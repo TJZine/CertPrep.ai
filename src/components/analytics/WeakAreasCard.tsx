@@ -1,0 +1,122 @@
+'use client';
+
+import * as React from 'react';
+import { AlertTriangle, TrendingUp, BookOpen, ArrowRight } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { Badge } from '@/components/ui/Badge';
+import { cn } from '@/lib/utils';
+
+interface WeakArea {
+  category: string;
+  avgScore: number;
+  totalQuestions: number;
+  recentTrend?: 'improving' | 'declining' | 'stable';
+}
+
+interface WeakAreasCardProps {
+  weakAreas: WeakArea[];
+  onStudyArea?: (category: string) => void;
+  className?: string;
+}
+
+/**
+ * Highlights weakest categories with quick study CTA.
+ */
+export function WeakAreasCard({ weakAreas, onStudyArea, className }: WeakAreasCardProps): React.ReactElement {
+  const getScoreColor = (score: number): string => {
+    if (score >= 70) return 'text-green-600 bg-green-100';
+    if (score >= 50) return 'text-amber-600 bg-amber-100';
+    return 'text-red-600 bg-red-100';
+  };
+
+  const getProgressColor = (score: number): string => {
+    if (score >= 70) return 'bg-green-500';
+    if (score >= 50) return 'bg-amber-500';
+    return 'bg-red-500';
+  };
+
+  if (weakAreas.length === 0) {
+    return (
+      <Card className={className}>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-amber-500" aria-hidden="true" />
+            Areas to Improve
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-lg border border-green-200 bg-green-50 p-4 text-center">
+            <p className="font-medium text-green-800">🎉 Great job! No weak areas identified.</p>
+            <p className="mt-1 text-sm text-green-600">Keep practicing to maintain your knowledge.</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className={className}>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <AlertTriangle className="h-5 w-5 text-amber-500" aria-hidden="true" />
+          Areas to Improve
+        </CardTitle>
+        <CardDescription>Categories where you scored below average</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {weakAreas.map((area) => (
+            <div key={area.category} className="rounded-lg border border-slate-200 p-4">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <h4 className="font-medium text-slate-900">{area.category}</h4>
+                    {area.recentTrend === 'improving' && (
+                      <Badge variant="success" className="gap-1">
+                        <TrendingUp className="h-3 w-3" aria-hidden="true" />
+                        Improving
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="mt-1 text-sm text-slate-500">{area.totalQuestions} questions attempted</p>
+                </div>
+
+                <div className={cn('rounded-full px-3 py-1 text-sm font-semibold', getScoreColor(area.avgScore))}>
+                  {area.avgScore}%
+                </div>
+              </div>
+
+              <div className="mt-3">
+                <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200">
+                  <div className={cn('h-full transition-all', getProgressColor(area.avgScore))} style={{ width: `${area.avgScore}%` }} />
+                </div>
+              </div>
+
+              {onStudyArea && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="mt-3 w-full"
+                  onClick={() => onStudyArea(area.category)}
+                  rightIcon={<ArrowRight className="h-4 w-4" aria-hidden="true" />}
+                >
+                  <BookOpen className="mr-2 h-4 w-4" aria-hidden="true" />
+                  Study This Topic
+                </Button>
+              )}
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-4 rounded-lg bg-blue-50 p-3">
+          <p className="text-sm text-blue-800">
+            <strong>Tip:</strong> Focus on your weakest areas first. Studies show that targeted practice improves retention by up to 50%.
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+export default WeakAreasCard;

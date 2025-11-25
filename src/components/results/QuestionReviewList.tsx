@@ -1,0 +1,148 @@
+'use client';
+
+import * as React from 'react';
+import { List, CheckCircle, XCircle, Flag } from 'lucide-react';
+import { QuestionReviewCard } from './QuestionReviewCard';
+import { Button } from '@/components/ui/Button';
+import { Badge } from '@/components/ui/Badge';
+import type { Question } from '@/types/quiz';
+
+export type FilterType = 'all' | 'correct' | 'incorrect' | 'flagged';
+
+interface QuestionWithAnswer {
+  question: Question;
+  userAnswer: string | null;
+  isCorrect: boolean;
+  isFlagged: boolean;
+}
+
+interface QuestionReviewListProps {
+  questions: QuestionWithAnswer[];
+  defaultFilter?: FilterType;
+  filter?: FilterType;
+  onFilterChange?: (filter: FilterType) => void;
+  className?: string;
+}
+
+/**
+ * Filterable list of question review cards.
+ */
+export function QuestionReviewList({
+  questions,
+  defaultFilter = 'all',
+  filter,
+  onFilterChange,
+  className,
+}: QuestionReviewListProps): React.ReactElement {
+  const [internalFilter, setInternalFilter] = React.useState<FilterType>(defaultFilter);
+  const [expandAll, setExpandAll] = React.useState(false);
+  const [expandAllSignal, setExpandAllSignal] = React.useState(0);
+
+  const activeFilter = filter ?? internalFilter;
+
+  const counts = React.useMemo(() => {
+    return {
+      all: questions.length,
+      correct: questions.filter((q) => q.isCorrect).length,
+      incorrect: questions.filter((q) => !q.isCorrect).length,
+      flagged: questions.filter((q) => q.isFlagged).length,
+    };
+  }, [questions]);
+
+  const filteredQuestions = React.useMemo(() => {
+    switch (activeFilter) {
+      case 'correct':
+        return questions.filter((q) => q.isCorrect);
+      case 'incorrect':
+        return questions.filter((q) => !q.isCorrect);
+      case 'flagged':
+        return questions.filter((q) => q.isFlagged);
+      default:
+        return questions;
+    }
+  }, [questions, activeFilter]);
+
+  const handleFilterChange = (value: FilterType): void => {
+    if (!filter) {
+      setInternalFilter(value);
+    }
+    onFilterChange?.(value);
+  };
+
+  const handleToggleExpandAll = (): void => {
+    setExpandAll((prev) => !prev);
+    setExpandAllSignal((signal) => signal + 1);
+  };
+
+  const filters = [
+    { id: 'all', label: 'All', icon: <List className="h-4 w-4" aria-hidden="true" />, count: counts.all },
+    { id: 'correct', label: 'Correct', icon: <CheckCircle className="h-4 w-4" aria-hidden="true" />, count: counts.correct },
+    { id: 'incorrect', label: 'Incorrect', icon: <XCircle className="h-4 w-4" aria-hidden="true" />, count: counts.incorrect },
+    { id: 'flagged', label: 'Flagged', icon: <Flag className="h-4 w-4" aria-hidden="true" />, count: counts.flagged },
+  ] as const;
+
+  return (
+    <div className={className}>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
+        <div className="flex flex-wrap gap-2">
+          {filters.map((f) => (
+            <Button
+              key={f.id}
+              variant={activeFilter === f.id ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => handleFilterChange(f.id)}
+              className="gap-1.5"
+            >
+              {f.icon}
+              {f.label}
+              <Badge variant={activeFilter === f.id ? 'secondary' : 'outline'} className="ml-1">
+                {f.count}
+              </Badge>
+            </Button>
+          ))}
+        </div>
+
+        <Button variant="ghost" size="sm" onClick={handleToggleExpandAll}>
+          {expandAll ? 'Collapse All' : 'Expand All'}
+        </Button>
+      </div>
+
+      <p className="mb-4 text-sm text-slate-500">
+        Showing {filteredQuestions.length} of {questions.length} questions
+      </p>
+
+      {filteredQuestions.length === 0 ? (
+        <div className="rounded-lg border border-slate-200 bg-slate-50 p-8 text-center">
+          <p className="text-slate-500">
+            {activeFilter === 'incorrect' && 'No incorrect answers. Great job!'}
+            {activeFilter === 'flagged' && 'No flagged questions.'}
+            {activeFilter === 'correct' && 'No correct answers yet.'}
+            {activeFilter === 'all' && 'No questions to display.'}
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {filteredQuestions.map((item) => {
+            const originalIndex = questions.findIndex((q) => q.question.id === item.question.id);
+
+            return (
+              <QuestionReviewCard
+                key={item.question.id}
+                question={item.question}
+                questionNumber={originalIndex + 1}
+                userAnswer={item.userAnswer}
+                isCorrect={item.isCorrect}
+                isFlagged={item.isFlagged}
+                defaultExpanded={activeFilter === 'incorrect' && !item.isCorrect}
+                expandAllState={expandAll}
+                expandAllSignal={expandAllSignal}
+              />
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default QuestionReviewList;

@@ -1,0 +1,238 @@
+'use client';
+
+import * as React from 'react';
+import { useRouter } from 'next/navigation';
+import { QuizLayout } from './QuizLayout';
+import { QuestionDisplay } from './QuestionDisplay';
+import { OptionsList } from './OptionsList';
+import { ExplanationPanel } from './ExplanationPanel';
+import { AITutorButton } from './AITutorButton';
+import { SubmitButton, ZenControls } from './ZenControls';
+import { Card, CardContent } from '@/components/ui/Card';
+import { useToast } from '@/components/ui/Toast';
+import {
+  useCurrentQuestion,
+  useProgress,
+  useQuizSessionStore,
+} from '@/stores/quizSessionStore';
+import { useKeyboardNav, useSpacedRepetitionNav } from '@/hooks/useKeyboardNav';
+import { useTimer } from '@/hooks/useTimer';
+import { useBeforeUnload } from '@/hooks/useBeforeUnload';
+import { createResult } from '@/db/results';
+import type { Quiz } from '@/types/quiz';
+
+interface ZenQuizContainerProps {
+  quiz: Quiz;
+  isSmartRound?: boolean;
+}
+
+/**
+ * Main orchestrator for Zen mode interactions.
+ */
+export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContainerProps): React.ReactElement {
+  const router = useRouter();
+  const { addToast } = useToast();
+
+  const {
+    initializeSession,
+    selectAnswer,
+    submitAnswer,
+    toggleExplanation,
+    toggleFlag,
+    markAgain,
+    markHard,
+    markGood,
+    resetSession,
+    currentIndex,
+    selectedAnswer,
+    hasSubmitted,
+    showExplanation,
+    answers,
+    flaggedQuestions,
+    questionQueue,
+    isComplete,
+  } = useQuizSessionStore();
+
+  const currentQuestion = useCurrentQuestion();
+  const progress = useProgress();
+
+  const { formattedTime, start: startTimer, seconds } = useTimer({ autoStart: true });
+  useBeforeUnload(!isComplete, 'Your quiz progress will be lost. Are you sure?');
+
+  const handleSessionComplete = React.useCallback(async (): Promise<void> => {
+    try {
+      const answersRecord: Record<string, string> = {};
+      answers.forEach((record, questionId) => {
+        answersRecord[questionId] = record.selectedAnswer;
+      });
+
+      const result = await createResult({
+        quizId: quiz.id,
+        mode: 'zen',
+        answers: answersRecord,
+        flaggedQuestions: Array.from(flaggedQuestions),
+        timeTakenSeconds: seconds,
+      });
+
+      if (isSmartRound) {
+        sessionStorage.removeItem('smartRoundQuestions');
+        sessionStorage.removeItem('smartRoundQuizId');
+        sessionStorage.removeItem('smartRoundAllQuestions');
+        sessionStorage.removeItem('smartRoundMissedCount');
+        sessionStorage.removeItem('smartRoundFlaggedCount');
+      }
+
+      addToast('success', isSmartRound ? 'Smart Round complete!' : 'Study session complete!');
+      router.push(`/results/${result.id}`);
+    } catch (error) {
+      console.error('Failed to save result:', error);
+      addToast('error', 'Failed to save your results. Please try again.');
+    }
+  }, [addToast, answers, flaggedQuestions, isSmartRound, quiz.id, router, seconds]);
+
+  React.useEffect(() => {
+    initializeSession(quiz.id, 'zen', quiz.questions);
+    startTimer();
+    return (): void => {
+      resetSession();
+    };
+  }, [quiz.id, quiz.questions, initializeSession, startTimer, resetSession]);
+
+  React.useEffect(() => {
+    if (isComplete) {
+      void handleSessionComplete();
+    }
+  }, [isComplete, handleSessionComplete]);
+
+  useKeyboardNav({
+    onSelectOption: (key) => {
+      if (!hasSubmitted && currentQuestion?.options[key]) {
+        selectAnswer(key);
+      }
+    },
+    onSubmit: () => {
+      if (selectedAnswer && !hasSubmitted) {
+        submitAnswer();
+      }
+    },
+    onFlag: () => {
+      if (currentQuestion) {
+        toggleFlag(currentQuestion.id);
+      }
+    },
+    enabled: !isComplete,
+    optionKeys: currentQuestion ? Object.keys(currentQuestion.options) : [],
+  });
+
+  useSpacedRepetitionNav({
+    onAgain: markAgain,
+    onHard: markHard,
+    onGood: markGood,
+    enabled: hasSubmitted && !isComplete,
+  });
+
+  const handleExit = (): void => {
+    resetSession();
+    if (isSmartRound) {
+      sessionStorage.removeItem('smartRoundQuestions');
+      sessionStorage.removeItem('smartRoundQuizId');
+      sessionStorage.removeItem('smartRoundAllQuestions');
+      sessionStorage.removeItem('smartRoundMissedCount');
+      sessionStorage.removeItem('smartRoundFlaggedCount');
+    }
+    router.push('/');
+  };
+
+  const isCurrentAnswerCorrect = React.useMemo(() => {
+    if (!currentQuestion || !hasSubmitted) return false;
+    return selectedAnswer === currentQuestion.correct_answer;
+  }, [currentQuestion, hasSubmitted, selectedAnswer]);
+
+  const isLastQuestion = currentIndex >= questionQueue.length - 1;
+
+  React.useEffect(() => {
+    if (hasSubmitted && isCurrentAnswerCorrect) {
+      addToast('success', 'Correct! 🎉');
+    }
+  }, [hasSubmitted, isCurrentAnswerCorrect, addToast]);
+
+  if (!currentQuestion) {
+    return (
+      <QuizLayout
+        title={quiz.title}
+        currentProgress={progress.current}
+        totalQuestions={progress.total}
+        onExit={handleExit}
+        mode="zen"
+      >
+        <div className="py-12 text-center">
+          <p className="text-slate-500">Loading question...</p>
+        </div>
+      </QuizLayout>
+    );
+  }
+
+  return (
+    <QuizLayout
+      title={quiz.title}
+      currentProgress={progress.current}
+      totalQuestions={progress.total}
+      timerDisplay={formattedTime}
+      onExit={handleExit}
+      mode="zen"
+    >
+      <div className="mx-auto max-w-3xl">
+        <Card>
+          <CardContent className="p-6 sm:p-8">
+            <QuestionDisplay
+              question={currentQuestion}
+              questionNumber={currentIndex + 1}
+              totalQuestions={quiz.questions.length}
+              isFlagged={flaggedQuestions.has(currentQuestion.id)}
+              onToggleFlag={() => toggleFlag(currentQuestion.id)}
+            />
+
+            <div className="mt-6">
+              <OptionsList
+                options={currentQuestion.options}
+                selectedAnswer={selectedAnswer}
+                correctAnswer={currentQuestion.correct_answer}
+                hasSubmitted={hasSubmitted}
+                onSelectOption={selectAnswer}
+              />
+            </div>
+
+            <div className="mt-8">
+              {!hasSubmitted ? (
+                <SubmitButton onClick={submitAnswer} disabled={!selectedAnswer} />
+              ) : (
+                <div className="space-y-6">
+                  <ExplanationPanel
+                    explanation={currentQuestion.explanation}
+                    distractorLogic={currentQuestion.distractor_logic}
+                    isCorrect={isCurrentAnswerCorrect}
+                    isExpanded={showExplanation || !isCurrentAnswerCorrect}
+                    onToggle={toggleExplanation}
+                  />
+
+                  {!isCurrentAnswerCorrect && selectedAnswer && (
+                    <AITutorButton question={currentQuestion} userAnswer={selectedAnswer} />
+                  )}
+
+                  <ZenControls
+                    onAgain={markAgain}
+                    onHard={markHard}
+                    onGood={markGood}
+                    isLastQuestion={isLastQuestion}
+                  />
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </QuizLayout>
+  );
+}
+
+export default ZenQuizContainer;

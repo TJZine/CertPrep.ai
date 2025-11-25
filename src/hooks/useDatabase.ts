@@ -1,0 +1,163 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { db, initializeDatabase } from '@/db';
+import type { Quiz } from '@/types/quiz';
+import type { Result } from '@/types/result';
+import type { QuizStats } from '@/db/quizzes';
+import { getQuizStats } from '@/db/quizzes';
+
+interface InitializationState {
+  isInitialized: boolean;
+  error: Error | null;
+}
+
+interface UseQuizzesResponse {
+  quizzes: Quiz[];
+  isLoading: boolean;
+}
+
+interface UseQuizResponse {
+  quiz: Quiz | undefined;
+  isLoading: boolean;
+}
+
+interface UseQuizWithStatsResponse {
+  quiz: Quiz | undefined;
+  stats: QuizStats | null;
+  isLoading: boolean;
+}
+
+interface UseResultsResponse {
+  results: Result[];
+  isLoading: boolean;
+}
+
+interface UseResultResponse {
+  result: Result | undefined;
+  isLoading: boolean;
+}
+
+interface UseQuizResultsResponse {
+  results: Result[];
+  isLoading: boolean;
+}
+
+/**
+ * Initializes the database connection when mounted.
+ */
+export function useInitializeDatabase(): InitializationState {
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    initializeDatabase()
+      .then(() => {
+        if (isMounted) {
+          setIsInitialized(true);
+        }
+      })
+      .catch((err) => {
+        if (isMounted) {
+          setError(err instanceof Error ? err : new Error('Failed to initialize database.'));
+        }
+      });
+
+    return (): void => {
+      isMounted = false;
+    };
+  }, []);
+
+  return { isInitialized, error };
+}
+
+/**
+ * Retrieves all quizzes with live updates.
+ */
+export function useQuizzes(): UseQuizzesResponse {
+  const quizzes = useLiveQuery(() => db.quizzes.orderBy('created_at').reverse().toArray(), []);
+  return {
+    quizzes: quizzes ?? [],
+    isLoading: quizzes === undefined,
+  };
+}
+
+/**
+ * Retrieves a single quiz with live updates.
+ */
+export function useQuiz(id: string | undefined): UseQuizResponse {
+  const quiz = useLiveQuery(() => (id ? db.quizzes.get(id) : undefined), [id]);
+  return {
+    quiz: id ? quiz : undefined,
+    isLoading: id ? quiz === undefined : false,
+  };
+}
+
+/**
+ * Retrieves a quiz and its aggregated stats with live updates.
+ */
+export function useQuizWithStats(id: string | undefined): UseQuizWithStatsResponse {
+  const data = useLiveQuery(
+    async () => {
+      if (!id) {
+        return { quiz: undefined, stats: null };
+      }
+      const quiz = await db.quizzes.get(id);
+      if (!quiz) {
+        return { quiz: undefined, stats: null };
+      }
+      const stats = await getQuizStats(id);
+      return { quiz, stats };
+    },
+    [id],
+  );
+
+  return {
+    quiz: data?.quiz,
+    stats: data?.stats ?? null,
+    isLoading: id ? data === undefined : false,
+  };
+}
+
+/**
+ * Retrieves all results with live updates.
+ */
+export function useResults(): UseResultsResponse {
+  const results = useLiveQuery(() => db.results.orderBy('timestamp').reverse().toArray(), []);
+  return {
+    results: results ?? [],
+    isLoading: results === undefined,
+  };
+}
+
+/**
+ * Retrieves a single result with live updates.
+ */
+export function useResult(id: string | undefined): UseResultResponse {
+  const result = useLiveQuery(() => (id ? db.results.get(id) : undefined), [id]);
+  return {
+    result: id ? result : undefined,
+    isLoading: id ? result === undefined : false,
+  };
+}
+
+/**
+ * Retrieves results for a specific quiz with live updates.
+ */
+export function useQuizResults(quizId: string | undefined): UseQuizResultsResponse {
+  const results = useLiveQuery(async () => {
+    if (!quizId) {
+      return [] as Result[];
+    }
+    const ordered = await db.results.where('quiz_id').equals(quizId).sortBy('timestamp');
+    return ordered.reverse();
+  }, [quizId]);
+
+  return {
+    results: results ?? [],
+    isLoading: quizId ? results === undefined : false,
+  };
+}

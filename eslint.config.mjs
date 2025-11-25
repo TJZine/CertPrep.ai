@@ -1,18 +1,31 @@
-import { defineConfig, globalIgnores } from "eslint/config";
-import nextVitals from "eslint-config-next/core-web-vitals";
-import nextTs from "eslint-config-next/typescript";
+import nextConfig from 'eslint-config-next';
+import tseslintPlugin from '@typescript-eslint/eslint-plugin';
 
-const eslintConfig = defineConfig([
-  ...nextVitals,
-  ...nextTs,
-  // Override default ignores of eslint-config-next.
-  globalIgnores([
-    // Default ignores of eslint-config-next:
-    ".next/**",
-    "out/**",
-    "build/**",
-    "next-env.d.ts",
-  ]),
-]);
+const config = [
+  { ignores: ['.next/**', 'node_modules/**', 'tailwind.config.ts', 'postcss.config.mjs', 'next.config.js', 'next.config.ts'] },
+  ...nextConfig,
+  {
+    plugins: {
+      '@typescript-eslint': tseslintPlugin,
+    },
+    languageOptions: {
+      parserOptions: {
+        project: './tsconfig.json',
+      },
+    },
+    rules: {
+      '@typescript-eslint/no-unused-vars': 'error',
+      '@typescript-eslint/no-explicit-any': 'error',
+      '@typescript-eslint/explicit-function-return-type': 'warn',
+      'react/jsx-no-target-blank': 'error',
+      'no-console': [
+        'warn',
+        {
+          allow: ['warn', 'error'],
+        },
+      ],
+    },
+  },
+];
 
-export default eslintConfig;
+export default config;

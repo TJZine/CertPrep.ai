@@ -1,0 +1,158 @@
+{
+  "title": "Sample Certification Quiz",
+  "description": "A sample quiz demonstrating the CertPrep.ai question format with various question types and difficulties.",
+  "questions": [
+    {
+      "id": "sample-1",
+      "category": "Cloud Fundamentals",
+      "difficulty": "Easy",
+      "question": "What does <strong>IaaS</strong> stand for in cloud computing?",
+      "options": {
+        "A": "Internet as a Service",
+        "B": "Infrastructure as a Service",
+        "C": "Integration as a Service",
+        "D": "Information as a Service"
+      },
+      "correct_answer": "B",
+      "explanation": "<p><strong>Infrastructure as a Service (IaaS)</strong> provides virtualized computing resources over the internet. It includes:</p><ul><li>Virtual machines</li><li>Storage</li><li>Networks</li><li>Operating systems</li></ul><p>Examples include AWS EC2, Azure VMs, and Google Compute Engine.</p>",
+      "distractor_logic": "The other options are not standard cloud computing terms. While 'Internet as a Service' might sound plausible, it's not an industry-recognized service model."
+    },
+    {
+      "id": "sample-2",
+      "category": "Cloud Fundamentals",
+      "difficulty": "Easy",
+      "question": "Which of the following is a characteristic of cloud computing?",
+      "options": {
+        "A": "Requires physical hardware installation",
+        "B": "Fixed monthly costs regardless of usage",
+        "C": "On-demand self-service",
+        "D": "Limited to single geographic location"
+      },
+      "correct_answer": "C",
+      "explanation": "On-demand self-service is one of the five essential characteristics of cloud computing as defined by NIST. Users can provision computing capabilities without requiring human interaction with service providers.",
+      "distractor_logic": "Cloud computing specifically eliminates the need for physical hardware installation (A), typically uses pay-as-you-go pricing (B), and can be globally distributed (D)."
+    },
+    {
+      "id": "sample-3",
+      "category": "Security",
+      "difficulty": "Medium",
+      "question": "What is the principle of least privilege?",
+      "options": {
+        "A": "Users should have admin access by default",
+        "B": "Users should only have the minimum access necessary to perform their job",
+        "C": "All privileges should be shared equally among team members",
+        "D": "Privileges should be maximized for operational efficiency"
+      },
+      "correct_answer": "B",
+      "explanation": "The <em>principle of least privilege</em> (PoLP) states that users, programs, and processes should only have the minimum permissions necessary to perform their intended function. This reduces the attack surface and limits potential damage from accidents or malicious actions.",
+      "distractor_logic": "Options A, C, and D all describe practices that would increase security risks by granting excessive permissions.",
+      "ai_prompt": "I'm studying security principles. Can you explain the principle of least privilege with real-world examples and how it applies to cloud environments?"
+    },
+    {
+      "id": "sample-4",
+      "category": "Security",
+      "difficulty": "Medium",
+      "question": "Which authentication method provides the strongest security?",
+      "options": {
+        "A": "Password only",
+        "B": "PIN code",
+        "C": "Multi-factor authentication (MFA)",
+        "D": "Security question"
+      },
+      "correct_answer": "C",
+      "explanation": "Multi-factor authentication (MFA) combines two or more independent credentials: something you know (password), something you have (phone/token), and something you are (biometrics). This layered approach significantly reduces the risk of unauthorized access.",
+      "distractor_logic": "Single-factor methods (A, B, D) are all vulnerable to various attacks including phishing, brute force, and social engineering."
+    },
+    {
+      "id": "sample-5",
+      "category": "Networking",
+      "difficulty": "Medium",
+      "question": "What is the primary purpose of a Virtual Private Cloud (VPC)?",
+      "options": {
+        "A": "To provide free cloud storage",
+        "B": "To create an isolated network environment within a public cloud",
+        "C": "To increase internet speed",
+        "D": "To replace physical routers"
+      },
+      "correct_answer": "B",
+      "explanation": "A Virtual Private Cloud (VPC) allows you to provision a logically isolated section of a cloud provider's network. Within this virtual network, you can define your own IP address range, create subnets, and configure route tables and network gateways.",
+      "distractor_logic": "VPCs don't provide storage (A), don't affect internet speed directly (C), and complement rather than replace network infrastructure concepts (D)."
+    },
+    {
+      "id": "sample-6",
+      "category": "Networking",
+      "difficulty": "Hard",
+      "question": "In a VPC, what is the difference between a public subnet and a private subnet?",
+      "options": {
+        "A": "Public subnets have larger IP ranges",
+        "B": "Public subnets have routes to an Internet Gateway; private subnets do not",
+        "C": "Private subnets are more expensive",
+        "D": "There is no difference; the terms are interchangeable"
+      },
+      "correct_answer": "B",
+      "explanation": "The key difference is routing: <ul><li><strong>Public subnet</strong>: Has a route to an Internet Gateway, allowing resources to communicate directly with the internet</li><li><strong>Private subnet</strong>: No direct route to the internet; typically uses NAT Gateway for outbound-only internet access</li></ul>",
+      "distractor_logic": "Subnet size (A) is configurable and unrelated to public/private designation. Cost (C) depends on resources, not subnet type. The terms have distinct technical meanings (D)."
+    },
+    {
+      "id": "sample-7",
+      "category": "Database",
+      "difficulty": "Medium",
+      "question": "What type of database is best suited for storing hierarchical data like social network connections?",
+      "options": {
+        "A": "Relational database (SQL)",
+        "B": "Graph database",
+        "C": "Key-value store",
+        "D": "Time-series database"
+      },
+      "correct_answer": "B",
+      "explanation": "Graph databases are optimized for storing and querying highly connected data. They excel at representing relationships (edges) between entities (nodes), making them ideal for social networks, recommendation engines, and fraud detection.",
+      "distractor_logic": "While relational databases can model relationships, they require complex joins. Key-value stores lack relationship modeling. Time-series databases are optimized for temporal data."
+    },
+    {
+      "id": "sample-8",
+      "category": "Database",
+      "difficulty": "Hard",
+      "question": "What is the CAP theorem in distributed systems?",
+      "options": {
+        "A": "A database can be Cheap, Available, and Performant simultaneously",
+        "B": "A distributed system can only guarantee two of: Consistency, Availability, Partition tolerance",
+        "C": "Cloud computing requires Compute, Applications, and Processing",
+        "D": "Caching Always Prevents database bottlenecks"
+      },
+      "correct_answer": "B",
+      "explanation": "<p>The <strong>CAP theorem</strong> (Brewer's theorem) states that a distributed data store can only provide two of these three guarantees:</p><ul><li><strong>Consistency</strong>: Every read receives the most recent write</li><li><strong>Availability</strong>: Every request receives a response</li><li><strong>Partition tolerance</strong>: System continues operating despite network partitions</li></ul><p>Since network partitions are unavoidable, systems must choose between consistency (CP) or availability (AP).</p>",
+      "ai_prompt": "Explain the CAP theorem with examples of real databases that prioritize different combinations. When should I choose CP vs AP systems?"
+    },
+    {
+      "id": "sample-9",
+      "category": "DevOps",
+      "difficulty": "Easy",
+      "question": "What does CI/CD stand for?",
+      "options": {
+        "A": "Computer Integration / Computer Deployment",
+        "B": "Continuous Integration / Continuous Delivery (or Deployment)",
+        "C": "Code Implementation / Code Distribution",
+        "D": "Central Infrastructure / Central Database"
+      },
+      "correct_answer": "B",
+      "explanation": "CI/CD stands for Continuous Integration and Continuous Delivery/Deployment. CI automates code integration and testing, while CD automates the release process. Together, they enable frequent, reliable software releases.",
+      "distractor_logic": "The other options are fabricated terms that don't represent real DevOps practices."
+    },
+    {
+      "id": "sample-10",
+      "category": "DevOps",
+      "difficulty": "Medium",
+      "question": "What is Infrastructure as Code (IaC)?",
+      "options": {
+        "A": "Writing code that runs on servers",
+        "B": "Managing and provisioning infrastructure through machine-readable definition files",
+        "C": "Converting physical servers to virtual machines",
+        "D": "A programming language for databases"
+      },
+      "correct_answer": "B",
+      "explanation": "Infrastructure as Code (IaC) is the practice of managing infrastructure (networks, VMs, load balancers, etc.) using configuration files rather than manual processes. Tools like Terraform, CloudFormation, and Pulumi enable version-controlled, repeatable infrastructure deployments.",
+      "distractor_logic": "Option A describes application development. Option C describes virtualization. Option D is not a real concept."
+    }
+  ],
+  "tags": ["Cloud", "Security", "Networking", "Database", "DevOps", "Sample"]
+}

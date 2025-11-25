@@ -1,0 +1,195 @@
+'use client';
+
+import * as React from 'react';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from 'recharts';
+import { BookOpen, Clock, Target, Award } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
+import { cn, formatTime } from '@/lib/utils';
+import type { OverallStats } from '@/db/results';
+
+interface AnalyticsOverviewProps {
+  stats: OverallStats;
+  className?: string;
+}
+
+/**
+ * Overview stat cards for analytics.
+ */
+export function AnalyticsOverview({ stats, className }: AnalyticsOverviewProps): React.ReactElement {
+  const statCards = [
+    { label: 'Total Quizzes', value: stats.totalQuizzes, icon: BookOpen, color: 'text-blue-600', bgColor: 'bg-blue-100' },
+    { label: 'Total Attempts', value: stats.totalAttempts, icon: Target, color: 'text-green-600', bgColor: 'bg-green-100' },
+    {
+      label: 'Average Score',
+      value: stats.totalAttempts > 0 ? `${stats.averageScore}%` : '-',
+      icon: Award,
+      color: 'text-amber-600',
+      bgColor: 'bg-amber-100',
+    },
+    { label: 'Study Time', value: formatTime(stats.totalStudyTime), icon: Clock, color: 'text-purple-600', bgColor: 'bg-purple-100' },
+  ] as const;
+
+  return (
+    <div className={className}>
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        {statCards.map((stat) => (
+          <Card key={stat.label}>
+            <CardContent className="flex items-center gap-4 p-4">
+              <div className={cn('rounded-full p-3', stat.bgColor)}>
+                <stat.icon className={cn('h-6 w-6', stat.color)} aria-hidden="true" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-slate-900">{stat.value}</p>
+                <p className="text-sm text-slate-500">{stat.label}</p>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+interface ScoreDistributionProps {
+  results: Array<{ score: number }>;
+  className?: string;
+}
+
+/**
+ * Pie chart showing distribution of scores.
+ */
+export function ScoreDistribution({ results, className }: ScoreDistributionProps): React.ReactElement {
+  const distribution = React.useMemo(() => {
+    const ranges = [
+      { name: '90-100%', min: 90, max: 100, color: '#22c55e' },
+      { name: '80-89%', min: 80, max: 89, color: '#3b82f6' },
+      { name: '70-79%', min: 70, max: 79, color: '#06b6d4' },
+      { name: '60-69%', min: 60, max: 69, color: '#f59e0b' },
+      { name: 'Below 60%', min: 0, max: 59, color: '#ef4444' },
+    ];
+
+    return ranges
+      .map((range) => ({
+        name: range.name,
+        value: results.filter((r) => r.score >= range.min && r.score <= range.max).length,
+        color: range.color,
+      }))
+      .filter((r) => r.value > 0);
+  }, [results]);
+
+  if (results.length === 0) {
+    return (
+      <Card className={className}>
+        <CardHeader>
+          <CardTitle>Score Distribution</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-center text-slate-500">No data yet</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className={className}>
+      <CardHeader>
+        <CardTitle>Score Distribution</CardTitle>
+        <CardDescription>Breakdown of your scores across all attempts</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="h-[250px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={distribution}
+                cx="50%"
+                cy="50%"
+                innerRadius={60}
+                outerRadius={100}
+                paddingAngle={2}
+                dataKey="value"
+                label={({ name, value }) => `${name}: ${value}`}
+                labelLine={false}
+              >
+                {distribution.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip formatter={(value: number) => [`${value} attempts`, 'Count']} />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="mt-4 flex flex-wrap justify-center gap-4">
+          {distribution.map((entry) => (
+            <div key={entry.name} className="flex items-center gap-2">
+              <span className="h-3 w-3 rounded-full" style={{ backgroundColor: entry.color }} />
+              <span className="text-sm text-slate-600">{entry.name}</span>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+interface StudyTimeChartProps {
+  dailyData: Array<{ date: string; minutes: number }>;
+  className?: string;
+}
+
+/**
+ * Bar chart of study time per day.
+ */
+export function StudyTimeChart({ dailyData, className }: StudyTimeChartProps): React.ReactElement {
+  if (dailyData.length === 0) {
+    return (
+      <Card className={className}>
+        <CardHeader>
+          <CardTitle>Study Activity</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-center text-slate-500">No study data yet</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className={className}>
+      <CardHeader>
+        <CardTitle>Study Activity</CardTitle>
+        <CardDescription>Minutes studied per day (last 14 days)</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="h-[250px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={dailyData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <XAxis dataKey="date" tick={{ fill: '#64748b', fontSize: 12 }} tickLine={false} />
+              <YAxis tick={{ fill: '#64748b', fontSize: 12 }} tickLine={false} axisLine={false} />
+              <Tooltip
+                formatter={(value: number) => [`${value} min`, 'Study Time']}
+                contentStyle={{ backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '8px' }}
+              />
+              <Bar dataKey="minutes" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+export default AnalyticsOverview;

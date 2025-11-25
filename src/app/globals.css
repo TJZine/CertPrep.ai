@@ -1,26 +1,113 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    /* Define CSS custom properties for theming */
+    --background: 248 250 252;
+    --foreground: 15 23 42;
+    --primary: 37 99 235;
+    --primary-foreground: 255 255 255;
+    --muted: 100 116 139;
+    --muted-foreground: 71 85 105;
+    --border: 203 213 225;
+    --input: 226 232 240;
+    --ring: 37 99 235;
+    --radius: 0.5rem;
+  }
+
+  * {
+    @apply border-slate-200;
+  }
+
+  body {
+    @apply bg-slate-50 text-slate-900 antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* CRITICAL: Focus visible styles for accessibility */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-blue-600 ring-offset-2;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  /* Question display styles */
+  .question-text {
+    @apply text-lg font-semibold leading-relaxed text-slate-900 sm:text-xl;
+  }
+
+  /* Option button states */
+  .option-base {
+    @apply flex w-full items-center justify-between rounded-lg border bg-white px-4 py-3 text-left text-slate-900 transition;
+  }
+
+  .option-default {
+    @apply border-slate-200 hover:border-blue-200 hover:bg-blue-50/60;
+  }
+
+  .option-selected {
+    @apply border-blue-500 bg-blue-50 text-blue-900 hover:border-blue-600;
+  }
+
+  .option-correct {
+    @apply border-green-500 bg-green-50 text-green-900;
+  }
+
+  .option-incorrect {
+    @apply border-red-500 bg-red-50 text-red-900;
+  }
+
+  /* Card variants */
+  .card {
+    @apply rounded-xl border border-slate-200 bg-white shadow-sm;
+  }
+
+  .card-hover {
+    @apply transition hover:-translate-y-0.5 hover:shadow-md;
+  }
+}
+
+@layer utilities {
+  /* Custom scrollbar for sidebars */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 9999px;
+  }
+}
+
+@media print {
+  body {
+    background: white;
+    color: #0f172a;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .print-break {
+    page-break-before: always;
+  }
+
+  .card,
+  .card-hover {
+    box-shadow: none !important;
+    border-color: #cbd5e1 !important;
+  }
 }
