@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { lockBodyScroll, unlockBodyScroll } from '@/lib/bodyScrollLock';
 
 interface ModalProps {
   isOpen: boolean;
@@ -68,8 +69,7 @@ export function Modal({
   React.useEffect(() => {
     if (!isOpen) return undefined;
 
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+    lockBodyScroll();
     focusFirstElement();
 
     const handleKeyDown = (event: KeyboardEvent): void => {
@@ -103,15 +103,15 @@ export function Modal({
     document.addEventListener('keydown', handleKeyDown);
 
     return (): void => {
-      document.body.style.overflow = previousOverflow;
+      unlockBodyScroll();
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [focusFirstElement, isOpen, onClose]);
 
   const handleOverlayClick = (event: React.MouseEvent<HTMLDivElement>): void => {
-    if (overlayRef.current && event.target === overlayRef.current && closeOnOverlayClick) {
-      onClose();
-    }
+    if (!closeOnOverlayClick) return;
+    if (event.target !== event.currentTarget) return;
+    onClose();
   };
 
   if (!isOpen) return null;
@@ -119,14 +119,15 @@ export function Modal({
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 px-4 backdrop-blur-sm"
-      onMouseDown={handleOverlayClick}
+      className="fixed inset-0 z-50 flex items-start justify-center bg-slate-900/60 px-4 py-6 backdrop-blur-sm sm:items-center"
+      onClick={handleOverlayClick}
       role="presentation"
     >
       <div
         ref={dialogRef}
         className={cn(
-          'relative w-full transform rounded-xl bg-white shadow-xl transition-all focus:outline-none dark:border dark:border-slate-800 dark:bg-slate-900',
+          'relative flex w-full transform flex-col overflow-hidden rounded-xl bg-white shadow-xl transition-all focus:outline-none dark:border dark:border-slate-800 dark:bg-slate-900',
+          'max-h-[calc(100vh-3rem)]',
           modalSizes[size],
         )}
         role="dialog"
@@ -135,7 +136,7 @@ export function Modal({
         aria-describedby={description ? descriptionId : undefined}
         tabIndex={-1}
       >
-        <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-6 py-4 dark:border-slate-800">
+        <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-slate-200 bg-white/95 px-4 py-4 backdrop-blur dark:border-slate-800 dark:bg-slate-900/95 sm:px-6">
           <div className="flex flex-col gap-1">
             <h2 id={titleId} className="text-lg font-semibold text-slate-900 dark:text-slate-50">
               {title}
@@ -155,8 +156,12 @@ export function Modal({
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
-        <div className="px-6 py-4 text-slate-800 dark:text-slate-200">{children}</div>
-        {footer ? <div className="border-t border-slate-200 px-6 py-4 dark:border-slate-800">{footer}</div> : null}
+        <div className="flex-1 overflow-y-auto px-4 py-4 text-slate-800 dark:text-slate-200 sm:px-6">{children}</div>
+        {footer ? (
+          <div className="sticky bottom-0 border-t border-slate-200 bg-white/95 px-4 py-3 backdrop-blur dark:border-slate-800 dark:bg-slate-900/95 sm:px-6 sm:py-4">
+            {footer}
+          </div>
+        ) : null}
       </div>
     </div>
   );

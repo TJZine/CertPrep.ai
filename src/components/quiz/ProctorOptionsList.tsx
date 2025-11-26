@@ -37,8 +37,8 @@ export function ProctorOptionsList({
             type="button"
             onClick={() => !disabled && onSelectOption(key)}
             disabled={disabled}
-              className={cn(
-                'relative flex w-full items-start gap-3 rounded-lg border-2 p-4 text-left transition-all',
+            className={cn(
+              'relative flex w-full items-start gap-3 rounded-lg border-2 p-4 text-left transition-all',
               isSelected
                 ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-500 ring-offset-1 dark:border-blue-400 dark:bg-blue-900/30 dark:ring-offset-slate-900'
                 : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-slate-600 dark:hover:bg-slate-800',
@@ -58,7 +58,7 @@ export function ProctorOptionsList({
             </span>
 
             <span
-              className="flex-1 pt-1 text-base text-slate-700 dark:text-slate-100"
+              className="flex-1 pt-1 text-base text-slate-700 break-words dark:text-slate-100"
               dangerouslySetInnerHTML={{ __html: sanitizedText }}
             />
 

@@ -24,7 +24,8 @@ export interface Quiz {
   sourceId?: string;
 }
 
-export type QuizMode = 'zen' | 'proctor';
+export const QUIZ_MODES = ['zen', 'proctor'] as const;
+export type QuizMode = (typeof QUIZ_MODES)[number];
 
 export interface QuizSessionState {
   quizId: string;
