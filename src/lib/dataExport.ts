@@ -165,10 +165,9 @@ export async function importData(
         quizzesImported = sanitizedQuizzes.length;
       }
 
-      const replaceResults = sanitizedResults.filter((result) => quizIds.has(result.quiz_id));
-      if (replaceResults.length > 0) {
-        await db.results.bulkPut(replaceResults);
-        resultsImported = replaceResults.length;
+      if (sanitizedResults.length > 0) {
+        await db.results.bulkPut(sanitizedResults);
+        resultsImported = sanitizedResults.length;
       }
     });
 
@@ -176,20 +175,25 @@ export async function importData(
   }
 
   await db.transaction('rw', db.quizzes, db.results, async () => {
-    for (const quiz of sanitizedQuizzes) {
-      const existing = await db.quizzes.get(quiz.id);
-      if (existing) continue;
-      await db.quizzes.put(quiz);
-      quizzesImported += 1;
-      existingQuizIds.add(quiz.id);
+    const quizzesInDb = await db.quizzes.toArray();
+    const mergedExistingQuizIds = new Set<string>(quizzesInDb.map((quiz) => quiz.id));
+    const quizzesToAdd = sanitizedQuizzes.filter((quiz) => !mergedExistingQuizIds.has(quiz.id));
+
+    if (quizzesToAdd.length > 0) {
+      await db.quizzes.bulkPut(quizzesToAdd);
+      quizzesImported = quizzesToAdd.length;
+      quizzesToAdd.forEach((quiz) => mergedExistingQuizIds.add(quiz.id));
     }
 
-    for (const result of sanitizedResults) {
-      if (!existingQuizIds.has(result.quiz_id)) continue;
-      const existing = await db.results.get(result.id);
-      if (existing) continue;
-      await db.results.put(result);
-      resultsImported += 1;
+    const resultsInDb = await db.results.toArray();
+    const mergedExistingResultIds = new Set<string>(resultsInDb.map((result) => result.id));
+    const resultsToAdd = sanitizedResults.filter(
+      (result) => mergedExistingQuizIds.has(result.quiz_id) && !mergedExistingResultIds.has(result.id),
+    );
+
+    if (resultsToAdd.length > 0) {
+      await db.results.bulkPut(resultsToAdd);
+      resultsImported = resultsToAdd.length;
     }
   });
 

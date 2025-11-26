@@ -26,7 +26,6 @@ export function Header(): React.ReactElement {
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const mobilePanelId = React.useId();
-  const headerRef = React.useRef<HTMLElement>(null);
   const firstMobileLinkRef = React.useRef<HTMLAnchorElement>(null);
   const toggleButtonRef = React.useRef<HTMLButtonElement>(null);
   const mobilePanelRef = React.useRef<HTMLDivElement>(null);
@@ -36,15 +35,25 @@ export function Header(): React.ReactElement {
     setIsMenuOpen(false);
   }, [pathname]);
 
-  React.useEffect((): (() => void) => {
-    if (isMenuOpen) {
-      lockBodyScroll();
-    }
+  React.useEffect((): (() => void) | void => {
+    if (!isMenuOpen) return;
+    lockBodyScroll();
     return () => {
-      if (isMenuOpen) {
-        unlockBodyScroll();
-      }
+      unlockBodyScroll();
     };
+  }, [isMenuOpen]);
+
+  React.useEffect(() => {
+    const panel = mobilePanelRef.current;
+    if (!panel) return;
+
+    if (isMenuOpen) {
+      panel.removeAttribute('inert');
+      panel.removeAttribute('aria-hidden');
+    } else {
+      panel.setAttribute('inert', '');
+      panel.setAttribute('aria-hidden', 'true');
+    }
   }, [isMenuOpen]);
 
   React.useEffect((): (() => void) | undefined => {
@@ -109,7 +118,6 @@ export function Header(): React.ReactElement {
 
   return (
     <header
-      ref={headerRef}
       className="sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur dark:border-slate-800 dark:bg-slate-900/80"
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
@@ -152,16 +160,15 @@ export function Header(): React.ReactElement {
           <button
             ref={toggleButtonRef}
             type="button"
-          data-mobile-focus
-          className="inline-flex h-10 w-10 items-center justify-center rounded-md text-slate-700 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 dark:text-slate-200 dark:hover:bg-slate-800 dark:focus-visible:ring-offset-slate-900 md:hidden"
-          aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
-          aria-expanded={isMenuOpen}
-          aria-controls={mobilePanelId}
-          onClick={() => setIsMenuOpen((open) => !open)}
-        >
-          {isMenuOpen ? <X className="h-5 w-5" aria-hidden="true" /> : <Menu className="h-5 w-5" aria-hidden="true" />}
-        </button>
-      </div>
+            className="inline-flex h-10 w-10 items-center justify-center rounded-md text-slate-700 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 dark:text-slate-200 dark:hover:bg-slate-800 dark:focus-visible:ring-offset-slate-900 md:hidden"
+            aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={isMenuOpen}
+            aria-controls={mobilePanelId}
+            onClick={() => setIsMenuOpen((open) => !open)}
+          >
+            {isMenuOpen ? <X className="h-5 w-5" aria-hidden="true" /> : <Menu className="h-5 w-5" aria-hidden="true" />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile nav panel */}
@@ -174,7 +181,7 @@ export function Header(): React.ReactElement {
           'overflow-hidden transition-all duration-200 ease-out',
         )}
       >
-        <div data-mobile-focus className="space-y-1 border-t border-slate-200 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-900">
+        <div className="space-y-1 border-t border-slate-200 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-900">
           <nav aria-label="Mobile navigation" className="space-y-1">
             {navigation.map((item, index) => {
               const isActive =
@@ -192,7 +199,6 @@ export function Header(): React.ReactElement {
                   )}
                   aria-current={isActive ? 'page' : undefined}
                   ref={index === 0 ? firstMobileLinkRef : undefined}
-                  data-mobile-focus
                 >
                   <Icon className="h-5 w-5" aria-hidden="true" />
                   <span>{item.name}</span>
