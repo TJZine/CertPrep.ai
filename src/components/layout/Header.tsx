@@ -49,10 +49,8 @@ export function Header(): React.ReactElement {
 
     if (isMenuOpen) {
       panel.removeAttribute('inert');
-      panel.removeAttribute('aria-hidden');
     } else {
       panel.setAttribute('inert', '');
-      panel.setAttribute('aria-hidden', 'true');
     }
   }, [isMenuOpen]);
 
@@ -112,7 +110,7 @@ export function Header(): React.ReactElement {
           <Link
             href="/"
             className="flex items-center gap-2 text-lg font-semibold text-slate-900 dark:text-slate-50"
-            aria-label="CertPrep.ai home"
+            aria-label={`${APP_NAME} home`}
           >
             <BookOpen className="h-6 w-6 text-blue-600 dark:text-blue-400" aria-hidden="true" />
             <span className="whitespace-nowrap">{APP_NAME}</span>
@@ -162,6 +160,7 @@ export function Header(): React.ReactElement {
       <div
         ref={mobilePanelRef}
         id={mobilePanelId}
+        aria-hidden={!isMenuOpen}
         className={cn(
           'md:hidden',
           isMenuOpen ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0',
@@ -178,6 +177,7 @@ export function Header(): React.ReactElement {
                 <Link
                   key={item.name}
                   href={item.href}
+                  onClick={() => setIsMenuOpen(false)}
                   className={cn(
                     'flex items-center gap-3 rounded-lg px-3 py-3 text-base font-medium',
                     isActive
