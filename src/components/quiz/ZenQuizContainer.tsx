@@ -80,13 +80,13 @@ export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContaine
         if (isSmartRound) {
           sessionStorage.removeItem('smartRoundQuestions');
           sessionStorage.removeItem('smartRoundQuizId');
-        sessionStorage.removeItem('smartRoundAllQuestions');
-        sessionStorage.removeItem('smartRoundMissedCount');
-        sessionStorage.removeItem('smartRoundFlaggedCount');
-      }
+          sessionStorage.removeItem('smartRoundAllQuestions');
+          sessionStorage.removeItem('smartRoundMissedCount');
+          sessionStorage.removeItem('smartRoundFlaggedCount');
+        }
 
-      addToast('success', isSmartRound ? 'Smart Round complete!' : 'Study session complete!');
-      router.push(`/results/${result.id}`);
+        addToast('success', isSmartRound ? 'Smart Round complete!' : 'Study session complete!');
+        router.push(`/results/${result.id}`);
       } catch (error) {
         console.error('Failed to save result:', error);
         addToast('error', 'Failed to save your results. Please try again.');

@@ -17,6 +17,38 @@ export interface QuizCardProps {
   onDelete: (quiz: Quiz) => void;
 }
 
+function useClickOutside(
+  ref: React.RefObject<HTMLElement>,
+  isOpen: boolean,
+  onClose: () => void,
+): void {
+  React.useEffect((): (() => void) | void => {
+    if (!isOpen) {
+      return undefined;
+    }
+
+    const handleClickOutside = (event: MouseEvent): void => {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
+        onClose();
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent): void => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscape);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isOpen, onClose, ref]);
+}
+
 /**
  * Displays a quiz summary card with stats and quick actions.
  */
@@ -27,61 +59,12 @@ export function QuizCard({ quiz, stats, onStart, onDelete }: QuizCardProps): Rea
   const tagsPopoverRef = React.useRef<HTMLDivElement>(null);
   const { addToast } = useToast();
 
+  useClickOutside(menuRef, showMenu, () => setShowMenu(false));
+  useClickOutside(tagsPopoverRef, showTagsPopover, () => setShowTagsPopover(false));
+
   const visibleTags = React.useMemo(() => quiz.tags.slice(0, 3), [quiz.tags]);
   const extraTagCount = Math.max(quiz.tags.length - 3, 0);
   const extraTags = React.useMemo(() => quiz.tags.slice(3), [quiz.tags]);
-
-  React.useEffect((): (() => void) | void => {
-    if (!showMenu) {
-      return undefined;
-    }
-
-    const handleClickOutside = (event: MouseEvent): void => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setShowMenu(false);
-      }
-    };
-
-    const handleEscape = (event: KeyboardEvent): void => {
-      if (event.key === 'Escape') {
-        setShowMenu(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('keydown', handleEscape);
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleEscape);
-    };
-  }, [showMenu]);
-
-  React.useEffect((): (() => void) | void => {
-    if (!showTagsPopover) {
-      return undefined;
-    }
-
-    const handleClickOutside = (event: MouseEvent): void => {
-      if (tagsPopoverRef.current && !tagsPopoverRef.current.contains(event.target as Node)) {
-        setShowTagsPopover(false);
-      }
-    };
-
-    const handleEscape = (event: KeyboardEvent): void => {
-      if (event.key === 'Escape') {
-        setShowTagsPopover(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('keydown', handleEscape);
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleEscape);
-    };
-  }, [showTagsPopover]);
 
   const handleDelete = (): void => {
     setShowMenu(false);

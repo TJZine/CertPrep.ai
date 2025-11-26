@@ -15,7 +15,7 @@ interface OptionsListProps {
   className?: string;
 }
 
-type OptionStatus = 'default' | 'selected' | 'correct' | 'incorrect' | 'missed';
+type OptionStatus = 'default' | 'selected' | 'correct' | 'incorrect';
 
 /**
  * Renders answer options with immediate feedback styling.
@@ -48,7 +48,6 @@ export function OptionsList({
     selected: 'border-blue-500 bg-blue-50 ring-2 ring-blue-500 ring-offset-1 dark:border-blue-400 dark:bg-blue-900/30 dark:ring-offset-slate-900',
     correct: 'border-green-500 bg-green-50 dark:border-green-500 dark:bg-green-900/30',
     incorrect: 'border-red-500 bg-red-50 dark:border-red-500 dark:bg-red-900/30',
-    missed: 'border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800',
   };
 
   const statusIcons: Partial<Record<OptionStatus, React.ReactNode>> = {
@@ -96,6 +95,7 @@ export function OptionsList({
                 'flex-1 pt-1 text-base',
                 status === 'correct' && 'text-green-800 dark:text-green-100',
                 status === 'incorrect' && 'text-red-800 dark:text-red-100',
+                status === 'selected' && 'text-blue-900 dark:text-blue-100',
                 status === 'default' && 'text-slate-700 dark:text-slate-100',
               )}
               dangerouslySetInnerHTML={{ __html: sanitizedText }}

@@ -150,7 +150,7 @@ export default function AnalyticsPage(): React.ReactElement {
   if (results.length === 0) {
     return (
       <div className="mx-auto max-w-7xl px-4 py-8">
-        <h1 className="mb-8 text-3xl font-bold text-slate-900">Analytics</h1>
+        <h1 className="mb-8 text-3xl font-bold text-slate-900 dark:text-slate-50">Analytics</h1>
 
         <EmptyState
           icon={<BarChart3 className="h-12 w-12" aria-hidden="true" />}

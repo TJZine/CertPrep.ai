@@ -14,7 +14,7 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
   ({ className, hoverable = false, ...props }, ref) => (
     <div
       ref={ref}
-      className={cn('card', hoverable && 'card-hover', 'bg-white dark:bg-slate-900', className)}
+      className={cn('card', hoverable && 'card-hover', className)}
       {...props}
     />
   ),

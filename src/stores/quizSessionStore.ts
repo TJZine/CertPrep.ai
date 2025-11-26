@@ -541,12 +541,20 @@ export const useProgress = (): { current: number; total: number; percentage: num
   const hasSubmitted = useQuizSessionStore((state) => state.hasSubmitted);
   const isComplete = useQuizSessionStore((state) => state.isComplete);
   const total = useQuizSessionStore((state) => state.questions.length);
+  const answeredQuestionsSize = useQuizSessionStore((state) => state.answeredQuestions.size);
+  const isProctorMode = useQuizSessionStore((state) => state.mode === 'proctor');
 
   return React.useMemo(() => {
+    if (isProctorMode) {
+      const answeredCount = Math.min(answeredQuestionsSize, total);
+      const percentage = total > 0 ? Math.round((answeredCount / total) * 100) : 0;
+      return { current: answeredCount, total, percentage };
+    }
+
     const answeredCount = isComplete ? total : Math.min(currentIndex + (hasSubmitted ? 1 : 0), total);
     const percentage = total > 0 ? Math.round((answeredCount / total) * 100) : 0;
     return { current: answeredCount, total, percentage };
-  }, [currentIndex, hasSubmitted, isComplete, total]);
+  }, [answeredQuestionsSize, currentIndex, hasSubmitted, isComplete, isProctorMode, total]);
 };
 
 export const useIsAnswered = (): boolean => useQuizSessionStore((state) => state.hasSubmitted);
@@ -561,9 +569,11 @@ export const useProctorStatus = (): {
 } => {
   const timeRemaining = useQuizSessionStore((state) => state.timeRemaining);
   const isTimeWarning = useQuizSessionStore((state) => state.isTimeWarning);
-  const answeredCount = useQuizSessionStore((state) => state.getAnsweredCount());
-  const flaggedCount = useQuizSessionStore((state) => state.getFlaggedCount());
-  const unansweredCount = useQuizSessionStore((state) => state.getUnansweredCount());
+  const answeredCount = useQuizSessionStore((state) => state.answeredQuestions.size);
+  const flaggedCount = useQuizSessionStore((state) => state.flaggedQuestions.size);
+  const unansweredCount = useQuizSessionStore((state) =>
+    Math.max(state.questions.length - state.answeredQuestions.size, 0),
+  );
   const totalQuestions = useQuizSessionStore((state) => state.questions.length);
 
   return React.useMemo(

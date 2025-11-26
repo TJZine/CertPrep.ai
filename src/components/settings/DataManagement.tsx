@@ -234,7 +234,7 @@ export function DataManagement(): React.ReactElement {
                     value="merge"
                     checked={importMode === 'merge'}
                     onChange={() => setImportMode('merge')}
-                    className="h-4 w-4 text-blue-600 dark:text-blue-400"
+                    className="h-4 w-4 accent-blue-600 dark:accent-blue-400"
                   />
                   <span className="text-sm text-slate-700 dark:text-slate-200">Merge (keep existing data, add new)</span>
                 </label>
@@ -245,7 +245,7 @@ export function DataManagement(): React.ReactElement {
                     value="replace"
                     checked={importMode === 'replace'}
                     onChange={() => setImportMode('replace')}
-                    className="h-4 w-4 text-blue-600 dark:text-blue-400"
+                    className="h-4 w-4 accent-blue-600 dark:accent-blue-400"
                   />
                   <span className="text-sm text-slate-700 dark:text-slate-200">Replace (delete existing data first)</span>
                 </label>

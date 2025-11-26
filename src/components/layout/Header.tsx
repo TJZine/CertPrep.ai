@@ -38,7 +38,8 @@ export function Header(): React.ReactElement {
         <div className="flex items-center gap-3">
           <nav aria-label="Main navigation" className="flex items-center gap-2">
             {navigation.map((item) => {
-              const isActive = pathname === item.href;
+              const isActive =
+                item.href === '/' ? pathname === '/' : pathname === item.href || pathname.startsWith(`${item.href}/`);
               const Icon = item.icon;
               return (
                 <Link

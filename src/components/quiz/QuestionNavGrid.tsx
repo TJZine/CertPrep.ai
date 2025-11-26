@@ -196,7 +196,7 @@ export function QuestionNavStrip({
             className={cn(
               'flex h-8 w-8 flex-shrink-0 items-center justify-center rounded text-xs font-medium transition-all',
               statusStyles[question.status],
-              isCurrent && 'ring-2 ring-slate-900',
+              isCurrent && 'ring-2 ring-slate-900 dark:ring-slate-200',
             )}
             aria-current={isCurrent ? 'step' : undefined}
           >

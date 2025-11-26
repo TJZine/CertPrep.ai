@@ -26,7 +26,9 @@ export default function LibraryPage(): React.ReactElement {
       <div className="mx-auto max-w-4xl px-4 py-10">
         <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center dark:border-red-500/50 dark:bg-red-950">
           <h1 className="text-xl font-semibold text-red-800 dark:text-red-100">Database Error</h1>
-          <p className="mt-2 text-sm text-red-700 dark:text-red-200">{dbError.message}</p>
+          <p className="mt-2 text-sm text-red-700 dark:text-red-200">
+            {dbError.message || 'An unexpected error occurred. Please refresh and try again.'}
+          </p>
           <Link
             href="/"
             aria-label="Return to dashboard"

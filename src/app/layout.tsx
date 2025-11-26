@@ -9,6 +9,7 @@ import { OfflineIndicator } from '@/components/common/OfflineIndicator';
 import { InstallPrompt } from '@/components/common/InstallPrompt';
 import { UpdateBanner } from '@/components/common/UpdateBanner';
 import { ThemeProvider } from '@/components/common/ThemeProvider';
+import { SkipLink } from '@/components/common/SkipLink';
 import { APP_NAME } from '@/lib/constants';
 import './globals.css';
 
@@ -67,7 +68,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }): React.ReactElement {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={inter.variable} suppressHydrationWarning>
       <head>
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="icon" href="/icon.svg" type="image/svg+xml" />
@@ -75,8 +76,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }):
         <meta name="theme-color" content="#2563eb" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{const stored=localStorage.getItem('theme');const prefersDark=window.matchMedia('(prefers-color-scheme: dark)').matches;const shouldDark=stored==='dark'||(!stored&&prefersDark);const root=document.documentElement;if(shouldDark){root.classList.add('dark');}else{root.classList.remove('dark');}}catch(e){}})();`,
+          }}
+        />
       </head>
       <body className="flex min-h-screen flex-col bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-50">
+        <SkipLink />
         <ThemeProvider>
           <GlobalErrorHandler>
             <ToastProvider>

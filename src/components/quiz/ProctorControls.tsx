@@ -66,10 +66,6 @@ export function ProctorControls({
         <Button
           variant={isFlagged ? 'warning' : 'outline'}
           onClick={onToggleFlag}
-          className={cn(
-            isFlagged &&
-              'border-orange-400 bg-orange-100 text-orange-700 hover:bg-orange-200 dark:border-orange-500 dark:bg-orange-900/40 dark:text-orange-100 dark:hover:bg-orange-900/60',
-          )}
           aria-label={isFlagged ? 'Remove flag' : 'Flag for review'}
           aria-pressed={isFlagged}
         >
