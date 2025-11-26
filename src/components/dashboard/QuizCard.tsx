@@ -18,7 +18,7 @@ export interface QuizCardProps {
 }
 
 function useClickOutside(
-  ref: React.RefObject<HTMLElement>,
+  ref: React.RefObject<HTMLElement | null>,
   isOpen: boolean,
   onClose: () => void,
 ): void {
