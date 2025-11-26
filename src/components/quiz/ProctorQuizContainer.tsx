@@ -243,13 +243,13 @@ export function ProctorQuizContainer({
         mode="proctor"
         sidebar={sidebarContent}
       >
-        <div className="mx-auto max-w-3xl">
+        <div className="mx-auto w-full max-w-3xl min-w-0 overflow-x-hidden">
           <div className="mb-4 lg:hidden">
             <QuestionNavStrip questions={navItems} currentIndex={currentIndex} onNavigate={navigateToQuestion} />
           </div>
 
-          <Card>
-            <CardContent className="p-6 sm:p-8">
+          <Card className="w-full overflow-hidden">
+            <CardContent className="w-full overflow-x-auto p-6 sm:p-8">
               <QuestionDisplay
                 question={currentQuestion}
                 questionNumber={currentIndex + 1}

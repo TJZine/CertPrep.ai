@@ -35,7 +35,7 @@ export function QuestionDisplay({
   return (
     <div className={cn('space-y-4', className)}>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
           <span className="text-sm font-medium text-slate-500 dark:text-slate-300">
             Question {questionNumber} of {totalQuestions}
           </span>
@@ -70,7 +70,7 @@ export function QuestionDisplay({
       </div>
 
       <div
-        className="question-text prose prose-slate max-w-none text-slate-900 dark:prose-invert dark:text-slate-100"
+        className="question-text prose prose-slate max-w-none break-words text-slate-900 dark:prose-invert dark:text-slate-100"
         dangerouslySetInnerHTML={{ __html: sanitizedQuestion }}
         aria-label="Question text"
       />

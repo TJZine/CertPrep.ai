@@ -57,7 +57,7 @@ export function QuizLayout({
   return (
     <div className={cn('min-h-screen bg-slate-50 dark:bg-slate-950', className)}>
       <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur dark:border-slate-800 dark:bg-slate-900/90">
-        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 py-3 sm:px-6">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="icon-sm" onClick={handleExitClick} aria-label="Exit quiz">
               <ArrowLeft className="h-5 w-5" />
@@ -68,11 +68,7 @@ export function QuizLayout({
             </div>
           </div>
 
-          <div className="flex-1 px-4 sm:max-w-md">
-            <ProgressBar current={currentProgress} total={totalQuestions} showFraction size="sm" />
-          </div>
-
-          <div className="flex items-center gap-2">
+          <div className="ml-auto flex items-center gap-2">
             {timerDisplay && (
               <div
                 className={cn(
@@ -106,12 +102,16 @@ export function QuizLayout({
               <X className="h-5 w-5" />
             </Button>
           </div>
+
+          <div className="order-3 w-full sm:order-none sm:max-w-md sm:flex-1">
+            <ProgressBar current={currentProgress} total={totalQuestions} showFraction size="sm" />
+          </div>
         </div>
       </header>
 
-      <div className="mx-auto max-w-7xl">
+      <div className="mx-auto max-w-7xl w-full">
         <div className={cn('flex', sidebar && 'lg:gap-6')}>
-          <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">{children}</main>
+          <main className="flex-1 min-w-0 px-4 py-6 sm:px-6 lg:px-8">{children}</main>
           {sidebar && (
             <aside className="hidden w-64 border-l border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900 lg:block">
               {sidebar}

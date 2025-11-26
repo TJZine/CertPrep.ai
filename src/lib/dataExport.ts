@@ -1,14 +1,60 @@
 import { db } from '@/db';
-import { createQuiz } from '@/db/quizzes';
+import { sanitizeQuestions } from '@/db/quizzes';
+import { sanitizeQuestionText } from '@/lib/sanitize';
 import type { Quiz } from '@/types/quiz';
 import type { Result } from '@/types/result';
-import { validateQuizImport, type QuizImportInput } from '@/validators/quizSchema';
+import { QuizSchema } from '@/validators/quizSchema';
+import { z } from 'zod';
 
 export interface ExportData {
   version: string;
   exportedAt: string;
   quizzes: Quiz[];
   results: Result[];
+}
+
+const ResultImportSchema = z.object({
+  id: z.string(),
+  quiz_id: z.string(),
+  timestamp: z.number().int().nonnegative(),
+  mode: z.enum(['zen', 'proctor']),
+  score: z.number(),
+  time_taken_seconds: z.number().nonnegative(),
+  answers: z.record(z.string(), z.string()).default({}),
+  flagged_questions: z.array(z.string()).default([]),
+  category_breakdown: z.record(z.string(), z.number()).default({}),
+});
+
+const QuizBackupSchema = QuizSchema.extend({
+  sourceId: z.string().optional(),
+});
+
+function sanitizeQuizRecord(quiz: Quiz): Quiz | null {
+  const parsed = QuizBackupSchema.safeParse(quiz);
+
+  if (!parsed.success) {
+    console.error('Skipped invalid quiz during import:', quiz.id, parsed.error);
+    return null;
+  }
+
+  return {
+    ...parsed.data,
+    title: sanitizeQuestionText(parsed.data.title),
+    description: sanitizeQuestionText(parsed.data.description ?? ''),
+    tags: (parsed.data.tags ?? []).map((tag) => sanitizeQuestionText(tag)),
+    questions: sanitizeQuestions(parsed.data.questions),
+  };
+}
+
+function sanitizeResultRecord(result: Result): Result | null {
+  const parsed = ResultImportSchema.safeParse(result);
+
+  if (!parsed.success) {
+    console.error('Skipped invalid result during import:', result.id, parsed.error);
+    return null;
+  }
+
+  return parsed.data;
 }
 
 /**
@@ -64,48 +110,86 @@ export async function importData(
   data: ExportData,
   mode: 'merge' | 'replace' = 'merge',
 ): Promise<{ quizzesImported: number; resultsImported: number }> {
-  if (mode === 'replace') {
-    await db.quizzes.clear();
-    await db.results.clear();
+  const sanitizedQuizzes: Quiz[] = [];
+  const quizIds = new Set<string>();
+
+  for (const quiz of data.quizzes) {
+    const sanitizedQuiz = sanitizeQuizRecord(quiz);
+    if (!sanitizedQuiz) continue;
+    if (quizIds.has(sanitizedQuiz.id)) {
+      console.warn('Skipped duplicate quiz id during import:', sanitizedQuiz.id);
+      continue;
+    }
+    sanitizedQuizzes.push(sanitizedQuiz);
+    quizIds.add(sanitizedQuiz.id);
+  }
+
+  const existingQuizIds =
+    mode === 'merge'
+      ? new Set<string>((await db.quizzes.toArray()).map((quiz) => quiz.id))
+      : new Set<string>();
+  const allowedQuizIds = new Set<string>([...quizIds, ...existingQuizIds]);
+
+  const sanitizedResults: Result[] = [];
+  const resultIds = new Set<string>();
+
+  for (const result of data.results) {
+    const sanitizedResult = sanitizeResultRecord(result);
+    if (!sanitizedResult) continue;
+    if (!allowedQuizIds.has(sanitizedResult.quiz_id)) {
+      console.warn('Skipped result referencing missing quiz during import:', sanitizedResult.id);
+      continue;
+    }
+    if (resultIds.has(sanitizedResult.id)) {
+      console.warn('Skipped duplicate result id during import:', sanitizedResult.id);
+      continue;
+    }
+    sanitizedResults.push(sanitizedResult);
+    resultIds.add(sanitizedResult.id);
   }
 
   let quizzesImported = 0;
   let resultsImported = 0;
 
-  for (const quiz of data.quizzes) {
-    try {
-      // Validate and sanitize via existing quiz import pipeline
-      const validation = validateQuizImport(quiz as QuizImportInput);
-      if (!validation.success || !validation.data) {
-        console.error('Skipped invalid quiz during import:', quiz.id);
-        continue;
+  if (mode === 'replace') {
+    if (sanitizedQuizzes.length === 0 && sanitizedResults.length === 0) {
+      throw new Error('Import aborted: no valid quizzes or results to import.');
+    }
+
+    await db.transaction('rw', db.quizzes, db.results, async () => {
+      await Promise.all([db.quizzes.clear(), db.results.clear()]);
+      if (sanitizedQuizzes.length > 0) {
+        await db.quizzes.bulkPut(sanitizedQuizzes);
+        quizzesImported = sanitizedQuizzes.length;
       }
 
-      const sanitizedQuiz = await createQuiz(validation.data);
-
-      if (mode === 'merge') {
-        const existing = await db.quizzes.get(sanitizedQuiz.id);
-        if (existing) continue;
+      const replaceResults = sanitizedResults.filter((result) => quizIds.has(result.quiz_id));
+      if (replaceResults.length > 0) {
+        await db.results.bulkPut(replaceResults);
+        resultsImported = replaceResults.length;
       }
-      await db.quizzes.add(sanitizedQuiz);
+    });
+
+    return { quizzesImported, resultsImported };
+  }
+
+  await db.transaction('rw', db.quizzes, db.results, async () => {
+    for (const quiz of sanitizedQuizzes) {
+      const existing = await db.quizzes.get(quiz.id);
+      if (existing) continue;
+      await db.quizzes.put(quiz);
       quizzesImported += 1;
-    } catch (error) {
-      console.error('Failed to import quiz:', quiz.id, error);
+      existingQuizIds.add(quiz.id);
     }
-  }
 
-  for (const result of data.results) {
-    try {
-      if (mode === 'merge') {
-        const existing = await db.results.get(result.id);
-        if (existing) continue;
-      }
-      await db.results.add(result);
+    for (const result of sanitizedResults) {
+      if (!existingQuizIds.has(result.quiz_id)) continue;
+      const existing = await db.results.get(result.id);
+      if (existing) continue;
+      await db.results.put(result);
       resultsImported += 1;
-    } catch (error) {
-      console.error('Failed to import result:', result.id, error);
     }
-  }
+  });
 
   return { quizzesImported, resultsImported };
 }
