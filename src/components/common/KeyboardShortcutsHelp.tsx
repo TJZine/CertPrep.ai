@@ -32,19 +32,19 @@ export function KeyboardShortcutsHelp({ isOpen, onClose }: KeyboardShortcutsHelp
       <div className="space-y-6">
         {Object.entries(shortcuts).map(([category, items]) => (
           <div key={category}>
-            <h3 className="mb-3 font-semibold text-slate-900">{category}</h3>
+            <h3 className="mb-3 font-semibold text-slate-900 dark:text-slate-100">{category}</h3>
             <div className="space-y-2">
               {items.map((item, index) => (
                 <div
                   key={item.description + index}
-                  className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2"
+                  className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 dark:bg-slate-800"
                 >
-                  <span className="text-sm text-slate-600">{item.description}</span>
+                  <span className="text-sm text-slate-600 dark:text-slate-200">{item.description}</span>
                   <div className="flex gap-1">
                     {item.keys.map((key) => (
                       <kbd
                         key={key}
-                        className="rounded bg-slate-200 px-2 py-1 font-mono text-xs text-slate-700"
+                        className="rounded bg-slate-200 px-2 py-1 font-mono text-xs text-slate-700 dark:bg-slate-700 dark:text-slate-100"
                       >
                         {key}
                       </kbd>

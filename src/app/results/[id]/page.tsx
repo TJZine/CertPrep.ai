@@ -39,7 +39,7 @@ export default function ResultsPage(): React.ReactElement {
 
   if (!isInitialized || resultLoading || quizLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
         <LoadingSpinner size="lg" text="Loading your results..." />
       </div>
     );
@@ -47,11 +47,11 @@ export default function ResultsPage(): React.ReactElement {
 
   if (dbError) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
-        <div className="max-w-md rounded-lg border border-red-200 bg-white p-6 text-center shadow-sm">
-          <AlertCircle className="mx-auto h-12 w-12 text-red-500" aria-hidden="true" />
-          <h1 className="mt-4 text-xl font-semibold text-slate-900">Database Error</h1>
-          <p className="mt-2 text-sm text-slate-600">{dbError.message}</p>
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4 dark:bg-slate-950">
+        <div className="max-w-md rounded-lg border border-red-200 bg-white p-6 text-center shadow-sm dark:border-red-500/60 dark:bg-red-950">
+          <AlertCircle className="mx-auto h-12 w-12 text-red-500 dark:text-red-200" aria-hidden="true" />
+          <h1 className="mt-4 text-xl font-semibold text-slate-900 dark:text-slate-50">Database Error</h1>
+          <p className="mt-2 text-sm text-slate-600 dark:text-slate-200">{dbError.message}</p>
           <Button className="mt-6" onClick={() => router.push('/')} leftIcon={<ArrowLeft className="h-4 w-4" aria-hidden="true" />}>
             Back to Dashboard
           </Button>
@@ -62,11 +62,11 @@ export default function ResultsPage(): React.ReactElement {
 
   if (!result) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
-        <div className="max-w-md rounded-lg border border-slate-200 bg-white p-6 text-center shadow-sm">
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4 dark:bg-slate-950">
+        <div className="max-w-md rounded-lg border border-slate-200 bg-white p-6 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <AlertCircle className="mx-auto h-12 w-12 text-amber-500" aria-hidden="true" />
-          <h1 className="mt-4 text-xl font-semibold text-slate-900">Result Not Found</h1>
-          <p className="mt-2 text-sm text-slate-600">This result doesn&apos;t exist or may have been deleted.</p>
+          <h1 className="mt-4 text-xl font-semibold text-slate-900 dark:text-slate-50">Result Not Found</h1>
+          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">This result doesn&apos;t exist or may have been deleted.</p>
           <Button className="mt-6" onClick={() => router.push('/')} leftIcon={<ArrowLeft className="h-4 w-4" aria-hidden="true" />}>
             Back to Dashboard
           </Button>
@@ -77,14 +77,14 @@ export default function ResultsPage(): React.ReactElement {
 
   if (!quiz) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
-        <div className="max-w-md rounded-lg border border-slate-200 bg-white p-6 text-center shadow-sm">
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4 dark:bg-slate-950">
+        <div className="max-w-md rounded-lg border border-slate-200 bg-white p-6 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <AlertCircle className="mx-auto h-12 w-12 text-amber-500" aria-hidden="true" />
-          <h1 className="mt-4 text-xl font-semibold text-slate-900">Quiz Not Found</h1>
-          <p className="mt-2 text-sm text-slate-600">The quiz associated with this result has been deleted.</p>
-          <div className="mt-2 rounded-lg bg-slate-50 p-3">
-            <p className="text-sm text-slate-600">
-              Your score was: <span className="font-bold">{result.score}%</span>
+          <h1 className="mt-4 text-xl font-semibold text-slate-900 dark:text-slate-50">Quiz Not Found</h1>
+          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">The quiz associated with this result has been deleted.</p>
+          <div className="mt-2 rounded-lg bg-slate-50 p-3 dark:bg-slate-800">
+            <p className="text-sm text-slate-600 dark:text-slate-200">
+              Your score was: <span className="font-bold text-slate-900 dark:text-slate-50">{result.score}%</span>
             </p>
           </div>
           <Button className="mt-6" onClick={() => router.push('/')} leftIcon={<ArrowLeft className="h-4 w-4" aria-hidden="true" />}>
@@ -98,11 +98,11 @@ export default function ResultsPage(): React.ReactElement {
   return (
     <ErrorBoundary
       fallback={
-        <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
-          <div className="max-w-md rounded-lg border border-red-200 bg-white p-6 text-center shadow-sm">
-            <AlertCircle className="mx-auto h-12 w-12 text-red-500" aria-hidden="true" />
-            <h1 className="mt-4 text-xl font-semibold text-slate-900">Something Went Wrong</h1>
-            <p className="mt-2 text-sm text-slate-600">An error occurred while displaying your results.</p>
+        <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4 dark:bg-slate-950">
+          <div className="max-w-md rounded-lg border border-red-200 bg-white p-6 text-center shadow-sm dark:border-red-500/60 dark:bg-red-950">
+            <AlertCircle className="mx-auto h-12 w-12 text-red-500 dark:text-red-200" aria-hidden="true" />
+            <h1 className="mt-4 text-xl font-semibold text-slate-900 dark:text-slate-50">Something Went Wrong</h1>
+            <p className="mt-2 text-sm text-slate-600 dark:text-slate-200">An error occurred while displaying your results.</p>
             <Button className="mt-6" onClick={() => router.push('/')} leftIcon={<ArrowLeft className="h-4 w-4" aria-hidden="true" />}>
               Back to Dashboard
             </Button>

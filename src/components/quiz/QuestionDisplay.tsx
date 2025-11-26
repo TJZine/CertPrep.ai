@@ -36,7 +36,7 @@ export function QuestionDisplay({
     <div className={cn('space-y-4', className)}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-slate-500">
+          <span className="text-sm font-medium text-slate-500 dark:text-slate-300">
             Question {questionNumber} of {totalQuestions}
           </span>
           <Badge variant="secondary">{question.category}</Badge>
@@ -70,15 +70,15 @@ export function QuestionDisplay({
       </div>
 
       <div
-        className="question-text prose prose-slate max-w-none"
+        className="question-text prose prose-slate max-w-none text-slate-900 dark:prose-invert dark:text-slate-100"
         dangerouslySetInnerHTML={{ __html: sanitizedQuestion }}
         aria-label="Question text"
       />
 
       {question.user_notes && (
-        <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
-          <p className="text-xs font-medium text-blue-700">Your Notes:</p>
-          <p className="mt-1 text-sm text-blue-800">{question.user_notes}</p>
+        <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-800/70 dark:bg-blue-900/20">
+          <p className="text-xs font-medium text-blue-700 dark:text-blue-200">Your Notes:</p>
+          <p className="mt-1 text-sm text-blue-800 dark:text-blue-100">{question.user_notes}</p>
         </div>
       )}
     </div>

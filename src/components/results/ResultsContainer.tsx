@@ -164,16 +164,16 @@ export function ResultsContainer({ result, quiz, previousScore }: ResultsContain
   }, [result.score]);
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="no-print sticky top-0 z-40 border-b border-slate-200 bg-white">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+      <header className="no-print sticky top-0 z-40 border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/95">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="icon-sm" onClick={handleBackToDashboard} aria-label="Back to dashboard">
               <ArrowLeft className="h-5 w-5" aria-hidden="true" />
             </Button>
             <div>
-              <h1 className="line-clamp-1 text-sm font-semibold text-slate-900">{quiz.title}</h1>
-              <p className="text-xs text-slate-500">Results</p>
+              <h1 className="line-clamp-1 text-sm font-semibold text-slate-900 dark:text-slate-50">{quiz.title}</h1>
+              <p className="text-xs text-slate-500 dark:text-slate-300">Results</p>
             </div>
           </div>
 
@@ -188,7 +188,7 @@ export function ResultsContainer({ result, quiz, previousScore }: ResultsContain
               variant="ghost"
               size="sm"
               onClick={() => setShowDeleteModal(true)}
-              className="text-red-600 hover:bg-red-50 hover:text-red-700"
+              className="text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-300 dark:hover:bg-red-900/40 dark:hover:text-red-100"
               aria-label="Delete result"
             >
               <Trash2 className="h-4 w-4" aria-hidden="true" />
@@ -248,7 +248,7 @@ export function ResultsContainer({ result, quiz, previousScore }: ResultsContain
         />
 
         <div id="question-review" className="print-break">
-          <h2 className="mb-4 text-xl font-semibold text-slate-900">Question Review</h2>
+          <h2 className="mb-4 text-xl font-semibold text-slate-900 dark:text-slate-50">Question Review</h2>
           <QuestionReviewList
             questions={questionsWithAnswers}
             defaultFilter={missedQuestions.length > 0 ? 'incorrect' : 'all'}

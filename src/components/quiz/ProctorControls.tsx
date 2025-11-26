@@ -52,13 +52,14 @@ export function ProctorControls({
         )}
       </div>
 
-      <div className="flex items-center justify-between gap-4">
+      <div className="grid grid-cols-[1fr,auto,1fr] items-center gap-4 text-center">
         <Button
           variant="outline"
           onClick={onPrevious}
           disabled={isFirstQuestion}
           leftIcon={<ChevronLeft className="h-4 w-4" />}
           aria-label="Previous question"
+          className="justify-self-start"
         >
           <span className="hidden sm:inline">Previous</span>
         </Button>
@@ -68,15 +69,13 @@ export function ProctorControls({
           onClick={onToggleFlag}
           aria-label={isFlagged ? 'Remove flag' : 'Flag for review'}
           aria-pressed={isFlagged}
+          leftIcon={isFlagged ? <Flag className="h-4 w-4 fill-current" /> : <FlagOff className="h-4 w-4" />}
+          className="justify-self-center"
         >
           {isFlagged ? (
-            <>
-              <Flag className="mr-2 h-4 w-4 fill-current" />
-              Flagged
-            </>
+            'Flagged'
           ) : (
             <>
-              <FlagOff className="mr-2 h-4 w-4" />
               <span className="hidden sm:inline">Mark for Review</span>
               <span className="sm:hidden">Flag</span>
             </>
@@ -89,6 +88,7 @@ export function ProctorControls({
           disabled={isLastQuestion}
           rightIcon={<ChevronRight className="h-4 w-4" />}
           aria-label="Next question"
+          className="justify-self-end"
         >
           <span className="hidden sm:inline">Next</span>
         </Button>

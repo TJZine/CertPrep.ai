@@ -78,7 +78,7 @@ export function QuestionNavGrid({
         </div>
       </div>
 
-      <div className="grid grid-cols-5 gap-1.5" role="navigation" aria-label="Question navigation">
+      <div className="grid grid-cols-5 gap-1.5 p-1" role="navigation" aria-label="Question navigation">
         {questions.map((question) => {
           const isCurrent = question.index === currentIndex;
           return (
@@ -87,9 +87,9 @@ export function QuestionNavGrid({
               type="button"
               onClick={() => onNavigate(question.index)}
               className={cn(
-                'relative flex h-9 w-9 items-center justify-center rounded-md text-sm font-medium transition-all',
+                'relative flex h-9 w-9 items-center justify-center rounded-md border border-transparent text-sm font-medium transition-all',
                 statusStyles[question.status],
-                isCurrent && 'ring-2 ring-slate-900 ring-offset-1 dark:ring-slate-200',
+                isCurrent && 'border-2 border-slate-900 shadow-sm dark:border-slate-100',
               )}
               aria-label={`Question ${question.index + 1}: ${statusLabels[question.status]}`}
               aria-current={isCurrent ? 'step' : undefined}
@@ -194,9 +194,9 @@ export function QuestionNavStrip({
             data-index={question.index}
             onClick={() => onNavigate(question.index)}
             className={cn(
-              'flex h-8 w-8 flex-shrink-0 items-center justify-center rounded text-xs font-medium transition-all',
+              'flex h-8 w-8 flex-shrink-0 items-center justify-center rounded border border-transparent text-xs font-medium transition-all',
               statusStyles[question.status],
-              isCurrent && 'ring-2 ring-slate-900 dark:ring-slate-200',
+              isCurrent && 'border-2 border-slate-900 shadow-sm dark:border-slate-100',
             )}
             aria-current={isCurrent ? 'step' : undefined}
           >

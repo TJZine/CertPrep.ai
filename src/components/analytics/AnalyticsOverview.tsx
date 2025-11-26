@@ -23,21 +23,74 @@ interface AnalyticsOverviewProps {
   className?: string;
 }
 
+function useIsDarkMode(): boolean {
+  const [isDark, setIsDark] = React.useState(false);
+
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const media = window.matchMedia('(prefers-color-scheme: dark)');
+    const update = (): void => {
+      const hasDarkClass = document.documentElement.classList.contains('dark');
+      setIsDark(hasDarkClass || media.matches);
+    };
+
+    update();
+
+    const handleChange = (event: MediaQueryListEvent): void => {
+      const hasDarkClass = document.documentElement.classList.contains('dark');
+      setIsDark(hasDarkClass || event.matches);
+    };
+
+    media.addEventListener?.('change', handleChange);
+    media.addListener?.(handleChange);
+
+    const observer = new MutationObserver(update);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+
+    return (): void => {
+      media.removeEventListener?.('change', handleChange);
+      media.removeListener?.(handleChange);
+      observer.disconnect();
+    };
+  }, []);
+
+  return isDark;
+}
+
 /**
  * Overview stat cards for analytics.
  */
 export function AnalyticsOverview({ stats, className }: AnalyticsOverviewProps): React.ReactElement {
   const statCards = [
-    { label: 'Total Quizzes', value: stats.totalQuizzes, icon: BookOpen, color: 'text-blue-600', bgColor: 'bg-blue-100' },
-    { label: 'Total Attempts', value: stats.totalAttempts, icon: Target, color: 'text-green-600', bgColor: 'bg-green-100' },
+    {
+      label: 'Total Quizzes',
+      value: stats.totalQuizzes,
+      icon: BookOpen,
+      color: 'text-blue-600 dark:text-blue-200',
+      bgColor: 'bg-blue-100 dark:bg-blue-900/30',
+    },
+    {
+      label: 'Total Attempts',
+      value: stats.totalAttempts,
+      icon: Target,
+      color: 'text-green-600 dark:text-green-200',
+      bgColor: 'bg-green-100 dark:bg-green-900/30',
+    },
     {
       label: 'Average Score',
       value: stats.totalAttempts > 0 ? `${stats.averageScore}%` : '-',
       icon: Award,
-      color: 'text-amber-600',
-      bgColor: 'bg-amber-100',
+      color: 'text-amber-600 dark:text-amber-200',
+      bgColor: 'bg-amber-100 dark:bg-amber-900/30',
     },
-    { label: 'Study Time', value: formatTime(stats.totalStudyTime), icon: Clock, color: 'text-purple-600', bgColor: 'bg-purple-100' },
+    {
+      label: 'Study Time',
+      value: formatTime(stats.totalStudyTime),
+      icon: Clock,
+      color: 'text-purple-600 dark:text-purple-200',
+      bgColor: 'bg-purple-100 dark:bg-purple-900/30',
+    },
   ] as const;
 
   return (
@@ -50,8 +103,8 @@ export function AnalyticsOverview({ stats, className }: AnalyticsOverviewProps):
                 <stat.icon className={cn('h-6 w-6', stat.color)} aria-hidden="true" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-slate-900">{stat.value}</p>
-                <p className="text-sm text-slate-500">{stat.label}</p>
+                <p className="text-2xl font-bold text-slate-900 dark:text-slate-50">{stat.value}</p>
+                <p className="text-sm text-slate-500 dark:text-slate-300">{stat.label}</p>
               </div>
             </CardContent>
           </Card>
@@ -70,6 +123,7 @@ interface ScoreDistributionProps {
  * Pie chart showing distribution of scores.
  */
 export function ScoreDistribution({ results, className }: ScoreDistributionProps): React.ReactElement {
+  const isDark = useIsDarkMode();
   const distribution = React.useMemo(() => {
     const ranges = [
       { name: '90-100%', min: 90, max: 100, color: '#22c55e' },
@@ -95,7 +149,7 @@ export function ScoreDistribution({ results, className }: ScoreDistributionProps
           <CardTitle>Score Distribution</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-center text-slate-500">No data yet</p>
+          <p className="text-center text-slate-500 dark:text-slate-300">No data yet</p>
         </CardContent>
       </Card>
     );
@@ -126,16 +180,24 @@ export function ScoreDistribution({ results, className }: ScoreDistributionProps
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Pie>
-              <Tooltip formatter={(value: number) => [`${value} attempts`, 'Count']} />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
+          <Tooltip
+            formatter={(value: number) => [`${value} attempts`, 'Count']}
+            contentStyle={{
+              backgroundColor: isDark ? '#0f172a' : '#ffffff',
+              border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`,
+              borderRadius: '8px',
+              color: isDark ? '#e2e8f0' : '#0f172a',
+            }}
+          />
+        </PieChart>
+      </ResponsiveContainer>
+    </div>
 
         <div className="mt-4 flex flex-wrap justify-center gap-4">
           {distribution.map((entry) => (
             <div key={entry.name} className="flex items-center gap-2">
               <span className="h-3 w-3 rounded-full" style={{ backgroundColor: entry.color }} />
-              <span className="text-sm text-slate-600">{entry.name}</span>
+              <span className="text-sm text-slate-600 dark:text-slate-200">{entry.name}</span>
             </div>
           ))}
         </div>
@@ -153,6 +215,12 @@ interface StudyTimeChartProps {
  * Bar chart of study time per day.
  */
 export function StudyTimeChart({ dailyData, className }: StudyTimeChartProps): React.ReactElement {
+  const isDark = useIsDarkMode();
+  const tickColor = isDark ? '#cbd5e1' : '#64748b';
+  const gridColor = isDark ? '#1f2937' : '#e2e8f0';
+  const tooltipBg = isDark ? '#0f172a' : '#ffffff';
+  const tooltipBorder = isDark ? '#334155' : '#e2e8f0';
+
   if (dailyData.length === 0) {
     return (
       <Card className={className}>
@@ -160,7 +228,7 @@ export function StudyTimeChart({ dailyData, className }: StudyTimeChartProps): R
           <CardTitle>Study Activity</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-center text-slate-500">No study data yet</p>
+          <p className="text-center text-slate-500 dark:text-slate-300">No study data yet</p>
         </CardContent>
       </Card>
     );
@@ -176,12 +244,17 @@ export function StudyTimeChart({ dailyData, className }: StudyTimeChartProps): R
         <div className="h-[250px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={dailyData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis dataKey="date" tick={{ fill: '#64748b', fontSize: 12 }} tickLine={false} />
-              <YAxis tick={{ fill: '#64748b', fontSize: 12 }} tickLine={false} axisLine={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
+              <XAxis dataKey="date" tick={{ fill: tickColor, fontSize: 12 }} tickLine={false} />
+              <YAxis tick={{ fill: tickColor, fontSize: 12 }} tickLine={false} axisLine={false} />
               <Tooltip
                 formatter={(value: number) => [`${value} min`, 'Study Time']}
-                contentStyle={{ backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '8px' }}
+                contentStyle={{
+                  backgroundColor: tooltipBg,
+                  border: `1px solid ${tooltipBorder}`,
+                  borderRadius: '8px',
+                  color: tickColor,
+                }}
               />
               <Bar dataKey="minutes" fill="#3b82f6" radius={[4, 4, 0, 0]} />
             </BarChart>

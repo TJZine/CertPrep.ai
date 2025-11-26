@@ -155,7 +155,7 @@ export function SmartActions({
             <Sparkles className="h-5 w-5 text-amber-500" aria-hidden="true" />
             Smart Actions
           </CardTitle>
-          <CardDescription>AI-powered tools to improve your weak areas</CardDescription>
+          <CardDescription className="dark:text-slate-300">AI-powered tools to improve your weak areas</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -166,15 +166,15 @@ export function SmartActions({
               className={cn(
                 'flex flex-col items-center rounded-lg border-2 border-dashed p-6 text-center transition-colors',
                 hasMissedQuestions
-                  ? 'border-slate-300 hover:border-blue-400 hover:bg-blue-50'
-                  : 'border-slate-200 bg-slate-50 opacity-60 cursor-not-allowed',
+                  ? 'border-slate-300 hover:border-blue-400 hover:bg-blue-50 dark:border-slate-600 dark:hover:border-blue-500 dark:hover:bg-blue-900/20'
+                  : 'border-slate-200 bg-slate-50 opacity-60 cursor-not-allowed dark:border-slate-700 dark:bg-slate-900',
               )}
             >
-              <div className="mb-3 rounded-full bg-red-100 p-3">
-                <Target className="h-6 w-6 text-red-600" aria-hidden="true" />
+              <div className="mb-3 rounded-full bg-red-100 p-3 dark:bg-red-900/40">
+                <Target className="h-6 w-6 text-red-600 dark:text-red-200" aria-hidden="true" />
               </div>
-              <h3 className="font-semibold text-slate-900">Review Missed</h3>
-              <p className="mt-1 text-sm text-slate-500">
+              <h3 className="font-semibold text-slate-900 dark:text-slate-100">Review Missed</h3>
+              <p className="mt-1 text-sm text-slate-500 dark:text-slate-300">
                 {hasMissedQuestions ? `${missedQuestions.length} questions to review` : 'No missed questions!'}
               </p>
             </button>
@@ -186,19 +186,19 @@ export function SmartActions({
               className={cn(
                 'flex flex-col items-center rounded-lg border-2 border-dashed p-6 text-center transition-colors',
                 hasMissedQuestions
-                  ? 'border-slate-300 hover:border-purple-400 hover:bg-purple-50'
-                  : 'border-slate-200 bg-slate-50 opacity-60 cursor-not-allowed',
+                  ? 'border-slate-300 hover:border-purple-400 hover:bg-purple-50 dark:border-slate-600 dark:hover:border-purple-500 dark:hover:bg-purple-900/20'
+                  : 'border-slate-200 bg-slate-50 opacity-60 cursor-not-allowed dark:border-slate-700 dark:bg-slate-900',
               )}
             >
-              <div className="mb-3 rounded-full bg-purple-100 p-3">
+              <div className="mb-3 rounded-full bg-purple-100 p-3 dark:bg-purple-900/40">
                 {copied ? (
-                  <Check className="h-6 w-6 text-purple-600" aria-hidden="true" />
+                  <Check className="h-6 w-6 text-purple-600 dark:text-purple-200" aria-hidden="true" />
                 ) : (
-                  <Brain className="h-6 w-6 text-purple-600" aria-hidden="true" />
+                  <Brain className="h-6 w-6 text-purple-600 dark:text-purple-200" aria-hidden="true" />
                 )}
               </div>
-              <h3 className="font-semibold text-slate-900">{copied ? 'Copied!' : 'AI Study Plan'}</h3>
-              <p className="mt-1 text-sm text-slate-500">
+              <h3 className="font-semibold text-slate-900 dark:text-slate-100">{copied ? 'Copied!' : 'AI Study Plan'}</h3>
+              <p className="mt-1 text-sm text-slate-500 dark:text-slate-300">
                 {hasMissedQuestions ? 'Generate prompt for AI tutor' : 'No areas need improvement!'}
               </p>
             </button>
@@ -210,15 +210,15 @@ export function SmartActions({
               className={cn(
                 'flex flex-col items-center rounded-lg border-2 border-dashed p-6 text-center transition-colors',
                 smartRoundQuestionIds.length > 0
-                  ? 'border-slate-300 hover:border-green-400 hover:bg-green-50'
-                  : 'border-slate-200 bg-slate-50 opacity-60 cursor-not-allowed',
+                  ? 'border-slate-300 hover:border-green-400 hover:bg-green-50 dark:border-slate-600 dark:hover:border-green-500 dark:hover:bg-green-900/20'
+                  : 'border-slate-200 bg-slate-50 opacity-60 cursor-not-allowed dark:border-slate-700 dark:bg-slate-900',
               )}
             >
-              <div className="mb-3 rounded-full bg-green-100 p-3">
-                <RotateCcw className="h-6 w-6 text-green-600" aria-hidden="true" />
+              <div className="mb-3 rounded-full bg-green-100 p-3 dark:bg-green-900/40">
+                <RotateCcw className="h-6 w-6 text-green-600 dark:text-green-200" aria-hidden="true" />
               </div>
-              <h3 className="font-semibold text-slate-900">Smart Round</h3>
-              <p className="mt-1 text-sm text-slate-500">
+              <h3 className="font-semibold text-slate-900 dark:text-slate-100">Smart Round</h3>
+              <p className="mt-1 text-sm text-slate-500 dark:text-slate-300">
                 {smartRoundQuestionIds.length > 0
                   ? `Practice ${smartRoundQuestionIds.length} questions`
                   : 'No questions to retry!'}
@@ -227,9 +227,9 @@ export function SmartActions({
           </div>
 
           {!hasMissedQuestions && !hasFlaggedQuestions && (
-            <div className="mt-6 rounded-lg border border-green-200 bg-green-50 p-4 text-center">
-              <p className="font-medium text-green-800">🎉 Perfect score! No areas need improvement.</p>
-              <p className="mt-1 text-sm text-green-600">
+            <div className="mt-6 rounded-lg border border-green-200 bg-green-50 p-4 text-center dark:border-green-800/70 dark:bg-green-900/20">
+              <p className="font-medium text-green-800 dark:text-green-100">🎉 Perfect score! No areas need improvement.</p>
+              <p className="mt-1 text-sm text-green-600 dark:text-green-200">
                 Try a harder quiz or take another attempt to test your consistency.
               </p>
             </div>
