@@ -109,9 +109,9 @@ export function Modal({
   }, [focusFirstElement, isOpen, onClose]);
 
   const handleOverlayClick = (event: React.MouseEvent<HTMLDivElement>): void => {
-    if (overlayRef.current && event.target === overlayRef.current && closeOnOverlayClick) {
-      onClose();
-    }
+    if (!closeOnOverlayClick) return;
+    if (event.target !== event.currentTarget) return;
+    onClose();
   };
 
   if (!isOpen) return null;

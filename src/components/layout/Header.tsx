@@ -68,6 +68,7 @@ export function Header(): React.ReactElement {
       if (event.key === 'Escape') {
         event.preventDefault();
         setIsMenuOpen(false);
+        toggleButtonRef.current?.focus();
         return;
       }
 
@@ -90,6 +91,19 @@ export function Header(): React.ReactElement {
 
     document.addEventListener('keydown', handleKeyDown);
     return (): void => document.removeEventListener('keydown', handleKeyDown);
+  }, [isMenuOpen]);
+
+  React.useEffect(() => {
+    const panel = mobilePanelRef.current;
+    if (!panel) return;
+
+    if (isMenuOpen) {
+      panel.removeAttribute('inert');
+      panel.removeAttribute('aria-hidden');
+    } else {
+      panel.setAttribute('inert', '');
+      panel.setAttribute('aria-hidden', 'true');
+    }
   }, [isMenuOpen]);
 
   return (
@@ -151,7 +165,6 @@ export function Header(): React.ReactElement {
       {/* Mobile nav panel */}
       <div
         ref={mobilePanelRef}
-        aria-hidden={!isMenuOpen}
         className={cn(
           'md:hidden',
           isMenuOpen ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0',

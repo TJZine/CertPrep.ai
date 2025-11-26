@@ -29,11 +29,12 @@ const QuizBackupSchema = QuizSchema.extend({
   sourceId: z.string().optional(),
 });
 
-function sanitizeQuizRecord(quiz: Quiz): Quiz | null {
+function sanitizeQuizRecord(quiz: unknown): Quiz | null {
   const parsed = QuizBackupSchema.safeParse(quiz);
 
   if (!parsed.success) {
-    console.error('Skipped invalid quiz during import:', quiz.id, parsed.error);
+    const maybeQuiz = quiz as { id?: string };
+    console.error('Skipped invalid quiz during import:', maybeQuiz.id, parsed.error);
     return null;
   }
 
@@ -46,11 +47,12 @@ function sanitizeQuizRecord(quiz: Quiz): Quiz | null {
   };
 }
 
-function sanitizeResultRecord(result: Result): Result | null {
+function sanitizeResultRecord(result: unknown): Result | null {
   const parsed = ResultImportSchema.safeParse(result);
 
   if (!parsed.success) {
-    console.error('Skipped invalid result during import:', result.id, parsed.error);
+    const maybeResult = result as { id?: string };
+    console.error('Skipped invalid result during import:', maybeResult.id, parsed.error);
     return null;
   }
 
