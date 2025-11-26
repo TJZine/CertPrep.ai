@@ -16,38 +16,38 @@ npm run start
 ## 1. Dashboard Tests
 
 ### 1.1 Initial State (Empty)
-- [ ] Dashboard loads without errors
-- [ ] "No quizzes yet" empty state displays
-- [ ] Import button is visible and clickable
-- [ ] Header navigation works
-- [ ] Footer displays version and privacy notice
+- [X] Dashboard loads without errors
+- [X] "No quizzes yet" empty state displays
+- [X] Import button is visible and clickable
+- [X] Header navigation works
+- [X] Footer displays version and privacy notice
 
 ### 1.2 Quiz Import
-- [ ] Click "Import Quiz" opens modal
-- [ ] Modal has two tabs: Paste JSON / Upload File
-- [ ] Tab switching works
+- [X] Click "Import Quiz" opens modal
+- [X] Modal has two tabs: Paste JSON / Upload File
+- [X] Tab switching works
 
 #### Paste JSON Tab
 - [ ] Textarea accepts JSON input
-- [ ] Valid JSON shows success indicators:
-  - [ ] "Valid JSON structure" ✓
-  - [ ] "Title: [quiz title]" ✓
-  - [ ] "[N] questions found" ✓
+- [X] Valid JSON shows success indicators:
+  - [X] "Valid JSON structure" ✓
+  - [X] "Title: [quiz title]" ✓
+  - [X] "[N] questions found" ✓
 - [ ] Invalid JSON shows error messages with specific issues
 - [ ] Import button disabled until JSON valid
-- [ ] Clicking Import creates quiz and closes modal
-- [ ] Success toast appears
-- [ ] Quiz card appears in grid
+- [X] Clicking Import creates quiz and closes modal
+- [X] Success toast appears
+- [X] Quiz card appears in grid
 
 #### Upload File Tab
-- [ ] Click to select file works
+- [X] Click to select file works
 - [ ] Drag and drop works
 - [ ] Only .json files accepted
-- [ ] File validation shows results
-- [ ] Import works from file
+- [X] File validation shows results
+- [X] Import works from file
 
 ### 1.3 Quiz Card Display
-- [ ] Title displayed (truncates if long)
+- [X] Title displayed (truncates if long)
 - [ ] Description or question count shown
 - [ ] Tags display (max 3 with "+N" for more)
 - [ ] Stats show: Questions, Attempts, Last Score

@@ -1,0 +1,464 @@
+{
+  "title": "MA Personal Lines Focused Review",
+  "description": "A 30-question practice exam tailored to address identified weak areas (General Insurance, P&C Basics, Regulation) while maintaining proficiency in stronger domains, strictly based on MAIA Personal Lines source material.",
+  "questions": [
+    {
+      "id": "gen-ins-001",
+      "category": "General Insurance",
+      "difficulty": "Easy",
+      "question": "Which of the following terms describes a condition that heightens or increases the possibility of a loss arising?",
+      "options": {
+        "A": "Peril",
+        "B": "Risk",
+        "C": "Hazard",
+        "D": "Indemnity"
+      },
+      "correct_answer": "C",
+      "explanation": "A hazard is defined as a condition that heightens or increases the chance of a loss arising. For example, a pile of oily rags in a garage is a physical hazard that increases the chance of a fire.",
+      "distractor_logic": "Option A (Peril) is the actual cause of the loss (e.g., fire). Option B (Risk) is the uncertainty concerning possible loss. Option D (Indemnity) is the principle of restoring the insured to their pre-loss financial condition."
+    },
+    {
+      "id": "gen-ins-002",
+      "category": "General Insurance",
+      "difficulty": "Medium",
+      "question": "All of the following are elements required for a risk to be insurable EXCEPT:",
+      "options": {
+        "A": "The loss must be catastrophic in nature",
+        "B": "The loss must be measurable and definite",
+        "C": "The loss must be accidental",
+        "D": "The law of large numbers must be applicable"
+      },
+      "correct_answer": "A",
+      "explanation": "Insurable risks must NOT be catastrophic (like war or nuclear hazard) because such losses could bankrupt the insurer. Insurers need to avoid concentrating risk to prevent catastrophic payouts.",
+      "distractor_logic": "Options B, C, and D are all required elements of an insurable risk. The loss must be definable financially, unintended/accidental, and part of a large enough pool of similar units for the law of large numbers to apply."
+    },
+    {
+      "id": "gen-ins-003",
+      "category": "General Insurance",
+      "difficulty": "Medium",
+      "question": "An insurance contract is considered aleatory because:",
+      "options": {
+        "A": "It is drawn up by one party and accepted by the other",
+        "B": "One party may recover more in value than they have parted with based on an uncertain future event",
+        "C": "Both parties must tell the truth and act in good faith",
+        "D": "The contract is personal and cannot be assigned without consent"
+      },
+      "correct_answer": "B",
+      "explanation": "Aleatory contracts are characterized by an unequal exchange of value. The insured pays a small premium, and the insurer may pay a large claim if a specific uncertain event occurs. Performance is conditioned upon this future event.",
+      "distractor_logic": "Option A describes a Contract of Adhesion. Option C describes the principle of Utmost Good Faith. Option D describes the Personal nature of the contract."
+    },
+    {
+      "id": "gen-ins-004",
+      "category": "General Insurance",
+      "difficulty": "Hard",
+      "question": "An insured leaves their keys in the ignition of their unlocked car while running into a store. This behavior is best described as what type of hazard?",
+      "options": {
+        "A": "Physical hazard",
+        "B": "Moral hazard",
+        "C": "Morale hazard",
+        "D": "Legal hazard"
+      },
+      "correct_answer": "C",
+      "explanation": "A morale hazard arises from an attitude of indifference or carelessness because one is insured. Leaving keys in an unlocked car demonstrates a careless attitude that increases the chance of loss.",
+      "distractor_logic": "Option A (Physical) refers to physical conditions like a pothole or faulty wiring. Option B (Moral) implies a dishonest character or intent to defraud (like faking a theft). Option D is not a standard hazard classification in this context."
+    },
+    {
+      "id": "pc-basics-005",
+      "category": "Property and Casualty Basics",
+      "difficulty": "Medium",
+      "question": "Under the principle of negligence, all of the following elements must be present to prove legal liability EXCEPT:",
+      "options": {
+        "A": "A legal duty owed to the public",
+        "B": "A breach of that duty",
+        "C": "Intent to cause harm",
+        "D": "Proximate cause linking the breach to the damage"
+      },
+      "correct_answer": "C",
+      "explanation": "Negligence is by definition an unintentional tort. If there is intent to cause harm, it is not negligence; it is an intentional tort. Therefore, intent is NOT a required element of negligence.",
+      "distractor_logic": "Options A, B, and D are the classic four elements of negligence: Duty, Breach, Damages, and Proximate Cause."
+    },
+    {
+      "id": "pc-basics-006",
+      "category": "Property and Casualty Basics",
+      "difficulty": "Hard",
+      "question": "A parent is held legally responsible for damage caused by their minor child. This is an example of:",
+      "options": {
+        "A": "Strict liability",
+        "B": "Vicarious liability",
+        "C": "Absolute liability",
+        "D": "Contributory negligence"
+      },
+      "correct_answer": "B",
+      "explanation": "Vicarious liability (also called imputed liability) occurs when one person is legally responsible for the acts of another due to a special relationship, such as parent/child or employer/employee.",
+      "distractor_logic": "Options A and C (Strict/Absolute liability) apply to dangerous activities or products where fault does not need to be proven. Option D is a defense against negligence, not a type of liability assignment."
+    },
+    {
+      "id": "pc-basics-007",
+      "category": "Property and Casualty Basics",
+      "difficulty": "Medium",
+      "question": "Which valuation method pays the cost to repair or replace damaged property without a deduction for depreciation?",
+      "options": {
+        "A": "Actual Cash Value",
+        "B": "Replacement Cost",
+        "C": "Market Value",
+        "D": "Stated Amount"
+      },
+      "correct_answer": "B",
+      "explanation": "Replacement Cost is the amount needed to replace damaged property with new materials of like kind and quality at today's prices, without deducting for depreciation.",
+      "distractor_logic": "Option A (ACV) is Replacement Cost MINUS depreciation. Option C (Market Value) is what a willing buyer would pay a willing seller. Option D (Stated Amount) is a specific agreed-upon value, often for classic cars."
+    },
+    {
+      "id": "pc-basics-008",
+      "category": "Property and Casualty Basics",
+      "difficulty": "Medium",
+      "question": "A building is considered vacant if it has been empty or unfurnished for how many consecutive days immediately before a loss?",
+      "options": {
+        "A": "30 days",
+        "B": "45 days",
+        "C": "60 days",
+        "D": "90 days"
+      },
+      "correct_answer": "C",
+      "explanation": "Standard property policies generally exclude vandalism and glass breakage if the building has been vacant for more than 60 consecutive days immediately prior to the loss.",
+      "distractor_logic": "Options A, B, and D are incorrect timeframes for the standard vacancy provision found in Dwelling and Homeowners policies."
+    },
+    {
+      "id": "pc-basics-009",
+      "category": "Property and Casualty Basics",
+      "difficulty": "Medium",
+      "question": "Which defense against negligence prevents an injured party from recovering any damages if they were in any way responsible for the loss?",
+      "options": {
+        "A": "Comparative negligence",
+        "B": "Contributory negligence",
+        "C": "Assumption of risk",
+        "D": "Intervening cause"
+      },
+      "correct_answer": "B",
+      "explanation": "Contributory negligence is a strict common law defense that states if the injured party contributed to their own injury in any way (even 1%), they cannot recover damages from the other party.",
+      "distractor_logic": "Option A (Comparative) allows for proportional recovery based on fault. Option C (Assumption of Risk) applies when a person voluntarily exposes themselves to danger. Option D (Intervening Cause) breaks the chain of causation."
+    },
+    {
+      "id": "pc-basics-010",
+      "category": "Property and Casualty Basics",
+      "difficulty": "Hard",
+      "question": "John has a fire policy with a $200,000 limit. He suffers a $60,000 loss. The cost to remove the debris is $5,000. How much will the policy pay?",
+      "options": {
+        "A": "$60,000",
+        "B": "$65,000",
+        "C": "$55,000",
+        "D": "$5,000"
+      },
+      "correct_answer": "B",
+      "explanation": "Debris removal is an additional coverage, but usually included within the policy limit. Since the total of the loss ($60,000) plus the debris removal ($5,000) is $65,000, and this is well within the $200,000 limit, the policy pays the full $65,000.",
+      "distractor_logic": "Option A fails to include the covered debris removal. Option C incorrectly subtracts debris removal. Option D pays only for the debris removal."
+    },
+    {
+      "id": "reg-011",
+      "category": "Insurance Regulation",
+      "difficulty": "Medium",
+      "question": "If an insurer in Massachusetts decides to non-renew a property insurance policy, how many days of written notice must be provided to the insured?",
+      "options": {
+        "A": "10 days",
+        "B": "20 days",
+        "C": "30 days",
+        "D": "45 days"
+      },
+      "correct_answer": "D",
+      "explanation": "According to Massachusetts law, an insurer must provide 45 days written notice to the insured if they intend to non-renew a property insurance policy.",
+      "distractor_logic": "Option A (10 days) is typically for non-payment of premium. Option B (20 days) is the notice required for cancellation of an auto policy or notice to a mortgagee for cancellation. Option C (30 days) is not the standard non-renewal notice period in MA."
+    },
+    {
+      "id": "reg-012",
+      "category": "Insurance Regulation",
+      "difficulty": "Easy",
+      "question": "Which of the following entities has the power to issue a Cease and Desist order?",
+      "options": {
+        "A": "The Governor",
+        "B": "The State Legislature",
+        "C": "The Commissioner of Insurance",
+        "D": "The Attorney General"
+      },
+      "correct_answer": "C",
+      "explanation": "The Commissioner of Insurance has the power to issue a Cease and Desist order when they believe a producer or insurer is engaging in unfair sales practices or violating insurance laws.",
+      "distractor_logic": "Option B (Legislature) makes the laws. Option D (Attorney General) prosecutes criminal activity. Option A (Governor) appoints the Commissioner but does not issue these specific regulatory orders."
+    },
+    {
+      "id": "reg-013",
+      "category": "Insurance Regulation",
+      "difficulty": "Medium",
+      "question": "A producer offering a client season tickets to sporting events in exchange for purchasing a policy is guilty of:",
+      "options": {
+        "A": "Twisting",
+        "B": "Rebating",
+        "C": "Defamation",
+        "D": "Coercion"
+      },
+      "correct_answer": "B",
+      "explanation": "Rebating is offering anything of value not specified in the policy contract (like tickets, cash, or gifts) as an inducement to buy insurance.",
+      "distractor_logic": "Option A (Twisting) involves misrepresentation to induce a policy lapse. Option C (Defamation) is making false statements about a competitor. Option D (Coercion) is forcing someone to buy insurance (e.g., as a condition of a loan)."
+    },
+    {
+      "id": "reg-014",
+      "category": "Insurance Regulation",
+      "difficulty": "Medium",
+      "question": "In Massachusetts, a producer license is valid for how many years before it must be renewed?",
+      "options": {
+        "A": "1 year",
+        "B": "2 years",
+        "C": "3 years",
+        "D": "5 years"
+      },
+      "correct_answer": "C",
+      "explanation": "A Massachusetts producer license is issued for a term of three years (triennial) and renews on the holder's birthday.",
+      "distractor_logic": "Options A, B, and D are incorrect renewal periods for Massachusetts producer licenses."
+    },
+    {
+      "id": "reg-015",
+      "category": "Insurance Regulation",
+      "difficulty": "Hard",
+      "question": "Which of the following is NOT considered an unfair claim settlement practice?",
+      "options": {
+        "A": "Refusing to pay claims without conducting a reasonable investigation",
+        "B": "Failing to acknowledge communications regarding claims promptly",
+        "C": "Compelling insureds to institute litigation to recover amounts due",
+        "D": "Refusing to pay a claim when liability is not reasonably clear"
+      },
+      "correct_answer": "D",
+      "explanation": "It is NOT an unfair practice to refuse to pay a claim if liability is not clear or if the claim is not covered. Insurers have a duty to investigate and only pay valid claims.",
+      "distractor_logic": "Options A, B, and C are explicitly listed as unfair claim settlement practices in Massachusetts law (Chapter 176D)."
+    },
+    {
+      "id": "ho-016",
+      "category": "Homeowners Policy",
+      "difficulty": "Medium",
+      "question": "Under a Homeowners policy, Coverage D (Loss of Use) limits are automatically what percentage of Coverage A (Dwelling) in HO-2, HO-3, and HO-5 forms?",
+      "options": {
+        "A": "10%",
+        "B": "20%",
+        "C": "30%",
+        "D": "50%"
+      },
+      "correct_answer": "C",
+      "explanation": "For HO-2, HO-3, and HO-5 policies, Coverage D (Loss of Use) is automatically provided at 30% of the Coverage A limit.",
+      "distractor_logic": "Option A (10%) is the limit for Other Structures (Coverage B). Option D (50%) is the limit for Personal Property (Coverage C). Option B is not a standard percentage for these coverages."
+    },
+    {
+      "id": "ho-017",
+      "category": "Homeowners Policy",
+      "difficulty": "Medium",
+      "question": "Which Homeowners form provides Open Peril (All-Risk) coverage on both the Dwelling/Other Structures AND Personal Property?",
+      "options": {
+        "A": "HO-2",
+        "B": "HO-3",
+        "C": "HO-4",
+        "D": "HO-5"
+      },
+      "correct_answer": "D",
+      "explanation": "The HO-5 Comprehensive Form provides open peril coverage for Coverage A, B, and C (Personal Property). The HO-3 only provides open peril for A and B, while C is named peril.",
+      "distractor_logic": "Option A (HO-2) is Broad Form (Named Peril). Option B (HO-3) is Special Form (Open Peril on dwelling, Named Peril on contents). Option C (HO-4) is the Tenants form (contents only)."
+    },
+    {
+      "id": "ho-018",
+      "category": "Homeowners Policy",
+      "difficulty": "Hard",
+      "question": "All of the following types of property are excluded under Coverage C of the Homeowners policy EXCEPT:",
+      "options": {
+        "A": "Motor vehicles registered for road use",
+        "B": "Business data",
+        "C": "Animals, birds, or fish",
+        "D": "A rowboat or canoe"
+      },
+      "correct_answer": "D",
+      "explanation": "Watercraft, including rowboats and canoes, are covered under Coverage C (subject to special limits). The policy specifically excludes most other motorized vehicles, animals, and business data.",
+      "distractor_logic": "Options A, B, and C are specific exclusions listed in the Coverage C section of the Homeowners policy."
+    },
+    {
+      "id": "ho-019",
+      "category": "Homeowners Policy",
+      "difficulty": "Medium",
+      "question": "What is the special limit of liability for theft of jewelry, watches, and furs in the Homeowners policy?",
+      "options": {
+        "A": "$1,000",
+        "B": "$1,500",
+        "C": "$2,500",
+        "D": "$5,000"
+      },
+      "correct_answer": "B",
+      "explanation": "The unendorsed Homeowners policy includes a special sub-limit of $1,500 for loss by theft of jewelry, watches, and furs.",
+      "distractor_logic": "Option A is often the limit for watercraft trailers. Option C ($2,500) is the limit for silverware or firearms (depending on the edition). Option D is typically the limit for grave markers."
+    },
+    {
+      "id": "ho-020",
+      "category": "Homeowners Policy",
+      "difficulty": "Medium",
+      "question": "Which of the following persons would NOT be eligible for Medical Payments to Others (Coverage F) under a Homeowners policy?",
+      "options": {
+        "A": "A guest who slips on the insured's walkway",
+        "B": "A neighbor injured by the insured's dog",
+        "C": "The named insured who falls off a ladder painting the house",
+        "D": "A residence employee injured in the course of employment"
+      },
+      "correct_answer": "C",
+      "explanation": "Medical Payments to Others (Coverage F) pays for injuries to others. It specifically excludes coverage for the named insured and regular residents of the household (except residence employees).",
+      "distractor_logic": "Options A and B are third parties, so they are eligible. Option D is eligible as long as the injury arises from employment duties and they are not covered by Workers' Compensation."
+    },
+    {
+      "id": "other-021",
+      "category": "Other Coverages and Options",
+      "difficulty": "Medium",
+      "question": "The primary purpose of an Umbrella Liability policy is to:",
+      "options": {
+        "A": "Provide primary coverage for small claims",
+        "B": "Replace the underlying policies entirely",
+        "C": "Provide excess limits and broader coverage than underlying policies",
+        "D": "Cover damage to the insured's own property"
+      },
+      "correct_answer": "C",
+      "explanation": "Umbrella policies serve two main functions: providing high limits of liability above underlying policies (excess) and covering exposures that underlying policies do not (broader coverage, like personal injury).",
+      "distractor_logic": "Option A is incorrect; Umbrellas are excess, not primary. Option B is incorrect; underlying policies must be maintained. Option D is incorrect; Umbrellas are liability policies, not property policies."
+    },
+    {
+      "id": "other-022",
+      "category": "Other Coverages and Options",
+      "difficulty": "Medium",
+      "question": "Under the National Flood Insurance Program (NFIP), the standard waiting period for a new policy to become effective is:",
+      "options": {
+        "A": "7 days",
+        "B": "14 days",
+        "C": "30 days",
+        "D": "60 days"
+      },
+      "correct_answer": "C",
+      "explanation": "There is a standard 30-day waiting period from the time of application to the effective date for NFIP flood insurance, with an exception for loan closings.",
+      "distractor_logic": "Options A, B, and D are incorrect waiting periods. The 30-day wait is designed to prevent people from buying insurance only when a flood is imminent."
+    },
+    {
+      "id": "other-023",
+      "category": "Other Coverages and Options",
+      "difficulty": "Hard",
+      "question": "All of the following are excluded under the standard Flood Insurance policy EXCEPT:",
+      "options": {
+        "A": "Sewer backup not caused by a general flood",
+        "B": "Moisture or mildew that could have been avoided",
+        "C": "Overflow of inland or tidal waters",
+        "D": "Water damage from a burst pipe inside the home"
+      },
+      "correct_answer": "C",
+      "explanation": "The definition of flood specifically includes the overflow of inland or tidal waters. This is the core coverage trigger for the policy.",
+      "distractor_logic": "Options A, B, and D are specific exclusions. Sewer backup is only covered if caused directly by the flood. Burst pipes are covered by Homeowners/Dwelling policies, not Flood."
+    },
+    {
+      "id": "auto-024",
+      "category": "Auto Insurance",
+      "difficulty": "Medium",
+      "question": "Under the Massachusetts Personal Auto Policy, which coverage is Compulsory (mandatory)?",
+      "options": {
+        "A": "Collision (Part 7)",
+        "B": "Bodily Injury to Others (Part 1)",
+        "C": "Medical Payments (Part 6)",
+        "D": "Comprehensive (Part 9)"
+      },
+      "correct_answer": "B",
+      "explanation": "Part 1 (Bodily Injury to Others), Part 2 (PIP), Part 3 (Uninsured Motorist), and Part 4 (Property Damage) are the four Compulsory coverages in MA.",
+      "distractor_logic": "Options A (Collision), C (Medical Payments), and D (Comprehensive) are all Optional coverages under the MA Auto Policy."
+    },
+    {
+      "id": "auto-025",
+      "category": "Auto Insurance",
+      "difficulty": "Medium",
+      "question": "Personal Injury Protection (PIP) will pay what percentage of an injured person's lost wages?",
+      "options": {
+        "A": "50%",
+        "B": "75%",
+        "C": "80%",
+        "D": "100%"
+      },
+      "correct_answer": "B",
+      "explanation": "PIP pays 75% of an injured person's average weekly gross wage if they are out of work due to the accident.",
+      "distractor_logic": "Option A, C, and D are incorrect percentages. 75% is the statutory amount for lost wages under MA PIP."
+    },
+    {
+      "id": "auto-026",
+      "category": "Auto Insurance",
+      "difficulty": "Easy",
+      "question": "The minimum required limit for Property Damage to Others (Part 4) in Massachusetts is:",
+      "options": {
+        "A": "$5,000",
+        "B": "$10,000",
+        "C": "$20,000",
+        "D": "$25,000"
+      },
+      "correct_answer": "A",
+      "explanation": "The compulsory minimum limit for Part 4 Damage to Someone Else's Property is $5,000.",
+      "distractor_logic": "Options B, C, and D are higher optional limits, but $5,000 is the state-mandated minimum."
+    },
+    {
+      "id": "dwelling-027",
+      "category": "Dwelling Policy",
+      "difficulty": "Medium",
+      "question": "Which Dwelling Policy form provides coverage for the peril of Falling Objects?",
+      "options": {
+        "A": "DP-1 Basic Form",
+        "B": "DP-2 Broad Form",
+        "C": "It is not available on any Dwelling form",
+        "D": "Only by endorsement to the DP-1"
+      },
+      "correct_answer": "B",
+      "explanation": "The DP-2 Broad Form includes coverage for falling objects (as part of the broad form perils). The DP-1 Basic Form does not cover this peril.",
+      "distractor_logic": "Option A is incorrect because DP-1 is limited to Fire, Lightning, and Internal Explosion (plus EC/VMM). Option C is incorrect because DP-2 and DP-3 cover it. Option D is incorrect."
+    },
+    {
+      "id": "dwelling-028",
+      "category": "Dwelling Policy",
+      "difficulty": "Hard",
+      "question": "How are losses settled under a DP-1 Basic Form?",
+      "options": {
+        "A": "Replacement Cost",
+        "B": "Agreed Value",
+        "C": "Actual Cash Value (ACV)",
+        "D": "Market Value"
+      },
+      "correct_answer": "C",
+      "explanation": "The DP-1 Basic Form settles property losses on an Actual Cash Value (ACV) basis. It does not offer Replacement Cost coverage.",
+      "distractor_logic": "Option A (Replacement Cost) is available in the DP-2 and DP-3 forms. Option B and D are not standard settlement methods for the basic dwelling form."
+    },
+    {
+      "id": "reg-029",
+      "category": "Insurance Regulation",
+      "difficulty": "Medium",
+      "question": "If a producer is charged with larceny for misappropriating premiums, the potential monetary penalty is not more than:",
+      "options": {
+        "A": "$500",
+        "B": "$1,000",
+        "C": "$5,000",
+        "D": "$10,000"
+      },
+      "correct_answer": "B",
+      "explanation": "Massachusetts law states that the monetary penalty for larceny (misappropriating premiums) is not more than $1,000.",
+      "distractor_logic": "Option A ($500) is a common fine for lesser violations. Option C ($5,000) is associated with operating without insurance. Option D ($10,000) is the fine for violating a Cease and Desist order."
+    },
+    {
+      "id": "pc-basics-030",
+      "category": "Property and Casualty Basics",
+      "difficulty": "Hard",
+      "question": "If an insurer and insured disagree on the amount of a property loss, either party may make a written demand for:",
+      "options": {
+        "A": "Subrogation",
+        "B": "Arbitration",
+        "C": "Appraisal",
+        "D": "Assignment"
+      },
+      "correct_answer": "C",
+      "explanation": "The Appraisal clause is used when the insurer and insured agree that a loss is covered but disagree on the amount (value) of the loss.",
+      "distractor_logic": "Option A (Subrogation) is the transfer of rights of recovery. Option B (Arbitration) is typically used for liability disputes or coverage denials. Option D (Assignment) is transferring the policy to another person."
+    }
+  ],
+  "tags": [
+    "Massachusetts",
+    "Personal Lines",
+    "Insurance Regulation",
+    "Homeowners",
+    "General Insurance",
+    "Property Basics"
+  ]
+}

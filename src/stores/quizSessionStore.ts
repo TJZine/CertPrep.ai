@@ -1,9 +1,13 @@
 'use client';
 
+import * as React from 'react';
+import { enableMapSet } from 'immer';
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { SPACED_REPETITION, TIMER } from '@/lib/constants';
 import type { Question, QuizMode } from '@/types/quiz';
+
+enableMapSet();
 
 // Spaced repetition queue item
 interface QueuedQuestion {
@@ -532,8 +536,18 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
 export const useCurrentQuestion = (): Question | null =>
   useQuizSessionStore((state) => state.getCurrentQuestion());
 
-export const useProgress = (): { current: number; total: number; percentage: number } =>
-  useQuizSessionStore((state) => state.getProgress());
+export const useProgress = (): { current: number; total: number; percentage: number } => {
+  const currentIndex = useQuizSessionStore((state) => state.currentIndex);
+  const hasSubmitted = useQuizSessionStore((state) => state.hasSubmitted);
+  const isComplete = useQuizSessionStore((state) => state.isComplete);
+  const total = useQuizSessionStore((state) => state.questions.length);
+
+  return React.useMemo(() => {
+    const answeredCount = isComplete ? total : Math.min(currentIndex + (hasSubmitted ? 1 : 0), total);
+    const percentage = total > 0 ? Math.round((answeredCount / total) * 100) : 0;
+    return { current: answeredCount, total, percentage };
+  }, [currentIndex, hasSubmitted, isComplete, total]);
+};
 
 export const useIsAnswered = (): boolean => useQuizSessionStore((state) => state.hasSubmitted);
 
@@ -544,20 +558,42 @@ export const useProctorStatus = (): {
   flaggedCount: number;
   unansweredCount: number;
   totalQuestions: number;
-} =>
-  useQuizSessionStore((state) => ({
-    timeRemaining: state.timeRemaining,
-    isTimeWarning: state.isTimeWarning,
-    answeredCount: state.getAnsweredCount(),
-    flaggedCount: state.getFlaggedCount(),
-    unansweredCount: state.getUnansweredCount(),
-    totalQuestions: state.questions.length,
-  }));
+} => {
+  const timeRemaining = useQuizSessionStore((state) => state.timeRemaining);
+  const isTimeWarning = useQuizSessionStore((state) => state.isTimeWarning);
+  const answeredCount = useQuizSessionStore((state) => state.getAnsweredCount());
+  const flaggedCount = useQuizSessionStore((state) => state.getFlaggedCount());
+  const unansweredCount = useQuizSessionStore((state) => state.getUnansweredCount());
+  const totalQuestions = useQuizSessionStore((state) => state.questions.length);
+
+  return React.useMemo(
+    () => ({
+      timeRemaining,
+      isTimeWarning,
+      answeredCount,
+      flaggedCount,
+      unansweredCount,
+      totalQuestions,
+    }),
+    [timeRemaining, isTimeWarning, answeredCount, flaggedCount, unansweredCount, totalQuestions],
+  );
+};
 
 export const useQuestionStatuses = (): Array<{ id: string; status: 'unseen' | 'answered' | 'flagged' | 'seen' }> =>
-  useQuizSessionStore((state) =>
-    state.questions.map((q) => ({
-      id: q.id,
-      status: state.getQuestionStatus(q.id),
-    })),
-  );
+  {
+    const questions = useQuizSessionStore((state) => state.questions);
+    const answeredQuestions = useQuizSessionStore((state) => state.answeredQuestions);
+    const flaggedQuestions = useQuizSessionStore((state) => state.flaggedQuestions);
+    const seenQuestions = useQuizSessionStore((state) => state.seenQuestions);
+
+    return React.useMemo(
+      () =>
+        questions.map((q) => {
+          if (flaggedQuestions.has(q.id)) return { id: q.id, status: 'flagged' as const };
+          if (answeredQuestions.has(q.id)) return { id: q.id, status: 'answered' as const };
+          if (seenQuestions.has(q.id)) return { id: q.id, status: 'seen' as const };
+          return { id: q.id, status: 'unseen' as const };
+        }),
+      [questions, answeredQuestions, flaggedQuestions, seenQuestions],
+    );
+  };

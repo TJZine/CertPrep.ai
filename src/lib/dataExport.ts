@@ -1,6 +1,8 @@
 import { db } from '@/db';
+import { createQuiz } from '@/db/quizzes';
 import type { Quiz } from '@/types/quiz';
 import type { Result } from '@/types/result';
+import { validateQuizImport, type QuizImportInput } from '@/validators/quizSchema';
 
 export interface ExportData {
   version: string;
@@ -51,14 +53,7 @@ export function validateImportData(data: unknown): data is ExportData {
   if (!Array.isArray(obj.quizzes)) return false;
   if (!Array.isArray(obj.results)) return false;
 
-  for (const quiz of obj.quizzes) {
-    if (!quiz || typeof quiz !== 'object') return false;
-    const q = quiz as Record<string, unknown>;
-    if (typeof q.id !== 'string') return false;
-    if (typeof q.title !== 'string') return false;
-    if (!Array.isArray(q.questions)) return false;
-  }
-
+  // Basic shape checks; full validation/sanitization occurs per quiz in importData.
   return true;
 }
 
@@ -79,11 +74,20 @@ export async function importData(
 
   for (const quiz of data.quizzes) {
     try {
+      // Validate and sanitize via existing quiz import pipeline
+      const validation = validateQuizImport(quiz as QuizImportInput);
+      if (!validation.success || !validation.data) {
+        console.error('Skipped invalid quiz during import:', quiz.id);
+        continue;
+      }
+
+      const sanitizedQuiz = await createQuiz(validation.data);
+
       if (mode === 'merge') {
-        const existing = await db.quizzes.get(quiz.id);
+        const existing = await db.quizzes.get(sanitizedQuiz.id);
         if (existing) continue;
       }
-      await db.quizzes.add(quiz);
+      await db.quizzes.add(sanitizedQuiz);
       quizzesImported += 1;
     } catch (error) {
       console.error('Failed to import quiz:', quiz.id, error);

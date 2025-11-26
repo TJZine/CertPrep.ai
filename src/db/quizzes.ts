@@ -10,6 +10,7 @@ export interface CreateQuizInput {
   description?: string;
   questions: Question[];
   tags?: string[];
+  sourceId?: string;
 }
 
 export interface QuizStats {
@@ -52,7 +53,7 @@ export function sanitizeQuestions(questions: Question[]): Question[] {
 /**
  * Validates, sanitizes, and persists a new quiz.
  */
-export async function createQuiz(input: QuizImportInput): Promise<Quiz> {
+export async function createQuiz(input: QuizImportInput, meta?: { sourceId?: string }): Promise<Quiz> {
   const validation = validateQuizImport(input);
 
   if (!validation.success || !validation.data) {
@@ -72,6 +73,7 @@ export async function createQuiz(input: QuizImportInput): Promise<Quiz> {
     questions: sanitizedQuestions,
     tags: sanitizedTags,
     version: validation.data.version ?? 1,
+    sourceId: meta?.sourceId,
   };
 
   await db.quizzes.add(quiz);

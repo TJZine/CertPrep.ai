@@ -29,14 +29,17 @@ interface StatItemProps {
 
 function StatItem({ icon, value, label, className }: StatItemProps): React.ReactElement {
   return (
-    <Card className={cn('border-slate-200', className)}>
+    <Card className={cn('border-slate-200 dark:border-slate-800', className)}>
       <CardContent className="flex items-center gap-4 p-4">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-blue-600" aria-hidden="true">
+        <div
+          className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-blue-600 dark:bg-blue-900/40 dark:text-blue-100"
+          aria-hidden="true"
+        >
           {icon}
         </div>
         <div>
-          <p className="text-2xl font-bold text-slate-900">{value}</p>
-          <p className="text-sm text-slate-500">{label}</p>
+          <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">{value}</p>
+          <p className="text-sm text-slate-500 dark:text-slate-300">{label}</p>
         </div>
       </CardContent>
     </Card>

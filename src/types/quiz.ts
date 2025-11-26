@@ -21,6 +21,7 @@ export interface Quiz {
   questions: Question[];
   tags: string[];
   version: number;
+  sourceId?: string;
 }
 
 export type QuizMode = 'zen' | 'proctor';

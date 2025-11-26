@@ -1,0 +1,390 @@
+{
+  "title": "MA Personal Lines Remediation Exam",
+  "description": "A 25-question practice exam focusing on identified weak areas (General Insurance, P&C Basics, Regulation, Other Coverages) with fresh scenarios and concepts derived from the MAIA source material.",
+  "questions": [
+    {
+      "id": "gen-ins-031",
+      "category": "General Insurance",
+      "difficulty": "Medium",
+      "question": "Which type of agent authority is not explicitly written in a contract but is assumed to be necessary to conduct business?",
+      "options": {
+        "A": "Express authority",
+        "B": "Implied authority",
+        "C": "Apparent authority",
+        "D": "Absolute authority"
+      },
+      "correct_answer": "B",
+      "explanation": "Implied authority is not specifically identified in the agency agreement but is an extension of the agent's regular duties. For example, it is implied that an agent authorized to sell insurance can also collect the initial premium.",
+      "distractor_logic": "Option A (Express) is written in the contract. Option C (Apparent) is what the public perceives the agent to have based on their actions. Option D is not a standard type of authority."
+    },
+    {
+      "id": "gen-ins-032",
+      "category": "General Insurance",
+      "difficulty": "Easy",
+      "question": "If an insurance policy is ambiguous, the court will generally rule in favor of the insured. This is because an insurance policy is a:",
+      "options": {
+        "A": "Contract of Adhesion",
+        "B": "Aleatory Contract",
+        "C": "Unilateral Contract",
+        "D": "Personal Contract"
+      },
+      "correct_answer": "A",
+      "explanation": "A Contract of Adhesion is drawn up by one party (the insurer) and offered on a 'take it or leave it' basis. Since the insured has no say in the wording, any ambiguity is construed against the drafter (the insurer).",
+      "distractor_logic": "Option B (Aleatory) refers to unequal exchange of value. Option C (Unilateral) means only one party makes a legally enforceable promise. Option D (Personal) means it covers the person, not the property."
+    },
+    {
+      "id": "gen-ins-033",
+      "category": "General Insurance",
+      "difficulty": "Medium",
+      "question": "Which risk management technique involves purchasing an insurance policy?",
+      "options": {
+        "A": "Avoidance",
+        "B": "Retention",
+        "C": "Transfer",
+        "D": "Reduction"
+      },
+      "correct_answer": "C",
+      "explanation": "Purchasing insurance is the most common method of Risk Transfer, where the financial burden of a loss is shifted from the individual to the insurance company.",
+      "distractor_logic": "Option A (Avoidance) eliminates the risk entirely. Option B (Retention) involves paying for losses out of pocket (like a deductible). Option D (Reduction) minimizes the severity of a loss (like installing sprinklers)."
+    },
+    {
+      "id": "gen-ins-034",
+      "category": "General Insurance",
+      "difficulty": "Hard",
+      "question": "A producer tells an applicant that a policy covers flood damage when it does not. The applicant relies on this statement and suffers a loss. The insurer is prevented from denying the claim due to:",
+      "options": {
+        "A": "Waiver",
+        "B": "Estoppel",
+        "C": "Indemnity",
+        "D": "Subrogation"
+      },
+      "correct_answer": "B",
+      "explanation": "Estoppel prevents a party from re-asserting a right they previously waived or denied if another party has relied on that statement to their detriment. The insurer is 'estopped' from denying coverage due to the agent's false statement.",
+      "distractor_logic": "Option A (Waiver) is the voluntary relinquishment of a known right. Option C (Indemnity) is the principle of restoring the insured to their pre-loss condition. Option D (Subrogation) is the transfer of recovery rights."
+    },
+    {
+      "id": "gen-ins-035",
+      "category": "General Insurance",
+      "difficulty": "Medium",
+      "question": "Which element of a legal contract represents the value exchanged between the parties?",
+      "options": {
+        "A": "Legal Purpose",
+        "B": "Competent Parties",
+        "C": "Agreement",
+        "D": "Consideration"
+      },
+      "correct_answer": "D",
+      "explanation": "Consideration is the binding force of the contract. For the insured, it is the premium paid and representations made. For the insurer, it is the promise to pay claims.",
+      "distractor_logic": "Option A refers to the contract's legality. Option B refers to the legal capacity of the parties. Option C refers to the Offer and Acceptance."
+    },
+    {
+      "id": "gen-ins-036",
+      "category": "General Insurance",
+      "difficulty": "Easy",
+      "question": "A stock insurer is owned by:",
+      "options": {
+        "A": "Policyholders",
+        "B": "Stockholders",
+        "C": "The State",
+        "D": "The Commissioner"
+      },
+      "correct_answer": "B",
+      "explanation": "A stock insurer is owned by its stockholders (shareholders), who share in the company's profits and losses.",
+      "distractor_logic": "Option A describes a Mutual Insurer. Options C and D refer to government or regulatory bodies."
+    },
+    {
+      "id": "pc-basics-037",
+      "category": "Property and Casualty Basics",
+      "difficulty": "Medium",
+      "question": "Which section of the insurance policy contains the name of the insured, the policy period, and the limits of liability?",
+      "options": {
+        "A": "Insuring Agreement",
+        "B": "Conditions",
+        "C": "Declarations",
+        "D": "Exclusions"
+      },
+      "correct_answer": "C",
+      "explanation": "The Declarations page 'personalizes' the policy, listing who is insured, what is covered, where it is located, when the policy is in force, and how much coverage applies.",
+      "distractor_logic": "Option A describes the insurer's promise to pay. Option B lists the duties of both parties. Option D lists what is NOT covered."
+    },
+    {
+      "id": "pc-basics-038",
+      "category": "Property and Casualty Basics",
+      "difficulty": "Hard",
+      "question": "Damages awarded to a plaintiff for pain and suffering or mental anguish are classified as:",
+      "options": {
+        "A": "Special damages",
+        "B": "General damages",
+        "C": "Punitive damages",
+        "D": "Statutory damages"
+      },
+      "correct_answer": "B",
+      "explanation": "General damages are compensatory damages awarded for intangible, non-economic losses such as pain and suffering, which are difficult to measure in specific dollar amounts.",
+      "distractor_logic": "Option A (Special) covers tangible economic losses like medical bills. Option C (Punitive) is intended to punish the wrongdoer. Option D (Statutory) is set by law."
+    },
+    {
+      "id": "pc-basics-039",
+      "category": "Property and Casualty Basics",
+      "difficulty": "Medium",
+      "question": "A fire burns a tire store, and the smoke damages the inventory of a clothing store next door. For the clothing store, this is an example of:",
+      "options": {
+        "A": "Indirect loss",
+        "B": "Direct loss",
+        "C": "Consequential loss",
+        "D": "Proximate loss"
+      },
+      "correct_answer": "B",
+      "explanation": "Smoke damage to the inventory is a Direct Loss (physical damage) caused by the peril of fire/smoke. An indirect loss would be the loss of income while the store is closed for repairs.",
+      "distractor_logic": "Options A and C (Indirect/Consequential) refer to financial loss resulting from the loss of use of the property, not the physical damage itself. Option D is not a standard loss classification."
+    },
+    {
+      "id": "pc-basics-040",
+      "category": "Property and Casualty Basics",
+      "difficulty": "Medium",
+      "question": "Under the 'Other Insurance' clause, if two policies cover the same loss on a pro-rata basis, and Policy A has a limit of $100,000 while Policy B has a limit of $300,000, what percentage of a loss will Policy A pay?",
+      "options": {
+        "A": "25%",
+        "B": "33%",
+        "C": "50%",
+        "D": "100%"
+      },
+      "correct_answer": "A",
+      "explanation": "The total insurance is $400,000 ($100k + $300k). Policy A holds $100,000 of that total. $100,000 / $400,000 = 25%.",
+      "distractor_logic": "Option B (33%) would be correct if the total was $300k. Option C (50%) represents contribution by equal shares. Option D (100%) implies Policy A is primary."
+    },
+    {
+      "id": "pc-basics-041",
+      "category": "Property and Casualty Basics",
+      "difficulty": "Easy",
+      "question": "A binder provides temporary coverage and typically is valid for up to:",
+      "options": {
+        "A": "10 days",
+        "B": "30 days",
+        "C": "60 days",
+        "D": "90 days"
+      },
+      "correct_answer": "B",
+      "explanation": "A binder is a temporary contract of insurance generally valid for up to 30 days while the actual policy is being issued.",
+      "distractor_logic": "Options A, C, and D are incorrect standard durations for binders in this context."
+    },
+    {
+      "id": "pc-basics-042",
+      "category": "Property and Casualty Basics",
+      "difficulty": "Hard",
+      "question": "Which of the following describes 'Strict Liability'?",
+      "options": {
+        "A": "Liability based on negligence",
+        "B": "Liability imposed without regard to fault",
+        "C": "Liability for the actions of employees",
+        "D": "Liability limited to medical expenses"
+      },
+      "correct_answer": "B",
+      "explanation": "Strict liability (or absolute liability) is imposed without regard to fault, typically for inherently dangerous activities (like blasting) or products. The injured party does not need to prove negligence.",
+      "distractor_logic": "Option A describes standard tort liability. Option C describes Vicarious liability. Option D refers to Medical Payments coverage."
+    },
+    {
+      "id": "reg-043",
+      "category": "Insurance Regulation",
+      "difficulty": "Medium",
+      "question": "In Massachusetts, a newly licensed resident producer must complete how many hours of continuing education during their first three-year licensing period?",
+      "options": {
+        "A": "24 hours",
+        "B": "45 hours",
+        "C": "60 hours",
+        "D": "90 hours"
+      },
+      "correct_answer": "C",
+      "explanation": "During the first 3 years (36 months) of licensure, a resident producer in MA must complete 60 credit hours of approved study. Subsequent periods require 45 hours.",
+      "distractor_logic": "Option A (24) is common in other states. Option B (45) applies to subsequent renewal periods. Option D (90) is incorrect."
+    },
+    {
+      "id": "reg-044",
+      "category": "Insurance Regulation",
+      "difficulty": "Easy",
+      "question": "Making a false or malicious statement about the financial condition of a competing insurer is known as:",
+      "options": {
+        "A": "Twisting",
+        "B": "Coercion",
+        "C": "Defamation",
+        "D": "Misrepresentation"
+      },
+      "correct_answer": "C",
+      "explanation": "Defamation involves making false or derogatory statements about a competitor's financial condition or business practices calculated to injure their reputation.",
+      "distractor_logic": "Option A (Twisting) involves inducing a policy lapse. Option B (Coercion) involves force or threat. Option D (Misrepresentation) generally refers to lying about policy terms."
+    },
+    {
+      "id": "reg-045",
+      "category": "Insurance Regulation",
+      "difficulty": "Medium",
+      "question": "A producer who changes their business or residential address must notify the Division of Insurance within:",
+      "options": {
+        "A": "10 days",
+        "B": "30 days",
+        "C": "45 days",
+        "D": "60 days"
+      },
+      "correct_answer": "B",
+      "explanation": "Massachusetts law requires licensees to notify the Division of Insurance of any change in address (business, residence, or email) within 30 days.",
+      "distractor_logic": "Options A, C, and D are incorrect timeframes for address change notification."
+    },
+    {
+      "id": "reg-046",
+      "category": "Insurance Regulation",
+      "difficulty": "Hard",
+      "question": "Which of the following is TRUE regarding the Massachusetts FAIR Plan?",
+      "options": {
+        "A": "It provides guaranteed coverage to any applicant",
+        "B": "It is funded by the state government",
+        "C": "Property must be inspected before coverage is provided",
+        "D": "It covers vacant and abandoned properties"
+      },
+      "correct_answer": "C",
+      "explanation": "The FAIR Plan requires an inspection of the property to determine eligibility. Coverage is not guaranteed if the property fails to meet basic underwriting standards (e.g., severe disrepair).",
+      "distractor_logic": "Option A is false; eligibility standards exist. Option B is false; it is an association of all licensed insurers. Option D is false; generally, vacant/abandoned properties are ineligible."
+    },
+    {
+      "id": "reg-047",
+      "category": "Insurance Regulation",
+      "difficulty": "Medium",
+      "question": "An insurer formed under the laws of Vermont but doing business in Massachusetts is considered a(n):",
+      "options": {
+        "A": "Domestic insurer",
+        "B": "Foreign insurer",
+        "C": "Alien insurer",
+        "D": "Unauthorized insurer"
+      },
+      "correct_answer": "B",
+      "explanation": "A Foreign insurer is one formed under the laws of another state within the United States. A Domestic insurer is formed in Massachusetts. An Alien insurer is formed in another country.",
+      "distractor_logic": "Option A (Domestic) would be a MA company. Option C (Alien) would be non-US. Option D (Unauthorized) means not licensed to do business."
+    },
+    {
+      "id": "reg-048",
+      "category": "Insurance Regulation",
+      "difficulty": "Easy",
+      "question": "The Privacy Protection Act requires that an insurer provide a privacy notice to an applicant no later than:",
+      "options": {
+        "A": "The time of application",
+        "B": "The time of policy delivery",
+        "C": "30 days after policy issuance",
+        "D": "Upon the first renewal"
+      },
+      "correct_answer": "B",
+      "explanation": "The notice of information practices must be provided to the applicant/insured no later than the time the policy is delivered.",
+      "distractor_logic": "Option A is earlier than required (though permissible). Options C and D are too late according to the regulation."
+    },
+    {
+      "id": "reg-049",
+      "category": "Insurance Regulation",
+      "difficulty": "Hard",
+      "question": "What is the penalty for acting as an insurance adviser without a license?",
+      "options": {
+        "A": "$50 - $500 fine and/or up to 6 months in prison",
+        "B": "$1,000 fine and 1 year in prison",
+        "C": "Revocation of driver's license",
+        "D": "$10,000 fine"
+      },
+      "correct_answer": "A",
+      "explanation": "Anyone acting as an adviser without a license may be fined not less than $50 nor more than $500, receive a prison sentence of not more than six months, or both.",
+      "distractor_logic": "Option B represents penalties for other violations (like Larceny). Option D is the fine for violating a Cease and Desist order."
+    },
+    {
+      "id": "reg-050",
+      "category": "Insurance Regulation",
+      "difficulty": "Medium",
+      "question": "Twisting is best defined as:",
+      "options": {
+        "A": "Offering a rebate to induce a sale",
+        "B": "Using misrepresentation to induce a policyholder to lapse a policy and buy a new one",
+        "C": "Forcing a client to buy insurance as a condition of a loan",
+        "D": "Defaming a competitor's financial status"
+      },
+      "correct_answer": "B",
+      "explanation": "Twisting involves making an illegal or unfair comparison of policies to persuade a person to lapse or surrender their current plan and purchase a new one, usually to the detriment of the insured.",
+      "distractor_logic": "Option A is Rebating. Option C is Coercion. Option D is Defamation."
+    },
+    {
+      "id": "other-051",
+      "category": "Other Coverages and Options",
+      "difficulty": "Medium",
+      "question": "To be covered under the National Flood Insurance Program, a 'flood' must affect:",
+      "options": {
+        "A": "Only the insured's property",
+        "B": "At least 2 acres of normally dry land or 2 or more properties",
+        "C": "Any amount of land as long as water enters the home",
+        "D": "Only coastal areas"
+      },
+      "correct_answer": "B",
+      "explanation": "The NFIP definition of flood requires a general and temporary condition of partial or complete inundation of two or more acres of normally dry land area or of two or more properties (one of which is the policyholder's).",
+      "distractor_logic": "Option A is incorrect because a flood cannot be confined to just the insured's premises (unless it covers 2+ acres). Option C is too broad. Option D is incorrect; inland floods are covered."
+    },
+    {
+      "id": "other-052",
+      "category": "Other Coverages and Options",
+      "difficulty": "Hard",
+      "question": "If property is removed from a building to protect it from the peril of flood, the NFIP policy covers that property at the new location for up to:",
+      "options": {
+        "A": "10 days",
+        "B": "30 days",
+        "C": "45 days",
+        "D": "60 days"
+      },
+      "correct_answer": "C",
+      "explanation": "Property removed to protect it from the peril of flood is covered at the new location for up to 45 days.",
+      "distractor_logic": "Options A, B, and D are incorrect timeframes. Note that standard Property policies usually cover removal for 30 days, making the Flood policy's 45 days unique."
+    },
+    {
+      "id": "other-053",
+      "category": "Other Coverages and Options",
+      "difficulty": "Medium",
+      "question": "In an Umbrella policy, the 'Self-Insured Retention' (SIR) applies when:",
+      "options": {
+        "A": "The umbrella drops down to cover a loss not covered by the underlying policy",
+        "B": "The underlying policy pays its full limit",
+        "C": "The insured files a claim for property damage to their own home",
+        "D": "The insurer becomes insolvent"
+      },
+      "correct_answer": "A",
+      "explanation": "The SIR is similar to a deductible and must be paid by the insured only when the Umbrella policy drops down to act as primary coverage for a loss that is excluded by the underlying policies.",
+      "distractor_logic": "Option B is incorrect; no SIR applies when the Umbrella acts as excess over a valid underlying claim. Option C is incorrect; Umbrellas are liability only. Option D is irrelevant."
+    },
+    {
+      "id": "other-054",
+      "category": "Other Coverages and Options",
+      "difficulty": "Easy",
+      "question": "Which of the following is NOT an underlying policy typically required for a Personal Umbrella Policy?",
+      "options": {
+        "A": "Personal Auto Policy",
+        "B": "Homeowners Policy",
+        "C": "Watercraft Liability",
+        "D": "Professional Liability"
+      },
+      "correct_answer": "D",
+      "explanation": "Personal Umbrella policies require underlying personal liability coverage (Auto, Home, Watercraft). Professional Liability (E&O, Malpractice) is a commercial exposure not covered by a standard personal umbrella.",
+      "distractor_logic": "Options A, B, and C are standard underlying personal lines policies required to maintain an umbrella."
+    },
+    {
+      "id": "other-055",
+      "category": "Other Coverages and Options",
+      "difficulty": "Medium",
+      "question": "Under the Massachusetts Auto Policy, coverage for 'Substitute Transportation' (Part 10) begins how long after a theft loss?",
+      "options": {
+        "A": "Immediately",
+        "B": "24 hours",
+        "C": "48 hours",
+        "D": "72 hours"
+      },
+      "correct_answer": "C",
+      "explanation": "For theft losses under Comprehensive coverage (Part 9), transportation expenses are reimbursed only after the first 48 hours following the loss.",
+      "distractor_logic": "Option B (24 hours) is the waiting period for other covered losses (like collision) under Part 10 Substitute Transportation, but theft specifically requires a 48-hour wait."
+    }
+  ],
+  "tags": [
+    "Massachusetts",
+    "Remediation",
+    "Insurance Regulation",
+    "General Insurance",
+    "Property Basics",
+    "Flood",
+    "Umbrella"
+  ]
+}

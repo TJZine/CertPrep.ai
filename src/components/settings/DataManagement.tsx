@@ -121,39 +121,39 @@ export function DataManagement(): React.ReactElement {
         </CardHeader>
         <CardContent className="space-y-6">
           {stats ? (
-            <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-              <h4 className="mb-2 font-medium text-slate-900">Storage Usage</h4>
+            <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-800">
+              <h4 className="mb-2 font-medium text-slate-900 dark:text-slate-100">Storage Usage</h4>
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
-                  <p className="text-2xl font-bold text-slate-900">{stats.quizCount}</p>
-                  <p className="text-sm text-slate-500">Quizzes</p>
+                  <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">{stats.quizCount}</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-300">Quizzes</p>
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-slate-900">{stats.resultCount}</p>
-                  <p className="text-sm text-slate-500">Results</p>
+                  <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">{stats.resultCount}</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-300">Results</p>
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-slate-900">{stats.estimatedSizeKB} KB</p>
-                  <p className="text-sm text-slate-500">Est. Size</p>
+                  <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">{stats.estimatedSizeKB} KB</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-300">Est. Size</p>
                 </div>
               </div>
             </div>
           ) : null}
 
-          <div className="flex items-center justify-between rounded-lg border border-slate-200 p-4">
+          <div className="flex items-center justify-between rounded-lg border border-slate-200 p-4 dark:border-slate-800 dark:bg-slate-800">
             <div>
-              <h4 className="font-medium text-slate-900">Export Data</h4>
-              <p className="text-sm text-slate-500">Download all your quizzes and results as a JSON file</p>
+              <h4 className="font-medium text-slate-900 dark:text-slate-100">Export Data</h4>
+              <p className="text-sm text-slate-500 dark:text-slate-300">Download all your quizzes and results as a JSON file</p>
             </div>
             <Button onClick={handleExport} isLoading={isExporting} leftIcon={<Download className="h-4 w-4" />}>
               Export
             </Button>
           </div>
 
-          <div className="flex items-center justify-between rounded-lg border border-slate-200 p-4">
+          <div className="flex items-center justify-between rounded-lg border border-slate-200 p-4 dark:border-slate-800 dark:bg-slate-800">
             <div>
-              <h4 className="font-medium text-slate-900">Import Data</h4>
-              <p className="text-sm text-slate-500">Restore from a previously exported backup file</p>
+              <h4 className="font-medium text-slate-900 dark:text-slate-100">Import Data</h4>
+              <p className="text-sm text-slate-500 dark:text-slate-300">Restore from a previously exported backup file</p>
             </div>
             <div>
               <input
@@ -170,10 +170,10 @@ export function DataManagement(): React.ReactElement {
             </div>
           </div>
 
-          <div className="flex items-center justify-between rounded-lg border border-red-200 bg-red-50 p-4">
+          <div className="flex items-center justify-between rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-500/60 dark:bg-red-950">
             <div>
-              <h4 className="font-medium text-red-900">Reset All Data</h4>
-              <p className="text-sm text-red-700">Permanently delete all quizzes, results, and settings</p>
+              <h4 className="font-medium text-red-900 dark:text-red-100">Reset All Data</h4>
+              <p className="text-sm text-red-700 dark:text-red-200">Permanently delete all quizzes, results, and settings</p>
             </div>
             <Button variant="danger" onClick={() => setShowResetModal(true)} leftIcon={<Trash2 className="h-4 w-4" />}>
               Reset
@@ -209,15 +209,15 @@ export function DataManagement(): React.ReactElement {
       >
         {importFile ? (
           <div className="space-y-4">
-            <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+            <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-800">
               <div className="flex items-center gap-3">
-                <FileJson className="h-8 w-8 text-blue-500" />
+                <FileJson className="h-8 w-8 text-blue-500 dark:text-blue-300" />
                 <div>
-                  <p className="font-medium text-slate-900">Backup File</p>
-                  <p className="text-sm text-slate-500">
+                  <p className="font-medium text-slate-900 dark:text-slate-100">Backup File</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-300">
                     {importFile.quizzes.length} quizzes, {importFile.results.length} results
                   </p>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-slate-400 dark:text-slate-400">
                     Exported: {new Date(importFile.exportedAt).toLocaleDateString()}
                   </p>
                 </div>
@@ -225,7 +225,7 @@ export function DataManagement(): React.ReactElement {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">Import Mode</label>
+              <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200">Import Mode</label>
               <div className="space-y-2">
                 <label className="flex items-center gap-2">
                   <input
@@ -234,9 +234,9 @@ export function DataManagement(): React.ReactElement {
                     value="merge"
                     checked={importMode === 'merge'}
                     onChange={() => setImportMode('merge')}
-                    className="h-4 w-4 text-blue-600"
+                    className="h-4 w-4 text-blue-600 dark:text-blue-400"
                   />
-                  <span className="text-sm text-slate-700">Merge (keep existing data, add new)</span>
+                  <span className="text-sm text-slate-700 dark:text-slate-200">Merge (keep existing data, add new)</span>
                 </label>
                 <label className="flex items-center gap-2">
                   <input
@@ -245,9 +245,9 @@ export function DataManagement(): React.ReactElement {
                     value="replace"
                     checked={importMode === 'replace'}
                     onChange={() => setImportMode('replace')}
-                    className="h-4 w-4 text-blue-600"
+                    className="h-4 w-4 text-blue-600 dark:text-blue-400"
                   />
-                  <span className="text-sm text-slate-700">Replace (delete existing data first)</span>
+                  <span className="text-sm text-slate-700 dark:text-slate-200">Replace (delete existing data first)</span>
                 </label>
               </div>
             </div>
@@ -272,17 +272,17 @@ export function DataManagement(): React.ReactElement {
         }
       >
         <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-red-100">
-            <AlertTriangle className="h-5 w-5 text-red-600" />
+          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/50">
+            <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-200" />
           </div>
           <div>
-            <p className="text-slate-700">This will permanently delete:</p>
-            <ul className="mt-2 list-inside list-disc text-sm text-slate-600">
+            <p className="text-slate-700 dark:text-slate-200">This will permanently delete:</p>
+            <ul className="mt-2 list-inside list-disc text-sm text-slate-600 dark:text-slate-300">
               <li>All imported quizzes</li>
               <li>All quiz results and history</li>
               <li>All settings and preferences</li>
             </ul>
-            <p className="mt-4 font-medium text-red-700">This action cannot be undone!</p>
+            <p className="mt-4 font-medium text-red-700 dark:text-red-200">This action cannot be undone!</p>
           </div>
         </div>
       </Modal>

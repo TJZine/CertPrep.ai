@@ -16,8 +16,8 @@ export class CertPrepDatabase extends Dexie {
     super('CertPrepDatabase');
 
     // Define schema version and indexes.
-    this.version(1).stores({
-      quizzes: 'id, title, created_at, *tags',
+    this.version(2).stores({
+      quizzes: 'id, title, created_at, *tags, sourceId',
       results: 'id, quiz_id, timestamp, mode, score',
     });
 

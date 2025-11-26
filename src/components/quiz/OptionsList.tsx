@@ -44,11 +44,11 @@ export function OptionsList({
   };
 
   const statusStyles: Record<OptionStatus, string> = {
-    default: 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50',
-    selected: 'border-blue-500 bg-blue-50 ring-2 ring-blue-500 ring-offset-1',
-    correct: 'border-green-500 bg-green-50',
-    incorrect: 'border-red-500 bg-red-50',
-    missed: 'border-slate-200 bg-slate-50',
+    default: 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-slate-600 dark:hover:bg-slate-800',
+    selected: 'border-blue-500 bg-blue-50 ring-2 ring-blue-500 ring-offset-1 dark:border-blue-400 dark:bg-blue-900/30 dark:ring-offset-slate-900',
+    correct: 'border-green-500 bg-green-50 dark:border-green-500 dark:bg-green-900/30',
+    incorrect: 'border-red-500 bg-red-50 dark:border-red-500 dark:bg-red-900/30',
+    missed: 'border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800',
   };
 
   const statusIcons: Partial<Record<OptionStatus, React.ReactNode>> = {
@@ -82,10 +82,10 @@ export function OptionsList({
             <span
               className={cn(
                 'flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full font-semibold',
-                status === 'correct' && 'bg-green-200 text-green-800',
-                status === 'incorrect' && 'bg-red-200 text-red-800',
-                status === 'selected' && 'bg-blue-200 text-blue-800',
-                status === 'default' && 'bg-slate-200 text-slate-700',
+                status === 'correct' && 'bg-green-200 text-green-800 dark:bg-green-800 dark:text-green-100',
+                status === 'incorrect' && 'bg-red-200 text-red-800 dark:bg-red-800 dark:text-red-100',
+                status === 'selected' && 'bg-blue-200 text-blue-800 dark:bg-blue-800 dark:text-blue-100',
+                status === 'default' && 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-100',
               )}
             >
               {key}
@@ -94,9 +94,9 @@ export function OptionsList({
             <span
               className={cn(
                 'flex-1 pt-1 text-base',
-                status === 'correct' && 'text-green-800',
-                status === 'incorrect' && 'text-red-800',
-                status === 'default' && 'text-slate-700',
+                status === 'correct' && 'text-green-800 dark:text-green-100',
+                status === 'incorrect' && 'text-red-800 dark:text-red-100',
+                status === 'default' && 'text-slate-700 dark:text-slate-100',
               )}
               dangerouslySetInnerHTML={{ __html: sanitizedText }}
             />
@@ -109,11 +109,11 @@ export function OptionsList({
       })}
 
       {!hasSubmitted && !disabled && (
-        <p className="mt-2 text-center text-xs text-slate-400">
-          Press <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono">A</kbd>,{' '}
-          <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono">B</kbd>,{' '}
-          <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono">C</kbd>, or{' '}
-          <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono">D</kbd> to select
+        <p className="mt-2 text-center text-xs text-slate-400 dark:text-slate-300">
+          Press <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono dark:bg-slate-800 dark:text-slate-100">A</kbd>,{' '}
+          <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono dark:bg-slate-800 dark:text-slate-100">B</kbd>,{' '}
+          <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono dark:bg-slate-800 dark:text-slate-100">C</kbd>, or{' '}
+          <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono dark:bg-slate-800 dark:text-slate-100">D</kbd> to select
         </p>
       )}
     </div>

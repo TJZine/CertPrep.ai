@@ -114,13 +114,13 @@ interface SubmitButtonProps {
 
 export function SubmitButton({ onClick, disabled = false, className }: SubmitButtonProps): React.ReactElement {
   return (
-    <div className={cn('flex justify-center', className)}>
+    <div className={cn('flex flex-col items-center', className)}>
       <Button onClick={onClick} disabled={disabled} size="lg" className="min-w-[200px]">
         Check Answer
       </Button>
       {!disabled && (
-        <p className="mt-2 text-center text-xs text-slate-400">
-          or press <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono">Enter</kbd>
+        <p className="mt-2 text-center text-xs text-slate-400 dark:text-slate-300">
+          or press <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono dark:bg-slate-800 dark:text-slate-100">Enter</kbd>
         </p>
       )}
     </div>

@@ -8,7 +8,7 @@ import { GlobalErrorHandler } from '@/components/common/GlobalErrorHandler';
 import { OfflineIndicator } from '@/components/common/OfflineIndicator';
 import { InstallPrompt } from '@/components/common/InstallPrompt';
 import { UpdateBanner } from '@/components/common/UpdateBanner';
-import { SkipLink } from '@/components/common/SkipLink';
+import { ThemeProvider } from '@/components/common/ThemeProvider';
 import { APP_NAME } from '@/lib/constants';
 import './globals.css';
 
@@ -76,20 +76,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }):
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
       </head>
-      <body className="flex min-h-screen flex-col bg-slate-50 text-slate-900 antialiased">
-        <GlobalErrorHandler>
-          <ToastProvider>
-            <SkipLink />
-            <UpdateBanner />
-            <Header />
-            <div id="main-content" className="flex-1" tabIndex={-1}>
-              {children}
-            </div>
-            <Footer />
-            <OfflineIndicator />
-            <InstallPrompt />
-          </ToastProvider>
-        </GlobalErrorHandler>
+      <body className="flex min-h-screen flex-col bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-50">
+        <ThemeProvider>
+          <GlobalErrorHandler>
+            <ToastProvider>
+              <UpdateBanner />
+              <Header />
+              <div id="main-content" className="flex-1" tabIndex={-1}>
+                {children}
+              </div>
+              <Footer />
+              <OfflineIndicator />
+              <InstallPrompt />
+            </ToastProvider>
+          </GlobalErrorHandler>
+        </ThemeProvider>
       </body>
     </html>
   );

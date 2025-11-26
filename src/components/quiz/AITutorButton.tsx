@@ -138,7 +138,7 @@ Please:
             <Button
               variant="outline"
               size="sm"
-              onClick={() => window.open('https://chat.openai.com', '_blank')}
+              onClick={() => window.open('https://chat.openai.com', '_blank', 'noopener,noreferrer')}
               rightIcon={<ExternalLink className="h-4 w-4" aria-hidden="true" />}
             >
               Open ChatGPT

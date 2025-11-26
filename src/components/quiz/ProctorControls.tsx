@@ -38,14 +38,14 @@ export function ProctorControls({
     <div className={cn('space-y-4', className)}>
       <div className="flex justify-center">
         {hasAnswer ? (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-700">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-700 dark:bg-blue-900/40 dark:text-blue-100">
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
             </svg>
             Answer recorded
           </span>
         ) : (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-sm font-medium text-amber-700">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-sm font-medium text-amber-700 dark:bg-amber-900/40 dark:text-amber-100">
             <AlertTriangle className="h-4 w-4" />
             No answer selected
           </span>
@@ -66,7 +66,10 @@ export function ProctorControls({
         <Button
           variant={isFlagged ? 'warning' : 'outline'}
           onClick={onToggleFlag}
-          className={cn(isFlagged && 'border-orange-400 bg-orange-100 text-orange-700 hover:bg-orange-200')}
+          className={cn(
+            isFlagged &&
+              'border-orange-400 bg-orange-100 text-orange-700 hover:bg-orange-200 dark:border-orange-500 dark:bg-orange-900/40 dark:text-orange-100 dark:hover:bg-orange-900/60',
+          )}
           aria-label={isFlagged ? 'Remove flag' : 'Flag for review'}
           aria-pressed={isFlagged}
         >
@@ -106,14 +109,14 @@ export function ProctorControls({
         >
           Submit Exam
         </Button>
-        <p className="mt-2 text-center text-xs text-slate-500">You can review and change answers before submitting</p>
+        <p className="mt-2 text-center text-xs text-slate-500 dark:text-slate-300">You can review and change answers before submitting</p>
       </div>
 
-      <div className="text-center text-xs text-slate-400">
+      <div className="text-center text-xs text-slate-400 dark:text-slate-300">
         <span className="hidden sm:inline">
-          Use <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono">←</kbd>{' '}
-          <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono">→</kbd> to navigate,{' '}
-          <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono">F</kbd> to flag
+          Use <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono dark:bg-slate-800 dark:text-slate-100">←</kbd>{' '}
+          <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono dark:bg-slate-800 dark:text-slate-100">→</kbd> to navigate,{' '}
+          <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono dark:bg-slate-800 dark:text-slate-100">F</kbd> to flag
         </span>
       </div>
     </div>

@@ -169,8 +169,8 @@ export default function AnalyticsPage(): React.ReactElement {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900">Analytics</h1>
-        <p className="mt-1 text-slate-500">Track your progress and identify areas for improvement</p>
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-50">Analytics</h1>
+        <p className="mt-1 text-slate-500 dark:text-slate-300">Track your progress and identify areas for improvement</p>
       </div>
 
       {statsError && <p className="mb-4 text-sm text-red-600">{statsError}</p>}

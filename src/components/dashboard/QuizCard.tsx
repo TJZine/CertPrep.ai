@@ -22,11 +22,14 @@ export interface QuizCardProps {
  */
 export function QuizCard({ quiz, stats, onStart, onDelete }: QuizCardProps): React.ReactElement {
   const [showMenu, setShowMenu] = React.useState(false);
+  const [showTagsPopover, setShowTagsPopover] = React.useState(false);
   const menuRef = React.useRef<HTMLDivElement>(null);
+  const tagsPopoverRef = React.useRef<HTMLDivElement>(null);
   const { addToast } = useToast();
 
   const visibleTags = React.useMemo(() => quiz.tags.slice(0, 3), [quiz.tags]);
   const extraTagCount = Math.max(quiz.tags.length - 3, 0);
+  const extraTags = React.useMemo(() => quiz.tags.slice(3), [quiz.tags]);
 
   React.useEffect((): (() => void) | void => {
     if (!showMenu) {
@@ -53,6 +56,32 @@ export function QuizCard({ quiz, stats, onStart, onDelete }: QuizCardProps): Rea
       document.removeEventListener('keydown', handleEscape);
     };
   }, [showMenu]);
+
+  React.useEffect((): (() => void) | void => {
+    if (!showTagsPopover) {
+      return undefined;
+    }
+
+    const handleClickOutside = (event: MouseEvent): void => {
+      if (tagsPopoverRef.current && !tagsPopoverRef.current.contains(event.target as Node)) {
+        setShowTagsPopover(false);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent): void => {
+      if (event.key === 'Escape') {
+        setShowTagsPopover(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscape);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [showTagsPopover]);
 
   const handleDelete = (): void => {
     setShowMenu(false);
@@ -94,15 +123,15 @@ export function QuizCard({ quiz, stats, onStart, onDelete }: QuizCardProps): Rea
   };
 
   return (
-    <Card className="group relative flex h-full flex-col overflow-hidden border border-slate-200 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+    <Card className="group relative flex h-full flex-col overflow-hidden border border-slate-200 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-slate-800">
       <div
-        className="pointer-events-none absolute right-4 top-4 hidden max-w-[220px] rounded-lg border border-slate-200 bg-white/95 px-3 py-2 text-left text-xs text-slate-700 shadow-lg backdrop-blur group-focus-within:block group-hover:block"
+        className="pointer-events-none absolute right-4 top-4 hidden max-w-[220px] rounded-lg border border-slate-200 bg-white/95 px-3 py-2 text-left text-xs text-slate-700 shadow-lg backdrop-blur group-focus-within:block group-hover:block dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200"
         role="presentation"
       >
-        <p className="mb-1 font-semibold text-slate-900">Quick stats</p>
+        <p className="mb-1 font-semibold text-slate-900 dark:text-slate-100">Quick stats</p>
         <ul className="space-y-1">
           <li className="flex items-center gap-2">
-            <BarChart3 className="h-3.5 w-3.5 text-blue-600" aria-hidden="true" />
+            <BarChart3 className="h-3.5 w-3.5 text-blue-600 dark:text-blue-300" aria-hidden="true" />
             <span>Best: {bestScore !== null ? `${bestScore}%` : '—'}</span>
           </li>
           <li className="flex items-center gap-2">
@@ -110,7 +139,7 @@ export function QuizCard({ quiz, stats, onStart, onDelete }: QuizCardProps): Rea
             <span>Avg: {averageScore !== null ? `${averageScore}%` : '—'}</span>
           </li>
           <li className="flex items-center gap-2">
-            <Clock className="h-3.5 w-3.5 text-slate-500" aria-hidden="true" />
+            <Clock className="h-3.5 w-3.5 text-slate-500 dark:text-slate-300" aria-hidden="true" />
             <span>Study time: {formatStudyTime(totalStudyTime)}</span>
           </li>
         </ul>
@@ -119,7 +148,7 @@ export function QuizCard({ quiz, stats, onStart, onDelete }: QuizCardProps): Rea
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 space-y-1">
             <CardTitle className="line-clamp-2 text-lg">{quiz.title}</CardTitle>
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-slate-600 dark:text-slate-300">
               {quiz.description?.trim() ? quiz.description : `${quiz.questions.length} questions`}
             </p>
           </div>
@@ -165,14 +194,37 @@ export function QuizCard({ quiz, stats, onStart, onDelete }: QuizCardProps): Rea
           </div>
         </div>
         {quiz.tags.length > 0 ? (
-          <div className="mt-3 flex flex-wrap gap-2">
+          <div className="mt-3 flex flex-wrap items-center gap-2">
             {visibleTags.map((tag) => (
-              <Badge key={tag} variant="secondary">
+              <Badge key={tag} variant="secondary" className="dark:bg-slate-800 dark:text-slate-100">
                 {tag}
               </Badge>
             ))}
             {extraTagCount > 0 ? (
-              <Badge variant="outline">+{extraTagCount}</Badge>
+              <div className="relative" ref={tagsPopoverRef}>
+                <button
+                  type="button"
+                  onClick={() => setShowTagsPopover((open) => !open)}
+                  className="inline-flex items-center gap-1 rounded-full border border-slate-300 bg-white px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-slate-800 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800 dark:focus-visible:ring-offset-slate-900"
+                  aria-expanded={showTagsPopover}
+                  aria-haspopup="true"
+                  aria-label={`Show ${extraTagCount} more tags`}
+                >
+                  +{extraTagCount}
+                </button>
+                {showTagsPopover ? (
+                  <div className="absolute z-10 mt-2 w-48 rounded-lg border border-slate-200 bg-white p-2 text-left shadow-lg dark:border-slate-700 dark:bg-slate-900">
+                    <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">More tags</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {extraTags.map((tag) => (
+                        <Badge key={tag} variant="secondary" className="dark:bg-slate-800 dark:text-slate-100">
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+              </div>
             ) : null}
           </div>
         ) : null}
@@ -198,7 +250,7 @@ export function QuizCard({ quiz, stats, onStart, onDelete }: QuizCardProps): Rea
         </div>
 
         {lastAttemptDate ? (
-          <div className="rounded-lg bg-slate-50 px-3 py-2 text-center text-xs text-slate-600">
+          <div className="rounded-lg bg-slate-50 px-3 py-2 text-center text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-200">
             Last attempt: {formatDate(lastAttemptDate)}
           </div>
         ) : null}
@@ -221,12 +273,12 @@ interface StatItemProps {
 
 function StatItem({ icon, value, label }: StatItemProps): React.ReactElement {
   return (
-    <div className="flex flex-col items-center gap-1 rounded-lg border border-slate-100 px-3 py-2">
-      <div className="flex items-center gap-1 text-base font-semibold text-slate-900">
-        <span className="text-blue-600">{icon}</span>
+    <div className="flex flex-col items-center gap-1 rounded-lg border border-slate-100 px-3 py-2 dark:border-slate-800 dark:bg-slate-800/80">
+      <div className="flex items-center gap-1 text-base font-semibold text-slate-900 dark:text-slate-100">
+        <span className="text-blue-600 dark:text-blue-300">{icon}</span>
         <span>{value}</span>
       </div>
-      <span className="text-[11px] uppercase tracking-wide text-slate-500">{label}</span>
+      <span className="text-[11px] uppercase tracking-wide text-slate-500 dark:text-slate-300">{label}</span>
     </div>
   );
 }

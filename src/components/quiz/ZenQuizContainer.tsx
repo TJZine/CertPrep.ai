@@ -33,6 +33,8 @@ export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContaine
   const router = useRouter();
   const { addToast } = useToast();
 
+  const hasSavedResultRef = React.useRef(false);
+
   const {
     initializeSession,
     selectAnswer,
@@ -56,27 +58,28 @@ export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContaine
   const currentQuestion = useCurrentQuestion();
   const progress = useProgress();
 
-  const { formattedTime, start: startTimer, seconds } = useTimer({ autoStart: true });
+  const { formattedTime, start: startTimer, seconds, pause: pauseTimer } = useTimer({ autoStart: true });
   useBeforeUnload(!isComplete, 'Your quiz progress will be lost. Are you sure?');
 
-  const handleSessionComplete = React.useCallback(async (): Promise<void> => {
-    try {
-      const answersRecord: Record<string, string> = {};
-      answers.forEach((record, questionId) => {
-        answersRecord[questionId] = record.selectedAnswer;
-      });
+  const handleSessionComplete = React.useCallback(
+    async (timeTakenSeconds: number): Promise<void> => {
+      try {
+        const answersRecord: Record<string, string> = {};
+        answers.forEach((record, questionId) => {
+          answersRecord[questionId] = record.selectedAnswer;
+        });
 
-      const result = await createResult({
-        quizId: quiz.id,
-        mode: 'zen',
-        answers: answersRecord,
-        flaggedQuestions: Array.from(flaggedQuestions),
-        timeTakenSeconds: seconds,
-      });
+        const result = await createResult({
+          quizId: quiz.id,
+          mode: 'zen',
+          answers: answersRecord,
+          flaggedQuestions: Array.from(flaggedQuestions),
+          timeTakenSeconds,
+        });
 
-      if (isSmartRound) {
-        sessionStorage.removeItem('smartRoundQuestions');
-        sessionStorage.removeItem('smartRoundQuizId');
+        if (isSmartRound) {
+          sessionStorage.removeItem('smartRoundQuestions');
+          sessionStorage.removeItem('smartRoundQuizId');
         sessionStorage.removeItem('smartRoundAllQuestions');
         sessionStorage.removeItem('smartRoundMissedCount');
         sessionStorage.removeItem('smartRoundFlaggedCount');
@@ -84,25 +87,32 @@ export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContaine
 
       addToast('success', isSmartRound ? 'Smart Round complete!' : 'Study session complete!');
       router.push(`/results/${result.id}`);
-    } catch (error) {
-      console.error('Failed to save result:', error);
-      addToast('error', 'Failed to save your results. Please try again.');
-    }
-  }, [addToast, answers, flaggedQuestions, isSmartRound, quiz.id, router, seconds]);
+      } catch (error) {
+        console.error('Failed to save result:', error);
+        addToast('error', 'Failed to save your results. Please try again.');
+      }
+    },
+    [addToast, answers, flaggedQuestions, isSmartRound, quiz.id, router],
+  );
 
   React.useEffect(() => {
+    hasSavedResultRef.current = false;
     initializeSession(quiz.id, 'zen', quiz.questions);
     startTimer();
     return (): void => {
       resetSession();
+      hasSavedResultRef.current = false;
     };
   }, [quiz.id, quiz.questions, initializeSession, startTimer, resetSession]);
 
   React.useEffect(() => {
-    if (isComplete) {
-      void handleSessionComplete();
+    if (isComplete && !hasSavedResultRef.current) {
+      hasSavedResultRef.current = true;
+      pauseTimer();
+      const elapsedSeconds = seconds;
+      void handleSessionComplete(elapsedSeconds);
     }
-  }, [isComplete, handleSessionComplete]);
+  }, [isComplete, handleSessionComplete, pauseTimer, seconds]);
 
   useKeyboardNav({
     onSelectOption: (key) => {
