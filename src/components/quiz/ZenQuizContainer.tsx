@@ -10,6 +10,7 @@ import { AITutorButton } from './AITutorButton';
 import { SubmitButton, ZenControls } from './ZenControls';
 import { Card, CardContent } from '@/components/ui/Card';
 import { useToast } from '@/components/ui/Toast';
+import { Button } from '@/components/ui/Button';
 import {
   useCurrentQuestion,
   useProgress,
@@ -33,7 +34,10 @@ export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContaine
   const router = useRouter();
   const { addToast } = useToast();
 
+  const isMountedRef = React.useRef(false);
   const hasSavedResultRef = React.useRef(false);
+  const completionTimeRef = React.useRef<number | null>(null);
+  const [saveError, setSaveError] = React.useState(false);
 
   const {
     initializeSession,
@@ -61,6 +65,13 @@ export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContaine
   const { formattedTime, start: startTimer, seconds, pause: pauseTimer } = useTimer({ autoStart: true });
   useBeforeUnload(!isComplete, 'Your quiz progress will be lost. Are you sure?');
 
+  React.useEffect((): (() => void) => {
+    isMountedRef.current = true;
+    return (): void => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
   const handleSessionComplete = React.useCallback(
     async (timeTakenSeconds: number): Promise<void> => {
       try {
@@ -77,6 +88,10 @@ export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContaine
           timeTakenSeconds,
         });
 
+        if (!isMountedRef.current) {
+          return;
+        }
+
         if (isSmartRound) {
           sessionStorage.removeItem('smartRoundQuestions');
           sessionStorage.removeItem('smartRoundQuizId');
@@ -85,14 +100,34 @@ export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContaine
           sessionStorage.removeItem('smartRoundFlaggedCount');
         }
 
+        setSaveError(false);
         addToast('success', isSmartRound ? 'Smart Round complete!' : 'Study session complete!');
         router.push(`/results/${result.id}`);
       } catch (error) {
         console.error('Failed to save result:', error);
+        if (!isMountedRef.current) {
+          return;
+        }
+        setSaveError(true);
         addToast('error', 'Failed to save your results. Please try again.');
+        throw error;
       }
     },
     [addToast, answers, flaggedQuestions, isSmartRound, quiz.id, router],
+  );
+
+  const retrySave = React.useCallback((): void => {
+    const elapsedSeconds = completionTimeRef.current ?? seconds;
+    if (elapsedSeconds === null) {
+      return;
+    }
+    hasSavedResultRef.current = true;
+    setSaveError(false);
+    void handleSessionComplete(elapsedSeconds).catch(() => {
+      hasSavedResultRef.current = false;
+    });
+  },
+    [handleSessionComplete, seconds],
   );
 
   React.useEffect(() => {
@@ -110,6 +145,7 @@ export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContaine
       hasSavedResultRef.current = true;
       pauseTimer();
       const elapsedSeconds = seconds;
+      completionTimeRef.current = elapsedSeconds;
       void handleSessionComplete(elapsedSeconds).catch(() => {
         hasSavedResultRef.current = false;
       });
@@ -237,6 +273,19 @@ export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContaine
                     onGood={markGood}
                     isLastQuestion={isLastQuestion}
                   />
+                  {saveError ? (
+                    <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-700/50 dark:bg-amber-950/30 dark:text-amber-100">
+                      <p className="mb-3 font-semibold">We couldn&apos;t save your results.</p>
+                      <div className="flex flex-wrap gap-2">
+                        <Button size="sm" onClick={retrySave}>
+                          Retry save
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={handleExit}>
+                          Exit without saving
+                        </Button>
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
               )}
             </div>

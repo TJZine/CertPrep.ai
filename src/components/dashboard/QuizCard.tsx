@@ -46,7 +46,8 @@ function useClickOutside(
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleEscape);
     };
-  }, [isOpen, onClose, ref]);
+    // ref is stable; excluding from deps avoids unnecessary reruns
+  }, [isOpen, onClose]); // eslint-disable-line react-hooks/exhaustive-deps
 }
 
 /**
@@ -166,7 +167,7 @@ export function QuizCard({ quiz, stats, onStart, onDelete }: QuizCardProps): Rea
                 <button
                   type="button"
                   onClick={handleDelete}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-600 transition hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 dark:text-red-400 dark:hover:bg-red-950"
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-600 transition hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 dark:text-red-400 dark:hover:bg-red-950/30"
                   role="menuitem"
                 >
                   <Trash2 className="h-4 w-4" aria-hidden="true" />
