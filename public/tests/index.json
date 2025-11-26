@@ -23,6 +23,22 @@
       "category": "Insurance",
       "subcategory": "Massachusetts Personal Lines",
       "path": "/tests/Insurance/Massachusetts Personal Lines/Personal Lines Weakness Practice Exam 3.json"
+    },
+    {
+      "id": "firearms-ma-law-mastery-2024",
+      "title": "Massachusetts Firearm Law Mastery (2024 Update)",
+      "description": "Comprehensive assessment of MA firearm laws, including licensing, transport, storage, and Modernizing Firearm Laws Act updates.",
+      "category": "Firearms",
+      "subcategory": "Massachusetts",
+      "path": "/tests/Firearms/Massachusetts/General Massachusetts Firearm Laws Test (10 questions).json"
+    },
+    {
+      "id": "firearms-ma-purchase-sale-compliance",
+      "title": "MA Firearm Purchase & Sale Compliance (Customer & FFL)",
+      "description": "Split-perspective exam on 2024 purchase/sale mandates, dealer protocols, and private transfer limits in Massachusetts.",
+      "category": "Firearms",
+      "subcategory": "Massachusetts",
+      "path": "/tests/Firearms/Massachusetts/MA Firearm Purchase and Sale Compliance Test.json"
     }
   ]
 }

@@ -16,46 +16,12 @@ import {
 import { BookOpen, Clock, Target, Award } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
 import { cn, formatTime } from '@/lib/utils';
+import { useIsDarkMode } from '@/hooks/useIsDarkMode';
 import type { OverallStats } from '@/db/results';
 
 interface AnalyticsOverviewProps {
   stats: OverallStats;
   className?: string;
-}
-
-function useIsDarkMode(): boolean {
-  const [isDark, setIsDark] = React.useState(false);
-
-  React.useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const media = window.matchMedia('(prefers-color-scheme: dark)');
-    const update = (): void => {
-      const hasDarkClass = document.documentElement.classList.contains('dark');
-      setIsDark(hasDarkClass || media.matches);
-    };
-
-    update();
-
-    const handleChange = (event: MediaQueryListEvent): void => {
-      const hasDarkClass = document.documentElement.classList.contains('dark');
-      setIsDark(hasDarkClass || event.matches);
-    };
-
-    media.addEventListener?.('change', handleChange);
-    media.addListener?.(handleChange);
-
-    const observer = new MutationObserver(update);
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-
-    return (): void => {
-      media.removeEventListener?.('change', handleChange);
-      media.removeListener?.(handleChange);
-      observer.disconnect();
-    };
-  }, []);
-
-  return isDark;
 }
 
 /**

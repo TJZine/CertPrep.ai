@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/Button';
 import { ScorecardCompact } from '@/components/results/Scorecard';
 import { cn } from '@/lib/utils';
 import type { Result } from '@/types/result';
+import { useIsDarkMode } from '@/hooks/useIsDarkMode';
 
 interface PerformanceHistoryProps {
   results: Result[];
@@ -51,30 +52,7 @@ function PerformanceHistoryTooltip({ active, payload }: PerformanceTooltipProps)
  */
 export function PerformanceHistory({ results, quizTitles, className }: PerformanceHistoryProps): React.ReactElement {
   const router = useRouter();
-  const [isDark, setIsDark] = React.useState(false);
-
-  React.useEffect((): (() => void) => {
-    if (typeof window === 'undefined') return () => {};
-    const media = window.matchMedia('(prefers-color-scheme: dark)');
-    const update = (): void => {
-      const hasDarkClass = document.documentElement.classList.contains('dark');
-      setIsDark(hasDarkClass || media.matches);
-    };
-    update();
-    const handleChange = (event: MediaQueryListEvent): void => {
-      const hasDarkClass = document.documentElement.classList.contains('dark');
-      setIsDark(hasDarkClass || event.matches);
-    };
-    media.addEventListener?.('change', handleChange);
-    media.addListener?.(handleChange);
-    const observer = new MutationObserver(update);
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-    return (): void => {
-      media.removeEventListener?.('change', handleChange);
-      media.removeListener?.(handleChange);
-      observer.disconnect();
-    };
-  }, []);
+  const isDark = useIsDarkMode();
 
   const sortedResults = React.useMemo(() => [...results].sort((a, b) => b.timestamp - a.timestamp), [results]);
   const [showAllResults, setShowAllResults] = React.useState(false);
@@ -171,7 +149,7 @@ export function PerformanceHistory({ results, quizTitles, className }: Performan
               <Tooltip content={<PerformanceHistoryTooltip />} />
               <ReferenceLine
                 y={averageScore}
-                stroke={isDark ? '#94a3b8' : '#94a3b8'}
+                stroke="#94a3b8"
                 strokeDasharray="5 5"
                 label={{
                   value: `Avg: ${averageScore}%`,

@@ -94,7 +94,7 @@ export function ProctorControls({
         </Button>
       </div>
 
-      <div className="border-t border-slate-200 pt-4">
+      <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
         <Button
           variant="default"
           size="lg"

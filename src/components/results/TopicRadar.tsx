@@ -16,6 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { cn } from '@/lib/utils';
 import { TrendingUp, TrendingDown, Target } from 'lucide-react';
+import { useIsDarkMode } from '@/hooks/useIsDarkMode';
 
 interface CategoryScore {
   category: string;
@@ -63,30 +64,7 @@ function TopicRadarTooltip({ active, payload }: TopicTooltipProps): React.ReactE
  * Shows strengths and weaknesses at a glance.
  */
 export function TopicRadar({ categories, className }: TopicRadarProps): React.ReactElement {
-  const [isDark, setIsDark] = React.useState(false);
-
-  React.useEffect((): (() => void) => {
-    if (typeof window === 'undefined') return () => {};
-    const media = window.matchMedia('(prefers-color-scheme: dark)');
-    const update = (): void => {
-      const hasDarkClass = document.documentElement.classList.contains('dark');
-      setIsDark(hasDarkClass || media.matches);
-    };
-    update();
-    const handleChange = (event: MediaQueryListEvent): void => {
-      const hasDarkClass = document.documentElement.classList.contains('dark');
-      setIsDark(hasDarkClass || event.matches);
-    };
-    media.addEventListener?.('change', handleChange);
-    media.addListener?.(handleChange);
-    const observer = new MutationObserver(update);
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-    return (): void => {
-      media.removeEventListener?.('change', handleChange);
-      media.removeListener?.(handleChange);
-      observer.disconnect();
-    };
-  }, []);
+  const isDark = useIsDarkMode();
 
   const chartData = React.useMemo(() => {
     return categories.map((cat) => ({
