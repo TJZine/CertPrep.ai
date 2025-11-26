@@ -96,7 +96,7 @@ export function QuestionNavGrid({
             >
               {question.index + 1}
               {question.status === 'flagged' ? (
-                <Flag className="absolute -right-1 -top-1 h-3 w-3 text-orange-600" aria-hidden="true" />
+                <Flag className="absolute -right-1 -top-1 h-3 w-3 text-orange-600 dark:text-orange-400" aria-hidden="true" />
               ) : null}
             </button>
           );
@@ -174,8 +174,8 @@ export function QuestionNavStrip({
   const statusStyles: Record<QuestionStatus, string> = {
     unseen: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-200',
     seen: 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-100',
-    answered: 'bg-blue-500 text-white',
-    flagged: 'bg-orange-400 text-white',
+    answered: 'bg-blue-500 text-white hover:bg-blue-600 dark:hover:bg-blue-400',
+    flagged: 'bg-orange-400 text-white hover:bg-orange-500 dark:hover:bg-orange-400',
   };
 
   return (

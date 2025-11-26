@@ -143,7 +143,7 @@ export function ProctorQuizContainer({
   };
 
   const handleAutoSubmit = React.useCallback(async (): Promise<string | null> => {
-    if (hasSavedResultRef.current) {
+    if (isSubmitting || hasSavedResultRef.current) {
       return autoResultId;
     }
     setIsSubmitting(true);
@@ -169,7 +169,7 @@ export function ProctorQuizContainer({
     } finally {
       setIsSubmitting(false);
     }
-  }, [addToast, autoResultId, autoSubmitExam, buildAnswersRecord, durationMinutes, flaggedQuestions, pauseTimer, quiz.id]);
+  }, [addToast, autoResultId, autoSubmitExam, buildAnswersRecord, durationMinutes, flaggedQuestions, isSubmitting, pauseTimer, quiz.id]);
 
   React.useEffect(() => {
     autoSubmitRef.current = handleAutoSubmit;

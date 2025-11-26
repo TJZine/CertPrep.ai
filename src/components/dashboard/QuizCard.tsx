@@ -139,8 +139,8 @@ export function QuizCard({ quiz, stats, onStart, onDelete }: QuizCardProps): Rea
             <button
               type="button"
               className={cn(
-                'rounded-full p-2 text-slate-500 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2',
-                showMenu && 'bg-slate-100 text-slate-800',
+                'rounded-full p-2 text-slate-500 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 dark:text-slate-400 dark:hover:bg-slate-700',
+                showMenu && 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-100',
               )}
               aria-label="Quiz options"
               aria-expanded={showMenu}
@@ -151,13 +151,13 @@ export function QuizCard({ quiz, stats, onStart, onDelete }: QuizCardProps): Rea
             </button>
             {showMenu ? (
               <div
-                className="absolute right-0 z-10 mt-2 w-40 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg"
+                className="absolute right-0 z-10 mt-2 w-40 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900"
                 role="menu"
               >
                 <button
                   type="button"
                   onClick={handleCopyLink}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 dark:text-slate-200 dark:hover:bg-slate-800"
                   role="menuitem"
                 >
                   <LinkIcon className="h-4 w-4" aria-hidden="true" />
@@ -166,7 +166,7 @@ export function QuizCard({ quiz, stats, onStart, onDelete }: QuizCardProps): Rea
                 <button
                   type="button"
                   onClick={handleDelete}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-600 transition hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-600 transition hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 dark:text-red-400 dark:hover:bg-red-950"
                   role="menuitem"
                 >
                   <Trash2 className="h-4 w-4" aria-hidden="true" />

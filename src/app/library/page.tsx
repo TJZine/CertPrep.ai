@@ -34,7 +34,7 @@ export default function LibraryPage(): React.ReactElement {
             aria-label="Return to dashboard"
             className={cn(
               buttonVariants({ variant: 'outline' }),
-              'mt-4 inline-flex w-auto dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800',
+              'mt-4 inline-flex w-auto',
             )}
           >
             <ArrowLeft className="mr-2 h-4 w-4" aria-hidden="true" />
@@ -62,7 +62,7 @@ export default function LibraryPage(): React.ReactElement {
           aria-label="Back to dashboard"
           className={cn(
             buttonVariants({ variant: 'outline' }),
-            'inline-flex w-auto dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800',
+            'inline-flex w-auto',
           )}
         >
           <ArrowLeft className="mr-2 h-4 w-4" aria-hidden="true" />

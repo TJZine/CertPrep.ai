@@ -110,7 +110,9 @@ export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContaine
       hasSavedResultRef.current = true;
       pauseTimer();
       const elapsedSeconds = seconds;
-      void handleSessionComplete(elapsedSeconds);
+      void handleSessionComplete(elapsedSeconds).catch(() => {
+        hasSavedResultRef.current = false;
+      });
     }
   }, [isComplete, handleSessionComplete, pauseTimer, seconds]);
 
