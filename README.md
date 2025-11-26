@@ -12,6 +12,12 @@ CertPrep.ai is a privacy-first web application for simulating professional certi
 - Data export/import and full reset controls
 - Installable PWA for mobile and desktop
 
+## Test Library
+
+- Built-in practice tests live under `public/tests` with a manifest at `public/tests/index.json`.
+- The Library page (`/library`) lets you browse and import built-in tests; imports are validated and stored locally.
+- If the catalog grows into many hundreds of entries, consider adding pagination or list virtualization to keep filtering and rendering responsive.
+
 ## Getting Started
 
 Prerequisites: Node.js 18+ and npm.

@@ -25,9 +25,9 @@ interface WeakAreasCardProps {
  */
 export function WeakAreasCard({ weakAreas, onStudyArea, className }: WeakAreasCardProps): React.ReactElement {
   const getScoreColor = (score: number): string => {
-    if (score >= 70) return 'text-green-600 bg-green-100';
-    if (score >= 50) return 'text-amber-600 bg-amber-100';
-    return 'text-red-600 bg-red-100';
+    if (score >= 70) return 'text-green-600 bg-green-100 dark:text-green-200 dark:bg-green-900/30';
+    if (score >= 50) return 'text-amber-600 bg-amber-100 dark:text-amber-200 dark:bg-amber-900/30';
+    return 'text-red-600 bg-red-100 dark:text-red-200 dark:bg-red-900/30';
   };
 
   const getProgressColor = (score: number): string => {
@@ -46,9 +46,9 @@ export function WeakAreasCard({ weakAreas, onStudyArea, className }: WeakAreasCa
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="rounded-lg border border-green-200 bg-green-50 p-4 text-center">
-            <p className="font-medium text-green-800">🎉 Great job! No weak areas identified.</p>
-            <p className="mt-1 text-sm text-green-600">Keep practicing to maintain your knowledge.</p>
+          <div className="rounded-lg border border-green-200 bg-green-50 p-4 text-center dark:border-green-800/70 dark:bg-green-900/20">
+            <p className="font-medium text-green-800 dark:text-green-100">🎉 Great job! No weak areas identified.</p>
+            <p className="mt-1 text-sm text-green-600 dark:text-green-200">Keep practicing to maintain your knowledge.</p>
           </div>
         </CardContent>
       </Card>
@@ -67,11 +67,11 @@ export function WeakAreasCard({ weakAreas, onStudyArea, className }: WeakAreasCa
       <CardContent>
         <div className="space-y-4">
           {weakAreas.map((area) => (
-            <div key={area.category} className="rounded-lg border border-slate-200 p-4">
+            <div key={area.category} className="rounded-lg border border-slate-200 p-4 dark:border-slate-800 dark:bg-slate-900">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <h4 className="font-medium text-slate-900">{area.category}</h4>
+                    <h4 className="font-medium text-slate-900 dark:text-slate-100">{area.category}</h4>
                     {area.recentTrend === 'improving' && (
                       <Badge variant="success" className="gap-1">
                         <TrendingUp className="h-3 w-3" aria-hidden="true" />
@@ -79,7 +79,7 @@ export function WeakAreasCard({ weakAreas, onStudyArea, className }: WeakAreasCa
                       </Badge>
                     )}
                   </div>
-                  <p className="mt-1 text-sm text-slate-500">{area.totalQuestions} questions attempted</p>
+                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-300">{area.totalQuestions} questions attempted</p>
                 </div>
 
                 <div className={cn('rounded-full px-3 py-1 text-sm font-semibold', getScoreColor(area.avgScore))}>
@@ -88,7 +88,7 @@ export function WeakAreasCard({ weakAreas, onStudyArea, className }: WeakAreasCa
               </div>
 
               <div className="mt-3">
-                <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200">
+                <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
                   <div className={cn('h-full transition-all', getProgressColor(area.avgScore))} style={{ width: `${area.avgScore}%` }} />
                 </div>
               </div>
@@ -109,8 +109,8 @@ export function WeakAreasCard({ weakAreas, onStudyArea, className }: WeakAreasCa
           ))}
         </div>
 
-        <div className="mt-4 rounded-lg bg-blue-50 p-3">
-          <p className="text-sm text-blue-800">
+        <div className="mt-4 rounded-lg bg-blue-50 p-3 dark:bg-blue-900/20">
+          <p className="text-sm text-blue-800 dark:text-blue-100">
             <strong>Tip:</strong> Focus on your weakest areas first. Studies show that targeted practice improves retention by up to 50%.
           </p>
         </div>

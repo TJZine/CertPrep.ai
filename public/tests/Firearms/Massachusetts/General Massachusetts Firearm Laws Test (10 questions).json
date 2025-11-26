@@ -1,0 +1,164 @@
+{
+  "title": "Massachusetts Firearm Law Mastery (2024 Update)",
+  "description": "A comprehensive assessment of Massachusetts gun laws, including licensing, transport, storage, and the Modernizing Firearm Laws Act (Chapter 135 of the Acts of 2024).",
+  "questions": [
+    {
+      "id": "licensing-distinction-001",
+      "category": "Licensing",
+      "difficulty": "Easy",
+      "question": "What is the primary legal distinction between a License to Carry (LTC) and a Firearms Identification Card (FID) in Massachusetts regarding the types of firearms one may possess?",
+      "options": {
+        "A": "An FID allows for concealed carry, while an LTC is for home possession only",
+        "B": "An FID is for handguns only, while an LTC covers all firearm types",
+        "C": "An FID permits possession of non-large capacity rifles and shotguns, while an LTC allows for handguns and large-capacity firearms",
+        "D": "There is no distinction; the terms are used interchangeably in state statutes"
+      },
+      "correct_answer": "C",
+      "explanation": "In Massachusetts, a Firearms Identification Card (FID) allows for the purchase and possession of non-large capacity rifles and shotguns only. To purchase, possess, or carry handguns (pistols/revolvers) or large-capacity rifles/shotguns, an individual must hold a License to Carry (LTC).",
+      "distractor_logic": "Option A reverses the carry logic; FID does not permit public carry. Option B is incorrect because FIDs explicitly exclude handguns. Option D is incorrect as they are distinct licenses with different age requirements (18 for FID, 21 for LTC) and privileges."
+    },
+    {
+      "id": "transport-vehicle-002",
+      "category": "Transport",
+      "difficulty": "Medium",
+      "question": "Under M.G.L. c. 140, § 131C, how must a person with a Class A License to Carry (LTC) transport a loaded handgun in a vehicle?",
+      "options": {
+        "A": "It must be kept in a locked glove compartment at all times",
+        "B": "It must be under the direct control of the licensee",
+        "C": "It must be visible on the dashboard to alert law enforcement",
+        "D": "Loaded firearms are never permitted in a vehicle, regardless of licensure"
+      },
+      "correct_answer": "B",
+      "explanation": "State law allows a holder of a License to Carry (LTC) to transport a loaded handgun in a vehicle only if the firearm is under their direct control. If the firearm is not under direct control, it must be unloaded and secured in a locked case, trunk, or other secure container.",
+      "distractor_logic": "Option A is a common misconception; the glove box does not count as a secure storage container for storage, and if it's loaded, it must be on your person (direct control). Option C is dangerous and illegal. Option D is incorrect because an LTC holder grants this specific privilege."
+    },
+    {
+      "id": "storage-home-003",
+      "category": "Storage",
+      "difficulty": "Medium",
+      "question": "According to M.G.L. c. 140, § 131L, which of the following is a compliant method for storing a firearm in the home when not in use?",
+      "options": {
+        "A": "Hidden in a location unknown to other family members",
+        "B": "Stored unloaded with ammunition in a separate room",
+        "C": "Secured in a locked container or equipped with a tamper-resistant mechanical lock",
+        "D": "Disassembled with the slide or bolt removed"
+      },
+      "correct_answer": "C",
+      "explanation": "Massachusetts law mandates that all firearms, when not in use or under the owner's immediate control, must be secured in a locked container OR equipped with a tamper-resistant mechanical lock (such as a trigger lock) or other safety device to render them inoperable by unauthorized users.",
+      "distractor_logic": "Option A constitutes 'improper storage' and is a criminal offense. Option B is a safety best practice but does not meet the legal requirement if the gun itself is not locked. Option D is insufficient under the law unless the parts are also locked/secured."
+    },
+    {
+      "id": "reporting-portal-004",
+      "category": "Transactions",
+      "difficulty": "Medium",
+      "question": "How must Massachusetts residents report the private sale or transfer of a firearm to another licensed resident?",
+      "options": {
+        "A": "By mailing a paper FA-10 form to the Department of Criminal Justice Information Services",
+        "B": "By filing a report in person at the local police station",
+        "C": "By using the Massachusetts Gun Transaction Portal to record the sale electronically",
+        "D": "Private sales are no longer legal; all sales must go through a licensed dealer"
+      },
+      "correct_answer": "C",
+      "explanation": "Residents are required to report private sales, transfers, and inheritances electronically via the Massachusetts Gun Transaction Portal. The state stopped accepting paper FA-10 forms for these transactions several years ago to ensure real-time registry updates.",
+      "distractor_logic": "Option A describes the old method which is now obsolete. Option B is not the standard procedure for reporting sales. Option D is incorrect; private transfers are still legal between properly licensed individuals, though they must be reported."
+    },
+    {
+      "id": "erpo-new-law-005",
+      "category": "Red Flag Laws",
+      "difficulty": "Hard",
+      "question": "Under the 'An Act Modernizing Firearm Laws' (Chapter 135 of the Acts of 2024), which new group of professionals was added to the list of people eligible to petition for an Extreme Risk Protection Order (ERPO)?",
+      "options": {
+        "A": "Licensed firearm instructors",
+        "B": "School administrators and licensed healthcare providers",
+        "C": "Neighbors within 500 feet of the respondent",
+        "D": "Employers of the respondent"
+      },
+      "correct_answer": "B",
+      "explanation": "The 2024 legislation expanded the list of eligible petitioners for an ERPO (Red Flag order) to include school administrators and licensed healthcare providers. Previously, this was largely limited to family/household members and law enforcement.",
+      "distractor_logic": "Options A, C, and D list groups that were not granted standing to petition for an ERPO under the new legislation. The expansion specifically targeted those in educational and medical positions who might observe warning signs."
+    },
+    {
+      "id": "prohibited-areas-006",
+      "category": "Restricted Areas",
+      "difficulty": "Easy",
+      "question": "Which of the following locations is statutorily prohibited for carrying a firearm, even with a valid LTC, under the 2024 updates to Massachusetts law?",
+      "options": {
+        "A": "Public parks",
+        "B": "Polling places and government buildings",
+        "C": "Grocery stores selling alcohol",
+        "D": "Private businesses without posted signage"
+      },
+      "correct_answer": "B",
+      "explanation": "Chapter 135 of the Acts of 2024 codified prohibitions on carrying firearms in polling places and government administrative buildings. While carrying in schools and airports was already prohibited, the new law explicitly added these civic locations to the statute.",
+      "distractor_logic": "Option A is generally not prohibited unless local by-laws apply (though state parks have specific regs). Option C is not a statutory prohibition in MA (unlike some states that ban carry in places serving alcohol). Option D is incorrect as private businesses must post signage to prohibit carry (trespass laws).",
+      "distractor_logic_check": "Note: While 135 updated the law, carry in schools was already illegal. The distinct *addition* was the focus on government buildings/polling places."
+    },
+    {
+      "id": "assault-style-grandfather-007",
+      "category": "Assault-Style Firearms",
+      "difficulty": "Hard",
+      "question": "The 2024 law changed the definition from 'Assault Weapon' to 'Assault-Style Firearm.' To legally possess such a firearm under the new grandfathering clause, it must have been legally registered in the Commonwealth by which date?",
+      "options": {
+        "A": "September 13, 1994",
+        "B": "July 20, 2016",
+        "C": "August 1, 2024",
+        "D": "October 2, 2024"
+      },
+      "correct_answer": "C",
+      "explanation": "The new law bans 'Assault-Style Firearms' but includes a grandfather clause for weapons that were lawfully owned and registered in Massachusetts by August 1, 2024. Weapons registered after this date do not qualify for the exemption.",
+      "distractor_logic": "Option A refers to the federal ban expiration date. Option B refers to the 'Healey Enforcement Notice' date regarding copycat weapons. Option D is the effective date of the new act, but the grandfathering cutoff was set earlier (August 1)."
+    },
+    {
+      "id": "castle-doctrine-008",
+      "category": "Self-Defense",
+      "difficulty": "Medium",
+      "question": "How does the 'Castle Doctrine' apply to self-defense inside a dwelling in Massachusetts?",
+      "options": {
+        "A": "You may use deadly force to protect property, even if no threat to life exists",
+        "B": "You have a duty to retreat to the furthest point of the home before using force",
+        "C": "You have no duty to retreat and may use reasonable force if you believe an intruder presents a threat of death or serious bodily injury",
+        "D": "It grants immunity from prosecution for any action taken against an intruder"
+      },
+      "correct_answer": "C",
+      "explanation": "Massachusetts law (M.G.L. c. 278, § 8A) establishes that an occupant of a dwelling has no duty to retreat from an unlawful intruder if the occupant has a reasonable belief that the intruder is about to inflict great bodily injury or death.",
+      "distractor_logic": "Option A is incorrect; deadly force cannot be used solely to protect property. Option B describes the 'duty to retreat' which applies *outside* the home, not inside. Option D is incorrect; you can still be prosecuted if the force used was disproportionate or unreasonable."
+    },
+    {
+      "id": "ghost-guns-009",
+      "category": "Ghost Guns",
+      "difficulty": "Medium",
+      "question": "What requirement does the 2024 firearm law impose regarding firearm frames and receivers (often called 'Ghost Guns')?",
+      "options": {
+        "A": "They are exempt from regulation if made for personal use",
+        "B": "They must be serialized and registered",
+        "C": "They can only be possessed by gunsmiths",
+        "D": "They must be painted a safety color to distinguish them from toys"
+      },
+      "correct_answer": "B",
+      "explanation": "The Act Modernizing Firearm Laws specifically targets 'ghost guns' by requiring that all frames and receivers be serialized and registered. Possession of unserialized frames/receivers is now explicitly criminalized to close the loophole on untraceable weapons.",
+      "distractor_logic": "Option A is the opposite of the new law, which removed the personal use loophole for unserialized builds. Option C is incorrect; individuals can possess them *if* they comply with serialization/registration. Option D is a fabrication."
+    },
+    {
+      "id": "non-resident-carry-010",
+      "category": "Non-Resident",
+      "difficulty": "Hard",
+      "question": "A resident of New Hampshire with a valid NH carry permit wants to carry a concealed firearm in Massachusetts. Which statement is true?",
+      "options": {
+        "A": "They may carry legally because NH and MA have a reciprocity agreement",
+        "B": "They may carry for up to 24 hours while traveling through the state",
+        "C": "They must obtain a Non-Resident License to Carry from the Massachusetts State Police",
+        "D": "They can carry openly but not concealed"
+      },
+      "correct_answer": "C",
+      "explanation": "Massachusetts does not honor concealed carry permits from any other state (no reciprocity). Non-residents wishing to carry a firearm in MA must apply for and obtain a Non-Resident License to Carry (LTC) issued by the Massachusetts State Police Firearms Records Bureau.",
+      "distractor_logic": "Option A is incorrect; MA has no reciprocity. Option B is incorrect; there is no 24-hour grace period for carry (only specific transport protections under FOPA, which requires the gun to be locked/unloaded, not carried). Option D is illegal without an MA LTC."
+    }
+  ],
+  "tags": [
+    "Massachusetts",
+    "Firearm Law",
+    "LTC",
+    "Safety",
+    "Legal"
+  ]
+}

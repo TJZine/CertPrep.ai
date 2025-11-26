@@ -84,7 +84,7 @@ export function ModeSelectModal({ quiz, isOpen, onClose }: ModeSelectModalProps)
       footer={footer}
     >
       {quiz ? (
-        <p className="mb-4 text-sm text-slate-600">
+        <p className="mb-4 text-sm text-slate-600 dark:text-slate-300">
           {quiz.questions.length} questions • ~{estimatedMinutes ?? 0} minutes
         </p>
       ) : null}
@@ -116,13 +116,15 @@ function ModeCard({
       type="button"
       onClick={onSelect}
       className={cn(
-        'relative flex h-full flex-col rounded-xl border-2 p-6 text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2',
-        isSelected ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-500 ring-offset-2' : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50',
+        'relative flex h-full flex-col rounded-xl border-2 p-6 text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-100 dark:focus-visible:ring-offset-slate-900',
+        isSelected
+          ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-500 ring-offset-2 dark:border-blue-400 dark:bg-blue-900/30'
+          : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:hover:border-slate-600 dark:hover:bg-slate-800',
       )}
       aria-pressed={isSelected}
     >
       {mode.recommended ? (
-        <Badge className="absolute -top-2 left-4" variant="default">
+        <Badge className="absolute -top-2 left-4 dark:border-blue-500 dark:bg-blue-900 dark:text-blue-100" variant="default">
           Recommended
         </Badge>
       ) : null}
@@ -130,19 +132,21 @@ function ModeCard({
       <div
         className={cn(
           'mb-4 flex h-16 w-16 items-center justify-center rounded-full',
-          isSelected ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-600',
+          isSelected
+            ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-200'
+            : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-200',
         )}
       >
         {mode.icon}
       </div>
 
-      <h3 className="text-lg font-semibold text-slate-900">{mode.name}</h3>
-      <p className="mt-1 text-sm text-slate-500">{mode.description}</p>
+      <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{mode.name}</h3>
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-300">{mode.description}</p>
 
       <ul className="mt-4 space-y-2">
         {mode.features.map((feature) => (
-          <li key={feature} className="flex items-center gap-2 text-sm text-slate-600">
-            <Check className="h-4 w-4 text-green-500" aria-hidden="true" />
+          <li key={feature} className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+            <Check className="h-4 w-4 text-green-500 dark:text-green-300" aria-hidden="true" />
             {feature}
           </li>
         ))}
@@ -152,7 +156,7 @@ function ModeCard({
         <div
           className={cn(
             'h-5 w-5 rounded-full border-2',
-            isSelected ? 'border-blue-500 bg-blue-500' : 'border-slate-300',
+            isSelected ? 'border-blue-500 bg-blue-500 dark:border-blue-400 dark:bg-blue-400' : 'border-slate-300 dark:border-slate-600',
           )}
         >
           {isSelected ? <Check className="h-full w-full p-0.5 text-white" aria-hidden="true" /> : null}

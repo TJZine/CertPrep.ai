@@ -38,27 +38,28 @@ export function ProctorControls({
     <div className={cn('space-y-4', className)}>
       <div className="flex justify-center">
         {hasAnswer ? (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-700">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-700 dark:bg-blue-900/40 dark:text-blue-100">
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
             </svg>
             Answer recorded
           </span>
         ) : (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-sm font-medium text-amber-700">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-sm font-medium text-amber-700 dark:bg-amber-900/40 dark:text-amber-100">
             <AlertTriangle className="h-4 w-4" />
             No answer selected
           </span>
         )}
       </div>
 
-      <div className="flex items-center justify-between gap-4">
+      <div className="grid grid-cols-[1fr,auto,1fr] items-center gap-4 text-center">
         <Button
           variant="outline"
           onClick={onPrevious}
           disabled={isFirstQuestion}
           leftIcon={<ChevronLeft className="h-4 w-4" />}
           aria-label="Previous question"
+          className="justify-self-start"
         >
           <span className="hidden sm:inline">Previous</span>
         </Button>
@@ -66,18 +67,15 @@ export function ProctorControls({
         <Button
           variant={isFlagged ? 'warning' : 'outline'}
           onClick={onToggleFlag}
-          className={cn(isFlagged && 'border-orange-400 bg-orange-100 text-orange-700 hover:bg-orange-200')}
           aria-label={isFlagged ? 'Remove flag' : 'Flag for review'}
           aria-pressed={isFlagged}
+          leftIcon={isFlagged ? <Flag className="h-4 w-4 fill-current" /> : <FlagOff className="h-4 w-4" />}
+          className="justify-self-center"
         >
           {isFlagged ? (
-            <>
-              <Flag className="mr-2 h-4 w-4 fill-current" />
-              Flagged
-            </>
+            'Flagged'
           ) : (
             <>
-              <FlagOff className="mr-2 h-4 w-4" />
               <span className="hidden sm:inline">Mark for Review</span>
               <span className="sm:hidden">Flag</span>
             </>
@@ -90,12 +88,13 @@ export function ProctorControls({
           disabled={isLastQuestion}
           rightIcon={<ChevronRight className="h-4 w-4" />}
           aria-label="Next question"
+          className="justify-self-end"
         >
           <span className="hidden sm:inline">Next</span>
         </Button>
       </div>
 
-      <div className="border-t border-slate-200 pt-4">
+      <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
         <Button
           variant="default"
           size="lg"
@@ -106,14 +105,14 @@ export function ProctorControls({
         >
           Submit Exam
         </Button>
-        <p className="mt-2 text-center text-xs text-slate-500">You can review and change answers before submitting</p>
+        <p className="mt-2 text-center text-xs text-slate-500 dark:text-slate-300">You can review and change answers before submitting</p>
       </div>
 
-      <div className="text-center text-xs text-slate-400">
+      <div className="text-center text-xs text-slate-400 dark:text-slate-300">
         <span className="hidden sm:inline">
-          Use <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono">←</kbd>{' '}
-          <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono">→</kbd> to navigate,{' '}
-          <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono">F</kbd> to flag
+          Use <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono dark:bg-slate-800 dark:text-slate-100">←</kbd>{' '}
+          <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono dark:bg-slate-800 dark:text-slate-100">→</kbd> to navigate,{' '}
+          <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono dark:bg-slate-800 dark:text-slate-100">F</kbd> to flag
         </span>
       </div>
     </div>

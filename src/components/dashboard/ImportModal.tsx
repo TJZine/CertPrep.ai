@@ -226,11 +226,11 @@ export function ImportModal({ isOpen, onClose, onImportSuccess }: ImportModalPro
   const renderValidationArea = (): React.ReactElement | null => {
     if (parseError) {
       return (
-        <div className="mt-4 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800" role="alert">
+        <div className="mt-4 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-500/50 dark:bg-red-950 dark:text-red-100" role="alert">
           <XCircle className="h-5 w-5 text-red-600" aria-hidden="true" />
           <div>
             <p className="font-semibold">Invalid JSON</p>
-            <p className="mt-1 whitespace-pre-wrap text-red-700">{parseError}</p>
+            <p className="mt-1 whitespace-pre-wrap text-red-700 dark:text-red-200">{parseError}</p>
           </div>
         </div>
       );
@@ -238,15 +238,15 @@ export function ImportModal({ isOpen, onClose, onImportSuccess }: ImportModalPro
 
     if (validationResult?.success && validationResult.data) {
       return (
-        <div className="mt-4 rounded-lg border border-green-200 bg-green-50 px-3 py-3">
-          <div className="mb-2 flex items-center gap-2 text-green-800">
+        <div className="mt-4 rounded-lg border border-green-200 bg-green-50 px-3 py-3 dark:border-green-500/40 dark:bg-green-950">
+          <div className="mb-2 flex items-center gap-2 text-green-800 dark:text-green-100">
             <CheckCircle className="h-5 w-5" aria-hidden="true" />
             <span className="text-sm font-semibold">Validation passed</span>
           </div>
-          <ul className="space-y-1 text-sm text-green-900">
+          <ul className="space-y-1 text-sm text-green-900 dark:text-green-100">
             {validationStatuses.map((status) => (
               <li key={status.label} className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-green-600" aria-hidden="true" />
+                <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-300" aria-hidden="true" />
                 {status.label}
               </li>
             ))}
@@ -257,15 +257,15 @@ export function ImportModal({ isOpen, onClose, onImportSuccess }: ImportModalPro
 
     if (validationResult && validationResult.errors && validationResult.errors.length > 0) {
       return (
-        <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-3" role="alert">
-          <div className="mb-2 flex items-center gap-2 text-red-800">
+        <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-3 dark:border-red-500/50 dark:bg-red-950" role="alert">
+          <div className="mb-2 flex items-center gap-2 text-red-800 dark:text-red-100">
             <AlertCircle className="h-5 w-5" aria-hidden="true" />
             <span className="text-sm font-semibold">Validation errors</span>
           </div>
-          <ul className="space-y-1 text-sm text-red-800">
+          <ul className="space-y-1 text-sm text-red-800 dark:text-red-100">
             {validationResult.errors.map((error) => (
               <li key={`${error.path.join('.')}-${error.message}`} className="flex items-start gap-2">
-                <XCircle className="mt-0.5 h-4 w-4 text-red-600" aria-hidden="true" />
+                <XCircle className="mt-0.5 h-4 w-4 text-red-600 dark:text-red-300" aria-hidden="true" />
                 <span>
                   <span className="font-semibold">[{error.path.join('.') || 'root'}]</span> {error.message}
                 </span>
@@ -296,7 +296,7 @@ export function ImportModal({ isOpen, onClose, onImportSuccess }: ImportModalPro
       <div className="space-y-4">
         <div
           ref={tabListRef}
-          className="flex border-b border-slate-200"
+          className="flex border-b border-slate-200 dark:border-slate-800"
           role="tablist"
           aria-label="Import method"
           onKeyDown={handleTabKeyNavigation}
@@ -311,8 +311,10 @@ export function ImportModal({ isOpen, onClose, onImportSuccess }: ImportModalPro
                 type="button"
                 aria-selected={isActive}
                 className={cn(
-                  'px-4 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2',
-                  isActive ? 'border-b-2 border-blue-600 text-blue-700' : 'text-slate-500 hover:text-slate-700',
+                  'px-4 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900',
+                  isActive
+                    ? 'border-b-2 border-blue-600 text-blue-700 dark:border-blue-400 dark:text-blue-200'
+                    : 'text-slate-500 hover:text-slate-700 dark:text-slate-300 dark:hover:text-slate-100',
                 )}
                 onClick={() => setActiveTab(tab as 'paste' | 'upload')}
               >
@@ -352,8 +354,8 @@ export function ImportModal({ isOpen, onClose, onImportSuccess }: ImportModalPro
               }
             }}
             className={cn(
-              'flex min-h-[220px] cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 text-center transition',
-              isDragOver && 'border-blue-500 bg-blue-50',
+              'flex min-h-[220px] cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 text-center transition dark:border-slate-700 dark:bg-slate-800',
+              isDragOver && 'border-blue-500 bg-blue-50 dark:border-blue-400 dark:bg-blue-900/30',
             )}
           >
             <input
@@ -369,15 +371,15 @@ export function ImportModal({ isOpen, onClose, onImportSuccess }: ImportModalPro
               }}
             />
             <div className="flex flex-col items-center gap-2">
-              <FileJson className="h-10 w-10 text-blue-600" aria-hidden="true" />
-              <p className="text-sm font-semibold text-slate-900">Drag and drop your JSON file</p>
-              <p className="text-xs text-slate-600">or click to browse .json files</p>
-              {fileName ? <p className="mt-2 text-sm text-blue-700">Selected: {fileName}</p> : null}
+              <FileJson className="h-10 w-10 text-blue-600 dark:text-blue-300" aria-hidden="true" />
+              <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Drag and drop your JSON file</p>
+              <p className="text-xs text-slate-600 dark:text-slate-300">or click to browse .json files</p>
+              {fileName ? <p className="mt-2 text-sm text-blue-700 dark:text-blue-300">Selected: {fileName}</p> : null}
             </div>
           </div>
         )}
 
-        <div aria-live="polite">{isValidating ? <p className="text-sm text-slate-500">Validating...</p> : null}</div>
+        <div aria-live="polite">{isValidating ? <p className="text-sm text-slate-500 dark:text-slate-300">Validating...</p> : null}</div>
 
         {renderValidationArea()}
       </div>

@@ -10,6 +10,7 @@ import { AITutorButton } from './AITutorButton';
 import { SubmitButton, ZenControls } from './ZenControls';
 import { Card, CardContent } from '@/components/ui/Card';
 import { useToast } from '@/components/ui/Toast';
+import { Button } from '@/components/ui/Button';
 import {
   useCurrentQuestion,
   useProgress,
@@ -32,6 +33,11 @@ interface ZenQuizContainerProps {
 export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContainerProps): React.ReactElement {
   const router = useRouter();
   const { addToast } = useToast();
+
+  const isMountedRef = React.useRef(false);
+  const hasSavedResultRef = React.useRef(false);
+  const completionTimeRef = React.useRef<number | null>(null);
+  const [saveError, setSaveError] = React.useState(false);
 
   const {
     initializeSession,
@@ -56,53 +62,95 @@ export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContaine
   const currentQuestion = useCurrentQuestion();
   const progress = useProgress();
 
-  const { formattedTime, start: startTimer, seconds } = useTimer({ autoStart: true });
+  const { formattedTime, start: startTimer, seconds, pause: pauseTimer } = useTimer({ autoStart: true });
   useBeforeUnload(!isComplete, 'Your quiz progress will be lost. Are you sure?');
 
-  const handleSessionComplete = React.useCallback(async (): Promise<void> => {
-    try {
-      const answersRecord: Record<string, string> = {};
-      answers.forEach((record, questionId) => {
-        answersRecord[questionId] = record.selectedAnswer;
-      });
+  React.useEffect((): (() => void) => {
+    isMountedRef.current = true;
+    return (): void => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
-      const result = await createResult({
-        quizId: quiz.id,
-        mode: 'zen',
-        answers: answersRecord,
-        flaggedQuestions: Array.from(flaggedQuestions),
-        timeTakenSeconds: seconds,
-      });
+  const handleSessionComplete = React.useCallback(
+    async (timeTakenSeconds: number): Promise<void> => {
+      try {
+        const answersRecord: Record<string, string> = {};
+        answers.forEach((record, questionId) => {
+          answersRecord[questionId] = record.selectedAnswer;
+        });
 
-      if (isSmartRound) {
-        sessionStorage.removeItem('smartRoundQuestions');
-        sessionStorage.removeItem('smartRoundQuizId');
-        sessionStorage.removeItem('smartRoundAllQuestions');
-        sessionStorage.removeItem('smartRoundMissedCount');
-        sessionStorage.removeItem('smartRoundFlaggedCount');
+        const result = await createResult({
+          quizId: quiz.id,
+          mode: 'zen',
+          answers: answersRecord,
+          flaggedQuestions: Array.from(flaggedQuestions),
+          timeTakenSeconds,
+        });
+
+        if (!isMountedRef.current) {
+          return;
+        }
+
+        if (isSmartRound) {
+          sessionStorage.removeItem('smartRoundQuestions');
+          sessionStorage.removeItem('smartRoundQuizId');
+          sessionStorage.removeItem('smartRoundAllQuestions');
+          sessionStorage.removeItem('smartRoundMissedCount');
+          sessionStorage.removeItem('smartRoundFlaggedCount');
+        }
+
+        setSaveError(false);
+        addToast('success', isSmartRound ? 'Smart Round complete!' : 'Study session complete!');
+        router.push(`/results/${result.id}`);
+      } catch (error) {
+        console.error('Failed to save result:', error);
+        if (!isMountedRef.current) {
+          return;
+        }
+        setSaveError(true);
+        addToast('error', 'Failed to save your results. Please try again.');
+        throw error;
       }
+    },
+    [addToast, answers, flaggedQuestions, isSmartRound, quiz.id, router],
+  );
 
-      addToast('success', isSmartRound ? 'Smart Round complete!' : 'Study session complete!');
-      router.push(`/results/${result.id}`);
-    } catch (error) {
-      console.error('Failed to save result:', error);
-      addToast('error', 'Failed to save your results. Please try again.');
+  const retrySave = React.useCallback((): void => {
+    const elapsedSeconds = completionTimeRef.current ?? seconds;
+    if (elapsedSeconds === null) {
+      return;
     }
-  }, [addToast, answers, flaggedQuestions, isSmartRound, quiz.id, router, seconds]);
+    hasSavedResultRef.current = true;
+    setSaveError(false);
+    void handleSessionComplete(elapsedSeconds).catch(() => {
+      hasSavedResultRef.current = false;
+    });
+  },
+    [handleSessionComplete, seconds],
+  );
 
   React.useEffect(() => {
+    hasSavedResultRef.current = false;
     initializeSession(quiz.id, 'zen', quiz.questions);
     startTimer();
     return (): void => {
       resetSession();
+      hasSavedResultRef.current = false;
     };
   }, [quiz.id, quiz.questions, initializeSession, startTimer, resetSession]);
 
   React.useEffect(() => {
-    if (isComplete) {
-      void handleSessionComplete();
+    if (isComplete && !hasSavedResultRef.current) {
+      hasSavedResultRef.current = true;
+      pauseTimer();
+      const elapsedSeconds = seconds;
+      completionTimeRef.current = elapsedSeconds;
+      void handleSessionComplete(elapsedSeconds).catch(() => {
+        hasSavedResultRef.current = false;
+      });
     }
-  }, [isComplete, handleSessionComplete]);
+  }, [isComplete, handleSessionComplete, pauseTimer, seconds]);
 
   useKeyboardNav({
     onSelectOption: (key) => {
@@ -225,6 +273,19 @@ export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContaine
                     onGood={markGood}
                     isLastQuestion={isLastQuestion}
                   />
+                  {saveError ? (
+                    <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-700/50 dark:bg-amber-950/30 dark:text-amber-100">
+                      <p className="mb-3 font-semibold">We couldn&apos;t save your results.</p>
+                      <div className="flex flex-wrap gap-2">
+                        <Button size="sm" onClick={retrySave}>
+                          Retry save
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={handleExit}>
+                          Exit without saving
+                        </Button>
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
               )}
             </div>

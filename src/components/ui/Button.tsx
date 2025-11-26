@@ -6,17 +6,18 @@ import { type VariantProps, cva } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 export const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-60',
+  'inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-100 disabled:pointer-events-none disabled:opacity-60 dark:focus-visible:ring-offset-slate-900',
   {
     variants: {
       variant: {
-        default: 'bg-blue-600 text-white shadow-sm hover:bg-blue-700',
-        secondary: 'bg-slate-100 text-slate-900 hover:bg-slate-200',
-        outline: 'border border-slate-300 bg-white text-slate-900 hover:bg-slate-50',
-        ghost: 'text-slate-700 hover:bg-slate-100',
-        danger: 'bg-red-600 text-white shadow-sm hover:bg-red-700',
-        success: 'bg-green-600 text-white shadow-sm hover:bg-green-700',
-        warning: 'bg-orange-500 text-white shadow-sm hover:bg-orange-600',
+        default: 'bg-blue-600 text-white shadow-sm hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500',
+        secondary: 'bg-slate-100 text-slate-900 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700',
+        outline:
+          'border border-slate-300 bg-white text-slate-900 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800',
+        ghost: 'text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800',
+        danger: 'bg-red-600 text-white shadow-sm hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-500',
+        success: 'bg-green-600 text-white shadow-sm hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-500',
+        warning: 'bg-orange-500 text-white shadow-sm hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-500',
       },
       size: {
         default: 'h-10 px-4 py-2',

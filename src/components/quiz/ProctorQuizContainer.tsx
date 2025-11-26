@@ -38,6 +38,8 @@ export function ProctorQuizContainer({
   const router = useRouter();
   const { addToast } = useToast();
 
+  const hasSavedResultRef = React.useRef(false);
+
   const {
     initializeProctorSession,
     selectAnswerProctor,
@@ -80,12 +82,14 @@ export function ProctorQuizContainer({
     updateTimeRemaining(timeRemaining);
   }, [timeRemaining, updateTimeRemaining]);
 
-  React.useEffect((): () => void => {
+  React.useEffect((): (() => void) => {
     initializeProctorSession(quiz.id, quiz.questions, durationMinutes);
     startTimer();
+    hasSavedResultRef.current = false;
     return () => {
       pauseTimer();
       resetSession();
+      hasSavedResultRef.current = false;
     };
   }, [quiz.id, quiz.questions, durationMinutes, initializeProctorSession, startTimer, pauseTimer, resetSession]);
 
@@ -115,7 +119,7 @@ export function ProctorQuizContainer({
   }, [answers]);
 
   const handleSubmitExam = async (): Promise<void> => {
-    if (isSubmitting) return;
+    if (isSubmitting || hasSavedResultRef.current) return;
     setIsSubmitting(true);
     setShowSubmitModal(false);
     try {
@@ -128,6 +132,7 @@ export function ProctorQuizContainer({
         flaggedQuestions: Array.from(flaggedQuestions),
         timeTakenSeconds: durationMinutes * 60 - timeRemaining,
       });
+      hasSavedResultRef.current = true;
       addToast('success', 'Exam submitted successfully!');
       router.push(`/results/${result.id}`);
     } catch (error) {
@@ -138,6 +143,9 @@ export function ProctorQuizContainer({
   };
 
   const handleAutoSubmit = React.useCallback(async (): Promise<string | null> => {
+    if (isSubmitting || hasSavedResultRef.current) {
+      return autoResultId;
+    }
     setIsSubmitting(true);
     pauseTimer();
     autoSubmitExam();
@@ -149,6 +157,7 @@ export function ProctorQuizContainer({
         flaggedQuestions: Array.from(flaggedQuestions),
         timeTakenSeconds: durationMinutes * 60,
       });
+      hasSavedResultRef.current = true;
       setAutoResultId(result.id);
       setShowTimeUpModal(true);
       return result.id;
@@ -160,9 +169,11 @@ export function ProctorQuizContainer({
     } finally {
       setIsSubmitting(false);
     }
-  }, [addToast, autoSubmitExam, buildAnswersRecord, durationMinutes, flaggedQuestions, pauseTimer, quiz.id]);
+  }, [addToast, autoResultId, autoSubmitExam, buildAnswersRecord, durationMinutes, flaggedQuestions, isSubmitting, pauseTimer, quiz.id]);
 
-  autoSubmitRef.current = handleAutoSubmit;
+  React.useEffect(() => {
+    autoSubmitRef.current = handleAutoSubmit;
+  }, [handleAutoSubmit]);
 
   const handleTimeUpConfirm = async (): Promise<void> => {
     setIsSubmitting(true);

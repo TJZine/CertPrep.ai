@@ -8,7 +8,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { ScorecardCompact } from '@/components/results/Scorecard';
+import { cn } from '@/lib/utils';
 import type { Result } from '@/types/result';
+import { useIsDarkMode } from '@/hooks/useIsDarkMode';
 
 interface PerformanceHistoryProps {
   results: Result[];
@@ -32,12 +34,12 @@ function PerformanceHistoryTooltip({ active, payload }: PerformanceTooltipProps)
   const data = currentPayload.payload as PerformancePoint;
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-lg">
-      <p className="font-semibold text-slate-900">{data.quizTitle}</p>
-      <p className="text-sm text-slate-600">
+    <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+      <p className="font-semibold text-slate-900 dark:text-slate-50">{data.quizTitle}</p>
+      <p className="text-sm text-slate-600 dark:text-slate-200">
         Score: <span className="font-semibold">{data.score}%</span>
       </p>
-      <p className="text-sm text-slate-600">Date: {data.date}</p>
+      <p className="text-sm text-slate-600 dark:text-slate-200">Date: {data.date}</p>
       <Badge variant={data.mode === 'zen' ? 'default' : 'secondary'} className="mt-1">
         {data.mode === 'zen' ? 'Study' : 'Exam'}
       </Badge>
@@ -50,6 +52,7 @@ function PerformanceHistoryTooltip({ active, payload }: PerformanceTooltipProps)
  */
 export function PerformanceHistory({ results, quizTitles, className }: PerformanceHistoryProps): React.ReactElement {
   const router = useRouter();
+  const isDark = useIsDarkMode();
 
   const sortedResults = React.useMemo(() => [...results].sort((a, b) => b.timestamp - a.timestamp), [results]);
   const [showAllResults, setShowAllResults] = React.useState(false);
@@ -113,13 +116,14 @@ export function PerformanceHistory({ results, quizTitles, className }: Performan
 
           {trend && (
             <div
-              className={`flex items-center gap-1 rounded-full px-3 py-1 ${
+              className={cn(
+                'flex items-center gap-1 rounded-full px-3 py-1',
                 trend.direction === 'up'
-                  ? 'bg-green-100 text-green-700'
+                  ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-200'
                   : trend.direction === 'down'
-                    ? 'bg-red-100 text-red-700'
-                    : 'bg-slate-100 text-slate-700'
-              }`}
+                    ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-200'
+                    : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-100',
+              )}
             >
               {trend.direction === 'up' && <TrendingUp className="h-4 w-4" aria-hidden="true" />}
               {trend.direction === 'down' && <TrendingDown className="h-4 w-4" aria-hidden="true" />}
@@ -134,15 +138,25 @@ export function PerformanceHistory({ results, quizTitles, className }: Performan
         <div className="h-[250px]">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData} margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis dataKey="date" tick={{ fill: '#64748b', fontSize: 12 }} tickLine={false} />
-              <YAxis domain={[0, 100]} tick={{ fill: '#64748b', fontSize: 12 }} tickLine={false} axisLine={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#1f2937' : '#e2e8f0'} />
+              <XAxis dataKey="date" tick={{ fill: isDark ? '#cbd5e1' : '#64748b', fontSize: 12 }} tickLine={false} />
+              <YAxis
+                domain={[0, 100]}
+                tick={{ fill: isDark ? '#cbd5e1' : '#64748b', fontSize: 12 }}
+                tickLine={false}
+                axisLine={false}
+              />
               <Tooltip content={<PerformanceHistoryTooltip />} />
               <ReferenceLine
                 y={averageScore}
                 stroke="#94a3b8"
                 strokeDasharray="5 5"
-                label={{ value: `Avg: ${averageScore}%`, position: 'right', fill: '#64748b', fontSize: 12 }}
+                label={{
+                  value: `Avg: ${averageScore}%`,
+                  position: 'right',
+                  fill: isDark ? '#cbd5e1' : '#64748b',
+                  fontSize: 12,
+                }}
               />
               <Line
                 type="monotone"

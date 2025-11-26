@@ -113,14 +113,14 @@ Please:
   }
 
   return (
-    <div className={cn('rounded-lg border border-blue-200 bg-blue-50 p-4', className)}>
+    <div className={cn('rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800/70 dark:bg-blue-900/20', className)}>
       <div className="flex items-start gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
-          <Bot className="h-5 w-5 text-blue-600" aria-hidden="true" />
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-800/60">
+          <Bot className="h-5 w-5 text-blue-600 dark:text-blue-200" aria-hidden="true" />
         </div>
         <div className="flex-1">
-          <h4 className="font-semibold text-blue-900">Need more help?</h4>
-          <p className="mt-1 text-sm text-blue-700">
+          <h4 className="font-semibold text-blue-900 dark:text-blue-100">Need more help?</h4>
+          <p className="mt-1 text-sm text-blue-700 dark:text-blue-200">
             Copy a detailed prompt to use with ChatGPT, Claude, or your favorite AI assistant for a
             personalized explanation.
           </p>
@@ -138,7 +138,7 @@ Please:
             <Button
               variant="outline"
               size="sm"
-              onClick={() => window.open('https://chat.openai.com', '_blank')}
+              onClick={() => window.open('https://chat.openai.com', '_blank', 'noopener,noreferrer')}
               rightIcon={<ExternalLink className="h-4 w-4" aria-hidden="true" />}
             >
               Open ChatGPT

@@ -1,0 +1,389 @@
+{
+  "title": "Massachusetts Property & Casualty Insurance Exam",
+  "description": "Comprehensive practice covering General Insurance concepts, MA Regulations, Homeowners, Auto, and Dwelling policies.",
+  "questions": [
+    {
+      "id": "general-insurance-001",
+      "category": "General Insurance",
+      "difficulty": "Medium",
+      "question": "Which of the following best describes a 'morale hazard'?",
+      "options": {
+        "A": "A physical condition that increases the probability of loss, such as a pothole.",
+        "B": "A dishonest act by an insured, such as arson.",
+        "C": "A careless or indifferent attitude toward risk, such as leaving keys in an unlocked car.",
+        "D": "A condition resulting from a violation of law."
+      },
+      "correct_answer": "C",
+      "explanation": "A morale hazard results from the indifferent or careless attitudes of an insured, such as leaving a car unlocked. This is distinct from a moral hazard (dishonesty) or physical hazard.",
+      "distractor_logic": "A describes a physical hazard. B describes a moral hazard. D is unrelated to the standard hazard definitions."
+    },
+    {
+      "id": "general-insurance-002",
+      "category": "General Insurance",
+      "difficulty": "Hard",
+      "question": "An insurance contract where only one party—the insurer—makes a legally enforceable promise is known as what type of contract?",
+      "options": {
+        "A": "Aleatory",
+        "B": "Unilateral",
+        "C": "Adhesion",
+        "D": "Conditional"
+      },
+      "correct_answer": "B",
+      "explanation": "A unilateral contract is one where only one party makes a promise. The insurer promises to pay covered claims; the insured does not promise to pay premiums (though they must do so to keep coverage in force, that is a condition, not a promise).",
+      "distractor_logic": "A refers to unequal exchange of value. C refers to the contract being drawn up by one party. D refers to the contract relying on conditions being met."
+    },
+    {
+      "id": "general-insurance-003",
+      "category": "General Insurance",
+      "difficulty": "Easy",
+      "question": "The concept of 'indemnity' is best defined as:",
+      "options": {
+        "A": "Restoring the insured to the same financial condition that existed prior to the loss.",
+        "B": "Allowing the insured to profit slightly from a loss to cover inconvenience.",
+        "C": "Transferring the right of recovery to the insurance company.",
+        "D": "Spreading the risk of loss among a large group of people."
+      },
+      "correct_answer": "A",
+      "explanation": "The principle of indemnity states that an insured should be restored to the same financial or economic condition that existed prior to the loss, without profit.",
+      "distractor_logic": "B violates the principle of indemnity (no profit). C describes subrogation. D describes the general definition of insurance/risk pooling."
+    },
+    {
+      "id": "general-insurance-004",
+      "category": "General Insurance",
+      "difficulty": "Medium",
+      "question": "All of the following are elements required for a contract to be legal and enforceable EXCEPT:",
+      "options": {
+        "A": "Competent parties",
+        "B": "Legal purpose",
+        "C": "Consideration",
+        "D": "Notarization"
+      },
+      "correct_answer": "D",
+      "explanation": "The four elements of a legal contract are Agreement (Offer & Acceptance), Consideration, Competent Parties, and Legal Purpose. Notarization is not a requirement for an insurance contract to be binding.",
+      "distractor_logic": "A, B, and C are the three standard elements listed in the text (along with Agreement)."
+    },
+    {
+      "id": "general-insurance-005",
+      "category": "General Insurance",
+      "difficulty": "Medium",
+      "question": "Which legal doctrine prevents an insurer from denying a claim if a producer has made a false statement that the insured relied upon, resulting in financial hardship?",
+      "options": {
+        "A": "Waiver",
+        "B": "Estoppel",
+        "C": "Subrogation",
+        "D": "Warranty"
+      },
+      "correct_answer": "B",
+      "explanation": "Estoppel prevents (stops) a party from re-asserting a right they previously waived or from denying a fact they previously established, if the other party relied on it to their detriment.",
+      "distractor_logic": "A is the voluntary relinquishment of a right. C is the transfer of rights of recovery. D is a statement guaranteed to be true."
+    },
+    {
+      "id": "p-and-c-basics-006",
+      "category": "Property and Casualty Basics",
+      "difficulty": "Medium",
+      "question": "In a liability policy, the 'Supplementary Payments' provide coverage for defense costs:",
+      "options": {
+        "A": "Within the limits of liability.",
+        "B": "In addition to the limits of liability.",
+        "C": "Only if the insured is found not liable.",
+        "D": "Subject to a specific deductible."
+      },
+      "correct_answer": "B",
+      "explanation": "Liability policies provide unlimited legal expenses for defense. These expenses are paid 'in addition' to the policy's coverage limit or limit of liability.",
+      "distractor_logic": "A is incorrect; defense costs do not reduce the limit. C is incorrect; defense is provided even if the suit is groundless. D is incorrect; defense costs usually have no deductible."
+    },
+    {
+      "id": "p-and-c-basics-007",
+      "category": "Property and Casualty Basics",
+      "difficulty": "Medium",
+      "question": "Which of the following defenses against negligence is a statutory law defense rather than a common law defense?",
+      "options": {
+        "A": "Contributory Negligence",
+        "B": "Assumption of Risk",
+        "C": "Intervening Cause",
+        "D": "Statute of Limitations"
+      },
+      "correct_answer": "D",
+      "explanation": "The Statute of Limitations is a statutory defense enacted by state legislatures. Contributory negligence, assumption of risk, and intervening cause are common law defenses.",
+      "distractor_logic": "A, B, and C are all common law defenses derived from judicial precedent."
+    },
+    {
+      "id": "p-and-c-basics-008",
+      "category": "Property and Casualty Basics",
+      "difficulty": "Easy",
+      "question": "Under a property policy, a 'direct loss' is best described as:",
+      "options": {
+        "A": "Financial loss resulting from the inability to use damaged property.",
+        "B": "Actual physical damage to tangible property caused by a covered peril.",
+        "C": "Loss of income due to business interruption.",
+        "D": "Extra expenses incurred to maintain a standard of living."
+      },
+      "correct_answer": "B",
+      "explanation": "Direct loss involves actual physical loss to tangible or intangible property caused by a peril (e.g., fire damage to a home). (Source: Chapter 2-4)",
+      "distractor_logic": "A, C, and D all describe 'Indirect' or 'Consequential' losses."
+    },
+    {
+      "id": "p-and-c-basics-009",
+      "category": "Property and Casualty Basics",
+      "difficulty": "Medium",
+      "question": "Which of the following construction classifications is considered the least fire-resistive?",
+      "options": {
+        "A": "Masonry",
+        "B": "Fire-Resistive",
+        "C": "Frame",
+        "D": "Modified Fire-Resistive"
+      },
+      "correct_answer": "C",
+      "explanation": "Frame construction is made of wood or similar combustible material and is the least fire-resistive classification. ",
+      "distractor_logic": "A, B, and D all offer higher levels of fire resistance than Frame construction."
+    },
+    {
+      "id": "p-and-c-basics-010",
+      "category": "Property and Casualty Basics",
+      "difficulty": "Hard",
+      "question": "Generally, to prove negligence, all of the following elements must be present EXCEPT:",
+      "options": {
+        "A": "A legal duty owed.",
+        "B": "A breach of that legal duty.",
+        "C": "Intent to cause harm.",
+        "D": "Actual loss or damage resulting from the breach."
+      },
+      "correct_answer": "C",
+      "explanation": "Negligence is an unintentional tort. If there is intent to cause harm, it is not negligence; it is an intentional tort. The four elements are duty, breach, injury/damages, and proximate cause.",
+      "distractor_logic": "A, B, and D are the required elements of negligence."
+    },
+    {
+      "id": "regulation-011",
+      "category": "Insurance Regulation",
+      "difficulty": "Medium",
+      "question": "The Commissioner of Insurance in Massachusetts is:",
+      "options": {
+        "A": "Elected by the general public.",
+        "B": "Appointed by the Governor.",
+        "C": "Selected by the National Association of Insurance Commissioners (NAIC).",
+        "D": "Appointed by the Attorney General."
+      },
+      "correct_answer": "B",
+      "explanation": "The Commissioner is appointed by the Governor. It is an appointed position, not an elective one.",
+      "distractor_logic": "A is a common misconception (some states elect, MA does not). C and D are incorrect regarding the appointment authority."
+    },
+    {
+      "id": "regulation-012",
+      "category": "Insurance Regulation",
+      "difficulty": "Hard",
+      "question": "If a producer is found guilty of an unfair trade practice, the Commissioner may issue a cease and desist order. A producer violating this order may be fined up to:",
+      "options": {
+        "A": "$1,000",
+        "B": "$5,000",
+        "C": "$10,000",
+        "D": "$25,000"
+      },
+      "correct_answer": "C",
+      "explanation": "Anyone who violates a cease and desist order may be fined up to $10,000 per violation and be subject to license suspension or revocation.",
+      "distractor_logic": "A is the fine for violating general insurance laws ($1,000). B and D are incorrect figures for this specific violation."
+    },
+    {
+      "id": "regulation-013",
+      "category": "Insurance Regulation",
+      "difficulty": "Medium",
+      "question": "A producer who offers a prospective client season tickets to sporting events in exchange for purchasing an insurance policy is engaging in:",
+      "options": {
+        "A": "Twisting",
+        "B": "Rebating",
+        "C": "Defamation",
+        "D": "Coercion"
+      },
+      "correct_answer": "B",
+      "explanation": "Rebating involves offering anything of value not specified in the policy (like tickets, cash, or gifts) to induce a sale. (Source: Chapter 9-14)",
+      "distractor_logic": "A involves misrepresentation to replace a policy. C involves false statements about a competitor. D involves forcing a purchase (e.g., by a lender)."
+    },
+    {
+      "id": "regulation-014",
+      "category": "Insurance Regulation",
+      "difficulty": "Medium",
+      "question": "How many credit hours of continuing education (CE) must a licensed resident producer complete every three years?",
+      "options": {
+        "A": "15 hours",
+        "B": "30 hours",
+        "C": "45 hours",
+        "D": "60 hours"
+      },
+      "correct_answer": "C",
+      "explanation": "After the first three years of licensure, a licensee must complete 45 credit hours of approved CE during each subsequent 3-year period. (Note: It is 60 hours for the *first* 3 years, but the standard ongoing requirement is 45). (Source: Chapter 9-7)",
+      "distractor_logic": "A is for public adjusters. D is for the first triennium only. B is incorrect."
+    },
+    {
+      "id": "regulation-015",
+      "category": "Insurance Regulation",
+      "difficulty": "Easy",
+      "question": "A domestic insurer is best defined as an insurance company that:",
+      "options": {
+        "A": "Is chartered in another country.",
+        "B": "Is chartered in another state but licensed in Massachusetts.",
+        "C": "Is chartered and formed under the laws of Massachusetts.",
+        "D": "Is not authorized to conduct business in Massachusetts."
+      },
+      "correct_answer": "C",
+      "explanation": "A domestic insurer is one that is incorporated or chartered in a particular state (Massachusetts) and has its principal office in that state.",
+      "distractor_logic": "A describes an Alien insurer. B describes a Foreign insurer. D describes an Unauthorized insurer."
+    },
+    {
+      "id": "other-coverages-016",
+      "category": "Other Coverages and Options",
+      "difficulty": "Hard",
+      "question": "Under the National Flood Insurance Program (NFIP), which of the following is TRUE regarding the waiting period for new policies?",
+      "options": {
+        "A": "There is a 10-day waiting period.",
+        "B": "There is a 30-day waiting period.",
+        "C": "Coverage is always effective immediately upon application.",
+        "D": "There is a 60-day waiting period."
+      },
+      "correct_answer": "B",
+      "explanation": "A policy issued after the initial 30-day period of community eligibility will become effective after a 30-day waiting period. (Exception: Policy written in conjunction with a mortgage loan).",
+      "distractor_logic": "A, C, and D are incorrect timeframes. Immediate coverage is only for the first 30 days a community enters the program or for loan closings."
+    },
+    {
+      "id": "other-coverages-017",
+      "category": "Other Coverages and Options",
+      "difficulty": "Medium",
+      "question": "A Personal Umbrella Policy generally requires the insured to maintain underlying liability limits. If the insured allows the underlying policy to lapse and a loss occurs, the Umbrella policy will:",
+      "options": {
+        "A": "Pay the entire loss from the first dollar.",
+        "B": "Deny coverage completely.",
+        "C": "Pay as if the underlying contract was in effect (the insured absorbs the gap).",
+        "D": "Pay only defense costs."
+      },
+      "correct_answer": "C",
+      "explanation": "If an underlying policy is canceled/lapses, the umbrella pays as if the underlying contract was in effect. The insured must absorb the amount the underlying policy would have paid.",
+      "distractor_logic": "A is incorrect because the umbrella is excess. B is incorrect; it doesn't void the umbrella, it just creates a gap. D is incorrect."
+    },
+    {
+      "id": "other-coverages-018",
+      "category": "Other Coverages and Options",
+      "difficulty": "Medium",
+      "question": "All of the following are excluded under the National Flood Insurance Program (NFIP) EXCEPT:",
+      "options": {
+        "A": "Property located in a basement (e.g., furniture).",
+        "B": "Money and securities.",
+        "C": "Kitchen appliances (e.g., stove, refrigerator).",
+        "D": "Automobiles."
+      },
+      "correct_answer": "C",
+      "explanation": "Kitchen appliances like ranges, stoves, ovens, and refrigerators are covered property under Coverage A or B. Personal property in a basement is generally excluded, as are money and autos.",
+      "distractor_logic": "A, B, and D are specifically listed as property not covered (or restricted in basements) in the text."
+    },
+    {
+      "id": "other-coverages-019",
+      "category": "Other Coverages and Options",
+      "difficulty": "Hard",
+      "question": "The Massachusetts FAIR Plan is designed to provide insurance to:",
+      "options": {
+        "A": "High-net-worth individuals who need umbrella policies.",
+        "B": "Properties in urban areas or those unable to secure coverage in the standard market.",
+        "C": "Businesses seeking workers' compensation coverage.",
+        "D": "Drivers with poor driving records."
+      },
+      "correct_answer": "B",
+      "explanation": "The FAIR Plan (Fair Access to Insurance Requirements) provides basic property insurance to those in urban areas or others who cannot secure it in the normal/standard markets. (Source: Chapter 9-20)",
+      "distractor_logic": "A is incorrect. C is typically a WC pool. D refers to the Commonwealth Auto Reinsurers (CAR) or assigned risk."
+    },
+    {
+      "id": "homeowners-020",
+      "category": "Homeowners Policy",
+      "difficulty": "Medium",
+      "question": "Under a Homeowners Policy, the 'Loss of Use' coverage (Coverage D) generally provides what percentage of the Coverage A limit automatically?",
+      "options": {
+        "A": "10%",
+        "B": "20%",
+        "C": "30%",
+        "D": "50%"
+      },
+      "correct_answer": "C",
+      "explanation": "The policy automatically provides coverage in the amount of 30% of the Coverage A limit for Loss of Use (in HO-2, HO-3, and HO-5). (Source: Chapter 5-4)",
+      "distractor_logic": "A is usually for Other Structures. B was a limit in older forms or dwelling policies. D is usually for Personal Property."
+    },
+    {
+      "id": "homeowners-021",
+      "category": "Homeowners Policy",
+      "difficulty": "Medium",
+      "question": "An HO-3 policy provides 'open peril' coverage on the dwelling but 'named peril' coverage on personal property. Which Homeowners form provides 'open peril' coverage on BOTH the dwelling and personal property?",
+      "options": {
+        "A": "HO-2",
+        "B": "HO-4",
+        "C": "HO-5",
+        "D": "HO-6"
+      },
+      "correct_answer": "C",
+      "explanation": "The HO-5 Comprehensive Form provides open peril coverage for both real property (structures) and personal property.",
+      "distractor_logic": "A is Broad Form (Named Peril). B is Tenants (Named Peril). D is Condo (Named Peril). (Source: Chapter 5-14)"
+    },
+    {
+      "id": "auto-insurance-022",
+      "category": "Auto Insurance",
+      "difficulty": "Hard",
+      "question": "In the Massachusetts Personal Auto Policy, 'Part I: Bodily Injury to Others' pays for injuries to people in accidents occurring:",
+      "options": {
+        "A": "Anywhere in the United States and Canada.",
+        "B": "Only in Massachusetts.",
+        "C": "Anywhere in the world.",
+        "D": "In Massachusetts, New Hampshire, and Rhode Island only."
+      },
+      "correct_answer": "B",
+      "explanation": "Part I (Compulsory Bodily Injury) pays for damages to people injured or killed by your car ONLY in an accident that occurs in Massachusetts. (Source: MA Auto Chapter)",
+      "distractor_logic": "A applies to Optional Bodily Injury (Part V). C is incorrect. D is incorrect."
+    },
+    {
+      "id": "auto-insurance-023",
+      "category": "Auto Insurance",
+      "difficulty": "Medium",
+      "question": "Under the Massachusetts Personal Auto Policy, which part covers damages to your auto caused by a hit-and-run driver (assuming the driver cannot be identified)?",
+      "options": {
+        "A": "Part 7 (Collision)",
+        "B": "Part 8 (Limited Collision)",
+        "C": "Part 3 (Uninsured Motorist)",
+        "D": "Part 9 (Comprehensive)"
+      },
+      "correct_answer": "A",
+      "explanation": "Collision (Part 7) covers accidental damage including collisions with other objects. Limited Collision (Part 8) only pays if the responsible driver can be identified. Uninsured Motorist (Part 3) covers Bodily Injury, not property damage. (Source: MA Auto Chapter)",
+      "distractor_logic": "B requires the driver to be identified. C is for BI only. D covers theft/fire/vandalism, not collision with a vehicle."
+    },
+    {
+      "id": "dwelling-policy-024",
+      "category": "Dwelling Policy",
+      "difficulty": "Medium",
+      "question": "In a DP-1 Basic Form, which of the following perils is NOT automatically covered?",
+      "options": {
+        "A": "Fire",
+        "B": "Lightning",
+        "C": "Vandalism",
+        "D": "Internal Explosion"
+      },
+      "correct_answer": "C",
+      "explanation": "The DP-1 Basic Form automatically covers Fire, Lightning, and Internal Explosion. Vandalism (V&MM) and Extended Coverages (EC) must be added by endorsement for an additional premium. (Source: Chapter 4-2)",
+      "distractor_logic": "A, B, and D are the three standard perils in the unendorsed DP-1."
+    },
+    {
+      "id": "dwelling-policy-025",
+      "category": "Dwelling Policy",
+      "difficulty": "Easy",
+      "question": "Which Dwelling Policy form provides coverage on an 'open-peril' (all-risk) basis for the dwelling structure?",
+      "options": {
+        "A": "DP-1",
+        "B": "DP-2",
+        "C": "DP-3",
+        "D": "DP-4"
+      },
+      "correct_answer": "C",
+      "explanation": "The DP-3 (Special Form) provides open-peril coverage for the dwelling (Coverage A) and other structures (Coverage B). ",
+      "distractor_logic": "A is Basic (Named Peril). B is Broad (Named Peril). D does not exist as a standard Dwelling form number. (Source: Chapter 4-9)"
+    }
+  ],
+  "tags": [
+    "Insurance",
+    "Property & Casualty",
+    "Massachusetts",
+    "Regulations",
+    "Homeowners",
+    "Auto"
+  ]
+}

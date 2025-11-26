@@ -42,3 +42,6 @@ next-env.d.ts
 
 # dev
 agents.md
+.codanna
+.fastembed_cache
+.codannaignore

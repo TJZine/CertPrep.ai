@@ -136,9 +136,9 @@ export default function AnalyticsPage(): React.ReactElement {
   if (dbError) {
     return (
       <div className="mx-auto max-w-7xl px-4 py-8">
-        <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center">
-          <h2 className="text-lg font-semibold text-red-800">Failed to load analytics</h2>
-          <p className="mt-2 text-red-600">{dbError.message}</p>
+        <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center dark:border-red-500/60 dark:bg-red-950">
+          <h2 className="text-lg font-semibold text-red-800 dark:text-red-100">Failed to load analytics</h2>
+          <p className="mt-2 text-red-600 dark:text-red-200">{dbError.message}</p>
           <Button className="mt-4" onClick={() => router.push('/')} leftIcon={<ArrowLeft className="h-4 w-4" aria-hidden="true" />}>
             Back to Dashboard
           </Button>
@@ -150,7 +150,7 @@ export default function AnalyticsPage(): React.ReactElement {
   if (results.length === 0) {
     return (
       <div className="mx-auto max-w-7xl px-4 py-8">
-        <h1 className="mb-8 text-3xl font-bold text-slate-900">Analytics</h1>
+        <h1 className="mb-8 text-3xl font-bold text-slate-900 dark:text-slate-50">Analytics</h1>
 
         <EmptyState
           icon={<BarChart3 className="h-12 w-12" aria-hidden="true" />}
@@ -169,11 +169,11 @@ export default function AnalyticsPage(): React.ReactElement {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900">Analytics</h1>
-        <p className="mt-1 text-slate-500">Track your progress and identify areas for improvement</p>
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-50">Analytics</h1>
+        <p className="mt-1 text-slate-500 dark:text-slate-300">Track your progress and identify areas for improvement</p>
       </div>
 
-      {statsError && <p className="mb-4 text-sm text-red-600">{statsError}</p>}
+      {statsError && <p className="mb-4 text-sm text-red-600 dark:text-red-300">{statsError}</p>}
       {overallStats && <AnalyticsOverview stats={overallStats} className="mb-8" />}
 
       <div className="mb-8 grid gap-8 lg:grid-cols-2">

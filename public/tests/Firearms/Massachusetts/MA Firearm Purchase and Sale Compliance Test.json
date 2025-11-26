@@ -1,0 +1,238 @@
+{
+  "title": "MA Firearm Purchase & Sale Compliance (Customer & FFL)",
+  "description": "A split-perspective assessment on buying and selling firearms in Massachusetts, covering new 2024 mandates, dealer protocols, and private transfer limits.",
+  "questions": [
+    {
+      "id": "customer-age-semi-001",
+      "category": "Customer",
+      "difficulty": "Medium",
+      "question": "You are an 18-year-old resident with a valid Firearms Identification (FID) Card. You wish to purchase a semi-automatic rifle from your local gun shop. Under the 2024 law updates, are you eligible to make this purchase?",
+      "options": {
+        "A": "Yes, because you have a valid FID card",
+        "B": "Yes, provided the rifle is not considered 'Large Capacity'",
+        "C": "No, the minimum age to purchase or possess any semi-automatic rifle or shotgun is now 21",
+        "D": "No, unless you have a parent or guardian present to sign for you"
+      },
+      "correct_answer": "C",
+      "explanation": "Chapter 135 of the Acts of 2024 raised the minimum age to purchase or possess semi-automatic rifles and shotguns to 21. Previously, an 18-year-old with an FID could purchase non-large capacity semi-automatics. Now, an FID holder under 21 is largely restricted to manual action (bolt, pump, lever, break) long guns.",
+      "distractor_logic": "Options A and B reflect the pre-2024 law. Option D is incorrect because parental consent does not override the statutory age requirement for purchase."
+    },
+    {
+      "id": "ffl-roster-compliance-002",
+      "category": "FFL Owner",
+      "difficulty": "Hard",
+      "question": "A customer wants to order a specific brand new handgun model that was released last week. As an FFL, you check the 'Approved Firearms Roster' and do not see it listed. Can you transfer this handgun to the customer?",
+      "options": {
+        "A": "Yes, if the customer has a Class A LTC",
+        "B": "No, dealers are prohibited from transferring any handgun not on the Approved Firearms Roster",
+        "C": "Yes, as long as the gun is not on the 'Large Capacity Roster'",
+        "D": "Yes, provided you perform a 'frame transfer' by separating the slide and frame"
+      },
+      "correct_answer": "B",
+      "explanation": "Massachusetts FFLs are strictly prohibited from selling or transferring any handgun that does not appear on the Approved Firearms Roster (and the Formal Target Shooting Roster, if applicable), unless a specific exemption (like law enforcement) applies. Selling off-roster handguns is a violation of 501 CMR 7.00.",
+      "distractor_logic": "Option A is incorrect; the customer's license type does not bypass dealer roster restrictions. Option C confuses two different rosters (Approved vs. Large Capacity). Option D describes a 'frame transfer,' a loophole that the 2024 law aggressively closed by redefining frames/receivers as 'firearms' subject to the same regulations. Note: Frame transfers were a common workaround before Ch. 135. The new definition of 'Firearm' in Section 121 now explicitly includes frames, making this loophole legally perilous or defunct."
+    },
+    {
+      "id": "customer-private-limit-003",
+      "category": "Customer",
+      "difficulty": "Easy",
+      "question": "You are a private citizen with an LTC and want to sell some of your collection to other licensed friends. How many firearms can you legally sell via private transfer per calendar year without becoming a licensed dealer?",
+      "options": {
+        "A": "Unlimited, as long as you report them",
+        "B": "2 firearms",
+        "C": "4 firearms",
+        "D": "10 firearms"
+      },
+      "correct_answer": "C",
+      "explanation": "Under M.G.L. c. 140, § 128A, a properly licensed resident who is not a dealer may sell up to four (4) guns in any one calendar year through a private transfer. Selling more than four requires obtaining a state dealer's license.",
+      "distractor_logic": "Option A is a common misconception; while you must report all sales, the volume is capped. Option D reflects federal curiosity/collector guidelines, not state private sale limits."
+    },
+    {
+      "id": "ffl-frame-definition-004",
+      "category": "FFL Owner",
+      "difficulty": "Medium",
+      "question": "Under the new definition in Chapter 135, how must you treat a stripped, standalone receiver for a rifle in your inventory?",
+      "options": {
+        "A": "As a non-firearm part until it is assembled",
+        "B": "As a 'Firearm' that must be serialized and registered",
+        "C": "As an accessory that requires an LTC to purchase but no registration",
+        "D": "As exempt from regulation if it is 80% complete"
+      },
+      "correct_answer": "B",
+      "explanation": "The 2024 Act redefined 'Firearm' in Section 121 to explicitly include 'the frame or receiver of any such firearm.' This means stripped receivers are now legally firearms in Massachusetts state law and must be serialized, registered, and treated with the same transfer protocols as complete guns.",
+      "distractor_logic": "Option A reflects the old state interpretation where frames weren't 'firearms' until capable of discharging a shot. Option D is incorrect; the new law specifically targets unfinished/80% frames ('ghost guns')."
+    },
+    {
+      "id": "customer-ammo-purchase-005",
+      "category": "Customer",
+      "difficulty": "Easy",
+      "question": "You walk into a hardware store that sells ammunition. What document must you present to legally purchase a box of .22LR ammo?",
+      "options": {
+        "A": "A valid driver's license showing you are over 18",
+        "B": "A valid LTC or FID card",
+        "C": "A hunter safety course certificate",
+        "D": "No documentation is required for rimfire ammunition"
+      },
+      "correct_answer": "B",
+      "explanation": "In Massachusetts, you must possess and present a valid License to Carry (LTC) or Firearms Identification (FID) card to purchase any ammunition or ammunition components (like casings or primers).",
+      "distractor_logic": "Option A is insufficient; age proof alone does not grant purchasing privileges. Option D is a dangerous misconception; even .22LR requires licensure in MA."
+    },
+    {
+      "id": "ffl-ammo-recording-006",
+      "category": "FFL Owner",
+      "difficulty": "Hard",
+      "question": "The 2024 law discusses ammunition sales recording. As of late 2024/early 2025, how are you currently required to record ammunition sales?",
+      "options": {
+        "A": "No recording is required, only license verification",
+        "B": "You must use a new real-time electronic state database for every round sold",
+        "C": "You must keep a written record (logbook) or electronic equivalent, as the state electronic system is not yet operational",
+        "D": "You must report all ammo sales to the local police chief weekly"
+      },
+      "correct_answer": "C",
+      "explanation": "While Chapter 135 mandates an eventual electronic record-keeping system for ammunition, the state (DCJIS) has issued guidance that until the system is built, dealers must continue to maintain a written record (or existing electronic point-of-sale record) containing the date, brand, type, quantity, and buyer's license number.",
+      "distractor_logic": "Option B is the future requirement, but guidance indicates the system isn't ready yet. Option A is illegal; records are mandatory. Option D is not the standard reporting interval."
+    },
+    {
+      "id": "customer-waiting-period-007",
+      "category": "Customer",
+      "difficulty": "Medium",
+      "question": "You have a valid LTC and buy a handgun from a dealer. Is there a mandatory statutory 'cooling off' waiting period (e.g., 7 days) you must wait before taking the gun home?",
+      "options": {
+        "A": "Yes, 7 days from the time of background check",
+        "B": "Yes, 10 days similar to California",
+        "C": "No, provided the background check clears immediately",
+        "D": "Yes, 3 days for handguns only"
+      },
+      "correct_answer": "C",
+      "explanation": "Massachusetts does not have a statutory transaction waiting period (like California's 10-day or Rhode Island's 7-day wait) for licensed individuals. If the NICS/MIRCS background check clears at the point of sale, the buyer may take possession immediately.",
+      "distractor_logic": "Option A and B confuse MA law with neighboring states (like RI) or other strict states (like CA). The 'wait' in MA is the months-long process to get the license itself, not the specific purchase transaction."
+    },
+    {
+      "id": "ffl-non-resident-sale-008",
+      "category": "FFL Owner",
+      "difficulty": "Medium",
+      "question": "A resident of New Hampshire enters your MA shop and wants to buy a bolt-action rifle. They have a valid NH driver's license but no MA non-resident license. Can you sell them the rifle?",
+      "options": {
+        "A": "Yes, because it is a long gun and contiguous state rules apply",
+        "B": "Yes, if you ship it to an FFL in New Hampshire",
+        "C": "No, non-residents cannot purchase firearms directly from an MA dealer without an MA license",
+        "D": "Yes, if they fill out a federal Form 4473 only"
+      },
+      "correct_answer": "B",
+      "explanation": "You cannot transfer the firearm directly to them over the counter. Non-residents generally cannot buy firearms in MA because they lack the required MA LTC/FID. However, you CAN sell it to them if you ship the firearm to an FFL in their home state (New Hampshire) for the transfer to take place there.",
+      "distractor_logic": "Option A refers to federal law (contiguous states), but MA state law overrides this by requiring an MA license for *possession* and *purchase* within the state. Option C is true regarding direct transfer, but B is the most accurate 'business' answer for how to complete the sale legally."
+    },
+    {
+      "id": "customer-ghost-gun-009",
+      "category": "Customer",
+      "difficulty": "Hard",
+      "question": "You built a firearm from a kit (a 'ghost gun') prior to the 2024 law change. Under the new law, what must you do to remain compliant?",
+      "options": {
+        "A": "Destroy it immediately; it is now contraband",
+        "B": "Declare it to the ATF but not the state",
+        "C": "Serialize it and register it with the state via the Gun Transaction Portal",
+        "D": "Nothing, it is grandfathered as-is"
+      },
+      "correct_answer": "C",
+      "explanation": "The new law requires that all privately made firearms (PMFs) be serialized and registered. Possessing an unserialized frame or receiver is now a crime. Owners must serialize the weapon (following specific depth/size standards) and register it via the Massachusetts Gun Transaction Portal.",
+      "distractor_logic": "Option A is extreme; there is a path to compliance. Option D is incorrect; there is no grandfathering for *unserialized* ghost guns—they must be brought into the system. Option B is incorrect as this is a state mandate."
+    },
+    {
+      "id": "ffl-assault-style-grandfather-010",
+      "category": "FFL Owner",
+      "difficulty": "Hard",
+      "question": "A customer wants to consign a semi-automatic rifle that is now classified as an 'Assault-Style Firearm' under the 2024 law. To be legally transferable to another MA resident, the rifle must have been registered in the Commonwealth by which date?",
+      "options": {
+        "A": "September 13, 1994",
+        "B": "July 20, 2016",
+        "C": "August 1, 2024",
+        "D": "October 23, 2024"
+      },
+      "correct_answer": "C",
+      "explanation": "For a semi-automatic rifle that falls under the new 'Assault-Style Firearm' definition to be grandfathered (and thus transferable to licensed residents), it must have been lawfully possessed and registered in Massachusetts on or before August 1, 2024.",
+      "distractor_logic": "Option A is the federal ban date. Option B is the Healey Enforcement Notice date (relevant for 'copycat' weapons). Option D is the effective date of the act, but the grandfathering cutoff was retroactive to August 1."
+    },
+    {
+      "id": "customer-portal-reporting-011",
+      "category": "Customer",
+      "difficulty": "Medium",
+      "question": "You are selling a handgun to a friend who has a valid LTC. You both log into the Massachusetts Gun Transaction Portal to record the sale. Who is responsible for entering the transaction data?",
+      "options": {
+        "A": "The Seller",
+        "B": "The Buyer",
+        "C": "A licensed FFL must facilitate the data entry",
+        "D": "Both must fill out separate forms"
+      },
+      "correct_answer": "A",
+      "explanation": "In a private transfer, the seller is responsible for reporting the transaction via the Massachusetts Gun Transaction Portal. The system will ask for the seller's info, the buyer's info, and the firearm details to update the registry.",
+      "distractor_logic": "Option B is incorrect; the obligation falls on the transferor (seller) to report the loss of possession/transfer. Option C is incorrect; private transfers do not require an FFL in MA (unlike some other states), provided both parties are licensed."
+    },
+    {
+      "id": "ffl-inspection-authority-012",
+      "category": "FFL Owner",
+      "difficulty": "Medium",
+      "question": "Under the 2024 updates, which agency has been granted explicit authority to conduct inspections of firearm dealers, a role previously held primarily by local police?",
+      "options": {
+        "A": "The Attorney General's Office",
+        "B": "The Massachusetts State Police",
+        "C": "The ATF exclusively",
+        "D": "The Department of Revenue"
+      },
+      "correct_answer": "B",
+      "explanation": "Chapter 135 allows local licensing authorities to transfer the responsibility of dealer inspections to the Massachusetts State Police. It also mandates that the State Police develop training and standards for these inspections.",
+      "distractor_logic": "Option C is incorrect; the ATF handles federal inspections, but the question asks about the state level changes. Option A is involved in consumer protection but not the primary inspection agent defined in this statute."
+    },
+    {
+      "id": "customer-transport-home-013",
+      "category": "Customer",
+      "difficulty": "Easy",
+      "question": "You just purchased a handgun from a dealer and are driving it home. You have a Class A LTC. How should you transport the firearm if you do not want to carry it on your person?",
+      "options": {
+        "A": "Unloaded and in a locked case/trunk",
+        "B": "Loaded in the glove compartment",
+        "C": "Unloaded on the passenger seat",
+        "D": "Loaded in a gym bag on the back seat"
+      },
+      "correct_answer": "A",
+      "explanation": "If a firearm is not under your direct control (i.e., on your person), it must be unloaded and secured in a locked container. For transport, this means a locked case, a locked trunk, or other secure locking device. The glove box and console generally do not count as secure storage.",
+      "distractor_logic": "Option B is illegal; a glove box is not a secure container and the gun must be under direct control if loaded. Option C and D violate safe transport laws (unsecured)."
+    },
+    {
+      "id": "ffl-mircs-pin-014",
+      "category": "FFL Owner",
+      "difficulty": "Hard",
+      "question": "When processing a sale through the MIRCS system, what specific data point must the customer provide to digitally 'sign' for the background check?",
+      "options": {
+        "A": "Their written signature on a tablet",
+        "B": "Their Personal Identification Number (PIN)",
+        "C": "Their Social Security Number",
+        "D": "A biometric thumbprint scan"
+      },
+      "correct_answer": "B",
+      "explanation": "In the Massachusetts Instant Record Check System (MIRCS), the transaction is validated by the customer entering their confidential PIN. This serves as their electronic signature and consent for the background check and transfer.",
+      "distractor_logic": "Option A is used for the federal 4473 (or digital equivalent), but the specific MA state check relies on the PIN. Option D is a feature of the system (fingerprint) but the PIN is the primary user-auth method for the transaction validation."
+    },
+    {
+      "id": "customer-prohibited-sale-015",
+      "category": "Customer",
+      "difficulty": "Hard",
+      "question": "You want to sell a firearm to your cousin. You know he has a valid LTC, but you also know he has been using medical marijuana legally under state law. Can you legally sell him the firearm?",
+      "options": {
+        "A": "Yes, because medical marijuana is legal in MA",
+        "B": "No, because federal law prohibits users of controlled substances (including marijuana) from possessing firearms",
+        "C": "Yes, provided he shows his medical marijuana card",
+        "D": "No, unless it is a black powder firearm"
+      },
+      "correct_answer": "B",
+      "explanation": "Even though marijuana is legal in Massachusetts, it remains a Schedule I controlled substance federally. Under federal law (which applies to the transfer), any user of marijuana is a 'prohibited person.' Selling a firearm to someone you *know* or have reasonable cause to believe is a prohibited person is a felony.",
+      "distractor_logic": "Option A is a common trap; state legality does not override federal prohibition on possession/purchase. Option C is incorrect as the card is proof of the federal disqualifier."
+    }
+  ],
+  "tags": [
+    "Massachusetts",
+    "FFL",
+    "Compliance",
+    "Sales",
+    "Chapter 135"
+  ]
+}

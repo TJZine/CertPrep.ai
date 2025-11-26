@@ -12,8 +12,8 @@ export function SkipLink(): React.ReactElement {
     <a
       href="#main-content"
       className={cn(
-        'fixed left-4 top-4 z-[100] -translate-y-full rounded-lg bg-blue-600 px-4 py-2 text-white',
-        'transition-transform focus:translate-y-0',
+        'sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100]',
+        'rounded-lg bg-blue-600 px-4 py-2 text-white transition-transform',
         'focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2',
       )}
     >

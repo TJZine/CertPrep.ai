@@ -37,11 +37,11 @@ export function ProctorOptionsList({
             type="button"
             onClick={() => !disabled && onSelectOption(key)}
             disabled={disabled}
-            className={cn(
-              'relative flex w-full items-start gap-3 rounded-lg border-2 p-4 text-left transition-all',
+              className={cn(
+                'relative flex w-full items-start gap-3 rounded-lg border-2 p-4 text-left transition-all',
               isSelected
-                ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-500 ring-offset-1'
-                : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50',
+                ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-500 ring-offset-1 dark:border-blue-400 dark:bg-blue-900/30 dark:ring-offset-slate-900'
+                : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-slate-600 dark:hover:bg-slate-800',
               disabled && 'cursor-not-allowed opacity-60',
             )}
             role="radio"
@@ -51,14 +51,14 @@ export function ProctorOptionsList({
             <span
               className={cn(
                 'flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full font-semibold transition-colors',
-                isSelected ? 'bg-blue-500 text-white' : 'bg-slate-200 text-slate-700',
+                isSelected ? 'bg-blue-500 text-white dark:bg-blue-400' : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-100',
               )}
             >
               {key}
             </span>
 
             <span
-              className="flex-1 pt-1 text-base text-slate-700"
+              className="flex-1 pt-1 text-base text-slate-700 dark:text-slate-100"
               dangerouslySetInnerHTML={{ __html: sanitizedText }}
             />
 
@@ -83,11 +83,11 @@ export function ProctorOptionsList({
       })}
 
       {!disabled && (
-        <p className="mt-2 text-center text-xs text-slate-400">
-          Press <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono">A</kbd>,{' '}
-          <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono">B</kbd>,{' '}
-          <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono">C</kbd>, or{' '}
-          <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono">D</kbd> to select
+        <p className="mt-2 text-center text-xs text-slate-400 dark:text-slate-300">
+          Press <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono dark:bg-slate-800 dark:text-slate-100">A</kbd>,{' '}
+          <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono dark:bg-slate-800 dark:text-slate-100">B</kbd>,{' '}
+          <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono dark:bg-slate-800 dark:text-slate-100">C</kbd>, or{' '}
+          <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono dark:bg-slate-800 dark:text-slate-100">D</kbd> to select
         </p>
       )}
     </div>
@@ -95,4 +95,3 @@ export function ProctorOptionsList({
 }
 
 export default ProctorOptionsList;
-

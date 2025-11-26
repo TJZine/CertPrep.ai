@@ -107,13 +107,13 @@ export function QuestionReviewList({
         </Button>
       </div>
 
-      <p className="mb-4 text-sm text-slate-500">
+      <p className="mb-4 text-sm text-slate-500 dark:text-slate-300">
         Showing {filteredQuestions.length} of {questions.length} questions
       </p>
 
       {filteredQuestions.length === 0 ? (
-        <div className="rounded-lg border border-slate-200 bg-slate-50 p-8 text-center">
-          <p className="text-slate-500">
+        <div className="rounded-lg border border-slate-200 bg-slate-50 p-8 text-center dark:border-slate-800 dark:bg-slate-900">
+          <p className="text-slate-500 dark:text-slate-200">
             {activeFilter === 'incorrect' && 'No incorrect answers. Great job!'}
             {activeFilter === 'flagged' && 'No flagged questions.'}
             {activeFilter === 'correct' && 'No correct answers yet.'}

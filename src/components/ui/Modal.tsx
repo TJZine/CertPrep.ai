@@ -126,7 +126,7 @@ export function Modal({
       <div
         ref={dialogRef}
         className={cn(
-          'relative w-full transform rounded-xl bg-white shadow-xl transition-all focus:outline-none',
+          'relative w-full transform rounded-xl bg-white shadow-xl transition-all focus:outline-none dark:border dark:border-slate-800 dark:bg-slate-900',
           modalSizes[size],
         )}
         role="dialog"
@@ -135,13 +135,13 @@ export function Modal({
         aria-describedby={description ? descriptionId : undefined}
         tabIndex={-1}
       >
-        <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-6 py-4">
+        <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-6 py-4 dark:border-slate-800">
           <div className="flex flex-col gap-1">
-            <h2 id={titleId} className="text-lg font-semibold text-slate-900">
+            <h2 id={titleId} className="text-lg font-semibold text-slate-900 dark:text-slate-50">
               {title}
             </h2>
             {description ? (
-              <p id={descriptionId} className="text-sm text-slate-600">
+              <p id={descriptionId} className="text-sm text-slate-600 dark:text-slate-300">
                 {description}
               </p>
             ) : null}
@@ -149,14 +149,14 @@ export function Modal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+            className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-50 dark:focus-visible:ring-offset-slate-900"
             aria-label="Close modal"
           >
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
-        <div className="px-6 py-4 text-slate-800">{children}</div>
-        {footer ? <div className="border-t border-slate-200 px-6 py-4">{footer}</div> : null}
+        <div className="px-6 py-4 text-slate-800 dark:text-slate-200">{children}</div>
+        {footer ? <div className="border-t border-slate-200 px-6 py-4 dark:border-slate-800">{footer}</div> : null}
       </div>
     </div>
   );

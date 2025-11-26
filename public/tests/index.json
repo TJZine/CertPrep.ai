@@ -1,0 +1,44 @@
+{
+  "tests": [
+    {
+      "id": "insurance-personal-lines-1",
+      "title": "Massachusetts Property & Casualty Insurance Exam",
+      "description": "Comprehensive practice covering MA personal lines topics including regulations, homeowners, auto, and dwelling policies.",
+      "category": "Insurance",
+      "subcategory": "Massachusetts Personal Lines",
+      "path": "/tests/Insurance/Massachusetts Personal Lines/Personal Lines Weakness Practice Exam 1.json"
+    },
+    {
+      "id": "insurance-personal-lines-2",
+      "title": "MA Personal Lines Focused Review",
+      "description": "30-question practice exam targeting weak areas in General Insurance, P&C Basics, and Regulation from MAIA material.",
+      "category": "Insurance",
+      "subcategory": "Massachusetts Personal Lines",
+      "path": "/tests/Insurance/Massachusetts Personal Lines/Personal Lines Weakness Practice Exam 2.json"
+    },
+    {
+      "id": "insurance-personal-lines-3",
+      "title": "MA Personal Lines Remediation Exam",
+      "description": "25-question remediation set focusing on General Insurance, P&C Basics, Regulation, and other coverages for MA personal lines.",
+      "category": "Insurance",
+      "subcategory": "Massachusetts Personal Lines",
+      "path": "/tests/Insurance/Massachusetts Personal Lines/Personal Lines Weakness Practice Exam 3.json"
+    },
+    {
+      "id": "firearms-ma-law-mastery-2024",
+      "title": "Massachusetts Firearm Law Mastery (2024 Update)",
+      "description": "Comprehensive assessment of MA firearm laws, including licensing, transport, storage, and Modernizing Firearm Laws Act updates.",
+      "category": "Firearms",
+      "subcategory": "Massachusetts",
+      "path": "/tests/Firearms/Massachusetts/General Massachusetts Firearm Laws Test (10 questions).json"
+    },
+    {
+      "id": "firearms-ma-purchase-sale-compliance",
+      "title": "MA Firearm Purchase & Sale Compliance (Customer & FFL)",
+      "description": "Split-perspective exam on 2024 purchase/sale mandates, dealer protocols, and private transfer limits in Massachusetts.",
+      "category": "Firearms",
+      "subcategory": "Massachusetts",
+      "path": "/tests/Firearms/Massachusetts/MA Firearm Purchase and Sale Compliance Test.json"
+    }
+  ]
+}

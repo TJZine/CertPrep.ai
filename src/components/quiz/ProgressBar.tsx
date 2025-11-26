@@ -44,13 +44,13 @@ export function ProgressBar({
   return (
     <div className={cn('w-full', className)}>
       {(showPercentage || showFraction) && (
-        <div className="mb-1 flex items-center justify-between text-sm">
-          {showFraction && <span className="text-slate-600">{current} / {total}</span>}
-          {showPercentage && <span className="text-slate-600">{percentage}%</span>}
+        <div className="mb-1 flex items-center justify-between text-sm text-slate-600 dark:text-slate-300">
+          {showFraction && <span>{current} / {total}</span>}
+          {showPercentage && <span>{percentage}%</span>}
         </div>
       )}
       <div
-        className={cn('w-full overflow-hidden rounded-full bg-slate-200', sizeClasses[size])}
+        className={cn('w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800', sizeClasses[size])}
         role="progressbar"
         aria-valuenow={percentage}
         aria-valuemin={0}
@@ -86,7 +86,7 @@ export function SegmentedProgress({
   className,
 }: SegmentedProgressProps): React.ReactElement {
   const statusColors = {
-    unanswered: 'bg-slate-200',
+    unanswered: 'bg-slate-200 dark:bg-slate-700',
     correct: 'bg-green-500',
     incorrect: 'bg-red-500',
     flagged: 'bg-orange-400',
@@ -101,7 +101,7 @@ export function SegmentedProgress({
           className={cn(
             'h-2 flex-1 rounded-full transition-all',
             statusColors[question.status],
-            index === currentIndex && 'ring-2 ring-blue-500 ring-offset-1',
+            index === currentIndex && 'ring-2 ring-blue-500 ring-offset-1 ring-offset-slate-100 dark:ring-offset-slate-900',
             onQuestionClick && 'cursor-pointer hover:opacity-80',
           )}
           aria-label={`Question ${index + 1}: ${question.status}`}
