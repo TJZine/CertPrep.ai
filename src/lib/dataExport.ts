@@ -198,8 +198,9 @@ export async function importData(
  * Clear all data (factory reset).
  */
 export async function clearAllData(): Promise<void> {
-  await db.quizzes.clear();
-  await db.results.clear();
+  await db.transaction('rw', db.quizzes, db.results, async () => {
+    await Promise.all([db.quizzes.clear(), db.results.clear()]);
+  });
   localStorage.clear();
   sessionStorage.clear();
 }

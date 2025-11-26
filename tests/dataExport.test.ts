@@ -13,10 +13,6 @@ async function resetDatabase(): Promise<void> {
     request.onsuccess = (): void => resolve();
   });
   await db.open();
-  await db.transaction('rw', db.quizzes, db.results, async () => {
-    await db.quizzes.clear();
-    await db.results.clear();
-  });
 }
 
 describe('data export/import', () => {
@@ -76,5 +72,44 @@ describe('data export/import', () => {
     expect(restoredQuiz?.created_at).toBe(sampleQuiz.created_at);
     expect(restoredQuiz?.sourceId).toBe(sampleQuiz.sourceId);
     expect(restoredResult?.quiz_id).toBe(sampleQuiz.id);
+  });
+
+  it('skips existing quizzes and results in merge mode', async () => {
+    await db.quizzes.put(sampleQuiz);
+    await db.results.put(sampleResult);
+
+    const exported = await exportAllData();
+    const { quizzesImported, resultsImported } = await importData(exported, 'merge');
+
+    const quizCount = await db.quizzes.count();
+    const resultCount = await db.results.count();
+
+    expect(quizzesImported).toBe(0);
+    expect(resultsImported).toBe(0);
+    expect(quizCount).toBe(1);
+    expect(resultCount).toBe(1);
+  });
+
+  it('drops results that reference missing quizzes during import', async () => {
+    const orphanResult: Result = {
+      ...sampleResult,
+      id: '33333333-3333-4333-8333-333333333333',
+      quiz_id: 'non-existent-quiz',
+    };
+
+    const exported: Awaited<ReturnType<typeof exportAllData>> = {
+      version: '1.0',
+      exportedAt: new Date().toISOString(),
+      quizzes: [sampleQuiz],
+      results: [sampleResult, orphanResult],
+    };
+
+    const { quizzesImported, resultsImported } = await importData(exported, 'replace');
+    const storedResults = await db.results.toArray();
+
+    expect(quizzesImported).toBe(1);
+    expect(resultsImported).toBe(1);
+    expect(storedResults).toHaveLength(1);
+    expect(storedResults[0]?.id).toBe(sampleResult.id);
   });
 });

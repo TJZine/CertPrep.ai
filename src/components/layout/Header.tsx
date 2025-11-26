@@ -49,20 +49,19 @@ export function Header(): React.ReactElement {
   React.useEffect((): (() => void) | undefined => {
     if (!isMenuOpen) return undefined;
 
+    const panelElements = mobilePanelRef.current
+      ? Array.from(
+          mobilePanelRef.current.querySelectorAll<HTMLElement>(
+            'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+          ),
+        )
+      : [];
+
     const focusableList = (
-      [
-        toggleButtonRef.current,
-        ...(mobilePanelRef.current
-          ? Array.from(
-              mobilePanelRef.current.querySelectorAll<HTMLElement>(
-                'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
-              ),
-            )
-          : []),
-      ] as Array<HTMLElement | null>
+      [toggleButtonRef.current, ...panelElements] as Array<HTMLElement | null>
     ).filter((el): el is HTMLElement => Boolean(el));
 
-    focusableList[0]?.focus();
+    (firstMobileLinkRef.current ?? focusableList[0])?.focus();
 
     const handleKeyDown = (event: KeyboardEvent): void => {
       if (!isMenuOpen) return;
@@ -151,6 +150,8 @@ export function Header(): React.ReactElement {
 
       {/* Mobile nav panel */}
       <div
+        ref={mobilePanelRef}
+        aria-hidden={!isMenuOpen}
         className={cn(
           'md:hidden',
           isMenuOpen ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0',
