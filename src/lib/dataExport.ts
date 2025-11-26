@@ -14,11 +14,11 @@ export interface ExportData {
 }
 
 const ResultImportSchema = z.object({
-  id: z.string(),
-  quiz_id: z.string(),
+  id: z.string().uuid(),
+  quiz_id: z.string().uuid(),
   timestamp: z.number().int().nonnegative(),
   mode: z.enum(QUIZ_MODES),
-  score: z.number(),
+  score: z.number().min(0).max(100),
   time_taken_seconds: z.number().nonnegative(),
   answers: z.record(z.string(), z.string()).default({}),
   flagged_questions: z.array(z.string()).default([]),
@@ -56,7 +56,15 @@ function sanitizeResultRecord(result: unknown): Result | null {
     return null;
   }
 
-  return parsed.data;
+  const sanitizedCategoryBreakdown: Record<string, number> = {};
+  for (const [key, value] of Object.entries(parsed.data.category_breakdown)) {
+    sanitizedCategoryBreakdown[sanitizeQuestionText(key)] = value;
+  }
+
+  return {
+    ...parsed.data,
+    category_breakdown: sanitizedCategoryBreakdown,
+  };
 }
 
 /**

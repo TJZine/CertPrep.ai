@@ -103,19 +103,6 @@ export function Header(): React.ReactElement {
     return (): void => document.removeEventListener('keydown', handleKeyDown);
   }, [isMenuOpen]);
 
-  React.useEffect(() => {
-    const panel = mobilePanelRef.current;
-    if (!panel) return;
-
-    if (isMenuOpen) {
-      panel.removeAttribute('inert');
-      panel.removeAttribute('aria-hidden');
-    } else {
-      panel.setAttribute('inert', '');
-      panel.setAttribute('aria-hidden', 'true');
-    }
-  }, [isMenuOpen]);
-
   return (
     <header
       className="sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur dark:border-slate-800 dark:bg-slate-900/80"
