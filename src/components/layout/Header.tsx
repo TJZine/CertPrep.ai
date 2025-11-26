@@ -25,6 +25,7 @@ const linkBase =
 export function Header(): React.ReactElement {
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  const mobilePanelId = React.useId();
   const headerRef = React.useRef<HTMLElement>(null);
   const firstMobileLinkRef = React.useRef<HTMLAnchorElement>(null);
   const toggleButtonRef = React.useRef<HTMLButtonElement>(null);
@@ -151,20 +152,22 @@ export function Header(): React.ReactElement {
           <button
             ref={toggleButtonRef}
             type="button"
-            data-mobile-focus
-            className="inline-flex h-10 w-10 items-center justify-center rounded-md text-slate-700 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 dark:text-slate-200 dark:hover:bg-slate-800 dark:focus-visible:ring-offset-slate-900 md:hidden"
-            aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
-            aria-expanded={isMenuOpen}
-            onClick={() => setIsMenuOpen((open) => !open)}
-          >
-            {isMenuOpen ? <X className="h-5 w-5" aria-hidden="true" /> : <Menu className="h-5 w-5" aria-hidden="true" />}
-          </button>
-        </div>
+          data-mobile-focus
+          className="inline-flex h-10 w-10 items-center justify-center rounded-md text-slate-700 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 dark:text-slate-200 dark:hover:bg-slate-800 dark:focus-visible:ring-offset-slate-900 md:hidden"
+          aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={isMenuOpen}
+          aria-controls={mobilePanelId}
+          onClick={() => setIsMenuOpen((open) => !open)}
+        >
+          {isMenuOpen ? <X className="h-5 w-5" aria-hidden="true" /> : <Menu className="h-5 w-5" aria-hidden="true" />}
+        </button>
+      </div>
       </div>
 
       {/* Mobile nav panel */}
       <div
         ref={mobilePanelRef}
+        id={mobilePanelId}
         className={cn(
           'md:hidden',
           isMenuOpen ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0',

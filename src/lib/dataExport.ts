@@ -1,7 +1,7 @@
 import { db } from '@/db';
 import { sanitizeQuestions } from '@/db/quizzes';
 import { sanitizeQuestionText } from '@/lib/sanitize';
-import type { Quiz } from '@/types/quiz';
+import { QUIZ_MODES, type Quiz } from '@/types/quiz';
 import type { Result } from '@/types/result';
 import { QuizSchema } from '@/validators/quizSchema';
 import { z } from 'zod';
@@ -17,7 +17,7 @@ const ResultImportSchema = z.object({
   id: z.string(),
   quiz_id: z.string(),
   timestamp: z.number().int().nonnegative(),
-  mode: z.enum(['zen', 'proctor']),
+  mode: z.enum(QUIZ_MODES),
   score: z.number(),
   time_taken_seconds: z.number().nonnegative(),
   answers: z.record(z.string(), z.string()).default({}),
