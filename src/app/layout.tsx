@@ -11,6 +11,7 @@ import { InstallPrompt } from '@/components/common/InstallPrompt';
 import { UpdateBanner } from '@/components/common/UpdateBanner';
 import { ThemeProvider } from '@/components/common/ThemeProvider';
 import { SkipLink } from '@/components/common/SkipLink';
+import { SentryInitializer } from '@/components/providers/SentryInitializer';
 import { APP_NAME } from '@/lib/constants';
 import './globals.css';
 
@@ -82,6 +83,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <script
           nonce={nonce}
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{
             __html: `(function(){try{const stored=localStorage.getItem('theme');const prefersDark=window.matchMedia('(prefers-color-scheme: dark)').matches;const shouldDark=stored==='dark'||(!stored&&prefersDark);const root=document.documentElement;if(shouldDark){root.classList.add('dark');}else{root.classList.remove('dark');}}catch(e){}})();`,
           }}
@@ -92,6 +94,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <ThemeProvider>
           <GlobalErrorHandler>
             <ToastProvider>
+              <SentryInitializer />
               <UpdateBanner />
               <Header />
               <div id="main-content" className="flex-1" tabIndex={-1}>

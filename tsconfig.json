@@ -61,6 +61,7 @@
     "next-env.d.ts",
     "src/**/*",
     "next.config.js",
+    "sentry.*.config.ts",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "tests/**/*",

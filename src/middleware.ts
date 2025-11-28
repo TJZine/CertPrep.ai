@@ -33,7 +33,8 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
     frame-ancestors 'none';
     block-all-mixed-content;
     upgrade-insecure-requests;
-    connect-src 'self' ${supabaseUrl} ${supabaseHostname ? `wss://${supabaseHostname}` : ''};
+    connect-src 'self' ${supabaseUrl} ${supabaseHostname ? `wss://${supabaseHostname}` : ''} *.sentry.io;
+    worker-src 'self' blob:;
   `
   // Replace newlines with spaces
   const contentSecurityPolicyHeaderValue = cspHeader
