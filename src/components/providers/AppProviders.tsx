@@ -6,6 +6,7 @@ import { Footer } from '@/components/layout/Footer';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { ToastProvider } from '@/components/ui/Toast';
 import { useInitializeDatabase } from '@/hooks/useDatabase';
+import { AuthProvider } from './AuthProvider';
 
 function DatabaseInitializer(): React.ReactElement | null {
   useInitializeDatabase();
@@ -19,12 +20,14 @@ export function AppProviders({ children }: { children: React.ReactNode }): React
   return (
     <ToastProvider>
       <ErrorBoundary>
-        <DatabaseInitializer />
-        <div className="flex min-h-screen flex-col">
-          <Header />
-          <main className="flex-1">{children}</main>
-          <Footer />
-        </div>
+        <AuthProvider>
+          <DatabaseInitializer />
+          <div className="flex min-h-screen flex-col">
+            <Header />
+            <main className="flex-1">{children}</main>
+            <Footer />
+          </div>
+        </AuthProvider>
       </ErrorBoundary>
     </ToastProvider>
   );

@@ -77,6 +77,7 @@ export async function createResult(input: CreateResultInput): Promise<Result> {
     answers: input.answers,
     flagged_questions: input.flaggedQuestions,
     category_breakdown: categoryBreakdown,
+    synced: 0,
   };
 
   await db.results.add(result);

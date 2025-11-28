@@ -10,6 +10,7 @@ export interface Result {
   answers: Record<string, string>;
   flagged_questions: string[];
   category_breakdown: Record<string, number>;
+  synced?: number; // 0 = not synced, 1 = synced
 }
 
 export interface CategoryPerformance {

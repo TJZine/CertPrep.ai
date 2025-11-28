@@ -2,7 +2,8 @@ import Dexie, { type Table } from 'dexie';
 import type { Quiz } from '@/types/quiz';
 import type { Result } from '@/types/result';
 
-// PRIVACY: All quiz data and results are stored locally in IndexedDB via Dexie; nothing leaves the device.
+// PRIVACY: Data is stored locally in IndexedDB via Dexie (Local-First).
+// Secure cloud sync (Supabase) is used for backup and cross-device synchronization only.
 
 /**
  * Dexie-backed database instance for CertPrep.ai.
@@ -12,17 +13,26 @@ export class CertPrepDatabase extends Dexie {
 
   public results!: Table<Result, string>;
 
+  public syncState!: Table<{ userId: string; lastSyncedAt: string }, string>;
+
   constructor() {
     super('CertPrepDatabase');
 
     // Define schema version and indexes.
-    this.version(2).stores({
+    this.version(4).stores({
       quizzes: 'id, title, created_at, *tags, sourceId',
-      results: 'id, quiz_id, timestamp, mode, score',
+      results: 'id, quiz_id, timestamp, mode, score, synced',
+      syncState: 'userId',
+    }).upgrade(async () => {
+      // Backfill 'synced' property for existing results
+      // Note: Versions 1-3 migrations are handled implicitly by Dexie's upgrade system if we were jumping versions,
+      // but specifically for v3->v4, we just need to ensure the new table is created (which stores handles).
+      // If we needed to manipulate data for the new table, we'd do it here.
     });
 
     this.quizzes = this.table('quizzes');
     this.results = this.table('results');
+    this.syncState = this.table('syncState');
   }
 }
 
@@ -48,8 +58,8 @@ export async function initializeDatabase(): Promise<void> {
  */
 export async function clearDatabase(): Promise<void> {
   try {
-    await db.transaction('rw', db.quizzes, db.results, async () => {
-      await Promise.all([db.quizzes.clear(), db.results.clear()]);
+    await db.transaction('rw', db.quizzes, db.results, db.syncState, async () => {
+      await Promise.all([db.quizzes.clear(), db.results.clear(), db.syncState.clear()]);
     });
   } catch (error) {
     console.error('[CertPrep.ai] Failed to clear database', error);

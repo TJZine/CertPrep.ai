@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import * as React from 'react';
+import { headers } from 'next/headers';
 import { Inter } from 'next/font/google';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
@@ -66,7 +67,10 @@ export const viewport: Viewport = {
   userScalable: true,
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }): React.ReactElement {
+export default async function RootLayout({ children }: { children: React.ReactNode }): Promise<React.ReactElement> {
+  const headersList = await headers();
+  const nonce = headersList.get('x-nonce') || undefined;
+
   return (
     <html lang="en" className={inter.variable} suppressHydrationWarning>
       <head>
@@ -77,6 +81,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }):
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <script
+          nonce={nonce}
           dangerouslySetInnerHTML={{
             __html: `(function(){try{const stored=localStorage.getItem('theme');const prefersDark=window.matchMedia('(prefers-color-scheme: dark)').matches;const shouldDark=stored==='dark'||(!stored&&prefersDark);const root=document.documentElement;if(shouldDark){root.classList.add('dark');}else{root.classList.remove('dark');}}catch(e){}})();`,
           }}

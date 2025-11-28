@@ -22,6 +22,7 @@ import { useBeforeUnload } from '@/hooks/useBeforeUnload';
 import { createResult } from '@/db/results';
 import { TIMER } from '@/lib/constants';
 import type { Quiz } from '@/types/quiz';
+import { useSync } from '@/hooks/useSync';
 
 interface ProctorQuizContainerProps {
   quiz: Quiz;
@@ -37,6 +38,7 @@ export function ProctorQuizContainer({
 }: ProctorQuizContainerProps): React.ReactElement {
   const router = useRouter();
   const { addToast } = useToast();
+  const { sync } = useSync();
 
   const hasSavedResultRef = React.useRef(false);
 
@@ -133,6 +135,7 @@ export function ProctorQuizContainer({
         timeTakenSeconds: durationMinutes * 60 - timeRemaining,
       });
       hasSavedResultRef.current = true;
+      void sync();
       addToast('success', 'Exam submitted successfully!');
       router.push(`/results/${result.id}`);
     } catch (error) {
@@ -159,6 +162,7 @@ export function ProctorQuizContainer({
       });
       hasSavedResultRef.current = true;
       setAutoResultId(result.id);
+      void sync();
       setShowTimeUpModal(true);
       return result.id;
     } catch (error) {
@@ -169,7 +173,7 @@ export function ProctorQuizContainer({
     } finally {
       setIsSubmitting(false);
     }
-  }, [addToast, autoResultId, autoSubmitExam, buildAnswersRecord, durationMinutes, flaggedQuestions, isSubmitting, pauseTimer, quiz.id]);
+  }, [addToast, autoResultId, autoSubmitExam, buildAnswersRecord, durationMinutes, flaggedQuestions, isSubmitting, pauseTimer, quiz.id, sync]);
 
   React.useEffect(() => {
     autoSubmitRef.current = handleAutoSubmit;

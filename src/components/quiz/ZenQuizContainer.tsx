@@ -21,6 +21,7 @@ import { useTimer } from '@/hooks/useTimer';
 import { useBeforeUnload } from '@/hooks/useBeforeUnload';
 import { createResult } from '@/db/results';
 import type { Quiz } from '@/types/quiz';
+import { useSync } from '@/hooks/useSync';
 
 interface ZenQuizContainerProps {
   quiz: Quiz;
@@ -33,6 +34,7 @@ interface ZenQuizContainerProps {
 export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContainerProps): React.ReactElement {
   const router = useRouter();
   const { addToast } = useToast();
+  const { sync } = useSync();
 
   const isMountedRef = React.useRef(false);
   const hasSavedResultRef = React.useRef(false);
@@ -88,6 +90,9 @@ export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContaine
           timeTakenSeconds,
         });
 
+        // Attempt background sync
+        void sync();
+
         if (!isMountedRef.current) {
           return;
         }
@@ -113,7 +118,7 @@ export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContaine
         throw error;
       }
     },
-    [addToast, answers, flaggedQuestions, isSmartRound, quiz.id, router],
+    [addToast, answers, flaggedQuestions, isSmartRound, quiz.id, router, sync],
   );
 
   const retrySave = React.useCallback((): void => {
