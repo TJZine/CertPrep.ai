@@ -71,6 +71,9 @@ function sanitizeResultRecord(result: unknown): Result | null {
  * Export all user data as JSON.
  */
 export async function exportAllData(): Promise<ExportData> {
+  // TODO: CRITICAL - This loads all data into memory at once.
+  // For large datasets (e.g., >10k results), this will crash the browser.
+  // Future improvement: Implement chunked processing or streaming.
   const quizzes = await db.quizzes.toArray();
   const results = await db.results.toArray();
 

@@ -3,7 +3,8 @@ import { sanitizeQuestionText } from '@/lib/sanitize';
 import { calculatePercentage, generateUUID } from '@/lib/utils';
 import type { Question, Quiz } from '@/types/quiz';
 import type { QuizImportInput } from '@/validators/quizSchema';
-import { formatValidationErrors, validateQuizImport } from '@/validators/quizSchema';
+import { formatValidationErrors, validateQuizImport, QuestionSchema } from '@/validators/quizSchema';
+import { z } from 'zod';
 
 export interface CreateQuizInput {
   title: string;
@@ -26,10 +27,26 @@ export interface QuizStats {
 /**
  * Sanitizes all textual fields on questions to ensure safe rendering.
  */
+/**
+ * Sanitizes all textual fields on questions to ensure safe rendering.
+ */
 export function sanitizeQuestions(questions: unknown[]): Question[] {
-  return questions.map((q) => {
-    const question = q as Record<string, unknown>;
-    const options = question.options as Record<string, string>;
+  // Validate structure first
+  const parsedQuestions = z.array(QuestionSchema).safeParse(questions);
+  
+  if (!parsedQuestions.success) {
+    // If validation fails, we log it but try to salvage what we can or throw?
+    // For now, let's throw to prevent bad data from entering the DB, as per code review.
+    const errorMsg = formatValidationErrors(parsedQuestions.error.issues.map(issue => ({
+      path: issue.path.map(p => p.toString()),
+      message: issue.message
+    })));
+    throw new Error(`Invalid questions data: ${errorMsg}`);
+  }
+
+  return parsedQuestions.data.map((q) => {
+    // We can trust the shape now, but we still want to sanitize text fields for XSS prevention
+    const options = q.options;
     
     const sanitizedOptions: Record<string, string> = Object.entries(options).reduce(
       (acc, [key, value]) => {
@@ -40,19 +57,18 @@ export function sanitizeQuestions(questions: unknown[]): Question[] {
     );
 
     return {
-      ...question,
-      id: String(question.id),
-      category: sanitizeQuestionText(question.category as string),
-      question: sanitizeQuestionText(question.question as string),
-      explanation: sanitizeQuestionText(question.explanation as string),
-      distractor_logic: question.distractor_logic ? sanitizeQuestionText(question.distractor_logic as string) : question.distractor_logic,
-      ai_prompt: question.ai_prompt ? sanitizeQuestionText(question.ai_prompt as string) : question.ai_prompt,
-      user_notes: question.user_notes ? sanitizeQuestionText(question.user_notes as string) : question.user_notes,
+      ...q,
+      id: String(q.id),
+      category: sanitizeQuestionText(q.category),
+      question: sanitizeQuestionText(q.question),
+      explanation: sanitizeQuestionText(q.explanation),
+      distractor_logic: q.distractor_logic ? sanitizeQuestionText(q.distractor_logic) : undefined,
+      ai_prompt: q.ai_prompt ? sanitizeQuestionText(q.ai_prompt) : undefined,
+      user_notes: q.user_notes ? sanitizeQuestionText(q.user_notes) : undefined,
       options: sanitizedOptions,
-      // Pass through hash or raw answer (will be handled by createQuiz)
-      correct_answer_hash: question.correct_answer_hash,
-      correct_answer: question.correct_answer,
-    } as unknown as Question;
+      correct_answer_hash: q.correct_answer_hash ?? '',
+      correct_answer: q.correct_answer,
+    };
   });
 }
 

@@ -4,7 +4,7 @@
 set -e
 
 # 1. Check for .env files being committed
-STAGED_ENV_FILES=$(git diff --cached --name-only | grep "\.env" || true)
+STAGED_ENV_FILES=$(git diff --cached --name-only | grep "\.env" | grep -v "\.env\.example" || true)
 
 if [ -n "$STAGED_ENV_FILES" ]; then
   echo "❌ SECURITY ERROR: Attempting to commit .env files:"

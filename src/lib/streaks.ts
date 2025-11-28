@@ -38,7 +38,8 @@ export function updateStudyStreak(): StudyStreak {
   }
 
   const streak = getStudyStreak();
-  const today = new Date().toISOString().split('T')[0] ?? null;
+  // Use local time for streak calculation, not UTC
+  const today = new Date().toLocaleDateString('en-CA');
 
   if (streak.lastStudyDate === today) {
     return streak;

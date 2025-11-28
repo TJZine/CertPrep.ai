@@ -127,8 +127,11 @@ export async function syncResults(userId: string): Promise<void> {
       if (resultsToSave.length > 0) {
         // bulkPut handles upserts (idempotent)
         await db.results.bulkPut(resultsToSave);
-        await setSyncCursor(userId, lastRecordCreatedAt);
       }
+      
+      // Always update cursor to the last seen record's timestamp
+      // This ensures we don't get stuck in an infinite loop if a batch contains only invalid records
+      await setSyncCursor(userId, lastRecordCreatedAt);
 
       if (remoteResults.length < BATCH_SIZE) {
         hasMore = false;

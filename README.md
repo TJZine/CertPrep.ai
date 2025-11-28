@@ -333,6 +333,7 @@ graph TB
 | [🤝 Contributing](./CONTRIBUTING.md) | Contribution guidelines |
 | [📝 Changelog](./CHANGELOG.md) | Version history |
 | [❓ FAQ](./docs/FAQ.md) | Frequently asked questions |
+| [👩‍💻 Code Review](./docs/CODE_REVIEW_IMPLEMENTATION.md) | Implementation standards & persona |
 
 ---
 
