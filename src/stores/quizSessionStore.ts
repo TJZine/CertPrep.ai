@@ -286,96 +286,91 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
     },
 
     submitAnswer: (): void => {
-      set((state) => {
-        if (state.isComplete) {
-          return;
-        }
+      const state = get();
+      if (state.isComplete) {
+        return;
+      }
 
-        const questionId = state.questionQueue[state.currentIndex];
-        if (!questionId || !state.selectedAnswer) {
-          return;
-        }
+      const questionId = state.questionQueue[state.currentIndex];
+      if (!questionId || !state.selectedAnswer) {
+        return;
+      }
 
-        const question = state.questions.find((q) => q.id === questionId);
-        if (!question) {
-          return;
-        }
+      const question = state.questions.find((q) => q.id === questionId);
+      if (!question) {
+        return;
+      }
 
-        // Optimistic update: We can't verify correctness synchronously if we need to hash.
-        // However, for UX, we want immediate feedback.
-        // Since we are in a store, we can't easily await async crypto here without breaking the synchronous action pattern
-        // or converting this to an async action.
-        // Given this is a security hardening, we MUST hash.
-        // We will convert this action to async or use a promise.
-        
-        // Actually, we can just store the selected answer and trigger the check.
-        // But `submitAnswer` updates `isCorrect`.
-        
-        // Let's make `submitAnswer` async.
-        // But Zustand actions can be async.
-        // We need to import hashAnswer.
-        import('@/lib/utils').then(({ hashAnswer }) => {
-          hashAnswer(state.selectedAnswer!).then((hashedSelection) => {
-             set((draft) => {
-                // Re-fetch to ensure state hasn't changed (though unlikely in this flow)
-                const currentQ = draft.questions.find((q) => q.id === questionId);
-                if (!currentQ) return;
-                
-                const isCorrect = hashedSelection === currentQ.correct_answer_hash;
-                const previousDifficulty = draft.answers.get(questionId)?.difficulty ?? null;
-                
-                const record: AnswerRecord = {
-                  questionId,
-                  selectedAnswer: state.selectedAnswer!, // Use captured state.selectedAnswer
-                  isCorrect,
-                  timestamp: Date.now(),
-                  difficulty: previousDifficulty,
-                };
+      // Capture values needed for async operation
+      const currentSelectedAnswer = state.selectedAnswer;
 
-                draft.answers.set(questionId, record);
-                draft.answeredQuestions.add(questionId);
-                draft.hasSubmitted = true;
-                draft.showExplanation = !isCorrect;
-             });
+      // Optimistic update or loading state could go here if needed
+      
+      import('@/lib/utils').then(({ hashAnswer }) => {
+        hashAnswer(currentSelectedAnswer).then((hashedSelection) => {
+          set((draft) => {
+            // Re-validate state in case it changed during async op
+            const currentQ = draft.questions.find((q) => q.id === questionId);
+            // Ensure we are still on the same question and state is valid
+            if (!currentQ || draft.questionQueue[draft.currentIndex] !== questionId) return;
+            
+            const isCorrect = hashedSelection === currentQ.correct_answer_hash;
+            const previousDifficulty = draft.answers.get(questionId)?.difficulty ?? null;
+            
+            const record: AnswerRecord = {
+              questionId,
+              selectedAnswer: currentSelectedAnswer,
+              isCorrect,
+              timestamp: Date.now(),
+              difficulty: previousDifficulty,
+            };
+
+            draft.answers.set(questionId, record);
+            draft.answeredQuestions.add(questionId);
+            draft.hasSubmitted = true;
+            draft.showExplanation = !isCorrect;
           });
         });
       });
     },
 
     selectAnswerProctor: (answerId): void => {
-      set((state) => {
-        if (state.isComplete || state.mode !== 'proctor') {
-          return;
-        }
-        const questionId = state.questionQueue[state.currentIndex];
-        if (!questionId) {
-          return;
-        }
-        const question = state.questions.find((q) => q.id === questionId);
-        if (!question) {
-          return;
-        }
-        state.selectedAnswer = answerId;
-        
-        // Async hash check for proctor mode
-        import('@/lib/utils').then(({ hashAnswer }) => {
-          hashAnswer(answerId).then((hashedSelection) => {
-             set((draft) => {
-                const currentQ = draft.questions.find((q) => q.id === questionId);
-                if (!currentQ) return;
-                
-                const isCorrect = hashedSelection === currentQ.correct_answer_hash;
-                draft.answers.set(questionId, {
-                  questionId,
-                  selectedAnswer: answerId,
-                  isCorrect,
-                  timestamp: Date.now(),
-                  difficulty: null,
-                });
-                draft.answeredQuestions.add(questionId);
-                draft.seenQuestions.add(questionId);
-             });
-          });
+      const state = get();
+      if (state.isComplete || state.mode !== 'proctor') {
+        return;
+      }
+      const questionId = state.questionQueue[state.currentIndex];
+      if (!questionId) {
+        return;
+      }
+      const question = state.questions.find((q) => q.id === questionId);
+      if (!question) {
+        return;
+      }
+
+      set((draft) => {
+        draft.selectedAnswer = answerId;
+      });
+      
+      // Async hash check for proctor mode
+      import('@/lib/utils').then(({ hashAnswer }) => {
+        hashAnswer(answerId).then((hashedSelection) => {
+            set((draft) => {
+              const currentQ = draft.questions.find((q) => q.id === questionId);
+              // Ensure we are still on the same question
+              if (!currentQ || draft.questionQueue[draft.currentIndex] !== questionId) return;
+              
+              const isCorrect = hashedSelection === currentQ.correct_answer_hash;
+              draft.answers.set(questionId, {
+                questionId,
+                selectedAnswer: answerId,
+                isCorrect,
+                timestamp: Date.now(),
+                difficulty: null,
+              });
+              draft.answeredQuestions.add(questionId);
+              draft.seenQuestions.add(questionId);
+            });
         });
       });
     },

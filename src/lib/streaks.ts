@@ -47,7 +47,7 @@ export function updateStudyStreak(): StudyStreak {
 
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
-  const yesterdayStr = yesterday.toISOString().split('T')[0];
+  const yesterdayStr = yesterday.toLocaleDateString('en-CA');
 
   if (streak.lastStudyDate === yesterdayStr) {
     streak.currentStreak += 1;

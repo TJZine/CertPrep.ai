@@ -23,11 +23,13 @@ export class CertPrepDatabase extends Dexie {
       quizzes: 'id, title, created_at, *tags, sourceId',
       results: 'id, quiz_id, timestamp, mode, score, synced',
       syncState: 'userId',
-    }).upgrade(async () => {
+    }).upgrade(async (trans) => {
       // Backfill 'synced' property for existing results
-      // Note: Versions 1-3 migrations are handled implicitly by Dexie's upgrade system if we were jumping versions,
-      // but specifically for v3->v4, we just need to ensure the new table is created (which stores handles).
-      // If we needed to manipulate data for the new table, we'd do it here.
+      await trans.table('results').toCollection().modify((result) => {
+        if (result.synced === undefined) {
+          result.synced = 0;
+        }
+      });
     });
 
     this.quizzes = this.table('quizzes');

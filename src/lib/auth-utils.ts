@@ -1,4 +1,5 @@
 import { AuthError } from '@supabase/supabase-js';
+import { logger } from '@/lib/logger';
 
 /**
  * Maps Supabase auth errors to generic, safe messages to prevent user enumeration.
@@ -9,7 +10,7 @@ export function getAuthErrorMessage(error: AuthError | null): string {
   if (!error) return '';
 
   // Log the actual error for debugging purposes (in a real app, send to Sentry)
-  console.error('Auth Error:', error.message, error.status);
+  logger.error('Auth Error:', { message: error.message, status: error.status });
 
   // List of error codes/messages that might reveal user existence
   // Note: Supabase error codes can be inconsistent, so we check messages too if needed.

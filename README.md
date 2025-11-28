@@ -113,8 +113,7 @@ README.md - CertPrep.ai
 > **Live Demo:** [https://certprep-ai.vercel.app](https://certprep-ai.vercel.app)
 >
 > **Test Credentials:**
-> - Email: `demo@example.com`
-> - Password: `demo123456`
+> *Please sign up for a new account to test the application.*
 
 ---
 

@@ -102,8 +102,10 @@ describe.skipIf(!shouldRun)('Row Level Security (RLS) Verification', () => {
       userA = await createTestUser();
       userB = await createTestUser();
     } catch (e) {
+      if (process.env.CI) {
+        throw new Error(`Failed to create test users in CI environment: ${e instanceof Error ? e.message : String(e)}`);
+      }
       console.warn('Skipping RLS tests: Could not create test users (Auth might be disabled or require confirmation)', e);
-      // In a real CI environment, we'd want this to fail, but for local dev without full backend setup, we might skip
     }
   });
 

@@ -1,5 +1,6 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { logger } from '@/lib/logger'
 
 export const createClient = async (): Promise<ReturnType<typeof createServerClient>> => {
   const cookieStore = await cookies()
@@ -53,8 +54,9 @@ export const createClient = async (): Promise<ReturnType<typeof createServerClie
         },
       }
     )
-  } catch {
+  } catch (error) {
     // Fallback to prevent build crash
+    logger.error('Failed to create Supabase server client', { error })
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return createServerClient('https://placeholder.supabase.co', 'placeholder-key', { cookies: {} as any })
   }

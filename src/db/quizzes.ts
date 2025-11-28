@@ -1,6 +1,6 @@
 import { db } from './index';
 import { sanitizeQuestionText } from '@/lib/sanitize';
-import { calculatePercentage, generateUUID } from '@/lib/utils';
+import { calculatePercentage, generateUUID, hashAnswer } from '@/lib/utils';
 import type { Question, Quiz } from '@/types/quiz';
 import type { QuizImportInput } from '@/validators/quizSchema';
 import { formatValidationErrors, validateQuizImport, QuestionSchema } from '@/validators/quizSchema';
@@ -95,7 +95,7 @@ export async function createQuiz(input: QuizImportInput, meta?: { sourceId?: str
       const qWithAnswer = q as Question & { correct_answer?: string };
       let hash = qWithAnswer.correct_answer_hash;
       if (!hash && qWithAnswer.correct_answer) {
-        hash = await import('@/lib/utils').then(m => m.hashAnswer(qWithAnswer.correct_answer!));
+        hash = await hashAnswer(qWithAnswer.correct_answer);
       }
       
       return {

@@ -53,8 +53,18 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
   })
   response.headers.set('Content-Security-Policy', contentSecurityPolicyHeaderValue)
 
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key'
-  let urlToUse = supabaseUrl || 'https://placeholder.supabase.co'
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const supabaseUrlEnv = process.env.NEXT_PUBLIC_SUPABASE_URL
+
+  if (!supabaseUrlEnv || !supabaseKey) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('Missing Supabase environment variables in production')
+    } else {
+      console.warn('Missing Supabase environment variables, using placeholder')
+    }
+  }
+
+  let urlToUse = supabaseUrlEnv || 'https://placeholder.supabase.co'
 
   if (!urlToUse.startsWith('http')) {
     urlToUse = `https://${urlToUse}`
@@ -62,7 +72,7 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
 
   const supabase = createServerClient(
     urlToUse,
-    supabaseKey,
+    supabaseKey!,
     {
       cookies: {
         getAll() {
