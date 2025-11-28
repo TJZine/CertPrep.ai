@@ -73,8 +73,8 @@ C4Context
 
 | Technology | Purpose | Version |
 |------------|---------|---------|
-| [Next.js](https://nextjs.org/) | React Framework | 14.x |
-| [React](https://react.dev/) | UI Library | 18.x |
+| [Next.js](https://nextjs.org/) | React Framework | 16.x |
+| [React](https://react.dev/) | UI Library | 19.x |
 | [TypeScript](https://www.typescriptlang.org/) | Type Safety | 5.x |
 | [Tailwind CSS](https://tailwindcss.com/) | Styling | 3.x |
 | [Dexie.js](https://dexie.org/) | IndexedDB Wrapper | 3.x |

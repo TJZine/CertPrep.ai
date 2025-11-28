@@ -20,7 +20,7 @@ README.md - CertPrep.ai
   
   <!-- Secondary Badges Row -->
   [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
-  [![Next.js](https://img.shields.io/badge/Next.js-14-black?style=flat-square&logo=next.js)](https://nextjs.org/)
+  [![Next.js](https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js)](https://nextjs.org/)
   [![Supabase](https://img.shields.io/badge/Supabase-Backend-3ECF8E?style=flat-square&logo=supabase)](https://supabase.com/)
   [![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC?style=flat-square&logo=tailwind-css)](https://tailwindcss.com/)
 
@@ -250,7 +250,7 @@ graph TD
 ┌─────────────────────────────────────────────────────────────┐
 │                        Frontend                              │
 ├─────────────────────────────────────────────────────────────┤
-│  Next.js 14 (App Router) │ React 18 │ TypeScript │ Tailwind │
+│  Next.js 16 (App Router) │ React 19 │ TypeScript │ Tailwind │
 └─────────────────────────────────────────────────────────────┘
                               │
                               ▼
