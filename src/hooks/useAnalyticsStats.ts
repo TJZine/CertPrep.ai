@@ -46,32 +46,43 @@ export function useAnalyticsStats(results: Result[], quizzes: Quiz[]): Analytics
       const categories = new Map<string, { correct: number; total: number }>();
       
       // Calculate category performance
-      await Promise.all(
+      const quizMap = new Map(quizzes.map((q) => [q.id, q]));
+      
+      // Calculate category performance
+      const allResultsData = await Promise.all(
         results.map(async (result) => {
-          const quiz = quizzes.find((q) => q.id === result.quiz_id);
-          if (!quiz) return;
+          const quiz = quizMap.get(result.quiz_id);
+          if (!quiz) return [];
 
-          await Promise.all(
+          return Promise.all(
             quiz.questions.map(async (question) => {
               const category = question.category;
-              if (!categories.has(category)) {
-                categories.set(category, { correct: 0, total: 0 });
-              }
-
-              const cat = categories.get(category)!;
-              cat.total += 1;
-
               const userAnswer = result.answers[question.id];
+              let isCorrect = false;
+              
               if (userAnswer) {
                 const userHash = await hashAnswer(userAnswer);
                 if (userHash === question.correct_answer_hash) {
-                  cat.correct += 1;
+                  isCorrect = true;
                 }
               }
+              return { category, isCorrect };
             })
           );
         })
       );
+
+      allResultsData.flat().forEach(({ category, isCorrect }) => {
+        if (!categories.has(category)) {
+          categories.set(category, { correct: 0, total: 0 });
+        }
+
+        const cat = categories.get(category)!;
+        cat.total += 1;
+        if (isCorrect) {
+          cat.correct += 1;
+        }
+      });
 
       const categoryPerformance = Array.from(categories.entries()).map(([category, data]) => ({
         category,

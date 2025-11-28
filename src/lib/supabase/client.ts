@@ -23,7 +23,7 @@ export const createClient = (): ReturnType<typeof createBrowserClient> => {
   }
 
   try {
-    return createBrowserClient(url, key)
+    return createBrowserClient(supabaseUrl || url, key)
   } catch (error) {
     logger.error('Failed to create Supabase client.', error)
     throw error

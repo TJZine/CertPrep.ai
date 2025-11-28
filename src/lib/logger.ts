@@ -31,12 +31,14 @@ export const logger = {
     }
     
     // In production, send to Sentry
-    const errorObj = args.find(arg => arg instanceof Error) || new Error(args.map(String).join(' '));
-    const extras = args.filter(arg => arg !== errorObj);
+    if (isProduction) {
+      const errorObj = args.find(arg => arg instanceof Error) || new Error(args.map(String).join(' '));
+      const extras = args.filter(arg => arg !== errorObj);
 
-    Sentry.captureException(errorObj, {
-      extra: { rawArgs: extras }
-    });
+      Sentry.captureException(errorObj, {
+        extra: { rawArgs: extras }
+      });
+    }
   },
 
   info: (...args: unknown[]): void => {
