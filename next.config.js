@@ -10,10 +10,15 @@ if (process.env.NODE_ENV === 'production') {
     throw new Error(
       `Production build failed: Missing required environment variables: ${missingEnvs.join(', ')}`
     );
-  }
+    }
 }
 
+const pkg = require('./package.json');
+
 const nextConfig = {
+  env: {
+    NEXT_PUBLIC_APP_VERSION: pkg.version,
+  },
   reactStrictMode: true,
   images: {
     unoptimized: true, // Required for static export or offline capability if needed

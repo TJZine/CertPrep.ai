@@ -1,55 +1,46 @@
 'use client';
 
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { getAuthErrorMessage } from '@/lib/auth-utils';
 import Link from 'next/link';
 import { useToast } from '@/components/ui/Toast';
 
-const loginSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-});
-
-type LoginFormData = z.infer<typeof loginSchema>;
-
-export function LoginForm(): React.ReactElement {
+export default function LoginForm(): React.ReactElement {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const supabase = createClient();
   const { addToast } = useToast();
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
-  });
-
-  const onSubmit = async (data: LoginFormData): Promise<void> => {
+  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
+    e.preventDefault();
     setIsLoading(true);
+    setError(null);
+
     try {
       const { error } = await supabase.auth.signInWithPassword({
-        email: data.email,
-        password: data.password,
+        email,
+        password,
       });
 
       if (error) {
-        throw error;
+        setError(getAuthErrorMessage(error));
+        return;
       }
 
       addToast('success', 'Successfully logged in!');
       router.push('/dashboard');
       router.refresh();
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to login';
-      addToast('error', errorMessage);
+    } catch (err) {
+      // Handle unexpected errors that aren't Supabase AuthErrors
+      console.error('Unexpected login error:', err);
+      setError('An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -63,7 +54,7 @@ export function LoginForm(): React.ReactElement {
           Enter your credentials to access your account
         </p>
       </div>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
           <label
             htmlFor="email"
@@ -75,12 +66,11 @@ export function LoginForm(): React.ReactElement {
             id="email"
             type="email"
             placeholder="m@example.com"
-            {...register('email')}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             disabled={isLoading}
+            required
           />
-          {errors.email && (
-            <p className="text-sm text-red-500">{errors.email.message}</p>
-          )}
         </div>
         <div className="space-y-2">
           <label
@@ -92,13 +82,17 @@ export function LoginForm(): React.ReactElement {
           <Input
             id="password"
             type="password"
-            {...register('password')}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             disabled={isLoading}
+            required
           />
-          {errors.password && (
-            <p className="text-sm text-red-500">{errors.password.message}</p>
-          )}
         </div>
+        {error && (
+          <div className="text-sm text-red-500 font-medium">
+            {error}
+          </div>
+        )}
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading ? 'Signing in...' : 'Sign In'}
         </Button>

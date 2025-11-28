@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import * as Sentry from '@sentry/nextjs';
 
 const isProduction = process.env.NODE_ENV === 'production';

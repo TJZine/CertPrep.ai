@@ -15,7 +15,7 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
     if (supabaseUrl) {
       supabaseHostname = new URL(supabaseUrl).hostname
     }
-  } catch (e) {
+  } catch {
     // Ignore invalid URL
   }
 
@@ -23,17 +23,17 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
   
   const cspHeader = `
     default-src 'self';
-    script-src 'self' 'nonce-${nonce}' ${isDev ? "'unsafe-eval'" : ''};
-    style-src 'self' 'unsafe-inline';
+    script-src 'self' 'nonce-${nonce}' ${isDev ? "'unsafe-eval'" : ''} https://js.hcaptcha.com https://*.hcaptcha.com;
+    style-src 'self' 'unsafe-inline' https://hcaptcha.com https://*.hcaptcha.com;
     img-src 'self' blob: data:;
     font-src 'self';
     object-src 'none';
     base-uri 'self';
     form-action 'self';
-    frame-ancestors 'none';
+    frame-ancestors 'none' https://hcaptcha.com https://*.hcaptcha.com;
     block-all-mixed-content;
     upgrade-insecure-requests;
-    connect-src 'self' ${supabaseUrl} ${supabaseHostname ? `wss://${supabaseHostname}` : ''} *.sentry.io;
+    connect-src 'self' ${supabaseUrl} ${supabaseHostname ? `wss://${supabaseHostname}` : ''} *.sentry.io https://hcaptcha.com https://*.hcaptcha.com;
     worker-src 'self' blob:;
   `
   // Replace newlines with spaces
@@ -67,10 +67,12 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
       supabaseKey,
       {
         cookies: {
-          get(name: string) {
+          get(name: string): string | undefined {
             return request.cookies.get(name)?.value
           },
-          set(name: string, value: string, options: CookieOptions) {
+          set(name: string, value: string, options: CookieOptions): void {
+            // request.cookies.set only accepts { name, value } or { name, value, ...options } where options are limited
+            // We strip secure/httpOnly for the request cookie as it's internal
             request.cookies.set({
               name,
               value,
@@ -87,9 +89,11 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
               name,
               value,
               ...options,
+              secure: process.env.NODE_ENV === 'production',
+              httpOnly: true,
             })
           },
-          remove(name: string, options: CookieOptions) {
+          remove(name: string, options: CookieOptions): void {
             request.cookies.set({
               name,
               value: '',
@@ -100,12 +104,14 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
                 headers: requestHeaders,
               },
             })
-             // Re-apply CSP header to the new response object
+            // Re-apply CSP header to the new response object
             response.headers.set('Content-Security-Policy', contentSecurityPolicyHeaderValue)
             response.cookies.set({
               name,
               value: '',
               ...options,
+              secure: process.env.NODE_ENV === 'production',
+              httpOnly: true,
             })
           },
         },
@@ -113,6 +119,7 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
     )
   } catch {
     // Fallback for build resilience
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     supabase = createServerClient('https://placeholder.supabase.co', 'placeholder-key', { cookies: {} as any })
   }
 

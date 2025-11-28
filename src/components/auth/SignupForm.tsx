@@ -1,64 +1,66 @@
 'use client';
 
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import Link from 'next/link';
 import { useToast } from '@/components/ui/Toast';
+import { getAuthErrorMessage } from '@/lib/auth-utils';
+import HCaptcha from '@hcaptcha/react-hcaptcha';
 
-const signupSchema = z.object({
-  fullName: z.string().min(2, 'Full name must be at least 2 characters'),
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ['confirmPassword'],
-});
-
-type SignupFormData = z.infer<typeof signupSchema>;
-
-export function SignupForm(): React.ReactElement {
+export default function SignupForm(): React.ReactElement {
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const supabase = createClient();
   const { addToast } = useToast();
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<SignupFormData>({
-    resolver: zodResolver(signupSchema),
-  });
-
-  const onSubmit = async (data: SignupFormData): Promise<void> => {
+  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
+    e.preventDefault();
     setIsLoading(true);
+    setError(null);
+
+    if (password !== confirmPassword) {
+      setError("Passwords don't match");
+      setIsLoading(false);
+      return;
+    }
+
+    if (!captchaToken) {
+      setError('Please complete the captcha');
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const { error } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password,
+        email,
+        password,
         options: {
           data: {
-            full_name: data.fullName,
+            full_name: fullName,
           },
+          captchaToken,
         },
       });
 
       if (error) {
-        throw error;
+        setError(getAuthErrorMessage(error));
+        return;
       }
 
       addToast('success', 'Account created! Please check your email to confirm.');
       router.push('/login');
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to create account';
-      addToast('error', errorMessage);
+    } catch (err) {
+      console.error('Unexpected signup error:', err);
+      setError('An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -72,7 +74,7 @@ export function SignupForm(): React.ReactElement {
           Enter your email below to create your account
         </p>
       </div>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
           <label
             htmlFor="fullName"
@@ -83,12 +85,11 @@ export function SignupForm(): React.ReactElement {
           <Input
             id="fullName"
             placeholder="John Doe"
-            {...register('fullName')}
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
             disabled={isLoading}
+            required
           />
-          {errors.fullName && (
-            <p className="text-sm text-red-500">{errors.fullName.message}</p>
-          )}
         </div>
         <div className="space-y-2">
           <label
@@ -101,12 +102,11 @@ export function SignupForm(): React.ReactElement {
             id="email"
             type="email"
             placeholder="m@example.com"
-            {...register('email')}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             disabled={isLoading}
+            required
           />
-          {errors.email && (
-            <p className="text-sm text-red-500">{errors.email.message}</p>
-          )}
         </div>
         <div className="space-y-2">
           <label
@@ -118,12 +118,12 @@ export function SignupForm(): React.ReactElement {
           <Input
             id="password"
             type="password"
-            {...register('password')}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             disabled={isLoading}
+            required
+            minLength={6}
           />
-          {errors.password && (
-            <p className="text-sm text-red-500">{errors.password.message}</p>
-          )}
         </div>
         <div className="space-y-2">
           <label
@@ -135,13 +135,27 @@ export function SignupForm(): React.ReactElement {
           <Input
             id="confirmPassword"
             type="password"
-            {...register('confirmPassword')}
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
             disabled={isLoading}
+            required
+            minLength={6}
           />
-          {errors.confirmPassword && (
-            <p className="text-sm text-red-500">{errors.confirmPassword.message}</p>
-          )}
         </div>
+
+        <div className="flex justify-center">
+          <HCaptcha
+            sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY || ''}
+            onVerify={(token) => setCaptchaToken(token)}
+          />
+        </div>
+
+        {error && (
+          <div className="text-sm text-red-500 font-medium">
+            {error}
+          </div>
+        )}
+
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading ? 'Creating account...' : 'Create Account'}
         </Button>

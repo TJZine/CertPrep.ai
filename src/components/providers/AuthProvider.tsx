@@ -4,6 +4,8 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session, AuthChangeEvent } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
+import { clearDatabase } from '@/db';
+
 
 type AuthContextType = {
   user: User | null;
@@ -51,8 +53,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }): React
   }, [router, supabase]);
 
   const signOut = async (): Promise<void> => {
-    await supabase.auth.signOut();
-    router.push('/');
+    try {
+      // Clear local data first to ensure privacy even if network fails
+      await clearDatabase();
+    } catch (error) {
+      console.error('Failed to clear local database during sign out:', error);
+    }
+
+    try {
+      await supabase.auth.signOut();
+      setUser(null);
+      setSession(null);
+      router.push('/login');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
   };
 
   const value = {

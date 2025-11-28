@@ -93,7 +93,7 @@ export class GlobalErrorHandler extends React.Component<GlobalErrorHandlerProps,
                 options below.
               </p>
 
-              {this.state.error ? (
+              {this.state.error && process.env.NODE_ENV === 'development' ? (
                 <details className="mb-6 rounded-lg border border-slate-200 bg-slate-50 p-4 text-left">
                   <summary className="cursor-pointer font-medium text-slate-700">Technical Details</summary>
                   <pre className="mt-2 overflow-auto whitespace-pre-wrap text-xs text-slate-600">

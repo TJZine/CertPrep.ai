@@ -55,6 +55,7 @@ export const createClient = async (): Promise<ReturnType<typeof createServerClie
     )
   } catch {
     // Fallback to prevent build crash
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return createServerClient('https://placeholder.supabase.co', 'placeholder-key', { cookies: {} as any })
   }
 }

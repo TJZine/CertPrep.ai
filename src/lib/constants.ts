@@ -1,5 +1,5 @@
 export const APP_NAME = 'CertPrep.ai';
-export const APP_VERSION = '1.0.0';
+export const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0';
 
 export const SPACED_REPETITION = {
   AGAIN_REAPPEAR_TURNS: 3,
