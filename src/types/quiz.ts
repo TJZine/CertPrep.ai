@@ -6,7 +6,7 @@ export interface Question {
   difficulty?: Difficulty;
   question: string;
   options: Record<string, string>;
-  correct_answer: string;
+  correct_answer_hash: string;
   explanation: string;
   distractor_logic?: string;
   ai_prompt?: string;

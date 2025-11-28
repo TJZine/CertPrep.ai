@@ -1,4 +1,4 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 const PROTECTED_ROUTES = ['/dashboard', '/quiz', '/results', '/library', '/settings', '/analytics']
@@ -53,76 +53,51 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
   })
   response.headers.set('Content-Security-Policy', contentSecurityPolicyHeaderValue)
 
-  let supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key'
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key'
   let urlToUse = supabaseUrl || 'https://placeholder.supabase.co'
 
   if (!urlToUse.startsWith('http')) {
     urlToUse = `https://${urlToUse}`
   }
 
-  let supabase
-  try {
-    supabase = createServerClient(
-      urlToUse,
-      supabaseKey,
-      {
-        cookies: {
-          get(name: string): string | undefined {
-            return request.cookies.get(name)?.value
-          },
-          set(name: string, value: string, options: CookieOptions): void {
-            // request.cookies.set only accepts { name, value } or { name, value, ...options } where options are limited
-            // We strip secure/httpOnly for the request cookie as it's internal
-            request.cookies.set({
-              name,
-              value,
-              ...options,
-            })
-            response = NextResponse.next({
-              request: {
-                headers: requestHeaders,
-              },
-            })
-            // Re-apply CSP header to the new response object
-            response.headers.set('Content-Security-Policy', contentSecurityPolicyHeaderValue)
-            response.cookies.set({
-              name,
-              value,
-              ...options,
-              secure: process.env.NODE_ENV === 'production',
-              httpOnly: true,
-            })
-          },
-          remove(name: string, options: CookieOptions): void {
-            request.cookies.set({
-              name,
-              value: '',
-              ...options,
-            })
-            response = NextResponse.next({
-              request: {
-                headers: requestHeaders,
-              },
-            })
-            // Re-apply CSP header to the new response object
-            response.headers.set('Content-Security-Policy', contentSecurityPolicyHeaderValue)
-            response.cookies.set({
-              name,
-              value: '',
-              ...options,
-              secure: process.env.NODE_ENV === 'production',
-              httpOnly: true,
-            })
-          },
+  const supabase = createServerClient(
+    urlToUse,
+    supabaseKey,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
         },
-      }
-    )
-  } catch {
-    // Fallback for build resilience
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    supabase = createServerClient('https://placeholder.supabase.co', 'placeholder-key', { cookies: {} as any })
-  }
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => {
+            request.cookies.set(name, value)
+          })
+          
+          response = NextResponse.next({
+            request: {
+              headers: requestHeaders,
+            },
+          })
+          
+          response.headers.set('Content-Security-Policy', contentSecurityPolicyHeaderValue)
+          
+          cookiesToSet.forEach(({ name, value, options }) => {
+            response.cookies.set({
+              name,
+              value,
+              ...options,
+              secure: process.env.NODE_ENV === 'production',
+              httpOnly: true,
+              sameSite: 'lax',
+            })
+          })
+        },
+      },
+    }
+  )
 
+  // Refresh session if expired - required for Server Components
+  // https://supabase.com/docs/guides/auth/server-side/nextjs
   const {
     data: { user },
   } = await supabase.auth.getUser()

@@ -5,6 +5,7 @@ import { Bot, Check, Copy, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
 import { cn } from '@/lib/utils';
+import { useCorrectAnswer } from '@/hooks/useCorrectAnswer';
 import type { Question } from '@/types/quiz';
 
 interface AITutorButtonProps {
@@ -26,17 +27,21 @@ export function AITutorButton({
   const [copied, setCopied] = React.useState(false);
   const { addToast } = useToast();
 
+  const correctAnswerKey = useCorrectAnswer(question);
+
   const generatePrompt = React.useCallback((): string => {
+    const correctKey = correctAnswerKey || '';
+    const correctText = question.options[correctKey] ?? correctKey;
+
     if (question.ai_prompt) {
       return question.ai_prompt
         .replace('{question}', question.question)
         .replace('{user_answer}', question.options[userAnswer] ?? userAnswer)
-        .replace('{correct_answer}', question.options[question.correct_answer] ?? question.correct_answer)
+        .replace('{correct_answer}', correctText)
         .replace('{category}', question.category);
     }
 
     const userAnswerText = question.options[userAnswer] ?? userAnswer;
-    const correctAnswerText = question.options[question.correct_answer] ?? question.correct_answer;
 
     return `I'm studying for a certification exam and got this question wrong. Please help me understand why my answer was incorrect and explain the correct concept.
 
@@ -47,7 +52,7 @@ ${question.question}
 
 **My Answer:** ${userAnswer}) ${userAnswerText}
 
-**Correct Answer:** ${question.correct_answer}) ${correctAnswerText}
+**Correct Answer:** ${correctKey}) ${correctText}
 
 **The explanation provided was:**
 ${question.explanation}
@@ -57,7 +62,7 @@ Please:
 2. Explain why the correct answer is right
 3. Give me a simple way to remember this concept
 4. If relevant, provide a real-world example`;
-  }, [question, userAnswer]);
+  }, [question, userAnswer, correctAnswerKey]);
 
   const handleCopyPrompt = async (): Promise<void> => {
     const prompt = generatePrompt();

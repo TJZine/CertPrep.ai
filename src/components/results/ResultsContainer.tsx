@@ -14,6 +14,9 @@ import { useToast } from '@/components/ui/Toast';
 import { deleteResult } from '@/db/results';
 import { celebratePerfectScore } from '@/lib/confetti';
 import { updateStudyStreak } from '@/lib/streaks';
+import { useQuizGrading } from '@/hooks/useQuizGrading';
+import { useResolveCorrectAnswers } from '@/hooks/useResolveCorrectAnswers';
+import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import type { Quiz } from '@/types/quiz';
 import type { Result } from '@/types/result';
 
@@ -33,30 +36,24 @@ export function ResultsContainer({ result, quiz, previousScore }: ResultsContain
   const [showDeleteModal, setShowDeleteModal] = React.useState(false);
   const [isDeleting, setIsDeleting] = React.useState(false);
 
+  const { grading, isLoading: gradingLoading } = useQuizGrading(quiz, result.answers);
+  const resolvedAnswers = useResolveCorrectAnswers(quiz.questions);
+
   const stats = React.useMemo(() => {
-    const answeredQuestions = Object.keys(result.answers);
-    let correctCount = 0;
-
-    quiz.questions.forEach((q) => {
-      const userAnswer = result.answers[q.id];
-      if (userAnswer === q.correct_answer) {
-        correctCount += 1;
-      }
-    });
-
-    const incorrectCount = answeredQuestions.length - correctCount;
-    const unansweredCount = quiz.questions.length - answeredQuestions.length;
-
+    if (!grading) return null;
+    
     return {
-      correctCount,
-      incorrectCount,
-      unansweredCount,
-      answeredCount: answeredQuestions.length,
+      correctCount: grading.correctCount,
+      incorrectCount: grading.incorrectCount,
+      unansweredCount: grading.unansweredCount,
+      answeredCount: Object.keys(result.answers).length,
       averageTimePerQuestion: quiz.questions.length > 0 ? result.time_taken_seconds / quiz.questions.length : 0,
     };
-  }, [result, quiz]);
+  }, [grading, result.answers, result.time_taken_seconds, quiz.questions.length]);
 
   const categoryScores = React.useMemo(() => {
+    if (!grading) return [];
+    
     const categories = new Map<string, { correct: number; total: number }>();
 
     quiz.questions.forEach((q) => {
@@ -67,7 +64,7 @@ export function ResultsContainer({ result, quiz, previousScore }: ResultsContain
       const cat = categories.get(q.category)!;
       cat.total += 1;
 
-      if (result.answers[q.id] === q.correct_answer) {
+      if (grading.questionStatus[q.id]) {
         cat.correct += 1;
       }
     });
@@ -78,28 +75,39 @@ export function ResultsContainer({ result, quiz, previousScore }: ResultsContain
       correct: data.correct,
       total: data.total,
     }));
-  }, [quiz, result]);
+  }, [quiz, grading]);
 
   const questionsWithAnswers = React.useMemo(() => {
+    if (!grading) return [];
+    
     return quiz.questions.map((q) => ({
       question: q,
       userAnswer: result.answers[q.id] || null,
-      isCorrect: result.answers[q.id] === q.correct_answer,
+      isCorrect: !!grading.questionStatus[q.id],
       isFlagged: result.flagged_questions.includes(q.id),
     }));
-  }, [quiz, result]);
+  }, [quiz, result, grading]);
 
   const missedQuestions = React.useMemo(() => {
+    if (!grading) return [];
+    
     return quiz.questions
-      .filter((q) => result.answers[q.id] !== q.correct_answer)
+      .filter((q) => !grading.questionStatus[q.id] && result.answers[q.id]) // Incorrect and answered
       .map((q) => ({
         question: q,
         userAnswer: result.answers[q.id] || null,
-        correctAnswer: q.correct_answer,
+        correctAnswer: resolvedAnswers[q.id] || '', // Use resolved answer or empty string
       }));
-  }, [quiz, result]);
+  }, [quiz, result, grading, resolvedAnswers]);
 
-  const [questionFilter, setQuestionFilter] = React.useState<FilterType>(missedQuestions.length > 0 ? 'incorrect' : 'all');
+  const [questionFilter, setQuestionFilter] = React.useState<FilterType>('all');
+  
+  // Update filter once grading is done
+  React.useEffect(() => {
+    if (missedQuestions.length > 0) {
+      setQuestionFilter('incorrect');
+    }
+  }, [missedQuestions.length]);
 
   const handleRetakeQuiz = (): void => {
     router.push(`/quiz/${quiz.id}/${result.mode}`);
@@ -165,6 +173,12 @@ export function ResultsContainer({ result, quiz, previousScore }: ResultsContain
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+      {gradingLoading || !stats ? (
+         <div className="flex h-screen items-center justify-center">
+           <LoadingSpinner size="lg" text="Calculating results..." />
+         </div>
+      ) : (
+        <>
       <header className="no-print sticky top-0 z-40 border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/95">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4">
           <div className="flex items-center gap-3">
@@ -279,6 +293,8 @@ export function ResultsContainer({ result, quiz, previousScore }: ResultsContain
           Are you sure you want to delete this result? Your score and answers will be permanently removed.
         </p>
       </Modal>
+      </>
+      )}
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { db } from './index';
-import { calculatePercentage, generateUUID } from '@/lib/utils';
+import { calculatePercentage, generateUUID, hashAnswer } from '@/lib/utils';
 import type { CategoryPerformance, Result } from '@/types/result';
 import type { Quiz, QuizMode } from '@/types/quiz';
 
@@ -22,28 +22,35 @@ export interface OverallStats {
 /**
  * Calculates overall and per-category performance for a completed quiz.
  */
-export function calculateResults(
+export async function calculateResults(
   quiz: Quiz,
   answers: Record<string, string>,
-): { score: number; categoryBreakdown: Record<string, number> } {
+): Promise<{ score: number; categoryBreakdown: Record<string, number> }> {
   let correctCount = 0;
   const categoryTotals: Record<string, { correct: number; total: number }> = {};
 
-  quiz.questions.forEach((question) => {
-    const category = question.category || 'Uncategorized';
-    const userAnswer = answers[String(question.id)];
-    const isCorrect = userAnswer === question.correct_answer;
+  await Promise.all(
+    quiz.questions.map(async (question) => {
+      const category = question.category || 'Uncategorized';
+      const userAnswer = answers[String(question.id)];
+      
+      let isCorrect = false;
+      if (userAnswer) {
+        const userHash = await hashAnswer(userAnswer);
+        isCorrect = userHash === question.correct_answer_hash;
+      }
 
-    if (!categoryTotals[category]) {
-      categoryTotals[category] = { correct: 0, total: 0 };
-    }
+      if (!categoryTotals[category]) {
+        categoryTotals[category] = { correct: 0, total: 0 };
+      }
 
-    categoryTotals[category].total += 1;
-    if (isCorrect) {
-      categoryTotals[category].correct += 1;
-      correctCount += 1;
-    }
-  });
+      categoryTotals[category].total += 1;
+      if (isCorrect) {
+        categoryTotals[category].correct += 1;
+        correctCount += 1;
+      }
+    })
+  );
 
   const score = calculatePercentage(correctCount, quiz.questions.length);
   const categoryBreakdown = Object.fromEntries(
@@ -66,7 +73,7 @@ export async function createResult(input: CreateResultInput): Promise<Result> {
     throw new Error('Quiz not found.');
   }
 
-  const { score, categoryBreakdown } = calculateResults(quiz, input.answers);
+  const { score, categoryBreakdown } = await calculateResults(quiz, input.answers);
   const result: Result = {
     id: generateUUID(),
     quiz_id: input.quizId,
@@ -126,22 +133,31 @@ export async function getCategoryPerformance(quizId: string): Promise<CategoryPe
   const results = await getResultsByQuizId(quizId);
   const totals: Record<string, { correct: number; total: number }> = {};
 
-  results.forEach((result) => {
-    quiz.questions.forEach((question) => {
-      const category = question.category || 'Uncategorized';
-      const userAnswer = result.answers[String(question.id)];
-      const isCorrect = userAnswer === question.correct_answer;
+  await Promise.all(
+    results.map(async (result) => {
+      await Promise.all(
+        quiz.questions.map(async (question) => {
+          const category = question.category || 'Uncategorized';
+          const userAnswer = result.answers[String(question.id)];
+          
+          let isCorrect = false;
+          if (userAnswer) {
+            const userHash = await hashAnswer(userAnswer);
+            isCorrect = userHash === question.correct_answer_hash;
+          }
 
-      if (!totals[category]) {
-        totals[category] = { correct: 0, total: 0 };
-      }
+          if (!totals[category]) {
+            totals[category] = { correct: 0, total: 0 };
+          }
 
-      totals[category].total += 1;
-      if (isCorrect) {
-        totals[category].correct += 1;
-      }
-    });
-  });
+          totals[category].total += 1;
+          if (isCorrect) {
+            totals[category].correct += 1;
+          }
+        })
+      );
+    })
+  );
 
   return Object.entries(totals)
     .map(([category, { correct, total }]) => ({
@@ -167,9 +183,21 @@ export async function getMissedQuestions(resultId: string): Promise<string[]> {
     throw new Error('Quiz not found.');
   }
 
-  return quiz.questions
-    .filter((question) => result.answers[String(question.id)] !== question.correct_answer)
-    .map((question) => String(question.id));
+  const missedIds: string[] = [];
+
+  await Promise.all(
+    quiz.questions.map(async (question) => {
+      const userAnswer = result.answers[String(question.id)];
+      if (userAnswer) {
+        const userHash = await hashAnswer(userAnswer);
+        if (userHash !== question.correct_answer_hash) {
+          missedIds.push(String(question.id));
+        }
+      }
+    })
+  );
+
+  return missedIds;
 }
 
 /**
@@ -187,27 +215,36 @@ export async function getOverallStats(): Promise<OverallStats> {
 
   const categoryTotals: Record<string, { correct: number; total: number }> = {};
 
-  results.forEach((result) => {
-    const quiz = quizMap.get(result.quiz_id);
-    if (!quiz) {
-      return;
-    }
-
-    quiz.questions.forEach((question) => {
-      const category = question.category || 'Uncategorized';
-      const userAnswer = result.answers[String(question.id)];
-      const isCorrect = userAnswer === question.correct_answer;
-
-      if (!categoryTotals[category]) {
-        categoryTotals[category] = { correct: 0, total: 0 };
+  await Promise.all(
+    results.map(async (result) => {
+      const quiz = quizMap.get(result.quiz_id);
+      if (!quiz) {
+        return;
       }
 
-      categoryTotals[category].total += 1;
-      if (isCorrect) {
-        categoryTotals[category].correct += 1;
-      }
-    });
-  });
+      await Promise.all(
+        quiz.questions.map(async (question) => {
+          const category = question.category || 'Uncategorized';
+          const userAnswer = result.answers[String(question.id)];
+          
+          let isCorrect = false;
+          if (userAnswer) {
+            const userHash = await hashAnswer(userAnswer);
+            isCorrect = userHash === question.correct_answer_hash;
+          }
+
+          if (!categoryTotals[category]) {
+            categoryTotals[category] = { correct: 0, total: 0 };
+          }
+
+          categoryTotals[category].total += 1;
+          if (isCorrect) {
+            categoryTotals[category].correct += 1;
+          }
+        })
+      );
+    })
+  );
 
   const weakestCategories = Object.entries(categoryTotals)
     .map(([category, { correct, total }]) => ({

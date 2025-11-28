@@ -43,3 +43,13 @@ export function calculatePercentage(correct: number, total: number): number {
   }
   return Math.round((correct / total) * 100);
 }
+
+/**
+ * Hashes an answer string using SHA-256.
+ */
+export async function hashAnswer(answer: string): Promise<string> {
+  const msgBuffer = new TextEncoder().encode(answer);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+}

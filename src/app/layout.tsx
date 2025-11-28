@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import * as React from 'react';
 import { headers } from 'next/headers';
 import { Inter } from 'next/font/google';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { ToastProvider } from '@/components/ui/Toast';
@@ -103,6 +104,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <Footer />
               <OfflineIndicator />
               <InstallPrompt />
+              <SpeedInsights />
             </ToastProvider>
           </GlobalErrorHandler>
         </ThemeProvider>

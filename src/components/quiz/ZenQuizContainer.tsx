@@ -22,6 +22,7 @@ import { useBeforeUnload } from '@/hooks/useBeforeUnload';
 import { createResult } from '@/db/results';
 import type { Quiz } from '@/types/quiz';
 import { useSync } from '@/hooks/useSync';
+import { useCorrectAnswer } from '@/hooks/useCorrectAnswer';
 
 interface ZenQuizContainerProps {
   quiz: Quiz;
@@ -198,8 +199,11 @@ export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContaine
 
   const isCurrentAnswerCorrect = React.useMemo(() => {
     if (!currentQuestion || !hasSubmitted) return false;
-    return selectedAnswer === currentQuestion.correct_answer;
-  }, [currentQuestion, hasSubmitted, selectedAnswer]);
+    const answerRecord = answers.get(currentQuestion.id);
+    return answerRecord?.isCorrect ?? false;
+  }, [currentQuestion, hasSubmitted, answers]);
+
+  const currentCorrectAnswer = useCorrectAnswer(currentQuestion);
 
   const isLastQuestion = currentIndex >= questionQueue.length - 1;
 
@@ -249,7 +253,7 @@ export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContaine
               <OptionsList
                 options={currentQuestion.options}
                 selectedAnswer={selectedAnswer}
-                correctAnswer={currentQuestion.correct_answer}
+                correctAnswer={currentCorrectAnswer ?? ''}
                 hasSubmitted={hasSubmitted}
                 onSelectOption={selectAnswer}
               />

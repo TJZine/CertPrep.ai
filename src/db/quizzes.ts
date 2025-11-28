@@ -26,9 +26,12 @@ export interface QuizStats {
 /**
  * Sanitizes all textual fields on questions to ensure safe rendering.
  */
-export function sanitizeQuestions(questions: Question[]): Question[] {
-  return questions.map((question) => {
-    const sanitizedOptions: Record<string, string> = Object.entries(question.options).reduce(
+export function sanitizeQuestions(questions: unknown[]): Question[] {
+  return questions.map((q) => {
+    const question = q as Record<string, unknown>;
+    const options = question.options as Record<string, string>;
+    
+    const sanitizedOptions: Record<string, string> = Object.entries(options).reduce(
       (acc, [key, value]) => {
         acc[key] = sanitizeQuestionText(value);
         return acc;
@@ -39,14 +42,17 @@ export function sanitizeQuestions(questions: Question[]): Question[] {
     return {
       ...question,
       id: String(question.id),
-      category: sanitizeQuestionText(question.category),
-      question: sanitizeQuestionText(question.question),
-      explanation: sanitizeQuestionText(question.explanation),
-      distractor_logic: question.distractor_logic ? sanitizeQuestionText(question.distractor_logic) : question.distractor_logic,
-      ai_prompt: question.ai_prompt ? sanitizeQuestionText(question.ai_prompt) : question.ai_prompt,
-      user_notes: question.user_notes ? sanitizeQuestionText(question.user_notes) : question.user_notes,
+      category: sanitizeQuestionText(question.category as string),
+      question: sanitizeQuestionText(question.question as string),
+      explanation: sanitizeQuestionText(question.explanation as string),
+      distractor_logic: question.distractor_logic ? sanitizeQuestionText(question.distractor_logic as string) : question.distractor_logic,
+      ai_prompt: question.ai_prompt ? sanitizeQuestionText(question.ai_prompt as string) : question.ai_prompt,
+      user_notes: question.user_notes ? sanitizeQuestionText(question.user_notes as string) : question.user_notes,
       options: sanitizedOptions,
-    };
+      // Pass through hash or raw answer (will be handled by createQuiz)
+      correct_answer_hash: question.correct_answer_hash,
+      correct_answer: question.correct_answer,
+    } as unknown as Question;
   });
 }
 
@@ -61,7 +67,30 @@ export async function createQuiz(input: QuizImportInput, meta?: { sourceId?: str
     throw new Error(`Invalid quiz import: ${message}`);
   }
 
-  const sanitizedQuestions = sanitizeQuestions(validation.data.questions);
+  const sanitizedQuestions = await Promise.all(
+    validation.data.questions.map(async (q) => {
+      const sanitized = sanitizeQuestions([q])[0];
+      if (!sanitized) throw new Error('Failed to sanitize question');
+      
+      // If the input has a raw correct_answer, hash it.
+      // If it already has a hash (importing existing export), keep it.
+      // Note: The validator might need adjustment if we strictly require one or the other.
+      // For now, we assume the input might have the raw answer we need to hash.
+      const qWithAnswer = q as Question & { correct_answer?: string };
+      let hash = qWithAnswer.correct_answer_hash;
+      if (!hash && qWithAnswer.correct_answer) {
+        hash = await import('@/lib/utils').then(m => m.hashAnswer(qWithAnswer.correct_answer!));
+      }
+      
+      return {
+        ...sanitized,
+        correct_answer_hash: hash,
+        // Remove plaintext answer if it exists on the object to avoid persisting it
+        correct_answer: undefined,
+      } as unknown as Question;
+    })
+  );
+
   const sanitizedTitle = sanitizeQuestionText(validation.data.title);
   const sanitizedDescription = sanitizeQuestionText(validation.data.description ?? '');
   const sanitizedTags = (validation.data.tags ?? []).map((tag) => sanitizeQuestionText(tag));

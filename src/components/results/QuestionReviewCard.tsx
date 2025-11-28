@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/Badge';
 import { AITutorButton } from '@/components/quiz/AITutorButton';
 import { cn } from '@/lib/utils';
 import { sanitizeHTML } from '@/lib/sanitize';
+import { useCorrectAnswer } from '@/hooks/useCorrectAnswer';
 import type { Question } from '@/types/quiz';
 
 interface QuestionReviewCardProps {
@@ -39,6 +40,8 @@ export function QuestionReviewCard({
 
   const sanitizedQuestion = React.useMemo(() => sanitizeHTML(question.question), [question.question]);
   const sanitizedExplanation = React.useMemo(() => sanitizeHTML(question.explanation), [question.explanation]);
+
+  const correctAnswerKey = useCorrectAnswer(question);
 
   const sortedOptions = React.useMemo(() => {
     return Object.entries(question.options).sort(([a], [b]) => a.localeCompare(b));
@@ -127,7 +130,7 @@ export function QuestionReviewCard({
           <div className="mb-4 space-y-2">
             {sortedOptions.map(([key, text]) => {
               const isUserAnswer = key === userAnswer;
-              const isCorrectAnswer = key === question.correct_answer;
+              const isCorrectAnswer = key === correctAnswerKey;
               const sanitizedText = sanitizeHTML(text);
 
               let optionStyle = 'border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900';

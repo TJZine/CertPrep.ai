@@ -301,20 +301,44 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
           return;
         }
 
-        const isCorrect = state.selectedAnswer === question.correct_answer;
-        const previousDifficulty = state.answers.get(questionId)?.difficulty ?? null;
-        const record: AnswerRecord = {
-          questionId,
-          selectedAnswer: state.selectedAnswer,
-          isCorrect,
-          timestamp: Date.now(),
-          difficulty: previousDifficulty,
-        };
+        // Optimistic update: We can't verify correctness synchronously if we need to hash.
+        // However, for UX, we want immediate feedback.
+        // Since we are in a store, we can't easily await async crypto here without breaking the synchronous action pattern
+        // or converting this to an async action.
+        // Given this is a security hardening, we MUST hash.
+        // We will convert this action to async or use a promise.
+        
+        // Actually, we can just store the selected answer and trigger the check.
+        // But `submitAnswer` updates `isCorrect`.
+        
+        // Let's make `submitAnswer` async.
+        // But Zustand actions can be async.
+        // We need to import hashAnswer.
+        import('@/lib/utils').then(({ hashAnswer }) => {
+          hashAnswer(state.selectedAnswer!).then((hashedSelection) => {
+             set((draft) => {
+                // Re-fetch to ensure state hasn't changed (though unlikely in this flow)
+                const currentQ = draft.questions.find((q) => q.id === questionId);
+                if (!currentQ) return;
+                
+                const isCorrect = hashedSelection === currentQ.correct_answer_hash;
+                const previousDifficulty = draft.answers.get(questionId)?.difficulty ?? null;
+                
+                const record: AnswerRecord = {
+                  questionId,
+                  selectedAnswer: state.selectedAnswer!, // Use captured state.selectedAnswer
+                  isCorrect,
+                  timestamp: Date.now(),
+                  difficulty: previousDifficulty,
+                };
 
-        state.answers.set(questionId, record);
-        state.answeredQuestions.add(questionId);
-        state.hasSubmitted = true;
-        state.showExplanation = !isCorrect;
+                draft.answers.set(questionId, record);
+                draft.answeredQuestions.add(questionId);
+                draft.hasSubmitted = true;
+                draft.showExplanation = !isCorrect;
+             });
+          });
+        });
       });
     },
 
@@ -332,16 +356,27 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
           return;
         }
         state.selectedAnswer = answerId;
-        const isCorrect = answerId === question.correct_answer;
-        state.answers.set(questionId, {
-          questionId,
-          selectedAnswer: answerId,
-          isCorrect,
-          timestamp: Date.now(),
-          difficulty: null,
+        
+        // Async hash check for proctor mode
+        import('@/lib/utils').then(({ hashAnswer }) => {
+          hashAnswer(answerId).then((hashedSelection) => {
+             set((draft) => {
+                const currentQ = draft.questions.find((q) => q.id === questionId);
+                if (!currentQ) return;
+                
+                const isCorrect = hashedSelection === currentQ.correct_answer_hash;
+                draft.answers.set(questionId, {
+                  questionId,
+                  selectedAnswer: answerId,
+                  isCorrect,
+                  timestamp: Date.now(),
+                  difficulty: null,
+                });
+                draft.answeredQuestions.add(questionId);
+                draft.seenQuestions.add(questionId);
+             });
+          });
         });
-        state.answeredQuestions.add(questionId);
-        state.seenQuestions.add(questionId);
       });
     },
 
