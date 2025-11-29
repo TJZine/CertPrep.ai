@@ -12,13 +12,10 @@ export const createClient = async (): Promise<ReturnType<typeof createServerClie
     if (process.env.NODE_ENV !== 'production') {
       throw new Error('Missing Supabase environment variables')
     }
-    // In production, we'll handle this gracefully below or let createServerClient fail if it must,
-    // but typically we want to return a safe fallback to prevent crashes.
-    // However, without a URL, we can't really do anything.
-    // Let's use a safe fallback URL if missing in prod to prevent immediate crash, 
-    // but operations will fail.
-    supabaseUrl = supabaseUrl || 'https://placeholder.supabase.co'
-    supabaseKey = supabaseKey || 'placeholder-key'
+    // In production, we must fail hard if configuration is missing to prevent silent data loss or confusion.
+    // This ensures the issue is caught immediately in deployment or monitoring.
+    logger.error('CRITICAL: Missing Supabase environment variables in production. Application cannot function.')
+    throw new Error('Server configuration error: Missing Supabase credentials.')
   }
 
   if (!supabaseUrl.startsWith('http')) {
