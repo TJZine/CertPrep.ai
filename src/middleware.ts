@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-const PROTECTED_ROUTES = ['/quiz', '/results', '/library', '/settings', '/analytics', '/reset-password']
+const PROTECTED_ROUTES = ['/quiz', '/results', '/library', '/settings', '/analytics']
 const AUTH_ROUTES = ['/login', '/signup', '/forgot-password']
 
 export async function middleware(request: NextRequest): Promise<NextResponse> {
@@ -69,9 +69,7 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
   const urlToUse = supabaseUrlEnv || 'https://placeholder.supabase.co'
   const keyToUse = supabaseKey || 'placeholder-key'
 
-  if (!urlToUse.startsWith('http')) {
-    // urlToUse = `https://${urlToUse}` // This line was unreachable or redundant if we trust the env var or placeholder
-  }
+
 
   const supabase = createServerClient(
     urlToUse,
@@ -101,7 +99,6 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
               ...options,
               secure: process.env.NODE_ENV === 'production',
               httpOnly: true,
-              sameSite: 'lax',
             })
           })
         },
@@ -121,7 +118,14 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
   // 1. Unauthenticated users trying to access protected routes -> Redirect to Login
   if (isProtectedRoute && !user) {
     const redirectUrl = new URL('/login', request.url)
-    redirectUrl.searchParams.set('next', request.nextUrl.pathname + request.nextUrl.search)
+    
+    // Validate 'next' param to prevent loops and open redirects
+    const nextPath = request.nextUrl.pathname + request.nextUrl.search
+    // Ensure it's a relative path and not an auth route
+    if (nextPath.startsWith('/') && !nextPath.startsWith('//') && !AUTH_ROUTES.some(r => nextPath.startsWith(r))) {
+      redirectUrl.searchParams.set('next', nextPath)
+    }
+    
     return NextResponse.redirect(redirectUrl)
   }
 

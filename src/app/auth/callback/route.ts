@@ -3,8 +3,11 @@ import { createClient } from '@/lib/supabase/server'
 import { logger } from '@/lib/logger'
 
 function isAllowedHost(host: string): boolean {
-  const allowedHosts = process.env.ALLOWED_HOSTS?.split(',') ?? []
-  return allowedHosts.some(allowed => host === allowed || host.endsWith(`.${allowed}`))
+  const allowedHosts = process.env.ALLOWED_HOSTS?.split(',').map(h => h.trim()).filter(Boolean) ?? []
+  return allowedHosts.some(allowed => {
+    return host === allowed || host === `www.${allowed}` || 
+           (host.endsWith(`.${allowed}`) && host[host.length - allowed.length - 1] === '.')
+  })
 }
 
 export async function GET(request: Request): Promise<NextResponse> {

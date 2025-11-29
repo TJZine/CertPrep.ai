@@ -322,7 +322,13 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
               return;
             }
             
-            const isCorrect = hashedSelection === currentQ.correct_answer_hash;
+            let isCorrect = false;
+            if (currentQ.correct_answer_hash) {
+              isCorrect = hashedSelection === currentQ.correct_answer_hash;
+            } else if (currentQ.correct_answer) {
+              // Fallback for legacy quizzes or missing hashes
+              isCorrect = currentSelectedAnswer === currentQ.correct_answer;
+            }
             const previousDifficulty = draft.answers.get(questionId)?.difficulty ?? null;
             
             const record: AnswerRecord = {

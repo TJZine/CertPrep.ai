@@ -44,16 +44,18 @@ export function QuestionReviewCard({
 
   // Determine the canonical correct answer (prefer prop, fallback to question data)
   const canonicalCorrectAnswer = correctAnswer || question.correct_answer;
-  
+  const hasCanonicalAnswer = !!canonicalCorrectAnswer;
+  const hasUserAnswer = userAnswer != null && userAnswer !== '';
+
   // Compute correctness based on the canonical answer
-  const isCorrect = userAnswer === canonicalCorrectAnswer;
-  const isWrong = userAnswer && !isCorrect;
+  const isCorrect = hasCanonicalAnswer && hasUserAnswer && userAnswer === canonicalCorrectAnswer;
+  const isWrong = hasCanonicalAnswer && hasUserAnswer && !isCorrect;
   
   // Determine what to display for the correct answer
   let correctAnswerDisplay = canonicalCorrectAnswer;
   const correctAnswerKey = canonicalCorrectAnswer;
   
-  const showResolutionError = !correctAnswerDisplay && !isResolving && !!question.correct_answer_hash;
+  const showResolutionError = !canonicalCorrectAnswer && !isResolving && !!question.correct_answer_hash;
 
   if (!correctAnswerDisplay && isResolving) {
     correctAnswerDisplay = 'Resolving...';
@@ -147,7 +149,7 @@ export function QuestionReviewCard({
 
           {showResolutionError && (
             <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200">
-              Unable to verify correct answer (hash mismatch).
+              Unable to determine the correct answer from stored quiz data.
             </div>
           )}
 
@@ -198,7 +200,7 @@ export function QuestionReviewCard({
           </div>
 
           {/* Correct Answer (if wrong) */}
-          {isWrong && (
+          {isWrong && correctAnswerDisplay && (
             <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-900/30 rounded-md">
               <div className="flex items-start gap-2">
                 <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5 shrink-0" />
@@ -213,7 +215,7 @@ export function QuestionReviewCard({
               </div>
             </div>
           )}
-          {!userAnswer && (
+          {!hasUserAnswer && (
             <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-700/70 dark:bg-amber-900/20">
               <p className="text-sm text-amber-800 dark:text-amber-100">You did not answer this question.</p>
             </div>
@@ -227,7 +229,7 @@ export function QuestionReviewCard({
             <div className="prose prose-sm prose-slate max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: sanitizedExplanation }} />
           </div>
 
-          {!isCorrect && userAnswer && (
+          {!isCorrect && hasUserAnswer && (
             <div className="mt-4">
               <AITutorButton question={question} userAnswer={userAnswer} variant="compact" />
             </div>
