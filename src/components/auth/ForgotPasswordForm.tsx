@@ -2,24 +2,22 @@
 
 import { useState, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/Button';
+import { Button, buttonVariants } from '@/components/ui/Button';
+import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/Input';
 import { getAuthErrorMessage } from '@/lib/auth-utils';
 import Link from 'next/link';
 import { useToast } from '@/components/ui/Toast';
 import HCaptcha from '@hcaptcha/react-hcaptcha';
 
-const supabase = createClient();
-
-export default function LoginForm(): React.ReactElement {
+export default function ForgotPasswordForm(): React.ReactElement {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const captchaRef = useRef<HCaptcha>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
+  const [isSuccess, setIsSuccess] = useState(false);
+  const supabase = createClient();
   const { addToast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
@@ -34,12 +32,9 @@ export default function LoginForm(): React.ReactElement {
     }
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-        options: {
-          captchaToken,
-        },
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
+        captchaToken,
       });
 
       if (error) {
@@ -49,23 +44,42 @@ export default function LoginForm(): React.ReactElement {
         return;
       }
 
-      addToast('success', 'Successfully logged in!');
-      router.push('/');
+      setIsSuccess(true);
+      addToast('success', 'Password reset link sent!');
     } catch (err) {
-      // Handle unexpected errors that aren't Supabase AuthErrors
-      console.error('Unexpected login error:', err);
+      console.error('Unexpected error:', err);
       setError('An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
+  if (isSuccess) {
+    return (
+      <div className="space-y-6 text-center">
+        <h1 className="text-3xl font-bold">Check Your Email</h1>
+        <p className="text-gray-500 dark:text-gray-400">
+          We&apos;ve sent a password reset link to <span className="font-medium text-foreground">{email}</span>.
+        </p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          Click the link in the email to set a new password.
+        </p>
+        <Link 
+          href="/login" 
+          className={cn(buttonVariants({ variant: 'outline' }), "w-full")}
+        >
+          Return to Login
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="space-y-2 text-center">
-        <h1 className="text-3xl font-bold">Welcome Back</h1>
+        <h1 className="text-3xl font-bold">Forgot Password</h1>
         <p className="text-gray-500 dark:text-gray-400">
-          Enter your credentials to access your account
+          Enter your email to receive a reset link
         </p>
       </div>
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -86,25 +100,9 @@ export default function LoginForm(): React.ReactElement {
             required
           />
         </div>
-        <div className="space-y-2">
-          <label
-            htmlFor="password"
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-          >
-            Password
-          </label>
-          <Input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            disabled={isLoading}
-            required
-          />
-        </div>
 
         <div className="flex justify-center">
-          {process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY ? (
+           {process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY ? (
             <HCaptcha
               ref={captchaRef}
               sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY}
@@ -124,13 +122,12 @@ export default function LoginForm(): React.ReactElement {
           </div>
         )}
         <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? 'Signing in...' : 'Sign In'}
+          {isLoading ? 'Sending Link...' : 'Send Reset Link'}
         </Button>
       </form>
       <div className="text-center text-sm">
-        Don&apos;t have an account?{' '}
-        <Link href="/signup" className="underline underline-offset-4 hover:text-primary">
-          Sign up
+        <Link href="/login" className="underline underline-offset-4 hover:text-primary">
+          Back to Login
         </Link>
       </div>
     </div>

@@ -22,6 +22,7 @@ interface QuestionReviewListProps {
   filter?: FilterType;
   onFilterChange?: (filter: FilterType) => void;
   className?: string;
+  quizId: string;
 }
 
 /**
@@ -33,6 +34,7 @@ export function QuestionReviewList({
   filter,
   onFilterChange,
   className,
+  quizId,
 }: QuestionReviewListProps): React.ReactElement {
   const [internalFilter, setInternalFilter] = React.useState<FilterType>(defaultFilter);
   const [expandAll, setExpandAll] = React.useState(false);
@@ -131,11 +133,11 @@ export function QuestionReviewList({
                 question={item.question}
                 questionNumber={originalIndex + 1}
                 userAnswer={item.userAnswer}
-                isCorrect={item.isCorrect}
                 isFlagged={item.isFlagged}
                 defaultExpanded={activeFilter === 'incorrect' && !item.isCorrect}
                 expandAllState={expandAll}
                 expandAllSignal={expandAllSignal}
+                quizId={quizId}
               />
             );
           })}

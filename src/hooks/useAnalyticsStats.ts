@@ -109,10 +109,17 @@ export function useAnalyticsStats(results: Result[], quizzes: Quiz[]): Analytics
         const now = new Date();
         const days: Map<string, number> = new Map();
 
+        const formatDate = (timestamp: number): string => {
+          return new Date(timestamp).toLocaleDateString(undefined, {
+            month: 'short',
+            day: 'numeric',
+          });
+        };
+
         for (let i = 13; i >= 0; i -= 1) {
           const date = new Date(now);
           date.setDate(date.getDate() - i);
-          const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          const dateStr = formatDate(date.getTime());
           days.set(dateStr, 0);
         }
 

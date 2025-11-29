@@ -163,7 +163,15 @@ export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContaine
     return answerRecord?.isCorrect ?? false;
   }, [currentQuestion, hasSubmitted, answers]);
 
-  const currentCorrectAnswer = useCorrectAnswer(currentQuestion);
+  const { resolvedAnswers } = useCorrectAnswer(
+    quiz.id,
+    currentQuestion?.id ?? null,
+    currentQuestion?.correct_answer_hash ?? null
+  );
+
+  const currentCorrectAnswer = currentQuestion
+    ? (resolvedAnswers[currentQuestion.id] || currentQuestion.correct_answer)
+    : undefined;
 
   const isLastQuestion = currentIndex >= questionQueue.length - 1;
 
@@ -211,7 +219,7 @@ export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContaine
                     />
 
                     {!isCurrentAnswerCorrect && selectedAnswer && (
-                      <AITutorButton question={currentQuestion} userAnswer={selectedAnswer} />
+                      <AITutorButton quizId={quiz.id} question={currentQuestion} userAnswer={selectedAnswer} />
                     )}
 
                     <ZenControls
@@ -262,6 +270,7 @@ export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContaine
     saveError,
     retrySave,
     handleExit,
+    quiz.id,
   ]);
 
   if (!currentQuestion) {

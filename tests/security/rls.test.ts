@@ -13,7 +13,36 @@ describe.skipIf(!shouldRun)('Row Level Security (RLS) Verification', () => {
   let userA: { id: string; email: string; client: SupabaseClient };
   let userB: { id: string; email: string; client: SupabaseClient };
 
+  // Helper function to clear database tables
+  const clearDatabase = async (): Promise<void> => {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!serviceRoleKey) {
+      console.warn('SUPABASE_SERVICE_ROLE_KEY is not set. Cannot clear database for tests.');
+      return;
+    }
+
+    const adminClient = createClient(url, serviceRoleKey);
+
+    // Delete all data from 'results' table
+    const { error: deleteResultsError } = await adminClient.from('results').delete().neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all rows
+    if (deleteResultsError) {
+      console.error('Error clearing results table:', deleteResultsError);
+      throw deleteResultsError;
+    }
+
+    // Delete all test users
+    // This is a bit tricky as Supabase doesn't have a direct "delete all users" API.
+    // We'll rely on the afterAll hook to clean up specific users created by the tests.
+    // For a more robust solution, one might query all users and delete them,
+    // but that's generally not recommended for production environments.
+  };
+
   beforeAll(async () => {
+    // Ensure we have a clean state before starting tests
+    await clearDatabase();
+
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
     supabase = createClient(url, key);

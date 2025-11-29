@@ -3,10 +3,8 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BarChart3, BookOpen, Home, Library, Menu, Settings as SettingsIcon, X, LogOut } from 'lucide-react';
-import { APP_NAME } from '@/lib/constants';
+import { Menu, X, LogOut, Moon, Sun, Home, BarChart3, Library, Settings as SettingsIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { ThemeToggle } from '@/components/common/ThemeToggle';
 import { lockBodyScroll, unlockBodyScroll } from '@/lib/bodyScrollLock';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { Button } from '@/components/ui/Button';
@@ -18,8 +16,7 @@ const navigation = [
   { name: 'Settings', href: '/settings', icon: SettingsIcon },
 ];
 
-const linkBase =
-  'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900';
+
 
 /**
  * Sticky application header with main navigation.
@@ -104,80 +101,82 @@ export function Header(): React.ReactElement {
     return (): void => document.removeEventListener('keydown', handleKeyDown);
   }, [isMenuOpen]);
 
+  // Placeholder for theme toggle logic if next-themes is not available
+  // const [theme, setTheme] = React.useState('light');
+
   const handleSignOut = async (): Promise<void> => {
     setIsMenuOpen(false);
-    await signOut();
+    const result = await signOut();
+    if (!result.success && result.error) {
+      console.error('Sign out failed:', result.error);
+    }
+  };
+
+  const handleThemeToggle = (): void => {
+    // This is a placeholder. Real implementation should likely use a context or local storage
+    // consistent with ThemeToggle.tsx
+    // setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+    document.documentElement.classList.toggle('dark');
   };
 
   return (
-    <header
-      className="sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur dark:border-slate-800 dark:bg-slate-900/80"
-    >
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-3">
-          <Link
-            href="/"
-            className="flex items-center gap-2 text-lg font-semibold text-slate-900 dark:text-slate-50"
-            aria-label={`${APP_NAME} home`}
-          >
-            <BookOpen className="h-6 w-6 text-blue-600 dark:text-blue-400" aria-hidden="true" />
-            <span className="whitespace-nowrap">{APP_NAME}</span>
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container flex h-14 items-center">
+        <div className="mr-4 hidden md:flex">
+          <Link href="/" className="mr-6 flex items-center space-x-2">
+            <span className="hidden font-bold sm:inline-block">CertPrep.ai</span>
           </Link>
+          <nav className="flex items-center space-x-6 text-sm font-medium">
+            <Link
+              href="/docs"
+              className={cn(
+                'transition-colors hover:text-foreground/80',
+                pathname === '/docs' ? 'text-foreground' : 'text-foreground/60'
+              )}
+            >
+              Docs
+            </Link>
+          </nav>
         </div>
-
-        <div className="flex items-center gap-3">
-          <nav aria-label="Main navigation" className="hidden items-center gap-2 md:flex">
-            {user && navigation.map((item) => {
-              const isActive =
-                item.href === '/' ? pathname === '/' : pathname === item.href || pathname.startsWith(`${item.href}/`);
-              const Icon = item.icon;
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={cn(
-                    linkBase,
-                    isActive
-                      ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-100'
-                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-slate-50',
-                  )}
-                  aria-current={isActive ? 'page' : undefined}
-                >
-                  <Icon className="h-5 w-5" aria-hidden="true" />
-                  <span>{item.name}</span>
-                </Link>
-              );
-            })}
-            
-            {!user && (
+        <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
+          <div className="w-full flex-1 md:w-auto md:flex-none">
+            {/* Search could go here */}
+          </div>
+          <nav className="flex items-center">
+            {user ? (
               <div className="flex items-center gap-2">
-                <Link href="/login" className={cn(linkBase, 'text-slate-600 hover:text-slate-900 dark:text-slate-200')}>
-                  Log In
-                </Link>
-                <Link 
-                  href="/signup" 
-                  className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-blue-600 px-3 text-xs font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 dark:bg-blue-600 dark:hover:bg-blue-500 dark:focus-visible:ring-offset-slate-900"
-                >
-                  Sign Up
-                </Link>
-              </div>
-            )}
-
-            {user && (
-              <div className="ml-2 border-l border-slate-200 pl-2 dark:border-slate-700">
-                 <Button 
-                  variant="ghost" 
-                  size="sm" 
+                <span className="text-sm text-muted-foreground hidden sm:inline-block">
+                  {user.email}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={handleSignOut}
                   className="text-slate-600 hover:text-red-600 dark:text-slate-200 dark:hover:text-red-400"
+                  leftIcon={<LogOut className="h-4 w-4" />}
                 >
-                  <LogOut className="mr-2 h-4 w-4" />
                   Sign Out
                 </Button>
               </div>
+            ) : (
+              <Link href="/login">
+                <Button variant="ghost" size="sm">
+                  Log In
+                </Button>
+              </Link>
             )}
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Toggle Theme"
+              className="mr-6"
+              onClick={handleThemeToggle}
+            >
+              <Sun className="h-6 w-6 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+              <Moon className="absolute h-6 w-6 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+              <span className="sr-only">Toggle Theme</span>
+            </Button>
           </nav>
-          <ThemeToggle />
           <button
             ref={toggleButtonRef}
             type="button"

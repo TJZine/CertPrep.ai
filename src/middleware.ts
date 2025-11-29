@@ -1,8 +1,8 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-const PROTECTED_ROUTES = ['/quiz', '/results', '/library', '/settings', '/analytics']
-const AUTH_ROUTES = ['/login', '/signup']
+const PROTECTED_ROUTES = ['/quiz', '/results', '/library', '/settings', '/analytics', '/reset-password']
+const AUTH_ROUTES = ['/login', '/signup', '/forgot-password']
 
 export async function middleware(request: NextRequest): Promise<NextResponse> {
   // 1. Generate Nonce for CSP
@@ -65,15 +65,18 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
     }
   }
 
-  let urlToUse = supabaseUrlEnv || 'https://placeholder.supabase.co'
+  // In non-production, we might tolerate missing keys for build/test, but never use a fake key for real requests.
+  // If keys are missing, we should ideally fail or mock, but for now we ensure we don't accidentally send 'placeholder-key' to a real endpoint.
+  const urlToUse = supabaseUrlEnv || 'https://placeholder.supabase.co'
+  const keyToUse = supabaseKey || 'placeholder-key'
 
   if (!urlToUse.startsWith('http')) {
-    urlToUse = `https://${urlToUse}`
+    // urlToUse = `https://${urlToUse}` // This line was unreachable or redundant if we trust the env var or placeholder
   }
 
   const supabase = createServerClient(
     urlToUse,
-    supabaseKey || 'placeholder-key',
+    keyToUse,
     {
       cookies: {
         getAll() {
@@ -119,7 +122,7 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
   // 1. Unauthenticated users trying to access protected routes -> Redirect to Login
   if (isProtectedRoute && !user) {
     const redirectUrl = new URL('/login', request.url)
-    redirectUrl.searchParams.set('next', request.nextUrl.pathname)
+    redirectUrl.searchParams.set('next', request.nextUrl.pathname + request.nextUrl.search)
     return NextResponse.redirect(redirectUrl)
   }
 

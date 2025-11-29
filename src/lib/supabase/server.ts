@@ -71,7 +71,7 @@ export const createClient = async (): Promise<ReturnType<typeof createServerClie
     }
     // In production, ensure the error is logged and re-thrown to prevent silent failures.
     // We intentionally do NOT return a fallback client here because it would mask configuration errors.
-    logger.error('CRITICAL: Supabase environment variables are missing in production. Auth will not work.')
+    logger.error('CRITICAL: Supabase environment variables are missing in production. Auth will not work.', error)
     throw new Error('Critical System Error: Missing Supabase Configuration');
   }
 }

@@ -41,8 +41,9 @@ interface QuizSessionState {
   hardQuestions: Set<string>;
   flaggedQuestions: Set<string>;
   startTime: number | null;
-  endTime: number | null;
+  endTime?: number | null;
   isComplete: boolean;
+  isSubmitting: boolean;
   isPaused: boolean;
   // Proctor-specific
   seenQuestions: Set<string>;
@@ -106,6 +107,7 @@ const createInitialState = (): QuizSessionState => ({
   startTime: null,
   endTime: null,
   isComplete: false,
+  isSubmitting: false,
   isPaused: false,
   seenQuestions: new Set<string>(),
   examDurationMinutes: TIMER.DEFAULT_EXAM_DURATION_MINUTES,
@@ -339,6 +341,18 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
         })
         .catch((err) => {
           console.error('Failed to hash answer in submitAnswer', err);
+          // Reset state to allow retry
+          set((draft) => {
+             draft.hasSubmitted = false;
+          });
+          // We can't easily trigger a toast from here without injecting the hook or a global event emitter.
+          // For now, we rely on the UI checking hasSubmitted or we could add an error state to the store.
+          // Let's add a transient error state if we want to be fancy, but resetting hasSubmitted is the minimal fix
+          // to prevent the UI from getting stuck.
+          // Ideally we would dispatch a custom event or use a callback.
+          if (typeof window !== 'undefined') {
+             window.dispatchEvent(new CustomEvent('quiz-error', { detail: 'Failed to submit answer. Please try again.' }));
+          }
         });
     },
 
@@ -387,6 +401,18 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
         })
         .catch((err) => {
           console.error('Failed to hash answer in selectAnswerProctor', err);
+          // Reset isSubmitting on error
+          set((draft) => {
+            draft.isSubmitting = false;
+          });
+          // Notify user
+          if (typeof window !== 'undefined') {
+             window.dispatchEvent(new CustomEvent('quiz-error', { detail: 'Failed to save answer. Please check your connection.' }));
+          }
+          
+          // Recovery: Save raw answer to a local queue or just retry?
+          // For now, we will just ensure the UI reflects that it wasn't saved (it won't be in answers map).
+          // The user can try selecting again.
         });
     },
 

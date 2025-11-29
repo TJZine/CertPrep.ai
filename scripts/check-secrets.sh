@@ -27,7 +27,7 @@ fi
 # - Generic API Keys (simple heuristics)
 # - Database Connection Strings
 # More specific patterns with context to reduce false positives
-PATTERNS="-----BEGIN.*PRIVATE KEY-----|aws_access_key_id\s*=|ghp_[a-zA-Z0-9]{20,}|sk_live_[a-zA-Z0-9]{20,}|xox[baprs]-[a-zA-Z0-9-]{10,}|PRIVATE_KEY\s*=\s*['\"][^'\"]+|password\s*=\s*['\"][^'\"]+|Authorization:\s*Bearer [a-zA-Z0-9\-\._\~\+\/]+=*|postgres://[^:]+:[^@]+@"
+PATTERNS="-----BEGIN.*PRIVATE KEY-----|aws_access_key_id\s*=|ghp_[a-zA-Z0-9]{20,}|sk_live_[a-zA-Z0-9]{20,}|sk_test_[a-zA-Z0-9]{20,}|xox[baprs]-[a-zA-Z0-9-]{10,}|PRIVATE_KEY\s*=\s*['\"][^'\"]+|password\s*=\s*['\"][^'\"]+|Authorization:\s*Bearer [a-zA-Z0-9\-\._\~\+\/]+=*|postgres://[^:]+:[^@]+@|SG\.[a-zA-Z0-9_-]{20,}"
 
 FOUND_SECRETS=0
 

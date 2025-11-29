@@ -29,7 +29,7 @@ interface ResultsContainerProps {
 /**
  * Full results page container combining score, analytics, and review.
  */
-export function ResultsContainer({ result, quiz, previousScore }: ResultsContainerProps): React.ReactElement {
+export function ResultsContainer({ result, quiz }: ResultsContainerProps): React.ReactElement {
   const router = useRouter();
   const { addToast } = useToast();
 
@@ -91,12 +91,22 @@ export function ResultsContainer({ result, quiz, previousScore }: ResultsContain
   const missedQuestions = React.useMemo(() => {
     if (!grading) return [];
     
+    // If we are still resolving answers, return empty to avoid showing "Unable to resolve"
+    // or show a loading state. For now, we'll suppress the section until ready.
+    // We can check if resolvedAnswers is empty but we expect at least some answers if the quiz has questions.
+    // A better check might be if the resolvedAnswers object has keys corresponding to the questions.
+    const isResolving = quiz.questions.length > 0 && Object.keys(resolvedAnswers).length === 0;
+
+    if (isResolving) {
+      return [];
+    }
+
     return quiz.questions
       .filter((q) => !grading.questionStatus[q.id] && result.answers[q.id]) // Incorrect and answered
       .map((q) => ({
         question: q,
         userAnswer: result.answers[q.id] || null,
-        correctAnswer: resolvedAnswers[q.id] || 'Unable to resolve', // Use resolved answer or fallback
+        correctAnswer: resolvedAnswers[q.id] || 'Unable to resolve',
       }));
   }, [quiz, result, grading, resolvedAnswers]);
 
@@ -237,7 +247,6 @@ export function ResultsContainer({ result, quiz, previousScore }: ResultsContain
           timeTakenSeconds={result.time_taken_seconds}
           mode={result.mode}
           timestamp={result.timestamp}
-          previousScore={previousScore}
           className="mb-8"
         />
 
@@ -277,6 +286,7 @@ export function ResultsContainer({ result, quiz, previousScore }: ResultsContain
             defaultFilter={missedQuestions.length > 0 ? 'incorrect' : 'all'}
             filter={questionFilter}
             onFilterChange={handleFilterChange}
+            quizId={quiz.id}
           />
         </div>
       </main>
@@ -301,6 +311,9 @@ export function ResultsContainer({ result, quiz, previousScore }: ResultsContain
         <p className="text-sm text-slate-600">
           Are you sure you want to delete this result? Your score and answers will be permanently removed.
         </p>
+        <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+          Score: {result.score}%
+        </div>
       </Modal>
       </>
       )}

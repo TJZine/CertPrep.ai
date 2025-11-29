@@ -13,6 +13,12 @@ vi.mock('@/db', () => ({
       bulkUpdate: vi.fn(),
       bulkPut: vi.fn(),
     },
+    syncState: {
+      where: vi.fn().mockReturnThis(),
+      equals: vi.fn().mockReturnThis(),
+      toArray: vi.fn().mockResolvedValue([]),
+      bulkPut: vi.fn(),
+    },
     transaction: vi.fn((mode, tables, callback) => callback()),
   },
 }));
@@ -24,14 +30,22 @@ vi.mock('@/db/syncState', () => ({
 
 const { mockSupabase } = vi.hoisted(() => {
   const mock = {
-    from: vi.fn().mockReturnThis(),
-    select: vi.fn().mockReturnThis(),
-    eq: vi.fn().mockReturnThis(),
-    or: vi.fn().mockReturnThis(),
-    order: vi.fn().mockReturnThis(),
-    limit: vi.fn().mockReturnThis(),
-    upsert: vi.fn().mockResolvedValue({ error: null }),
+    from: vi.fn(),
+    select: vi.fn(),
+    eq: vi.fn(),
+    or: vi.fn(),
+    order: vi.fn(),
+    limit: vi.fn(),
+    upsert: vi.fn(),
   };
+  // Mock chainable methods
+  mock.from.mockReturnValue(mock);
+  mock.select.mockReturnValue(mock);
+  mock.eq.mockReturnValue(mock);
+  mock.or.mockReturnValue(mock);
+  mock.order.mockReturnValue(mock);
+  mock.limit.mockReturnValue(mock);
+  mock.upsert.mockResolvedValue({ error: null });
   return { mockSupabase: mock };
 });
 
@@ -61,7 +75,7 @@ describe('SyncManager', () => {
 
     // Verify setSyncCursor was called with the timestamp AND id of the last invalid record
     const lastResult = invalidResults[49];
-    expect(syncState.setSyncCursor).toHaveBeenCalledWith('user-123', lastResult?.created_at, lastResult?.id);
+    expect(syncState.setSyncCursor).toHaveBeenCalledWith(lastResult?.created_at, lastResult?.id);
     
     // Verify bulkPut was NOT called (since no valid results)
     expect(db.results.bulkPut).not.toHaveBeenCalled();
@@ -76,5 +90,26 @@ describe('SyncManager', () => {
     // Verify double ordering
     expect(mockSupabase.order).toHaveBeenCalledWith('created_at', { ascending: true });
     expect(mockSupabase.order).toHaveBeenCalledWith('id', { ascending: true });
+  });
+
+  it('should acquire web lock before syncing', async () => {
+    // Mock navigator.locks
+    const mockRequest = vi.fn().mockImplementation(async (_name, _options, callback) => {
+      await callback({ name: 'sync-results' });
+    });
+    
+    vi.stubGlobal('navigator', {
+      locks: {
+        request: mockRequest
+      }
+    });
+
+    mockSupabase.limit.mockResolvedValueOnce({ data: [], error: null });
+
+    await syncResults('user-123');
+
+    expect(mockRequest).toHaveBeenCalledWith('sync-results', { ifAvailable: true }, expect.any(Function));
+    
+    vi.unstubAllGlobals();
   });
 });

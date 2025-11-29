@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { CheckCircle, XCircle, ChevronDown, ChevronUp, Flag, Lightbulb } from 'lucide-react';
+import { CheckCircle, CheckCircle2, XCircle, ChevronDown, ChevronUp, Flag, Lightbulb } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { AITutorButton } from '@/components/quiz/AITutorButton';
@@ -13,13 +13,14 @@ import type { Question } from '@/types/quiz';
 interface QuestionReviewCardProps {
   question: Question;
   questionNumber: number;
-  userAnswer: string | null;
-  isCorrect: boolean;
+  userAnswer?: string | null;
   isFlagged: boolean;
   defaultExpanded?: boolean;
   className?: string;
   expandAllState?: boolean;
   expandAllSignal?: number;
+  quizId: string;
+  showCorrectAnswer?: boolean;
 }
 
 /**
@@ -29,21 +30,39 @@ export function QuestionReviewCard({
   question,
   questionNumber,
   userAnswer,
-  isCorrect,
   isFlagged,
   defaultExpanded = false,
   className,
   expandAllState,
   expandAllSignal,
+  quizId,
+  showCorrectAnswer,
 }: QuestionReviewCardProps): React.ReactElement {
   const [isExpanded, setIsExpanded] = React.useState(defaultExpanded);
 
   const sanitizedQuestion = React.useMemo(() => sanitizeHTML(question.question), [question.question]);
   const sanitizedExplanation = React.useMemo(() => sanitizeHTML(question.explanation), [question.explanation]);
 
-  const correctAnswerKey = useCorrectAnswer(question); // May be null if resolution fails
+  const { resolvedAnswers, isResolving } = useCorrectAnswer(
+    showCorrectAnswer ? quizId : null,
+    showCorrectAnswer ? question.id : null,
+    showCorrectAnswer ? (question.correct_answer_hash ?? null) : null
+  );
+
+  const isCorrect = userAnswer === question.correct_answer;
+  const isWrong = userAnswer && !isCorrect;
   
-  const showResolutionError = correctAnswerKey === null && !!question.correct_answer_hash;
+  // Determine what to display for the correct answer
+  let correctAnswerDisplay = question.correct_answer || resolvedAnswers[question.id];
+  const correctAnswerKey = resolvedAnswers[question.id] || question.correct_answer;
+  
+  const showResolutionError = showCorrectAnswer && !correctAnswerDisplay && !isResolving && !!question.correct_answer_hash;
+
+  if (showCorrectAnswer && !correctAnswerDisplay && isResolving) {
+    correctAnswerDisplay = 'Resolving...';
+  } else if (showCorrectAnswer && !correctAnswerDisplay) {
+    correctAnswerDisplay = 'Unable to resolve';
+  }
 
   const sortedOptions = React.useMemo(() => {
     return Object.entries(question.options).sort(([a], [b]) => a.localeCompare(b));
@@ -181,6 +200,22 @@ export function QuestionReviewCard({
             })}
           </div>
 
+          {/* Correct Answer (if wrong) */}
+          {isWrong && (
+            <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-900/30 rounded-md">
+              <div className="flex items-start gap-2">
+                <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5 shrink-0" />
+                <div>
+                  <span className="font-medium text-green-900 dark:text-green-100 block mb-1">
+                    Correct Answer:
+                  </span>
+                  <span className="text-green-800 dark:text-green-200">
+                    {correctAnswerDisplay}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
           {!userAnswer && (
             <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-700/70 dark:bg-amber-900/20">
               <p className="text-sm text-amber-800 dark:text-amber-100">You did not answer this question.</p>
@@ -197,7 +232,7 @@ export function QuestionReviewCard({
 
           {!isCorrect && userAnswer && (
             <div className="mt-4">
-              <AITutorButton question={question} userAnswer={userAnswer} variant="compact" />
+              <AITutorButton quizId={quizId} question={question} userAnswer={userAnswer} variant="compact" />
             </div>
           )}
         </CardContent>

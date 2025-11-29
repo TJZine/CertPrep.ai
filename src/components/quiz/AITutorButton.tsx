@@ -9,6 +9,7 @@ import { useCorrectAnswer } from '@/hooks/useCorrectAnswer';
 import type { Question } from '@/types/quiz';
 
 interface AITutorButtonProps {
+  quizId: string;
   question: Question;
   userAnswer: string;
   className?: string;
@@ -19,6 +20,7 @@ interface AITutorButtonProps {
  * Copies a rich AI tutor prompt to clipboard for external LLMs.
  */
 export function AITutorButton({
+  quizId,
   question,
   userAnswer,
   className,
@@ -27,9 +29,13 @@ export function AITutorButton({
   const [copied, setCopied] = React.useState(false);
   const { addToast } = useToast();
 
-  const correctAnswerKey = useCorrectAnswer(question);
+  const { resolvedAnswers } = useCorrectAnswer(
+    quizId,
+    question.id,
+    question.correct_answer_hash || null
+  );
 
-
+  const correctAnswerKey = resolvedAnswers[question.id] || question.correct_answer;
 
   const generatePrompt = React.useCallback((): string => {
     const correctKey = correctAnswerKey || '';

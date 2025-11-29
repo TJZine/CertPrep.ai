@@ -2,6 +2,8 @@
 
 import * as React from 'react';
 import { DataManagement } from '@/components/settings/DataManagement';
+import { ProfileSettings } from '@/components/settings/ProfileSettings';
+import { SecuritySettings } from '@/components/settings/SecuritySettings';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { APP_NAME, APP_VERSION } from '@/lib/constants';
@@ -47,6 +49,8 @@ export default function SettingsPage(): React.ReactElement {
         </CardContent>
       </Card>
 
+      <ProfileSettings />
+      <SecuritySettings />
       <DataManagement />
     </div>
   );

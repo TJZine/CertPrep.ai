@@ -60,7 +60,7 @@ export function sanitizeQuestions(questions: unknown[]): Question[] {
       ai_prompt: q.ai_prompt ? sanitizeQuestionText(q.ai_prompt) : undefined,
       user_notes: q.user_notes ? sanitizeQuestionText(q.user_notes) : undefined,
       options: sanitizedOptions,
-      correct_answer_hash: q.correct_answer_hash ?? '',
+      correct_answer_hash: q.correct_answer_hash,
       correct_answer: q.correct_answer,
     };
   });
@@ -95,8 +95,8 @@ export async function createQuiz(input: QuizImportInput, meta?: { sourceId?: str
         throw new Error(`Question ${sanitized.id} is missing correct_answer_hash`);
       }
       
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { correct_answer: _, ...rest } = sanitized;
+      const { correct_answer: _correct_answer, ...rest } = sanitized;
+      void _correct_answer;
       
       return {
         ...rest,
@@ -171,6 +171,13 @@ export async function updateQuiz(
 
   if (updates.questions !== undefined) {
     sanitizedUpdates.questions = sanitizeQuestions(updates.questions);
+    
+    // Validate that we aren't introducing questions without hashes
+    sanitizedUpdates.questions.forEach(q => {
+      if (!q.correct_answer_hash && !q.correct_answer) {
+         throw new Error(`Question ${q.id} is missing correct_answer_hash`);
+      }
+    });
   }
 
   if (updates.title !== undefined) {

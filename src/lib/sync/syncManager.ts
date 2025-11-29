@@ -1,5 +1,6 @@
 'use client';
 
+import type { SyncState } from '@/types/sync';
 import { db } from '@/db';
 import { logger } from '@/lib/logger';
 import { getSyncCursor, setSyncCursor } from '@/db/syncState';
@@ -8,11 +9,18 @@ import { QUIZ_MODES, type QuizMode } from '@/types/quiz';
 import type { Result } from '@/types/result';
 import { z } from 'zod';
 
-const supabase = createClient();
+let supabaseInstance: ReturnType<typeof createClient> | null = null;
+
+function getSupabaseClient(): ReturnType<typeof createClient> {
+  if (!supabaseInstance) {
+    supabaseInstance = createClient();
+  }
+  return supabaseInstance;
+}
 const BATCH_SIZE = 50;
 
 // Simple in-memory lock to prevent race conditions if sync is triggered multiple times rapidly
-let isSyncing = false;
+// let isSyncing = false; // Removed unused variable
 
 // Schema for validating remote result data structure
 const RemoteResultSchema = z.object({
@@ -28,14 +36,49 @@ const RemoteResultSchema = z.object({
   created_at: z.string(),
 });
 
+const syncState = {
+  isSyncing: false,
+  lastSyncAttempt: 0
+};
+
 export async function syncResults(userId: string): Promise<void> {
   if (!userId) return;
-  if (isSyncing) {
-    return;
+
+  // Use Web Locks API for cross-tab synchronization safety
+  // This prevents multiple tabs from running sync simultaneously
+  if (typeof navigator !== 'undefined' && 'locks' in navigator) {
+    try {
+      await navigator.locks.request('sync-results', { ifAvailable: true }, async (lock) => {
+        if (!lock) {
+          logger.debug('Sync already in progress in another tab, skipping');
+          return;
+        }
+        await performSync(userId);
+      });
+    } catch (error) {
+      logger.error('Failed to acquire sync lock:', error);
+    }
+  } else {
+    // Fallback for environments without Web Locks (e.g. some tests or very old browsers)
+    if (syncState.isSyncing) {
+      if (Date.now() - syncState.lastSyncAttempt > 30000) {
+        console.warn('Sync lock timed out, resetting...');
+        syncState.isSyncing = false;
+      } else {
+        return;
+      }
+    }
+    syncState.isSyncing = true;
+    syncState.lastSyncAttempt = Date.now();
+    try {
+      await performSync(userId);
+    } finally {
+      syncState.isSyncing = false;
+    }
   }
+}
 
-  isSyncing = true;
-
+async function performSync(userId: string): Promise<void> {
   try {
     // 1. PUSH: Upload unsynced local results to Supabase
     const unsyncedResults = await db.results.where('synced').equals(0).toArray();
@@ -45,7 +88,7 @@ export async function syncResults(userId: string): Promise<void> {
       for (let i = 0; i < unsyncedResults.length; i += BATCH_SIZE) {
         const batch = unsyncedResults.slice(i, i + BATCH_SIZE);
         
-        const { error } = await supabase.from('results').upsert(
+        const { error } = await getSupabaseClient().from('results').upsert(
           batch.map((r) => ({
             id: r.id,
             user_id: userId,
@@ -72,17 +115,61 @@ export async function syncResults(userId: string): Promise<void> {
       }
     }
 
+    // 2. PUSH: Sync State (Progress)
+    const pendingSyncs = (await db.syncState.where('synced').equals(0).toArray()) as unknown as SyncState[];
+      
+    if (pendingSyncs.length > 0) {
+      // Group by table for batching
+      const batches: Record<string, SyncState[]> = {};
+      pendingSyncs.forEach(item => {
+        const table = item.table;
+        if (!batches[table]) {
+          batches[table] = [];
+        }
+        batches[table].push(item);
+      });
+
+      for (const [table, items] of Object.entries(batches)) {
+        // Process in chunks of 50 to avoid payload limits
+        const chunks = [];
+        for (let i = 0; i < items.length; i += 50) {
+          chunks.push(items.slice(i, i + 50));
+        }
+
+        for (const chunk of chunks) {
+          // Validate data before upserting to avoid 'any' cast issues
+          const safeData = chunk.map(i => {
+             // Ensure data is an object if present, otherwise ignore
+             return typeof i.data === 'object' ? i.data : {};
+          });
+
+          const { error } = await getSupabaseClient()
+            .from(table)
+            .upsert(safeData);
+
+          if (error) {
+            console.error(`Sync error for ${table}:`, error);
+          } else {
+            // Mark as synced only on success
+            await db.syncState.bulkPut(
+              chunk.map(i => ({ ...i, synced: 1, lastSyncedAt: Date.now() }))
+            );
+          }
+        }
+      }
+    }
+
     // 2. PULL: Incremental Sync with Keyset Pagination
     let hasMore = true;
 
     while (hasMore) {
-      const cursor = await getSyncCursor(userId);
+      const cursor = await getSyncCursor();
       
       // Use keyset pagination (created_at, id) to handle identical timestamps
       // Logic: (created_at > last_ts) OR (created_at = last_ts AND id > last_id)
       const filter = `created_at.gt.${cursor.timestamp},and(created_at.eq.${cursor.timestamp},id.gt.${cursor.lastId})`;
 
-      const { data: remoteResults, error: fetchError } = await supabase
+      const { data: remoteResults, error: fetchError } = await getSupabaseClient()
         .from('results')
         .select(
           'id, quiz_id, timestamp, mode, score, time_taken_seconds, answers, flagged_questions, category_breakdown, created_at'
@@ -109,6 +196,8 @@ export async function syncResults(userId: string): Promise<void> {
       let lastRecordId = cursor.lastId;
 
       for (const r of remoteResults) {
+        if (!r) continue; // Skip if undefined
+        
         lastRecordCreatedAt = r.created_at;
         lastRecordId = r.id;
 
@@ -141,7 +230,7 @@ export async function syncResults(userId: string): Promise<void> {
       }
       
       // Update cursor to the last seen record's timestamp AND id
-      await setSyncCursor(userId, lastRecordCreatedAt, lastRecordId);
+      await setSyncCursor(lastRecordCreatedAt, lastRecordId);
 
       if (remoteResults.length < BATCH_SIZE) {
         hasMore = false;
@@ -149,7 +238,5 @@ export async function syncResults(userId: string): Promise<void> {
     }
   } catch (error) {
     logger.error('Sync failed:', error);
-  } finally {
-    isSyncing = false;
   }
 }

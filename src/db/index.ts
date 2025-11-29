@@ -2,6 +2,8 @@ import Dexie, { type Table } from 'dexie';
 import type { Quiz } from '@/types/quiz';
 import type { Result } from '@/types/result';
 
+import type { SyncState } from '@/types/sync';
+
 // PRIVACY: Data is stored locally in IndexedDB via Dexie (Local-First).
 // Secure cloud sync (Supabase) is used for backup and cross-device synchronization only.
 
@@ -13,31 +15,19 @@ export class CertPrepDatabase extends Dexie {
 
   public results!: Table<Result, string>;
 
-  public syncState!: Table<{ userId: string; lastSyncedAt: string; lastId?: string }, string>;
+  public syncState!: Table<SyncState, string>;
 
   constructor() {
     super('CertPrepDatabase');
 
     // Define schema version and indexes.
-    // Version 3: Added keyset pagination support (lastId) to syncState
+    // Version 3: Added lastId to syncState table for correct keyset pagination
     this.version(3).stores({
-      quizzes: 'id, title, created_at, *tags, sourceId',
-      results: 'id, quiz_id, timestamp, mode, score, synced',
-      syncState: 'userId',
-    });
-
-    // Version 2 (Legacy)
-    this.version(2).stores({
-      quizzes: 'id, title, created_at, *tags, sourceId',
-      results: 'id, quiz_id, timestamp, mode, score, synced',
-      syncState: 'userId',
-    }).upgrade(async (trans) => {
-      // Backfill 'synced' property for existing results
-      await trans.table('results').toCollection().modify((result) => {
-        if (result.synced === undefined) {
-          result.synced = 0;
-        }
-      });
+      quizzes: 'id, title, category, *tags',
+      results: 'id, quiz_id, timestamp, synced',
+      syncState: 'table, lastSyncedAt, synced, lastId',
+    }).upgrade(async () => {
+      // No data migration needed for syncState as it's a cache/metadata table
     });
 
     this.quizzes = this.table('quizzes');

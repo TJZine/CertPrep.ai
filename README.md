@@ -3,14 +3,16 @@ README.md - CertPrep.ai
 -->
 
 <!-- Header Section with Logo -->
-<div align="center">
   <img src="./public/icon.svg" alt="CertPrep.ai Logo" width="120">
-  
-  # CertPrep.ai
-  
-  **A comprehensive certification preparation platform with offline-first capabilities.**
-  
-  CertPrep.ai is a modern, offline-first quiz application designed to help users prepare for certifications. It features secure authentication, multiple quiz modes (Zen and Proctor), and detailed analytics to track your progress.
+</div>
+
+# CertPrep.ai
+
+**A comprehensive certification preparation platform with offline-first capabilities.**
+
+CertPrep.ai is a modern, offline-first quiz application designed to help users prepare for certifications. It features secure authentication, multiple quiz modes (Zen and Proctor), and detailed analytics to track your progress.
+
+<div align="center">
 
   <!-- Primary Badges Row -->
   [![License](https://img.shields.io/github/license/TJZine/CertPrep.ai?style=flat-square)](LICENSE)
@@ -25,8 +27,8 @@ README.md - CertPrep.ai
   [![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC?style=flat-square&logo=tailwind-css)](https://tailwindcss.com/)
 
   <!-- Links Row -->
-  [Documentation](#📚-Documentation) •
-  [Getting Started](#🚀-Getting-Started) •
+  [Documentation](#documentation) •
+  [Getting Started](#getting-started) •
   [Contributing](CONTRIBUTING.md) •
   [Changelog](CHANGELOG.md)
 
@@ -34,7 +36,7 @@ README.md - CertPrep.ai
 
 ---
 
-## ✨ Features
+## Features
 
 <!-- Use a feature grid for visual scanning -->
 <table>
@@ -50,24 +52,24 @@ README.md - CertPrep.ai
       <sub>Local IndexedDB storage with automatic cloud synchronization</sub>
     </td>
     <td align="center" width="33%">
-      <img src="https://img.icons8.com/fluency/48/000000/quiz.png" width="40"><br>
+      <img src="https://img.icons8.com/fluency/48/000000/quiz.png" width="40" alt="Quiz modes icon"><br>
       <strong>Quiz Modes</strong><br>
       <sub>Proctor and Zen modes for different learning experiences</sub>
     </td>
   </tr>
   <tr>
     <td align="center" width="33%">
-      <img src="https://img.icons8.com/fluency/48/000000/analytics.png" width="40"><br>
+      <img src="https://img.icons8.com/fluency/48/000000/analytics.png" width="40" alt="Analytics dashboard icon"><br>
       <strong>Analytics Dashboard</strong><br>
       <sub>Track progress, scores, and performance over time</sub>
     </td>
     <td align="center" width="33%">
-      <img src="https://img.icons8.com/fluency/48/000000/smartphone-tablet.png" width="40"><br>
+      <img src="https://img.icons8.com/fluency/48/000000/smartphone-tablet.png" width="40" alt="Responsive design icon"><br>
       <strong>Responsive Design</strong><br>
       <sub>Fully responsive UI that works on all devices</sub>
     </td>
     <td align="center" width="33%">
-      <img src="https://img.icons8.com/fluency/48/000000/accessibility2.png" width="40"><br>
+      <img src="https://img.icons8.com/fluency/48/000000/accessibility2.png" width="40" alt="Accessibility icon"><br>
       <strong>Accessible</strong><br>
       <sub>WCAG 2.1 compliant with full keyboard navigation</sub>
     </td>
@@ -95,17 +97,13 @@ README.md - CertPrep.ai
 </details>
 
 ---
+## Documentation
 
-## 🎬 Demo
-
-<!-- Include GIF or screenshot -->
-<div align="center">
-  <img src="./docs/assets/demo.gif" alt="Demo" width="600">
-</div>
+## Demo
 
 > **Live Demo:** [https://certprep-ai.vercel.app](https://certprep-ai.vercel.app)
->
-> **Test Credentials:**
+
+## Getting Startedentials:**
 > *Please sign up for a new account to test the application.*
 
 ---
@@ -234,7 +232,7 @@ graph TD
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ### Tech Stack
 
@@ -329,7 +327,7 @@ graph TB
 
 ---
 
-## 🧪 Testing
+## Testing
 
 ```bash
 # Run all tests
@@ -356,7 +354,7 @@ npm run test:e2e
 
 ---
 
-## 🚢 Deployment
+## Deployment
 
 ### Vercel (Recommended)
 
@@ -393,7 +391,7 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
+3. Commit your changes (`git commit -m 'Add new feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
@@ -409,7 +407,7 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 
 ---
 
-## 🔒 Security
+## Security
 
 > [!CAUTION]
 > If you discover a security vulnerability, please report it responsibly.
@@ -420,11 +418,11 @@ See [SECURITY.md](SECURITY.md) for our full security policy.
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the **Apache 2.0 License** - see the [LICENSE](LICENSE) file for details.
 
-```
+```text
 Apache 2.0 License
 
 Copyright (c) 2025 TJZine
@@ -434,7 +432,7 @@ Permission is hereby granted, free of charge, to any person obtaining a copy...
 
 ---
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - [Next.js](https://nextjs.org/) - The React Framework
 - [Supabase](https://supabase.com/) - Open-source Firebase Alternative
