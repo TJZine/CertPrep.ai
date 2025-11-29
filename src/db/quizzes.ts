@@ -91,6 +91,9 @@ export async function createQuiz(input: QuizImportInput, meta?: { sourceId?: str
       if (!hash && qWithAnswer.correct_answer) {
         hash = await hashAnswer(qWithAnswer.correct_answer);
       }
+      if (!hash) {
+        throw new Error(`Question ${sanitized.id} is missing correct_answer_hash`);
+      }
       
       return {
         ...sanitized,

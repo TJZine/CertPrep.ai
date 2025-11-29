@@ -306,8 +306,9 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
 
       // Optimistic update or loading state could go here if needed
       
-      import('@/lib/utils').then(({ hashAnswer }) => {
-        hashAnswer(currentSelectedAnswer).then((hashedSelection) => {
+      import('@/lib/utils')
+        .then(({ hashAnswer }) => hashAnswer(currentSelectedAnswer))
+        .then((hashedSelection) => {
           set((draft) => {
             // Re-validate state in case it changed during async op
             const currentQ = draft.questions.find((q) => q.id === questionId);
@@ -330,8 +331,10 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
             draft.hasSubmitted = true;
             draft.showExplanation = !isCorrect;
           });
+        })
+        .catch((err) => {
+          console.error('Failed to hash answer in submitAnswer', err);
         });
-      });
     },
 
     selectAnswerProctor: (answerId): void => {
@@ -353,8 +356,9 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
       });
       
       // Async hash check for proctor mode
-      import('@/lib/utils').then(({ hashAnswer }) => {
-        hashAnswer(answerId).then((hashedSelection) => {
+      import('@/lib/utils')
+        .then(({ hashAnswer }) => hashAnswer(answerId))
+        .then((hashedSelection) => {
             set((draft) => {
               const currentQ = draft.questions.find((q) => q.id === questionId);
               // Ensure we are still on the same question
@@ -371,8 +375,10 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
               draft.answeredQuestions.add(questionId);
               draft.seenQuestions.add(questionId);
             });
+        })
+        .catch((err) => {
+          console.error('Failed to hash answer in selectAnswerProctor', err);
         });
-      });
     },
 
     markAgain: (): void => {

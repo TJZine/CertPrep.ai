@@ -191,17 +191,15 @@ export async function getMissedQuestions(resultId: string): Promise<string[]> {
 
   const missedIds: string[] = [];
 
-  await Promise.all(
-    quiz.questions.map(async (question) => {
-      const userAnswer = result.answers[String(question.id)];
-      if (userAnswer) {
-        const userHash = await hashAnswer(userAnswer);
-        if (userHash !== question.correct_answer_hash) {
-          missedIds.push(String(question.id));
-        }
-      }
-    })
-  );
+  for (const question of quiz.questions) {
+    const userAnswer = result.answers[String(question.id)];
+    if (!userAnswer) continue;
+
+    const userHash = await hashAnswer(userAnswer);
+    if (userHash !== question.correct_answer_hash) {
+      missedIds.push(String(question.id));
+    }
+  }
 
   return missedIds;
 }

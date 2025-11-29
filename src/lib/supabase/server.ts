@@ -55,9 +55,12 @@ export const createClient = async (): Promise<ReturnType<typeof createServerClie
       }
     )
   } catch (error) {
-    // Fallback to prevent build crash
-    logger.error('Failed to create Supabase server client', { error })
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return createServerClient('https://placeholder.supabase.co', 'placeholder-key', { cookies: {} as any })
+    // Re-throw in development for immediate feedback
+    if (process.env.NODE_ENV === 'development') {
+      throw error
+    }
+    // In production, return fallback to prevent crash (will fail on actual operations)
+    logger.warn('Using fallback Supabase client - auth operations will fail')
+    return createServerClient('https://placeholder.supabase.co', 'placeholder-key', { cookies: {} as unknown as Parameters<typeof createServerClient>[2]['cookies'] })
   }
 }

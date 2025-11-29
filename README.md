@@ -437,7 +437,7 @@ Permission is hereby granted, free of charge, to any person obtaining a copy...
 ## 🙏 Acknowledgments
 
 - [Next.js](https://nextjs.org/) - The React Framework
-- [Supabase](https://supabase.com/) - Open Source Firebase Alternative
+- [Supabase](https://supabase.com/) - Open-source Firebase Alternative
 - [Tailwind CSS](https://tailwindcss.com/) - Utility-First CSS Framework
 - [Dexie.js](https://dexie.org/) - IndexedDB Wrapper
 - [Vercel](https://vercel.com/) - Deployment Platform

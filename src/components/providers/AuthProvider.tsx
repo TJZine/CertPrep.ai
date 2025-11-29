@@ -24,6 +24,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }): React
   const [supabase] = useState(() => createClient());
 
   useEffect((): (() => void) => {
+    let isMounted = true;
+
     const setData = async (): Promise<void> => {
       try {
         const {
@@ -32,19 +34,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }): React
         } = await supabase.auth.getSession();
         if (error) throw error;
 
+        if (!isMounted) return;
         setSession(session);
         setUser(session?.user ?? null);
       } catch (error) {
         console.error('Failed to get session:', error);
         // Fallback to cleared state
+        if (!isMounted) return;
         setSession(null);
         setUser(null);
       } finally {
-        setIsLoading(false);
+        if (isMounted) setIsLoading(false);
       }
     };
 
     const { data: listener } = supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
+      if (!isMounted) return;
       setSession(session);
       setUser(session?.user ?? null);
       setIsLoading(false);
@@ -56,6 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }): React
     void setData();
 
     return () => {
+      isMounted = false;
       listener.subscription.unsubscribe();
     };
   }, [router, supabase]);
