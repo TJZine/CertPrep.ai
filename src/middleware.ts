@@ -23,7 +23,7 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
   
   const cspHeader = `
     default-src 'self';
-    script-src 'self' 'nonce-${nonce}' ${isDev ? "'unsafe-eval'" : ''} https://js.hcaptcha.com https://*.hcaptcha.com https://*.sentry.io;
+    script-src 'self' 'nonce-${nonce}' ${isDev ? "'unsafe-eval'" : ''} https://js.hcaptcha.com https://*.hcaptcha.com https://*.sentry.io https://va.vercel-scripts.com;
     style-src 'self' 'unsafe-inline' https://hcaptcha.com https://*.hcaptcha.com;
     img-src 'self' blob: data:;
     font-src 'self';
@@ -33,7 +33,7 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
     frame-ancestors 'self' https://hcaptcha.com https://*.hcaptcha.com;
     frame-src 'self' https://hcaptcha.com https://*.hcaptcha.com https://sentry.io https://browser.sentry-cdn.com;
     upgrade-insecure-requests;
-    connect-src 'self' ${supabaseUrl} ${supabaseHostname ? `wss://${supabaseHostname}` : ''} *.sentry.io https://hcaptcha.com https://*.hcaptcha.com https://browser.sentry-cdn.com;
+    connect-src 'self' ${supabaseUrl} ${supabaseHostname ? `wss://${supabaseHostname}` : ''} *.sentry.io https://hcaptcha.com https://*.hcaptcha.com https://browser.sentry-cdn.com https://vitals.vercel-insights.com;
     worker-src 'self' blob:;
   `
   // Replace newlines with spaces
