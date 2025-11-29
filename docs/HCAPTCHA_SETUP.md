@@ -4,28 +4,24 @@
 
 To test hCaptcha on `localhost`, you have two options:
 
-### Option A: Use your Production/Real Keys (Recommended)
-hCaptcha allows you to use your real Site Key and Secret Key on localhost.
+### Option A: Use Test Keys (Recommended for Localhost)
+hCaptcha's dashboard validation can be tricky with `localhost`. The easiest way to unblock development is to use the official Test Keys. These always work on localhost and always pass validation.
 
-1.  Log in to your [hCaptcha Dashboard](https://dashboard.hcaptcha.com/).
-2.  Select your site (or create a new one).
-3.  Go to **Settings** > **Domains**.
-4.  Add the following domains:
-    *   `localhost`
-    *   `127.0.0.1`
-5.  Click **Save**.
-6.  Copy your **Site Key** to `.env.local`:
+**Important:** When you deploy to production, you **must** switch to real keys.
+
+1.  Update your `.env.local` file:
     ```bash
-    NEXT_PUBLIC_HCAPTCHA_SITE_KEY=your-real-site-key
+    NEXT_PUBLIC_HCAPTCHA_SITE_KEY=10000000-ffff-ffff-ffff-000000000001
     ```
+    *(Note: The secret key is configured in Supabase, see Section 2 below)*
 
-### Option B: Use Test Keys
-If you don't want to configure a dashboard yet, you can use the official hCaptcha test keys.
-
-**Note:** If you are using Supabase Auth with hCaptcha enabled, Supabase expects a valid secret key. Using test keys on the client might fail validation if Supabase is configured with a real secret key.
-
-*   **Test Site Key:** `10000000-ffff-ffff-ffff-000000000001`
-*   **Test Secret Key:** `0x0000000000000000000000000000000000000000`
+### Option B: Use Real Keys
+If you must use real keys locally:
+1.  Log in to your hCaptcha Dashboard.
+2.  Go to **Settings**.
+3.  **Do not** add `localhost` to the domain list (it often throws an error).
+4.  Instead, look for a "Disable Domain Checking" option and enable it temporarily.
+5.  Or, try adding `127.0.0.1` if `localhost` is rejected.
 
 ## 2. Supabase Configuration
 
@@ -34,8 +30,14 @@ To enable hCaptcha protection for Auth:
 1.  Go to Supabase Dashboard > **Project Settings** > **Authentication**.
 2.  Enable **Enable Captcha Protection**.
 3.  Select **hCaptcha**.
-4.  Enter your **hCaptcha Site Key** and **Secret Key** (from the hCaptcha dashboard).
-5.  Save.
+4.  **If using Test Keys (Option A):**
+    *   Site Key: `10000000-ffff-ffff-ffff-000000000001`
+    *   Secret Key: `0x0000000000000000000000000000000000000000`
+5.  **If using Real Keys (Option B):**
+    *   Enter your actual Site Key and Secret Key.
+6.  Save.
+
+**Security Note:** If you use Test Keys in Supabase, **anyone** can bypass your captcha on production. **NEVER** leave Test Keys active in your production Supabase project.
 
 ## 3. Troubleshooting
 
@@ -43,7 +45,10 @@ To enable hCaptcha protection for Auth:
 Ensure `NEXT_PUBLIC_HCAPTCHA_SITE_KEY` is defined in your `.env.local` file.
 
 ### "Hydration failed" or UI Mismatches
-Browser extensions (like password managers or ad blockers) can sometimes inject HTML that interferes with React's hydration. Try testing in an Incognito window to rule this out.
+Browser extensions can interfere. Test in Incognito.
 
 ### "Invalid Captcha" during Signup
-If using Test Keys on the client but Real Keys on Supabase, signup will fail. Ensure both the Client (`.env.local`) and the Server (Supabase Dashboard) use a matching pair of keys (either both Real or both Test).
+This happens if your Client (Next.js) and Server (Supabase) keys don't match.
+*   Client uses Test Key + Supabase uses Real Key -> **FAIL**
+*   Client uses Real Key + Supabase uses Test Key -> **FAIL**
+*   **Both** must use the same pair.
