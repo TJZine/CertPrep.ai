@@ -28,6 +28,10 @@ export function useAnalyticsStats(results: Result[], quizzes: Quiz[]): Analytics
   });
   const [isLoading, setIsLoading] = useState(true);
 
+  // Create stable keys for dependencies
+  const resultsHash = results.map(r => r.id).sort().join(',');
+  const quizzesHash = quizzes.map(q => q.id).sort().join(',');
+
   useEffect(() => {
     let isMounted = true;
     const calculate = async (): Promise<void> => {
@@ -141,7 +145,8 @@ export function useAnalyticsStats(results: Result[], quizzes: Quiz[]): Analytics
     return (): void => {
       isMounted = false;
     };
-  }, [results, quizzes]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resultsHash, quizzesHash]);
 
   return { ...stats, isLoading };
 }

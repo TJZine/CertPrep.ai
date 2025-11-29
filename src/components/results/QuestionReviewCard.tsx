@@ -41,7 +41,7 @@ export function QuestionReviewCard({
   const sanitizedQuestion = React.useMemo(() => sanitizeHTML(question.question), [question.question]);
   const sanitizedExplanation = React.useMemo(() => sanitizeHTML(question.explanation), [question.explanation]);
 
-  const correctAnswerKey = useCorrectAnswer(question);
+  const correctAnswerKey = useCorrectAnswer(question); // May be null if resolution fails
 
   const sortedOptions = React.useMemo(() => {
     return Object.entries(question.options).sort(([a], [b]) => a.localeCompare(b));

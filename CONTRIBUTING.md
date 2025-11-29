@@ -282,7 +282,7 @@ export function Button(props) {
 |------|------------|---------|
 | Components | PascalCase | `UserProfile.tsx` |
 | Hooks | camelCase with `use` prefix | `useAuth.ts` |
-| Hooks | camelCase with `use` prefix | `useAuth.ts` |
+
 | Utilities | camelCase | `formatDate.ts` |
 | Types | PascalCase | `User.ts` |
 | Constants | SCREAMING_SNAKE_CASE | `API_ENDPOINTS.ts` |
@@ -314,7 +314,7 @@ export function Button(props) {
 
 We follow [Conventional Commits](https://www.conventionalcommits.org/):
 
-```
+```text
 <type>(<scope>): <description>
 
 [optional body]
@@ -357,7 +357,7 @@ asdfgh
 
 For complex changes, include a body:
 
-```
+```text
 feat(sync): implement conflict resolution
 
 - Add last-write-wins strategy for conflicts
@@ -386,7 +386,7 @@ Closes #123
 
 Follow the same convention as commits:
 
-```
+```text
 feat(scope): description
 fix(scope): description
 docs: description

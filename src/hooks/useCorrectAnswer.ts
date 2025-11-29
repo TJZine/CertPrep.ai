@@ -10,6 +10,8 @@ export function useCorrectAnswer(question: Question | null): string | null {
 
   useEffect((): (() => void) | void => {
     let isMounted = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setCorrectKey(null); // Reset immediately when question changes
 
     const findKey = async (): Promise<void> => {
       if (!question) {

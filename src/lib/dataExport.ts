@@ -234,6 +234,7 @@ export async function getStorageStats(): Promise<{
   const results = await db.results.toArray();
   const quizzesJson = JSON.stringify(quizzes);
   const resultsJson = JSON.stringify(results);
+  // TODO: This is memory intensive. Use db.stats() or estimate based on count in future.
   const estimatedSizeKB = Math.round((quizzesJson.length + resultsJson.length) / 1024);
 
   return {

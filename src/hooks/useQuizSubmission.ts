@@ -62,11 +62,15 @@ export function useQuizSubmission({ quizId, isSmartRound = false }: UseQuizSubmi
         if (!isMountedRef.current) return;
 
         if (isSmartRound) {
-          sessionStorage.removeItem('smartRoundQuestions');
-          sessionStorage.removeItem('smartRoundQuizId');
-          sessionStorage.removeItem('smartRoundAllQuestions');
-          sessionStorage.removeItem('smartRoundMissedCount');
-          sessionStorage.removeItem('smartRoundFlaggedCount');
+          try {
+            sessionStorage.removeItem('smartRoundQuestions');
+            sessionStorage.removeItem('smartRoundQuizId');
+            sessionStorage.removeItem('smartRoundAllQuestions');
+            sessionStorage.removeItem('smartRoundMissedCount');
+            sessionStorage.removeItem('smartRoundFlaggedCount');
+          } catch (e) {
+            console.warn('Failed to clear sessionStorage:', e);
+          }
         }
 
         addToast('success', isSmartRound ? 'Smart Round complete!' : 'Study session complete!');

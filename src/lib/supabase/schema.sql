@@ -22,6 +22,10 @@ create policy "Users can update their own profile."
   on profiles for update
   using ( auth.uid() = id );
 
+create policy "Users can delete their own profile."
+  on profiles for delete
+  using ( auth.uid() = id );
+
 -- TABLE: results
 create table if not exists results (
   id uuid primary key default gen_random_uuid(),
@@ -64,7 +68,7 @@ security definer set search_path = public
 as $$
 begin
   insert into public.profiles (id, display_name)
-  values (new.id, new.raw_user_meta_data ->> 'full_name');
+  values (new.id, COALESCE(new.raw_user_meta_data ->> 'full_name', new.email));
   return new;
 end;
 $$;

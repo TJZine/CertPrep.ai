@@ -25,7 +25,8 @@ fi
 # - Private Keys
 # - AWS Keys
 # - Generic API Keys (simple heuristics)
-PATTERNS="-----BEGIN.*PRIVATE KEY-----|aws_access_key_id|ghp_[a-zA-Z0-9]{20,}|sk_live_[a-zA-Z0-9]{20,}|xox[baprs]-[a-zA-Z0-9-]{10,}"
+# - Database Connection Strings
+PATTERNS="-----BEGIN.*PRIVATE KEY-----|aws_access_key_id|ghp_[a-zA-Z0-9]{20,}|sk_live_[a-zA-Z0-9]{20,}|xox[baprs]-[a-zA-Z0-9-]{10,}|PRIVATE_KEY=|password=|Bearer [a-zA-Z0-9\-\._\~\+\/]+=*|postgres://"
 
 FOUND_SECRETS=0
 
@@ -33,10 +34,11 @@ for FILE in $STAGED_FILES; do
   # Skip deleted files
   if [ ! -f "$FILE" ]; then continue; fi
 
-  # Search for patterns
-  if grep -Eq "$PATTERNS" "$FILE"; then
+  # Search for patterns in the staged content using git show
+  if git show :"$FILE" | grep -Eq "$PATTERNS"; then
     echo "❌ SECURITY WARNING: Potential secret found in $FILE"
-    grep -E "$PATTERNS" "$FILE" | head -n 1
+    # Show the matching line (masked slightly for safety in logs if needed, but here we just show it)
+    git show :"$FILE" | grep -E "$PATTERNS" | head -n 1
     FOUND_SECRETS=1
   fi
 done

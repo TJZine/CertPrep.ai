@@ -41,28 +41,34 @@ export async function syncResults(userId: string): Promise<void> {
     const unsyncedResults = await db.results.where('synced').equals(0).toArray();
 
     if (unsyncedResults.length > 0) {
-      const { error } = await supabase.from('results').upsert(
-        unsyncedResults.map((r) => ({
-          id: r.id,
-          user_id: userId,
-          quiz_id: r.quiz_id,
-          timestamp: r.timestamp,
-          mode: r.mode,
-          score: r.score,
-          time_taken_seconds: r.time_taken_seconds,
-          answers: r.answers,
-          flagged_questions: r.flagged_questions,
-          category_breakdown: r.category_breakdown,
-        }))
-      );
-
-      if (error) {
-        logger.error('Failed to push results to Supabase:', error);
-      } else {
-        // Mark as synced locally
-        await db.results.bulkUpdate(
-          unsyncedResults.map((r) => ({ key: r.id, changes: { synced: 1 } }))
+      // Chunk the upload to avoid hitting payload limits
+      for (let i = 0; i < unsyncedResults.length; i += BATCH_SIZE) {
+        const batch = unsyncedResults.slice(i, i + BATCH_SIZE);
+        
+        const { error } = await supabase.from('results').upsert(
+          batch.map((r) => ({
+            id: r.id,
+            user_id: userId,
+            quiz_id: r.quiz_id,
+            timestamp: r.timestamp,
+            mode: r.mode,
+            score: r.score,
+            time_taken_seconds: r.time_taken_seconds,
+            answers: r.answers,
+            flagged_questions: r.flagged_questions,
+            category_breakdown: r.category_breakdown,
+          }))
         );
+
+        if (error) {
+          logger.error('Failed to push results batch to Supabase:', error);
+          // Continue to next batch instead of failing completely
+        } else {
+          // Mark as synced locally
+          await db.results.bulkUpdate(
+            batch.map((r) => ({ key: r.id, changes: { synced: 1 } }))
+          );
+        }
       }
     }
 

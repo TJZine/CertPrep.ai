@@ -23,11 +23,13 @@ export function AITutorButton({
   userAnswer,
   className,
   variant = 'default',
-}: AITutorButtonProps): React.ReactElement {
+}: AITutorButtonProps): React.ReactNode {
   const [copied, setCopied] = React.useState(false);
   const { addToast } = useToast();
 
   const correctAnswerKey = useCorrectAnswer(question);
+
+
 
   const generatePrompt = React.useCallback((): string => {
     const correctKey = correctAnswerKey || '';
@@ -63,6 +65,8 @@ Please:
 3. Give me a simple way to remember this concept
 4. If relevant, provide a real-world example`;
   }, [question, userAnswer, correctAnswerKey]);
+  
+  if (!correctAnswerKey) return null;
 
   const handleCopyPrompt = async (): Promise<void> => {
     const prompt = generatePrompt();

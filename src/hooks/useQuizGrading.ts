@@ -28,6 +28,7 @@ export function useQuizGrading(quiz: Quiz | null, answers: Record<string, string
 
     let isMounted = true;
     setIsLoading(true);
+    setGrading(null); // Clear previous result while loading
 
     const grade = async (): Promise<void> => {
       const status: Record<string, boolean> = {};

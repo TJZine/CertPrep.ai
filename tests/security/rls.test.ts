@@ -109,6 +109,11 @@ describe.skipIf(!shouldRun)('Row Level Security (RLS) Verification', () => {
     }
   });
 
+  // Cleanup test users
+  // Note: This requires service role key. If not available, we can't delete users.
+  // Ideally, we'd use a separate cleanup script or run in a transaction that rolls back.
+  // For now, we'll just log a message if we can't clean up.
+
   it('User A should be able to insert and read their own results', async () => {
     if (!userA) return;
 

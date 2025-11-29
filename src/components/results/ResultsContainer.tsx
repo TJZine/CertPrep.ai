@@ -96,7 +96,7 @@ export function ResultsContainer({ result, quiz, previousScore }: ResultsContain
       .map((q) => ({
         question: q,
         userAnswer: result.answers[q.id] || null,
-        correctAnswer: resolvedAnswers[q.id] || '', // Use resolved answer or empty string
+        correctAnswer: resolvedAnswers[q.id] || 'Unable to resolve', // Use resolved answer or fallback
       }));
   }, [quiz, result, grading, resolvedAnswers]);
 

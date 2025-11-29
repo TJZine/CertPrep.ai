@@ -16,24 +16,28 @@ export function useResolveCorrectAnswers(questions: Question[]): Record<string, 
     const newResolved: Record<string, string> = {};
 
     const resolveAll = async (): Promise<void> => {
-      await Promise.all(
-        questions.map(async (q) => {
-          const targetHash = q.correct_answer_hash;
-          if (!targetHash) return;
+      try {
+        await Promise.all(
+          questions.map(async (q) => {
+            const targetHash = q.correct_answer_hash;
+            if (!targetHash) return;
 
-          // Brute-force check options
-          for (const key of Object.keys(q.options)) {
-            const hash = await hashAnswer(key);
-            if (hash === targetHash) {
-              newResolved[q.id] = key;
-              break;
+            // Brute-force check options
+            for (const key of Object.keys(q.options)) {
+              const hash = await hashAnswer(key);
+              if (hash === targetHash) {
+                newResolved[q.id] = key;
+                break;
+              }
             }
-          }
-        })
-      );
+          })
+        );
 
-      if (isMounted) {
-        setResolved(newResolved);
+        if (isMounted) {
+          setResolved(newResolved);
+        }
+      } catch (error) {
+        console.error('Failed to resolve answers:', error);
       }
     };
 

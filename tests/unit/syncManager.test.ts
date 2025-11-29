@@ -36,7 +36,7 @@ const { mockSupabase } = vi.hoisted(() => {
 });
 
 vi.mock('@/lib/supabase/client', () => ({
-  createClient: () => mockSupabase,
+  createClient: (): typeof mockSupabase => mockSupabase,
 }));
 
 describe('SyncManager', () => {
@@ -46,11 +46,11 @@ describe('SyncManager', () => {
 
   it('should advance cursor even if all results in a batch are invalid', async () => {
     // Mock 50 invalid results (missing required fields)
-    const invalidResults = Array(50).fill({
-      id: 'invalid-id',
+    const invalidResults = Array(50).fill(null).map((_, i) => ({
+      id: `invalid-id-${i}`,
       // Missing other required fields like quiz_id, timestamp, etc.
-      created_at: '2023-01-02T00:00:00.000Z', 
-    });
+      created_at: new Date(Date.now() + i * 1000).toISOString(), 
+    }));
 
     // First call returns 50 invalid items
     // Second call returns empty to break the loop
@@ -60,7 +60,8 @@ describe('SyncManager', () => {
     await syncResults('user-123');
 
     // Verify setSyncCursor was called with the timestamp of the last invalid record
-    expect(syncState.setSyncCursor).toHaveBeenCalledWith('user-123', '2023-01-02T00:00:00.000Z');
+    const lastTimestamp = invalidResults[49]?.created_at;
+    expect(syncState.setSyncCursor).toHaveBeenCalledWith('user-123', lastTimestamp);
     
     // Verify bulkPut was NOT called (since no valid results)
     expect(db.results.bulkPut).not.toHaveBeenCalled();

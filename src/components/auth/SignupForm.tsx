@@ -46,7 +46,7 @@ export default function SignupForm(): React.ReactElement {
         password,
         options: {
           data: {
-            full_name: fullName,
+            full_name: fullName.trim(),
           },
           captchaToken,
         },

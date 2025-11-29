@@ -34,7 +34,7 @@ export default function Page(): React.ReactElement {
         </h1>
 
         <p className="description">
-          Click the button below, and view the sample error on the Sentry <a target="_blank" rel="noreferrer" href="https://tjzine.sentry.io/issues/?project=4510441098313728">Issues Page</a>.
+          Click the button below, and view the sample error on the Sentry <a target="_blank" rel="noreferrer" href="https://sentry.io">Issues Page</a>.
           For more details about setting up Sentry, <a target="_blank" rel="noreferrer"
            href="https://docs.sentry.io/platforms/javascript/guides/nextjs/">read our docs</a>.
         </p>

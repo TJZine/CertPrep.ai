@@ -238,7 +238,7 @@ graph TD
 
 ### Tech Stack
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │                        Frontend                              │
 ├─────────────────────────────────────────────────────────────┤
@@ -262,7 +262,7 @@ graph TD
 
 ### Project Structure
 
-```
+```text
 src/
 ├── app/                    # Next.js App Router pages
 │   ├── (auth)/            # Auth group routes

@@ -19,7 +19,7 @@ describe('hashAnswer', () => {
     const hash = await hashAnswer('');
     expect(hash).toBeDefined();
     expect(typeof hash).toBe('string');
-    expect(hash.length).toBeGreaterThan(0);
+    expect(hash.length).toBe(64);
   });
 
   it('should be case-sensitive (as per current implementation)', async () => {

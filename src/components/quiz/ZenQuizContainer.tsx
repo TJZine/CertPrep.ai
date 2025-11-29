@@ -70,10 +70,7 @@ export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContaine
   const { formattedTime, start: startTimer, seconds, pause: pauseTimer } = useTimer({ autoStart: true });
   useBeforeUnload(!isComplete, 'Your quiz progress will be lost. Are you sure?');
 
-  const secondsRef = React.useRef(seconds);
-  React.useEffect(() => {
-    secondsRef.current = seconds;
-  }, [seconds]);
+
 
   React.useEffect((): (() => void) => {
     isMountedRef.current = true;
@@ -90,7 +87,7 @@ export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContaine
   );
 
   const retrySave = React.useCallback((): void => {
-    const elapsedSeconds = completionTimeRef.current ?? secondsRef.current;
+    const elapsedSeconds = completionTimeRef.current;
     if (elapsedSeconds === null) {
       return;
     }
