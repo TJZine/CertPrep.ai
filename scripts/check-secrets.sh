@@ -35,10 +35,10 @@ for FILE in $STAGED_FILES; do
   if [ ! -f "$FILE" ]; then continue; fi
 
   # Search for patterns in the staged content using git show
-  if git show :"$FILE" | grep -Eq "$PATTERNS"; then
+  if git show :"$FILE" | grep -Eq -e "$PATTERNS"; then
     echo "❌ SECURITY WARNING: Potential secret found in $FILE"
     # Show the matching line (masked slightly for safety in logs if needed, but here we just show it)
-    git show :"$FILE" | grep -E "$PATTERNS" | head -n 1
+    git show :"$FILE" | grep -E -e "$PATTERNS" | head -n 1
     FOUND_SECRETS=1
   fi
 done
