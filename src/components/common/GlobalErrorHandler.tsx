@@ -93,16 +93,32 @@ export class GlobalErrorHandler extends React.Component<GlobalErrorHandlerProps,
                 options below.
               </p>
 
-              {this.state.error && process.env.NODE_ENV === 'development' ? (
-                <details className="mb-6 rounded-lg border border-slate-200 bg-slate-50 p-4 text-left">
-                  <summary className="cursor-pointer font-medium text-slate-700">Technical Details</summary>
-                  <pre className="mt-2 overflow-auto whitespace-pre-wrap text-xs text-slate-600">
-                    {this.state.error.message}
+              {/* Always allow expanding details for debugging, but warn it's technical */}
+              <details className="mb-6 rounded-lg border border-slate-200 bg-slate-50 p-4 text-left">
+                <summary className="cursor-pointer font-medium text-slate-700 flex items-center justify-between">
+                  <span>Technical Details</span>
+                  <span className="text-xs text-slate-500 font-normal">(Click to expand)</span>
+                </summary>
+                <div className="mt-2">
+                  <pre className="overflow-auto whitespace-pre-wrap text-xs text-slate-600 max-h-40">
+                    {this.state.error?.message || 'Unknown error'}
                     {'\n\n'}
-                    {this.state.error.stack}
+                    {this.state.error?.stack}
                   </pre>
-                </details>
-              ) : null}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-2 w-full"
+                    onClick={() => {
+                      const text = `${this.state.error?.message}\n\n${this.state.error?.stack}`;
+                      navigator.clipboard.writeText(text);
+                      alert('Error details copied to clipboard');
+                    }}
+                  >
+                    Copy Error Details
+                  </Button>
+                </div>
+              </details>
 
               <div className="space-y-3">
                 <Button onClick={this.handleReset} className="w-full" leftIcon={<RefreshCw className="h-4 w-4" />}>

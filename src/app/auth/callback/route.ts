@@ -13,7 +13,32 @@ export async function GET(request: Request): Promise<NextResponse> {
   
   // Validate 'next' param to prevent open redirects
   let next = searchParams.get('next') ?? '/'
-  if (!next.startsWith('/') || next.startsWith('//')) {
+  
+  try {
+    // 1. Decode URI component to handle encoded attacks (e.g. %2f)
+    const decodedNext = decodeURIComponent(next)
+    
+    // 2. Strip leading/trailing whitespace and control characters
+    const sanitizedNext = decodedNext.trim().replace(/[\x00-\x1F\x7F]/g, '')
+    
+    // 3. Reject if it contains backslashes (often used to bypass / checks)
+    if (sanitizedNext.includes('\\')) {
+      next = '/'
+    }
+    // 4. Reject if it contains a scheme (e.g. javascript:, data:, https:)
+    // A scheme is defined as characters followed by a colon before any slash
+    else if (/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(sanitizedNext)) {
+      next = '/'
+    }
+    // 5. Ensure it starts with a single '/' and is not a protocol-relative URL (//)
+    else if (!sanitizedNext.startsWith('/') || sanitizedNext.startsWith('//')) {
+      next = '/'
+    } else {
+      // If all checks pass, use the sanitized value
+      next = sanitizedNext
+    }
+  } catch {
+    // If decoding fails, default to root
     next = '/'
   }
 

@@ -44,12 +44,16 @@ export function QuestionReviewCard({
   const sanitizedQuestion = React.useMemo(() => sanitizeHTML(question.question), [question.question]);
   const sanitizedExplanation = React.useMemo(() => sanitizeHTML(question.explanation), [question.explanation]);
 
-  const isCorrect = userAnswer === question.correct_answer;
+  // Determine the canonical correct answer (prefer prop, fallback to question data)
+  const canonicalCorrectAnswer = correctAnswer || question.correct_answer;
+  
+  // Compute correctness based on the canonical answer
+  const isCorrect = userAnswer === canonicalCorrectAnswer;
   const isWrong = userAnswer && !isCorrect;
   
   // Determine what to display for the correct answer
-  let correctAnswerDisplay = question.correct_answer || correctAnswer;
-  const correctAnswerKey = correctAnswer || question.correct_answer;
+  let correctAnswerDisplay = canonicalCorrectAnswer;
+  const correctAnswerKey = canonicalCorrectAnswer;
   
   const showResolutionError = !correctAnswerDisplay && !isResolving && !!question.correct_answer_hash;
 
