@@ -18,7 +18,7 @@ let isSyncing = false;
 const RemoteResultSchema = z.object({
   id: z.string(),
   quiz_id: z.string(),
-  timestamp: z.number(),
+  timestamp: z.coerce.number(), // Coerce string (from Postgres bigint) to number
   mode: z.enum([...QUIZ_MODES] as [string, ...string[]]).transform((val) => val as QuizMode),
   score: z.number().min(0).max(100),
   time_taken_seconds: z.number().min(0),
