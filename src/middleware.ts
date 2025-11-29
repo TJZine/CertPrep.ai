@@ -71,9 +71,20 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
     urlToUse = `https://${urlToUse}`
   }
 
+  // Validate key before use to avoid runtime errors
+  if (!supabaseKey) {
+    if (process.env.NODE_ENV === 'production') {
+      // In production, if key is missing, we can't authenticate. 
+      // We should probably return a 500 or let the app continue with a dummy client that will fail auth.
+      // For middleware, returning a response is often better.
+      console.error('Middleware: Missing NEXT_PUBLIC_SUPABASE_ANON_KEY');
+      // Proceeding with a dummy key to prevent crash, but auth will fail.
+    }
+  }
+
   const supabase = createServerClient(
     urlToUse,
-    supabaseKey!,
+    supabaseKey || 'placeholder-key',
     {
       cookies: {
         getAll() {

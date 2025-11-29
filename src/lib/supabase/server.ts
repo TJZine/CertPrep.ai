@@ -5,8 +5,21 @@ import { logger } from '@/lib/logger'
 export const createClient = async (): Promise<ReturnType<typeof createServerClient>> => {
   const cookieStore = await cookies()
 
-  let supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key'
+  let supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  let supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (!supabaseUrl || !supabaseKey) {
+    if (process.env.NODE_ENV !== 'production') {
+      throw new Error('Missing Supabase environment variables')
+    }
+    // In production, we'll handle this gracefully below or let createServerClient fail if it must,
+    // but typically we want to return a safe fallback to prevent crashes.
+    // However, without a URL, we can't really do anything.
+    // Let's use a safe fallback URL if missing in prod to prevent immediate crash, 
+    // but operations will fail.
+    supabaseUrl = supabaseUrl || 'https://placeholder.supabase.co'
+    supabaseKey = supabaseKey || 'placeholder-key'
+  }
 
   if (!supabaseUrl.startsWith('http')) {
     supabaseUrl = `https://${supabaseUrl}`

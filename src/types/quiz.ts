@@ -11,6 +11,7 @@ export interface Question {
   distractor_logic?: string;
   ai_prompt?: string;
   user_notes?: string;
+  correct_answer?: string;
 }
 
 export interface Quiz {

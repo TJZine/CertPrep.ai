@@ -313,7 +313,12 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
             // Re-validate state in case it changed during async op
             const currentQ = draft.questions.find((q) => q.id === questionId);
             // Ensure we are still on the same question and state is valid
-            if (!currentQ || draft.questionQueue[draft.currentIndex] !== questionId) return;
+            // Also ensure the user hasn't changed their selection while we were hashing
+            if (!currentQ || 
+                draft.questionQueue[draft.currentIndex] !== questionId ||
+                draft.selectedAnswer !== currentSelectedAnswer) {
+              return;
+            }
             
             const isCorrect = hashedSelection === currentQ.correct_answer_hash;
             const previousDifficulty = draft.answers.get(questionId)?.difficulty ?? null;
@@ -362,7 +367,12 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
             set((draft) => {
               const currentQ = draft.questions.find((q) => q.id === questionId);
               // Ensure we are still on the same question
-              if (!currentQ || draft.questionQueue[draft.currentIndex] !== questionId) return;
+              // And ensure the user hasn't changed their selection since this hash started
+              if (!currentQ || 
+                  draft.questionQueue[draft.currentIndex] !== questionId ||
+                  draft.selectedAnswer !== answerId) {
+                return;
+              }
               
               const isCorrect = hashedSelection === currentQ.correct_answer_hash;
               draft.answers.set(questionId, {
