@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-const PROTECTED_ROUTES = ['/dashboard', '/quiz', '/results', '/library', '/settings', '/analytics']
+const PROTECTED_ROUTES = ['/quiz', '/results', '/library', '/settings', '/analytics']
 const AUTH_ROUTES = ['/login', '/signup']
 
 export async function middleware(request: NextRequest): Promise<NextResponse> {
@@ -134,9 +134,9 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
     return NextResponse.redirect(redirectUrl)
   }
 
-  // 2. Authenticated users trying to access auth routes (login/signup) -> Redirect to Dashboard
+  // 2. Authenticated users trying to access auth routes (login/signup) -> Redirect to Dashboard (Root)
   if (isAuthRoute && user) {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
+    return NextResponse.redirect(new URL('/', request.url))
   }
 
   return response

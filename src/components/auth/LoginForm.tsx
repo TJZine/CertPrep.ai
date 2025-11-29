@@ -49,7 +49,7 @@ export default function LoginForm(): React.ReactElement {
       }
 
       addToast('success', 'Successfully logged in!');
-      router.push('/dashboard');
+      router.push('/');
       router.refresh();
     } catch (err) {
       // Handle unexpected errors that aren't Supabase AuthErrors
