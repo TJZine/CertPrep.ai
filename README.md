@@ -25,8 +25,8 @@ README.md - CertPrep.ai
   [![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC?style=flat-square&logo=tailwind-css)](https://tailwindcss.com/)
 
   <!-- Links Row -->
-  [Documentation](#documentation) •
-  [Getting Started](#getting-started) •
+  [Documentation](#📚-Documentation) •
+  [Getting Started](#🚀-Getting-Started) •
   [Contributing](CONTRIBUTING.md) •
   [Changelog](CHANGELOG.md)
 
@@ -40,12 +40,12 @@ README.md - CertPrep.ai
 <table>
   <tr>
     <td align="center" width="33%">
-      <img src="https://img.icons8.com/fluency/48/000000/authentication.png" width="40"><br>
+      <img src="https://img.icons8.com/fluency/48/000000/authentication.png" width="40" alt="Authentication icon"><br>
       <strong>Secure Authentication</strong><br>
       <sub>Email/password auth with Supabase, session management, and secure cookies</sub>
     </td>
     <td align="center" width="33%">
-      <img src="https://img.icons8.com/fluency/48/000000/sync.png" width="40"><br>
+      <img src="https://img.icons8.com/fluency/48/000000/sync.png" width="40" alt="Sync icon"><br>
       <strong>Offline-First Sync</strong><br>
       <sub>Local IndexedDB storage with automatic cloud synchronization</sub>
     </td>
@@ -84,7 +84,7 @@ README.md - CertPrep.ai
 
 - [Features](#features)
 - [Demo](#demo)
-- [Getting Started](#getting-started)
+- [Getting Started](#🚀-Getting-Started)
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
   - [Environment Setup](#environment-setup)

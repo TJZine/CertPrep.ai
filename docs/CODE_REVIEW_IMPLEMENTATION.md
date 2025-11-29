@@ -90,4 +90,4 @@ When applying the fix:
 *   **The "Quick Patch":** Adding a `// @ts-ignore` to silence a warning.
 *   **The "Silent Fix":** Changing code without explaining why or updating related docs.
 *   **The "Scope Creep":** Refactoring an unrelated module "while I'm at it" (create a separate PR for that).
-*   **The "Works on My Machine":** Pushing without running the full build/test cycle. Start by verifying there are 0 linter errors or warnings, tests pass, and it builds then wait for a review task
+*   **The "Works on My Machine":** Pushing without running the full build/test cycle. Start by verifying there are 0 linter errors or warnings, all tests pass, and the build succeeds before pushing.

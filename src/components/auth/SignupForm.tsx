@@ -147,12 +147,20 @@ export default function SignupForm(): React.ReactElement {
         </div>
 
         <div className="flex justify-center">
-          <HCaptcha
-            ref={captchaRef}
-            sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY || ''}
-            onVerify={(token) => setCaptchaToken(token)}
-            onExpire={() => setCaptchaToken(null)}
-          />
+          {process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY ? (
+            <HCaptcha
+              ref={captchaRef}
+              sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY}
+              onVerify={(token) => setCaptchaToken(token)}
+              onExpire={() => setCaptchaToken(null)}
+            />
+          ) : (
+            <div className="p-4 border border-red-200 bg-red-50 text-red-700 text-sm rounded-md">
+              Configuration Error: Missing HCaptcha Site Key.
+              <br />
+              Please add <code>NEXT_PUBLIC_HCAPTCHA_SITE_KEY</code> to your .env file.
+            </div>
+          )}
         </div>
 
         {error && (

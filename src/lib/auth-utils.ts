@@ -9,9 +9,13 @@ import { logger } from '@/lib/logger';
 export function getAuthErrorMessage(error: AuthError | null): string {
   if (!error) return '';
 
-  // Log only the status for debugging purposes to avoid leaking user existence via error messages
-  // in logs (e.g. "User already registered" vs "Invalid login credentials")
-  logger.error('Auth Error (Status Code):', { status: error.status });
+  // Log full error details for debugging
+  logger.error('Auth Error:', { 
+    status: error.status,
+    message: error.message,
+    name: error.name,
+    fullError: error
+  });
 
   // List of error codes/messages that might reveal user existence
   // Note: Supabase error codes can be inconsistent, so we check messages too if needed.
