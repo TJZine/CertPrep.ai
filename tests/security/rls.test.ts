@@ -106,6 +106,9 @@ describe.skipIf(!shouldRun)('Row Level Security (RLS) Verification', () => {
         throw new Error(`Failed to create test users in CI environment: ${e instanceof Error ? e.message : String(e)}`);
       }
       console.warn('Skipping RLS tests: Could not create test users (Auth might be disabled or require confirmation)', e);
+      // Explicitly fail the setup so tests don't run and falsely pass. 
+      // In a real scenario, we might want to skip, but for security tests, explicit failure is safer than silent skipping.
+      throw new Error('Setup failed: Could not create test users. Tests cannot run.');
     }
   });
 

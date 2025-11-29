@@ -37,8 +37,19 @@ for FILE in $STAGED_FILES; do
   # Search for patterns in the staged content using git show
   if git show :"$FILE" | grep -Eq -e "$PATTERNS"; then
     echo "❌ SECURITY WARNING: Potential secret found in $FILE"
-    # Show the matching line (masked slightly for safety in logs if needed, but here we just show it)
-    git show :"$FILE" | grep -E -e "$PATTERNS" | head -n 1
+    
+    # Extract the matching line
+    MATCH_LINE=$(git show :"$FILE" | grep -E -e "$PATTERNS" | head -n 1)
+    
+    # Masking logic: keep first 4 and last 4 chars of the match, obscure the rest
+    # We'll just mask the whole line's sensitive part broadly for safety
+    # A simple heuristic: replace the inner part of long strings
+    
+    MASKED_OUTPUT=$(echo "$MATCH_LINE" | sed -E 's/([a-zA-Z0-9._-]{4})[a-zA-Z0-9._-]{5,}([a-zA-Z0-9._-]{4})/\1******\2/g')
+    
+    echo "Context: $MASKED_OUTPUT"
+    echo "Please remove this secret before committing."
+    
     FOUND_SECRETS=1
   fi
 done

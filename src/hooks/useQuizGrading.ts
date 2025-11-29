@@ -36,26 +36,35 @@ export function useQuizGrading(quiz: Quiz | null, answers: Record<string, string
       let incorrect = 0;
       let unanswered = 0;
 
-      // We can run these in parallel
-      await Promise.all(
+      // Collect results in a local array to avoid race conditions on shared counters
+      const results = await Promise.all(
         quiz.questions.map(async (q) => {
           const userAnswer = answers[q.id];
           if (!userAnswer) {
-            unanswered++;
-            status[q.id] = false;
-            return;
+            return { id: q.id, status: 'unanswered' as const };
           }
 
           // Hash the user's answer to compare
           const userHash = await hashAnswer(userAnswer);
           const isCorrect = userHash === q.correct_answer_hash;
-
-          if (isCorrect) correct++;
-          else incorrect++;
           
-          status[q.id] = isCorrect;
+          return { id: q.id, status: isCorrect ? 'correct' as const : 'incorrect' as const };
         })
       );
+
+      // Synchronously aggregate results
+      results.forEach((result) => {
+        if (result.status === 'unanswered') {
+          unanswered++;
+          status[result.id] = false;
+        } else if (result.status === 'correct') {
+          correct++;
+          status[result.id] = true;
+        } else {
+          incorrect++;
+          status[result.id] = false;
+        }
+      });
 
       if (isMounted) {
         setGrading({

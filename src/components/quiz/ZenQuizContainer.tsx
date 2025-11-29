@@ -91,7 +91,8 @@ export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContaine
     if (elapsedSeconds === null) {
       return;
     }
-    hasSavedResultRef.current = true;
+    // Don't set hasSavedResultRef.current = true here; 
+    // let the hook manage success or set it in a callback if needed.
     retrySaveAction(elapsedSeconds);
   }, [retrySaveAction]);
 

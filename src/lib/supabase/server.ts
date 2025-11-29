@@ -69,8 +69,8 @@ export const createClient = async (): Promise<ReturnType<typeof createServerClie
     if (process.env.NODE_ENV === 'development') {
       throw error
     }
-    // In production, return fallback to prevent crash (will fail on actual operations)
-    // REFACTOR: Throwing in production to ensure immediate visibility of config errors.
+    // In production, ensure the error is logged and re-thrown to prevent silent failures.
+    // We intentionally do NOT return a fallback client here because it would mask configuration errors.
     logger.error('CRITICAL: Supabase environment variables are missing in production. Auth will not work.')
     throw new Error('Critical System Error: Missing Supabase Configuration');
   }
