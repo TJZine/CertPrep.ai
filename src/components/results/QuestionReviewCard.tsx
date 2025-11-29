@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { CheckCircle, XCircle, ChevronDown, ChevronUp, Flag, Lightbulb } from 'lucide-react';
+import { CheckCircle, CheckCircle2, XCircle, ChevronDown, ChevronUp, Flag, HelpCircle, Lightbulb } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { AITutorButton } from '@/components/quiz/AITutorButton';
@@ -12,13 +12,14 @@ import type { Question } from '@/types/quiz';
 interface QuestionReviewCardProps {
   question: Question;
   questionNumber: number;
-  userAnswer: string | null;
-  isCorrect: boolean;
+  userAnswer?: string | null;
   isFlagged: boolean;
   defaultExpanded?: boolean;
   className?: string;
   expandAllState?: boolean;
   expandAllSignal?: number;
+  correctAnswer?: string | null;
+  isResolving?: boolean;
 }
 
 /**
@@ -28,17 +29,39 @@ export function QuestionReviewCard({
   question,
   questionNumber,
   userAnswer,
-  isCorrect,
   isFlagged,
   defaultExpanded = false,
   className,
   expandAllState,
   expandAllSignal,
+  correctAnswer,
+  isResolving = false,
 }: QuestionReviewCardProps): React.ReactElement {
   const [isExpanded, setIsExpanded] = React.useState(defaultExpanded);
 
   const sanitizedQuestion = React.useMemo(() => sanitizeHTML(question.question), [question.question]);
   const sanitizedExplanation = React.useMemo(() => sanitizeHTML(question.explanation), [question.explanation]);
+
+  // Determine the canonical correct answer (prefer prop, fallback to question data)
+  const canonicalCorrectAnswer = correctAnswer || question.correct_answer;
+  const hasCanonicalAnswer = !!canonicalCorrectAnswer;
+  const hasUserAnswer = userAnswer != null && userAnswer !== '';
+
+  // Compute correctness based on the canonical answer
+  const isCorrect = hasCanonicalAnswer && hasUserAnswer && userAnswer.trim() === canonicalCorrectAnswer.trim();
+  const isWrong = hasCanonicalAnswer && hasUserAnswer && !isCorrect;
+  
+  // Determine what to display for the correct answer
+  let correctAnswerDisplay = canonicalCorrectAnswer;
+  const correctAnswerKey = canonicalCorrectAnswer;
+  
+  const showResolutionError = !canonicalCorrectAnswer && !isResolving && !!question.correct_answer_hash;
+
+  if (!correctAnswerDisplay && isResolving) {
+    correctAnswerDisplay = 'Resolving...';
+  } else if (!correctAnswerDisplay && !!question.correct_answer_hash) {
+    correctAnswerDisplay = 'Unable to resolve';
+  }
 
   const sortedOptions = React.useMemo(() => {
     return Object.entries(question.options).sort(([a], [b]) => a.localeCompare(b));
@@ -59,7 +82,7 @@ export function QuestionReviewCard({
     <Card
       className={cn(
         'overflow-hidden transition-shadow dark:border-slate-800 dark:bg-slate-900',
-        !isCorrect && 'border-l-4 border-l-red-400',
+        isWrong && 'border-l-4 border-l-red-400',
         isCorrect && 'border-l-4 border-l-green-400',
         className,
       )}
@@ -73,13 +96,15 @@ export function QuestionReviewCard({
         <div
           className={cn(
             'flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full',
-            isCorrect ? 'bg-green-100 dark:bg-green-900/40' : 'bg-red-100 dark:bg-red-900/40',
+            isCorrect ? 'bg-green-100 dark:bg-green-900/40' : isWrong ? 'bg-red-100 dark:bg-red-900/40' : 'bg-slate-100 dark:bg-slate-700',
           )}
         >
           {isCorrect ? (
             <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-200" aria-hidden="true" />
-          ) : (
+          ) : isWrong ? (
             <XCircle className="h-5 w-5 text-red-600 dark:text-red-200" aria-hidden="true" />
+          ) : (
+            <HelpCircle className="h-5 w-5 text-slate-500 dark:text-slate-400" aria-hidden="true" />
           )}
         </div>
 
@@ -124,10 +149,16 @@ export function QuestionReviewCard({
         <CardContent className="border-t border-slate-100 pt-4 dark:border-slate-800">
           <div className="prose prose-sm prose-slate mb-4 max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: sanitizedQuestion }} />
 
+          {showResolutionError && (
+            <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200">
+              Unable to determine the correct answer from stored quiz data.
+            </div>
+          )}
+
           <div className="mb-4 space-y-2">
             {sortedOptions.map(([key, text]) => {
               const isUserAnswer = key === userAnswer;
-              const isCorrectAnswer = key === question.correct_answer;
+              const isCorrectAnswer = key === correctAnswerKey;
               const sanitizedText = sanitizeHTML(text);
 
               let optionStyle = 'border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900';
@@ -170,7 +201,23 @@ export function QuestionReviewCard({
             })}
           </div>
 
-          {!userAnswer && (
+          {/* Correct Answer (if wrong) */}
+          {isWrong && correctAnswerDisplay && (
+            <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-900/30 rounded-md">
+              <div className="flex items-start gap-2">
+                <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5 shrink-0" />
+                <div>
+                  <span className="font-medium text-green-900 dark:text-green-100 block mb-1">
+                    Correct Answer:
+                  </span>
+                  <span className="text-green-800 dark:text-green-200">
+                    {correctAnswerDisplay}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+          {!hasUserAnswer && (
             <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-700/70 dark:bg-amber-900/20">
               <p className="text-sm text-amber-800 dark:text-amber-100">You did not answer this question.</p>
             </div>
@@ -184,7 +231,7 @@ export function QuestionReviewCard({
             <div className="prose prose-sm prose-slate max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: sanitizedExplanation }} />
           </div>
 
-          {!isCorrect && userAnswer && (
+          {!isCorrect && hasUserAnswer && (
             <div className="mt-4">
               <AITutorButton question={question} userAnswer={userAnswer} variant="compact" />
             </div>

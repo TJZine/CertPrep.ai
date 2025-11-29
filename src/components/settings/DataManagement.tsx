@@ -31,6 +31,7 @@ export function DataManagement(): React.ReactElement {
   const [showImportModal, setShowImportModal] = React.useState(false);
   const [importFile, setImportFile] = React.useState<ExportData | null>(null);
   const [importMode, setImportMode] = React.useState<'merge' | 'replace'>('merge');
+  const [deleteConfirmation, setDeleteConfirmation] = React.useState('');
 
   React.useEffect((): void => {
     getStorageStats().then(setStats);
@@ -97,14 +98,39 @@ export function DataManagement(): React.ReactElement {
   const handleReset = async (): Promise<void> => {
     setIsResetting(true);
     try {
+      // 1. Delete from Supabase (if logged in)
+      // We try this first. If it fails (e.g. network), we stop to prevent partial state?
+      // Or should we wipe local anyway?
+      // "Account deletion must wipe BOTH Supabase Auth AND local Dexie.js data."
+      // If Supabase deletion fails, the account still exists, so we probably shouldn't wipe local yet?
+      // But if the user is offline, they can't delete from Supabase.
+      // Let's try to delete from Supabase.
+      
+      const response = await fetch('/api/auth/delete-account', {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        // If 401, maybe they aren't logged in? Just proceed to wipe local.
+        if (response.status !== 401) {
+            const data = await response.json();
+            throw new Error(data.error || 'Failed to delete account from server');
+        }
+      }
+
+      // 2. Wipe Local Data
       await clearAllData();
-      addToast('success', 'All data has been cleared.');
+      
+      addToast('success', 'Account deleted and data cleared.');
       setShowResetModal(false);
       await refreshStats();
+      
+      // Force reload to clear any in-memory state/auth
       window.location.href = '/';
     } catch (error) {
       console.error('Reset failed:', error);
-      addToast('error', 'Failed to reset data. Please try again.');
+      addToast('error', error instanceof Error ? error.message : 'Failed to reset data. Please try again.');
+    } finally {
       setIsResetting(false);
     }
   };
@@ -257,15 +283,29 @@ export function DataManagement(): React.ReactElement {
 
       <Modal
         isOpen={showResetModal}
-        onClose={() => setShowResetModal(false)}
+        onClose={() => {
+          setShowResetModal(false);
+          setDeleteConfirmation('');
+        }}
         title="Reset All Data?"
         size="sm"
         footer={
           <>
-            <Button variant="outline" onClick={() => setShowResetModal(false)}>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setShowResetModal(false);
+                setDeleteConfirmation('');
+              }}
+            >
               Cancel
             </Button>
-            <Button variant="danger" onClick={handleReset} isLoading={isResetting}>
+            <Button 
+              variant="danger" 
+              onClick={handleReset} 
+              isLoading={isResetting}
+              disabled={deleteConfirmation !== 'DELETE'}
+            >
               Yes, Delete Everything
             </Button>
           </>
@@ -275,14 +315,30 @@ export function DataManagement(): React.ReactElement {
           <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/50">
             <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-200" />
           </div>
-          <div>
+          <div className="w-full">
             <p className="text-slate-700 dark:text-slate-200">This will permanently delete:</p>
             <ul className="mt-2 list-inside list-disc text-sm text-slate-600 dark:text-slate-300">
               <li>All imported quizzes</li>
               <li>All quiz results and history</li>
               <li>All settings and preferences</li>
+              <li><strong>Your entire account (if logged in)</strong></li>
             </ul>
             <p className="mt-4 font-medium text-red-700 dark:text-red-200">This action cannot be undone!</p>
+            
+            <div className="mt-4">
+              <label htmlFor="delete-confirm" className="block text-sm font-medium text-slate-700 dark:text-slate-200">
+                Type <strong>DELETE</strong> to confirm
+              </label>
+              <input
+                id="delete-confirm"
+                type="text"
+                value={deleteConfirmation}
+                onChange={(e) => setDeleteConfirmation(e.target.value)}
+                className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm placeholder-slate-400 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                placeholder="DELETE"
+                autoComplete="off"
+              />
+            </div>
           </div>
         </div>
       </Modal>

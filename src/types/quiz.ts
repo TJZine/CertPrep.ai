@@ -6,11 +6,12 @@ export interface Question {
   difficulty?: Difficulty;
   question: string;
   options: Record<string, string>;
-  correct_answer: string;
+  correct_answer_hash?: string;
   explanation: string;
   distractor_logic?: string;
   ai_prompt?: string;
   user_notes?: string;
+  correct_answer?: string;
 }
 
 export interface Quiz {
@@ -36,4 +37,5 @@ export interface QuizSessionState {
   startTime: number;
   endTime?: number;
   isComplete: boolean;
+  isSubmitting?: boolean;
 }

@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from 'next';
 import * as React from 'react';
+import { headers } from 'next/headers';
 import { Inter } from 'next/font/google';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { ToastProvider } from '@/components/ui/Toast';
@@ -10,6 +12,8 @@ import { InstallPrompt } from '@/components/common/InstallPrompt';
 import { UpdateBanner } from '@/components/common/UpdateBanner';
 import { ThemeProvider } from '@/components/common/ThemeProvider';
 import { SkipLink } from '@/components/common/SkipLink';
+import { SentryInitializer } from '@/components/providers/SentryInitializer';
+import { AuthProvider } from '@/components/providers/AuthProvider';
 import { APP_NAME } from '@/lib/constants';
 import './globals.css';
 
@@ -66,7 +70,10 @@ export const viewport: Viewport = {
   userScalable: true,
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }): React.ReactElement {
+export default async function RootLayout({ children }: { children: React.ReactNode }): Promise<React.ReactElement> {
+  const headersList = await headers();
+  const nonce = headersList.get('x-nonce') || undefined;
+
   return (
     <html lang="en" className={inter.variable} suppressHydrationWarning>
       <head>
@@ -77,6 +84,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }):
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <script
+          nonce={nonce}
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{
             __html: `(function(){try{const stored=localStorage.getItem('theme');const prefersDark=window.matchMedia('(prefers-color-scheme: dark)').matches;const shouldDark=stored==='dark'||(!stored&&prefersDark);const root=document.documentElement;if(shouldDark){root.classList.add('dark');}else{root.classList.remove('dark');}}catch(e){}})();`,
           }}
@@ -87,14 +96,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }):
         <ThemeProvider>
           <GlobalErrorHandler>
             <ToastProvider>
-              <UpdateBanner />
-              <Header />
-              <div id="main-content" className="flex-1" tabIndex={-1}>
-                {children}
-              </div>
-              <Footer />
-              <OfflineIndicator />
-              <InstallPrompt />
+              <AuthProvider>
+                <SentryInitializer />
+                <UpdateBanner />
+                <Header />
+                <div id="main-content" className="flex-1" tabIndex={-1}>
+                  {children}
+                </div>
+                <Footer />
+                <OfflineIndicator />
+                <InstallPrompt />
+                <SpeedInsights />
+              </AuthProvider>
             </ToastProvider>
           </GlobalErrorHandler>
         </ThemeProvider>

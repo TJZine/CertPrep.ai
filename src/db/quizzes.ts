@@ -1,9 +1,10 @@
 import { db } from './index';
 import { sanitizeQuestionText } from '@/lib/sanitize';
-import { calculatePercentage, generateUUID } from '@/lib/utils';
+import { calculatePercentage, generateUUID, hashAnswer } from '@/lib/utils';
 import type { Question, Quiz } from '@/types/quiz';
 import type { QuizImportInput } from '@/validators/quizSchema';
-import { formatValidationErrors, validateQuizImport } from '@/validators/quizSchema';
+import { formatValidationErrors, validateQuizImport, QuestionSchema } from '@/validators/quizSchema';
+import { z } from 'zod';
 
 export interface CreateQuizInput {
   title: string;
@@ -23,12 +24,25 @@ export interface QuizStats {
   totalStudyTime: number;
 }
 
-/**
- * Sanitizes all textual fields on questions to ensure safe rendering.
- */
-export function sanitizeQuestions(questions: Question[]): Question[] {
-  return questions.map((question) => {
-    const sanitizedOptions: Record<string, string> = Object.entries(question.options).reduce(
+export function sanitizeQuestions(questions: unknown[]): Question[] {
+  // Validate structure first
+  const parsedQuestions = z.array(QuestionSchema).safeParse(questions);
+  
+  if (!parsedQuestions.success) {
+    // If validation fails, we log it but try to salvage what we can or throw?
+    // For now, let's throw to prevent bad data from entering the DB, as per code review.
+    const errorMsg = formatValidationErrors(parsedQuestions.error.issues.map(issue => ({
+      path: issue.path.map(p => p.toString()),
+      message: issue.message
+    })));
+    throw new Error(`Invalid questions data: ${errorMsg}`);
+  }
+
+  return parsedQuestions.data.map((q) => {
+    // We can trust the shape now, but we still want to sanitize text fields for XSS prevention
+    const options = q.options;
+    
+    const sanitizedOptions: Record<string, string> = Object.entries(options).reduce(
       (acc, [key, value]) => {
         acc[key] = sanitizeQuestionText(value);
         return acc;
@@ -37,15 +51,17 @@ export function sanitizeQuestions(questions: Question[]): Question[] {
     );
 
     return {
-      ...question,
-      id: String(question.id),
-      category: sanitizeQuestionText(question.category),
-      question: sanitizeQuestionText(question.question),
-      explanation: sanitizeQuestionText(question.explanation),
-      distractor_logic: question.distractor_logic ? sanitizeQuestionText(question.distractor_logic) : question.distractor_logic,
-      ai_prompt: question.ai_prompt ? sanitizeQuestionText(question.ai_prompt) : question.ai_prompt,
-      user_notes: question.user_notes ? sanitizeQuestionText(question.user_notes) : question.user_notes,
+      ...q,
+      id: String(q.id),
+      category: sanitizeQuestionText(q.category),
+      question: sanitizeQuestionText(q.question),
+      explanation: sanitizeQuestionText(q.explanation),
+      distractor_logic: q.distractor_logic ? sanitizeQuestionText(q.distractor_logic) : undefined,
+      ai_prompt: q.ai_prompt ? sanitizeQuestionText(q.ai_prompt) : undefined,
+      user_notes: q.user_notes ? sanitizeQuestionText(q.user_notes) : undefined,
       options: sanitizedOptions,
+      correct_answer_hash: q.correct_answer_hash,
+      correct_answer: q.correct_answer,
     };
   });
 }
@@ -61,7 +77,34 @@ export async function createQuiz(input: QuizImportInput, meta?: { sourceId?: str
     throw new Error(`Invalid quiz import: ${message}`);
   }
 
-  const sanitizedQuestions = sanitizeQuestions(validation.data.questions);
+  const sanitizedQuestions = await Promise.all(
+    validation.data.questions.map(async (q) => {
+      const sanitized = sanitizeQuestions([q])[0];
+      if (!sanitized) throw new Error('Failed to sanitize question');
+      
+      // If the input has a raw correct_answer, hash it.
+      // If it already has a hash (importing existing export), keep it.
+      // Note: The validator might need adjustment if we strictly require one or the other.
+      // For now, we assume the input might have the raw answer we need to hash.
+      const qWithAnswer = q as Question & { correct_answer?: string };
+      let hash = qWithAnswer.correct_answer_hash;
+      if (!hash && qWithAnswer.correct_answer) {
+        hash = await hashAnswer(qWithAnswer.correct_answer);
+      }
+      if (!hash) {
+        throw new Error(`Question ${sanitized.id} is missing correct_answer_hash`);
+      }
+      
+      const { correct_answer: _correct_answer, ...rest } = sanitized;
+      void _correct_answer;
+      
+      return {
+        ...rest,
+        correct_answer_hash: hash,
+      };
+    })
+  );
+
   const sanitizedTitle = sanitizeQuestionText(validation.data.title);
   const sanitizedDescription = sanitizeQuestionText(validation.data.description ?? '');
   const sanitizedTags = (validation.data.tags ?? []).map((tag) => sanitizeQuestionText(tag));
@@ -128,6 +171,13 @@ export async function updateQuiz(
 
   if (updates.questions !== undefined) {
     sanitizedUpdates.questions = sanitizeQuestions(updates.questions);
+    
+    // Validate that we aren't introducing questions without hashes
+    sanitizedUpdates.questions.forEach(q => {
+      if (!q.correct_answer_hash && !q.correct_answer) {
+         throw new Error(`Question ${q.id} is missing correct_answer_hash`);
+      }
+    });
   }
 
   if (updates.title !== undefined) {

@@ -1,9 +1,17 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { db } from '@/db';
-import { exportAllData, importData } from '@/lib/dataExport';
+import { generateJSONExport, getStorageStats, importData, type ExportData } from '@/lib/dataExport';
 import type { Quiz } from '@/types/quiz';
 import type { Result } from '@/types/result';
+
+async function getAllDataFromGenerator(): Promise<ExportData> {
+  let jsonString = '';
+  for await (const chunk of generateJSONExport()) {
+    jsonString += chunk;
+  }
+  return JSON.parse(jsonString) as ExportData;
+}
 
 async function resetDatabase(): Promise<void> {
   db.close();
@@ -31,6 +39,7 @@ describe('data export/import', () => {
           B: 'Home Tool Transfer Protocol',
         },
         correct_answer: 'A',
+        correct_answer_hash: 'dummy-hash-123',
         explanation: 'HTTP stands for Hypertext Transfer Protocol.',
       },
     ],
@@ -55,11 +64,22 @@ describe('data export/import', () => {
     await resetDatabase();
   });
 
+  it('calculates storage statistics correctly', async () => {
+    await db.quizzes.put(sampleQuiz);
+    await db.results.put(sampleResult);
+
+    const stats = await getStorageStats();
+
+    expect(stats.quizCount).toBe(1);
+    expect(stats.resultCount).toBe(1);
+    expect(stats.estimatedSizeKB).toBeGreaterThan(0);
+  });
+
   it('preserves quiz and result IDs and links during replace import', async () => {
     await db.quizzes.put(sampleQuiz);
     await db.results.put(sampleResult);
 
-    const exported = await exportAllData();
+    const exported = await getAllDataFromGenerator();
 
     const { quizzesImported, resultsImported } = await importData(exported, 'replace');
 
@@ -78,7 +98,7 @@ describe('data export/import', () => {
     await db.quizzes.put(sampleQuiz);
     await db.results.put(sampleResult);
 
-    const exported = await exportAllData();
+    const exported = await getAllDataFromGenerator();
     const { quizzesImported, resultsImported } = await importData(exported, 'merge');
 
     const quizCount = await db.quizzes.count();
@@ -97,7 +117,7 @@ describe('data export/import', () => {
       quiz_id: '44444444-4444-4444-8444-444444444444',
     };
 
-    const exported: Awaited<ReturnType<typeof exportAllData>> = {
+    const exported: ExportData = {
       version: '1.0',
       exportedAt: new Date().toISOString(),
       quizzes: [sampleQuiz],

@@ -13,7 +13,7 @@ import type { Question } from '@/types/quiz';
 interface MissedQuestion {
   question: Question;
   userAnswer: string | null;
-  correctAnswer: string;
+  correctAnswer: string | null;
 }
 
 interface SmartActionsProps {
@@ -81,11 +81,11 @@ export function SmartActions({
 
       questions.forEach((q, index) => {
         const userAnswerText = q.userAnswer ? q.question.options[q.userAnswer] : 'No answer provided';
-        const correctAnswerText = q.question.options[q.correctAnswer];
+        const correctAnswerText = q.correctAnswer ? q.question.options[q.correctAnswer] : 'Unknown';
 
         prompt += `**Question ${index + 1}:** ${q.question.question}\n`;
         prompt += `- My Answer: ${q.userAnswer ? `${q.userAnswer}) ${userAnswerText}` : 'N/A - No answer provided'}\n`;
-        prompt += `- Correct Answer: ${q.correctAnswer}) ${correctAnswerText}\n\n`;
+        prompt += `- Correct Answer: ${q.correctAnswer ? `${q.correctAnswer}) ${correctAnswerText}` : 'Unknown'}\n\n`;
       });
     });
 

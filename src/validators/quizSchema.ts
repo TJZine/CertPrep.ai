@@ -39,7 +39,8 @@ export const QuestionSchema = z
     options: z
       .record(OptionKeyString, OptionValueString)
       .refine((opts) => Object.keys(opts).length >= 2, 'At least 2 options are required'),
-    correct_answer: requiredString('Correct answer'),
+    correct_answer: TrimmedString.optional(),
+    correct_answer_hash: TrimmedString.optional(),
     explanation: requiredString('Explanation'),
     distractor_logic: TrimmedString.optional(),
     ai_prompt: TrimmedString.optional(),
@@ -47,10 +48,17 @@ export const QuestionSchema = z
   })
   .superRefine((data, ctx) => {
     // Ensure the provided correct answer exists within the options record.
-    if (!(data.correct_answer in data.options)) {
+    if (data.correct_answer && !(data.correct_answer in data.options)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: 'Correct answer must match one of the option keys',
+        path: ['correct_answer'],
+      });
+    }
+    if (!data.correct_answer && !data.correct_answer_hash) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Either correct_answer or correct_answer_hash must be provided',
         path: ['correct_answer'],
       });
     }

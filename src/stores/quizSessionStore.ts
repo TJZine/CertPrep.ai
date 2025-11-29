@@ -5,6 +5,7 @@ import { enableMapSet } from 'immer';
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { SPACED_REPETITION, TIMER } from '@/lib/constants';
+import { hashAnswer } from '@/lib/utils';
 import type { Question, QuizMode } from '@/types/quiz';
 
 enableMapSet();
@@ -40,8 +41,9 @@ interface QuizSessionState {
   hardQuestions: Set<string>;
   flaggedQuestions: Set<string>;
   startTime: number | null;
-  endTime: number | null;
+  endTime?: number | null;
   isComplete: boolean;
+  isSubmitting: boolean;
   isPaused: boolean;
   // Proctor-specific
   seenQuestions: Set<string>;
@@ -105,6 +107,7 @@ const createInitialState = (): QuizSessionState => ({
   startTime: null,
   endTime: null,
   isComplete: false,
+  isSubmitting: false,
   isPaused: false,
   seenQuestions: new Set<string>(),
   examDurationMinutes: TIMER.DEFAULT_EXAM_DURATION_MINUTES,
@@ -286,63 +289,156 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
     },
 
     submitAnswer: (): void => {
-      set((state) => {
-        if (state.isComplete) {
-          return;
-        }
+      const state = get();
+      if (state.isComplete) {
+        return;
+      }
 
-        const questionId = state.questionQueue[state.currentIndex];
-        if (!questionId || !state.selectedAnswer) {
-          return;
-        }
+      const questionId = state.questionQueue[state.currentIndex];
+      if (!questionId || !state.selectedAnswer) {
+        return;
+      }
 
-        const question = state.questions.find((q) => q.id === questionId);
-        if (!question) {
-          return;
-        }
+      const question = state.questions.find((q) => q.id === questionId);
+      if (!question) {
+        return;
+      }
 
-        const isCorrect = state.selectedAnswer === question.correct_answer;
-        const previousDifficulty = state.answers.get(questionId)?.difficulty ?? null;
-        const record: AnswerRecord = {
-          questionId,
-          selectedAnswer: state.selectedAnswer,
-          isCorrect,
-          timestamp: Date.now(),
-          difficulty: previousDifficulty,
-        };
+      // Capture values needed for async operation
+      const currentSelectedAnswer = state.selectedAnswer;
 
-        state.answers.set(questionId, record);
-        state.answeredQuestions.add(questionId);
-        state.hasSubmitted = true;
-        state.showExplanation = !isCorrect;
+      // Optimistic update or loading state could go here if needed
+      if (state.isSubmitting) return;
+      
+      set((draft) => {
+        draft.isSubmitting = true;
       });
+      
+      hashAnswer(currentSelectedAnswer)
+        .then((hashedSelection) => {
+          set((draft) => {
+            // Re-validate state in case it changed during async op
+            const currentQ = draft.questions.find((q) => q.id === questionId);
+            // Ensure we are still on the same question and state is valid
+            // Also ensure the user hasn't changed their selection while we were hashing
+            if (!currentQ || 
+                draft.questionQueue[draft.currentIndex] !== questionId ||
+                draft.selectedAnswer !== currentSelectedAnswer) {
+              return;
+            }
+            
+            let isCorrect = false;
+            if (currentQ.correct_answer_hash) {
+              isCorrect = hashedSelection === currentQ.correct_answer_hash;
+            } else if (currentQ.correct_answer) {
+              // Fallback for legacy quizzes or missing hashes
+              isCorrect = currentSelectedAnswer === currentQ.correct_answer;
+            }
+            const previousDifficulty = draft.answers.get(questionId)?.difficulty ?? null;
+            
+            const record: AnswerRecord = {
+              questionId,
+              selectedAnswer: currentSelectedAnswer,
+              isCorrect,
+              timestamp: Date.now(),
+              difficulty: previousDifficulty,
+            };
+
+            draft.answers.set(questionId, record);
+            draft.answeredQuestions.add(questionId);
+            draft.hasSubmitted = true;
+            draft.showExplanation = !isCorrect;
+            draft.isSubmitting = false;
+          });
+        })
+        .catch((err) => {
+          console.error('Failed to hash answer in submitAnswer', err);
+          // Reset state to allow retry
+          // Reset state to allow retry
+          set((draft) => {
+             draft.hasSubmitted = false;
+             draft.isSubmitting = false;
+          });
+          // We can't easily trigger a toast from here without injecting the hook or a global event emitter.
+          // For now, we rely on the UI checking hasSubmitted or we could add an error state to the store.
+          // Let's add a transient error state if we want to be fancy, but resetting hasSubmitted is the minimal fix
+          // to prevent the UI from getting stuck.
+          // Ideally we would dispatch a custom event or use a callback.
+          if (typeof window !== 'undefined') {
+             window.dispatchEvent(new CustomEvent('quiz-error', { detail: 'Failed to submit answer. Please try again.' }));
+          }
+        });
     },
 
     selectAnswerProctor: (answerId): void => {
-      set((state) => {
-        if (state.isComplete || state.mode !== 'proctor') {
-          return;
-        }
-        const questionId = state.questionQueue[state.currentIndex];
-        if (!questionId) {
-          return;
-        }
-        const question = state.questions.find((q) => q.id === questionId);
-        if (!question) {
-          return;
-        }
-        state.selectedAnswer = answerId;
-        const isCorrect = answerId === question.correct_answer;
-        state.answers.set(questionId, {
-          questionId,
-          selectedAnswer: answerId,
-          isCorrect,
-          timestamp: Date.now(),
-          difficulty: null,
-        });
-        state.answeredQuestions.add(questionId);
-        state.seenQuestions.add(questionId);
+      const state = get();
+      if (state.isComplete || state.mode !== 'proctor') {
+        return;
+      }
+      const questionId = state.questionQueue[state.currentIndex];
+      if (!questionId) {
+        return;
+      }
+      const question = state.questions.find((q) => q.id === questionId);
+      if (!question) {
+        return;
+      }
+
+      set((draft) => {
+        draft.selectedAnswer = answerId;
+        draft.isSubmitting = true;
       });
+      
+      // Async hash check for proctor mode
+      hashAnswer(answerId)
+        .then((hashedSelection) => {
+            set((draft) => {
+              const currentQ = draft.questions.find((q) => q.id === questionId);
+              // Ensure we are still on the same question
+              // And ensure the user hasn't changed their selection since this hash started
+              if (!currentQ || 
+                  draft.questionQueue[draft.currentIndex] !== questionId ||
+                  draft.selectedAnswer !== answerId) {
+                return;
+              }
+              
+              let isCorrect = false;
+              if (currentQ.correct_answer_hash) {
+                isCorrect = hashedSelection === currentQ.correct_answer_hash;
+              } else if (currentQ.correct_answer) {
+                // Fallback for legacy quizzes
+                isCorrect = answerId === currentQ.correct_answer;
+              }
+
+              draft.answers.set(questionId, {
+                questionId,
+                selectedAnswer: answerId,
+                isCorrect,
+                timestamp: Date.now(),
+                difficulty: null,
+              });
+              draft.answeredQuestions.add(questionId);
+              draft.seenQuestions.add(questionId);
+              draft.isSubmitting = false;
+            });
+        })
+        .catch((err) => {
+          console.error('Failed to hash answer in selectAnswerProctor', err);
+          // Reset isSubmitting on error
+          set((draft) => {
+            draft.isSubmitting = false;
+            // Optionally clear selection to indicate it wasn't saved
+            // draft.selectedAnswer = null;
+          });
+          // Notify user
+          if (typeof window !== 'undefined') {
+             window.dispatchEvent(new CustomEvent('quiz-error', { detail: 'Failed to save answer. Please check your connection.' }));
+          }
+          
+          // Recovery: Save raw answer to a local queue or just retry?
+          // For now, we will just ensure the UI reflects that it wasn't saved (it won't be in answers map).
+          // The user can try selecting again.
+        });
     },
 
     markAgain: (): void => {
