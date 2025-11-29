@@ -16,6 +16,10 @@ export function useQuizGrading(quiz: Quiz | null, answers: Record<string, string
   const [grading, setGrading] = useState<GradingResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Memoize the answers string to prevent the effect from running on every render
+  // useLiveQuery returns a new object reference every time, even if data hasn't changed
+  const answersJson = JSON.stringify(answers);
+
   useEffect((): (() => void) | void => {
     if (!quiz || !answers) {
       setGrading(null);
@@ -68,7 +72,8 @@ export function useQuizGrading(quiz: Quiz | null, answers: Record<string, string
     return () => {
       isMounted = false;
     };
-  }, [quiz, answers]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [quiz, answersJson]); // Depend on answersJson instead of answers
 
   return { grading, isLoading };
 }

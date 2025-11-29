@@ -24,12 +24,6 @@ export interface QuizStats {
   totalStudyTime: number;
 }
 
-/**
- * Sanitizes all textual fields on questions to ensure safe rendering.
- */
-/**
- * Sanitizes all textual fields on questions to ensure safe rendering.
- */
 export function sanitizeQuestions(questions: unknown[]): Question[] {
   // Validate structure first
   const parsedQuestions = z.array(QuestionSchema).safeParse(questions);

@@ -390,7 +390,7 @@ CREATE POLICY "Users can update own results" ON results
 
 **Context:** Need modern React framework with SSR support.
 
-**Decision:** Use Next.js 14 with App Router.
+**Decision:** Use Next.js 16 with App Router.
 
 **Consequences:**
 - ✅ Built-in SSR/SSG

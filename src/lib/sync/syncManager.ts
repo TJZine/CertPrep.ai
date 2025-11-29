@@ -1,3 +1,5 @@
+'use client';
+
 import { db } from '@/db';
 import { logger } from '@/lib/logger';
 import { getSyncCursor, setSyncCursor } from '@/db/syncState';

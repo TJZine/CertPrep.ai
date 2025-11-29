@@ -23,7 +23,7 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
   
   const cspHeader = `
     default-src 'self';
-    script-src 'self' 'nonce-${nonce}' ${isDev ? "'unsafe-eval'" : ''} https://js.hcaptcha.com https://*.hcaptcha.com;
+    script-src 'self' 'nonce-${nonce}' ${isDev ? "'unsafe-eval'" : ''} https://js.hcaptcha.com https://*.hcaptcha.com https://*.sentry.io;
     style-src 'self' 'unsafe-inline' https://hcaptcha.com https://*.hcaptcha.com;
     img-src 'self' blob: data:;
     font-src 'self';
@@ -31,9 +31,10 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
     base-uri 'self';
     form-action 'self';
     frame-ancestors 'self' https://hcaptcha.com https://*.hcaptcha.com;
+    frame-src 'self' https://sentry.io https://browser.sentry-cdn.com;
     block-all-mixed-content;
     upgrade-insecure-requests;
-    connect-src 'self' ${supabaseUrl} ${supabaseHostname ? `wss://${supabaseHostname}` : ''} *.sentry.io https://hcaptcha.com https://*.hcaptcha.com;
+    connect-src 'self' ${supabaseUrl} ${supabaseHostname ? `wss://${supabaseHostname}` : ''} *.sentry.io https://hcaptcha.com https://*.hcaptcha.com https://browser.sentry-cdn.com;
     worker-src 'self' blob:;
   `
   // Replace newlines with spaces

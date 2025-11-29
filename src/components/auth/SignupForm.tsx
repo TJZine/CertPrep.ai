@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
@@ -16,6 +16,7 @@ export default function SignupForm(): React.ReactElement {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const captchaRef = useRef<HCaptcha>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -53,6 +54,8 @@ export default function SignupForm(): React.ReactElement {
 
       if (error) {
         setError(getAuthErrorMessage(error));
+        captchaRef.current?.resetCaptcha();
+        setCaptchaToken(null);
         return;
       }
 
@@ -145,8 +148,10 @@ export default function SignupForm(): React.ReactElement {
 
         <div className="flex justify-center">
           <HCaptcha
+            ref={captchaRef}
             sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY || ''}
             onVerify={(token) => setCaptchaToken(token)}
+            onExpire={() => setCaptchaToken(null)}
           />
         </div>
 

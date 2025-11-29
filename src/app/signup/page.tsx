@@ -2,7 +2,7 @@ import SignupForm from '@/components/auth/SignupForm';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Sign Up | CertPrep.ai',
+  title: 'Sign Up',
   description: 'Create a new CertPrep.ai account',
 };
 

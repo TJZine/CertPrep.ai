@@ -102,10 +102,13 @@ export function ResultsContainer({ result, quiz, previousScore }: ResultsContain
 
   const [questionFilter, setQuestionFilter] = React.useState<FilterType>('all');
   
+  const hasSetInitialFilter = React.useRef(false);
+
   // Update filter once grading is done
   React.useEffect(() => {
-    if (missedQuestions.length > 0) {
+    if (missedQuestions.length > 0 && !hasSetInitialFilter.current) {
       setQuestionFilter('incorrect');
+      hasSetInitialFilter.current = true;
     }
   }, [missedQuestions.length]);
 

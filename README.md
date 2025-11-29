@@ -82,19 +82,12 @@ README.md - CertPrep.ai
 <details>
 <summary>Click to expand</summary>
 
-- [Features](#-features)
-- [Demo](#-demo)
-- [Getting Started](#-getting-started)
+- [Features](#features)
+- [Demo](#demo)
+- [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
   - [Environment Setup](#environment-setup)
-- [Usage](#-usage)
-- [Architecture](#-architecture)
-- [Documentation](#-documentation)
-- [API Reference](#-api-reference)
-- [Testing](#-testing)
-- [Deployment](#-deployment)
-- [Contributing](#-contributing)
 - [Security](#-security)
 - [License](#-license)
 - [Acknowledgments](#-acknowledgments)

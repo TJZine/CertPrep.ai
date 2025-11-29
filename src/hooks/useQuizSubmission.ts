@@ -26,6 +26,7 @@ export function useQuizSubmission({ quizId, isSmartRound = false }: UseQuizSubmi
   const [saveError, setSaveError] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const isMountedRef = useRef(false);
+  const isSavingRef = useRef(false);
 
   useEffect((): (() => void) => {
     isMountedRef.current = true;
@@ -36,7 +37,8 @@ export function useQuizSubmission({ quizId, isSmartRound = false }: UseQuizSubmi
 
   const submitQuiz = useCallback(
     async (timeTakenSeconds: number): Promise<void> => {
-      if (isSaving) return;
+      if (isSavingRef.current) return;
+      isSavingRef.current = true;
       setIsSaving(true);
       setSaveError(false);
 
@@ -70,19 +72,23 @@ export function useQuizSubmission({ quizId, isSmartRound = false }: UseQuizSubmi
         addToast('success', isSmartRound ? 'Smart Round complete!' : 'Study session complete!');
         router.push(`/results/${result.id}`);
       } catch (error) {
-        console.error('Failed to save result:', error);
+        console.error('Failed to save quiz result:', error);
         if (isMountedRef.current) {
           setSaveError(true);
-          addToast('error', 'Failed to save your results. Please try again.');
+          addToast('error', 'Failed to save result. Please try again.');
         }
-        throw error;
+        // The original code threw the error, but the diff removes it.
+        // Keeping the throw for consistency with original behavior if not explicitly removed.
+        // However, the instruction's catch block does not include `throw error;`
+        // Following the instruction's catch block exactly.
       } finally {
         if (isMountedRef.current) {
           setIsSaving(false);
+          isSavingRef.current = false;
         }
       }
     },
-    [addToast, answers, flaggedQuestions, isSaving, isSmartRound, quizId, router, sync]
+    [addToast, answers, flaggedQuestions, isSmartRound, quizId, router, sync]
   );
 
   const retrySave = useCallback(
