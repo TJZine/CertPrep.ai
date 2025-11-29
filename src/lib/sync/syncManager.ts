@@ -72,24 +72,25 @@ export async function syncResults(userId: string): Promise<void> {
       }
     }
 
-    // 2. PULL: Incremental Sync
+    // 2. PULL: Incremental Sync with Keyset Pagination
     let hasMore = true;
 
     while (hasMore) {
       const cursor = await getSyncCursor(userId);
+      
+      // Use keyset pagination (created_at, id) to handle identical timestamps
+      // Logic: (created_at > last_ts) OR (created_at = last_ts AND id > last_id)
+      const filter = `created_at.gt.${cursor.timestamp},and(created_at.eq.${cursor.timestamp},id.gt.${cursor.lastId})`;
 
-      // Note: We use 'gt' (greater than) for the cursor.
-      // Edge Case: If a large batch of records (>= BATCH_SIZE) shares the EXACT same millisecond timestamp,
-      // records beyond the batch limit might be skipped in the next iteration.
-      // For a quiz app, this is acceptable (unlikely to have >50 completions in 1ms).
       const { data: remoteResults, error: fetchError } = await supabase
         .from('results')
         .select(
           'id, quiz_id, timestamp, mode, score, time_taken_seconds, answers, flagged_questions, category_breakdown, created_at'
         )
         .eq('user_id', userId)
-        .gt('created_at', cursor)
+        .or(filter)
         .order('created_at', { ascending: true })
+        .order('id', { ascending: true })
         .limit(BATCH_SIZE);
 
       if (fetchError) {
@@ -104,10 +105,12 @@ export async function syncResults(userId: string): Promise<void> {
       }
 
       const resultsToSave: Result[] = [];
-      let lastRecordCreatedAt = cursor;
+      let lastRecordCreatedAt = cursor.timestamp;
+      let lastRecordId = cursor.lastId;
 
       for (const r of remoteResults) {
         lastRecordCreatedAt = r.created_at;
+        lastRecordId = r.id;
 
         const validation = RemoteResultSchema.safeParse(r);
 
@@ -137,9 +140,8 @@ export async function syncResults(userId: string): Promise<void> {
         await db.results.bulkPut(resultsToSave);
       }
       
-      // Always update cursor to the last seen record's timestamp
-      // This ensures we don't get stuck in an infinite loop if a batch contains only invalid records
-      await setSyncCursor(userId, lastRecordCreatedAt);
+      // Update cursor to the last seen record's timestamp AND id
+      await setSyncCursor(userId, lastRecordCreatedAt, lastRecordId);
 
       if (remoteResults.length < BATCH_SIZE) {
         hasMore = false;

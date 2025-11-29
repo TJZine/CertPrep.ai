@@ -70,7 +70,8 @@ export const createClient = async (): Promise<ReturnType<typeof createServerClie
       throw error
     }
     // In production, return fallback to prevent crash (will fail on actual operations)
-    logger.warn('Using fallback Supabase client - auth operations will fail')
-    return createServerClient('https://placeholder.supabase.co', 'placeholder-key', { cookies: {} as unknown as Parameters<typeof createServerClient>[2]['cookies'] })
+    // REFACTOR: Throwing in production to ensure immediate visibility of config errors.
+    logger.error('CRITICAL: Supabase environment variables are missing in production. Auth will not work.')
+    throw new Error('Critical System Error: Missing Supabase Configuration');
   }
 }

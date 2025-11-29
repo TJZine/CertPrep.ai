@@ -13,12 +13,20 @@ export class CertPrepDatabase extends Dexie {
 
   public results!: Table<Result, string>;
 
-  public syncState!: Table<{ userId: string; lastSyncedAt: string }, string>;
+  public syncState!: Table<{ userId: string; lastSyncedAt: string; lastId?: string }, string>;
 
   constructor() {
     super('CertPrepDatabase');
 
     // Define schema version and indexes.
+    // Version 3: Added keyset pagination support (lastId) to syncState
+    this.version(3).stores({
+      quizzes: 'id, title, created_at, *tags, sourceId',
+      results: 'id, quiz_id, timestamp, mode, score, synced',
+      syncState: 'userId',
+    });
+
+    // Version 2 (Legacy)
     this.version(2).stores({
       quizzes: 'id, title, created_at, *tags, sourceId',
       results: 'id, quiz_id, timestamp, mode, score, synced',

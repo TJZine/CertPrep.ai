@@ -68,29 +68,55 @@ function sanitizeResultRecord(result: unknown): Result | null {
 }
 
 /**
- * Export all user data as JSON.
+ * Generator that streams the export JSON in chunks.
+ * This prevents Out-Of-Memory errors for large datasets.
  */
-export async function exportAllData(): Promise<ExportData> {
-  // TODO: CRITICAL - This loads all data into memory at once.
-  // For large datasets (e.g., >10k results), this will crash the browser.
-  // Future improvement: Implement chunked processing or streaming.
-  const quizzes = await db.quizzes.toArray();
-  const results = await db.results.toArray();
+export async function* generateJSONExport(): AsyncGenerator<string> {
+  yield `{\n  "version": "1.0",\n  "exportedAt": "${new Date().toISOString()}",\n  "quizzes": [`;
 
-  return {
-    version: '1.0',
-    exportedAt: new Date().toISOString(),
-    quizzes,
-    results,
-  };
+  let offset = 0;
+  const BATCH_SIZE = 100;
+  
+  while (true) {
+    const batch = await db.quizzes.offset(offset).limit(BATCH_SIZE).toArray();
+    if (batch.length === 0) break;
+    
+    for (let i = 0; i < batch.length; i++) {
+      if (offset > 0 || i > 0) yield ',';
+      yield JSON.stringify(batch[i]);
+    }
+    offset += batch.length;
+  }
+  
+  yield `],\n  "results": [`;
+  
+  offset = 0;
+  while (true) {
+    const batch = await db.results.offset(offset).limit(BATCH_SIZE).toArray();
+    if (batch.length === 0) break;
+    
+    for (let i = 0; i < batch.length; i++) {
+      if (offset > 0 || i > 0) yield ',';
+      yield JSON.stringify(batch[i]);
+    }
+    offset += batch.length;
+  }
+  
+  yield `]\n}`;
 }
 
 /**
- * Download data as a JSON file.
+ * Download data as a JSON file using streaming to minimize memory usage.
  */
 export async function downloadDataAsFile(): Promise<void> {
-  const data = await exportAllData();
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const parts: string[] = [];
+  
+  // Consume the generator
+  for await (const chunk of generateJSONExport()) {
+    parts.push(chunk);
+  }
+  
+  const blob = new Blob(parts, { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
@@ -230,16 +256,17 @@ export async function getStorageStats(): Promise<{
   resultCount: number;
   estimatedSizeKB: number;
 }> {
-  const quizzes = await db.quizzes.toArray();
-  const results = await db.results.toArray();
-  const quizzesJson = JSON.stringify(quizzes);
-  const resultsJson = JSON.stringify(results);
-  // TODO: This is memory intensive. Use db.stats() or estimate based on count in future.
-  const estimatedSizeKB = Math.round((quizzesJson.length + resultsJson.length) / 1024);
+  // Optimized: Use count() instead of toArray() to avoid loading all data
+  const quizCount = await db.quizzes.count();
+  const resultCount = await db.results.count();
+  
+  // Estimation: ~2KB per quiz (with questions), ~1KB per result
+  // This is faster and uses O(1) memory compared to JSON.stringify(allData)
+  const estimatedSizeKB = Math.round((quizCount * 2 + resultCount * 1) * 1024 / 1024);
 
   return {
-    quizCount: quizzes.length,
-    resultCount: results.length,
+    quizCount,
+    resultCount,
     estimatedSizeKB,
   };
 }
