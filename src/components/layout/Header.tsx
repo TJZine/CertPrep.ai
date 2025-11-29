@@ -6,6 +6,8 @@ import { usePathname } from 'next/navigation';
 import { Menu, X, LogOut, Moon, Sun, Home, BarChart3, Library, Settings as SettingsIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { lockBodyScroll, unlockBodyScroll } from '@/lib/bodyScrollLock';
+import { useTheme } from '@/components/common/ThemeProvider';
+
 import { useAuth } from '@/components/providers/AuthProvider';
 import { Button } from '@/components/ui/Button';
 
@@ -16,14 +18,10 @@ const navigation = [
   { name: 'Settings', href: '/settings', icon: SettingsIcon },
 ];
 
-
-
-/**
- * Sticky application header with main navigation.
- */
 export function Header(): React.ReactElement {
   const pathname = usePathname();
   const { user, signOut } = useAuth();
+  const { toggleTheme } = useTheme();
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const mobilePanelId = React.useId();
   const firstMobileLinkRef = React.useRef<HTMLAnchorElement>(null);
@@ -101,9 +99,6 @@ export function Header(): React.ReactElement {
     return (): void => document.removeEventListener('keydown', handleKeyDown);
   }, [isMenuOpen]);
 
-  // Placeholder for theme toggle logic if next-themes is not available
-  // const [theme, setTheme] = React.useState('light');
-
   const handleSignOut = async (): Promise<void> => {
     setIsMenuOpen(false);
     const result = await signOut();
@@ -113,10 +108,7 @@ export function Header(): React.ReactElement {
   };
 
   const handleThemeToggle = (): void => {
-    // This is a placeholder. Real implementation should likely use a context or local storage
-    // consistent with ThemeToggle.tsx
-    // setTheme(prev => prev === 'dark' ? 'light' : 'dark');
-    document.documentElement.classList.toggle('dark');
+    toggleTheme();
   };
 
   return (

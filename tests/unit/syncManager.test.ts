@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { syncResults } from '@/lib/sync/syncManager';
 import { db } from '@/db';
 import * as syncState from '@/db/syncState';
+import type { Result } from '@/types/result';
 
 // Mock dependencies
 vi.mock('@/db', () => ({
@@ -111,5 +112,57 @@ describe('SyncManager', () => {
     expect(mockRequest).toHaveBeenCalledWith('sync-results', { ifAvailable: true }, expect.any(Function));
     
     vi.unstubAllGlobals();
+  });
+
+  it('should push unsynced local results to Supabase', async () => {
+    const unsyncedResults = [
+      { id: 'local-1', score: 100, synced: 0 },
+      { id: 'local-2', score: 90, synced: 0 }
+    ];
+
+    // Mock local DB returning unsynced items
+    vi.mocked(db.results.toArray).mockResolvedValueOnce(unsyncedResults as unknown as Result[]);
+    
+    // Mock Supabase upsert success
+    mockSupabase.upsert.mockResolvedValue({ error: null });
+    
+    // Mock empty pull response to stop loop
+    mockSupabase.limit.mockResolvedValue({ data: [], error: null });
+
+    await syncResults('user-123');
+
+    // Verify upsert called with correct data (excluding 'synced' field)
+    expect(mockSupabase.upsert).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({ id: 'local-1', score: 100 }),
+        expect.objectContaining({ id: 'local-2', score: 90 })
+      ]),
+      { onConflict: 'id' }
+    );
+
+    // Verify local DB updated to synced: 1
+    expect(db.results.bulkUpdate).toHaveBeenCalledWith([
+      { key: 'local-1', changes: { synced: 1 } },
+      { key: 'local-2', changes: { synced: 1 } }
+    ]);
+  });
+
+  it('should not mark results as synced if push fails', async () => {
+    const unsyncedResults = [
+      { id: 'local-1', score: 100, synced: 0 }
+    ];
+
+    vi.mocked(db.results.toArray).mockResolvedValueOnce(unsyncedResults as unknown as Result[]);
+    
+    // Mock Supabase upsert failure
+    mockSupabase.upsert.mockResolvedValue({ error: { message: 'Network error' } });
+    
+    mockSupabase.limit.mockResolvedValue({ data: [], error: null });
+
+    await syncResults('user-123');
+
+    expect(mockSupabase.upsert).toHaveBeenCalled();
+    // Verify bulkUpdate was NOT called
+    expect(db.results.bulkUpdate).not.toHaveBeenCalled();
   });
 });

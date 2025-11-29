@@ -159,7 +159,6 @@ describe.skipIf(!shouldRun)('Row Level Security (RLS) Verification', () => {
   });
 
   it('User A should be able to insert and read their own results', async () => {
-    if (!userA) return;
 
     const resultId = generateUUID();
     const resultData = {
@@ -193,7 +192,6 @@ describe.skipIf(!shouldRun)('Row Level Security (RLS) Verification', () => {
   });
 
   it('User B should NOT be able to read User A\'s results', async () => {
-    if (!userA || !userB) return;
 
     // User A creates a record (already done in previous test, but let's make a new one to be sure)
     const resultId = generateUUID();
@@ -225,7 +223,6 @@ describe.skipIf(!shouldRun)('Row Level Security (RLS) Verification', () => {
   });
 
   it('User B should NOT be able to update User A\'s results', async () => {
-    if (!userA || !userB) return;
 
     // User A creates a record
     const resultId = generateUUID();

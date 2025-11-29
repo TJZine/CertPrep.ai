@@ -110,7 +110,7 @@ export function useAnalyticsStats(results: Result[], quizzes: Quiz[]): Analytics
         const days: Map<string, number> = new Map();
 
         const formatDate = (timestamp: number): string => {
-          return new Date(timestamp).toLocaleDateString(undefined, {
+          return new Date(timestamp).toLocaleDateString('en-US', {
             month: 'short',
             day: 'numeric',
           });

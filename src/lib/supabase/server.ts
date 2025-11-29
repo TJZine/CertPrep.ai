@@ -41,10 +41,12 @@ export const createClient = async (): Promise<ReturnType<typeof createServerClie
                 secure: process.env.NODE_ENV === 'production',
                 sameSite: 'lax',
               })
-            } catch {
+            } catch (error) {
               // The `cookies().set()` method can only be called in a Server Component or Route Handler.
               // This error `cookies().set()` will cause when called from a Client Component.
-              // console.warn('Could not set cookie from Server Client:', error)
+              if (process.env.NODE_ENV === 'development') {
+                console.warn('Could not set cookie from Server Client:', error)
+              }
             }
           },
           remove(name: string, options: CookieOptions) {
@@ -57,8 +59,10 @@ export const createClient = async (): Promise<ReturnType<typeof createServerClie
                 secure: process.env.NODE_ENV === 'production',
                 sameSite: 'lax',
               })
-            } catch {
-              // console.warn('Could not remove cookie from Server Client:', error)
+            } catch (error) {
+              if (process.env.NODE_ENV === 'development') {
+                console.warn('Could not remove cookie from Server Client:', error)
+              }
             }
           },
         },

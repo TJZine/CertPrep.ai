@@ -1,6 +1,6 @@
 'use client';
 
-import type { SyncState } from '@/types/sync';
+// import type { SyncState } from '@/types/sync'; // Removed unused import
 import { db } from '@/db';
 import { logger } from '@/lib/logger';
 import { getSyncCursor, setSyncCursor } from '@/db/syncState';
@@ -100,7 +100,8 @@ async function performSync(userId: string): Promise<void> {
             answers: r.answers,
             flagged_questions: r.flagged_questions,
             category_breakdown: r.category_breakdown,
-          }))
+          })),
+          { onConflict: 'id' }
         );
 
         if (error) {
@@ -111,50 +112,6 @@ async function performSync(userId: string): Promise<void> {
           await db.results.bulkUpdate(
             batch.map((r) => ({ key: r.id, changes: { synced: 1 } }))
           );
-        }
-      }
-    }
-
-    // 2. PUSH: Sync State (Progress)
-    const pendingSyncs = (await db.syncState.where('synced').equals(0).toArray()) as unknown as SyncState[];
-      
-    if (pendingSyncs.length > 0) {
-      // Group by table for batching
-      const batches: Record<string, SyncState[]> = {};
-      pendingSyncs.forEach(item => {
-        const table = item.table;
-        if (!batches[table]) {
-          batches[table] = [];
-        }
-        batches[table].push(item);
-      });
-
-      for (const [table, items] of Object.entries(batches)) {
-        // Process in chunks of 50 to avoid payload limits
-        const chunks = [];
-        for (let i = 0; i < items.length; i += 50) {
-          chunks.push(items.slice(i, i + 50));
-        }
-
-        for (const chunk of chunks) {
-          // Validate data before upserting to avoid 'any' cast issues
-          const safeData = chunk.map(i => {
-             // Ensure data is an object if present, otherwise ignore
-             return typeof i.data === 'object' ? i.data : {};
-          });
-
-          const { error } = await getSupabaseClient()
-            .from(table)
-            .upsert(safeData);
-
-          if (error) {
-            console.error(`Sync error for ${table}:`, error);
-          } else {
-            // Mark as synced only on success
-            await db.syncState.bulkPut(
-              chunk.map(i => ({ ...i, synced: 1, lastSyncedAt: Date.now() }))
-            );
-          }
         }
       }
     }

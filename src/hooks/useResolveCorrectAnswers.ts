@@ -6,8 +6,9 @@ import type { Question } from '@/types/quiz';
  * Asynchronously resolves correct answer keys for a list of questions.
  * Returns a map of questionId -> correctKey.
  */
-export function useResolveCorrectAnswers(questions: Question[]): Record<string, string> {
+export function useResolveCorrectAnswers(questions: Question[]): { resolvedAnswers: Record<string, string>; isResolving: boolean } {
   const [resolved, setResolved] = useState<Record<string, string>>({});
+  const [isResolving, setIsResolving] = useState(true);
 
   // Create stable key for dependency comparison to prevent unnecessary re-runs
   const questionsKey = useMemo(
@@ -16,9 +17,13 @@ export function useResolveCorrectAnswers(questions: Question[]): Record<string, 
   );
 
   useEffect((): (() => void) | void => {
-    if (!questions.length) return;
+    if (!questions.length) {
+      setIsResolving(false);
+      return;
+    }
 
     let isMounted = true;
+    setIsResolving(true);
 
     const resolveAll = async (): Promise<void> => {
       try {
@@ -47,6 +52,10 @@ export function useResolveCorrectAnswers(questions: Question[]): Record<string, 
         }
       } catch (error) {
         console.error('Failed to resolve answers:', error);
+      } finally {
+        if (isMounted) {
+          setIsResolving(false);
+        }
       }
     };
 
@@ -57,5 +66,5 @@ export function useResolveCorrectAnswers(questions: Question[]): Record<string, 
     };
   }, [questionsKey, questions]); // Depend on stable key
 
-  return resolved;
+  return { resolvedAnswers: resolved, isResolving };
 }

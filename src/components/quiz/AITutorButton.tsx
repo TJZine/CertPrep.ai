@@ -32,7 +32,8 @@ export function AITutorButton({
   const { resolvedAnswers } = useCorrectAnswer(
     quizId,
     question.id,
-    question.correct_answer_hash || null
+    question.correct_answer_hash || null,
+    question.options
   );
 
   const correctAnswerKey = resolvedAnswers[question.id] || question.correct_answer;

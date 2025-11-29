@@ -32,7 +32,6 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
     form-action 'self';
     frame-ancestors 'self' https://hcaptcha.com https://*.hcaptcha.com;
     frame-src 'self' https://hcaptcha.com https://*.hcaptcha.com https://sentry.io https://browser.sentry-cdn.com;
-    block-all-mixed-content;
     upgrade-insecure-requests;
     connect-src 'self' ${supabaseUrl} ${supabaseHostname ? `wss://${supabaseHostname}` : ''} *.sentry.io https://hcaptcha.com https://*.hcaptcha.com https://browser.sentry-cdn.com;
     worker-src 'self' blob:;

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { hashAnswer } from '@/lib/utils';
 
 /**
  * Asynchronously resolves the correct answer key for a question by hashing options.
@@ -6,7 +7,8 @@ import { useState, useEffect } from 'react';
 export function useCorrectAnswer(
   quizId: string | null,
   questionId: string | null,
-  targetHash: string | null
+  targetHash: string | null,
+  options?: Record<string, string>
 ): { resolvedAnswers: Record<string, string>; isResolving: boolean } {
   const [resolvedAnswers, setResolvedAnswers] = useState<Record<string, string>>({});
   const [isResolving, setIsResolving] = useState(false);
@@ -15,7 +17,7 @@ export function useCorrectAnswer(
     let isMounted = true;
 
     const resolveAnswer = async (): Promise<void> => {
-      if (!quizId || !questionId || !targetHash) return;
+      if (!questionId || !targetHash || !options) return;
       
       // Check if already resolved
       if (resolvedAnswers[questionId]) return;
@@ -23,25 +25,17 @@ export function useCorrectAnswer(
       setIsResolving(true);
 
       try {
-        // First check if we have the answer in the question object itself (if passed)
-        // This is an optimization if the data is already available
-        
-        // If not, fetch from API
-        const response = await fetch(`/api/quiz/${quizId}/answer/${questionId}`);
-        if (!response.ok) throw new Error('Failed to fetch answer');
-        
-        const data = await response.json();
-        
-        if (isMounted) {
-          if (data && data.correct_answer) {
-             // Verify hash matches if provided
-             // In a real app, we might verify the hash here too
-             setResolvedAnswers((prev) => ({
-               ...prev,
-               [questionId]: data.correct_answer,
-             }));
-          } else {
-            console.warn(`No matching answer found for question ${questionId} with hash ${targetHash}`);
+        // Brute-force check options
+        for (const key of Object.keys(options)) {
+          const hash = await hashAnswer(key);
+          if (hash === targetHash) {
+            if (isMounted) {
+              setResolvedAnswers((prev) => ({
+                ...prev,
+                [questionId]: key,
+              }));
+            }
+            break;
           }
         }
       } catch (err) {
@@ -58,7 +52,9 @@ export function useCorrectAnswer(
     return (): void => {
       isMounted = false;
     };
-  }, [quizId, questionId, targetHash, resolvedAnswers]);
+    // Removed resolvedAnswers from dependency array to prevent infinite loops
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [questionId, targetHash, options]);
 
   return { resolvedAnswers, isResolving };
 }

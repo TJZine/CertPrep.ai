@@ -166,7 +166,8 @@ export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContaine
   const { resolvedAnswers } = useCorrectAnswer(
     quiz.id,
     currentQuestion?.id ?? null,
-    currentQuestion?.correct_answer_hash ?? null
+    currentQuestion?.correct_answer_hash ?? null,
+    currentQuestion?.options
   );
 
   const currentCorrectAnswer = currentQuestion

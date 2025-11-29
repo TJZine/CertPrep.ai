@@ -14,15 +14,16 @@ interface QuestionWithAnswer {
   userAnswer: string | null;
   isCorrect: boolean;
   isFlagged: boolean;
+  correctAnswer?: string | null;
 }
 
 interface QuestionReviewListProps {
   questions: QuestionWithAnswer[];
-  defaultFilter?: FilterType;
   filter?: FilterType;
   onFilterChange?: (filter: FilterType) => void;
   className?: string;
   quizId: string;
+  isResolving?: boolean;
 }
 
 /**
@@ -30,13 +31,13 @@ interface QuestionReviewListProps {
  */
 export function QuestionReviewList({
   questions,
-  defaultFilter = 'all',
   filter,
   onFilterChange,
   className,
   quizId,
+  isResolving = false,
 }: QuestionReviewListProps): React.ReactElement {
-  const [internalFilter, setInternalFilter] = React.useState<FilterType>(defaultFilter);
+  const [internalFilter, setInternalFilter] = React.useState<FilterType>('all');
   const [expandAll, setExpandAll] = React.useState(false);
   const [expandAllSignal, setExpandAllSignal] = React.useState(0);
 
@@ -138,6 +139,8 @@ export function QuestionReviewList({
                 expandAllState={expandAll}
                 expandAllSignal={expandAllSignal}
                 quizId={quizId}
+                correctAnswer={item.correctAnswer}
+                isResolving={isResolving}
               />
             );
           })}

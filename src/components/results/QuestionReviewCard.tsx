@@ -7,7 +7,6 @@ import { Badge } from '@/components/ui/Badge';
 import { AITutorButton } from '@/components/quiz/AITutorButton';
 import { cn } from '@/lib/utils';
 import { sanitizeHTML } from '@/lib/sanitize';
-import { useCorrectAnswer } from '@/hooks/useCorrectAnswer';
 import type { Question } from '@/types/quiz';
 
 interface QuestionReviewCardProps {
@@ -20,7 +19,8 @@ interface QuestionReviewCardProps {
   expandAllState?: boolean;
   expandAllSignal?: number;
   quizId: string;
-  showCorrectAnswer?: boolean;
+  correctAnswer?: string | null;
+  isResolving?: boolean;
 }
 
 /**
@@ -36,31 +36,26 @@ export function QuestionReviewCard({
   expandAllState,
   expandAllSignal,
   quizId,
-  showCorrectAnswer,
+  correctAnswer,
+  isResolving = false,
 }: QuestionReviewCardProps): React.ReactElement {
   const [isExpanded, setIsExpanded] = React.useState(defaultExpanded);
 
   const sanitizedQuestion = React.useMemo(() => sanitizeHTML(question.question), [question.question]);
   const sanitizedExplanation = React.useMemo(() => sanitizeHTML(question.explanation), [question.explanation]);
 
-  const { resolvedAnswers, isResolving } = useCorrectAnswer(
-    showCorrectAnswer ? quizId : null,
-    showCorrectAnswer ? question.id : null,
-    showCorrectAnswer ? (question.correct_answer_hash ?? null) : null
-  );
-
   const isCorrect = userAnswer === question.correct_answer;
   const isWrong = userAnswer && !isCorrect;
   
   // Determine what to display for the correct answer
-  let correctAnswerDisplay = question.correct_answer || resolvedAnswers[question.id];
-  const correctAnswerKey = resolvedAnswers[question.id] || question.correct_answer;
+  let correctAnswerDisplay = question.correct_answer || correctAnswer;
+  const correctAnswerKey = correctAnswer || question.correct_answer;
   
-  const showResolutionError = showCorrectAnswer && !correctAnswerDisplay && !isResolving && !!question.correct_answer_hash;
+  const showResolutionError = !correctAnswerDisplay && !isResolving && !!question.correct_answer_hash;
 
-  if (showCorrectAnswer && !correctAnswerDisplay && isResolving) {
+  if (!correctAnswerDisplay && isResolving) {
     correctAnswerDisplay = 'Resolving...';
-  } else if (showCorrectAnswer && !correctAnswerDisplay) {
+  } else if (!correctAnswerDisplay && !!question.correct_answer_hash) {
     correctAnswerDisplay = 'Unable to resolve';
   }
 

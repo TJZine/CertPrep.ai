@@ -37,7 +37,7 @@ export function ResultsContainer({ result, quiz }: ResultsContainerProps): React
   const [isDeleting, setIsDeleting] = React.useState(false);
 
   const { grading, isLoading: gradingLoading } = useQuizGrading(quiz, result.answers);
-  const resolvedAnswers = useResolveCorrectAnswers(quiz.questions);
+  const { resolvedAnswers, isResolving } = useResolveCorrectAnswers(quiz.questions);
 
   const stats = React.useMemo(() => {
     if (!grading) return null;
@@ -85,18 +85,13 @@ export function ResultsContainer({ result, quiz }: ResultsContainerProps): React
       userAnswer: result.answers[q.id] || null,
       isCorrect: !!grading.questionStatus[q.id],
       isFlagged: result.flagged_questions.includes(q.id),
+      correctAnswer: resolvedAnswers[q.id] || null,
     }));
-  }, [quiz, result, grading]);
+  }, [quiz, result, grading, resolvedAnswers]);
 
   const missedQuestions = React.useMemo(() => {
     if (!grading) return [];
     
-    // If we are still resolving answers, return empty to avoid showing "Unable to resolve"
-    // or show a loading state. For now, we'll suppress the section until ready.
-    // We can check if resolvedAnswers is empty but we expect at least some answers if the quiz has questions.
-    // A better check might be if the resolvedAnswers object has keys corresponding to the questions.
-    const isResolving = quiz.questions.length > 0 && Object.keys(resolvedAnswers).length === 0;
-
     if (isResolving) {
       return [];
     }
@@ -106,9 +101,9 @@ export function ResultsContainer({ result, quiz }: ResultsContainerProps): React
       .map((q) => ({
         question: q,
         userAnswer: result.answers[q.id] || null,
-        correctAnswer: resolvedAnswers[q.id] || 'Unable to resolve',
+        correctAnswer: resolvedAnswers[q.id] || null, // Use null instead of string fallback
       }));
-  }, [quiz, result, grading, resolvedAnswers]);
+  }, [quiz, result, grading, resolvedAnswers, isResolving]);
 
   const [questionFilter, setQuestionFilter] = React.useState<FilterType>('all');
   
@@ -283,10 +278,10 @@ export function ResultsContainer({ result, quiz }: ResultsContainerProps): React
           <h2 className="mb-4 text-xl font-semibold text-slate-900 dark:text-slate-50">Question Review</h2>
           <QuestionReviewList
             questions={questionsWithAnswers}
-            defaultFilter={missedQuestions.length > 0 ? 'incorrect' : 'all'}
             filter={questionFilter}
             onFilterChange={handleFilterChange}
             quizId={quiz.id}
+            isResolving={isResolving}
           />
         </div>
       </main>

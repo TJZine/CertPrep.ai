@@ -1,3 +1,4 @@
+import * as React from 'react';
 import ForgotPasswordForm from '@/components/auth/ForgotPasswordForm';
 import { Metadata } from 'next';
 
