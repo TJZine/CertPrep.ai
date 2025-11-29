@@ -3,14 +3,13 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BarChart3, BookOpen, Home, Library, Menu, Settings as SettingsIcon, X } from 'lucide-react';
+import { BarChart3, BookOpen, Home, Library, Menu, Settings as SettingsIcon, X, LogOut } from 'lucide-react';
 import { APP_NAME } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from '@/components/common/ThemeToggle';
 import { lockBodyScroll, unlockBodyScroll } from '@/lib/bodyScrollLock';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { Button } from '@/components/ui/Button';
-import { LogOut, User as UserIcon } from 'lucide-react';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: Home },
@@ -27,6 +26,7 @@ const linkBase =
  */
 export function Header(): React.ReactElement {
   const pathname = usePathname();
+  const { user, signOut } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const mobilePanelId = React.useId();
   const firstMobileLinkRef = React.useRef<HTMLAnchorElement>(null);
@@ -100,42 +100,7 @@ export function Header(): React.ReactElement {
       }
     };
 
-export function Header(): React.ReactElement {
-  const pathname = usePathname();
-  const { user, signOut } = useAuth();
-  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
-  const mobilePanelId = React.useId();
-  const firstMobileLinkRef = React.useRef<HTMLAnchorElement>(null);
-  const toggleButtonRef = React.useRef<HTMLButtonElement>(null);
-  const mobilePanelRef = React.useRef<HTMLDivElement>(null);
-
-  React.useEffect((): void => {
-    // Close the mobile menu when navigating
-    setIsMenuOpen(false);
-  }, [pathname]);
-  
-  // ... (existing effects)
-
-  React.useEffect((): (() => void) | undefined => {
-    if (!isMenuOpen) return undefined;
-    // ... (existing focus trap logic)
-    // Simplified for brevity in this replacement block, assuming the original focus trap logic remains if I don't touch it.
-    // Wait, the replacement tool requires context. I should be careful not to delete the effects.
-    
-    // Retaining the effects logic by just modifying the return JSX below.
-    // However, I need to insert the hooks at the top.
-    // I already inserted the hooks in the previous block? No, I just imported them.
-    // I need to insert the hook call inside the function.
-    
-    // WAIT. I cannot reliably use 'old_string' for the middle of the file if I don't have the full content.
-    // I will replace the ENTIRE component to be safe, or carefully target the hook insertion.
-    // Hook insertion:
-    
-    // return (
-    //   <header
-    
-    // I will replace the function start.
-    
+    document.addEventListener('keydown', handleKeyDown);
     return (): void => document.removeEventListener('keydown', handleKeyDown);
   }, [isMenuOpen]);
 
@@ -189,9 +154,12 @@ export function Header(): React.ReactElement {
                 <Link href="/login" className={cn(linkBase, 'text-slate-600 hover:text-slate-900 dark:text-slate-200')}>
                   Log In
                 </Link>
-                <Button asChild size="sm">
-                  <Link href="/signup">Sign Up</Link>
-                </Button>
+                <Link 
+                  href="/signup" 
+                  className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-blue-600 px-3 text-xs font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 dark:bg-blue-600 dark:hover:bg-blue-500 dark:focus-visible:ring-offset-slate-900"
+                >
+                  Sign Up
+                </Link>
               </div>
             )}
 

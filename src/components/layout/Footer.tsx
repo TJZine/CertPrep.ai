@@ -18,7 +18,7 @@ export function Footer(): React.ReactElement {
         </div>
         <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
           <Shield className="h-4 w-4" aria-hidden="true" />
-          <span>Privacy First: All data stored locally</span>
+          <span>Secure & Private: Local-First with Cloud Sync</span>
         </div>
       </div>
     </footer>
