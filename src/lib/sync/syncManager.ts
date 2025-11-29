@@ -122,9 +122,13 @@ async function performSync(userId: string): Promise<void> {
     while (hasMore) {
       const cursor = await getSyncCursor();
       
+      // Validate timestamp to prevent malformed queries
+      const timestamp = new Date(cursor.timestamp).toISOString();
+      
       // Use keyset pagination (created_at, id) to handle identical timestamps
       // Logic: (created_at > last_ts) OR (created_at = last_ts AND id > last_id)
-      const filter = `created_at.gt.${cursor.timestamp},and(created_at.eq.${cursor.timestamp},id.gt.${cursor.lastId})`;
+      // We construct the filter carefully to ensure valid PostgREST syntax
+      const filter = `created_at.gt.${timestamp},and(created_at.eq.${timestamp},id.gt.${cursor.lastId})`;
 
       const { data: remoteResults, error: fetchError } = await getSupabaseClient()
         .from('results')

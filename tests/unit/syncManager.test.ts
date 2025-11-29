@@ -20,7 +20,10 @@ vi.mock('@/db', () => ({
       toArray: vi.fn().mockResolvedValue([]),
       bulkPut: vi.fn(),
     },
-    transaction: vi.fn((mode, tables, callback) => callback()),
+    transaction: vi.fn((...args) => {
+      const callback = args[args.length - 1] as () => unknown;
+      return callback();
+    }),
   },
 }));
 
@@ -99,19 +102,20 @@ describe('SyncManager', () => {
       await callback({ name: 'sync-results' });
     });
     
-    vi.stubGlobal('navigator', {
-      locks: {
-        request: mockRequest
-      }
-    });
+    try {
+      vi.stubGlobal('navigator', { locks: { request: mockRequest } });
+      mockSupabase.limit.mockResolvedValueOnce({ data: [], error: null });
 
-    mockSupabase.limit.mockResolvedValueOnce({ data: [], error: null });
+      await syncResults('user-123');
 
-    await syncResults('user-123');
-
-    expect(mockRequest).toHaveBeenCalledWith('sync-results', { ifAvailable: true }, expect.any(Function));
-    
-    vi.unstubAllGlobals();
+      expect(mockRequest).toHaveBeenCalledWith(
+        'sync-results',
+        { ifAvailable: true },
+        expect.any(Function),
+      );
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 
   it('should push unsynced local results to Supabase', async () => {
@@ -135,10 +139,16 @@ describe('SyncManager', () => {
     expect(mockSupabase.upsert).toHaveBeenCalledWith(
       expect.arrayContaining([
         expect.objectContaining({ id: 'local-1', score: 100 }),
-        expect.objectContaining({ id: 'local-2', score: 90 })
+        expect.objectContaining({ id: 'local-2', score: 90 }),
       ]),
       { onConflict: 'id' }
     );
+    
+    const calls = mockSupabase.upsert.mock.calls[0];
+    const payload = calls ? calls[0] : [];
+    expect(Array.isArray(payload)).toBe(true);
+
+    expect(payload.every((row: Record<string, unknown>) => !('synced' in row))).toBe(true);
 
     // Verify local DB updated to synced: 1
     expect(db.results.bulkUpdate).toHaveBeenCalledWith([

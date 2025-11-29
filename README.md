@@ -353,12 +353,11 @@ npm run test:e2e
 
 ### Test Coverage
 
-| Category | Coverage |
-|----------|----------|
-| Statements | ![Coverage](https://img.shields.io/badge/coverage-85%25-green) |
-| Branches | ![Coverage](https://img.shields.io/badge/coverage-80%25-green) |
-| Functions | ![Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen) |
-| Lines | ![Coverage](https://img.shields.io/badge/coverage-85%25-green) |
+To run test coverage:
+
+```bash
+npm run test:coverage
+```
 
 ---
 
@@ -420,7 +419,7 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 > [!CAUTION]
 > If you discover a security vulnerability, please report it responsibly.
 
-**Do NOT open a public issue.** Instead, email [security@certprep.ai](mailto:security@certprep.ai).
+**Do NOT open a public issue.** Please refer to [SECURITY.md](SECURITY.md) for reporting instructions.
 
 See [SECURITY.md](SECURITY.md) for our full security policy.
 

@@ -308,6 +308,11 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
       const currentSelectedAnswer = state.selectedAnswer;
 
       // Optimistic update or loading state could go here if needed
+      if (state.isSubmitting) return;
+      
+      set((draft) => {
+        draft.isSubmitting = true;
+      });
       
       hashAnswer(currentSelectedAnswer)
         .then((hashedSelection) => {
@@ -343,13 +348,16 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
             draft.answeredQuestions.add(questionId);
             draft.hasSubmitted = true;
             draft.showExplanation = !isCorrect;
+            draft.isSubmitting = false;
           });
         })
         .catch((err) => {
           console.error('Failed to hash answer in submitAnswer', err);
           // Reset state to allow retry
+          // Reset state to allow retry
           set((draft) => {
              draft.hasSubmitted = false;
+             draft.isSubmitting = false;
           });
           // We can't easily trigger a toast from here without injecting the hook or a global event emitter.
           // For now, we rely on the UI checking hasSubmitted or we could add an error state to the store.
@@ -378,6 +386,7 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
 
       set((draft) => {
         draft.selectedAnswer = answerId;
+        draft.isSubmitting = true;
       });
       
       // Async hash check for proctor mode
@@ -393,7 +402,14 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
                 return;
               }
               
-              const isCorrect = hashedSelection === currentQ.correct_answer_hash;
+              let isCorrect = false;
+              if (currentQ.correct_answer_hash) {
+                isCorrect = hashedSelection === currentQ.correct_answer_hash;
+              } else if (currentQ.correct_answer) {
+                // Fallback for legacy quizzes
+                isCorrect = answerId === currentQ.correct_answer;
+              }
+
               draft.answers.set(questionId, {
                 questionId,
                 selectedAnswer: answerId,
@@ -403,6 +419,7 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
               });
               draft.answeredQuestions.add(questionId);
               draft.seenQuestions.add(questionId);
+              draft.isSubmitting = false;
             });
         })
         .catch((err) => {
@@ -410,6 +427,8 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
           // Reset isSubmitting on error
           set((draft) => {
             draft.isSubmitting = false;
+            // Optionally clear selection to indicate it wasn't saved
+            // draft.selectedAnswer = null;
           });
           // Notify user
           if (typeof window !== 'undefined') {

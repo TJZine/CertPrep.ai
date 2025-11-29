@@ -23,8 +23,9 @@ export function useCorrectAnswer(
       if (!questionId || !targetHash || !options) return;
       
       // Check if already resolved using ref to avoid stale closure
-      if (resolvedRef.current.has(questionId)) return;
-      resolvedRef.current.add(questionId);
+      const resolvedKey = `${questionId}:${targetHash}`;
+      if (resolvedRef.current.has(resolvedKey)) return;
+      resolvedRef.current.add(resolvedKey);
 
       setIsResolving(true);
 
@@ -44,8 +45,18 @@ export function useCorrectAnswer(
         }
       } catch (err) {
         console.error('Failed to resolve answer:', err);
+        console.error('Failed to resolve answer:', err);
         // Remove from ref on error so we can retry if needed
-        resolvedRef.current.delete(questionId);
+        const resolvedKey = `${questionId}:${targetHash}`;
+        resolvedRef.current.delete(resolvedKey);
+        
+        if (isMounted) {
+          setResolvedAnswers((prev) => {
+            const updated = { ...prev };
+            delete updated[questionId];
+            return updated;
+          });
+        }
       } finally {
         if (isMounted) {
           setIsResolving(false);

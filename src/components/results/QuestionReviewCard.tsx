@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { CheckCircle, CheckCircle2, XCircle, ChevronDown, ChevronUp, Flag, Lightbulb } from 'lucide-react';
+import { CheckCircle, CheckCircle2, XCircle, ChevronDown, ChevronUp, Flag, HelpCircle, Lightbulb } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { AITutorButton } from '@/components/quiz/AITutorButton';
@@ -48,7 +48,7 @@ export function QuestionReviewCard({
   const hasUserAnswer = userAnswer != null && userAnswer !== '';
 
   // Compute correctness based on the canonical answer
-  const isCorrect = hasCanonicalAnswer && hasUserAnswer && userAnswer === canonicalCorrectAnswer;
+  const isCorrect = hasCanonicalAnswer && hasUserAnswer && userAnswer.trim() === canonicalCorrectAnswer.trim();
   const isWrong = hasCanonicalAnswer && hasUserAnswer && !isCorrect;
   
   // Determine what to display for the correct answer
@@ -82,7 +82,7 @@ export function QuestionReviewCard({
     <Card
       className={cn(
         'overflow-hidden transition-shadow dark:border-slate-800 dark:bg-slate-900',
-        !isCorrect && 'border-l-4 border-l-red-400',
+        isWrong && 'border-l-4 border-l-red-400',
         isCorrect && 'border-l-4 border-l-green-400',
         className,
       )}
@@ -96,13 +96,15 @@ export function QuestionReviewCard({
         <div
           className={cn(
             'flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full',
-            isCorrect ? 'bg-green-100 dark:bg-green-900/40' : 'bg-red-100 dark:bg-red-900/40',
+            isCorrect ? 'bg-green-100 dark:bg-green-900/40' : isWrong ? 'bg-red-100 dark:bg-red-900/40' : 'bg-slate-100 dark:bg-slate-700',
           )}
         >
           {isCorrect ? (
             <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-200" aria-hidden="true" />
-          ) : (
+          ) : isWrong ? (
             <XCircle className="h-5 w-5 text-red-600 dark:text-red-200" aria-hidden="true" />
+          ) : (
+            <HelpCircle className="h-5 w-5 text-slate-500 dark:text-slate-400" aria-hidden="true" />
           )}
         </div>
 

@@ -21,7 +21,7 @@ export class CertPrepDatabase extends Dexie {
     super('CertPrepDatabase');
 
     // Define schema version and indexes.
-    // Version 4: Added created_at index to quizzes table for sorting
+    // Version 4: Added created_at index to quizzes table for sorting; Added syncState table
     this.version(4).stores({
       quizzes: 'id, title, category, created_at, *tags',
       results: 'id, quiz_id, timestamp, synced',
@@ -54,7 +54,7 @@ export async function initializeDatabase(): Promise<void> {
 }
 
 /**
- * Clears all quizzes and results. Intended for testing/reset flows.
+ * Clears all quizzes, results, and sync state. Intended for testing/reset flows.
  */
 export async function clearDatabase(): Promise<void> {
   try {

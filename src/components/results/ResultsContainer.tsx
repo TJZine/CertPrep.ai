@@ -64,7 +64,7 @@ export function ResultsContainer({ result, quiz, previousScore }: ResultsContain
       const cat = categories.get(q.category)!;
       cat.total += 1;
 
-      if (grading.questionStatus[q.id]) {
+      if (grading.questionStatus[q.id] === true) {
         cat.correct += 1;
       }
     });
@@ -83,7 +83,7 @@ export function ResultsContainer({ result, quiz, previousScore }: ResultsContain
     return quiz.questions.map((q) => ({
       question: q,
       userAnswer: result.answers[q.id] || null,
-      isCorrect: !!grading.questionStatus[q.id],
+      isCorrect: grading.questionStatus[q.id] === true,
       isFlagged: result.flagged_questions.includes(q.id),
       correctAnswer: resolvedAnswers[q.id] || null,
     }));
@@ -97,7 +97,7 @@ export function ResultsContainer({ result, quiz, previousScore }: ResultsContain
     }
 
     return quiz.questions
-      .filter((q) => !grading.questionStatus[q.id] && result.answers[q.id]) // Incorrect and answered
+      .filter((q) => grading.questionStatus[q.id] !== true && result.answers[q.id]) // Incorrect and answered
       .map((q) => ({
         question: q,
         userAnswer: result.answers[q.id] || null,
@@ -115,8 +115,9 @@ export function ResultsContainer({ result, quiz, previousScore }: ResultsContain
     if (!gradingLoading && missedQuestions.length > 0 && !hasSetInitialFilter.current && !userHasChangedFilter.current) {
       setQuestionFilter('incorrect');
       hasSetInitialFilter.current = true;
+      addToast('info', 'Showing incorrect answers to help you focus on areas to improve.');
     }
-  }, [gradingLoading, missedQuestions.length]);
+  }, [gradingLoading, missedQuestions.length, addToast]);
   
   const handleFilterChange = (filter: FilterType): void => {
     userHasChangedFilter.current = true;

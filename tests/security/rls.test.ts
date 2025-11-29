@@ -6,7 +6,10 @@ import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 
 // Skip tests if credentials are missing
-const shouldRun = process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const shouldRun = Boolean(
+  process.env.NEXT_PUBLIC_SUPABASE_URL &&
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+);
 
 describe.skipIf(!shouldRun)('Row Level Security (RLS) Verification', () => {
   let supabase: SupabaseClient;
@@ -26,6 +29,10 @@ describe.skipIf(!shouldRun)('Row Level Security (RLS) Verification', () => {
     // Safety check: Ensure we are in a test environment
     if (process.env.NODE_ENV !== 'test') {
       console.warn('Skipping database clear: Not in test environment');
+      return;
+    }
+    if (!url.includes('localhost') && !url.includes('test')) {
+      console.warn('Supabase URL does not look like a test instance; refusing to clear database');
       return;
     }
 
@@ -89,9 +96,8 @@ describe.skipIf(!shouldRun)('Row Level Security (RLS) Verification', () => {
 
         // 3. Verify OTP to get session (bypasses login captcha)
         const { data: sessionData, error: sessionError } = await supabase.auth.verifyOtp({
-          email,
-          token: linkData.properties.email_otp,
-          type: 'magiclink',
+          token_hash: linkData.properties.hashed_token,
+          type: 'email',
         });
 
         if (sessionError || !sessionData.session) {

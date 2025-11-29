@@ -32,7 +32,10 @@ export function Header(): React.ReactElement {
     const handleScroll = (): void => {
       setScrolled(window.scrollY > 0);
     };
+
+    handleScroll(); // initialize on mount
     window.addEventListener('scroll', handleScroll);
+
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -42,20 +45,35 @@ export function Header(): React.ReactElement {
   }, [pathname]);
 
   // Lock body scroll when mobile menu is open
-  React.useEffect((): (() => void) => {
-    if (isMenuOpen) {
-      lockBodyScroll();
-    } else {
-      unlockBodyScroll();
+  React.useEffect(() => {
+    if (!isMenuOpen) {
+      return;
     }
-    return () => unlockBodyScroll();
+
+    lockBodyScroll();
+
+    return (): void => {
+      unlockBodyScroll();
+    };
   }, [isMenuOpen]);
 
+  const [isSigningOut, setIsSigningOut] = React.useState(false);
+
   const handleSignOut = async (): Promise<void> => {
+    if (isSigningOut) return;
+
+    setIsSigningOut(true);
     setIsMenuOpen(false);
-    const result = await signOut();
-    if (!result.success) {
+
+    try {
+      const result = await signOut();
+      if (!result.success) {
+        addToast('error', 'Failed to sign out. Please try again.');
+      }
+    } catch {
       addToast('error', 'Failed to sign out. Please try again.');
+    } finally {
+      setIsSigningOut(false);
     }
   };
 
