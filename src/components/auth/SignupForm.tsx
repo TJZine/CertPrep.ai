@@ -162,6 +162,9 @@ export default function SignupForm(): React.ReactElement {
             </div>
           )}
         </div>
+        <div className="text-xs text-center text-gray-400">
+            Debug: Using Key ending in ...{process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY?.slice(-4)}
+        </div>
 
         {error && (
           <div className="text-sm text-red-500 font-medium">

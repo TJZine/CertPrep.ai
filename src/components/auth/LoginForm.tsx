@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
@@ -8,10 +8,13 @@ import { Input } from '@/components/ui/Input';
 import { getAuthErrorMessage } from '@/lib/auth-utils';
 import Link from 'next/link';
 import { useToast } from '@/components/ui/Toast';
+import HCaptcha from '@hcaptcha/react-hcaptcha';
 
 export default function LoginForm(): React.ReactElement {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const captchaRef = useRef<HCaptcha>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -23,14 +26,25 @@ export default function LoginForm(): React.ReactElement {
     setIsLoading(true);
     setError(null);
 
+    if (!captchaToken) {
+      setError('Please complete the captcha');
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
+        options: {
+          captchaToken,
+        },
       });
 
       if (error) {
         setError(getAuthErrorMessage(error));
+        captchaRef.current?.resetCaptcha();
+        setCaptchaToken(null);
         return;
       }
 
@@ -88,6 +102,22 @@ export default function LoginForm(): React.ReactElement {
             required
           />
         </div>
+
+        <div className="flex justify-center">
+          {process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY ? (
+            <HCaptcha
+              ref={captchaRef}
+              sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY}
+              onVerify={(token) => setCaptchaToken(token)}
+              onExpire={() => setCaptchaToken(null)}
+            />
+          ) : (
+            <div className="p-4 border border-red-200 bg-red-50 text-red-700 text-sm rounded-md">
+              Configuration Error: Missing HCaptcha Site Key.
+            </div>
+          )}
+        </div>
+
         {error && (
           <div className="text-sm text-red-500 font-medium">
             {error}
