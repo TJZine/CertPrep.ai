@@ -42,6 +42,8 @@ export function QuestionReviewCard({
   const sanitizedExplanation = React.useMemo(() => sanitizeHTML(question.explanation), [question.explanation]);
 
   const correctAnswerKey = useCorrectAnswer(question); // May be null if resolution fails
+  
+  const showResolutionError = correctAnswerKey === null && !!question.correct_answer_hash;
 
   const sortedOptions = React.useMemo(() => {
     return Object.entries(question.options).sort(([a], [b]) => a.localeCompare(b));
@@ -126,6 +128,12 @@ export function QuestionReviewCard({
       {isExpanded && (
         <CardContent className="border-t border-slate-100 pt-4 dark:border-slate-800">
           <div className="prose prose-sm prose-slate mb-4 max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: sanitizedQuestion }} />
+
+          {showResolutionError && (
+            <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200">
+              Unable to verify correct answer (hash mismatch).
+            </div>
+          )}
 
           <div className="mb-4 space-y-2">
             {sortedOptions.map(([key, text]) => {

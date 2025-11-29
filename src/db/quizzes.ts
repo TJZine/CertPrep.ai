@@ -95,12 +95,13 @@ export async function createQuiz(input: QuizImportInput, meta?: { sourceId?: str
         throw new Error(`Question ${sanitized.id} is missing correct_answer_hash`);
       }
       
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { correct_answer: _, ...rest } = sanitized;
+      
       return {
-        ...sanitized,
+        ...rest,
         correct_answer_hash: hash,
-        // Remove plaintext answer if it exists on the object to avoid persisting it
-        correct_answer: undefined,
-      } as unknown as Question;
+      };
     })
   );
 

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { generateUUID } from '@/lib/utils';
 import dotenv from 'dotenv';
@@ -113,9 +113,21 @@ describe.skipIf(!shouldRun)('Row Level Security (RLS) Verification', () => {
   });
 
   // Cleanup test users
-  // Note: This requires service role key. If not available, we can't delete users.
-  // Ideally, we'd use a separate cleanup script or run in a transaction that rolls back.
-  // For now, we'll just log a message if we can't clean up.
+  afterAll(async () => {
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (serviceRoleKey && userA && userB) {
+      const adminClient = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceRoleKey);
+      try {
+        // Clean up results first (cascade might handle this, but explicit is safer)
+        await adminClient.from('results').delete().in('user_id', [userA.id, userB.id]);
+        // Delete users
+        await adminClient.auth.admin.deleteUser(userA.id);
+        await adminClient.auth.admin.deleteUser(userB.id);
+      } catch (error) {
+        console.warn('Failed to cleanup test users:', error);
+      }
+    }
+  });
 
   it('User A should be able to insert and read their own results', async () => {
     if (!userA) return;

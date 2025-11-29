@@ -98,7 +98,7 @@ C4Context
 
 ## Application Structure
 
-```
+```text
 src/
 ├── app/                          # Next.js App Router
 │   ├── (auth)/                   # Auth route group (no layout)

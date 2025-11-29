@@ -41,8 +41,9 @@ export default function SignupForm(): React.ReactElement {
     }
 
     try {
+      const trimmedEmail = email.trim();
       const { error } = await supabase.auth.signUp({
-        email,
+        email: trimmedEmail,
         password,
         options: {
           data: {
@@ -60,6 +61,10 @@ export default function SignupForm(): React.ReactElement {
       }
 
       addToast('success', 'Account created! Please check your email to confirm.');
+      setPassword('');
+      setConfirmPassword('');
+      captchaRef.current?.resetCaptcha();
+      setCaptchaToken(null);
       router.push('/login');
     } catch (err) {
       console.error('Unexpected signup error:', err);
@@ -155,19 +160,19 @@ export default function SignupForm(): React.ReactElement {
               onExpire={() => setCaptchaToken(null)}
             />
           ) : (
-            <div className="p-4 border border-red-200 bg-red-50 text-red-700 text-sm rounded-md">
-              Configuration Error: Missing HCaptcha Site Key.
-              <br />
-              Please add <code>NEXT_PUBLIC_HCAPTCHA_SITE_KEY</code> to your .env file.
-            </div>
+            <p className="text-sm text-red-500 font-medium text-center">
+              Sign up is temporarily unavailable due to missing security configuration.
+            </p>
           )}
         </div>
-        <div className="text-xs text-center text-gray-400">
-            Debug: Using Key ending in ...{process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY?.slice(-4)}
-        </div>
+        {/* Debug removed for production readiness */}
 
         {error && (
-          <div className="text-sm text-red-500 font-medium">
+          <div
+            className="text-sm text-red-500 font-medium"
+            role="alert"
+            aria-live="polite"
+          >
             {error}
           </div>
         )}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { hashAnswer } from '@/lib/utils';
 import type { Question } from '@/types/quiz';
 
@@ -9,14 +9,22 @@ import type { Question } from '@/types/quiz';
 export function useResolveCorrectAnswers(questions: Question[]): Record<string, string> {
   const [resolved, setResolved] = useState<Record<string, string>>({});
 
+  // Create stable key for dependency comparison to prevent unnecessary re-runs
+  const questionsKey = useMemo(
+    () => questions.map(q => q.id + ':' + q.correct_answer_hash).join('|'),
+    [questions]
+  );
+
   useEffect((): (() => void) | void => {
     if (!questions.length) return;
 
     let isMounted = true;
-    const newResolved: Record<string, string> = {};
 
     const resolveAll = async (): Promise<void> => {
       try {
+        // Calculate new resolutions
+        const updates: Record<string, string> = {};
+        
         await Promise.all(
           questions.map(async (q) => {
             const targetHash = q.correct_answer_hash;
@@ -26,7 +34,7 @@ export function useResolveCorrectAnswers(questions: Question[]): Record<string, 
             for (const key of Object.keys(q.options)) {
               const hash = await hashAnswer(key);
               if (hash === targetHash) {
-                newResolved[q.id] = key;
+                updates[q.id] = key;
                 break;
               }
             }
@@ -34,7 +42,8 @@ export function useResolveCorrectAnswers(questions: Question[]): Record<string, 
         );
 
         if (isMounted) {
-          setResolved(newResolved);
+          // Merge with previous state to avoid flashing empty
+          setResolved(prev => ({ ...prev, ...updates }));
         }
       } catch (error) {
         console.error('Failed to resolve answers:', error);
@@ -46,7 +55,7 @@ export function useResolveCorrectAnswers(questions: Question[]): Record<string, 
     return () => {
       isMounted = false;
     };
-  }, [questions]);
+  }, [questionsKey, questions]); // Depend on stable key
 
   return resolved;
 }

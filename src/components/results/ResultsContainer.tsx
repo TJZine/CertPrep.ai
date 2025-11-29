@@ -103,14 +103,20 @@ export function ResultsContainer({ result, quiz, previousScore }: ResultsContain
   const [questionFilter, setQuestionFilter] = React.useState<FilterType>('all');
   
   const hasSetInitialFilter = React.useRef(false);
+  const userHasChangedFilter = React.useRef(false);
 
   // Update filter once grading is done
   React.useEffect(() => {
-    if (missedQuestions.length > 0 && !hasSetInitialFilter.current) {
+    if (missedQuestions.length > 0 && !hasSetInitialFilter.current && !userHasChangedFilter.current) {
       setQuestionFilter('incorrect');
       hasSetInitialFilter.current = true;
     }
   }, [missedQuestions.length]);
+  
+  const handleFilterChange = (filter: FilterType): void => {
+    userHasChangedFilter.current = true;
+    setQuestionFilter(filter);
+  };
 
   const handleRetakeQuiz = (): void => {
     router.push(`/quiz/${quiz.id}/${result.mode}`);
@@ -270,7 +276,7 @@ export function ResultsContainer({ result, quiz, previousScore }: ResultsContain
             questions={questionsWithAnswers}
             defaultFilter={missedQuestions.length > 0 ? 'incorrect' : 'all'}
             filter={questionFilter}
-            onFilterChange={setQuestionFilter}
+            onFilterChange={handleFilterChange}
           />
         </div>
       </main>

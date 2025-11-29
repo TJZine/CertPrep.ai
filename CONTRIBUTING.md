@@ -2,7 +2,7 @@
 
 First off, thank you for considering contributing to CertPrep.ai! 🎉
 
-This document provides guidelines and steps for contributing. Following these guidelines helps communicate that you respect the time of the developers managing and developing this open source project.
+This document provides guidelines and steps for contributing. Following these guidelines helps communicate that you respect the time of the developers managing and developing this open-source project.
 
 ---
 

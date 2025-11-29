@@ -39,6 +39,7 @@ describe('data export/import', () => {
           B: 'Home Tool Transfer Protocol',
         },
         correct_answer: 'A',
+        correct_answer_hash: 'dummy-hash-123',
         explanation: 'HTTP stands for Hypertext Transfer Protocol.',
       },
     ],

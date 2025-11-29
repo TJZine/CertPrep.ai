@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { User, Session, AuthChangeEvent } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
@@ -11,7 +11,7 @@ type AuthContextType = {
   user: User | null;
   session: Session | null;
   isLoading: boolean;
-  signOut: () => Promise<void>;
+  signOut: () => Promise<{ success: boolean; error?: string }>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -21,7 +21,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }): React
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
-  const [supabase] = useState(() => createClient());
+  
+  const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null);
+  if (!supabaseRef.current) {
+    supabaseRef.current = createClient();
+  }
+  const supabase = supabaseRef.current;
 
   useEffect((): (() => void) => {
     let isMounted = true;
@@ -66,12 +71,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }): React
     };
   }, [router, supabase]);
 
-  const signOut = async (): Promise<void> => {
+  const signOut = async (): Promise<{ success: boolean; error?: string }> => {
+    let dbClearFailed = false;
     try {
       // Clear local data first to ensure privacy even if network fails
       await clearDatabase();
     } catch (error) {
       console.error('Failed to clear local database during sign out:', error);
+      dbClearFailed = true;
     }
 
     try {
@@ -79,8 +86,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }): React
       setUser(null);
       setSession(null);
       router.push('/login');
+      return { success: true, error: dbClearFailed ? 'Local data clear failed' : undefined };
     } catch (error) {
       console.error('Error signing out:', error);
+      return { success: false, error: 'Sign out failed. Please try again.' };
     }
   };
 

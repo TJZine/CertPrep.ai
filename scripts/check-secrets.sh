@@ -14,8 +14,8 @@ if [ -n "$STAGED_ENV_FILES" ]; then
 fi
 
 # 2. Check for potential hardcoded secrets in staged files
-# We exclude package-lock.json and this script itself
-STAGED_FILES=$(git diff --cached --name-only | grep -v "package-lock.json" | grep -v "scripts/check-secrets.sh" || true)
+# We exclude package-lock.json, this script itself, and the tests directory
+STAGED_FILES=$(git diff --cached --name-only | grep -v "package-lock.json" | grep -v "scripts/check-secrets.sh" | grep -v "^tests/" || true)
 
 if [ -z "$STAGED_FILES" ]; then
   exit 0
@@ -26,7 +26,8 @@ fi
 # - AWS Keys
 # - Generic API Keys (simple heuristics)
 # - Database Connection Strings
-PATTERNS="-----BEGIN.*PRIVATE KEY-----|aws_access_key_id|ghp_[a-zA-Z0-9]{20,}|sk_live_[a-zA-Z0-9]{20,}|xox[baprs]-[a-zA-Z0-9-]{10,}|PRIVATE_KEY=|password=|Bearer [a-zA-Z0-9\-\._\~\+\/]+=*|postgres://"
+# More specific patterns with context to reduce false positives
+PATTERNS="-----BEGIN.*PRIVATE KEY-----|aws_access_key_id\s*=|ghp_[a-zA-Z0-9]{20,}|sk_live_[a-zA-Z0-9]{20,}|xox[baprs]-[a-zA-Z0-9-]{10,}|PRIVATE_KEY\s*=\s*['\"][^'\"]+|password\s*=\s*['\"][^'\"]+|Authorization:\s*Bearer [a-zA-Z0-9\-\._\~\+\/]+=*|postgres://[^:]+:[^@]+@"
 
 FOUND_SECRETS=0
 

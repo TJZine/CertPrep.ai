@@ -118,7 +118,10 @@ export function useAnalyticsStats(results: Result[], quizzes: Quiz[]): Analytics
 
         results.forEach((result) => {
           const resultDate = new Date(result.timestamp);
-          const daysDiff = Math.floor((now.getTime() - resultDate.getTime()) / (1000 * 60 * 60 * 24));
+          // Normalize to start of day for consistent comparison
+          const resultDay = new Date(resultDate.getFullYear(), resultDate.getMonth(), resultDate.getDate());
+          const nowDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          const daysDiff = Math.floor((nowDay.getTime() - resultDay.getTime()) / (1000 * 60 * 60 * 24));
 
           if (daysDiff < 14) {
             const dateStr = resultDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });

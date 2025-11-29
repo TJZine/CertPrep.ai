@@ -57,7 +57,9 @@ export function useQuizSubmission({ quizId, isSmartRound = false }: UseQuizSubmi
         });
 
         // Attempt background sync
-        void sync();
+        sync().catch((err) => {
+          console.warn('Background sync failed:', err);
+        });
 
         if (!isMountedRef.current) return;
 
@@ -81,10 +83,6 @@ export function useQuizSubmission({ quizId, isSmartRound = false }: UseQuizSubmi
           setSaveError(true);
           addToast('error', 'Failed to save result. Please try again.');
         }
-        // The original code threw the error, but the diff removes it.
-        // Keeping the throw for consistency with original behavior if not explicitly removed.
-        // However, the instruction's catch block does not include `throw error;`
-        // Following the instruction's catch block exactly.
       } finally {
         if (isMountedRef.current) {
           setIsSaving(false);

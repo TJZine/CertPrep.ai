@@ -422,12 +422,12 @@ See [SECURITY.md](SECURITY.md) for our full security policy.
 
 ## 📄 License
 
-This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the **Apache 2.0 License** - see the [LICENSE](LICENSE) file for details.
 
 ```
-MIT License
+Apache 2.0 License
 
-Copyright (c) 2024 TJZine
+Copyright (c) 2025 TJZine
 
 Permission is hereby granted, free of charge, to any person obtaining a copy...
 ```
@@ -442,10 +442,3 @@ Permission is hereby granted, free of charge, to any person obtaining a copy...
 - [Dexie.js](https://dexie.org/) - IndexedDB Wrapper
 - [Vercel](https://vercel.com/) - Deployment Platform
 
----
-
-<div align="center">
-  <strong>Built with ❤️ by TJZine</strong>
-  <br>
-  <sub>Star ⭐ this repo if you find it useful!</sub>
-</div>

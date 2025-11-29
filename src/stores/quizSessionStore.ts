@@ -5,6 +5,7 @@ import { enableMapSet } from 'immer';
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { SPACED_REPETITION, TIMER } from '@/lib/constants';
+import { hashAnswer } from '@/lib/utils';
 import type { Question, QuizMode } from '@/types/quiz';
 
 enableMapSet();
@@ -306,8 +307,7 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
 
       // Optimistic update or loading state could go here if needed
       
-      import('@/lib/utils')
-        .then(({ hashAnswer }) => hashAnswer(currentSelectedAnswer))
+      hashAnswer(currentSelectedAnswer)
         .then((hashedSelection) => {
           set((draft) => {
             // Re-validate state in case it changed during async op
@@ -361,8 +361,7 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
       });
       
       // Async hash check for proctor mode
-      import('@/lib/utils')
-        .then(({ hashAnswer }) => hashAnswer(answerId))
+      hashAnswer(answerId)
         .then((hashedSelection) => {
             set((draft) => {
               const currentQ = draft.questions.find((q) => q.id === questionId);
