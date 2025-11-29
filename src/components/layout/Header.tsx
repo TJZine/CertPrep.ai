@@ -10,6 +10,7 @@ import { useTheme } from '@/components/common/ThemeProvider';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { Button } from '@/components/ui/Button';
 import { Logo } from '@/components/common/Logo';
+import { useToast } from '@/components/ui/Toast';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: Home, public: true },
@@ -22,6 +23,7 @@ export function Header(): React.ReactElement {
   const pathname = usePathname();
   const { user, signOut } = useAuth();
   const { toggleTheme } = useTheme();
+  const { addToast } = useToast();
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const [scrolled, setScrolled] = React.useState(false);
 
@@ -51,7 +53,10 @@ export function Header(): React.ReactElement {
 
   const handleSignOut = async (): Promise<void> => {
     setIsMenuOpen(false);
-    await signOut();
+    const result = await signOut();
+    if (!result.success) {
+      addToast('error', 'Failed to sign out. Please try again.');
+    }
   };
 
   return (
@@ -75,7 +80,7 @@ export function Header(): React.ReactElement {
             // Show if public OR if user is authenticated
             if (!item.public && !user) return null;
             
-            const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
+            const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href + '/'));
             return (
               <Link
                 key={item.href}
@@ -174,7 +179,7 @@ export function Header(): React.ReactElement {
             {navigation.map((item) => {
               if (!item.public && !user) return null;
               
-              const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
+              const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href + '/'));
               const Icon = item.icon;
               return (
                 <Link

@@ -71,7 +71,6 @@ export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContaine
   useBeforeUnload(!isComplete, 'Your quiz progress will be lost. Are you sure?');
 
 
-
   React.useEffect((): (() => void) => {
     isMountedRef.current = true;
     return (): void => {
@@ -164,7 +163,6 @@ export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContaine
   }, [currentQuestion, hasSubmitted, answers]);
 
   const { resolvedAnswers } = useCorrectAnswer(
-    quiz.id,
     currentQuestion?.id ?? null,
     currentQuestion?.correct_answer_hash ?? null,
     currentQuestion?.options
@@ -220,7 +218,7 @@ export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContaine
                     />
 
                     {!isCurrentAnswerCorrect && selectedAnswer && (
-                      <AITutorButton quizId={quiz.id} question={currentQuestion} userAnswer={selectedAnswer} />
+                      <AITutorButton question={currentQuestion} userAnswer={selectedAnswer} />
                     )}
 
                     <ZenControls
@@ -253,6 +251,7 @@ export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContaine
   ), [
     currentQuestion,
     currentIndex,
+    // quizId, // Not used in this component anymore, but kept in props interface if needed elsewhere or remove from interface
     quiz.questions.length,
     flaggedQuestions,
     toggleFlag,
@@ -271,7 +270,6 @@ export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContaine
     saveError,
     retrySave,
     handleExit,
-    quiz.id,
   ]);
 
   if (!currentQuestion) {

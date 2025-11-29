@@ -52,6 +52,10 @@ export function useResolveCorrectAnswers(questions: Question[]): { resolvedAnswe
         }
       } catch (error) {
         console.error('Failed to resolve answers:', error);
+        // Reset to empty state on error to prevent stale data
+        if (isMounted) {
+          setResolved({});
+        }
       } finally {
         if (isMounted) {
           setIsResolving(false);
@@ -64,7 +68,8 @@ export function useResolveCorrectAnswers(questions: Question[]): { resolvedAnswe
     return () => {
       isMounted = false;
     };
-  }, [questionsKey, questions]); // Depend on stable key
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [questionsKey]); // Depend on stable key only
 
   return { resolvedAnswers: resolved, isResolving };
 }

@@ -23,6 +23,12 @@ describe.skipIf(!shouldRun)('Row Level Security (RLS) Verification', () => {
       return;
     }
 
+    // Safety check: Ensure we are in a test environment
+    if (process.env.NODE_ENV !== 'test') {
+      console.warn('Skipping database clear: Not in test environment');
+      return;
+    }
+
     const adminClient = createClient(url, serviceRoleKey);
 
     // Delete all data from 'results' table

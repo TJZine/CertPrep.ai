@@ -1,17 +1,20 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { hashAnswer } from '@/lib/utils';
 
 /**
  * Asynchronously resolves the correct answer key for a question by hashing options.
  */
 export function useCorrectAnswer(
-  quizId: string | null,
   questionId: string | null,
   targetHash: string | null,
   options?: Record<string, string>
 ): { resolvedAnswers: Record<string, string>; isResolving: boolean } {
   const [resolvedAnswers, setResolvedAnswers] = useState<Record<string, string>>({});
   const [isResolving, setIsResolving] = useState(false);
+  const resolvedRef = React.useRef<Set<string>>(new Set());
+
+  // Create a stable key for options to avoid unnecessary re-runs
+  const optionsKey = options ? JSON.stringify(Object.keys(options).sort()) : '';
 
   useEffect(() => {
     let isMounted = true;
@@ -19,8 +22,9 @@ export function useCorrectAnswer(
     const resolveAnswer = async (): Promise<void> => {
       if (!questionId || !targetHash || !options) return;
       
-      // Check if already resolved
-      if (resolvedAnswers[questionId]) return;
+      // Check if already resolved using ref to avoid stale closure
+      if (resolvedRef.current.has(questionId)) return;
+      resolvedRef.current.add(questionId);
 
       setIsResolving(true);
 
@@ -40,6 +44,8 @@ export function useCorrectAnswer(
         }
       } catch (err) {
         console.error('Failed to resolve answer:', err);
+        // Remove from ref on error so we can retry if needed
+        resolvedRef.current.delete(questionId);
       } finally {
         if (isMounted) {
           setIsResolving(false);
@@ -52,9 +58,8 @@ export function useCorrectAnswer(
     return (): void => {
       isMounted = false;
     };
-    // Removed resolvedAnswers from dependency array to prevent infinite loops
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [questionId, targetHash, options]);
+  }, [questionId, targetHash, optionsKey]);
 
   return { resolvedAnswers, isResolving };
 }

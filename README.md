@@ -95,6 +95,7 @@ CertPrep.ai is a modern, offline-first quiz application designed to help users p
   - [Environment Setup](#environment-setup)
 - [Usage](#usage)
 - [Architecture](#architecture)
+- [Documentation](#documentation)
 - [Testing](#testing)
 - [Deployment](#deployment)
 - [Contributing](#contributing)

@@ -75,7 +75,7 @@ describe('SyncManager', () => {
     await syncResults('user-123');
 
     // Verify setSyncCursor was called with the timestamp AND id of the last invalid record
-    const lastResult = invalidResults[49];
+    const lastResult = invalidResults[invalidResults.length - 1];
     expect(syncState.setSyncCursor).toHaveBeenCalledWith(lastResult?.created_at, lastResult?.id);
     
     // Verify bulkPut was NOT called (since no valid results)

@@ -17,6 +17,15 @@ export interface AnalyticsStats {
   isLoading: boolean;
 }
 
+const DAYS_TO_TRACK = 14;
+
+const formatDate = (timestamp: number | Date): string => {
+  return new Date(timestamp).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+  });
+};
+
 /**
  * Asynchronously calculates analytics stats from results and quizzes.
  */
@@ -109,14 +118,9 @@ export function useAnalyticsStats(results: Result[], quizzes: Quiz[]): Analytics
         const now = new Date();
         const days: Map<string, number> = new Map();
 
-        const formatDate = (timestamp: number): string => {
-          return new Date(timestamp).toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-          });
-        };
 
-        for (let i = 13; i >= 0; i -= 1) {
+
+        for (let i = DAYS_TO_TRACK - 1; i >= 0; i -= 1) {
           const date = new Date(now);
           date.setDate(date.getDate() - i);
           const dateStr = formatDate(date.getTime());
@@ -130,8 +134,8 @@ export function useAnalyticsStats(results: Result[], quizzes: Quiz[]): Analytics
           const nowDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
           const daysDiff = Math.floor((nowDay.getTime() - resultDay.getTime()) / (1000 * 60 * 60 * 24));
 
-          if (daysDiff < 14) {
-            const dateStr = resultDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          if (daysDiff < DAYS_TO_TRACK) {
+            const dateStr = formatDate(resultDate);
             if (days.has(dateStr)) {
               days.set(dateStr, days.get(dateStr)! + Math.round(result.time_taken_seconds / 60));
             }

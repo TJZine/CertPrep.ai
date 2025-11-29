@@ -18,7 +18,6 @@ interface QuestionReviewCardProps {
   className?: string;
   expandAllState?: boolean;
   expandAllSignal?: number;
-  quizId: string;
   correctAnswer?: string | null;
   isResolving?: boolean;
 }
@@ -35,7 +34,6 @@ export function QuestionReviewCard({
   className,
   expandAllState,
   expandAllSignal,
-  quizId,
   correctAnswer,
   isResolving = false,
 }: QuestionReviewCardProps): React.ReactElement {
@@ -231,7 +229,7 @@ export function QuestionReviewCard({
 
           {!isCorrect && userAnswer && (
             <div className="mt-4">
-              <AITutorButton quizId={quizId} question={question} userAnswer={userAnswer} variant="compact" />
+              <AITutorButton question={question} userAnswer={userAnswer} variant="compact" />
             </div>
           )}
         </CardContent>

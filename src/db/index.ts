@@ -21,13 +21,13 @@ export class CertPrepDatabase extends Dexie {
     super('CertPrepDatabase');
 
     // Define schema version and indexes.
-    // Version 3: Added lastId to syncState table for correct keyset pagination
-    this.version(3).stores({
-      quizzes: 'id, title, category, *tags',
+    // Version 4: Added created_at index to quizzes table for sorting
+    this.version(4).stores({
+      quizzes: 'id, title, category, created_at, *tags',
       results: 'id, quiz_id, timestamp, synced',
       syncState: 'table, lastSyncedAt, synced, lastId',
     }).upgrade(async () => {
-      // No data migration needed for syncState as it's a cache/metadata table
+      // No data migration needed, Dexie handles index creation automatically
     });
 
     this.quizzes = this.table('quizzes');

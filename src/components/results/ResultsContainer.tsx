@@ -29,7 +29,7 @@ interface ResultsContainerProps {
 /**
  * Full results page container combining score, analytics, and review.
  */
-export function ResultsContainer({ result, quiz }: ResultsContainerProps): React.ReactElement {
+export function ResultsContainer({ result, quiz, previousScore }: ResultsContainerProps): React.ReactElement {
   const router = useRouter();
   const { addToast } = useToast();
 
@@ -112,11 +112,11 @@ export function ResultsContainer({ result, quiz }: ResultsContainerProps): React
 
   // Update filter once grading is done
   React.useEffect(() => {
-    if (missedQuestions.length > 0 && !hasSetInitialFilter.current && !userHasChangedFilter.current) {
+    if (!gradingLoading && missedQuestions.length > 0 && !hasSetInitialFilter.current && !userHasChangedFilter.current) {
       setQuestionFilter('incorrect');
       hasSetInitialFilter.current = true;
     }
-  }, [missedQuestions.length]);
+  }, [gradingLoading, missedQuestions.length]);
   
   const handleFilterChange = (filter: FilterType): void => {
     userHasChangedFilter.current = true;
@@ -237,6 +237,7 @@ export function ResultsContainer({ result, quiz }: ResultsContainerProps): React
 
         <Scorecard
           score={result.score}
+          previousScore={previousScore}
           correctCount={stats.correctCount}
           totalCount={quiz.questions.length}
           timeTakenSeconds={result.time_taken_seconds}
@@ -280,7 +281,7 @@ export function ResultsContainer({ result, quiz }: ResultsContainerProps): React
             questions={questionsWithAnswers}
             filter={questionFilter}
             onFilterChange={handleFilterChange}
-            quizId={quiz.id}
+
             isResolving={isResolving}
           />
         </div>
@@ -306,7 +307,7 @@ export function ResultsContainer({ result, quiz }: ResultsContainerProps): React
         <p className="text-sm text-slate-600">
           Are you sure you want to delete this result? Your score and answers will be permanently removed.
         </p>
-        <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+        <div className="mt-1 text-sm text-slate-600 dark:text-slate-400">
           Score: {result.score}%
         </div>
       </Modal>
