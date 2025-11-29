@@ -8,30 +8,37 @@ import type { Question } from '@/types/quiz';
 export function useCorrectAnswer(question: Question | null): string | null {
   const [correctKey, setCorrectKey] = useState<string | null>(null);
 
+  const questionId = question?.id;
+  const targetHash = question?.correct_answer_hash;
+
   useEffect((): (() => void) | void => {
     let isMounted = true;
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setCorrectKey(null); // Reset immediately when question changes
+    setCorrectKey(null);
+
+    if (!questionId || !targetHash || !question?.options) {
+      return;
+    }
 
     const findKey = async (): Promise<void> => {
-      if (!question) {
-        if (isMounted) setCorrectKey(null);
-        return;
-      }
+      try {
+        // Parallelize hashing for performance (O(1) effective latency vs O(n))
+        const options = Object.entries(question.options);
+        
+        const results = await Promise.all(
+          options.map(async ([key]) => {
+            const hash = await hashAnswer(key);
+            return { key, hash };
+          })
+        );
 
-      // Optimization: If we somehow still have the raw answer (e.g. during creation), use it.
-      // But we assume we only have the hash.
-      const targetHash = question.correct_answer_hash;
-      if (!targetHash) return;
-
-      // Brute-force check all options (A, B, C, D...)
-      // This is fast for small number of options.
-      for (const key of Object.keys(question.options)) {
-        const hash = await hashAnswer(key);
-        if (hash === targetHash) {
-          if (isMounted) setCorrectKey(key);
-          return;
+        const match = results.find((r) => r.hash === targetHash);
+        
+        if (isMounted && match) {
+          setCorrectKey(match.key);
         }
+      } catch (error) {
+        console.error('Failed to resolve correct answer:', error);
       }
     };
 
@@ -40,7 +47,7 @@ export function useCorrectAnswer(question: Question | null): string | null {
     return () => {
       isMounted = false;
     };
-  }, [question]);
+  }, [questionId, targetHash, question?.options]); // Stable primitives + options ref (usually stable enough)
 
   return correctKey;
 }
