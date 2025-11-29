@@ -13,6 +13,7 @@ import { UpdateBanner } from '@/components/common/UpdateBanner';
 import { ThemeProvider } from '@/components/common/ThemeProvider';
 import { SkipLink } from '@/components/common/SkipLink';
 import { SentryInitializer } from '@/components/providers/SentryInitializer';
+import { AuthProvider } from '@/components/providers/AuthProvider';
 import { APP_NAME } from '@/lib/constants';
 import './globals.css';
 
@@ -95,16 +96,18 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <ThemeProvider>
           <GlobalErrorHandler>
             <ToastProvider>
-              <SentryInitializer />
-              <UpdateBanner />
-              <Header />
-              <div id="main-content" className="flex-1" tabIndex={-1}>
-                {children}
-              </div>
-              <Footer />
-              <OfflineIndicator />
-              <InstallPrompt />
-              <SpeedInsights />
+              <AuthProvider>
+                <SentryInitializer />
+                <UpdateBanner />
+                <Header />
+                <div id="main-content" className="flex-1" tabIndex={-1}>
+                  {children}
+                </div>
+                <Footer />
+                <OfflineIndicator />
+                <InstallPrompt />
+                <SpeedInsights />
+              </AuthProvider>
             </ToastProvider>
           </GlobalErrorHandler>
         </ThemeProvider>

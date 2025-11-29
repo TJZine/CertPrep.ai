@@ -8,6 +8,9 @@ import { APP_NAME } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from '@/components/common/ThemeToggle';
 import { lockBodyScroll, unlockBodyScroll } from '@/lib/bodyScrollLock';
+import { useAuth } from '@/components/providers/AuthProvider';
+import { Button } from '@/components/ui/Button';
+import { LogOut, User as UserIcon } from 'lucide-react';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: Home },
@@ -97,9 +100,49 @@ export function Header(): React.ReactElement {
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
+export function Header(): React.ReactElement {
+  const pathname = usePathname();
+  const { user, signOut } = useAuth();
+  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  const mobilePanelId = React.useId();
+  const firstMobileLinkRef = React.useRef<HTMLAnchorElement>(null);
+  const toggleButtonRef = React.useRef<HTMLButtonElement>(null);
+  const mobilePanelRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect((): void => {
+    // Close the mobile menu when navigating
+    setIsMenuOpen(false);
+  }, [pathname]);
+  
+  // ... (existing effects)
+
+  React.useEffect((): (() => void) | undefined => {
+    if (!isMenuOpen) return undefined;
+    // ... (existing focus trap logic)
+    // Simplified for brevity in this replacement block, assuming the original focus trap logic remains if I don't touch it.
+    // Wait, the replacement tool requires context. I should be careful not to delete the effects.
+    
+    // Retaining the effects logic by just modifying the return JSX below.
+    // However, I need to insert the hooks at the top.
+    // I already inserted the hooks in the previous block? No, I just imported them.
+    // I need to insert the hook call inside the function.
+    
+    // WAIT. I cannot reliably use 'old_string' for the middle of the file if I don't have the full content.
+    // I will replace the ENTIRE component to be safe, or carefully target the hook insertion.
+    // Hook insertion:
+    
+    // return (
+    //   <header
+    
+    // I will replace the function start.
+    
     return (): void => document.removeEventListener('keydown', handleKeyDown);
   }, [isMenuOpen]);
+
+  const handleSignOut = async (): Promise<void> => {
+    setIsMenuOpen(false);
+    await signOut();
+  };
 
   return (
     <header
@@ -119,7 +162,7 @@ export function Header(): React.ReactElement {
 
         <div className="flex items-center gap-3">
           <nav aria-label="Main navigation" className="hidden items-center gap-2 md:flex">
-            {navigation.map((item) => {
+            {user && navigation.map((item) => {
               const isActive =
                 item.href === '/' ? pathname === '/' : pathname === item.href || pathname.startsWith(`${item.href}/`);
               const Icon = item.icon;
@@ -140,6 +183,31 @@ export function Header(): React.ReactElement {
                 </Link>
               );
             })}
+            
+            {!user && (
+              <div className="flex items-center gap-2">
+                <Link href="/login" className={cn(linkBase, 'text-slate-600 hover:text-slate-900 dark:text-slate-200')}>
+                  Log In
+                </Link>
+                <Button asChild size="sm">
+                  <Link href="/signup">Sign Up</Link>
+                </Button>
+              </div>
+            )}
+
+            {user && (
+              <div className="ml-2 border-l border-slate-200 pl-2 dark:border-slate-700">
+                 <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={handleSignOut}
+                  className="text-slate-600 hover:text-red-600 dark:text-slate-200 dark:hover:text-red-400"
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Sign Out
+                </Button>
+              </div>
+            )}
           </nav>
           <ThemeToggle />
           <button
@@ -169,7 +237,7 @@ export function Header(): React.ReactElement {
       >
         <div className="space-y-1 border-t border-slate-200 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-900">
           <nav aria-label="Mobile navigation" className="space-y-1">
-            {navigation.map((item, index) => {
+            {user && navigation.map((item, index) => {
               const isActive =
                 item.href === '/' ? pathname === '/' : pathname === item.href || pathname.startsWith(`${item.href}/`);
               const Icon = item.icon;
@@ -192,6 +260,35 @@ export function Header(): React.ReactElement {
                 </Link>
               );
             })}
+            
+            {!user && (
+              <div className="grid grid-cols-2 gap-4 pt-4">
+                <Link
+                  href="/login"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="flex items-center justify-center rounded-lg bg-slate-100 px-4 py-2 text-sm font-medium text-slate-900 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-50 dark:hover:bg-slate-700"
+                >
+                  Log In
+                </Link>
+                <Link
+                  href="/signup"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                >
+                  Sign Up
+                </Link>
+              </div>
+            )}
+
+            {user && (
+              <button
+                onClick={handleSignOut}
+                className="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-base font-medium text-slate-700 hover:bg-red-50 hover:text-red-700 dark:text-slate-100 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+              >
+                <LogOut className="h-5 w-5" aria-hidden="true" />
+                <span>Sign Out</span>
+              </button>
+            )}
           </nav>
         </div>
       </div>
