@@ -59,7 +59,9 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
 
   if (!supabaseUrlEnv || !supabaseKey) {
     if (process.env.NODE_ENV === 'production') {
-      throw new Error('Missing Supabase environment variables in production')
+      const errorMsg = 'CRITICAL: Missing Supabase environment variables in production (NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY). Application cannot function safely.';
+      console.error(errorMsg);
+      throw new Error(errorMsg);
     } else {
       console.warn('Missing Supabase environment variables, using placeholder')
     }

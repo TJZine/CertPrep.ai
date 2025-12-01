@@ -79,3 +79,8 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
+
+-- OPTIMIZATION: Index for incremental sync
+-- Supports the query: .eq('user_id', userId).or('created_at.gt...,and(...)').order('created_at', ...).order('id', ...)
+create index concurrently if not exists idx_results_sync_optimization
+  on results (user_id, created_at, id);

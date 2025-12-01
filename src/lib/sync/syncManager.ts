@@ -18,7 +18,7 @@ function getSupabaseClient(): ReturnType<typeof createClient> {
   return supabaseInstance;
 }
 const BATCH_SIZE = 50;
-const MAX_SYNC_PAGES = 20;
+const TIME_BUDGET_MS = 5000;
 
 // Simple in-memory lock to prevent race conditions if sync is triggered multiple times rapidly
 // let isSyncing = false; // Removed unused variable
@@ -42,22 +42,23 @@ const syncState = {
   lastSyncAttempt: 0
 };
 
-export async function syncResults(userId: string): Promise<void> {
-  if (!userId) return;
+export async function syncResults(userId: string): Promise<{ incomplete: boolean }> {
+  if (!userId) return { incomplete: false };
 
   // Use Web Locks API for cross-tab synchronization safety
   // This prevents multiple tabs from running sync simultaneously
   if (typeof navigator !== 'undefined' && 'locks' in navigator) {
     try {
-      await navigator.locks.request('sync-results', { ifAvailable: true }, async (lock) => {
+      return await navigator.locks.request('sync-results', { ifAvailable: true }, async (lock) => {
         if (!lock) {
           logger.debug('Sync already in progress in another tab, skipping');
-          return;
+          return { incomplete: false };
         }
-        await performSync(userId);
-      });
+        return await performSync(userId);
+      }) || { incomplete: false };
     } catch (error) {
       logger.error('Failed to acquire sync lock:', error);
+      return { incomplete: false };
     }
   } else {
     // Fallback for environments without Web Locks (e.g. some tests or very old browsers)
@@ -66,20 +67,23 @@ export async function syncResults(userId: string): Promise<void> {
         logger.warn('Sync lock timed out, resetting...');
         syncState.isSyncing = false;
       } else {
-        return;
+        return { incomplete: false };
       }
     }
     syncState.isSyncing = true;
     syncState.lastSyncAttempt = Date.now();
     try {
-      await performSync(userId);
+      return await performSync(userId);
     } finally {
       syncState.isSyncing = false;
     }
   }
 }
 
-async function performSync(userId: string): Promise<void> {
+async function performSync(userId: string): Promise<{ incomplete: boolean }> {
+  let incomplete = false;
+  const startTime = Date.now();
+
   try {
     // 1. PUSH: Upload unsynced local results to Supabase
     const unsyncedResults = await db.results.where('synced').equals(0).toArray();
@@ -87,6 +91,13 @@ async function performSync(userId: string): Promise<void> {
     if (unsyncedResults.length > 0) {
       // Chunk the upload to avoid hitting payload limits
       for (let i = 0; i < unsyncedResults.length; i += BATCH_SIZE) {
+        // Check time budget
+        if (Date.now() - startTime > TIME_BUDGET_MS) {
+          logger.warn(`Sync time budget exceeded (${TIME_BUDGET_MS}ms) during PUSH, pausing.`);
+          incomplete = true;
+          break;
+        }
+
         const batch = unsyncedResults.slice(i, i + BATCH_SIZE);
         
         const { error } = await getSupabaseClient().from('results').upsert(
@@ -133,17 +144,18 @@ async function performSync(userId: string): Promise<void> {
       }
     }
 
+    if (incomplete) return { incomplete };
+
     // 2. PULL: Incremental Sync with Keyset Pagination
     let hasMore = true;
-    let pageCount = 0;
 
     while (hasMore) {
-      if (pageCount >= MAX_SYNC_PAGES) {
-        logger.warn(`Sync limit reached (${MAX_SYNC_PAGES} pages), pausing until next interval`);
+      if (Date.now() - startTime > TIME_BUDGET_MS) {
+        logger.warn(`Sync limit reached (time budget ${TIME_BUDGET_MS}ms), pausing until next interval`);
         hasMore = false;
+        incomplete = true;
         break;
       }
-      pageCount++;
 
       const cursor = await getSyncCursor();
       
@@ -225,4 +237,6 @@ async function performSync(userId: string): Promise<void> {
   } catch (error) {
     logger.error('Sync failed:', error);
   }
+  
+  return { incomplete };
 }

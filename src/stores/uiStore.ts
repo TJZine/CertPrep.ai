@@ -4,6 +4,7 @@ import { create } from 'zustand';
 interface UIState {
   isImportModalOpen: boolean;
   isModeSelectModalOpen: boolean;
+  syncStatus: 'idle' | 'syncing' | 'completed' | 'error';
 }
 
 interface UIActions {
@@ -11,11 +12,13 @@ interface UIActions {
   closeImportModal: () => void;
   openModeSelectModal: () => void;
   closeModeSelectModal: () => void;
+  setSyncStatus: (status: UIState['syncStatus']) => void;
 }
 
 const initialState: UIState = {
   isImportModalOpen: false,
   isModeSelectModalOpen: false,
+  syncStatus: 'idle',
 };
 
 /**
@@ -27,4 +30,5 @@ export const useUIStore = create<UIState & UIActions>((set) => ({
   closeImportModal: (): void => set(() => ({ isImportModalOpen: false })),
   openModeSelectModal: (): void => set(() => ({ isModeSelectModalOpen: true })),
   closeModeSelectModal: (): void => set(() => ({ isModeSelectModalOpen: false })),
+  setSyncStatus: (status): void => set(() => ({ syncStatus: status })),
 }));
