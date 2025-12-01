@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 import { lockBodyScroll, unlockBodyScroll } from '@/lib/bodyScrollLock';
 import { ThemeToggleButton } from '@/components/common/ThemeToggleButton';
 import { useAuth } from '@/components/providers/AuthProvider';
-import { Button } from '@/components/ui/Button';
+import { Button, buttonVariants } from '@/components/ui/Button';
 import { Logo } from '@/components/common/Logo';
 import { useToast } from '@/components/ui/Toast';
 
@@ -139,15 +139,17 @@ export function Header(): React.ReactElement {
             </div>
           ) : (
             <div className="flex items-center gap-3">
-              <Link href="/login">
-                <Button variant="ghost" size="sm" className="font-medium">
-                  Log In
-                </Button>
+              <Link
+                href="/login"
+                className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'font-medium')}
+              >
+                Log In
               </Link>
-              <Link href="/signup">
-                <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-sm">
-                  Sign Up
-                </Button>
+              <Link
+                href="/signup"
+                className={cn(buttonVariants({ size: 'sm' }), 'font-medium shadow-sm')}
+              >
+                Sign Up
               </Link>
             </div>
           )}
@@ -227,15 +229,17 @@ export function Header(): React.ReactElement {
               </div>
             ) : (
               <div className="grid gap-4">
-                <Link href="/login">
-                  <Button variant="outline" className="w-full justify-center h-11 text-base">
-                    Log In
-                  </Button>
+                <Link
+                  href="/login"
+                  className={cn(buttonVariants({ variant: 'outline' }), 'w-full justify-center h-11 text-base')}
+                >
+                  Log In
                 </Link>
-                <Link href="/signup">
-                  <Button className="w-full justify-center h-11 text-base bg-blue-600 hover:bg-blue-700 text-white shadow-sm">
-                    Sign Up
-                  </Button>
+                <Link
+                  href="/signup"
+                  className={cn(buttonVariants(), 'w-full justify-center h-11 text-base shadow-sm')}
+                >
+                  Sign Up
                 </Link>
               </div>
             )}

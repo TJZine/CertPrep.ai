@@ -262,7 +262,8 @@ export async function getStorageStats(): Promise<{
   
   // Estimation: ~2KB per quiz (with questions), ~1KB per result
   // This is faster and uses O(1) memory compared to JSON.stringify(allData)
-  const estimatedSizeKB = Math.round((quizCount * 2 + resultCount * 1) * 1024 / 1024);
+  const estimatedBytes = quizCount * 2 * 1024 + resultCount * 1024;
+  const estimatedSizeKB = Math.round(estimatedBytes / 1024);
 
   return {
     quizCount,

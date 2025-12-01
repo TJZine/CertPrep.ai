@@ -1,11 +1,40 @@
 import { createClient } from '@supabase/supabase-js';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import { NextResponse } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server';
 
-export async function DELETE(): Promise<NextResponse> {
+const allowedOrigins = new Set(
+  [
+    process.env.NEXT_PUBLIC_SITE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    'https://certprep.ai',
+  ].filter(Boolean),
+);
+
+function isAllowedOrigin(originHeader: string | null, requestOrigin: string): boolean {
+  if (!originHeader) return false;
+  try {
+    const origin = new URL(originHeader).origin;
+    if (origin === requestOrigin) return true;
+    return allowedOrigins.has(origin);
+  } catch {
+    return false;
+  }
+}
+
+function isSameSiteRequest(request: NextRequest): boolean {
+  const fetchSite = request.headers.get('sec-fetch-site');
+  return fetchSite === null || fetchSite === 'same-origin' || fetchSite === 'none' || fetchSite === 'same-site';
+}
+
+export async function DELETE(request: NextRequest): Promise<NextResponse> {
   try {
     const cookieStore = await cookies();
+    const requestOrigin = request.nextUrl.origin;
+
+    if (!isSameSiteRequest(request) || !isAllowedOrigin(request.headers.get('origin'), requestOrigin)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
 
     // 1. Verify Session
     const supabase = createServerClient(

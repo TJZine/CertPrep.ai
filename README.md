@@ -39,7 +39,8 @@ CertPrep.ai is a modern, offline-first quiz application designed to help users p
                                                                                                                                                       
   ---                                                                                                                                                 
                                                                                                                                                       
-  ## Features
+<a id="features"></a>
+## Features
 <!-- Use a feature grid for visual scanning -->
 <table>
   <tr>
@@ -105,6 +106,7 @@ CertPrep.ai is a modern, offline-first quiz application designed to help users p
 
 ---
 
+<a id="demo"></a>
 ## Demo
 
 > **Live Demo:** [https://certprep-ai.vercel.app](https://certprep-ai.vercel.app)
@@ -114,8 +116,10 @@ CertPrep.ai is a modern, offline-first quiz application designed to help users p
 
 ---
 
+<a id="getting-started"></a>
 ## Getting Started
 
+<a id="prerequisites"></a>
 ### Prerequisites
 
 | Requirement | Version | Installation |
@@ -124,6 +128,7 @@ CertPrep.ai is a modern, offline-first quiz application designed to help users p
 | npm/yarn/pnpm | Latest | Comes with Node.js |
 | Supabase Account | - | [Sign up](https://supabase.com/) |
 
+<a id="installation"></a>
 ### Installation
 
 ```bash
@@ -141,6 +146,7 @@ yarn install
 pnpm install
 ```
 
+<a id="environment-setup"></a>
 ### Environment Setup
 
 1. **Copy the environment template:**
@@ -237,6 +243,7 @@ graph TD
 
 ---
 
+<a id="architecture"></a>
 ## Architecture
 
 ### Tech Stack
@@ -319,8 +326,9 @@ graph TB
 ---                                                                                                                                                 
                                                                                                                                                     
 ## <a id="documentation"></a>📚 Documentation                                                                                                                                  
-                                                                                                                                                    
-| Document | Description ||----------|-------------|
+                                                                                                                                                     
+| Document | Description |
+|----------|-------------|
 | [📖 API Reference](./docs/API.md) | Complete API documentation |
 | [🏗️ Architecture](./docs/ARCHITECTURE.md) | System design and patterns |
 | [🔒 Security](./SECURITY.md) | Security policies and practices |
@@ -331,6 +339,7 @@ graph TB
 
 ---
 
+<a id="testing"></a>
 ## Testing
 
 ```bash
@@ -357,6 +366,7 @@ npm run test:coverage
 
 ---
 
+<a id="deployment"></a>
 ## Deployment
 
 ### Vercel (Recommended)
@@ -409,6 +419,7 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 
 ---
 
+<a id="security"></a>
 ## Security
 
 > [!CAUTION]
@@ -420,6 +431,7 @@ See [SECURITY.md](SECURITY.md) for our full security policy.
 
 ---
 
+<a id="license"></a>
 ## License
 
 This project is licensed under the **Apache 2.0 License** - see the [LICENSE](LICENSE) file for details.
@@ -434,6 +446,7 @@ Permission is hereby granted, free of charge, to any person obtaining a copy...
 
 ---
 
+<a id="acknowledgments"></a>
 ## Acknowledgments
 
 - [Next.js](https://nextjs.org/) - The React Framework
