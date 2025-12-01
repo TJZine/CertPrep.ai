@@ -47,6 +47,7 @@ agents.md
 .fastembed_cache
 .codannaignore
 .vscode
+GEMINI.md
 
 # Sentry Config File
 .env.sentry-build-plugin

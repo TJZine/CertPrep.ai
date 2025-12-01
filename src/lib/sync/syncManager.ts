@@ -18,6 +18,7 @@ function getSupabaseClient(): ReturnType<typeof createClient> {
   return supabaseInstance;
 }
 const BATCH_SIZE = 50;
+const MAX_SYNC_PAGES = 20;
 
 // Simple in-memory lock to prevent race conditions if sync is triggered multiple times rapidly
 // let isSyncing = false; // Removed unused variable
@@ -106,7 +107,23 @@ async function performSync(userId: string): Promise<void> {
 
         if (error) {
           logger.error('Failed to push results batch to Supabase:', error);
-          // Continue to next batch instead of failing completely
+
+          // Circuit Breaker: Stop syncing if we hit critical errors
+          // Check for standard PostgREST codes or HTTP status codes if available
+          const code = error.code;
+          const status = (error as unknown as { status?: number }).status; // Supabase error object often contains status
+
+          if (
+            code === 'PGRST301' || // JWT expired or RLS violation
+            code === '429' ||      // Rate limit (if passed as code)
+            code === '401' ||      // Unauthorized (if passed as code)
+            status === 429 ||      // Rate limit (HTTP status)
+            status === 401         // Unauthorized (HTTP status)
+          ) {
+            logger.error(`Critical sync error detected (${code || status}). Aborting push to prevent API hammering.`);
+            break;
+          }
+          // Continue to next batch instead of failing completely for non-critical errors
         } else {
           // Mark as synced locally
           await db.results.bulkUpdate(
@@ -118,8 +135,16 @@ async function performSync(userId: string): Promise<void> {
 
     // 2. PULL: Incremental Sync with Keyset Pagination
     let hasMore = true;
+    let pageCount = 0;
 
     while (hasMore) {
+      if (pageCount >= MAX_SYNC_PAGES) {
+        logger.warn(`Sync limit reached (${MAX_SYNC_PAGES} pages), pausing until next interval`);
+        hasMore = false;
+        break;
+      }
+      pageCount++;
+
       const cursor = await getSyncCursor();
       
       // Validate timestamp to prevent malformed queries

@@ -108,8 +108,8 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
 
   // Refresh session if expired - required for Server Components
   // https://supabase.com/docs/guides/auth/server-side/nextjs
-  const {
-    data: { user },
+  const { 
+    data: { user }, 
   } = await supabase.auth.getUser()
 
   const isProtectedRoute = PROTECTED_ROUTES.some((route) => request.nextUrl.pathname.startsWith(route))
@@ -146,6 +146,6 @@ export const config = {
      * - favicon.ico (favicon file)
      * Feel free to modify this pattern to include more paths.
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|.*\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }
