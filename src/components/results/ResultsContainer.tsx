@@ -272,7 +272,7 @@ export function ResultsContainer({ result, quiz, previousScore }: ResultsContain
           missedQuestions={missedQuestions}
           flaggedQuestionIds={result.flagged_questions}
           allQuestions={quiz.questions}
-          onReviewMissed={() => setQuestionFilter('incorrect')}
+          onReviewMissed={() => handleFilterChange('incorrect')}
           className="mb-8 no-print"
         />
 

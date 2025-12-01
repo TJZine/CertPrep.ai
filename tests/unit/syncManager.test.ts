@@ -120,8 +120,30 @@ describe('SyncManager', () => {
 
   it('should push unsynced local results to Supabase', async () => {
     const unsyncedResults = [
-      { id: 'local-1', score: 100, synced: 0 },
-      { id: 'local-2', score: 90, synced: 0 }
+      { 
+        id: 'local-1', 
+        score: 100, 
+        synced: 0, 
+        quiz_id: 'quiz-1', 
+        timestamp: Date.now(), 
+        mode: 'practice', 
+        time_taken_seconds: 60, 
+        answers: {}, 
+        flagged_questions: [], 
+        category_breakdown: {} 
+      },
+      { 
+        id: 'local-2', 
+        score: 90, 
+        synced: 0, 
+        quiz_id: 'quiz-2', 
+        timestamp: Date.now(), 
+        mode: 'exam', 
+        time_taken_seconds: 120, 
+        answers: {}, 
+        flagged_questions: [], 
+        category_breakdown: {} 
+      }
     ];
 
     // Mock local DB returning unsynced items
@@ -159,7 +181,18 @@ describe('SyncManager', () => {
 
   it('should not mark results as synced if push fails', async () => {
     const unsyncedResults = [
-      { id: 'local-1', score: 100, synced: 0 }
+      { 
+        id: 'local-1', 
+        score: 100, 
+        synced: 0, 
+        quiz_id: 'quiz-1', 
+        timestamp: Date.now(), 
+        mode: 'practice', 
+        time_taken_seconds: 60, 
+        answers: {}, 
+        flagged_questions: [], 
+        category_breakdown: {} 
+      }
     ];
 
     vi.mocked(db.results.toArray).mockResolvedValueOnce(unsyncedResults as unknown as Result[]);

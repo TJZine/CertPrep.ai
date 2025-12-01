@@ -39,7 +39,7 @@ describe.skipIf(!shouldRun)('Row Level Security (RLS) Verification', () => {
     const adminClient = createClient(url, serviceRoleKey);
 
     // Delete all data from 'results' table
-    const { error: deleteResultsError } = await adminClient.from('results').delete().neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all rows
+    const { error: deleteResultsError } = await adminClient.from('results').delete().gt('id', '00000000-0000-0000-0000-000000000000'); // Delete all rows
     if (deleteResultsError) {
       console.error('Error clearing results table:', deleteResultsError);
       throw deleteResultsError;

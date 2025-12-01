@@ -324,6 +324,7 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
             if (!currentQ || 
                 draft.questionQueue[draft.currentIndex] !== questionId ||
                 draft.selectedAnswer !== currentSelectedAnswer) {
+              draft.isSubmitting = false;
               return;
             }
             
@@ -399,6 +400,7 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
               if (!currentQ || 
                   draft.questionQueue[draft.currentIndex] !== questionId ||
                   draft.selectedAnswer !== answerId) {
+                draft.isSubmitting = false;
                 return;
               }
               

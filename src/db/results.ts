@@ -37,7 +37,11 @@ export async function calculateResults(
       let isCorrect = false;
       if (userAnswer) {
         const userHash = await hashAnswer(userAnswer);
-        isCorrect = userHash === question.correct_answer_hash;
+        if (question.correct_answer_hash) {
+          isCorrect = userHash === question.correct_answer_hash;
+        } else if (question.correct_answer) {
+          isCorrect = userAnswer === question.correct_answer;
+        }
       }
       return { category, isCorrect };
     })
@@ -146,7 +150,11 @@ export async function getCategoryPerformance(quizId: string): Promise<CategoryPe
           let isCorrect = false;
           if (userAnswer) {
             const userHash = await hashAnswer(userAnswer);
-            isCorrect = userHash === question.correct_answer_hash;
+            if (question.correct_answer_hash) {
+              isCorrect = userHash === question.correct_answer_hash;
+            } else if (question.correct_answer) {
+              isCorrect = userAnswer === question.correct_answer;
+            }
           }
           return { category, isCorrect };
         })
@@ -233,7 +241,11 @@ export async function getOverallStats(): Promise<OverallStats> {
           let isCorrect = false;
           if (userAnswer) {
             const userHash = await hashAnswer(userAnswer);
-            isCorrect = userHash === question.correct_answer_hash;
+            if (question.correct_answer_hash) {
+              isCorrect = userHash === question.correct_answer_hash;
+            } else if (question.correct_answer) {
+              isCorrect = userAnswer === question.correct_answer;
+            }
           }
           return { category, isCorrect };
         })

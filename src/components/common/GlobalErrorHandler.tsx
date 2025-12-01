@@ -103,16 +103,21 @@ export class GlobalErrorHandler extends React.Component<GlobalErrorHandlerProps,
                   <pre className="overflow-auto whitespace-pre-wrap text-xs text-slate-600 max-h-40">
                     {this.state.error?.message || 'Unknown error'}
                     {'\n\n'}
-                    {this.state.error?.stack}
+                    {this.state.error?.stack || 'No stack trace available'}
                   </pre>
                   <Button
                     variant="outline"
                     size="sm"
                     className="mt-2 w-full"
-                    onClick={() => {
-                      const text = `${this.state.error?.message}\n\n${this.state.error?.stack}`;
-                      navigator.clipboard.writeText(text);
-                      alert('Error details copied to clipboard');
+                    onClick={async () => {
+                      const text = `${this.state.error?.message || 'Unknown error'}\n\n${this.state.error?.stack || 'No stack trace'}`;
+                      try {
+                        await navigator.clipboard.writeText(text);
+                        alert('Error details copied to clipboard');
+                      } catch {
+                        console.warn('Clipboard API failed, falling back to alert');
+                        alert('Could not copy to clipboard. Please manually copy the text above.');
+                      }
                     }}
                   >
                     Copy Error Details

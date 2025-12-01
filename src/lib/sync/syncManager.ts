@@ -63,7 +63,7 @@ export async function syncResults(userId: string): Promise<void> {
     // Fallback for environments without Web Locks (e.g. some tests or very old browsers)
     if (syncState.isSyncing) {
       if (Date.now() - syncState.lastSyncAttempt > 30000) {
-        console.warn('Sync lock timed out, resetting...');
+        logger.warn('Sync lock timed out, resetting...');
         syncState.isSyncing = false;
       } else {
         return;

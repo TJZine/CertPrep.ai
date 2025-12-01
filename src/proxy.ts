@@ -4,7 +4,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 const PROTECTED_ROUTES = ['/quiz', '/results', '/library', '/settings', '/analytics']
 const AUTH_ROUTES = ['/login', '/signup', '/forgot-password']
 
-export async function middleware(request: NextRequest): Promise<NextResponse> {
+export async function proxy(request: NextRequest): Promise<NextResponse> {
   // 1. Generate Nonce for CSP
   const nonce = crypto.randomUUID()
   
@@ -41,18 +41,19 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
     .replace(/\s{2,}/g, ' ')
     .trim()
 
-  // 3. Initialize Response with Headers
+  // 3. Initialize Response with Headers ONCE
   const requestHeaders = new Headers(request.headers)
   requestHeaders.set('x-nonce', nonce)
   requestHeaders.set('Content-Security-Policy', contentSecurityPolicyHeaderValue)
 
-  let response = NextResponse.next({
+  const response = NextResponse.next({
     request: {
       headers: requestHeaders,
     },
   })
   response.headers.set('Content-Security-Policy', contentSecurityPolicyHeaderValue)
 
+  // 4. Supabase Client
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   const supabaseUrlEnv = process.env.NEXT_PUBLIC_SUPABASE_URL
 
@@ -64,12 +65,8 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
     }
   }
 
-  // In non-production, we might tolerate missing keys for build/test, but never use a fake key for real requests.
-  // If keys are missing, we should ideally fail or mock, but for now we ensure we don't accidentally send 'placeholder-key' to a real endpoint.
   const urlToUse = supabaseUrlEnv || 'https://placeholder.supabase.co'
   const keyToUse = supabaseKey || 'placeholder-key'
-
-
 
   const supabase = createServerClient(
     urlToUse,
@@ -80,19 +77,9 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) => {
-            request.cookies.set(name, value)
-          })
-          
-          response = NextResponse.next({
-            request: {
-              headers: requestHeaders,
-            },
-          })
-          
-          response.headers.set('Content-Security-Policy', contentSecurityPolicyHeaderValue)
-          
+          // MUTATE existing response, don't destroy it
           cookiesToSet.forEach(({ name, value, options }) => {
+            request.cookies.set(name, value) // Update req for current processing
             response.cookies.set({
               name,
               value,
@@ -106,8 +93,7 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
     }
   )
 
-  // Refresh session if expired - required for Server Components
-  // https://supabase.com/docs/guides/auth/server-side/nextjs
+  // 5. Auth Logic
   const { 
     data: { user }, 
   } = await supabase.auth.getUser()
@@ -115,27 +101,46 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
   const isProtectedRoute = PROTECTED_ROUTES.some((route) => request.nextUrl.pathname.startsWith(route))
   const isAuthRoute = AUTH_ROUTES.some((route) => request.nextUrl.pathname.startsWith(route))
 
-  // 1. Unauthenticated users trying to access protected routes -> Redirect to Login
+  // Unauthenticated users trying to access protected routes -> Redirect to Login
   if (isProtectedRoute && !user) {
     const redirectUrl = new URL('/login', request.url)
     
     // Validate 'next' param to prevent loops and open redirects
     const nextPath = request.nextUrl.pathname + request.nextUrl.search
-    // Ensure it's a relative path and not an auth route
     if (nextPath.startsWith('/') && !nextPath.startsWith('//') && !AUTH_ROUTES.some(r => nextPath.startsWith(r))) {
       redirectUrl.searchParams.set('next', nextPath)
     }
     
-    return NextResponse.redirect(redirectUrl)
+    const redirectResponse = NextResponse.redirect(redirectUrl)
+    
+    // Copy cookies from the main response to the redirect response
+    const cookies = response.cookies.getAll()
+    cookies.forEach(cookie => {
+      redirectResponse.cookies.set(cookie)
+    })
+
+    return redirectResponse
   }
 
-  // 2. Authenticated users trying to access auth routes (login/signup) -> Redirect to Dashboard (Root)
+  // Authenticated users trying to access auth routes -> Redirect to Dashboard
   if (isAuthRoute && user) {
-    return NextResponse.redirect(new URL('/', request.url))
+    const redirectUrl = new URL('/', request.url)
+    const redirectResponse = NextResponse.redirect(redirectUrl)
+
+    // Copy cookies from the main response to the redirect response
+    const cookies = response.cookies.getAll()
+    cookies.forEach(cookie => {
+      redirectResponse.cookies.set(cookie)
+    })
+    
+    return redirectResponse
   }
 
   return response
 }
+
+// Default export for Next.js to pick it up easily
+export default proxy
 
 export const config = {
   matcher: [

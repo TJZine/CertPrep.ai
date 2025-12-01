@@ -282,7 +282,6 @@ export function Button(props) {
 |------|------------|---------|
 | Components | PascalCase | `UserProfile.tsx` |
 | Hooks | camelCase with `use` prefix | `useAuth.ts` |
-
 | Utilities | camelCase | `formatDate.ts` |
 | Types | PascalCase | `User.ts` |
 | Constants | SCREAMING_SNAKE_CASE | `API_ENDPOINTS.ts` |

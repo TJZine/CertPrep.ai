@@ -27,9 +27,9 @@ CertPrep.ai is a modern, offline-first quiz application designed to help users p
   [![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC?style=flat-square&logo=tailwind-css)](https://tailwindcss.com/)
 
   <!-- Links Row -->
-  [Documentation](#documentation) •
   [Usage](#usage) •
   [Architecture](#architecture) •
+  [Documentation](./docs/API.md) •
   [Testing](#testing) •
   [Deployment](#deployment) •
   [Contributing](#contributing) •
@@ -95,7 +95,6 @@ CertPrep.ai is a modern, offline-first quiz application designed to help users p
   - [Environment Setup](#environment-setup)
 - [Usage](#usage)
 - [Architecture](#architecture)
-- [Documentation](#documentation)
 - [Testing](#testing)
 - [Deployment](#deployment)
 - [Contributing](#contributing)
@@ -318,20 +317,6 @@ graph TB
 ```
 
 </details>
-
----
-
-## 📚 Documentation
-
-| Document | Description |
-|----------|-------------|
-| [📖 API Reference](./docs/API.md) | Complete API documentation |
-| [🏗️ Architecture](./docs/ARCHITECTURE.md) | System design and patterns |
-| [🔒 Security](./SECURITY.md) | Security policies and practices |
-| [🤝 Contributing](./CONTRIBUTING.md) | Contribution guidelines |
-| [📝 Changelog](./CHANGELOG.md) | Version history |
-| [❓ FAQ](./docs/FAQ.md) | Frequently asked questions |
-| [👩‍💻 Code Review](./docs/CODE_REVIEW_IMPLEMENTATION.md) | Implementation standards & persona |
 
 ---
 

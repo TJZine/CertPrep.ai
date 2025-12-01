@@ -140,6 +140,8 @@ export function Header(): React.ReactElement {
                 variant="ghost"
                 size="sm"
                 onClick={handleSignOut}
+                isLoading={isSigningOut}
+                disabled={isSigningOut}
                 className="text-slate-600 hover:text-red-600 hover:bg-red-50 dark:text-slate-400 dark:hover:text-red-400 dark:hover:bg-red-900/20"
               >
                 Sign Out
@@ -203,6 +205,7 @@ export function Header(): React.ReactElement {
                 <Link
                   key={item.href}
                   href={item.href}
+                  onClick={() => setIsMenuOpen(false)}
                   className={cn(
                     'flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium transition-colors',
                     isActive
@@ -233,6 +236,8 @@ export function Header(): React.ReactElement {
                   variant="ghost"
                   className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
                   onClick={handleSignOut}
+                  isLoading={isSigningOut}
+                  disabled={isSigningOut}
                 >
                   <LogOut className="mr-2 h-4 w-4" />
                   Sign Out
@@ -240,12 +245,12 @@ export function Header(): React.ReactElement {
               </div>
             ) : (
               <div className="grid gap-4">
-                <Link href="/login">
+                <Link href="/login" onClick={() => setIsMenuOpen(false)}>
                   <Button variant="outline" className="w-full justify-center h-11 text-base">
                     Log In
                   </Button>
                 </Link>
-                <Link href="/signup">
+                <Link href="/signup" onClick={() => setIsMenuOpen(false)}>
                   <Button className="w-full justify-center h-11 text-base bg-blue-600 hover:bg-blue-700 text-white shadow-sm">
                     Sign Up
                   </Button>
