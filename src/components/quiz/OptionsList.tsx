@@ -12,6 +12,7 @@ interface OptionsListProps {
   hasSubmitted: boolean;
   onSelectOption: (key: string) => void;
   disabled?: boolean;
+  isResolving?: boolean;
   className?: string;
 }
 
@@ -27,6 +28,7 @@ export function OptionsList({
   hasSubmitted,
   onSelectOption,
   disabled = false,
+  isResolving = false,
   className,
 }: OptionsListProps): React.ReactElement {
   const sortedOptions = React.useMemo(
@@ -35,7 +37,7 @@ export function OptionsList({
   );
 
   const getOptionStatus = (key: string): OptionStatus => {
-    if (!hasSubmitted) {
+    if (!hasSubmitted || isResolving) {
       return key === selectedAnswer ? 'selected' : 'default';
     }
     if (key === correctAnswer) return 'correct';

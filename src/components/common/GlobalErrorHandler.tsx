@@ -41,11 +41,13 @@ export class GlobalErrorHandler extends React.Component<GlobalErrorHandlerProps,
     this.setState({ errorInfo });
 
     // Capture error in Sentry
-    Sentry.captureException(error, {
-      extra: {
-        componentStack: errorInfo.componentStack,
-      },
-    });
+    if (process.env.NODE_ENV === 'production') {
+      Sentry.captureException(error, {
+        extra: {
+          componentStack: errorInfo.componentStack,
+        },
+      });
+    }
 
     try {
       const errorLog = {
@@ -120,7 +122,10 @@ export class GlobalErrorHandler extends React.Component<GlobalErrorHandlerProps,
                     onClick={async () => {
                       const message = this.state.error?.message || 'Unknown error';
                       const stack = this.state.error?.stack || 'No stack trace available';
-                      const text = `${message}\n\n${stack}`;
+                      const componentStack = this.state.errorInfo?.componentStack;
+                      const text = componentStack
+                        ? `${message}\n\n${stack}\n\nComponent stack:\n${componentStack}`
+                        : `${message}\n\n${stack}`;
 
                       if (!navigator.clipboard?.writeText) {
                         console.warn('Clipboard API not available');

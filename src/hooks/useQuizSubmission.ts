@@ -84,6 +84,7 @@ export function useQuizSubmission({ quizId, isSmartRound = false }: UseQuizSubmi
           setSaveError(true);
           addToast('error', 'Failed to save result. Please try again.');
         }
+        throw error;
       } finally {
         if (isMountedRef.current) {
           setIsSaving(false);

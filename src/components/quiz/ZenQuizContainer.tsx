@@ -70,14 +70,17 @@ export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContaine
   const { formattedTime, start: startTimer, seconds, pause: pauseTimer } = useTimer({ autoStart: true });
   useBeforeUnload(!isComplete, 'Your quiz progress will be lost. Are you sure?');
 
+  type QuizErrorEvent = CustomEvent<{ message: string }>;
+
   React.useEffect(() => {
-    const handleQuizError = (event: CustomEvent<{ message: string }>): void => {
+    const handleQuizError = (event: QuizErrorEvent): void => {
       addToast('error', event.detail.message);
     };
 
-    window.addEventListener('quiz-error', handleQuizError as EventListener);
+    const listener = handleQuizError as unknown as EventListener;
+    window.addEventListener('quiz-error', listener);
     return (): void => {
-      window.removeEventListener('quiz-error', handleQuizError as EventListener);
+      window.removeEventListener('quiz-error', listener);
     };
   }, [addToast]);
 
@@ -172,7 +175,7 @@ export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContaine
     return answerRecord?.isCorrect ?? false;
   }, [currentQuestion, hasSubmitted, answers]);
 
-  const { resolvedAnswers } = useCorrectAnswer(
+  const { resolvedAnswers, isResolving } = useCorrectAnswer(
     currentQuestion?.id ?? null,
     currentQuestion?.correct_answer_hash ?? null,
     currentQuestion?.options
@@ -209,6 +212,7 @@ export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContaine
                   options={currentQuestion.options}
                   selectedAnswer={selectedAnswer}
                   correctAnswer={currentCorrectAnswer ?? ''}
+                  isResolving={isResolving}
                   hasSubmitted={hasSubmitted}
                   onSelectOption={selectAnswer}
                 />
@@ -279,6 +283,7 @@ export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContaine
     saveError,
     retrySave,
     handleExit,
+    isResolving,
   ]);
 
   if (!currentQuestion) {

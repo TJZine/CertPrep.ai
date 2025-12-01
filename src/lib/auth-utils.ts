@@ -2,11 +2,7 @@ import { AuthError } from '@supabase/supabase-js';
 import { logger } from '@/lib/logger';
 
 function isAuthError(error: unknown): error is AuthError {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    '__isAuthError' in error
-  );
+  return error instanceof AuthError;
 }
 
 /**
@@ -23,19 +19,28 @@ export function getAuthErrorMessage(error: unknown, context: 'login' | 'signup' 
   if (isAuthError(error)) {
     status = error.status;
     name = error.name;
-  } else if ((error as any) instanceof Error) { // eslint-disable-line @typescript-eslint/no-explicit-any
-    name = (error as Error).name;
+  } else if (error && typeof error === 'object' && 'name' in error) {
+    const { name: rawName } = error as { name?: unknown };
+    name = String(rawName ?? 'Error');
   } else {
     name = 'UnknownError';
   }
 
-  // Log sanitized error details
-  logger.error('Auth Error:', {
-    status,
-    name,
-  });
+  // Log sanitized error details; expected 4xx auth failures at warn to reduce noise.
+  const logPayload = { status, name };
+  if (status && status >= 500) {
+    logger.error('Auth Error:', logPayload);
+  } else {
+    logger.warn('Auth Warning:', logPayload);
+  }
 
-  return context === 'signup'
-    ? 'Unable to create account. Please try again.'
-    : 'Invalid email or password. Please try again.';
+  if (context === 'signup') {
+    return 'Unable to create account. Please try again.';
+  }
+
+  if (context === 'profile') {
+    return 'Unable to update profile. Please try again.';
+  }
+
+  return 'Invalid email or password. Please try again.';
 }
