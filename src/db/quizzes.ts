@@ -208,8 +208,8 @@ export async function deleteQuiz(id: string): Promise<void> {
 /**
  * Aggregates quiz statistics from associated results.
  */
-export async function getQuizStats(quizId: string): Promise<QuizStats> {
-  const attempts = await db.results.where('quiz_id').equals(quizId).sortBy('timestamp');
+export async function getQuizStats(quizId: string, userId: string): Promise<QuizStats> {
+  const attempts = await db.results.where('[user_id+quiz_id]').equals([userId, quizId]).sortBy('timestamp');
   const attemptCount = attempts.length;
 
   if (attemptCount === 0) {

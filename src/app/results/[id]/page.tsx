@@ -8,6 +8,8 @@ import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { Button } from '@/components/ui/Button';
 import { useResult, useQuiz, useQuizResults, useInitializeDatabase } from '@/hooks/useDatabase';
 import { ArrowLeft, AlertCircle } from 'lucide-react';
+import { useAuth } from '@/components/providers/AuthProvider';
+import { useEffectiveUserId } from '@/hooks/useEffectiveUserId';
 
 /**
  * Results page integrating analytics and review.
@@ -16,11 +18,13 @@ export default function ResultsPage(): React.ReactElement {
   const params = useParams();
   const router = useRouter();
   const resultId = params.id as string;
+  const { user } = useAuth();
+  const effectiveUserId = useEffectiveUserId(user?.id);
 
   const { isInitialized, error: dbError } = useInitializeDatabase();
-  const { result, isLoading: resultLoading } = useResult(isInitialized ? resultId : undefined);
+  const { result, isLoading: resultLoading } = useResult(isInitialized ? resultId : undefined, effectiveUserId ?? undefined);
   const { quiz, isLoading: quizLoading } = useQuiz(result?.quiz_id);
-  const { results: allQuizResults } = useQuizResults(result?.quiz_id);
+  const { results: allQuizResults } = useQuizResults(result?.quiz_id, effectiveUserId ?? undefined);
 
   const previousScore = React.useMemo(() => {
     if (!allQuizResults || allQuizResults.length < 2 || !result) {
@@ -37,7 +41,7 @@ export default function ResultsPage(): React.ReactElement {
     return null;
   }, [allQuizResults, result]);
 
-  if (!isInitialized || resultLoading || quizLoading) {
+  if (!isInitialized || !effectiveUserId || resultLoading || quizLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
         <LoadingSpinner size="lg" text="Loading your results..." />

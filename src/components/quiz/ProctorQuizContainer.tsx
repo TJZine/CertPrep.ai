@@ -23,6 +23,8 @@ import { createResult } from '@/db/results';
 import { TIMER } from '@/lib/constants';
 import type { Quiz } from '@/types/quiz';
 import { useSync } from '@/hooks/useSync';
+import { useAuth } from '@/components/providers/AuthProvider';
+import { useEffectiveUserId } from '@/hooks/useEffectiveUserId';
 
 interface ProctorQuizContainerProps {
   quiz: Quiz;
@@ -39,6 +41,8 @@ export function ProctorQuizContainer({
   const router = useRouter();
   const { addToast } = useToast();
   const { sync } = useSync();
+  const { user } = useAuth();
+  const effectiveUserId = useEffectiveUserId(user?.id);
 
   const hasSavedResultRef = React.useRef(false);
 
@@ -127,8 +131,15 @@ export function ProctorQuizContainer({
     try {
       pauseTimer();
       submitExam();
+      if (!effectiveUserId) {
+        addToast('error', 'Unable to save results: no user context available.');
+        setIsSubmitting(false);
+        return;
+      }
+
       const result = await createResult({
         quizId: quiz.id,
+        userId: effectiveUserId,
         mode: 'proctor',
         answers: buildAnswersRecord(),
         flaggedQuestions: Array.from(flaggedQuestions),
@@ -153,8 +164,15 @@ export function ProctorQuizContainer({
     pauseTimer();
     autoSubmitExam();
     try {
+      if (!effectiveUserId) {
+        addToast('error', 'Unable to save results: no user context available.');
+        setIsSubmitting(false);
+        return null;
+      }
+
       const result = await createResult({
         quizId: quiz.id,
+        userId: effectiveUserId,
         mode: 'proctor',
         answers: buildAnswersRecord(),
         flaggedQuestions: Array.from(flaggedQuestions),
@@ -173,7 +191,7 @@ export function ProctorQuizContainer({
     } finally {
       setIsSubmitting(false);
     }
-  }, [addToast, autoResultId, autoSubmitExam, buildAnswersRecord, durationMinutes, flaggedQuestions, isSubmitting, pauseTimer, quiz.id, sync]);
+  }, [addToast, autoResultId, autoSubmitExam, buildAnswersRecord, durationMinutes, effectiveUserId, flaggedQuestions, isSubmitting, pauseTimer, quiz.id, sync]);
 
   React.useEffect(() => {
     autoSubmitRef.current = handleAutoSubmit;

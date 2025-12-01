@@ -4,6 +4,8 @@ import { useToast } from '@/components/ui/Toast';
 import { createResult } from '@/db/results';
 import { useSync } from '@/hooks/useSync';
 import { useQuizSessionStore } from '@/stores/quizSessionStore';
+import { useAuth } from '@/components/providers/AuthProvider';
+import { useEffectiveUserId } from '@/hooks/useEffectiveUserId';
 
 interface UseQuizSubmissionProps {
   quizId: string;
@@ -21,6 +23,8 @@ export function useQuizSubmission({ quizId, isSmartRound = false }: UseQuizSubmi
   const router = useRouter();
   const { addToast } = useToast();
   const { sync } = useSync();
+  const { user } = useAuth();
+  const effectiveUserId = useEffectiveUserId(user?.id);
   const { answers, flaggedQuestions, questions } = useQuizSessionStore();
 
   const [saveError, setSaveError] = useState(false);
@@ -48,8 +52,15 @@ export function useQuizSubmission({ quizId, isSmartRound = false }: UseQuizSubmi
           answersRecord[questionId] = record.selectedAnswer;
         });
 
+        if (!effectiveUserId) {
+          setSaveError(true);
+          addToast('error', 'Unable to save result: no user context available.');
+          return;
+        }
+
         const result = await createResult({
           quizId,
+          userId: effectiveUserId,
           mode: 'zen',
           answers: answersRecord,
           flaggedQuestions: Array.from(flaggedQuestions),
@@ -92,7 +103,7 @@ export function useQuizSubmission({ quizId, isSmartRound = false }: UseQuizSubmi
         }
       }
     },
-    [addToast, answers, flaggedQuestions, isSmartRound, quizId, router, sync, questions]
+    [addToast, answers, flaggedQuestions, isSmartRound, quizId, router, sync, questions, effectiveUserId]
   );
 
   const retrySave = useCallback(

@@ -99,65 +99,75 @@ export function useQuiz(id: string | undefined): UseQuizResponse {
 /**
  * Retrieves a quiz and its aggregated stats with live updates.
  */
-export function useQuizWithStats(id: string | undefined): UseQuizWithStatsResponse {
+export function useQuizWithStats(id: string | undefined, userId: string | undefined): UseQuizWithStatsResponse {
   const data = useLiveQuery(
     async () => {
-      if (!id) {
+      if (!id || !userId) {
         return { quiz: undefined, stats: null };
       }
       const quiz = await db.quizzes.get(id);
       if (!quiz) {
         return { quiz: undefined, stats: null };
       }
-      const stats = await getQuizStats(id);
+      const stats = await getQuizStats(id, userId);
       return { quiz, stats };
     },
-    [id],
+    [id, userId],
   );
 
   return {
-    quiz: data?.quiz,
+    quiz: id && userId ? data?.quiz : undefined,
     stats: data?.stats ?? null,
-    isLoading: id ? data === undefined : false,
+    isLoading: !id || !userId ? true : data === undefined,
   };
 }
 
 /**
  * Retrieves all results with live updates.
  */
-export function useResults(): UseResultsResponse {
-  const results = useLiveQuery(() => db.results.orderBy('timestamp').reverse().toArray(), []);
+export function useResults(userId: string | undefined): UseResultsResponse {
+  const results = useLiveQuery(
+    () => (userId ? db.results.where('user_id').equals(userId).sortBy('timestamp') : []),
+    [userId],
+  );
   return {
-    results: results ?? [],
-    isLoading: results === undefined,
+    results: results ? results.reverse() : [],
+    isLoading: !userId ? true : results === undefined,
   };
 }
 
 /**
  * Retrieves a single result with live updates.
  */
-export function useResult(id: string | undefined): UseResultResponse {
-  const result = useLiveQuery(() => (id ? db.results.get(id) : undefined), [id]);
+export function useResult(id: string | undefined, userId: string | undefined): UseResultResponse {
+  const result = useLiveQuery(
+    async () => {
+      if (!id || !userId) return undefined;
+      const found = await db.results.get(id);
+      return found?.user_id === userId ? found : undefined;
+    },
+    [id, userId],
+  );
   return {
-    result: id ? result : undefined,
-    isLoading: id ? result === undefined : false,
+    result: id && userId ? result : undefined,
+    isLoading: !id || !userId ? true : result === undefined,
   };
 }
 
 /**
  * Retrieves results for a specific quiz with live updates.
  */
-export function useQuizResults(quizId: string | undefined): UseQuizResultsResponse {
+export function useQuizResults(quizId: string | undefined, userId: string | undefined): UseQuizResultsResponse {
   const results = useLiveQuery(async () => {
-    if (!quizId) {
+    if (!quizId || !userId) {
       return [] as Result[];
     }
-    const ordered = await db.results.where('quiz_id').equals(quizId).sortBy('timestamp');
+    const ordered = await db.results.where('[user_id+quiz_id]').equals([userId, quizId]).sortBy('timestamp');
     return ordered.reverse();
-  }, [quizId]);
+  }, [quizId, userId]);
 
   return {
     results: results ?? [],
-    isLoading: quizId ? results === undefined : false,
+    isLoading: !quizId || !userId ? true : results === undefined,
   };
 }

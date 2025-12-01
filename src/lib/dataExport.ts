@@ -47,7 +47,7 @@ function sanitizeQuizRecord(quiz: unknown): Quiz | null {
   };
 }
 
-function sanitizeResultRecord(result: unknown): Result | null {
+function sanitizeResultRecord(result: unknown, userId: string): Result | null {
   const parsed = ResultImportSchema.safeParse(result);
 
   if (!parsed.success) {
@@ -63,6 +63,8 @@ function sanitizeResultRecord(result: unknown): Result | null {
 
   return {
     ...parsed.data,
+    user_id: userId,
+    synced: 0,
     category_breakdown: sanitizedCategoryBreakdown,
   };
 }
@@ -71,7 +73,7 @@ function sanitizeResultRecord(result: unknown): Result | null {
  * Generator that streams the export JSON in chunks.
  * This prevents Out-Of-Memory errors for large datasets.
  */
-export async function* generateJSONExport(): AsyncGenerator<string> {
+export async function* generateJSONExport(userId: string): AsyncGenerator<string> {
   yield `{\n  "version": "1.0",\n  "exportedAt": "${new Date().toISOString()}",\n  "quizzes": [`;
 
   let offset = 0;
@@ -92,7 +94,7 @@ export async function* generateJSONExport(): AsyncGenerator<string> {
   
   offset = 0;
   while (true) {
-    const batch = await db.results.offset(offset).limit(BATCH_SIZE).toArray();
+    const batch = await db.results.where('user_id').equals(userId).offset(offset).limit(BATCH_SIZE).toArray();
     if (batch.length === 0) break;
     
     for (let i = 0; i < batch.length; i++) {
@@ -108,11 +110,11 @@ export async function* generateJSONExport(): AsyncGenerator<string> {
 /**
  * Download data as a JSON file using streaming to minimize memory usage.
  */
-export async function downloadDataAsFile(): Promise<void> {
+export async function downloadDataAsFile(userId: string): Promise<void> {
   const parts: string[] = [];
   
   // Consume the generator
-  for await (const chunk of generateJSONExport()) {
+  for await (const chunk of generateJSONExport(userId)) {
     parts.push(chunk);
   }
   
@@ -147,6 +149,7 @@ export function validateImportData(data: unknown): data is ExportData {
  */
 export async function importData(
   data: ExportData,
+  userId: string,
   mode: 'merge' | 'replace' = 'merge',
 ): Promise<{ quizzesImported: number; resultsImported: number }> {
   const sanitizedQuizzes: Quiz[] = [];
@@ -173,7 +176,7 @@ export async function importData(
   const resultIds = new Set<string>();
 
   for (const result of data.results) {
-    const sanitizedResult = sanitizeResultRecord(result);
+    const sanitizedResult = sanitizeResultRecord(result, userId);
     if (!sanitizedResult) continue;
     if (!allowedQuizIds.has(sanitizedResult.quiz_id)) {
       console.warn('Skipped result referencing missing quiz during import:', sanitizedResult.id);
@@ -222,7 +225,7 @@ export async function importData(
       quizzesToAdd.forEach((quiz) => mergedExistingQuizIds.add(quiz.id));
     }
 
-    const resultsInDb = await db.results.toArray();
+    const resultsInDb = await db.results.where('user_id').equals(userId).toArray();
     const mergedExistingResultIds = new Set<string>(resultsInDb.map((result) => result.id));
     const resultsToAdd = sanitizedResults.filter(
       (result) => mergedExistingQuizIds.has(result.quiz_id) && !mergedExistingResultIds.has(result.id),
@@ -251,14 +254,18 @@ export async function clearAllData(): Promise<void> {
 /**
  * Get storage usage statistics.
  */
-export async function getStorageStats(): Promise<{
+export async function getStorageStats(userId: string | null | undefined): Promise<{
   quizCount: number;
   resultCount: number;
   estimatedSizeKB: number;
 }> {
+  if (!userId) {
+    return { quizCount: 0, resultCount: 0, estimatedSizeKB: 0 };
+  }
+
   // Optimized: Use count() instead of toArray() to avoid loading all data
   const quizCount = await db.quizzes.count();
-  const resultCount = await db.results.count();
+  const resultCount = await db.results.where('user_id').equals(userId).count();
   
   // Estimation: ~2KB per quiz (with questions), ~1KB per result
   // This is faster and uses O(1) memory compared to JSON.stringify(allData)

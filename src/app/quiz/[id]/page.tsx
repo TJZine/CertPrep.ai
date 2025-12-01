@@ -8,13 +8,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { EmptyState } from '@/components/common/EmptyState';
+import { useAuth } from '@/components/providers/AuthProvider';
+import { useEffectiveUserId } from '@/hooks/useEffectiveUserId';
 
 export default function QuizLobbyPage(): React.ReactElement {
   const params = useParams();
   const router = useRouter();
   const id = typeof params?.id === 'string' ? params.id : '';
+  const { user } = useAuth();
+  const effectiveUserId = useEffectiveUserId(user?.id);
 
-  const { quiz, stats, isLoading } = useQuizWithStats(id);
+  const { quiz, stats, isLoading } = useQuizWithStats(id, effectiveUserId ?? undefined);
 
   if (isLoading) {
     return (

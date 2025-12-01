@@ -13,15 +13,19 @@ import { useResults, useQuizzes, useInitializeDatabase } from '@/hooks/useDataba
 import { useAnalyticsStats } from '@/hooks/useAnalyticsStats';
 import { getOverallStats, type OverallStats } from '@/db/results';
 import { BarChart3, Plus, ArrowLeft } from 'lucide-react';
+import { useAuth } from '@/components/providers/AuthProvider';
+import { useEffectiveUserId } from '@/hooks/useEffectiveUserId';
 
 /**
  * Analytics dashboard aggregating results across quizzes.
  */
 export default function AnalyticsPage(): React.ReactElement {
   const router = useRouter();
+  const { user } = useAuth();
+  const effectiveUserId = useEffectiveUserId(user?.id);
 
   const { isInitialized, error: dbError } = useInitializeDatabase();
-  const { results, isLoading: resultsLoading } = useResults();
+  const { results, isLoading: resultsLoading } = useResults(effectiveUserId ?? undefined);
   const { quizzes, isLoading: quizzesLoading } = useQuizzes();
 
   const [overallStats, setOverallStats] = React.useState<OverallStats | null>(null);
@@ -33,7 +37,7 @@ export default function AnalyticsPage(): React.ReactElement {
     let isMounted = true;
     const loadStats = async (): Promise<void> => {
       try {
-        const stats = await getOverallStats();
+        const stats = effectiveUserId ? await getOverallStats(effectiveUserId) : null;
         if (isMounted) {
           setOverallStats(stats);
           setStatsError(null);
@@ -51,7 +55,7 @@ export default function AnalyticsPage(): React.ReactElement {
     return (): void => {
       isMounted = false;
     };
-  }, [isInitialized, results]);
+  }, [effectiveUserId, isInitialized, results]);
 
   const quizTitles = React.useMemo(() => {
     const map = new Map<string, string>();
@@ -60,6 +64,21 @@ export default function AnalyticsPage(): React.ReactElement {
   }, [quizzes]);
 
   const { categoryPerformance, weakAreas, dailyStudyTime, isLoading: statsLoading } = useAnalyticsStats(results, quizzes);
+
+  if (!effectiveUserId) {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 text-center">
+        <BarChart3 className="mb-4 h-10 w-10 text-slate-400" aria-hidden="true" />
+        <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-50">Sign in to view analytics</h1>
+        <p className="mt-2 max-w-lg text-sm text-slate-600 dark:text-slate-300">
+          Your performance data is tied to your account. Please sign in to see your stats.
+        </p>
+        <Button className="mt-4" onClick={() => router.push('/login')}>
+          Go to Login
+        </Button>
+      </div>
+    );
+  }
 
   if (!isInitialized || resultsLoading || quizzesLoading || statsLoading) {
     return (

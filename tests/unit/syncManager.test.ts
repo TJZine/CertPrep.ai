@@ -79,7 +79,7 @@ describe('SyncManager', () => {
 
     // Verify setSyncCursor was called with the timestamp AND id of the last invalid record
     const lastResult = invalidResults[invalidResults.length - 1];
-    expect(syncState.setSyncCursor).toHaveBeenCalledWith(lastResult?.created_at, lastResult?.id);
+    expect(syncState.setSyncCursor).toHaveBeenCalledWith(lastResult?.created_at, 'user-123', lastResult?.id);
     
     // Verify bulkPut was NOT called (since no valid results)
     expect(db.results.bulkPut).not.toHaveBeenCalled();
@@ -122,6 +122,7 @@ describe('SyncManager', () => {
     const unsyncedResults = [
       { 
         id: 'local-1', 
+        user_id: 'user-123',
         score: 100, 
         synced: 0, 
         quiz_id: 'quiz-1', 
@@ -134,6 +135,7 @@ describe('SyncManager', () => {
       },
       { 
         id: 'local-2', 
+        user_id: 'user-123',
         score: 90, 
         synced: 0, 
         quiz_id: 'quiz-2', 
@@ -160,8 +162,8 @@ describe('SyncManager', () => {
     // Verify upsert called with correct data (excluding 'synced' field)
     expect(mockSupabase.upsert).toHaveBeenCalledWith(
       expect.arrayContaining([
-        expect.objectContaining({ id: 'local-1', score: 100 }),
-        expect.objectContaining({ id: 'local-2', score: 90 }),
+        expect.objectContaining({ id: 'local-1', score: 100, user_id: 'user-123' }),
+        expect.objectContaining({ id: 'local-2', score: 90, user_id: 'user-123' }),
       ]),
       { onConflict: 'id' }
     );
@@ -183,6 +185,7 @@ describe('SyncManager', () => {
     const unsyncedResults = [
       { 
         id: 'local-1', 
+        user_id: 'user-123',
         score: 100, 
         synced: 0, 
         quiz_id: 'quiz-1', 

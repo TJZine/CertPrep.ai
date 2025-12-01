@@ -14,9 +14,13 @@ import {
   getStorageStats,
   type ExportData,
 } from '@/lib/dataExport';
+import { useAuth } from '@/components/providers/AuthProvider';
+import { useEffectiveUserId } from '@/hooks/useEffectiveUserId';
 
 export function DataManagement(): React.ReactElement {
   const { addToast } = useToast();
+  const { user } = useAuth();
+  const effectiveUserId = useEffectiveUserId(user?.id);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const [stats, setStats] = React.useState<{
@@ -34,18 +38,22 @@ export function DataManagement(): React.ReactElement {
   const [deleteConfirmation, setDeleteConfirmation] = React.useState('');
 
   React.useEffect((): void => {
-    getStorageStats().then(setStats);
-  }, []);
+    getStorageStats(effectiveUserId).then(setStats);
+  }, [effectiveUserId]);
 
   const refreshStats = async (): Promise<void> => {
-    const newStats = await getStorageStats();
+    const newStats = await getStorageStats(effectiveUserId);
     setStats(newStats);
   };
 
   const handleExport = async (): Promise<void> => {
+    if (!effectiveUserId) {
+      addToast('error', 'Unable to export without a user context.');
+      return;
+    }
     setIsExporting(true);
     try {
-      await downloadDataAsFile();
+      await downloadDataAsFile(effectiveUserId);
       addToast('success', 'Data exported successfully!');
     } catch (error) {
       console.error('Export failed:', error);
@@ -80,9 +88,13 @@ export function DataManagement(): React.ReactElement {
 
   const handleImportConfirm = async (): Promise<void> => {
     if (!importFile) return;
+    if (!effectiveUserId) {
+      addToast('error', 'Unable to import without a user context.');
+      return;
+    }
     setIsImporting(true);
     try {
-      const result = await importData(importFile, importMode);
+      const result = await importData(importFile, effectiveUserId, importMode);
       addToast('success', `Imported ${result.quizzesImported} quizzes and ${result.resultsImported} results!`);
       setShowImportModal(false);
       setImportFile(null);

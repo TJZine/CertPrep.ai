@@ -13,10 +13,14 @@ import { DeleteConfirmModal } from '@/components/dashboard/DeleteConfirmModal';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { useToast } from '@/components/ui/Toast';
 import type { Quiz } from '@/types/quiz';
+import { useAuth } from '@/components/providers/AuthProvider';
+import { useEffectiveUserId } from '@/hooks/useEffectiveUserId';
 
 export default function DashboardPage(): React.ReactElement {
   const { isInitialized, error: dbError } = useInitializeDatabase();
   const { quizzes, isLoading: quizzesLoading } = useQuizzes();
+  const { user } = useAuth();
+  const effectiveUserId = useEffectiveUserId(user?.id);
 
   const [quizStats, setQuizStats] = React.useState<Map<string, QuizStats>>(new Map());
   const [overallStats, setOverallStats] = React.useState<OverallStats | null>(null);
@@ -28,7 +32,7 @@ export default function DashboardPage(): React.ReactElement {
   const { addToast } = useToast();
 
   React.useEffect((): (() => void) | void => {
-    if (!isInitialized || quizzesLoading) {
+    if (!isInitialized || quizzesLoading || !effectiveUserId) {
       return;
     }
 
@@ -46,11 +50,11 @@ export default function DashboardPage(): React.ReactElement {
       try {
         const statsEntries = await Promise.all(
           quizzes.map(async (quiz) => {
-            const stats = await getQuizStats(quiz.id);
+            const stats = await getQuizStats(quiz.id, effectiveUserId!);
             return [quiz.id, stats] as const;
           }),
         );
-        const overall = await getOverallStats();
+        const overall = effectiveUserId ? await getOverallStats(effectiveUserId) : null;
 
         if (!isMounted) return;
         setQuizStats(new Map(statsEntries));
@@ -65,7 +69,7 @@ export default function DashboardPage(): React.ReactElement {
     return () => {
       isMounted = false;
     };
-  }, [isInitialized, quizzes, quizzesLoading]);
+  }, [effectiveUserId, isInitialized, quizzes, quizzesLoading]);
 
   const handleImportSuccess = (quiz: Quiz): void => {
     setIsImportModalOpen(false);

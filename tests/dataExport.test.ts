@@ -5,9 +5,11 @@ import { generateJSONExport, getStorageStats, importData, type ExportData } from
 import type { Quiz } from '@/types/quiz';
 import type { Result } from '@/types/result';
 
+const TEST_USER_ID = 'user-test-123';
+
 async function getAllDataFromGenerator(): Promise<ExportData> {
   let jsonString = '';
-  for await (const chunk of generateJSONExport()) {
+  for await (const chunk of generateJSONExport(TEST_USER_ID)) {
     jsonString += chunk;
   }
   return JSON.parse(jsonString) as ExportData;
@@ -51,6 +53,7 @@ describe('data export/import', () => {
   const sampleResult: Result = {
     id: '22222222-2222-4222-8222-222222222222',
     quiz_id: sampleQuiz.id,
+    user_id: TEST_USER_ID,
     timestamp: 1_700_000_100_000,
     mode: 'zen',
     score: 80,
@@ -68,7 +71,7 @@ describe('data export/import', () => {
     await db.quizzes.put(sampleQuiz);
     await db.results.put(sampleResult);
 
-    const stats = await getStorageStats();
+    const stats = await getStorageStats(TEST_USER_ID);
 
     expect(stats.quizCount).toBe(1);
     expect(stats.resultCount).toBe(1);
@@ -81,7 +84,7 @@ describe('data export/import', () => {
 
     const exported = await getAllDataFromGenerator();
 
-    const { quizzesImported, resultsImported } = await importData(exported, 'replace');
+    const { quizzesImported, resultsImported } = await importData(exported, TEST_USER_ID, 'replace');
 
     const restoredQuiz = await db.quizzes.get(sampleQuiz.id);
     const restoredResult = await db.results.get(sampleResult.id);
@@ -99,7 +102,7 @@ describe('data export/import', () => {
     await db.results.put(sampleResult);
 
     const exported = await getAllDataFromGenerator();
-    const { quizzesImported, resultsImported } = await importData(exported, 'merge');
+    const { quizzesImported, resultsImported } = await importData(exported, TEST_USER_ID, 'merge');
 
     const quizCount = await db.quizzes.count();
     const resultCount = await db.results.count();
@@ -124,7 +127,7 @@ describe('data export/import', () => {
       results: [sampleResult, orphanResult],
     };
 
-    const { quizzesImported, resultsImported } = await importData(exported, 'replace');
+    const { quizzesImported, resultsImported } = await importData(exported, TEST_USER_ID, 'replace');
     const storedResults = await db.results.toArray();
 
     expect(quizzesImported).toBe(1);

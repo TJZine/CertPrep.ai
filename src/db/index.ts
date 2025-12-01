@@ -4,6 +4,8 @@ import type { Result } from '@/types/result';
 
 import type { SyncState } from '@/types/sync';
 
+export const NIL_UUID = '00000000-0000-0000-0000-000000000000';
+
 // PRIVACY: Data is stored locally in IndexedDB via Dexie (Local-First).
 // Secure cloud sync (Supabase) is used for backup and cross-device synchronization only.
 
@@ -21,13 +23,20 @@ export class CertPrepDatabase extends Dexie {
     super('CertPrepDatabase');
 
     // Define schema version and indexes.
-    // Version 4: Added created_at index to quizzes table for sorting; Added syncState table
-    this.version(4).stores({
+    // Version 5: Add user_id and composite indexes for per-user isolation; scope sync cursor per user.
+    this.version(5).stores({
       quizzes: 'id, title, category, created_at, *tags',
-      results: 'id, quiz_id, timestamp, synced',
+      results: 'id, quiz_id, timestamp, synced, user_id, [user_id+synced], [user_id+quiz_id], [user_id+timestamp]',
       syncState: 'table, lastSyncedAt, synced, lastId',
-    }).upgrade(async () => {
-      // No data migration needed, Dexie handles index creation automatically
+    }).upgrade(async (tx) => {
+      // Backfill legacy results without user_id to a nil UUID and force re-sync prevention.
+      const resultsTable = tx.table('results');
+      await resultsTable.toCollection().modify((result: Record<string, unknown>) => {
+        if (!('user_id' in result) || !result.user_id) {
+          result.user_id = NIL_UUID;
+          result.synced = 0;
+        }
+      });
     });
 
     this.quizzes = this.table('quizzes');

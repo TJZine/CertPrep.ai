@@ -5,6 +5,7 @@ export type SyncFlag = 0 | 1;
 export interface Result {
   id: string;
   quiz_id: string;
+  user_id: string;
   timestamp: number;
   mode: QuizMode;
   score: number;

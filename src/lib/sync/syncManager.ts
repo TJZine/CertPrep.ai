@@ -86,7 +86,7 @@ async function performSync(userId: string): Promise<{ incomplete: boolean }> {
 
   try {
     // 1. PUSH: Upload unsynced local results to Supabase
-    const unsyncedResults = await db.results.where('synced').equals(0).toArray();
+    const unsyncedResults = await db.results.where('[user_id+synced]').equals([userId, 0]).toArray();
 
     if (unsyncedResults.length > 0) {
       // Chunk the upload to avoid hitting payload limits
@@ -157,7 +157,7 @@ async function performSync(userId: string): Promise<{ incomplete: boolean }> {
         break;
       }
 
-      const cursor = await getSyncCursor();
+      const cursor = await getSyncCursor(userId);
       
       // Validate timestamp to prevent malformed queries
       const timestamp = new Date(cursor.timestamp).toISOString();
@@ -210,6 +210,7 @@ async function performSync(userId: string): Promise<{ incomplete: boolean }> {
 
         resultsToSave.push({
           id: validResult.id,
+          user_id: userId,
           quiz_id: validResult.quiz_id,
           timestamp: validResult.timestamp,
           mode: validResult.mode,
@@ -228,7 +229,7 @@ async function performSync(userId: string): Promise<{ incomplete: boolean }> {
       }
       
       // Update cursor to the last seen record's timestamp AND id
-      await setSyncCursor(lastRecordCreatedAt, lastRecordId);
+      await setSyncCursor(lastRecordCreatedAt, userId, lastRecordId);
 
       if (remoteResults.length < BATCH_SIZE) {
         hasMore = false;

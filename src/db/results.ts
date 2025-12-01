@@ -10,6 +10,7 @@ export interface CreateResultInput {
   flaggedQuestions: string[];
   timeTakenSeconds: number;
   activeQuestionIds?: string[];
+  userId: string;
 }
 
 export interface OverallStats {
@@ -80,6 +81,10 @@ export async function calculateResults(
  * Persists a quiz result and returns the stored entity.
  */
 export async function createResult(input: CreateResultInput): Promise<Result> {
+  if (!input.userId) {
+    throw new Error('Cannot create result without a user context.');
+  }
+
   const quiz = await db.quizzes.get(input.quizId);
 
   if (!quiz) {
@@ -90,6 +95,7 @@ export async function createResult(input: CreateResultInput): Promise<Result> {
   const result: Result = {
     id: generateUUID(),
     quiz_id: input.quizId,
+    user_id: input.userId,
     timestamp: Date.now(),
     mode: input.mode,
     score,
@@ -107,23 +113,26 @@ export async function createResult(input: CreateResultInput): Promise<Result> {
 /**
  * Retrieves a result by its identifier.
  */
-export async function getResultById(id: string): Promise<Result | undefined> {
-  return db.results.get(id);
+export async function getResultById(id: string, userId: string): Promise<Result | undefined> {
+  const result = await db.results.get(id);
+  if (result?.user_id !== userId) return undefined;
+  return result;
 }
 
 /**
  * Retrieves all results for a quiz ordered by newest first.
  */
-export async function getResultsByQuizId(quizId: string): Promise<Result[]> {
-  const results = await db.results.where('quiz_id').equals(quizId).sortBy('timestamp');
+export async function getResultsByQuizId(quizId: string, userId: string): Promise<Result[]> {
+  const results = await db.results.where('[user_id+quiz_id]').equals([userId, quizId]).sortBy('timestamp');
   return results.reverse();
 }
 
 /**
  * Retrieves all results ordered by newest first.
  */
-export async function getAllResults(): Promise<Result[]> {
-  return db.results.orderBy('timestamp').reverse().toArray();
+export async function getAllResults(userId: string): Promise<Result[]> {
+  const results = await db.results.where('user_id').equals(userId).sortBy('timestamp');
+  return results.reverse();
 }
 
 /**
@@ -136,14 +145,14 @@ export async function deleteResult(id: string): Promise<void> {
 /**
  * Aggregates category performance across all attempts for a quiz.
  */
-export async function getCategoryPerformance(quizId: string): Promise<CategoryPerformance[]> {
+export async function getCategoryPerformance(quizId: string, userId: string): Promise<CategoryPerformance[]> {
   const quiz = await db.quizzes.get(quizId);
 
   if (!quiz) {
     throw new Error('Quiz not found.');
   }
 
-  const results = await getResultsByQuizId(quizId);
+  const results = await getResultsByQuizId(quizId, userId);
   const totals: Record<string, { correct: number; total: number }> = {};
 
   const allResultsData = await Promise.all(
@@ -192,10 +201,13 @@ export async function getCategoryPerformance(quizId: string): Promise<CategoryPe
 /**
  * Returns the IDs of questions answered incorrectly for a given result.
  */
-export async function getMissedQuestions(resultId: string): Promise<string[]> {
+export async function getMissedQuestions(resultId: string, userId: string): Promise<string[]> {
   const result = await db.results.get(resultId);
   if (!result) {
     throw new Error('Result not found.');
+  }
+  if (result.user_id !== userId) {
+    throw new Error('Result not accessible for this user.');
   }
 
   const quiz = await db.quizzes.get(result.quiz_id);
@@ -227,8 +239,11 @@ export async function getMissedQuestions(resultId: string): Promise<string[]> {
 /**
  * Aggregates global statistics across all quizzes and results.
  */
-export async function getOverallStats(): Promise<OverallStats> {
-  const [quizzes, results] = await Promise.all([db.quizzes.toArray(), db.results.toArray()]);
+export async function getOverallStats(userId: string): Promise<OverallStats> {
+  const [quizzes, results] = await Promise.all([
+    db.quizzes.toArray(),
+    db.results.where('user_id').equals(userId).toArray(),
+  ]);
   const quizMap = new Map(quizzes.map((quiz) => [quiz.id, quiz]));
 
   const totalQuizzes = quizzes.length;
