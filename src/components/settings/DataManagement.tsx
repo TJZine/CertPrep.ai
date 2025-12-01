@@ -143,9 +143,17 @@ export function DataManagement(): React.ReactElement {
             <HardDrive className="h-5 w-5" />
             Data Management
           </CardTitle>
-          <CardDescription>Export, import, or reset your quiz data. All data is stored locally on your device.</CardDescription>
+          <CardDescription>
+            Export, import, or reset your quiz data. Data is stored locally in your browser (unencrypted). On shared devices, use
+            the reset option to clear it.
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-100">
+            Local storage is not encrypted. Anyone with access to this browser profile could read quizzes and results. Clear data
+            below if privacy is a concern on shared devices.
+          </div>
+
           {stats ? (
             <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-800">
               <h4 className="mb-2 font-medium text-slate-900 dark:text-slate-100">Storage Usage</h4>

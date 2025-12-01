@@ -53,8 +53,8 @@ We support safe harbor for security researchers who:
 |---------|----------------|
 | Password Hashing | Supabase (bcrypt) |
 | Session Management | Supabase Auth with secure cookies |
-| Cookie Security | `Secure`, `HttpOnly`, `SameSite=Lax` |
-| Row-Level Security | PostgreSQL RLS policies |
+| Cookie Security | `Secure`, `HttpOnly`, `SameSite=Lax`, `Path=/` |
+| Row-Level Security | Enforced per-table with `auth.uid()` owner checks (see RLS policy checklist below) |
 
 ### Data Protection
 
@@ -65,7 +65,21 @@ We support safe harbor for security researchers who:
 | At Rest (Client) | IndexedDB (see note below) |
 
 > [!NOTE]
-> Local data in IndexedDB is not encrypted at rest. Users on shared devices should log out to clear local data.
+> Local data in IndexedDB is not encrypted at rest. Use **Settings → Data Management → Reset** on shared devices to clear local quizzes/results.
+
+### RLS Policy Checklist (Supabase)
+
+For each user-owned table (e.g., `results`), ensure:
+
+```sql
+ALTER TABLE results ENABLE ROW LEVEL SECURITY;
+CREATE POLICY results_select_owner ON results FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY results_insert_owner ON results FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY results_update_owner ON results FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+CREATE POLICY results_delete_owner ON results FOR DELETE USING (auth.uid() = user_id);
+```
+
+> Verify equivalent owner-scoped policies exist for any additional user-data tables.
 
 ### Content Security
 
