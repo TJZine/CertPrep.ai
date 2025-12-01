@@ -17,6 +17,8 @@ import { updateStudyStreak } from '@/lib/streaks';
 import { useQuizGrading } from '@/hooks/useQuizGrading';
 import { useResolveCorrectAnswers } from '@/hooks/useResolveCorrectAnswers';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
+import { useAuth } from '@/components/providers/AuthProvider';
+import { useEffectiveUserId } from '@/hooks/useEffectiveUserId';
 import type { Quiz } from '@/types/quiz';
 import type { Result } from '@/types/result';
 
@@ -32,6 +34,8 @@ interface ResultsContainerProps {
 export function ResultsContainer({ result, quiz, previousScore }: ResultsContainerProps): React.ReactElement {
   const router = useRouter();
   const { addToast } = useToast();
+  const { user } = useAuth();
+  const effectiveUserId = useEffectiveUserId(user?.id);
 
   const [showDeleteModal, setShowDeleteModal] = React.useState(false);
   const [isDeleting, setIsDeleting] = React.useState(false);
@@ -135,15 +139,21 @@ export function ResultsContainer({ result, quiz, previousScore }: ResultsContain
   };
 
   const handleDeleteResult = async (): Promise<void> => {
+    if (!effectiveUserId) {
+      addToast('error', 'Unable to delete result: missing user context.');
+      return;
+    }
+
     setIsDeleting(true);
 
     try {
-      await deleteResult(result.id);
+      await deleteResult(result.id, effectiveUserId);
       addToast('success', 'Result deleted successfully');
       router.push('/');
     } catch (error) {
       console.error('Failed to delete result:', error);
       addToast('error', 'Failed to delete result');
+    } finally {
       setIsDeleting(false);
     }
   };

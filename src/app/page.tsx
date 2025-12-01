@@ -87,9 +87,13 @@ export default function DashboardPage(): React.ReactElement {
 
   const handleConfirmDelete = async (): Promise<void> => {
     if (!deleteContext) return;
+    if (!effectiveUserId) {
+      addToast('error', 'Unable to delete quiz: missing user context.');
+      return;
+    }
     setIsDeleting(true);
     try {
-      await deleteQuiz(deleteContext.quiz.id);
+      await deleteQuiz(deleteContext.quiz.id, effectiveUserId);
       addToast('success', `Deleted "${deleteContext.quiz.title}"`);
       setDeleteContext(null);
     } catch (error) {

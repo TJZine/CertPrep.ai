@@ -136,9 +136,14 @@ export async function getAllResults(userId: string): Promise<Result[]> {
 }
 
 /**
- * Deletes a result by its identifier.
+ * Deletes a result by its identifier, scoped to the current user.
  */
-export async function deleteResult(id: string): Promise<void> {
+export async function deleteResult(id: string, userId: string): Promise<void> {
+  const result = await db.results.get(id);
+  if (!result || result.user_id !== userId) {
+    throw new Error('Result not found for this user.');
+  }
+
   await db.results.delete(id);
 }
 

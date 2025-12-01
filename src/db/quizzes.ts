@@ -170,14 +170,17 @@ export async function updateQuiz(
   const sanitizedUpdates: Partial<Omit<Quiz, 'id' | 'created_at'>> = { ...updates };
 
   if (updates.questions !== undefined) {
-    sanitizedUpdates.questions = sanitizeQuestions(updates.questions);
-    
-    // Validate that we aren't introducing questions without hashes
-    sanitizedUpdates.questions.forEach(q => {
-      if (!q.correct_answer_hash && !q.correct_answer) {
-         throw new Error(`Question ${q.id} is missing correct_answer_hash`);
-      }
-    });
+    const sanitizedQuestions = sanitizeQuestions(updates.questions);
+
+    sanitizedUpdates.questions = await Promise.all(
+      sanitizedQuestions.map(async ({ correct_answer, correct_answer_hash, ...rest }) => {
+        const hash = correct_answer_hash ?? (correct_answer ? await hashAnswer(correct_answer) : undefined);
+        if (!hash) {
+          throw new Error(`Question ${rest.id} is missing correct_answer_hash`);
+        }
+        return { ...rest, correct_answer_hash: hash };
+      }),
+    );
   }
 
   if (updates.title !== undefined) {
@@ -198,9 +201,9 @@ export async function updateQuiz(
 /**
  * Deletes a quiz and all associated results in a single transaction.
  */
-export async function deleteQuiz(id: string): Promise<void> {
+export async function deleteQuiz(id: string, userId: string): Promise<void> {
   await db.transaction('rw', db.quizzes, db.results, async () => {
-    await db.results.where('quiz_id').equals(id).delete();
+    await db.results.where('[user_id+quiz_id]').equals([userId, id]).delete();
     await db.quizzes.delete(id);
   });
 }

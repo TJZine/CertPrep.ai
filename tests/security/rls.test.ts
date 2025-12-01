@@ -101,8 +101,8 @@ describe.skipIf(!shouldRun)('Row Level Security (RLS) Verification', () => {
           email,
         });
 
-        if (linkError || !linkData.properties?.email_otp) {
-           throw new Error(`Failed to generate magic link: ${linkError?.message}`);
+        if (linkError || !linkData.properties?.hashed_token) {
+          throw new Error(`Failed to generate magic link: ${linkError?.message}`);
         }
 
         // 3. Verify OTP to get session (bypasses login captcha)

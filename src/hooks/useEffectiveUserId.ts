@@ -8,7 +8,9 @@ function ensureGuestUserId(): string | null {
   if (typeof window === 'undefined') return null;
   let existing = localStorage.getItem(GUEST_USER_KEY);
   if (!existing) {
-    existing = crypto.randomUUID();
+    const randomUUID = (crypto as Crypto | undefined)?.randomUUID?.();
+    const fallbackId = `guest-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    existing = randomUUID ?? fallbackId;
     localStorage.setItem(GUEST_USER_KEY, existing);
   }
   return existing;

@@ -65,22 +65,7 @@ export default function AnalyticsPage(): React.ReactElement {
 
   const { categoryPerformance, weakAreas, dailyStudyTime, isLoading: statsLoading } = useAnalyticsStats(results, quizzes);
 
-  if (!effectiveUserId) {
-    return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 text-center">
-        <BarChart3 className="mb-4 h-10 w-10 text-slate-400" aria-hidden="true" />
-        <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-50">Sign in to view analytics</h1>
-        <p className="mt-2 max-w-lg text-sm text-slate-600 dark:text-slate-300">
-          Your performance data is tied to your account. Please sign in to see your stats.
-        </p>
-        <Button className="mt-4" onClick={() => router.push('/login')}>
-          Go to Login
-        </Button>
-      </div>
-    );
-  }
-
-  if (!isInitialized || resultsLoading || quizzesLoading || statsLoading) {
+  if (!isInitialized || resultsLoading || quizzesLoading || statsLoading || !effectiveUserId) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <LoadingSpinner size="lg" text="Loading analytics..." />

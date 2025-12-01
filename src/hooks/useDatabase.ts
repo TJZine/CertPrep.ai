@@ -35,7 +35,7 @@ interface UseResultsResponse {
 }
 
 interface UseResultResponse {
-  result: Result | undefined;
+  result: Result | null | undefined;
   isLoading: boolean;
 }
 
@@ -144,7 +144,10 @@ export function useResult(id: string | undefined, userId: string | undefined): U
     async () => {
       if (!id || !userId) return undefined;
       const found = await db.results.get(id);
-      return found?.user_id === userId ? found : undefined;
+      if (!found) {
+        return null;
+      }
+      return found.user_id === userId ? found : null;
     },
     [id, userId],
   );
