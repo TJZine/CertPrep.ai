@@ -245,12 +245,12 @@ export function Header(): React.ReactElement {
               </div>
             ) : (
               <div className="grid gap-4">
-                <Link href="/login" onClick={() => setIsMenuOpen(false)}>
+                <Link href="/login">
                   <Button variant="outline" className="w-full justify-center h-11 text-base">
                     Log In
                   </Button>
                 </Link>
-                <Link href="/signup" onClick={() => setIsMenuOpen(false)}>
+                <Link href="/signup">
                   <Button className="w-full justify-center h-11 text-base bg-blue-600 hover:bg-blue-700 text-white shadow-sm">
                     Sign Up
                   </Button>

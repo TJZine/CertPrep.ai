@@ -40,14 +40,14 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
       return (
         <div
           role="alert"
-          className="rounded-lg border border-red-200 bg-red-50 p-6 text-red-900 shadow-sm"
+          className="rounded-lg border border-red-200 bg-red-50 p-6 text-red-900 shadow-sm dark:border-red-900 dark:bg-red-950/50 dark:text-red-200"
         >
           <div className="flex items-start gap-3">
-            <AlertTriangle className="mt-0.5 h-6 w-6 text-red-600" aria-hidden="true" />
+            <AlertTriangle className="mt-0.5 h-6 w-6 text-red-600 dark:text-red-400" aria-hidden="true" />
             <div className="flex-1">
               <h2 className="text-lg font-semibold">Something went wrong</h2>
               {this.state.error?.message ? (
-                <p className="mt-2 text-sm text-red-800">{this.state.error.message}</p>
+                <p className="mt-2 text-sm text-red-800 dark:text-red-300">{this.state.error.message}</p>
               ) : null}
               <div className="mt-4">
                 <Button variant="secondary" onClick={this.reset} leftIcon={<RotateCcw />}>

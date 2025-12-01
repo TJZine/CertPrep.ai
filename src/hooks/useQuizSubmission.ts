@@ -21,7 +21,7 @@ export function useQuizSubmission({ quizId, isSmartRound = false }: UseQuizSubmi
   const router = useRouter();
   const { addToast } = useToast();
   const { sync } = useSync();
-  const { answers, flaggedQuestions } = useQuizSessionStore();
+  const { answers, flaggedQuestions, questions } = useQuizSessionStore();
 
   const [saveError, setSaveError] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -54,6 +54,7 @@ export function useQuizSubmission({ quizId, isSmartRound = false }: UseQuizSubmi
           answers: answersRecord,
           flaggedQuestions: Array.from(flaggedQuestions),
           timeTakenSeconds,
+          activeQuestionIds: questions.map((q) => q.id), // Pass active questions for accurate scoring (e.g. Smart Round)
         });
 
         // Attempt background sync
@@ -90,7 +91,7 @@ export function useQuizSubmission({ quizId, isSmartRound = false }: UseQuizSubmi
         }
       }
     },
-    [addToast, answers, flaggedQuestions, isSmartRound, quizId, router, sync]
+    [addToast, answers, flaggedQuestions, isSmartRound, quizId, router, sync, questions]
   );
 
   const retrySave = useCallback(

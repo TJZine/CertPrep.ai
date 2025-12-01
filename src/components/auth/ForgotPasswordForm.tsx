@@ -110,7 +110,7 @@ export default function ForgotPasswordForm(): React.ReactElement {
               onExpire={() => setCaptchaToken(null)}
             />
           ) : (
-            <div className="p-4 border border-red-200 bg-red-50 text-red-700 text-sm rounded-md">
+            <div className="p-4 border border-red-200 bg-red-50 text-red-700 text-sm rounded-md dark:border-red-800/50 dark:bg-red-900/20 dark:text-red-200">
               Configuration Error: Missing HCaptcha Site Key.
             </div>
           )}

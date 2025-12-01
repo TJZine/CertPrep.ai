@@ -324,7 +324,7 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
             if (!currentQ || 
                 draft.questionQueue[draft.currentIndex] !== questionId ||
                 draft.selectedAnswer !== currentSelectedAnswer) {
-              draft.isSubmitting = false;
+              draft.isSubmitting = false; // Reset if state changed
               return;
             }
             
@@ -354,7 +354,6 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
         })
         .catch((err) => {
           console.error('Failed to hash answer in submitAnswer', err);
-          // Reset state to allow retry
           // Reset state to allow retry
           set((draft) => {
              draft.hasSubmitted = false;
@@ -400,7 +399,7 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
               if (!currentQ || 
                   draft.questionQueue[draft.currentIndex] !== questionId ||
                   draft.selectedAnswer !== answerId) {
-                draft.isSubmitting = false;
+                draft.isSubmitting = false; // Reset if state changed
                 return;
               }
               

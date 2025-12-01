@@ -9,6 +9,7 @@ export interface CreateResultInput {
   answers: Record<string, string>;
   flaggedQuestions: string[];
   timeTakenSeconds: number;
+  activeQuestionIds?: string[];
 }
 
 export interface OverallStats {
@@ -25,12 +26,17 @@ export interface OverallStats {
 export async function calculateResults(
   quiz: Quiz,
   answers: Record<string, string>,
+  activeQuestionIds?: string[]
 ): Promise<{ score: number; categoryBreakdown: Record<string, number> }> {
   let correctCount = 0;
   const categoryTotals: Record<string, { correct: number; total: number }> = {};
 
+  const questionsToScore = activeQuestionIds
+    ? quiz.questions.filter((q) => activeQuestionIds.includes(q.id))
+    : quiz.questions;
+
   const questionResults = await Promise.all(
-    quiz.questions.map(async (question) => {
+    questionsToScore.map(async (question) => {
       const category = question.category || 'Uncategorized';
       const userAnswer = answers[String(question.id)];
       
@@ -59,7 +65,7 @@ export async function calculateResults(
     }
   });
 
-  const score = calculatePercentage(correctCount, quiz.questions.length);
+  const score = calculatePercentage(correctCount, questionsToScore.length);
   const categoryBreakdown = Object.fromEntries(
     Object.entries(categoryTotals).map(([category, { correct, total }]) => [
       category,
@@ -80,7 +86,7 @@ export async function createResult(input: CreateResultInput): Promise<Result> {
     throw new Error('Quiz not found.');
   }
 
-  const { score, categoryBreakdown } = await calculateResults(quiz, input.answers);
+  const { score, categoryBreakdown } = await calculateResults(quiz, input.answers, input.activeQuestionIds);
   const result: Result = {
     id: generateUUID(),
     quiz_id: input.quizId,
@@ -203,8 +209,15 @@ export async function getMissedQuestions(resultId: string): Promise<string[]> {
       if (!userAnswer) return null;
 
       const userHash = await hashAnswer(userAnswer);
-      const isMissed = userHash !== question.correct_answer_hash;
-      return isMissed ? String(question.id) : null;
+      
+      let isCorrect = false;
+      if (question.correct_answer_hash) {
+        isCorrect = userHash === question.correct_answer_hash;
+      } else if (question.correct_answer) {
+        isCorrect = userAnswer === question.correct_answer;
+      }
+      
+      return !isCorrect ? String(question.id) : null;
     })
   );
 

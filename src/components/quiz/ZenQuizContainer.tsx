@@ -189,7 +189,7 @@ export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContaine
               <QuestionDisplay
                 question={currentQuestion}
                 questionNumber={currentIndex + 1}
-                totalQuestions={quiz.questions.length}
+                totalQuestions={progress.total}
                 isFlagged={flaggedQuestions.has(currentQuestion.id)}
                 onToggleFlag={() => toggleFlag(currentQuestion.id)}
               />
@@ -251,8 +251,7 @@ export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContaine
   ), [
     currentQuestion,
     currentIndex,
-    // quizId, // Not used in this component anymore, but kept in props interface if needed elsewhere or remove from interface
-    quiz.questions.length,
+    progress.total,
     flaggedQuestions,
     toggleFlag,
     selectedAnswer,

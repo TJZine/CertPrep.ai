@@ -27,12 +27,12 @@ CertPrep.ai is a modern, offline-first quiz application designed to help users p
   [![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC?style=flat-square&logo=tailwind-css)](https://tailwindcss.com/)
 
   <!-- Links Row -->
-  [Usage](#usage) •
+  [Documentation](#-documentation) •
+  [Usage](#-usage) •
   [Architecture](#architecture) •
-  [Documentation](./docs/API.md) •
   [Testing](#testing) •
   [Deployment](#deployment) •
-  [Contributing](#contributing) •
+  [Contributing](#-contributing) •
   [Changelog](CHANGELOG.md)
 
 </div>
@@ -93,11 +93,12 @@ CertPrep.ai is a modern, offline-first quiz application designed to help users p
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
   - [Environment Setup](#environment-setup)
-- [Usage](#usage)
+- [Usage](#-usage)
 - [Architecture](#architecture)
+- [Documentation](#-documentation)
 - [Testing](#testing)
 - [Deployment](#deployment)
-- [Contributing](#contributing)
+- [Contributing](#-contributing)
 - [Security](#security)
 - [License](#license)
 - [Acknowledgments](#acknowledgments)
@@ -320,6 +321,20 @@ graph TB
 
 ---
 
+## 📚 Documentation
+
+| Document | Description |
+|----------|-------------|
+| [📖 API Reference](./docs/API.md) | Complete API documentation |
+| [🏗️ Architecture](./docs/ARCHITECTURE.md) | System design and patterns |
+| [🔒 Security](./SECURITY.md) | Security policies and practices |
+| [🤝 Contributing](./CONTRIBUTING.md) | Contribution guidelines |
+| [📝 Changelog](./CHANGELOG.md) | Version history |
+| [❓ FAQ](./docs/FAQ.md) | Frequently asked questions |
+| [👩‍💻 Code Review](./docs/CODE_REVIEW_IMPLEMENTATION.md) | Implementation standards & persona |
+
+---
+
 ## Testing
 
 ```bash
@@ -431,4 +446,3 @@ Permission is hereby granted, free of charge, to any person obtaining a copy...
 - [Tailwind CSS](https://tailwindcss.com/) - Utility-First CSS Framework
 - [Dexie.js](https://dexie.org/) - IndexedDB Wrapper
 - [Vercel](https://vercel.com/) - Deployment Platform
-

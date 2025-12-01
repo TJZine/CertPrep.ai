@@ -80,27 +80,27 @@ export class GlobalErrorHandler extends React.Component<GlobalErrorHandlerProps,
   render(): React.ReactNode {
     if (this.state.hasError) {
       return (
-        <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
+        <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4 dark:bg-slate-950">
           <Card className="max-w-lg">
             <CardContent className="p-8 text-center">
-              <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
-                <AlertTriangle className="h-8 w-8 text-red-600" />
+              <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20">
+                <AlertTriangle className="h-8 w-8 text-red-600 dark:text-red-400" />
               </div>
 
-              <h1 className="mb-2 text-2xl font-bold text-slate-900">Something Went Wrong</h1>
-              <p className="mb-6 text-slate-600">
+              <h1 className="mb-2 text-2xl font-bold text-slate-900 dark:text-slate-50">Something Went Wrong</h1>
+              <p className="mb-6 text-slate-600 dark:text-slate-400">
                 An unexpected error occurred. Your quiz data is safe and stored locally. Please try one of the recovery
                 options below.
               </p>
 
               {/* Always allow expanding details for debugging, but warn it's technical */}
-              <details className="mb-6 rounded-lg border border-slate-200 bg-slate-50 p-4 text-left">
-                <summary className="cursor-pointer font-medium text-slate-700 flex items-center justify-between">
+              <details className="mb-6 rounded-lg border border-slate-200 bg-slate-50 p-4 text-left dark:border-slate-800 dark:bg-slate-900">
+                <summary className="cursor-pointer font-medium text-slate-700 flex items-center justify-between dark:text-slate-300">
                   <span>Technical Details</span>
-                  <span className="text-xs text-slate-500 font-normal">(Click to expand)</span>
+                  <span className="text-xs text-slate-500 font-normal dark:text-slate-500">(Click to expand)</span>
                 </summary>
                 <div className="mt-2">
-                  <pre className="overflow-auto whitespace-pre-wrap text-xs text-slate-600 max-h-40">
+                  <pre className="overflow-auto whitespace-pre-wrap text-xs text-slate-600 max-h-40 dark:text-slate-400">
                     {this.state.error?.message || 'Unknown error'}
                     {'\n\n'}
                     {this.state.error?.stack || 'No stack trace available'}
@@ -110,13 +110,22 @@ export class GlobalErrorHandler extends React.Component<GlobalErrorHandlerProps,
                     size="sm"
                     className="mt-2 w-full"
                     onClick={async () => {
-                      const text = `${this.state.error?.message || 'Unknown error'}\n\n${this.state.error?.stack || 'No stack trace'}`;
+                      const message = this.state.error?.message || 'Unknown error';
+                      const stack = this.state.error?.stack || 'No stack trace available';
+                      const text = `${message}\n\n${stack}`;
+
+                      if (!navigator.clipboard?.writeText) {
+                        console.warn('Clipboard API not available');
+                        alert('Copy failed: Clipboard API is not available in this browser.');
+                        return;
+                      }
+
                       try {
                         await navigator.clipboard.writeText(text);
                         alert('Error details copied to clipboard');
-                      } catch {
-                        console.warn('Clipboard API failed, falling back to alert');
-                        alert('Could not copy to clipboard. Please manually copy the text above.');
+                      } catch (err) {
+                        console.error('Failed to copy error details', err);
+                        alert('Copy failed. Please capture a screenshot instead.');
                       }
                     }}
                   >
@@ -144,13 +153,13 @@ export class GlobalErrorHandler extends React.Component<GlobalErrorHandlerProps,
                 </Button>
               </div>
 
-              <div className="mt-6 border-t border-slate-200 pt-6">
-                <p className="mb-3 text-xs text-slate-500">If the problem persists, you can reset the app:</p>
+              <div className="mt-6 border-t border-slate-200 pt-6 dark:border-slate-800">
+                <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">If the problem persists, you can reset the app:</p>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={this.handleClearDataAndReload}
-                  className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                  className="text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-900/20 dark:hover:text-red-300"
                   leftIcon={<Bug className="h-4 w-4" />}
                 >
                   Clear All Data &amp; Reset
