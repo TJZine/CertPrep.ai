@@ -2,12 +2,13 @@ import { createClient } from '@supabase/supabase-js';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { NextResponse, type NextRequest } from 'next/server';
+import { logger } from '@/lib/logger';
 
 const allowedOrigins = new Set(
   [
     process.env.NEXT_PUBLIC_SITE_URL,
     process.env.NEXT_PUBLIC_SUPABASE_URL,
-    'https://certprep.ai',
+    process.env.NEXT_PUBLIC_PRODUCTION_URL ?? 'https://cert-prep-ai.vercel.app',
   ].filter(Boolean),
 );
 
@@ -37,9 +38,17 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
     }
 
     // 1. Verify Session
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+      logger.error('Missing Supabase env vars for delete-account route', { supabaseUrl: !!supabaseUrl, supabaseAnonKey: !!supabaseAnonKey });
+      return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+    }
+
     const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      supabaseUrl,
+      supabaseAnonKey,
       {
         cookies: {
           getAll() {
@@ -71,7 +80,7 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
     // 2. Initialize Admin Client
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!serviceRoleKey) {
-      console.error('Missing SUPABASE_SERVICE_ROLE_KEY');
+      logger.error('Missing SUPABASE_SERVICE_ROLE_KEY');
       return NextResponse.json(
         { error: 'Server configuration error' },
         { status: 500 }
@@ -79,7 +88,7 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
     }
 
     const supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      supabaseUrl,
       serviceRoleKey,
       {
         auth: {
@@ -93,13 +102,13 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
     const { error } = await supabaseAdmin.auth.admin.deleteUser(user.id);
 
     if (error) {
-      console.error('Error deleting user:', error);
+      logger.error('Error deleting user via service role', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Unexpected error in delete-account:', error);
+    logger.error('Unexpected error in delete-account', error);
     return NextResponse.json(
       { error: 'An unexpected error occurred' },
       { status: 500 }

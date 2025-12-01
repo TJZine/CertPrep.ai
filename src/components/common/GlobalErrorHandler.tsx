@@ -80,10 +80,20 @@ export class GlobalErrorHandler extends React.Component<GlobalErrorHandlerProps,
 
   handleClearDataAndReload = (): void => {
     if (window.confirm('This will clear all your quiz data and reload the app. Are you sure?')) {
-      indexedDB.deleteDatabase('CertPrepDatabase');
-      localStorage.clear();
-      sessionStorage.clear();
-      window.location.href = '/';
+      const deleteRequest = indexedDB.deleteDatabase('CertPrepDatabase');
+
+      deleteRequest.onsuccess = (): void => {
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.href = '/';
+      };
+
+      deleteRequest.onerror = (): void => {
+        console.error('Failed to delete database during error recovery, clearing storage anyway');
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.href = '/';
+      };
     }
   };
 

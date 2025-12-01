@@ -118,7 +118,7 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
       nextPath.startsWith('/') &&
       !nextPath.startsWith('//') &&
       !AUTH_ROUTES.some((r) => nextPath.startsWith(r)) &&
-      !nextPath.split('/')[0]?.includes(':')
+      !nextPath.includes('://')
     ) {
       redirectUrl.searchParams.set('next', nextPath)
     }

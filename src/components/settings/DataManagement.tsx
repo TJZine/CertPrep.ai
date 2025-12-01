@@ -32,6 +32,7 @@ export function DataManagement(): React.ReactElement {
   const [isImporting, setIsImporting] = React.useState(false);
   const [showResetModal, setShowResetModal] = React.useState(false);
   const [isResetting, setIsResetting] = React.useState(false);
+  const [isClearingLocal, setIsClearingLocal] = React.useState(false);
   const [showImportModal, setShowImportModal] = React.useState(false);
   const [importFile, setImportFile] = React.useState<ExportData | null>(null);
   const [importMode, setImportMode] = React.useState<'merge' | 'replace'>('merge');
@@ -108,42 +109,62 @@ export function DataManagement(): React.ReactElement {
   };
 
   const handleReset = async (): Promise<void> => {
+    if (isResetting || isClearingLocal) return;
     setIsResetting(true);
+    let serverError: string | null = null;
     try {
-      // 1. Delete from Supabase (if logged in)
-      // We try this first. If it fails (e.g. network), we stop to prevent partial state?
-      // Or should we wipe local anyway?
-      // "Account deletion must wipe BOTH Supabase Auth AND local Dexie.js data."
-      // If Supabase deletion fails, the account still exists, so we probably shouldn't wipe local yet?
-      // But if the user is offline, they can't delete from Supabase.
-      // Let's try to delete from Supabase.
-      
       const response = await fetch('/api/auth/delete-account', {
         method: 'DELETE',
       });
 
-      if (!response.ok) {
-        // If 401, maybe they aren't logged in? Just proceed to wipe local.
-        if (response.status !== 401) {
-            const data = await response.json();
-            throw new Error(data.error || 'Failed to delete account from server');
+      if (!response.ok && response.status !== 401) {
+        let bodyText = '';
+        try {
+          bodyText = await response.text();
+          const parsed = bodyText ? JSON.parse(bodyText) : {};
+          const message = (parsed as { error?: string }).error || bodyText || 'Unknown server error';
+          serverError = `Account deletion failed (${response.status}): ${message}`;
+        } catch {
+          serverError = `Account deletion failed (${response.status}): ${bodyText || 'Unknown server error'}`;
         }
       }
+    } catch (error) {
+      serverError = error instanceof Error ? error.message : 'Network error deleting account';
+    }
 
-      // 2. Wipe Local Data
+    try {
       await clearAllData();
-      
-      addToast('success', 'Account deleted and data cleared.');
-      setShowResetModal(false);
       await refreshStats();
-      
-      // Force reload to clear any in-memory state/auth
+      addToast(
+        serverError ? 'error' : 'success',
+        serverError ? `Local data cleared. ${serverError}` : 'Account deleted and local data cleared.',
+      );
+      setShowResetModal(false);
+      setDeleteConfirmation('');
       window.location.href = '/';
     } catch (error) {
-      console.error('Reset failed:', error);
-      addToast('error', error instanceof Error ? error.message : 'Failed to reset data. Please try again.');
+      console.error('Local clear failed after account delete attempt:', error);
+      addToast('error', 'Failed to clear local data. Please try again.');
     } finally {
       setIsResetting(false);
+    }
+  };
+
+  const handleClearLocalOnly = async (): Promise<void> => {
+    if (isClearingLocal || isResetting) return;
+    setIsClearingLocal(true);
+    try {
+      await clearAllData();
+      await refreshStats();
+      addToast('success', 'Local data cleared.');
+      setShowResetModal(false);
+      setDeleteConfirmation('');
+      window.location.href = '/';
+    } catch (error) {
+      console.error('Failed to clear local data:', error);
+      addToast('error', 'Failed to clear local data. Please try again.');
+    } finally {
+      setIsClearingLocal(false);
     }
   };
 
@@ -307,7 +328,7 @@ export function DataManagement(): React.ReactElement {
           setShowResetModal(false);
           setDeleteConfirmation('');
         }}
-        title="Reset All Data?"
+        title="Reset Data"
         size="sm"
         footer={
           <>
@@ -320,14 +341,24 @@ export function DataManagement(): React.ReactElement {
             >
               Cancel
             </Button>
-            <Button 
-              variant="danger" 
-              onClick={handleReset} 
-              isLoading={isResetting}
-              disabled={deleteConfirmation !== 'DELETE'}
-            >
-              Yes, Delete Everything
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                variant="secondary"
+                onClick={handleClearLocalOnly}
+                isLoading={isClearingLocal}
+                disabled={deleteConfirmation.trim().toUpperCase() !== 'DELETE'}
+              >
+                Clear Local Data Only
+              </Button>
+              <Button 
+                variant="danger" 
+                onClick={handleReset} 
+                isLoading={isResetting}
+                disabled={deleteConfirmation.trim().toUpperCase() !== 'DELETE'}
+              >
+                Delete Account + Local
+              </Button>
+            </div>
           </>
         }
       >
@@ -336,12 +367,10 @@ export function DataManagement(): React.ReactElement {
             <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-200" />
           </div>
           <div className="w-full">
-            <p className="text-slate-700 dark:text-slate-200">This will permanently delete:</p>
+            <p className="text-slate-700 dark:text-slate-200">Choose whether to clear local data only or delete your account and clear local data:</p>
             <ul className="mt-2 list-inside list-disc text-sm text-slate-600 dark:text-slate-300">
-              <li>All imported quizzes</li>
-              <li>All quiz results and history</li>
-              <li>All settings and preferences</li>
-              <li><strong>Your entire account (if logged in)</strong></li>
+              <li><strong>Clear Local Data Only:</strong> deletes quizzes/results/settings stored on this browser.</li>
+              <li><strong>Delete Account + Local:</strong> attempts to remove your account from the server, then clears local data.</li>
             </ul>
             <p className="mt-4 font-medium text-red-700 dark:text-red-200">This action cannot be undone!</p>
             

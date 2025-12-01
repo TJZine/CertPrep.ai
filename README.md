@@ -1,4 +1,4 @@
-<!-- 
+<!--
 README.md - CertPrep.ai
 -->
 
@@ -19,26 +19,26 @@ CertPrep.ai is a modern, offline-first quiz application designed to help users p
   [![Version](https://img.shields.io/github/package-json/v/TJZine/CertPrep.ai?style=flat-square)](package.json)
   [![Build Status](https://img.shields.io/github/actions/workflow/status/TJZine/CertPrep.ai/ci.yml?branch=main&style=flat-square)](https://github.com/TJZine/CertPrep.ai/actions)
   [![Coverage](https://img.shields.io/codecov/c/github/TJZine/CertPrep.ai?style=flat-square)](https://codecov.io/gh/TJZine/CertPrep.ai)
-  
+
   <!-- Secondary Badges Row -->
   [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
   [![Next.js](https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js)](https://nextjs.org/)
   [![Supabase](https://img.shields.io/badge/Supabase-Backend-3ECF8E?style=flat-square&logo=supabase)](https://supabase.com/)
   [![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC?style=flat-square&logo=tailwind-css)](https://tailwindcss.com/)
 
-    <!-- Links Row -->                                                                                                                                
-    [Documentation](#documentation) •                                                                                                                
-    [Usage](#usage) •                                                                                                                                
-    [Architecture](#architecture) •                                                                                                                   
-    [Testing](#testing) •                                                                                                                             
-    [Deployment](#deployment) •                                                                                                                       
-    [Contributing](#contributing) •                                                                                                                  
-    [Changelog](CHANGELOG.md)                                                                                                                         
-                                                                                                                                                      
-  </div>                                                                                                                                              
-                                                                                                                                                      
-  ---                                                                                                                                                 
-                                                                                                                                                      
+    <!-- Links Row -->
+    [Documentation](#documentation) •
+    [Usage](#usage) •
+    [Architecture](#architecture) •
+    [Testing](#testing) •
+    [Deployment](#deployment) •
+    [Contributing](#contributing) •
+    [Changelog](CHANGELOG.md)
+
+  </div>
+
+  ---
+
 <a id="features"></a>
 ## Features
 <!-- Use a feature grid for visual scanning -->
@@ -87,20 +87,20 @@ CertPrep.ai is a modern, offline-first quiz application designed to help users p
 <details>
 <summary>Click to expand</summary>
 
-- [Features](#features)                                                                                                                             
-- [Demo](#demo)                                                                                                                                     
-- [Getting Started](#getting-started)                                                                                                               
-  - [Prerequisites](#prerequisites)                                                                                                                 
-  - [Installation](#installation)                                                                                                                   
-  - [Environment Setup](#environment-setup)                                                                                                         
-- [Usage](#usage)                                                                                                                                  
-- [Architecture](#architecture)                                                                                                                     
-- [Documentation](#documentation)                                                                                                                  
-- [Testing](#testing)                                                                                                                               
-- [Deployment](#deployment)                                                                                                                         
-- [Contributing](#contributing)                                                                                                                    
-- [Security](#security)                                                                                                                             
-- [License](#license)                                                                                                                               
+- [Features](#features)
+- [Demo](#demo)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Installation](#installation)
+  - [Environment Setup](#environment-setup)
+- [Usage](#usage)
+- [Architecture](#architecture)
+- [Documentation](#documentation)
+- [Testing](#testing)
+- [Deployment](#deployment)
+- [Contributing](#contributing)
+- [Security](#security)
+- [License](#license)
 - [Acknowledgments](#acknowledgments)
 </details>
 
@@ -194,10 +194,11 @@ npm run dev
 > [!TIP]
 > The app will be available at [http://localhost:3000](http://localhost:3000)
 
----                                                                                                                                                 
-                                                                                                                                                    
-## <a id="usage"></a>📖 Usage                                                                                                                                          
-                                                                                                                                                    
+---
+
+<a id="usage"></a>
+## 📖 Usage
+
 ### Quick Start
 ```typescript
 // Example usage of key features
@@ -304,17 +305,17 @@ graph TB
         A[Pages/Routes] --> B[Components]
         B --> C[Hooks]
     end
-    
+
     subgraph "Data Layer"
         C --> D[Dexie DB]
         C --> E[Supabase Client]
     end
-    
+
     subgraph "Sync Layer"
         D <--> F[Sync Manager]
         E <--> F
     end
-    
+
     subgraph "Backend"
         E --> G[Supabase Auth]
         E --> H[PostgreSQL + RLS]
@@ -323,10 +324,11 @@ graph TB
 
 </details>
 
----                                                                                                                                                 
-                                                                                                                                                    
-## <a id="documentation"></a>📚 Documentation                                                                                                                                  
-                                                                                                                                                     
+---
+
+<a id="documentation"></a>
+## 📚 Documentation
+
 | Document | Description |
 |----------|-------------|
 | [📖 API Reference](./docs/API.md) | Complete API documentation |
@@ -394,10 +396,11 @@ npm start
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✅ | Supabase anonymous key |
 | `NEXT_PUBLIC_SITE_URL` | ✅ | Production site URL |
 
----                                                                                                                                                 
-                                                                                                                                                    
-## <a id="contributing"></a>🤝 Contributing                                                                                                                                   
-                                                                                                                                                    
+---
+
+<a id="contributing"></a>
+## 🤝 Contributing
+
 We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
 ### Quick Contribution Steps
 

@@ -34,7 +34,7 @@ export const metadata: Metadata = {
   keywords: ['exam', 'certification', 'study', 'quiz', 'learning', 'offline', 'AI tutor'],
   authors: [{ name: 'CertPrep.ai' }],
   creator: 'CertPrep.ai',
-  metadataBase: new URL('https://certprep.ai'),
+  metadataBase: new URL('https://cert-prep-ai.vercel.app'),
   openGraph: {
     type: 'website',
     locale: 'en_US',

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 const GUEST_USER_KEY = 'cp_guest_user_id';
 
@@ -20,16 +20,6 @@ function ensureGuestUserId(): string | null {
  * - Otherwise, a persisted guest id is generated/stored locally.
  */
 export function useEffectiveUserId(authUserId?: string | null): string | null {
-  const [guestId, setGuestId] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (authUserId) {
-      setGuestId(null);
-      return;
-    }
-    const id = ensureGuestUserId();
-    setGuestId(id);
-  }, [authUserId]);
-
+  const [guestId] = useState<string | null>(() => ensureGuestUserId());
   return authUserId ?? guestId;
 }

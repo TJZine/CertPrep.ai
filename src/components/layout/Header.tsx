@@ -172,6 +172,8 @@ export function Header(): React.ReactElement {
 
       {/* Mobile Navigation Sheet */}
       <div
+        // @ts-expect-error inert is supported but not yet typed in React DOM
+        inert={!isMenuOpen ? '' : undefined}
         className={cn(
           'fixed inset-x-0 top-16 bottom-0 z-40 bg-white dark:bg-slate-950 md:hidden transition-transform duration-300 ease-in-out',
           isMenuOpen ? 'translate-x-0' : 'translate-x-full'
@@ -222,8 +224,8 @@ export function Header(): React.ReactElement {
                   onClick={handleSignOut}
                   isLoading={isSigningOut}
                   disabled={isSigningOut}
+                  leftIcon={<LogOut className="h-4 w-4" />}
                 >
-                  <LogOut className="mr-2 h-4 w-4" />
                   Sign Out
                 </Button>
               </div>
