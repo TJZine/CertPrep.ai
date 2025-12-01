@@ -464,18 +464,28 @@ Contributors are recognized in:
 - [CHANGELOG.md](CHANGELOG.md) for each release
 - GitHub's contributor graph
 
+---                                                                                                                                                 
+                                                                                                                                                    
+## Community
+
+Join our community to stay updated and connect with other learners!
+
+- **Discord**: [Coming Soon]
+- **Twitter**: [@certprepai](https://twitter.com/certprepai)
+- **GitHub Discussions**: [Project Discussions](https://github.com/TJZine/CertPrep.ai/discussions)
+
 ---
 
-## ❓ Questions?
-
-- 💬 [GitHub Discussions](https://github.com/TJZine/CertPrep.ai/discussions)
-- 📧 Email: [maintainer@certprep.ai](mailto:maintainer@certprep.ai)
-- 🐦 Twitter: [@certprepai](https://twitter.com/certprepai)
-
----
-
-<div align="center">
-
-**Thank you for contributing! 🙌**
-
+## ❓ Questions?                                                                                                                                     
+                                                                                                                                                    
+- 💬 [GitHub Discussions](https://github.com/TJZine/CertPrep.ai/discussions)                                                                         
+- 📧 Email: [maintainer@certprep.ai](mailto:maintainer@certprep.ai)                                                                                  
+- 🐦 Twitter: [@certprepai](https://twitter.com/certprepai)                                                                                          
+                                                                                                                                                    
+---                                                                                                                                                 
+                                                                                                                                                    
+<div align="center">                                                                                                                                
+                                                                                                                                                    
+## Thank You! 🙌                                                                                                                   
+                                                                                                                                                    
 </div>

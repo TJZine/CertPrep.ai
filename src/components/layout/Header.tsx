@@ -3,10 +3,10 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X, LogOut, Moon, Sun, Home, BarChart3, Library, Settings as SettingsIcon, User as UserIcon } from 'lucide-react';
+import { Menu, X, LogOut, Home, BarChart3, Library, Settings as SettingsIcon, User as UserIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { lockBodyScroll, unlockBodyScroll } from '@/lib/bodyScrollLock';
-import { useTheme } from '@/components/common/ThemeProvider';
+import { ThemeToggleButton } from '@/components/common/ThemeToggleButton';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { Button } from '@/components/ui/Button';
 import { Logo } from '@/components/common/Logo';
@@ -22,7 +22,6 @@ const navigation = [
 export function Header(): React.ReactElement {
   const pathname = usePathname();
   const { user, signOut } = useAuth();
-  const { toggleTheme } = useTheme();
   const { addToast } = useToast();
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const [scrolled, setScrolled] = React.useState(false);
@@ -119,16 +118,7 @@ export function Header(): React.ReactElement {
 
         {/* Desktop Actions */}
         <div className="hidden md:flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleTheme}
-            aria-label="Toggle theme"
-            className="relative text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
-          >
-            <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-            <Moon className="absolute top-1/2 left-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-          </Button>
+          <ThemeToggleButton />
 
           {user ? (
             <div className="flex items-center gap-4 pl-4 border-l border-slate-200 dark:border-slate-800">
@@ -165,16 +155,7 @@ export function Header(): React.ReactElement {
 
         {/* Mobile Menu Button */}
         <div className="flex items-center gap-4 md:hidden">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleTheme}
-            aria-label="Toggle theme"
-            className="relative text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
-          >
-            <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-            <Moon className="absolute top-1/2 left-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-          </Button>
+          <ThemeToggleButton />
           <button
             type="button"
             className="inline-flex h-10 w-10 items-center justify-center rounded-md text-slate-700 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 dark:text-slate-200 dark:hover:bg-slate-800"
@@ -193,6 +174,7 @@ export function Header(): React.ReactElement {
           'fixed inset-x-0 top-16 bottom-0 z-40 bg-white dark:bg-slate-950 md:hidden transition-transform duration-300 ease-in-out',
           isMenuOpen ? 'translate-x-0' : 'translate-x-full'
         )}
+        aria-hidden={!isMenuOpen}
       >
         <div className="flex flex-col h-full overflow-y-auto p-6 space-y-6">
           <nav className="flex flex-col space-y-2">

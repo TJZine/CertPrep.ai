@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { AlertTriangle, RefreshCw, Home, Bug } from 'lucide-react';
+import * as Sentry from '@sentry/nextjs';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
 
@@ -38,6 +39,13 @@ export class GlobalErrorHandler extends React.Component<GlobalErrorHandlerProps,
     console.error('Component stack:', errorInfo.componentStack);
 
     this.setState({ errorInfo });
+
+    // Capture error in Sentry
+    Sentry.captureException(error, {
+      extra: {
+        componentStack: errorInfo.componentStack,
+      },
+    });
 
     try {
       const errorLog = {

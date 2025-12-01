@@ -109,7 +109,12 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
     
     // Validate 'next' param to prevent loops and open redirects
     const nextPath = request.nextUrl.pathname + request.nextUrl.search
-    if (nextPath.startsWith('/') && !nextPath.startsWith('//') && !AUTH_ROUTES.some(r => nextPath.startsWith(r))) {
+    if (
+      nextPath.startsWith('/') &&
+      !nextPath.startsWith('//') &&
+      !AUTH_ROUTES.some((r) => nextPath.startsWith(r)) &&
+      !nextPath.split('/')[0]?.includes(':')
+    ) {
       redirectUrl.searchParams.set('next', nextPath)
     }
     

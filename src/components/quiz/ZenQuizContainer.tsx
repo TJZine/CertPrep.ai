@@ -70,6 +70,16 @@ export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContaine
   const { formattedTime, start: startTimer, seconds, pause: pauseTimer } = useTimer({ autoStart: true });
   useBeforeUnload(!isComplete, 'Your quiz progress will be lost. Are you sure?');
 
+  React.useEffect(() => {
+    const handleQuizError = (event: CustomEvent<{ message: string }>): void => {
+      addToast('error', event.detail.message);
+    };
+
+    window.addEventListener('quiz-error', handleQuizError as EventListener);
+    return (): void => {
+      window.removeEventListener('quiz-error', handleQuizError as EventListener);
+    };
+  }, [addToast]);
 
   React.useEffect((): (() => void) => {
     isMountedRef.current = true;

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Button, buttonVariants } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
@@ -11,13 +11,13 @@ import { useToast } from '@/components/ui/Toast';
 import HCaptcha from '@hcaptcha/react-hcaptcha';
 
 export default function ForgotPasswordForm(): React.ReactElement {
+  const supabase = useMemo(() => createClient(), []);
   const [email, setEmail] = useState('');
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const captchaRef = useRef<HCaptcha>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
-  const supabase = createClient();
   const { addToast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
@@ -25,7 +25,8 @@ export default function ForgotPasswordForm(): React.ReactElement {
     setIsLoading(true);
     setError(null);
 
-    if (!captchaToken) {
+    // Only validate captcha if the key is present
+    if (process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY && !captchaToken) {
       setError('Please complete the captcha');
       setIsLoading(false);
       return;
@@ -34,7 +35,7 @@ export default function ForgotPasswordForm(): React.ReactElement {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
-        captchaToken,
+        captchaToken: captchaToken || undefined,
       });
 
       if (error) {
@@ -46,8 +47,8 @@ export default function ForgotPasswordForm(): React.ReactElement {
 
       setIsSuccess(true);
       addToast('success', 'Password reset link sent!');
-    } catch (err) {
-      console.error('Unexpected error:', err);
+    } catch {
+      // Do not log full error to avoid PII leaks
       setError('An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);
@@ -97,6 +98,8 @@ export default function ForgotPasswordForm(): React.ReactElement {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             disabled={isLoading}
+            aria-invalid={!!error}
+            aria-describedby={error ? "email-error" : undefined}
             required
           />
         </div>
@@ -110,14 +113,14 @@ export default function ForgotPasswordForm(): React.ReactElement {
               onExpire={() => setCaptchaToken(null)}
             />
           ) : (
-            <div className="p-4 border border-red-200 bg-red-50 text-red-700 text-sm rounded-md dark:border-red-800/50 dark:bg-red-900/20 dark:text-red-200">
-              Configuration Error: Missing HCaptcha Site Key.
+            <div className="text-sm text-gray-500 italic dark:text-gray-400">
+              (Captcha disabled in development)
             </div>
           )}
         </div>
 
         {error && (
-          <div className="text-sm text-red-500 font-medium">
+          <div role="alert" id="email-error" className="text-sm text-red-500 font-medium">
             {error}
           </div>
         )}

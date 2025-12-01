@@ -26,21 +26,20 @@ CertPrep.ai is a modern, offline-first quiz application designed to help users p
   [![Supabase](https://img.shields.io/badge/Supabase-Backend-3ECF8E?style=flat-square&logo=supabase)](https://supabase.com/)
   [![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC?style=flat-square&logo=tailwind-css)](https://tailwindcss.com/)
 
-  <!-- Links Row -->
-  [Documentation](#-documentation) •
-  [Usage](#-usage) •
-  [Architecture](#architecture) •
-  [Testing](#testing) •
-  [Deployment](#deployment) •
-  [Contributing](#-contributing) •
-  [Changelog](CHANGELOG.md)
-
-</div>
-
----
-
-## Features
-
+    <!-- Links Row -->                                                                                                                                
+    [Documentation](#documentation) •                                                                                                                
+    [Usage](#usage) •                                                                                                                                
+    [Architecture](#architecture) •                                                                                                                   
+    [Testing](#testing) •                                                                                                                             
+    [Deployment](#deployment) •                                                                                                                       
+    [Contributing](#contributing) •                                                                                                                  
+    [Changelog](CHANGELOG.md)                                                                                                                         
+                                                                                                                                                      
+  </div>                                                                                                                                              
+                                                                                                                                                      
+  ---                                                                                                                                                 
+                                                                                                                                                      
+  ## Features
 <!-- Use a feature grid for visual scanning -->
 <table>
   <tr>
@@ -87,22 +86,21 @@ CertPrep.ai is a modern, offline-first quiz application designed to help users p
 <details>
 <summary>Click to expand</summary>
 
-- [Features](#features)
-- [Demo](#demo)
-- [Getting Started](#getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Installation](#installation)
-  - [Environment Setup](#environment-setup)
-- [Usage](#-usage)
-- [Architecture](#architecture)
-- [Documentation](#-documentation)
-- [Testing](#testing)
-- [Deployment](#deployment)
-- [Contributing](#-contributing)
-- [Security](#security)
-- [License](#license)
+- [Features](#features)                                                                                                                             
+- [Demo](#demo)                                                                                                                                     
+- [Getting Started](#getting-started)                                                                                                               
+  - [Prerequisites](#prerequisites)                                                                                                                 
+  - [Installation](#installation)                                                                                                                   
+  - [Environment Setup](#environment-setup)                                                                                                         
+- [Usage](#usage)                                                                                                                                  
+- [Architecture](#architecture)                                                                                                                     
+- [Documentation](#documentation)                                                                                                                  
+- [Testing](#testing)                                                                                                                               
+- [Deployment](#deployment)                                                                                                                         
+- [Contributing](#contributing)                                                                                                                    
+- [Security](#security)                                                                                                                             
+- [License](#license)                                                                                                                               
 - [Acknowledgments](#acknowledgments)
-
 </details>
 
 ---
@@ -190,12 +188,11 @@ npm run dev
 > [!TIP]
 > The app will be available at [http://localhost:3000](http://localhost:3000)
 
----
-
-## 📖 Usage
-
+---                                                                                                                                                 
+                                                                                                                                                    
+## <a id="usage"></a>📖 Usage                                                                                                                                          
+                                                                                                                                                    
 ### Quick Start
-
 ```typescript
 // Example usage of key features
 import { createQuiz, submitResult } from '@/lib/quiz'
@@ -319,12 +316,11 @@ graph TB
 
 </details>
 
----
-
-## 📚 Documentation
-
-| Document | Description |
-|----------|-------------|
+---                                                                                                                                                 
+                                                                                                                                                    
+## <a id="documentation"></a>📚 Documentation                                                                                                                                  
+                                                                                                                                                    
+| Document | Description ||----------|-------------|
 | [📖 API Reference](./docs/API.md) | Complete API documentation |
 | [🏗️ Architecture](./docs/ARCHITECTURE.md) | System design and patterns |
 | [🔒 Security](./SECURITY.md) | Security policies and practices |
@@ -388,12 +384,11 @@ npm start
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✅ | Supabase anonymous key |
 | `NEXT_PUBLIC_SITE_URL` | ✅ | Production site URL |
 
----
-
-## 🤝 Contributing
-
+---                                                                                                                                                 
+                                                                                                                                                    
+## <a id="contributing"></a>🤝 Contributing                                                                                                                                   
+                                                                                                                                                    
 We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
-
 ### Quick Contribution Steps
 
 1. Fork the repository

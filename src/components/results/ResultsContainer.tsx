@@ -46,10 +46,10 @@ export function ResultsContainer({ result, quiz, previousScore }: ResultsContain
       correctCount: grading.correctCount,
       incorrectCount: grading.incorrectCount,
       unansweredCount: grading.unansweredCount,
-      answeredCount: Object.keys(result.answers).length,
+      answeredCount: grading.correctCount + grading.incorrectCount,
       averageTimePerQuestion: quiz.questions.length > 0 ? result.time_taken_seconds / quiz.questions.length : 0,
     };
-  }, [grading, result.answers, result.time_taken_seconds, quiz.questions.length]);
+  }, [grading, result.time_taken_seconds, quiz.questions.length]);
 
   const categoryScores = React.useMemo(() => {
     if (!grading) return [];
@@ -105,6 +105,8 @@ export function ResultsContainer({ result, quiz, previousScore }: ResultsContain
       }));
   }, [quiz, result, grading, resolvedAnswers, isResolving]);
 
+  const hasMissedQuestions = React.useMemo(() => missedQuestions.length > 0, [missedQuestions.length]);
+
   const [questionFilter, setQuestionFilter] = React.useState<FilterType>('all');
   
   const hasSetInitialFilter = React.useRef(false);
@@ -112,12 +114,12 @@ export function ResultsContainer({ result, quiz, previousScore }: ResultsContain
 
   // Update filter once grading is done
   React.useEffect(() => {
-    if (!gradingLoading && missedQuestions.length > 0 && !hasSetInitialFilter.current && !userHasChangedFilter.current) {
+    if (!gradingLoading && hasMissedQuestions && !hasSetInitialFilter.current && !userHasChangedFilter.current) {
       setQuestionFilter('incorrect');
       hasSetInitialFilter.current = true;
       addToast('info', 'Showing incorrect answers to help you focus on areas to improve.');
     }
-  }, [gradingLoading, missedQuestions.length, addToast]);
+  }, [gradingLoading, hasMissedQuestions, addToast]);
   
   const handleFilterChange = (filter: FilterType): void => {
     userHasChangedFilter.current = true;
@@ -317,5 +319,3 @@ export function ResultsContainer({ result, quiz, previousScore }: ResultsContain
     </div>
   );
 }
-
-export default ResultsContainer;

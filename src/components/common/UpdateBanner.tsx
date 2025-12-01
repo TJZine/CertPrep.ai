@@ -47,7 +47,7 @@ export function UpdateBanner(): React.ReactElement | null {
           <button
             type="button"
             onClick={() => setDismissed(true)}
-            className="rounded p-1 text-green-600 hover:bg-green-100 dark:text-green-300 dark:hover:bg-green-800"
+            className="rounded p-1 text-green-600 hover:bg-green-100 dark:text-green-300 dark:hover:bg-green-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600"
             aria-label="Dismiss update notification"
           >
             <X className="h-4 w-4" />

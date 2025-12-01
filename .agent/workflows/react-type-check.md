@@ -38,10 +38,10 @@ After applying fixes, you **MUST** perform the following verification steps in o
 *   **Project**: CertPrep.ai (Next.js, TypeScript, Supabase, Dexie.js, Tailwind).
 *   **Current State**: The codebase is undergoing strict linting enforcement.
 *   **Common Issues**:
-  *   `any` types in legacy auth/sync logic.
-  *   Missing return types on functions.
-  *   React Hook dependency arrays.
-  *   Unused variables (prefix with `_` if strictly needed for signature).
+    *   `any` types in legacy auth/sync logic.
+    *   Missing return types on functions.
+    *   React Hook dependency arrays.
+    *   Unused variables (prefix with `_` if strictly needed for signature).
 
 ## Interaction Style
 *   **Concise**: State the error, the fix, and the rationale.

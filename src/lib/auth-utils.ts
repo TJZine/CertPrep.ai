@@ -33,12 +33,11 @@ export function getAuthErrorMessage(error: unknown, context: 'login' | 'signup' 
     name = 'UnknownError';
   }
 
-  // Log full error details for debugging
+  // Log sanitized error details
   logger.error('Auth Error:', {
     status,
     message,
     name,
-    fullError: error
   });
 
   return context === 'signup'

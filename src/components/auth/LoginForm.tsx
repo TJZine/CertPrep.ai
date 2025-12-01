@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
@@ -10,9 +10,8 @@ import Link from 'next/link';
 import { useToast } from '@/components/ui/Toast';
 import HCaptcha from '@hcaptcha/react-hcaptcha';
 
-const supabase = createClient();
-
 export default function LoginForm(): React.ReactElement {
+  const supabase = useMemo(() => createClient(), []);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
@@ -27,7 +26,8 @@ export default function LoginForm(): React.ReactElement {
     setIsLoading(true);
     setError(null);
 
-    if (!captchaToken) {
+    // Only validate captcha if the key is present
+    if (process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY && !captchaToken) {
       setError('Please complete the captcha');
       setIsLoading(false);
       return;
@@ -38,7 +38,7 @@ export default function LoginForm(): React.ReactElement {
         email,
         password,
         options: {
-          captchaToken,
+          captchaToken: captchaToken || undefined,
         },
       });
 
@@ -51,9 +51,9 @@ export default function LoginForm(): React.ReactElement {
 
       addToast('success', 'Successfully logged in!');
       router.push('/');
-    } catch (err) {
+    } catch {
       // Handle unexpected errors that aren't Supabase AuthErrors
-      console.error('Unexpected login error:', err);
+      // Do not log full error to avoid PII leaks
       setError('An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);
@@ -112,8 +112,8 @@ export default function LoginForm(): React.ReactElement {
               onExpire={() => setCaptchaToken(null)}
             />
           ) : (
-            <div className="p-4 border border-red-200 bg-red-50 text-red-700 text-sm rounded-md dark:border-red-800/50 dark:bg-red-900/20 dark:text-red-200">
-              Configuration Error: Missing HCaptcha Site Key.
+            <div className="text-sm text-gray-500 italic dark:text-gray-400">
+              (Captcha disabled in development)
             </div>
           )}
         </div>
