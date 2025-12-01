@@ -18,25 +18,20 @@ export function getAuthErrorMessage(error: unknown, context: 'login' | 'signup' 
   if (!error) return '';
 
   let status: number | undefined;
-  let message: string;
   let name: string;
 
   if (isAuthError(error)) {
     status = error.status;
-    message = error.message;
     name = error.name;
   } else if ((error as any) instanceof Error) { // eslint-disable-line @typescript-eslint/no-explicit-any
-    message = (error as Error).message;
     name = (error as Error).name;
   } else {
-    message = String(error);
     name = 'UnknownError';
   }
 
   // Log sanitized error details
   logger.error('Auth Error:', {
     status,
-    message,
     name,
   });
 
