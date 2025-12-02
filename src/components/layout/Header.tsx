@@ -14,7 +14,7 @@ import { useToast } from '@/components/ui/Toast';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: Home, public: true },
-  { name: 'Analytics', href: '/analytics', icon: BarChart3, public: false },
+  { name: 'Analytics', href: '/analytics', icon: BarChart3, public: true },
   { name: 'Library', href: '/library', icon: Library, public: true },
   { name: 'Settings', href: '/settings', icon: SettingsIcon, public: false },
 ];

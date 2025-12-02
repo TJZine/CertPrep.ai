@@ -8,8 +8,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { APP_NAME, APP_VERSION } from '@/lib/constants';
 import { Settings, Info, Shield } from 'lucide-react';
+import { useAuth } from '@/components/providers/AuthProvider';
 
 export default function SettingsPage(): React.ReactElement {
+  const { user } = useAuth();
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="mb-8">
@@ -42,8 +44,9 @@ export default function SettingsPage(): React.ReactElement {
           <div className="mt-4 rounded-lg bg-blue-50 p-4 dark:bg-blue-900/30">
             <h4 className="font-medium text-blue-900 dark:text-blue-100">Privacy Notice</h4>
             <p className="mt-1 text-sm text-blue-700 dark:text-blue-100">
-              All your data is stored locally on your device using IndexedDB. No data is ever sent to external servers.
-              Your quiz results, progress, and personal notes never leave your browser.
+              {user
+                ? 'Your data is stored locally first and securely synced to your account so you can back up and access it across devices. You can clear both local and cloud data from this page at any time.'
+                : 'Your data stays local to this device using IndexedDB. You can sign in to enable encrypted sync and backups, or continue fully offline.'}
             </p>
           </div>
         </CardContent>
