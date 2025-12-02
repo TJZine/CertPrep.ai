@@ -42,10 +42,14 @@ const typeStyles: Record<ToastType, { icon: React.ReactNode; classes: string }> 
 
 let toastCounter = 0;
 const generateId = (): string => {
-  const uuid = crypto.randomUUID?.();
+  const webCrypto =
+    typeof globalThis !== 'undefined' && (globalThis as { crypto?: Crypto }).crypto
+      ? (globalThis as { crypto?: Crypto }).crypto
+      : undefined;
+
+  const uuid = webCrypto?.randomUUID?.();
   if (uuid) return uuid;
 
-  const webCrypto = crypto as Crypto | undefined;
   if (webCrypto?.getRandomValues) {
     const buffer = new Uint32Array(1);
     webCrypto.getRandomValues(buffer);
