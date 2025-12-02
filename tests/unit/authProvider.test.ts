@@ -15,7 +15,7 @@ const createRouterStub = (): { push: ReturnType<typeof vi.fn> } => ({
 });
 
 describe('performSignOut', () => {
-  it('fails and avoids redirect when clearing Dexie fails', async () => {
+  it('continues sign-out when clearing Dexie fails but surfaces warning', async () => {
     const supabase = createSupabaseStub();
     const router = createRouterStub();
     const clearDb = vi.fn().mockRejectedValue(new Error('Dexie failure'));
@@ -28,11 +28,11 @@ describe('performSignOut', () => {
       onResetAuthState,
     });
 
-    expect(result.success).toBe(false);
-    expect(result.error).toMatch(/Failed to clear local data/);
-    expect(supabase.auth.signOut).not.toHaveBeenCalled();
-    expect(router.push).not.toHaveBeenCalled();
-    expect(onResetAuthState).not.toHaveBeenCalled();
+    expect(result.success).toBe(true);
+    expect(result.error).toMatch(/Local data could not be cleared/i);
+    expect(supabase.auth.signOut).toHaveBeenCalledTimes(1);
+    expect(router.push).toHaveBeenCalledWith('/login');
+    expect(onResetAuthState).toHaveBeenCalledTimes(1);
   });
 
   it('signs out and resets auth state on success', async () => {
@@ -54,5 +54,26 @@ describe('performSignOut', () => {
     expect(supabase.auth.signOut).toHaveBeenCalledTimes(1);
     expect(onResetAuthState).toHaveBeenCalledTimes(1);
     expect(router.push).toHaveBeenCalledWith('/login');
+  });
+
+  it('returns error when signOut fails after clearing database', async () => {
+    const supabase = createSupabaseStub();
+    supabase.auth.signOut.mockRejectedValue(new Error('Supabase failure'));
+    const router = createRouterStub();
+    const clearDb = vi.fn().mockResolvedValue(undefined);
+    const onResetAuthState = vi.fn();
+
+    const result = await performSignOut({
+      supabase: supabase as never,
+      router: router as never,
+      clearDb,
+      onResetAuthState,
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/Sign out failed/i);
+    expect(clearDb).toHaveBeenCalledTimes(1);
+    expect(onResetAuthState).not.toHaveBeenCalled();
+    expect(router.push).not.toHaveBeenCalled();
   });
 });

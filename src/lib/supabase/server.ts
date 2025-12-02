@@ -70,13 +70,13 @@ export const createClient = async (): Promise<ReturnType<typeof createServerClie
       }
     )
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error creating Supabase client'
     logger.error('Failed to create Supabase server client', error)
     // Re-throw in development for immediate feedback
     if (process.env.NODE_ENV === 'development') {
       throw error
     }
     // In production, surface a contextual error without masking the root cause in logs.
+    const message = error instanceof Error ? error.message : 'Unknown error creating Supabase client'
     throw new Error(`Failed to create Supabase client: ${message}`)
   }
 }

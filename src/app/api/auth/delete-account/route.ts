@@ -4,13 +4,16 @@ import { cookies } from 'next/headers';
 import { NextResponse, type NextRequest } from 'next/server';
 import { logger } from '@/lib/logger';
 
-const allowedOrigins = new Set(
-  [
-    process.env.NEXT_PUBLIC_SITE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_PRODUCTION_URL ?? 'https://cert-prep-ai.vercel.app',
-  ].filter(Boolean),
-);
+const originCandidates = [
+  process.env.NEXT_PUBLIC_SITE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+];
+
+if (process.env.NEXT_PUBLIC_PRODUCTION_URL && process.env.NODE_ENV === 'production') {
+  originCandidates.push(process.env.NEXT_PUBLIC_PRODUCTION_URL);
+}
+
+const allowedOrigins = new Set(originCandidates.filter(Boolean));
 
 function isAllowedOrigin(originHeader: string | null, requestOrigin: string): boolean {
   if (!originHeader) return false;
@@ -125,18 +128,18 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
       }
     );
 
+    const { error: signOutError } = await supabase.auth.signOut({ scope: 'global' });
+    if (signOutError) {
+      logger.error('Error signing out before account deletion', signOutError);
+      return NextResponse.json({ error: 'Failed to clear session after deletion' }, { status: 500 });
+    }
+
     // 3. Delete User
     const { error } = await supabaseAdmin.auth.admin.deleteUser(user.id);
 
     if (error) {
       logger.error('Error deleting user via service role', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    const { error: signOutError } = await supabase.auth.signOut({ scope: 'global' });
-    if (signOutError) {
-      logger.error('Error signing out after account deletion', signOutError);
-      return NextResponse.json({ error: 'Failed to clear session after deletion' }, { status: 500 });
     }
 
     const response = NextResponse.json({ success: true });

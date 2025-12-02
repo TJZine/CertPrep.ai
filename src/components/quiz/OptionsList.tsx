@@ -8,7 +8,7 @@ import { sanitizeHTML } from '@/lib/sanitize';
 interface OptionsListProps {
   options: Record<string, string>;
   selectedAnswer: string | null;
-  correctAnswer: string;
+  correctAnswer?: string;
   hasSubmitted: boolean;
   onSelectOption: (key: string) => void;
   disabled?: boolean;

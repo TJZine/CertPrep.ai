@@ -28,7 +28,7 @@ export function LoadingSpinner({
 }: LoadingSpinnerProps): React.ReactElement {
   const spinner = (
     <div
-      className={cn('flex items-center gap-2 text-sm font-medium text-slate-700', className)}
+      className={cn('flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300', className)}
       role="status"
       aria-live="polite"
     >
@@ -40,7 +40,7 @@ export function LoadingSpinner({
 
   if (fullScreen) {
     return (
-      <div className="fixed inset-0 z-40 flex items-center justify-center bg-white/80 backdrop-blur">
+      <div className="fixed inset-0 z-40 flex items-center justify-center bg-white/80 backdrop-blur dark:bg-slate-950/80">
         {spinner}
       </div>
     );

@@ -29,18 +29,19 @@ export async function performSignOut({
   onResetAuthState,
   clearDb,
 }: SignOutDependencies): Promise<{ success: boolean; error?: string }> {
+  let dbClearError: string | undefined;
   try {
     await clearDb();
   } catch (error) {
     console.error('Failed to clear local database during sign out:', error);
-    return { success: false, error: 'Failed to clear local data. Please try again.' };
+    dbClearError = 'Local data could not be cleared.';
   }
 
   try {
     await supabase.auth.signOut();
     onResetAuthState();
     router.push('/login');
-    return { success: true };
+    return { success: true, error: dbClearError };
   } catch (error) {
     console.error('Error signing out:', error);
     return { success: false, error: 'Sign out failed. Please try again.' };

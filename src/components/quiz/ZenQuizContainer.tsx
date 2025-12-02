@@ -211,7 +211,7 @@ export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContaine
     }
   }, [hasSubmitted, isCurrentAnswerCorrect, addToast]);
 
-  const quizContent = React.useMemo(() => (
+  const quizContent = (
     <div className="mx-auto max-w-3xl">
       <Card>
         <CardContent className="p-6 sm:p-8">
@@ -229,7 +229,7 @@ export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContaine
                 <OptionsList
                   options={currentQuestion.options}
                   selectedAnswer={selectedAnswer}
-                  correctAnswer={currentCorrectAnswer ?? ''}
+                  correctAnswer={currentCorrectAnswer}
                   isResolving={isResolving}
                   hasSubmitted={hasSubmitted}
                   onSelectOption={selectAnswer}
@@ -280,29 +280,7 @@ export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContaine
         </CardContent>
       </Card>
     </div>
-  ), [
-    currentQuestion,
-    currentIndex,
-    progress.total,
-    flaggedQuestions,
-    toggleFlag,
-    selectedAnswer,
-    currentCorrectAnswer,
-    hasSubmitted,
-    selectAnswer,
-    submitAnswer,
-    showExplanation,
-    isCurrentAnswerCorrect,
-    toggleExplanation,
-    markAgain,
-    markHard,
-    markGood,
-    isLastQuestion,
-    saveError,
-    retrySave,
-    handleExit,
-    isResolving,
-  ]);
+  );
 
   if (!currentQuestion) {
     return (

@@ -8,7 +8,9 @@ dotenv.config({ path: '.env.local' });
 // Skip tests if credentials are missing
 const shouldRun = Boolean(
   process.env.NEXT_PUBLIC_SUPABASE_URL &&
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY &&
+  process.env.SUPABASE_SERVICE_ROLE_KEY &&
+  process.env.RUN_RLS_TESTS === 'true',
 );
 
 // Hosts that we explicitly treat as production and should never be cleared.

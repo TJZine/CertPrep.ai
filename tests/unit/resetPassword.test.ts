@@ -56,4 +56,20 @@ describe('exchangeRecoverySession', () => {
     expect(result.success).toBe(false);
     expect(result.error).toMatch(/recovery link is invalid/i);
   });
+
+  it('sets session when access and refresh tokens are provided', async () => {
+    const supabase = createSupabaseStub();
+
+    const result = await exchangeRecoverySession(
+      supabase as never,
+      { type: 'recovery', code: null, accessToken: 'access', refreshToken: 'refresh' }
+    );
+
+    expect(result.success).toBe(true);
+    expect(supabase.auth.setSession).toHaveBeenCalledWith({
+      access_token: 'access',
+      refresh_token: 'refresh',
+    });
+    expect(supabase.auth.exchangeCodeForSession).not.toHaveBeenCalled();
+  });
 });
