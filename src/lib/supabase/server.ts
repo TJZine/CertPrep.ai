@@ -69,13 +69,13 @@ export const createClient = async (): Promise<ReturnType<typeof createServerClie
       }
     )
   } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error creating Supabase client'
+    logger.error('Failed to create Supabase server client', error)
     // Re-throw in development for immediate feedback
     if (process.env.NODE_ENV === 'development') {
       throw error
     }
-    // In production, ensure the error is logged and re-thrown to prevent silent failures.
-    // We intentionally do NOT return a fallback client here because it would mask configuration errors.
-    logger.error('CRITICAL: Supabase environment variables are missing in production. Auth will not work.', error)
-    throw new Error('Critical System Error: Missing Supabase Configuration');
+    // In production, surface a contextual error without masking the root cause in logs.
+    throw new Error(`Failed to create Supabase client: ${message}`)
   }
 }

@@ -84,6 +84,26 @@ export function ProctorQuizContainer({
   });
   useBeforeUnload(!isComplete, 'Your quiz progress will be lost. Are you sure?');
 
+  React.useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const handleQuizError = (event: Event): void => {
+      const customEvent = event as CustomEvent<{ message?: string } | string>;
+      const detail = customEvent.detail;
+      const message = typeof detail === 'string' ? detail : detail?.message;
+      if (message) {
+        addToast('error', message);
+      }
+    };
+
+    window.addEventListener('quiz-error', handleQuizError as EventListener);
+    return (): void => {
+      window.removeEventListener('quiz-error', handleQuizError as EventListener);
+    };
+  }, [addToast]);
+
   React.useEffect((): void => {
     updateTimeRemaining(timeRemaining);
   }, [timeRemaining, updateTimeRemaining]);

@@ -25,6 +25,8 @@ export function Header(): React.ReactElement {
   const { addToast } = useToast();
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const [scrolled, setScrolled] = React.useState(false);
+  const handleCloseMenu = React.useCallback((): void => setIsMenuOpen(false), []);
+  const menuItemTabIndex = isMenuOpen ? 0 : -1;
 
   // Handle scroll effect for glassmorphism border
   React.useEffect((): (() => void) => {
@@ -191,7 +193,8 @@ export function Header(): React.ReactElement {
                 <Link
                   key={item.href}
                   href={item.href}
-                  onClick={() => setIsMenuOpen(false)}
+                  onClick={handleCloseMenu}
+                  tabIndex={menuItemTabIndex}
                   className={cn(
                     'flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium transition-colors',
                     isActive
@@ -224,6 +227,7 @@ export function Header(): React.ReactElement {
                   onClick={handleSignOut}
                   isLoading={isSigningOut}
                   disabled={isSigningOut}
+                  tabIndex={menuItemTabIndex}
                   leftIcon={<LogOut className="h-4 w-4" />}
                 >
                   Sign Out
@@ -233,12 +237,16 @@ export function Header(): React.ReactElement {
               <div className="grid gap-4">
                 <Link
                   href="/login"
+                  onClick={handleCloseMenu}
+                  tabIndex={menuItemTabIndex}
                   className={cn(buttonVariants({ variant: 'outline' }), 'w-full justify-center h-11 text-base')}
                 >
                   Log In
                 </Link>
                 <Link
                   href="/signup"
+                  onClick={handleCloseMenu}
+                  tabIndex={menuItemTabIndex}
                   className={cn(buttonVariants(), 'w-full justify-center h-11 text-base shadow-sm')}
                 >
                   Sign Up

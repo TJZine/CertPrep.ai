@@ -10,6 +10,15 @@ import type { Question, QuizMode } from '@/types/quiz';
 
 enableMapSet();
 
+const HASH_RETRY_ATTEMPTS = 2;
+
+const emitQuizError = (message: string): void => {
+  if (typeof window === 'undefined') {
+    return;
+  }
+  window.dispatchEvent(new CustomEvent('quiz-error', { detail: { message } }));
+};
+
 // Spaced repetition queue item
 interface QueuedQuestion {
   questionId: string;
@@ -364,9 +373,7 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
           // Let's add a transient error state if we want to be fancy, but resetting hasSubmitted is the minimal fix
           // to prevent the UI from getting stuck.
           // Ideally we would dispatch a custom event or use a callback.
-          if (typeof window !== 'undefined') {
-             window.dispatchEvent(new CustomEvent('quiz-error', { detail: 'Failed to submit answer. Please try again.' }));
-          }
+          emitQuizError('Failed to submit answer. Please try again.');
         });
     },
 
@@ -388,58 +395,68 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
         draft.selectedAnswer = answerId;
         draft.isSubmitting = true;
       });
-      
-      // Async hash check for proctor mode
-      hashAnswer(answerId)
-        .then((hashedSelection) => {
-            set((draft) => {
-              const currentQ = draft.questions.find((q) => q.id === questionId);
-              // Ensure we are still on the same question
-              // And ensure the user hasn't changed their selection since this hash started
-              if (!currentQ || 
-                  draft.questionQueue[draft.currentIndex] !== questionId ||
-                  draft.selectedAnswer !== answerId) {
-                draft.isSubmitting = false; // Reset if state changed
-                return;
-              }
-              
-              let isCorrect = false;
-              if (currentQ.correct_answer_hash) {
-                isCorrect = hashedSelection === currentQ.correct_answer_hash;
-              } else if (currentQ.correct_answer) {
-                // Fallback for legacy quizzes
-                isCorrect = answerId === currentQ.correct_answer;
-              }
 
-              draft.answers.set(questionId, {
-                questionId,
-                selectedAnswer: answerId,
-                isCorrect,
-                timestamp: Date.now(),
-                difficulty: null,
-              });
-              draft.answeredQuestions.add(questionId);
-              draft.seenQuestions.add(questionId);
-              draft.isSubmitting = false;
+      const attemptHashWithRetry = async (): Promise<string> => {
+        let lastError: unknown;
+        for (let attempt = 1; attempt <= HASH_RETRY_ATTEMPTS; attempt += 1) {
+          try {
+            return await hashAnswer(answerId);
+          } catch (error) {
+            lastError = error;
+            console.error(`Failed to hash answer (attempt ${attempt}/${HASH_RETRY_ATTEMPTS}) for question ${questionId}`, error);
+          }
+        }
+        throw lastError ?? new Error('Failed to hash answer');
+      };
+      
+      // Async hash check for proctor mode with retry and user-visible failure
+      const persistAnswer = async (): Promise<void> => {
+        try {
+          const hashedSelection = await attemptHashWithRetry();
+          set((draft) => {
+            const currentQ = draft.questions.find((q) => q.id === questionId);
+            // Ensure we are still on the same question
+            // And ensure the user hasn't changed their selection since this hash started
+            if (!currentQ || 
+                draft.questionQueue[draft.currentIndex] !== questionId ||
+                draft.selectedAnswer !== answerId) {
+              draft.isSubmitting = false; // Reset if state changed
+              return;
+            }
+            
+            let isCorrect = false;
+            if (currentQ.correct_answer_hash) {
+              isCorrect = hashedSelection === currentQ.correct_answer_hash;
+            } else if (currentQ.correct_answer) {
+              // Fallback for legacy quizzes
+              isCorrect = answerId === currentQ.correct_answer;
+            }
+
+            draft.answers.set(questionId, {
+              questionId,
+              selectedAnswer: answerId,
+              isCorrect,
+              timestamp: Date.now(),
+              difficulty: null,
             });
-        })
-        .catch((err) => {
-          console.error('Failed to hash answer in selectAnswerProctor', err);
-          // Reset isSubmitting on error
+            draft.answeredQuestions.add(questionId);
+            draft.seenQuestions.add(questionId);
+            draft.isSubmitting = false;
+          });
+        } catch (err) {
+          console.error('Failed to hash answer in selectAnswerProctor after retries', err);
           set((draft) => {
             draft.isSubmitting = false;
-            // Optionally clear selection to indicate it wasn't saved
-            // draft.selectedAnswer = null;
+            // Clear selection to avoid implying the answer was saved
+            if (draft.questionQueue[draft.currentIndex] === questionId) {
+              draft.selectedAnswer = null;
+            }
           });
-          // Notify user
-          if (typeof window !== 'undefined') {
-             window.dispatchEvent(new CustomEvent('quiz-error', { detail: 'Failed to save answer. Please check your connection.' }));
-          }
-          
-          // Recovery: Save raw answer to a local queue or just retry?
-          // For now, we will just ensure the UI reflects that it wasn't saved (it won't be in answers map).
-          // The user can try selecting again.
-        });
+          emitQuizError('We could not save your answer. Please try again.');
+        }
+      };
+
+      void persistAnswer();
     },
 
     markAgain: (): void => {
