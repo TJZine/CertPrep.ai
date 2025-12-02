@@ -81,14 +81,11 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
           // MUTATE existing response, don't destroy it
           cookiesToSet.forEach(({ name, value, options }) => {
             request.cookies.set(name, value) // Update req for current processing
-            response.cookies.set({
-              path: '/',
-              sameSite: 'lax',
+            response.cookies.set(name, value, {
+              ...options,
               httpOnly: true,
               secure: process.env.NODE_ENV === 'production',
-              ...options,
-              name,
-              value,
+              sameSite: 'lax',
             })
           })
         },

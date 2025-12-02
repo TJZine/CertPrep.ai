@@ -15,9 +15,12 @@ const shouldRun = Boolean(
 
 // Hosts that we explicitly treat as production and should never be cleared.
 // For these, we silently skip the clear step (no warning noise).
-const knownProductionHosts = new Set([
-  'rkhtvyvuksuhzqlxjyzx.supabase.co',
-]);
+// CI/local environments should set PRODUCTION_SUPABASE_HOSTS (e.g., in .env.test or via test dotenv setup)
+// to ensure tests behave correctly without embedding production hostnames in source code.
+const productionSupabaseHosts = process.env.PRODUCTION_SUPABASE_HOSTS;
+const knownProductionHosts = productionSupabaseHosts
+  ? new Set(productionSupabaseHosts.split(',').map(host => host.trim()).filter(Boolean))
+  : new Set<string>();
 
 describe.skipIf(!shouldRun)('Row Level Security (RLS) Verification', () => {
   let supabase: SupabaseClient;

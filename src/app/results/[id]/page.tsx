@@ -72,14 +72,6 @@ export default function ResultsPage(): React.ReactElement {
     };
   }, [effectiveUserId, quiz, result, restoreAttempted]);
 
-  if (!isInitialized || !effectiveUserId || resultLoading || quizLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
-        <LoadingSpinner size="lg" text="Loading your results..." />
-      </div>
-    );
-  }
-
   if (dbError) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4 dark:bg-slate-950">
@@ -91,6 +83,14 @@ export default function ResultsPage(): React.ReactElement {
             Back to Dashboard
           </Button>
         </div>
+      </div>
+    );
+  }
+
+  if (!isInitialized || !effectiveUserId || resultLoading || quizLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
+        <LoadingSpinner size="lg" text="Loading your results..." />
       </div>
     );
   }

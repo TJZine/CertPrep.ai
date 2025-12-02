@@ -224,8 +224,9 @@ async function pullRemoteChanges(userId: string, startTime: number, stats: { pul
       if (typeof rawUpdatedAt === 'string' && !Number.isNaN(Date.parse(rawUpdatedAt))) {
         candidateUpdatedAt = new Date(rawUpdatedAt).toISOString();
       } else {
-        logger.warn('Invalid updated_at in remote quiz, using lastUpdatedAt fallback', { quizId: remoteQuiz.id, rawUpdatedAt });
-        candidateUpdatedAt = lastUpdatedAt;
+        logger.error('Invalid updated_at in remote quiz, advancing cursor to skip record', { quizId: remoteQuiz.id, rawUpdatedAt, userId });
+        const safeLastUpdate = (lastUpdatedAt && !Number.isNaN(Date.parse(lastUpdatedAt))) ? new Date(lastUpdatedAt).getTime() : 0;
+        candidateUpdatedAt = new Date(Math.max(safeLastUpdate + 1, Date.now())).toISOString();
       }
       lastUpdatedAt = candidateUpdatedAt;
 

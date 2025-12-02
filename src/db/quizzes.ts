@@ -62,7 +62,7 @@ export function sanitizeQuestions(questions: unknown[]): Question[] {
       user_notes: q.user_notes ? sanitizeQuestionText(q.user_notes) : undefined,
       options: sanitizedOptions,
       correct_answer_hash: q.correct_answer_hash,
-      correct_answer: q.correct_answer,
+      // correct_answer intentionally omitted - callers needing it for hashing should access q.correct_answer directly
     };
   });
 }
