@@ -29,6 +29,20 @@ interface ZenQuizContainerProps {
   isSmartRound?: boolean;
 }
 
+const SMART_ROUND_STATE_KEYS = [
+  'smartRoundQuestions',
+  'smartRoundQuizId',
+  'smartRoundAllQuestions',
+  'smartRoundMissedCount',
+  'smartRoundFlaggedCount',
+] as const;
+
+export const clearSmartRoundState = (): void => {
+  SMART_ROUND_STATE_KEYS.forEach((key) => {
+    sessionStorage.removeItem(key);
+  });
+};
+
 /**
  * Main orchestrator for Zen mode interactions.
  */
@@ -68,7 +82,7 @@ export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContaine
   const progress = useProgress();
 
   const { formattedTime, start: startTimer, seconds, pause: pauseTimer } = useTimer({ autoStart: true });
-  useBeforeUnload(!isComplete, 'Your quiz progress will be lost. Are you sure?');
+  useBeforeUnload(!isComplete || Boolean(saveError), 'Your quiz progress will be lost. Are you sure?');
 
   React.useEffect(() => {
     if (typeof window === 'undefined') {
@@ -76,8 +90,10 @@ export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContaine
     }
 
     const handleQuizError = (event: Event): void => {
-      const customEvent = event as CustomEvent<{ message?: string } | string>;
-      const detail = customEvent.detail;
+      if (!(event instanceof CustomEvent)) {
+        return;
+      }
+      const detail = event.detail as { message?: string } | string | undefined;
       const message = typeof detail === 'string' ? detail : detail?.message;
       if (message) {
         addToast('error', message);
@@ -166,11 +182,7 @@ export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContaine
   const handleExit = React.useCallback((): void => {
     resetSession();
     if (isSmartRound) {
-      sessionStorage.removeItem('smartRoundQuestions');
-      sessionStorage.removeItem('smartRoundQuizId');
-      sessionStorage.removeItem('smartRoundAllQuestions');
-      sessionStorage.removeItem('smartRoundMissedCount');
-      sessionStorage.removeItem('smartRoundFlaggedCount');
+      clearSmartRoundState();
     }
     router.push('/');
   }, [resetSession, isSmartRound, router]);

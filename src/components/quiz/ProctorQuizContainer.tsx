@@ -90,8 +90,10 @@ export function ProctorQuizContainer({
     }
 
     const handleQuizError = (event: Event): void => {
-      const customEvent = event as CustomEvent<{ message?: string } | string>;
-      const detail = customEvent.detail;
+      if (!(event instanceof CustomEvent)) {
+        return;
+      }
+      const detail = event.detail as { message?: string } | string | undefined;
       const message = typeof detail === 'string' ? detail : detail?.message;
       if (message) {
         addToast('error', message);
@@ -149,13 +151,13 @@ export function ProctorQuizContainer({
     setIsSubmitting(true);
     setShowSubmitModal(false);
     try {
-      pauseTimer();
-      submitExam();
       if (!effectiveUserId) {
         addToast('error', 'Unable to save results: no user context available.');
         setIsSubmitting(false);
         return;
       }
+      pauseTimer();
+      submitExam();
 
       const result = await createResult({
         quizId: quiz.id,
@@ -166,7 +168,7 @@ export function ProctorQuizContainer({
         timeTakenSeconds: durationMinutes * 60 - timeRemaining,
       });
       hasSavedResultRef.current = true;
-      void sync();
+      void sync().catch((syncError) => console.error('Failed to sync results after submit:', syncError));
       addToast('success', 'Exam submitted successfully!');
       router.push(`/results/${result.id}`);
     } catch (error) {
@@ -200,7 +202,7 @@ export function ProctorQuizContainer({
       });
       hasSavedResultRef.current = true;
       setAutoResultId(result.id);
-      void sync();
+      void sync().catch((syncError) => console.error('Failed to sync results after auto-submit:', syncError));
       setShowTimeUpModal(true);
       return result.id;
     } catch (error) {

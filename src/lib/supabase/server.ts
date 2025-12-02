@@ -4,6 +4,11 @@ import { logger } from '@/lib/logger'
 
 export const createClient = async (): Promise<ReturnType<typeof createServerClient>> => {
   const cookieStore = await cookies()
+  const sharedCookieOptions: Pick<CookieOptions, 'httpOnly' | 'secure' | 'sameSite'> = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+  }
 
   let supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   let supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -37,15 +42,13 @@ export const createClient = async (): Promise<ReturnType<typeof createServerClie
                 name,
                 value,
                 ...options,
-                httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'lax',
+                ...sharedCookieOptions,
               })
             } catch (error) {
               // The `cookies().set()` method can only be called in a Server Component or Route Handler.
               // This error `cookies().set()` will cause when called from a Client Component.
               if (process.env.NODE_ENV === 'development') {
-                console.warn('Could not set cookie from Server Client:', error)
+                logger.warn('Could not set cookie from Server Client', error)
               }
             }
           },
@@ -55,13 +58,11 @@ export const createClient = async (): Promise<ReturnType<typeof createServerClie
                 name,
                 value: '',
                 ...options,
-                httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'lax',
+                ...sharedCookieOptions,
               })
             } catch (error) {
               if (process.env.NODE_ENV === 'development') {
-                console.warn('Could not remove cookie from Server Client:', error)
+                logger.warn('Could not remove cookie from Server Client', error)
               }
             }
           },
