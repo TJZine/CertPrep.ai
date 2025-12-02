@@ -49,8 +49,8 @@ export class CertPrepDatabase extends Dexie {
       const quizzesTable = tx.table<Quiz, string>('quizzes');
       const quizzes = await quizzesTable.toArray();
 
-      for (const quiz of quizzes) {
-        const updatedQuiz: Quiz = {
+      const updatedQuizzes = await Promise.all(quizzes.map(async (quiz) => {
+        return {
           ...quiz,
           user_id: (quiz as Quiz).user_id ?? NIL_UUID,
           deleted_at: quiz.deleted_at ?? null,
@@ -65,9 +65,9 @@ export class CertPrepDatabase extends Dexie {
           last_synced_at: quiz.last_synced_at ?? null,
           last_synced_version: quiz.last_synced_version ?? null,
         };
+      }));
 
-        await quizzesTable.put(updatedQuiz);
-      }
+      await quizzesTable.bulkPut(updatedQuizzes);
     });
 
     // Version 7: Add per-user scoping to quizzes and backfill legacy quizzes to NIL_UUID to prevent cross-account sync.

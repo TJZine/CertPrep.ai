@@ -144,7 +144,7 @@ export async function createQuiz(input: QuizImportInput, meta: { userId: string;
  */
 export async function getAllQuizzes(userId: string): Promise<Quiz[]> {
   const quizzes = await db.quizzes.where('user_id').equals(userId).sortBy('created_at');
-  return quizzes.filter((quiz) => quiz.user_id === userId && (quiz.deleted_at === null || quiz.deleted_at === undefined));
+  return quizzes.filter((quiz) => (quiz.deleted_at === null || quiz.deleted_at === undefined));
 }
 
 /**

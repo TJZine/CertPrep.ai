@@ -131,13 +131,13 @@ describe('quizSyncManager', () => {
   });
 
   it('acquires web lock before syncing quizzes', async () => {
-    const lockRequest = vi.fn().mockImplementation(async (_name, _options, callback) => callback({ name: 'sync-quizzes' }));
+    const lockRequest = vi.fn().mockImplementation(async (_name, _options, callback) => callback({ name: 'sync-quizzes-user-1' }));
     vi.stubGlobal('navigator', { locks: { request: lockRequest } });
     quizzesData.length = 0;
 
     await syncQuizzes('user-1');
 
-    expect(lockRequest).toHaveBeenCalledWith('sync-quizzes', { ifAvailable: true }, expect.any(Function));
+    expect(lockRequest).toHaveBeenCalledWith('sync-quizzes-user-1', { ifAvailable: true }, expect.any(Function));
   });
 
   it('only pushes quizzes for the active user', async () => {

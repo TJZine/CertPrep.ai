@@ -1,6 +1,5 @@
 'use client';
 
-// import type { SyncState } from '@/types/sync'; // Removed unused import
 import { db } from '@/db';
 import { logger } from '@/lib/logger';
 import { getSyncCursor, setSyncCursor } from '@/db/syncState';
@@ -19,9 +18,6 @@ function getSupabaseClient(): ReturnType<typeof createClient> {
 }
 const BATCH_SIZE = 50;
 const TIME_BUDGET_MS = 5000;
-
-// Simple in-memory lock to prevent race conditions if sync is triggered multiple times rapidly
-// let isSyncing = false; // Removed unused variable
 
 // Schema for validating remote result data structure
 const RemoteResultSchema = z.object({

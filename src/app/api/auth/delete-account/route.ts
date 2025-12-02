@@ -107,6 +107,8 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
       return NextResponse.json({ error: 'Failed to clear session before deletion' }, { status: 500 });
     }
 
+    logger.info('Initiating account deletion for user', { userId: user.id });
+
     // 3. Delete User
     const { error } = await supabaseAdmin.auth.admin.deleteUser(user.id);
 

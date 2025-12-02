@@ -344,5 +344,8 @@ try {
 | Database reads | 1000 requests | 1 minute |
 | Database writes | 100 requests | 1 minute |
 
+> [!NOTE]
+> These limits are illustrative only and depend on your specific Supabase plan.
+
 > [!WARNING]
 > Exceeding rate limits will result in temporary blocking.

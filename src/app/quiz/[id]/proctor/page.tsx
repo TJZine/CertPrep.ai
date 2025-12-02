@@ -40,7 +40,7 @@ export default function ProctorModePage(): React.ReactElement {
     );
   }
 
-  if (!isInitialized || !effectiveUserId || isLoading) {
+  if (!isInitialized || !effectiveUserId || (isLoading && !quiz)) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
         <LoadingSpinner size="lg" text="Preparing your exam..." />

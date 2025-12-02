@@ -15,7 +15,7 @@ const shouldRun = Boolean(
 
 // Hosts that we explicitly treat as production and should never be cleared.
 // For these, we silently skip the clear step (no warning noise).
-const nonTestHosts = new Set([
+const knownProductionHosts = new Set([
   'rkhtvyvuksuhzqlxjyzx.supabase.co',
 ]);
 
@@ -40,12 +40,12 @@ describe.skipIf(!shouldRun)('Row Level Security (RLS) Verification', () => {
       return;
     }
     const host = new URL(url).hostname;
-    if (!url.includes('localhost') && !url.includes('test') && !nonTestHosts.has(host)) {
+    if (!url.includes('localhost') && !url.includes('test') && !knownProductionHosts.has(host)) {
       console.warn('Supabase URL does not look like a test instance; refusing to clear database');
       return;
     }
 
-    if (nonTestHosts.has(host)) {
+    if (knownProductionHosts.has(host)) {
       return;
     }
 

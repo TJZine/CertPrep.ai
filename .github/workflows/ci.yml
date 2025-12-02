@@ -66,4 +66,4 @@ jobs:
           SENTRY_DISABLE_AUTO_UPLOAD: 1
           # Provide dummy values to pass build-time validation checks
           NEXT_PUBLIC_SUPABASE_URL: https://supabase-ci.invalid
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpIiwicm9sZSI6ImFub24iLCJpYXQiOjE2MTY1NTU1NTUsImV4cCI6MTkzMjI5MTU1NX0.dummy-signaturey
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: dummy-anon-key-for-ci-only

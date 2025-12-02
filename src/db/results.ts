@@ -91,6 +91,10 @@ export async function createResult(input: CreateResultInput): Promise<Result> {
     throw new Error('Quiz not found.');
   }
 
+  if (quiz.user_id !== input.userId) {
+    throw new Error('Security mismatch: Quiz does not belong to the current user.');
+  }
+
   const { score, categoryBreakdown } = await calculateResults(quiz, input.answers, input.activeQuestionIds);
   const result: Result = {
     id: generateUUID(),

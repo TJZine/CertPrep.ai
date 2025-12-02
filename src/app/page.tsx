@@ -50,11 +50,12 @@ export default function DashboardPage(): React.ReactElement {
       try {
         const statsEntries = await Promise.all(
           quizzes.map(async (quiz) => {
-            const stats = await getQuizStats(quiz.id, effectiveUserId!);
+            // effectiveUserId is guaranteed to be present by the useEffect guard
+            const stats = await getQuizStats(quiz.id, effectiveUserId);
             return [quiz.id, stats] as const;
           }),
         );
-        const overall = effectiveUserId ? await getOverallStats(effectiveUserId) : null;
+        const overall = await getOverallStats(effectiveUserId);
 
         if (!isMounted) return;
         setQuizStats(new Map(statsEntries));

@@ -66,7 +66,7 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
     throw new Error(errorMsg);
   }
 
-  const urlToUse = supabaseUrlEnv
+  const urlToUse = supabaseUrlEnv.startsWith('http') ? supabaseUrlEnv : `https://${supabaseUrlEnv}`;
   const keyToUse = supabaseKey
 
   const supabase = createServerClient(
@@ -82,13 +82,13 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
           cookiesToSet.forEach(({ name, value, options }) => {
             request.cookies.set(name, value) // Update req for current processing
             response.cookies.set({
-              name,
-              value,
-              ...options,
               path: '/',
               sameSite: 'lax',
-              secure: process.env.NODE_ENV === 'production',
               httpOnly: true,
+              secure: process.env.NODE_ENV === 'production',
+              ...options,
+              name,
+              value,
             })
           })
         },

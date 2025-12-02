@@ -43,7 +43,7 @@ export async function syncQuizzes(userId: string): Promise<{ incomplete: boolean
   if (typeof navigator !== 'undefined' && 'locks' in navigator) {
     try {
       return (
-        (await navigator.locks.request('sync-quizzes', { ifAvailable: true }, async (lock) => {
+        (await navigator.locks.request(`sync-quizzes-${userId}`, { ifAvailable: true }, async (lock) => {
           if (!lock) {
             logger.debug('Quiz sync already in progress in another tab, skipping');
             return { incomplete: false };
@@ -140,7 +140,7 @@ async function pushLocalChanges(userId: string, startTime: number, stats: { push
   let incomplete = false;
   const userQuizzes = await db.quizzes.where('user_id').equals(userId).toArray();
   const dirtyQuizzes = userQuizzes.filter(
-    (quiz) => quiz.user_id === userId && quiz.user_id !== NIL_UUID && (quiz.last_synced_version ?? null) !== quiz.version,
+    (quiz) => quiz.user_id !== NIL_UUID && (quiz.last_synced_version ?? null) !== quiz.version,
   );
 
   for (let i = 0; i < dirtyQuizzes.length; i += BATCH_SIZE) {
@@ -219,10 +219,14 @@ async function pullRemoteChanges(userId: string, startTime: number, stats: { pul
 
     for (const remoteQuiz of remoteQuizzes) {
       const rawUpdatedAt = (remoteQuiz as { updated_at?: unknown }).updated_at;
-      const candidateUpdatedAt =
-        typeof rawUpdatedAt === 'string' && !Number.isNaN(Date.parse(rawUpdatedAt))
-          ? new Date(rawUpdatedAt).toISOString()
-          : lastUpdatedAt;
+      let candidateUpdatedAt: string;
+      
+      if (typeof rawUpdatedAt === 'string' && !Number.isNaN(Date.parse(rawUpdatedAt))) {
+        candidateUpdatedAt = new Date(rawUpdatedAt).toISOString();
+      } else {
+        logger.warn('Invalid updated_at in remote quiz, using lastUpdatedAt fallback', { quizId: remoteQuiz.id, rawUpdatedAt });
+        candidateUpdatedAt = lastUpdatedAt;
+      }
       lastUpdatedAt = candidateUpdatedAt;
 
       const candidateId = typeof (remoteQuiz as { id?: unknown }).id === 'string'
