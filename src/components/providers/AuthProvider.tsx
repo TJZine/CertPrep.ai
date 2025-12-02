@@ -16,6 +16,37 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+type SignOutDependencies = {
+  supabase: ReturnType<typeof createClient>;
+  router: ReturnType<typeof useRouter>;
+  onResetAuthState: () => void;
+  clearDb: () => Promise<void>;
+};
+
+export async function performSignOut({
+  supabase,
+  router,
+  onResetAuthState,
+  clearDb,
+}: SignOutDependencies): Promise<{ success: boolean; error?: string }> {
+  try {
+    await clearDb();
+  } catch (error) {
+    console.error('Failed to clear local database during sign out:', error);
+    return { success: false, error: 'Failed to clear local data. Please try again.' };
+  }
+
+  try {
+    await supabase.auth.signOut();
+    onResetAuthState();
+    router.push('/login');
+    return { success: true };
+  } catch (error) {
+    console.error('Error signing out:', error);
+    return { success: false, error: 'Sign out failed. Please try again.' };
+  }
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }): React.ReactElement {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -71,27 +102,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }): React
     };
   }, [router, supabase]);
 
-  const signOut = async (): Promise<{ success: boolean; error?: string }> => {
-    let dbClearFailed = false;
-    try {
-      // Clear local data first to ensure privacy even if network fails
-      await clearDatabase();
-    } catch (error) {
-      console.error('Failed to clear local database during sign out:', error);
-      dbClearFailed = true;
-    }
-
-    try {
-      await supabase.auth.signOut();
-      setUser(null);
-      setSession(null);
-      router.push('/login');
-      return { success: true, error: dbClearFailed ? 'Local data clear failed' : undefined };
-    } catch (error) {
-      console.error('Error signing out:', error);
-      return { success: false, error: 'Sign out failed. Please try again.' };
-    }
-  };
+  const signOut = async (): Promise<{ success: boolean; error?: string }> =>
+    performSignOut({
+      supabase,
+      router,
+      clearDb: clearDatabase,
+      onResetAuthState: () => {
+        setUser(null);
+        setSession(null);
+      },
+    });
 
   const value = {
     session,

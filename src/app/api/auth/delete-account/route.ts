@@ -28,6 +28,33 @@ function isSameSiteRequest(request: NextRequest): boolean {
   return fetchSite === null || fetchSite === 'same-origin' || fetchSite === 'none' || fetchSite === 'same-site';
 }
 
+type SerializableCookie = {
+  name: string;
+  value: string;
+  domain?: string;
+  expires?: Date | number | string;
+  httpOnly?: boolean;
+  maxAge?: number;
+  path?: string;
+  sameSite?: 'lax' | 'strict' | 'none';
+  secure?: boolean;
+};
+
+function copyCookiesToResponse(cookiesToCopy: SerializableCookie[], response: NextResponse): void {
+  cookiesToCopy.forEach((cookie) => {
+    const expires = typeof cookie.expires === 'string' ? new Date(cookie.expires) : cookie.expires;
+    response.cookies.set(cookie.name, cookie.value, {
+      domain: cookie.domain,
+      expires,
+      httpOnly: cookie.httpOnly,
+      maxAge: cookie.maxAge,
+      path: cookie.path,
+      sameSite: cookie.sameSite,
+      secure: cookie.secure,
+    });
+  });
+}
+
 export async function DELETE(request: NextRequest): Promise<NextResponse> {
   try {
     const cookieStore = await cookies();
@@ -106,7 +133,15 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true });
+    const { error: signOutError } = await supabase.auth.signOut({ scope: 'global' });
+    if (signOutError) {
+      logger.error('Error signing out after account deletion', signOutError);
+      return NextResponse.json({ error: 'Failed to clear session after deletion' }, { status: 500 });
+    }
+
+    const response = NextResponse.json({ success: true });
+    copyCookiesToResponse(cookieStore.getAll(), response);
+    return response;
   } catch (error) {
     logger.error('Unexpected error in delete-account', error);
     return NextResponse.json(

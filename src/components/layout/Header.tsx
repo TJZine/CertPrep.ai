@@ -69,7 +69,8 @@ export function Header(): React.ReactElement {
     try {
       const result = await signOut();
       if (!result.success) {
-        addToast('error', 'Failed to sign out. Please try again.');
+        addToast('error', result.error ?? 'Failed to sign out. Please try again.');
+        return;
       }
     } catch {
       addToast('error', 'Failed to sign out. Please try again.');
