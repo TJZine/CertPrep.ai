@@ -40,8 +40,22 @@ const typeStyles: Record<ToastType, { icon: React.ReactNode; classes: string }> 
   },
 };
 
-const generateId = (): string =>
-  crypto.randomUUID?.() ?? `toast-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+let toastCounter = 0;
+const generateId = (): string => {
+  const uuid = crypto.randomUUID?.();
+  if (uuid) return uuid;
+
+  const webCrypto = crypto as Crypto | undefined;
+  if (webCrypto?.getRandomValues) {
+    const buffer = new Uint32Array(1);
+    webCrypto.getRandomValues(buffer);
+    const randomValue = buffer[0] ?? 0;
+    return `toast-${Date.now().toString(36)}-${randomValue.toString(16)}`;
+  }
+
+  toastCounter += 1;
+  return `toast-${Date.now().toString(36)}-${toastCounter}`;
+};
 
 /**
  * Hook to access the toast context.

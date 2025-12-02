@@ -1,16 +1,29 @@
 'use client';
 
+'use client';
+
 import { useState } from 'react';
 
 const GUEST_USER_KEY = 'cp_guest_user_id';
+let guestIdCounter = 0;
 
 function ensureGuestUserId(): string | null {
   if (typeof window === 'undefined') return null;
   let existing = localStorage.getItem(GUEST_USER_KEY);
   if (!existing) {
-    const randomUUID = (crypto as Crypto | undefined)?.randomUUID?.();
-    const fallbackId = `guest-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-    existing = randomUUID ?? fallbackId;
+    const webCrypto = crypto as Crypto | undefined;
+    const randomUUID = webCrypto?.randomUUID?.();
+    if (randomUUID) {
+      existing = randomUUID;
+    } else if (webCrypto?.getRandomValues) {
+      const buffer = new Uint32Array(1);
+      webCrypto.getRandomValues(buffer);
+      const randomValue = buffer[0] ?? 0;
+      existing = `guest-${Date.now().toString(36)}-${randomValue.toString(16)}`;
+    } else {
+      guestIdCounter += 1;
+      existing = `guest-${Date.now().toString(36)}-${guestIdCounter}`;
+    }
     localStorage.setItem(GUEST_USER_KEY, existing);
   }
   return existing;
