@@ -25,14 +25,6 @@ export default function ProctorModePage(): React.ReactElement {
   const { isInitialized, error: dbError } = useInitializeDatabase();
   const { quiz, isLoading } = useQuiz(isInitialized ? quizId : undefined, effectiveUserId ?? undefined);
 
-  if (!isInitialized || !effectiveUserId || isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
-        <LoadingSpinner size="lg" text="Preparing your exam..." />
-      </div>
-    );
-  }
-
   if (dbError) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4 dark:bg-slate-950">
@@ -44,6 +36,14 @@ export default function ProctorModePage(): React.ReactElement {
             Back to Dashboard
           </Button>
         </div>
+      </div>
+    );
+  }
+
+  if (!isInitialized || !effectiveUserId || isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
+        <LoadingSpinner size="lg" text="Preparing your exam..." />
       </div>
     );
   }

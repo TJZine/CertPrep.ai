@@ -93,7 +93,7 @@ export async function computeQuizHash(core: QuizCore): Promise<string> {
 
 export async function toRemoteQuiz(userId: string, local: Quiz): Promise<RemoteQuizInput> {
   if (local.user_id && local.user_id !== userId) {
-    logger.warn('Attempting to sync quiz for mismatched user; skipping user override', { quizId: local.id, quizUserId: local.user_id, userId });
+    throw new Error(`Security mismatch: Attempting to sync quiz ${local.id} owned by ${local.user_id} as ${userId}`);
   }
   const quizHash = local.quiz_hash ?? (await computeQuizHash(local));
   const updatedAt = local.updated_at ?? local.created_at;

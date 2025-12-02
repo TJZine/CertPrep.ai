@@ -40,7 +40,7 @@ describe('quizDomain', () => {
       title: baseQuiz.title,
       questions: [
         {
-          ...baseQuiz.questions[0],
+          ...baseQuiz.questions[0]!,
           options: { b: 'B', a: 'A' },
         },
       ],

@@ -63,4 +63,5 @@ For your **Supabase data**:
 - Result sync: `src/lib/sync/syncManager.ts`.
 - Quiz sync: `src/lib/sync/quizSyncManager.ts`.
 
-Check your browser console (in development) and Supabase logs for detailed errors.*** End Patch***}세요...
+Check your browser console (in development) and Supabase logs for detailed errors.
+

@@ -58,9 +58,10 @@ export default function ResultsPage(): React.ReactElement {
       } catch (error) {
         logger.error('Failed to restore quiz for result view', error);
       } finally {
-        if (!isMounted) return;
-        setIsRestoringQuiz(false);
-        setRestoreAttempted(true);
+        if (isMounted) {
+          setIsRestoringQuiz(false);
+          setRestoreAttempted(true);
+        }
       }
     };
 

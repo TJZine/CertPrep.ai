@@ -118,7 +118,11 @@ export async function* generateJSONExport(userId: string): AsyncGenerator<string
     
     for (let i = 0; i < batch.length; i++) {
       if (offset > 0 || i > 0) yield ',';
-      yield JSON.stringify(batch[i]);
+      const result = batch[i];
+      if (!result) continue;
+      const { user_id: _omitUserId, ...rest } = result;
+      void _omitUserId;
+      yield JSON.stringify(rest);
     }
     offset += batch.length;
   }
