@@ -42,7 +42,19 @@ const syncState = {
   lastSyncAttempt: 0
 };
 
-export async function syncResults(userId: string): Promise<{ incomplete: boolean }> {
+export type SyncResultsOutcome = { incomplete: boolean; error?: string };
+
+function toErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'string') return error;
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return 'Unknown error';
+  }
+}
+
+export async function syncResults(userId: string): Promise<SyncResultsOutcome> {
   if (!userId) return { incomplete: false };
 
   // Use Web Locks API for cross-tab synchronization safety
@@ -80,11 +92,12 @@ export async function syncResults(userId: string): Promise<{ incomplete: boolean
   }
 }
 
-async function performSync(userId: string): Promise<{ incomplete: boolean }> {
+async function performSync(userId: string): Promise<SyncResultsOutcome> {
   let incomplete = false;
   const startTime = Date.now();
   let pushed = 0;
   let pulled = 0;
+  let lastError: string | undefined;
 
   try {
     // 1. PUSH: Upload unsynced local results to Supabase
@@ -120,6 +133,8 @@ async function performSync(userId: string): Promise<{ incomplete: boolean }> {
 
         if (error) {
           logger.error('Failed to push results batch to Supabase:', error);
+          incomplete = true;
+          lastError = toErrorMessage(error);
 
           // Circuit Breaker: Stop syncing if we hit critical errors
           // Check for standard PostgREST codes or HTTP status codes if available
@@ -147,7 +162,7 @@ async function performSync(userId: string): Promise<{ incomplete: boolean }> {
       }
     }
 
-    if (incomplete) return { incomplete };
+    if (incomplete) return { incomplete, error: lastError };
 
     // 2. PULL: Incremental Sync with Keyset Pagination
     let hasMore = true;
@@ -183,6 +198,8 @@ async function performSync(userId: string): Promise<{ incomplete: boolean }> {
 
       if (fetchError) {
         logger.error('Failed to fetch results from Supabase:', fetchError);
+        incomplete = true;
+        lastError = toErrorMessage(fetchError);
         hasMore = false;
         break;
       }
@@ -241,8 +258,10 @@ async function performSync(userId: string): Promise<{ incomplete: boolean }> {
     }
   } catch (error) {
     logger.error('Sync failed:', error);
+    incomplete = true;
+    lastError = toErrorMessage(error);
   }
   
-  logger.info('Result sync complete', { userId, pushed, pulled, incomplete });
-  return { incomplete };
+  logger.info('Result sync complete', { userId, pushed, pulled, incomplete, lastError });
+  return { incomplete, error: lastError };
 }

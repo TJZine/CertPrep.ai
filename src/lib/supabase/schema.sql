@@ -26,6 +26,39 @@ create policy "Users can delete their own profile."
   on profiles for delete
   using ( auth.uid() = id );
 
+-- TABLE: quizzes
+create table if not exists quizzes (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete cascade not null,
+  title text not null,
+  description text,
+  tags text[] not null default '{}',
+  version integer not null default 1,
+  questions jsonb not null,
+  quiz_hash text,
+  created_at timestamp with time zone default timezone('utc'::text, now()),
+  updated_at timestamp with time zone default timezone('utc'::text, now()),
+  deleted_at timestamp with time zone
+);
+
+alter table quizzes enable row level security;
+
+create policy "Users can view their own quizzes."
+  on quizzes for select
+  using ( auth.uid() = user_id );
+
+create policy "Users can insert their own quizzes."
+  on quizzes for insert
+  with check ( auth.uid() = user_id );
+
+create policy "Users can update their own quizzes."
+  on quizzes for update
+  using ( auth.uid() = user_id );
+
+create policy "Users can delete their own quizzes."
+  on quizzes for delete
+  using ( auth.uid() = user_id );
+
 -- TABLE: results
 create table if not exists results (
   id uuid primary key default gen_random_uuid(),
@@ -84,3 +117,23 @@ create trigger on_auth_user_created
 -- Supports the query: .eq('user_id', userId).or('created_at.gt...,and(...)').order('created_at', ...).order('id', ...)
 create index concurrently if not exists idx_results_sync_optimization
   on results (user_id, created_at, id);
+
+-- OPTIMIZATION: Index for quiz sync (keyset pagination by user + updated_at + id)
+create index concurrently if not exists idx_quizzes_sync_optimization
+  on quizzes (user_id, updated_at, id);
+
+-- Trigger to keep updated_at fresh on updates
+create or replace function public.set_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = timezone('utc'::text, now());
+  return new;
+end;
+$$;
+
+drop trigger if exists quizzes_set_updated_at on quizzes;
+create trigger quizzes_set_updated_at
+  before update on quizzes
+  for each row execute procedure public.set_updated_at();

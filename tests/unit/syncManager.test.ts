@@ -205,10 +205,21 @@ describe('SyncManager', () => {
     
     mockSupabase.limit.mockResolvedValue({ data: [], error: null });
 
-    await syncResults('user-123');
+    const result = await syncResults('user-123');
 
     expect(mockSupabase.upsert).toHaveBeenCalled();
     // Verify bulkUpdate was NOT called
     expect(db.results.bulkUpdate).not.toHaveBeenCalled();
+    expect(result.incomplete).toBe(true);
+    expect(result.error).toContain('Network error');
+  });
+
+  it('should mark sync incomplete when fetch fails', async () => {
+    mockSupabase.limit.mockResolvedValueOnce({ data: null, error: { message: 'RLS denied' } });
+
+    const result = await syncResults('user-123');
+
+    expect(result.incomplete).toBe(true);
+    expect(result.error).toContain('RLS denied');
   });
 });
