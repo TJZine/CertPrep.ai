@@ -109,9 +109,9 @@ describe('SyncManager', () => {
       await syncResults('user-123');
 
       expect(mockRequest).toHaveBeenCalledWith(
-        'sync-results',
+        'sync-results-user-123',
         { ifAvailable: true },
-        expect.any(Function),
+        expect.any(Function)
       );
     } finally {
       vi.unstubAllGlobals();

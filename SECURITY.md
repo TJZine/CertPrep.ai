@@ -24,7 +24,7 @@ Please include as much of the following information as possible:
 | Type | Type of vulnerability (e.g., XSS, SQL injection, authentication bypass) |
 | Location | Full paths of source file(s) related to the issue |
 | Steps | Step-by-step instructions to reproduce |
-| Impact | Potential impact of the vulnerability |
+| Impact | Potential impact of the vulnerability, including a CVSS score if possible. |
 | Proof | Proof-of-concept or exploit code (if possible) |
 
 ### Response Timeline
@@ -55,7 +55,7 @@ We support safe harbor for security researchers who:
 |---------|----------------|
 | Password Hashing | Supabase (bcrypt) |
 | Session Management | Supabase Auth with secure cookies |
-| Cookie Security | `Secure`, `HttpOnly`, `SameSite=Lax`, `Path=/` |
+| Cookie Security | `Secure`, `HttpOnly`, `SameSite=Lax` (protects against CSRF in most cases while allowing top-level navigations), `Path=/` |
 | Row-Level Security | Enforced per-table with `auth.uid()` owner checks (see RLS policy checklist below) |
 
 ### Data Protection
@@ -95,10 +95,13 @@ CREATE POLICY results_delete_owner ON results FOR DELETE USING (auth.uid() = use
 
 ## 🔐 Supported Versions
 
-| Version | Supported |
-|---------|-----------|
-| 1.x.x | ✅ Active support |
-| < 1.0 | ❌ No longer supported |
+We are committed to providing a secure and stable experience. Our version support policy is as follows:
+
+| Version | Status | Support Level | End of Life (EOL) Date |
+|---------|--------|---------------|------------------------|
+| 2.x.x   | ✅ Current | Full Support  | N/A (actively maintained) |
+| 1.x.x   | ⚠️ Legacy | Critical Fixes Only | 2024-12-31 |
+| < 1.0   | ❌ End-of-Life | No Support    | Passed                 |
 
 ---
 

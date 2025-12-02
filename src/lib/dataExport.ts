@@ -93,18 +93,19 @@ export async function* generateJSONExport(userId: string): AsyncGenerator<string
 
   let offset = 0;
   const BATCH_SIZE = 100;
+  let isFirstQuiz = true;
   
   while (true) {
     const batch = await db.quizzes.where('user_id').equals(userId).offset(offset).limit(BATCH_SIZE).toArray();
     if (batch.length === 0) break;
     
-    for (let i = 0; i < batch.length; i++) {
-      const quiz = batch[i];
+    for (const quiz of batch) {
       if (!quiz) continue;
-      if (offset > 0 || i > 0) yield ',';
+      if (!isFirstQuiz) yield ',';
       const { user_id: _omitUserId, ...rest } = quiz;
       void _omitUserId;
       yield JSON.stringify(rest);
+      isFirstQuiz = false;
     }
     offset += batch.length;
   }
@@ -112,17 +113,18 @@ export async function* generateJSONExport(userId: string): AsyncGenerator<string
   yield `],\n  "results": [`;
   
   offset = 0;
+  let isFirstResult = true;
   while (true) {
     const batch = await db.results.where('user_id').equals(userId).offset(offset).limit(BATCH_SIZE).toArray();
     if (batch.length === 0) break;
     
-    for (let i = 0; i < batch.length; i++) {
-      if (offset > 0 || i > 0) yield ',';
-      const result = batch[i];
+    for (const result of batch) {
       if (!result) continue;
+      if (!isFirstResult) yield ',';
       const { user_id: _omitUserId, ...rest } = result;
       void _omitUserId;
       yield JSON.stringify(rest);
+      isFirstResult = false;
     }
     offset += batch.length;
   }

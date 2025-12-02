@@ -143,8 +143,10 @@ export async function createQuiz(input: QuizImportInput, meta: { userId: string;
  * Retrieves all quizzes ordered from newest to oldest.
  */
 export async function getAllQuizzes(userId: string): Promise<Quiz[]> {
-  const quizzes = await db.quizzes.where('user_id').equals(userId).sortBy('created_at');
-  return quizzes.filter((quiz) => (quiz.deleted_at === null || quiz.deleted_at === undefined));
+  return db.quizzes
+    .where('user_id').equals(userId)
+    .and(quiz => quiz.deleted_at === null || quiz.deleted_at === undefined)
+    .sortBy('created_at');
 }
 
 /**
@@ -168,12 +170,9 @@ export async function searchQuizzes(query: string, userId: string): Promise<Quiz
   }
 
   return db.quizzes
-    .where('user_id')
-    .equals(userId)
+    .where('user_id').equals(userId)
+    .and(quiz => quiz.deleted_at === null || quiz.deleted_at === undefined)
     .filter((quiz) => {
-      if (quiz.user_id !== userId || (quiz.deleted_at !== null && quiz.deleted_at !== undefined)) {
-        return false;
-      }
       const titleMatch = quiz.title.toLowerCase().includes(trimmedQuery);
       const tagMatch = quiz.tags.some((tag) => tag.toLowerCase().includes(trimmedQuery));
       return titleMatch || tagMatch;

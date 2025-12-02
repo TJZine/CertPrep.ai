@@ -48,24 +48,30 @@ export class CertPrepDatabase extends Dexie {
     }).upgrade(async (tx) => {
       const quizzesTable = tx.table<Quiz, string>('quizzes');
       const quizzes = await quizzesTable.toArray();
+      const updatedQuizzes: Quiz[] = [];
+      const BATCH_SIZE = 20;
 
-      const updatedQuizzes = await Promise.all(quizzes.map(async (quiz) => {
-        return {
-          ...quiz,
-          user_id: (quiz as Quiz).user_id ?? NIL_UUID,
-          deleted_at: quiz.deleted_at ?? null,
-          quiz_hash: quiz.quiz_hash ?? await computeQuizHash({
-            title: quiz.title,
-            description: quiz.description,
-            tags: quiz.tags,
-            questions: quiz.questions,
-          }),
-          version: quiz.version || 1,
-          updated_at: quiz.updated_at ?? quiz.created_at,
-          last_synced_at: quiz.last_synced_at ?? null,
-          last_synced_version: quiz.last_synced_version ?? null,
-        };
-      }));
+      for (let i = 0; i < quizzes.length; i += BATCH_SIZE) {
+        const batch = quizzes.slice(i, i + BATCH_SIZE);
+        const processedBatch = await Promise.all(batch.map(async (quiz) => {
+          return {
+            ...quiz,
+            user_id: (quiz as Quiz).user_id ?? NIL_UUID,
+            deleted_at: quiz.deleted_at ?? null,
+            quiz_hash: quiz.quiz_hash ?? await computeQuizHash({
+              title: quiz.title,
+              description: quiz.description,
+              tags: quiz.tags,
+              questions: quiz.questions,
+            }),
+            version: quiz.version || 1,
+            updated_at: quiz.updated_at ?? quiz.created_at,
+            last_synced_at: quiz.last_synced_at ?? null,
+            last_synced_version: quiz.last_synced_version ?? null,
+          };
+        }));
+        updatedQuizzes.push(...processedBatch);
+      }
 
       await quizzesTable.bulkPut(updatedQuizzes);
     });

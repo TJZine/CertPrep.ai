@@ -1,7 +1,8 @@
 import { db } from './index';
-import { calculatePercentage, generateUUID, hashAnswer } from '@/lib/utils';
+import { calculatePercentage, generateUUID } from '@/lib/utils';
 import type { CategoryPerformance, Result } from '@/types/result';
 import type { Quiz, QuizMode } from '@/types/quiz';
+import { evaluateAnswer } from '@/lib/grading';
 
 export interface CreateResultInput {
   quizId: string;
@@ -38,19 +39,8 @@ export async function calculateResults(
 
   const questionResults = await Promise.all(
     questionsToScore.map(async (question) => {
-      const category = question.category || 'Uncategorized';
       const userAnswer = answers[String(question.id)];
-      
-      let isCorrect = false;
-      if (userAnswer) {
-        const userHash = await hashAnswer(userAnswer);
-        if (question.correct_answer_hash) {
-          isCorrect = userHash === question.correct_answer_hash;
-        } else if (question.correct_answer) {
-          isCorrect = userAnswer === question.correct_answer;
-        }
-      }
-      return { category, isCorrect };
+      return evaluateAnswer(question, userAnswer);
     })
   );
 
@@ -168,19 +158,8 @@ export async function getCategoryPerformance(quizId: string, userId: string): Pr
     results.map(async (result) => {
       return Promise.all(
         quiz.questions.map(async (question) => {
-          const category = question.category || 'Uncategorized';
           const userAnswer = result.answers[String(question.id)];
-          
-          let isCorrect = false;
-          if (userAnswer) {
-            const userHash = await hashAnswer(userAnswer);
-            if (question.correct_answer_hash) {
-              isCorrect = userHash === question.correct_answer_hash;
-            } else if (question.correct_answer) {
-              isCorrect = userAnswer === question.correct_answer;
-            }
-          }
-          return { category, isCorrect };
+          return evaluateAnswer(question, userAnswer);
         })
       );
     })
@@ -229,14 +208,7 @@ export async function getMissedQuestions(resultId: string, userId: string): Prom
       const userAnswer = result.answers[String(question.id)];
       if (!userAnswer) return null;
 
-      const userHash = await hashAnswer(userAnswer);
-      
-      let isCorrect = false;
-      if (question.correct_answer_hash) {
-        isCorrect = userHash === question.correct_answer_hash;
-      } else if (question.correct_answer) {
-        isCorrect = userAnswer === question.correct_answer;
-      }
+      const { isCorrect } = await evaluateAnswer(question, userAnswer);
       
       return !isCorrect ? String(question.id) : null;
     })
@@ -263,43 +235,37 @@ export async function getOverallStats(userId: string): Promise<OverallStats> {
 
   const categoryTotals: Record<string, { correct: number; total: number }> = {};
 
-  const allResultsData = await Promise.all(
-    results.map(async (result) => {
-      const quiz = quizMap.get(result.quiz_id);
-      if (!quiz) {
-        return [];
+  // Process results in batches to avoid blocking the main thread with unbounded concurrency
+  const BATCH_SIZE = 50;
+  for (let i = 0; i < results.length; i += BATCH_SIZE) {
+    const batch = results.slice(i, i + BATCH_SIZE);
+    const batchData = await Promise.all(
+      batch.map(async (result) => {
+        const quiz = quizMap.get(result.quiz_id);
+        if (!quiz) {
+          return [];
+        }
+
+        return Promise.all(
+          quiz.questions.map(async (question) => {
+            const userAnswer = result.answers[String(question.id)];
+            return evaluateAnswer(question, userAnswer);
+          })
+        );
+      })
+    );
+
+    batchData.flat().forEach(({ category, isCorrect }) => {
+      if (!categoryTotals[category]) {
+        categoryTotals[category] = { correct: 0, total: 0 };
       }
 
-      return Promise.all(
-        quiz.questions.map(async (question) => {
-          const category = question.category || 'Uncategorized';
-          const userAnswer = result.answers[String(question.id)];
-          
-          let isCorrect = false;
-          if (userAnswer) {
-            const userHash = await hashAnswer(userAnswer);
-            if (question.correct_answer_hash) {
-              isCorrect = userHash === question.correct_answer_hash;
-            } else if (question.correct_answer) {
-              isCorrect = userAnswer === question.correct_answer;
-            }
-          }
-          return { category, isCorrect };
-        })
-      );
-    })
-  );
-
-  allResultsData.flat().forEach(({ category, isCorrect }) => {
-    if (!categoryTotals[category]) {
-      categoryTotals[category] = { correct: 0, total: 0 };
-    }
-
-    categoryTotals[category].total += 1;
-    if (isCorrect) {
-      categoryTotals[category].correct += 1;
-    }
-  });
+      categoryTotals[category].total += 1;
+      if (isCorrect) {
+        categoryTotals[category].correct += 1;
+      }
+    });
+  }
 
   const weakestCategories = Object.entries(categoryTotals)
     .map(([category, { correct, total }]) => ({

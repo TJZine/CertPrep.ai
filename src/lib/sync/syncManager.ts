@@ -57,7 +57,7 @@ export async function syncResults(userId: string): Promise<SyncResultsOutcome> {
   // This prevents multiple tabs from running sync simultaneously
   if (typeof navigator !== 'undefined' && 'locks' in navigator) {
     try {
-      return await navigator.locks.request('sync-results', { ifAvailable: true }, async (lock) => {
+      return await navigator.locks.request(`sync-results-${userId}`, { ifAvailable: true }, async (lock) => {
         if (!lock) {
           logger.debug('Sync already in progress in another tab, skipping');
           return { incomplete: false };

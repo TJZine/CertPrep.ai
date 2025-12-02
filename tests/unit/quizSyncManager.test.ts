@@ -3,13 +3,16 @@ import { syncQuizzes } from '@/lib/sync/quizSyncManager';
 import type { Quiz } from '@/types/quiz';
 import { setQuizSyncCursor } from '@/db/syncState';
 
+const FIXED_TIMESTAMP = 1704067200000; // 2024-01-01T00:00:00.000Z
+const FIXED_ISO = new Date(FIXED_TIMESTAMP).toISOString();
+
 const sampleQuiz: Quiz = {
   id: 'quiz-1',
   user_id: 'user-1',
   title: 'Quiz',
   description: '',
-  created_at: 1,
-  updated_at: 1,
+  created_at: FIXED_TIMESTAMP,
+  updated_at: FIXED_TIMESTAMP,
   questions: [],
   tags: [],
   version: 2,
@@ -90,12 +93,12 @@ vi.mock('@/lib/sync/quizDomain', () => ({
     user_id: remote.user_id,
     title: remote.title,
     description: remote.description ?? '',
-    created_at: Date.now(),
-    updated_at: Date.now(),
+    created_at: 1704067200000,
+    updated_at: 1704067200000,
     tags: remote.tags ?? [],
     questions: remote.questions ?? [],
     version: remote.version,
-    deleted_at: remote.deleted_at ? Date.now() : null,
+    deleted_at: remote.deleted_at ? 1704067200000 : null,
     quiz_hash: remote.quiz_hash ?? null,
     last_synced_at: null,
     last_synced_version: null,
@@ -112,9 +115,12 @@ describe('quizSyncManager', () => {
     dbMock.quizzes.bulkPut.mockResolvedValue(undefined);
     resolveConflictMock.mockReturnValue({ winner: 'remote', merged: { ...sampleQuiz } });
     fetchUserQuizzesMock.mockResolvedValue({ data: [], error: null });
+    vi.useFakeTimers();
+    vi.setSystemTime(FIXED_TIMESTAMP);
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     vi.unstubAllGlobals();
   });
 
@@ -127,7 +133,7 @@ describe('quizSyncManager', () => {
 
     const updatedRecord = dbMock.quizzes.bulkPut.mock.calls[0]?.[0]?.[0] as Quiz | undefined;
     expect(updatedRecord?.last_synced_version).toBe(sampleQuiz.version);
-    expect(updatedRecord?.last_synced_at).toBeDefined();
+    expect(updatedRecord?.last_synced_at).toBe(FIXED_TIMESTAMP);
   });
 
   it('acquires web lock before syncing quizzes', async () => {

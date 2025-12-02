@@ -55,7 +55,7 @@ describe.skipIf(!shouldRun)('Row Level Security (RLS) Verification', () => {
     const adminClient = createClient(url, serviceRoleKey);
 
     // Delete all data from 'results' table
-    const { error: deleteResultsError } = await adminClient.from('results').delete().gt('id', '00000000-0000-0000-0000-000000000000'); // Delete all rows
+    const { error: deleteResultsError } = await adminClient.from('results').delete().not('id', 'is', null); // Delete all rows
     if (deleteResultsError) {
       console.error('Error clearing results table:', deleteResultsError);
       throw deleteResultsError;
@@ -206,6 +206,9 @@ describe.skipIf(!shouldRun)('Row Level Security (RLS) Verification', () => {
       .from('results')
       .insert(resultData);
 
+    if (insertError) {
+        throw new Error(`Insert failed: ${insertError.message}`);
+    }
     expect(insertError).toBeNull();
 
     const { data, error: selectError } = await userA.client
@@ -270,13 +273,15 @@ describe.skipIf(!shouldRun)('Row Level Security (RLS) Verification', () => {
     await userA.client.from('results').insert(resultData);
 
     // User B tries to update it
-    await userB.client
+    const { count, error: updateError } = await userB.client
       .from('results')
       .update({ score: 0 })
       .eq('id', resultId)
-      .select(); // select to see if it returns anything
+      .select('', { count: 'exact' }); // select to see if it returns anything
 
     // Should not update anything
+    expect(count).toBe(0);
+    
     // Note: Supabase update policies often silently ignore rows you can't see/edit
     // So we check if the data actually changed by reading it back as User A
     

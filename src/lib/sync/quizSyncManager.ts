@@ -109,30 +109,42 @@ async function backfillLocalQuizzes(userId: string): Promise<void> {
     return;
   }
 
-  const payload = await Promise.all(quizzes.map((quiz) => toRemoteQuiz(userId, quiz)));
-  const { error } = await upsertQuizzes(userId, payload);
-  if (error) {
-    logger.error('Failed to backfill quizzes to Supabase', { userId, error });
-    return;
+  const startTime = Date.now();
+
+  for (let i = 0; i < quizzes.length; i += BATCH_SIZE) {
+    if (Date.now() - startTime > TIME_BUDGET_MS) {
+      logger.warn('Quiz backfill time budget exceeded, pausing.');
+      return;
+    }
+
+    const batch = quizzes.slice(i, i + BATCH_SIZE);
+    const payload = await Promise.all(batch.map((quiz) => toRemoteQuiz(userId, quiz)));
+    const { error } = await upsertQuizzes(userId, payload);
+    
+    if (error) {
+      logger.error('Failed to backfill quizzes to Supabase', { userId, error });
+      continue; // Try next batch or abort? Continuing allows partial progress.
+    }
+
+    const now = Date.now();
+    const updated = await Promise.all(
+      batch.map(async (quiz, index) => ({
+        ...quiz,
+        user_id: userId,
+        quiz_hash: payload[index]?.quiz_hash ?? quiz.quiz_hash ?? (await computeQuizHash({
+          title: quiz.title,
+          description: quiz.description,
+          tags: quiz.tags,
+          questions: quiz.questions,
+        })),
+        last_synced_version: quiz.version,
+        last_synced_at: now,
+      })),
+    );
+
+    await db.quizzes.bulkPut(updated);
   }
 
-  const now = Date.now();
-  const updated = await Promise.all(
-    quizzes.map(async (quiz, index) => ({
-      ...quiz,
-      user_id: userId,
-      quiz_hash: payload[index]?.quiz_hash ?? quiz.quiz_hash ?? (await computeQuizHash({
-        title: quiz.title,
-        description: quiz.description,
-        tags: quiz.tags,
-        questions: quiz.questions,
-      })),
-      last_synced_version: quiz.version,
-      last_synced_at: now,
-    })),
-  );
-
-  await db.quizzes.bulkPut(updated);
   await setQuizBackfillDone(userId);
 }
 

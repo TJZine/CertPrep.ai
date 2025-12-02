@@ -134,12 +134,12 @@ interface Quiz {
 
 ### List Quizzes
 
-Retrieves quizzes from the local Dexie database.
+Retrieves quizzes from the local Dexie database. All queries are automatically scoped to the current authenticated user.
 
 ```typescript
 import { getAllQuizzes, searchQuizzes } from '@/db/quizzes'
 
-// All quizzes for the current user (see implementation for user scoping)
+// All quizzes for the current user
 const quizzes = await getAllQuizzes()
 
 // Search by title or tags
