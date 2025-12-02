@@ -28,9 +28,11 @@ async function resetDatabase(): Promise<void> {
 describe('data export/import', () => {
   const sampleQuiz: Quiz = {
     id: '11111111-1111-4111-8111-111111111111',
+    user_id: TEST_USER_ID,
     title: 'Sample Quiz',
     description: 'A quiz used for backup import tests.',
     created_at: 1_700_000_000_000,
+    updated_at: 1_700_000_000_000,
     questions: [
       {
         id: 'q1',
@@ -48,6 +50,10 @@ describe('data export/import', () => {
     tags: ['import', 'backup'],
     version: 1,
     sourceId: 'source-abc',
+    deleted_at: null,
+    quiz_hash: null,
+    last_synced_at: null,
+    last_synced_version: null,
   };
 
   const sampleResult: Result = {
@@ -134,5 +140,38 @@ describe('data export/import', () => {
     expect(resultsImported).toBe(1);
     expect(storedResults).toHaveLength(1);
     expect(storedResults[0]?.id).toBe(sampleResult.id);
+  });
+
+  it('scopes merge dedupe to the active user', async () => {
+    const otherUserId = 'user-other';
+    const sharedQuizId = '12345678-1234-4123-8123-1234567890ab';
+
+    await db.quizzes.put({ ...sampleQuiz, id: sharedQuizId, user_id: otherUserId });
+    await db.results.put({
+      ...sampleResult,
+      quiz_id: sharedQuizId,
+      user_id: otherUserId,
+      id: '22345678-1234-4123-8123-1234567890ab',
+    });
+
+    const importPayload: ExportData = {
+      version: '1.0',
+      exportedAt: new Date().toISOString(),
+      quizzes: [{ ...sampleQuiz, id: sharedQuizId, user_id: otherUserId }],
+      results: [
+        { ...sampleResult, quiz_id: sharedQuizId, user_id: otherUserId, id: '32345678-1234-4123-8123-1234567890ab' },
+      ],
+    };
+
+    const { quizzesImported, resultsImported } = await importData(importPayload, TEST_USER_ID, 'merge');
+
+    const storedQuiz = await db.quizzes.get(sharedQuizId);
+    const storedResults = await db.results.where('user_id').equals(TEST_USER_ID).toArray();
+
+    expect(quizzesImported).toBe(1);
+    expect(resultsImported).toBe(1);
+    expect(storedQuiz?.user_id).toBe(TEST_USER_ID);
+    expect(storedResults).toHaveLength(1);
+    expect(storedResults[0]?.quiz_id).toBe(sharedQuizId);
   });
 });

@@ -21,6 +21,7 @@ import { useAuth } from '@/components/providers/AuthProvider';
 import { useEffectiveUserId } from '@/hooks/useEffectiveUserId';
 import type { Quiz } from '@/types/quiz';
 import type { Result } from '@/types/result';
+import { Badge } from '@/components/ui/Badge';
 
 interface ResultsContainerProps {
   result: Result;
@@ -36,6 +37,7 @@ export function ResultsContainer({ result, quiz, previousScore }: ResultsContain
   const { addToast } = useToast();
   const { user } = useAuth();
   const effectiveUserId = useEffectiveUserId(user?.id);
+  const isQuizRemoved = quiz.deleted_at !== null && quiz.deleted_at !== undefined;
 
   const [showDeleteModal, setShowDeleteModal] = React.useState(false);
   const [isDeleting, setIsDeleting] = React.useState(false);
@@ -131,6 +133,10 @@ export function ResultsContainer({ result, quiz, previousScore }: ResultsContain
   };
 
   const handleRetakeQuiz = (): void => {
+    if (isQuizRemoved) {
+      addToast('info', 'This quiz was removed. Restore it before retaking.');
+      return;
+    }
     router.push(`/quiz/${quiz.id}/${result.mode}`);
   };
 
@@ -214,7 +220,14 @@ export function ResultsContainer({ result, quiz, previousScore }: ResultsContain
             </Button>
             <div>
               <h1 className="line-clamp-1 text-sm font-semibold text-slate-900 dark:text-slate-50">{quiz.title}</h1>
-              <p className="text-xs text-slate-500 dark:text-slate-300">Results</p>
+              <div className="flex items-center gap-2">
+                <p className="text-xs text-slate-500 dark:text-slate-300">Results</p>
+                {isQuizRemoved && (
+                  <Badge variant="secondary" className="text-xs">
+                    Removed quiz
+                  </Badge>
+                )}
+              </div>
             </div>
           </div>
 
@@ -243,10 +256,20 @@ export function ResultsContainer({ result, quiz, previousScore }: ResultsContain
           <Button variant="outline" onClick={handleBackToDashboard} leftIcon={<Home className="h-4 w-4" aria-hidden="true" />}>
             Dashboard
           </Button>
-          <Button onClick={handleRetakeQuiz} leftIcon={<RotateCcw className="h-4 w-4" aria-hidden="true" />}>
+          <Button
+            onClick={handleRetakeQuiz}
+            leftIcon={<RotateCcw className="h-4 w-4" aria-hidden="true" />}
+            disabled={isQuizRemoved}
+            title={isQuizRemoved ? 'This quiz was removed. Restore it before retaking.' : undefined}
+          >
             Retake Quiz
           </Button>
         </div>
+        {isQuizRemoved && (
+          <p className="mb-6 text-sm text-amber-700 dark:text-amber-300">
+            This quiz has been removed. Restore it from your dashboard before retaking or editing.
+          </p>
+        )}
 
         <Scorecard
           score={result.score}

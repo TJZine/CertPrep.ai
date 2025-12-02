@@ -8,6 +8,8 @@ import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { Button } from '@/components/ui/Button';
 import { useInitializeDatabase, useQuiz } from '@/hooks/useDatabase';
+import { useAuth } from '@/components/providers/AuthProvider';
+import { useEffectiveUserId } from '@/hooks/useEffectiveUserId';
 
 /**
  * Page entry for Proctor exam mode.
@@ -17,10 +19,13 @@ export default function ProctorModePage(): React.ReactElement {
   const router = useRouter();
   const quizId = params.id as string;
 
-  const { isInitialized, error: dbError } = useInitializeDatabase();
-  const { quiz, isLoading } = useQuiz(isInitialized ? quizId : undefined);
+  const { user } = useAuth();
+  const effectiveUserId = useEffectiveUserId(user?.id);
 
-  if (!isInitialized || isLoading) {
+  const { isInitialized, error: dbError } = useInitializeDatabase();
+  const { quiz, isLoading } = useQuiz(isInitialized ? quizId : undefined, effectiveUserId ?? undefined);
+
+  if (!isInitialized || !effectiveUserId || isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
         <LoadingSpinner size="lg" text="Preparing your exam..." />

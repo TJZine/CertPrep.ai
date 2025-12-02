@@ -27,9 +27,12 @@ const ResultImportSchema = z.object({
 
 const QuizBackupSchema = QuizSchema.extend({
   sourceId: z.string().optional(),
+  deleted_at: z.number().nullable().optional(),
+  updated_at: z.number().nullable().optional(),
+  quiz_hash: z.string().nullable().optional(),
 });
 
-function sanitizeQuizRecord(quiz: unknown): Quiz | null {
+function sanitizeQuizRecord(quiz: unknown, userId: string): Quiz | null {
   const parsed = QuizBackupSchema.safeParse(quiz);
 
   if (!parsed.success) {
@@ -38,12 +41,24 @@ function sanitizeQuizRecord(quiz: unknown): Quiz | null {
     return null;
   }
 
+  const createdAt = parsed.data.created_at ?? Date.now();
+  const updatedAt = parsed.data.updated_at ?? createdAt;
+  const deletedAt = parsed.data.deleted_at ?? null;
+  const quizHash = parsed.data.quiz_hash ?? null;
+
   return {
     ...parsed.data,
+    user_id: userId,
     title: sanitizeQuestionText(parsed.data.title),
     description: sanitizeQuestionText(parsed.data.description ?? ''),
     tags: (parsed.data.tags ?? []).map((tag) => sanitizeQuestionText(tag)),
     questions: sanitizeQuestions(parsed.data.questions),
+    created_at: createdAt,
+    updated_at: updatedAt,
+    deleted_at: deletedAt,
+    quiz_hash: quizHash,
+    last_synced_at: null,
+    last_synced_version: null,
   };
 }
 
@@ -80,12 +95,16 @@ export async function* generateJSONExport(userId: string): AsyncGenerator<string
   const BATCH_SIZE = 100;
   
   while (true) {
-    const batch = await db.quizzes.offset(offset).limit(BATCH_SIZE).toArray();
+    const batch = await db.quizzes.where('user_id').equals(userId).offset(offset).limit(BATCH_SIZE).toArray();
     if (batch.length === 0) break;
     
     for (let i = 0; i < batch.length; i++) {
+      const quiz = batch[i];
+      if (!quiz) continue;
       if (offset > 0 || i > 0) yield ',';
-      yield JSON.stringify(batch[i]);
+      const { user_id: _omitUserId, ...rest } = quiz;
+      void _omitUserId;
+      yield JSON.stringify(rest);
     }
     offset += batch.length;
   }
@@ -156,7 +175,7 @@ export async function importData(
   const quizIds = new Set<string>();
 
   for (const quiz of data.quizzes) {
-    const sanitizedQuiz = sanitizeQuizRecord(quiz);
+    const sanitizedQuiz = sanitizeQuizRecord(quiz, userId);
     if (!sanitizedQuiz) continue;
     if (quizIds.has(sanitizedQuiz.id)) {
       console.warn('Skipped duplicate quiz id during import:', sanitizedQuiz.id);
@@ -168,7 +187,7 @@ export async function importData(
 
   const existingQuizIds =
     mode === 'merge'
-      ? new Set<string>((await db.quizzes.toArray()).map((quiz) => quiz.id))
+      ? new Set<string>((await db.quizzes.where('user_id').equals(userId).toArray()).map((quiz) => quiz.id))
       : new Set<string>();
   const allowedQuizIds = new Set<string>([...quizIds, ...existingQuizIds]);
 
@@ -198,8 +217,14 @@ export async function importData(
       throw new Error('Import aborted: no valid quizzes or results to import.');
     }
 
-    await db.transaction('rw', db.quizzes, db.results, async () => {
-      await Promise.all([db.quizzes.clear(), db.results.clear()]);
+    await db.transaction('rw', db.quizzes, db.results, db.syncState, async () => {
+      await Promise.all([
+        db.quizzes.where('user_id').equals(userId).delete(),
+        db.results.where('user_id').equals(userId).delete(),
+        db.syncState.delete(`results:${userId}`),
+        db.syncState.delete(`quizzes:${userId}`),
+        db.syncState.delete(`quizzes:backfill:${userId}`),
+      ]);
       if (sanitizedQuizzes.length > 0) {
         await db.quizzes.bulkPut(sanitizedQuizzes);
         quizzesImported = sanitizedQuizzes.length;
@@ -215,7 +240,7 @@ export async function importData(
   }
 
   await db.transaction('rw', db.quizzes, db.results, async () => {
-    const quizzesInDb = await db.quizzes.toArray();
+    const quizzesInDb = await db.quizzes.where('user_id').equals(userId).toArray();
     const mergedExistingQuizIds = new Set<string>(quizzesInDb.map((quiz) => quiz.id));
     const quizzesToAdd = sanitizedQuizzes.filter((quiz) => !mergedExistingQuizIds.has(quiz.id));
 
@@ -264,7 +289,7 @@ export async function getStorageStats(userId: string | null | undefined): Promis
   }
 
   // Optimized: Use count() instead of toArray() to avoid loading all data
-  const quizCount = await db.quizzes.count();
+  const quizCount = await db.quizzes.where('user_id').equals(userId).count();
   const resultCount = await db.results.where('user_id').equals(userId).count();
   
   // Estimation: ~2KB per quiz (with questions), ~1KB per result

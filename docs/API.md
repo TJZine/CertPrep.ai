@@ -108,59 +108,55 @@ const { data: { user }, error } = await supabase.auth.getUser()
 
 ### Types
 
-```typescript
-interface Quiz {
-  id: string
-  title: string
-  description: string
-  mode: 'proctor' | 'zen'
-  questions: Question[]
-  duration?: number // seconds, for proctor mode
-  created_at: string
-  updated_at: string
-}
+> These types mirror the core fields used in `src/types/quiz.ts` but omit some internal metadata for brevity.
 
+```typescript
 interface Question {
   id: string
-  text: string
-  options: Option[]
-  correct_answer: string
+  category: string
+  question: string
+  options: Record<string, string>
+  explanation: string
 }
 
-interface Option {
+interface Quiz {
   id: string
-  text: string
+  user_id: string
+  title: string
+  description: string
+  created_at: number
+  updated_at?: number
+  questions: Question[]
+  tags: string[]
+  version: number
 }
 ```
 
 ### List Quizzes
 
-Retrieves all available quizzes.
+Retrieves quizzes from the local Dexie database.
 
 ```typescript
-import { db } from '@/db'
+import { getAllQuizzes, searchQuizzes } from '@/db/quizzes'
 
-// Local query
-const quizzes = await db.quizzes.toArray()
+// All quizzes for the current user (see implementation for user scoping)
+const quizzes = await getAllQuizzes()
 
-// With filtering
-const proctorQuizzes = await db.quizzes
-  .where('mode')
-  .equals('proctor')
-  .toArray()
+// Search by title or tags
+const filtered = await searchQuizzes('aws')
 ```
-
----
 
 ### Get Quiz by ID
 
 ```typescript
-const quiz = await db.quizzes.get(quizId)
+import { getQuizById } from '@/db/quizzes'
+
+const quiz = await getQuizById(quizId)
 ```
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `quizId` | `string` | ✅ | Quiz UUID |
+| `quizId` | `string` | ✅ | Quiz identifier |
 
 ---
 
@@ -168,45 +164,44 @@ const quiz = await db.quizzes.get(quizId)
 
 ### Types
 
+> See `src/types/result.ts` for the full definition used in the app.
+
 ```typescript
+type SyncFlag = 0 | 1
+
 interface Result {
   id: string
   quiz_id: string
   user_id: string
+  timestamp: number
+  mode: 'zen' | 'proctor'
   score: number
-  total_questions: number
-  correct_answers: number
-  mode: 'proctor' | 'zen'
-  duration: number // seconds
-  timestamp: string
-  synced: 0 | 1
-  answers: AnswerRecord[]
-}
-
-interface AnswerRecord {
-  question_id: string
-  selected_option: string
-  correct: boolean
-  time_spent: number
+  time_taken_seconds: number
+  answers: Record<string, string>
+  flagged_questions: string[]
+  category_breakdown: Record<string, number>
+  synced?: SyncFlag // 0 = not synced, 1 = synced
 }
 ```
 
 ### Create Result
 
-Saves a quiz result locally.
+Saves a quiz result locally; it will be synchronized to Supabase in the background.
 
 ```typescript
-import { saveResult } from '@/db/results'
+import { createResult } from '@/db/results'
+import type { QuizMode } from '@/types/quiz'
 
-const result = await saveResult({
-  quiz_id: 'quiz-uuid',
-  user_id: 'user-uuid',
-  score: 85,
-  total_questions: 20,
-  correct_answers: 17,
-  mode: 'proctor',
-  duration: 1200,
-  answers: [...]
+const result = await createResult({
+  quizId: 'quiz-uuid',
+  mode: 'proctor' satisfies QuizMode,
+  answers: {
+    'question-id-1': 'A',
+    'question-id-2': 'C'
+  },
+  flaggedQuestions: [],
+  timeTakenSeconds: 1200,
+  userId: 'user-uuid'
 })
 ```
 
@@ -254,6 +249,9 @@ await syncResults(userId)
 ## User Settings
 
 ### Types
+
+> Note: The core application does not currently include a `user_settings` feature.  
+> This section describes a **pattern you can adopt** if you choose to add such a table to your own Supabase project.
 
 ```typescript
 interface UserSettings {
@@ -319,7 +317,7 @@ interface AppError {
 
 ```typescript
 try {
-  const result = await saveResult(data)
+  const result = await createResult(data)
 } catch (error) {
   if (error instanceof AuthError) {
     // Handle auth error

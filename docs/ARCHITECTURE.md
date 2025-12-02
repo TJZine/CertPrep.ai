@@ -87,6 +87,112 @@ C4Context
 | [Supabase Database](https://supabase.com/database) | PostgreSQL Database |
 | [Row Level Security](https://supabase.com/docs/guides/auth/row-level-security) | Data Access Control |
 
+### Supabase Database Schema
+
+To run this project against your own Supabase instance, you should provision at least the following tables.
+
+> These schemas are intentionally minimal and mirror what the code expects. You can extend them to fit your own needs.
+
+#### `results`
+
+Stores per‑attempt quiz results and is synchronized between Dexie and Supabase.
+
+```sql
+create table if not exists public.results (
+  id uuid primary key,
+  user_id uuid not null,
+  quiz_id text not null,
+  timestamp bigint not null,
+  mode text not null check (mode in ('zen','proctor')),
+  score integer not null,
+  time_taken_seconds integer not null,
+  answers jsonb not null,
+  flagged_questions text[] not null default '{}',
+  category_breakdown jsonb not null,
+  created_at timestamptz not null default now()
+);
+
+alter table public.results enable row level security;
+```
+
+Recommended indexes:
+
+```sql
+create index if not exists results_user_id_created_at_idx
+  on public.results (user_id, created_at desc);
+
+create index if not exists results_user_id_quiz_id_ts_idx
+  on public.results (user_id, quiz_id, timestamp desc);
+```
+
+RLS policies (owner‑only access):
+
+```sql
+create policy "results_select_owner" on public.results
+  for select using (auth.uid() = user_id);
+
+create policy "results_insert_owner" on public.results
+  for insert with check (auth.uid() = user_id);
+
+create policy "results_update_owner" on public.results
+  for update using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+create policy "results_delete_owner" on public.results
+  for delete using (auth.uid() = user_id);
+```
+
+#### `quizzes`
+
+Stores quiz definitions per user and is synchronized with the local Dexie `quizzes` store.
+
+```sql
+create table if not exists public.quizzes (
+  id uuid primary key,
+  user_id uuid not null,
+  title text not null,
+  description text,
+  tags text[] not null default '{}',
+  version integer not null default 1,
+  questions jsonb not null,
+  quiz_hash text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  deleted_at timestamptz
+);
+
+alter table public.quizzes enable row level security;
+```
+
+Recommended indexes:
+
+```sql
+create index if not exists quizzes_user_id_updated_at_idx
+  on public.quizzes (user_id, updated_at desc);
+
+create index if not exists quizzes_user_id_deleted_at_idx
+  on public.quizzes (user_id, deleted_at);
+
+create index if not exists quizzes_user_id_hash_idx
+  on public.quizzes (user_id, quiz_hash);
+```
+
+RLS policies (owner‑only access):
+
+```sql
+create policy "quizzes_select_owner" on public.quizzes
+  for select using (auth.uid() = user_id);
+
+create policy "quizzes_insert_owner" on public.quizzes
+  for insert with check (auth.uid() = user_id);
+
+create policy "quizzes_update_owner" on public.quizzes
+  for update using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+```
+
+> Note: direct `delete` operations are typically not used; the app performs soft‑deletes by setting `deleted_at`.
+
 ### Infrastructure
 
 | Service | Purpose |
@@ -101,36 +207,24 @@ C4Context
 ```text
 src/
 ├── app/                          # Next.js App Router
-│   ├── (auth)/                   # Auth route group (no layout)
-│   │   ├── login/
-│   │   └── signup/
-│   ├── (dashboard)/              # Dashboard route group
-│   │   ├── layout.tsx            # Shared dashboard layout
-│   │   ├── page.tsx              # Dashboard home
-│   │   ├── analytics/
-│   │   └── settings/
-│   ├── quiz/
-│   │   ├── [id]/                 # Dynamic quiz routes
-│   │   └── results/
+│   ├── analytics/                # Analytics dashboard
+│   ├── auth/                     # Auth callback routes
+│   ├── login/, signup/           # Auth pages
+│   ├── library/                  # Quiz library
+│   ├── quiz/                     # Quiz flows ([id]/zen, [id]/proctor)
+│   ├── results/                  # Results pages
+│   ├── settings/                 # Settings pages
 │   ├── layout.tsx                # Root layout
 │   └── page.tsx                  # Landing page
 │
 ├── components/
 │   ├── auth/                     # Authentication components
-│   │   ├── LoginForm.tsx
-│   │   └── SignupForm.tsx
 │   ├── quiz/                     # Quiz components
-│   │   ├── QuizContainer.tsx
-│   │   ├── ProctorQuizContainer.tsx
-│   │   └── ZenQuizContainer.tsx
 │   ├── results/                  # Results components
 │   ├── dashboard/                # Dashboard components
 │   ├── analytics/                # Analytics components
 │   ├── settings/                 # Settings components
 │   └── ui/                       # Shared UI components
-│       ├── Button.tsx
-│       ├── Modal.tsx
-│       └── Toast.tsx
 │
 ├── db/                           # Local database (Dexie)
 │   ├── index.ts                  # Database initialization
@@ -138,16 +232,14 @@ src/
 │   └── results.ts                # Results operations
 │
 ├── hooks/                        # Custom React hooks
-│   ├── useAuth.ts
-│   ├── useSync.ts
-│   └── useQuiz.ts
 │
 ├── lib/                          # Utility libraries
 │   ├── supabase/
 │   │   ├── client.ts             # Browser Supabase client
 │   │   └── server.ts             # Server Supabase client
 │   ├── sync/
-│   │   └── syncManager.ts        # Sync orchestration
+│   │   ├── syncManager.ts        # Result sync orchestration
+│   │   └── quizSyncManager.ts    # Quiz sync orchestration
 │   └── sanitize.ts               # HTML sanitization
 │
 ├── types/                        # TypeScript definitions
@@ -155,7 +247,7 @@ src/
 │   ├── result.ts
 │   └── user.ts
 │
-└── middleware.ts                 # Next.js middleware
+└── proxy.ts                      # CSP proxy helper for Supabase
 ```
 
 ---
@@ -366,7 +458,7 @@ CREATE POLICY "Users can update own results" ON results
 | Area | Strategy |
 |------|----------|
 | Initial Load | Code splitting, lazy loading |
-| Data Fetching | SWR/React Query patterns |
+| Data Fetching | Custom hooks with Supabase client + Dexie |
 | Offline Support | IndexedDB caching |
 | Images | Next.js Image optimization |
 | Styles | Tailwind CSS purging |

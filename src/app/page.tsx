@@ -17,10 +17,10 @@ import { useAuth } from '@/components/providers/AuthProvider';
 import { useEffectiveUserId } from '@/hooks/useEffectiveUserId';
 
 export default function DashboardPage(): React.ReactElement {
-  const { isInitialized, error: dbError } = useInitializeDatabase();
-  const { quizzes, isLoading: quizzesLoading } = useQuizzes();
   const { user } = useAuth();
   const effectiveUserId = useEffectiveUserId(user?.id);
+  const { isInitialized, error: dbError } = useInitializeDatabase();
+  const { quizzes, isLoading: quizzesLoading } = useQuizzes(effectiveUserId ?? undefined);
 
   const [quizStats, setQuizStats] = React.useState<Map<string, QuizStats>>(new Map());
   const [overallStats, setOverallStats] = React.useState<OverallStats | null>(null);
@@ -150,7 +150,12 @@ export default function DashboardPage(): React.ReactElement {
         />
       </div>
 
-      <ImportModal isOpen={isImportModalOpen} onClose={() => setIsImportModalOpen(false)} onImportSuccess={handleImportSuccess} />
+      <ImportModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onImportSuccess={handleImportSuccess}
+        userId={effectiveUserId ?? null}
+      />
 
       <ModeSelectModal quiz={modeSelectQuiz} isOpen={modeSelectQuiz !== null} onClose={() => setModeSelectQuiz(null)} />
 

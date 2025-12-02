@@ -3,6 +3,7 @@ README.md - CertPrep.ai
 -->
 
 <!-- Header Section with Logo -->
+<div align="center">
   <img src="./public/icon.svg" alt="CertPrep.ai Logo" width="120">
 </div>
 
@@ -26,19 +27,9 @@ CertPrep.ai is a modern, offline-first quiz application designed to help users p
   [![Supabase](https://img.shields.io/badge/Supabase-Backend-3ECF8E?style=flat-square&logo=supabase)](https://supabase.com/)
   [![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC?style=flat-square&logo=tailwind-css)](https://tailwindcss.com/)
 
-    <!-- Links Row -->
-    [Documentation](#documentation) •
-    [Usage](#usage) •
-    [Demo](#demo) •
-    [Architecture](#architecture) •
-    [Testing](#testing) •
-    [Deployment](#deployment) •
-    [Contributing](#contributing) •
-    [Changelog](CHANGELOG.md)
-
   </div>
 
-  ---
+---
 
 <a id="features"></a>
 ## Features
@@ -179,12 +170,11 @@ NEXT_PUBLIC_ANALYTICS_ID=your_analytics_id
 
 3. **Set up the database:**
 
-```bash
-# Run Supabase migrations (if applicable)
-npx supabase db push
+This project does not currently ship Supabase migrations in-repo. You will need to:
 
-# Or apply SQL manually from supabase/migrations/
-```
+- Create a Supabase project.
+- Configure the database schema described in [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) (tables for users, quizzes, results, etc.).
+- Optionally manage your own migrations using the Supabase CLI (`supabase db ...`) in your environment.
 
 4. **Start the development server:**
 
@@ -201,23 +191,14 @@ npm run dev
 ## 📖 Usage
 
 ### Quick Start
-```typescript
-// Example usage of key features
-import { createQuiz, submitResult } from '@/lib/quiz'
 
-// Create a new quiz session
-const quiz = await createQuiz({
-  mode: 'zen',
-  questionCount: 10
-})
+1. Start the development server with `npm run dev`.
+2. Open [http://localhost:3000](http://localhost:3000) in your browser.
+3. Sign up for a new account (or log in).
+4. Import a sample quiz from `docs/SAMPLE_QUIZ.json` via the Library/Import UI.
+5. Start a quiz (Zen or Proctor mode), complete it, and view your results and analytics.
 
-// Submit results
-await submitResult({
-  quizId: quiz.id,
-  score: 85,
-  duration: 300
-})
-```
+For code-level examples (auth, quizzes, results, and sync), see the dedicated [API Reference](./docs/API.md).
 
 ### Quiz Modes
 
@@ -276,25 +257,31 @@ graph TD
 
 ```text
 src/
-├── app/                    # Next.js App Router pages
-│   ├── (auth)/            # Auth group routes
-│   ├── dashboard/         # Dashboard pages
-│   └── quiz/              # Quiz pages
-├── components/            # React components
-│   ├── auth/              # Authentication forms
-│   ├── quiz/              # Quiz components
-│   ├── results/           # Results display
-│   └── ui/                # Shared UI components
-├── db/                    # Dexie IndexedDB setup
-│   ├── index.ts           # Database initialization
-│   ├── quizzes.ts         # Quiz operations
-│   └── results.ts         # Results operations
-├── hooks/                 # Custom React hooks
-├── lib/                   # Utility libraries
-│   ├── supabase/          # Supabase clients
-│   ├── sync/              # Sync engine
-│   └── sanitize.ts        # HTML sanitization
-└── types/                 # TypeScript definitions
+├── app/                          # Next.js App Router
+│   ├── analytics/                # Analytics dashboard
+│   ├── auth/                     # Auth callback routes
+│   ├── login/, signup/           # Auth pages
+│   ├── library/                  # Quiz library
+│   ├── quiz/                     # Quiz flows ([id]/zen, [id]/proctor)
+│   ├── results/                  # Results pages
+│   └── settings/                 # Settings pages
+├── components/                   # React components
+│   ├── auth/                     # Authentication forms
+│   ├── dashboard/                # Dashboard/library components
+│   ├── quiz/                     # Quiz components
+│   ├── results/                  # Results display
+│   ├── analytics/                # Analytics components
+│   └── ui/                       # Shared UI components
+├── db/                           # Dexie IndexedDB setup
+│   ├── index.ts                  # Database initialization
+│   ├── quizzes.ts                # Quiz operations
+│   └── results.ts                # Results operations
+├── hooks/                        # Custom React hooks
+├── lib/                          # Utility libraries
+│   ├── supabase/                 # Supabase clients
+│   ├── sync/                     # Sync engine
+│   └── sanitize.ts               # HTML sanitization
+└── types/                        # TypeScript definitions
 ```
 
 <details>
@@ -332,7 +319,7 @@ graph TB
 
 | Document | Description |
 |----------|-------------|
-| [📖 API Reference](./docs/API.md) | Complete API documentation |
+| [📖 API Reference](./docs/API.md) | API overview and examples |
 | [🏗️ Architecture](./docs/ARCHITECTURE.md) | System design and patterns |
 | [🔒 Security](./SECURITY.md) | Security policies and practices |
 | [🤝 Contributing](./CONTRIBUTING.md) | Contribution guidelines |
@@ -346,25 +333,8 @@ graph TB
 ## Testing
 
 ```bash
-# Run all tests
+# Run the unit test suite (Vitest)
 npm test
-
-# Run with coverage
-npm run test:coverage
-
-# Run in watch mode
-npm run test:watch
-
-# Run E2E tests
-npm run test:e2e
-```
-
-### Test Coverage
-
-To run test coverage:
-
-```bash
-npm run test:coverage
 ```
 
 ---
@@ -418,8 +388,8 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 | `npm run dev` | Start development server |
 | `npm run build` | Build for production |
 | `npm run lint` | Run ESLint |
-| `npm run format` | Format with Prettier |
-| `npm run typecheck` | Run TypeScript checks |
+| `npm test` | Run the test suite |
+| `npm run security-check` | Run basic secret scanning |
 
 ---
 

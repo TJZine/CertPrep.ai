@@ -26,7 +26,7 @@ export default function AnalyticsPage(): React.ReactElement {
 
   const { isInitialized, error: dbError } = useInitializeDatabase();
   const { results, isLoading: resultsLoading } = useResults(effectiveUserId ?? undefined);
-  const { quizzes, isLoading: quizzesLoading } = useQuizzes();
+  const { quizzes, isLoading: quizzesLoading } = useQuizzes(effectiveUserId ?? undefined);
 
   const [overallStats, setOverallStats] = React.useState<OverallStats | null>(null);
   const [statsError, setStatsError] = React.useState<string | null>(null);
@@ -59,7 +59,7 @@ export default function AnalyticsPage(): React.ReactElement {
 
   const quizTitles = React.useMemo(() => {
     const map = new Map<string, string>();
-    quizzes.forEach((q) => map.set(q.id, q.title));
+    quizzes.forEach((q) => map.set(q.id, q.deleted_at ? `${q.title} (removed)` : q.title));
     return map;
   }, [quizzes]);
 

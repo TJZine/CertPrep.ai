@@ -2,6 +2,7 @@ import { db } from './index';
 import { sanitizeQuestionText } from '@/lib/sanitize';
 import { calculatePercentage, generateUUID, hashAnswer } from '@/lib/utils';
 import type { Question, Quiz } from '@/types/quiz';
+import { computeQuizHash } from '@/lib/sync/quizDomain';
 import type { QuizImportInput } from '@/validators/quizSchema';
 import { formatValidationErrors, validateQuizImport, QuestionSchema } from '@/validators/quizSchema';
 import { z } from 'zod';
@@ -69,7 +70,10 @@ export function sanitizeQuestions(questions: unknown[]): Question[] {
 /**
  * Validates, sanitizes, and persists a new quiz.
  */
-export async function createQuiz(input: QuizImportInput, meta?: { sourceId?: string }): Promise<Quiz> {
+export async function createQuiz(input: QuizImportInput, meta: { userId: string; sourceId?: string }): Promise<Quiz> {
+  if (!meta.userId) {
+    throw new Error('Missing userId for quiz creation.');
+  }
   const validation = validateQuizImport(input);
 
   if (!validation.success || !validation.data) {
@@ -108,15 +112,27 @@ export async function createQuiz(input: QuizImportInput, meta?: { sourceId?: str
   const sanitizedTitle = sanitizeQuestionText(validation.data.title);
   const sanitizedDescription = sanitizeQuestionText(validation.data.description ?? '');
   const sanitizedTags = (validation.data.tags ?? []).map((tag) => sanitizeQuestionText(tag));
+  const createdAt = Date.now();
   const quiz: Quiz = {
     id: generateUUID(),
+    user_id: meta.userId,
     title: sanitizedTitle,
     description: sanitizedDescription,
-    created_at: Date.now(),
+    created_at: createdAt,
+    updated_at: createdAt,
     questions: sanitizedQuestions,
     tags: sanitizedTags,
     version: validation.data.version ?? 1,
     sourceId: meta?.sourceId,
+    deleted_at: null,
+    quiz_hash: await computeQuizHash({
+      title: sanitizedTitle,
+      description: sanitizedDescription,
+      tags: sanitizedTags,
+      questions: sanitizedQuestions,
+    }),
+    last_synced_at: null,
+    last_synced_version: null,
   };
 
   await db.quizzes.add(quiz);
@@ -126,28 +142,38 @@ export async function createQuiz(input: QuizImportInput, meta?: { sourceId?: str
 /**
  * Retrieves all quizzes ordered from newest to oldest.
  */
-export async function getAllQuizzes(): Promise<Quiz[]> {
-  return db.quizzes.orderBy('created_at').reverse().toArray();
+export async function getAllQuizzes(userId: string): Promise<Quiz[]> {
+  const quizzes = await db.quizzes.where('user_id').equals(userId).sortBy('created_at');
+  return quizzes.filter((quiz) => quiz.user_id === userId && (quiz.deleted_at === null || quiz.deleted_at === undefined));
 }
 
 /**
  * Retrieves a single quiz by its identifier.
  */
-export async function getQuizById(id: string): Promise<Quiz | undefined> {
-  return db.quizzes.get(id);
+export async function getQuizById(id: string, userId: string): Promise<Quiz | undefined> {
+  const quiz = await db.quizzes.get(id);
+  if (!quiz || quiz.user_id !== userId) {
+    return undefined;
+  }
+  return quiz;
 }
 
 /**
  * Searches quizzes by title and tags with case-insensitive matching.
  */
-export async function searchQuizzes(query: string): Promise<Quiz[]> {
+export async function searchQuizzes(query: string, userId: string): Promise<Quiz[]> {
   const trimmedQuery = query.trim().toLowerCase();
   if (!trimmedQuery) {
-    return getAllQuizzes();
+    return getAllQuizzes(userId);
   }
 
   return db.quizzes
+    .where('user_id')
+    .equals(userId)
     .filter((quiz) => {
+      if (quiz.user_id !== userId || (quiz.deleted_at !== null && quiz.deleted_at !== undefined)) {
+        return false;
+      }
       const titleMatch = quiz.title.toLowerCase().includes(trimmedQuery);
       const tagMatch = quiz.tags.some((tag) => tag.toLowerCase().includes(trimmedQuery));
       return titleMatch || tagMatch;
@@ -160,11 +186,15 @@ export async function searchQuizzes(query: string): Promise<Quiz[]> {
  */
 export async function updateQuiz(
   id: string,
+  userId: string,
   updates: Partial<Omit<Quiz, 'id' | 'created_at'>>,
 ): Promise<void> {
   const existing = await db.quizzes.get(id);
   if (!existing) {
     throw new Error('Quiz not found.');
+  }
+  if (existing.user_id !== userId) {
+    throw new Error('Unauthorized quiz update.');
   }
 
   const sanitizedUpdates: Partial<Omit<Quiz, 'id' | 'created_at'>> = { ...updates };
@@ -195,16 +225,69 @@ export async function updateQuiz(
     sanitizedUpdates.tags = updates.tags.map((tag) => sanitizeQuestionText(tag));
   }
 
-  await db.quizzes.update(id, sanitizedUpdates);
+  const nextTitle = sanitizedUpdates.title ?? existing.title;
+  const nextDescription = sanitizedUpdates.description ?? existing.description;
+  const nextTags = sanitizedUpdates.tags ?? existing.tags;
+  const nextQuestions = sanitizedUpdates.questions ?? existing.questions;
+  const shouldBumpVersion = ['questions', 'title', 'description', 'tags'].some(
+    (key) => key in sanitizedUpdates,
+  );
+  const updatedAt = shouldBumpVersion || 'deleted_at' in sanitizedUpdates ? Date.now() : (existing.updated_at ?? existing.created_at);
+  const nextVersion = shouldBumpVersion ? existing.version + 1 : existing.version;
+  const nextHash = await computeQuizHash({
+    title: nextTitle,
+    description: nextDescription,
+    tags: nextTags,
+    questions: nextQuestions,
+  });
+
+  await db.quizzes.update(id, {
+    ...sanitizedUpdates,
+    version: nextVersion,
+    updated_at: updatedAt,
+    quiz_hash: nextHash,
+    user_id: userId,
+  });
 }
 
 /**
  * Deletes a quiz and all associated results in a single transaction.
  */
 export async function deleteQuiz(id: string, userId: string): Promise<void> {
-  await db.transaction('rw', db.quizzes, db.results, async () => {
-    await db.results.where('[user_id+quiz_id]').equals([userId, id]).delete();
-    await db.quizzes.delete(id);
+  await db.transaction('rw', db.quizzes, async () => {
+    const existing = await db.quizzes.get(id);
+    if (!existing) {
+      throw new Error('Quiz not found.');
+    }
+    if (existing.user_id !== userId) {
+      throw new Error('Unauthorized quiz delete.');
+    }
+    const deletedAt = Date.now();
+    await db.quizzes.update(id, {
+      deleted_at: deletedAt,
+      version: existing.version + 1,
+      updated_at: deletedAt,
+      user_id: userId,
+    });
+  });
+}
+
+export async function undeleteQuiz(id: string, userId: string): Promise<void> {
+  await db.transaction('rw', db.quizzes, async () => {
+    const existing = await db.quizzes.get(id);
+    if (!existing) {
+      throw new Error('Quiz not found.');
+    }
+    if (existing.user_id !== userId) {
+      throw new Error('Unauthorized quiz restore.');
+    }
+    const updatedAt = Date.now();
+    await db.quizzes.update(id, {
+      deleted_at: null,
+      version: existing.version + 1,
+      updated_at: updatedAt,
+      user_id: userId,
+    });
   });
 }
 
@@ -258,16 +341,28 @@ export async function getQuizStats(quizId: string, userId: string): Promise<Quiz
 /**
  * Updates notes for a specific question within a quiz.
  */
-export async function updateQuestionNotes(quizId: string, questionId: string, notes: string): Promise<void> {
+export async function updateQuestionNotes(quizId: string, questionId: string, notes: string, userId: string): Promise<void> {
   const quiz = await db.quizzes.get(quizId);
 
   if (!quiz) {
     throw new Error('Quiz not found.');
+  }
+  if (quiz.user_id !== userId) {
+    throw new Error('Unauthorized quiz update.');
   }
 
   const updatedQuestions = quiz.questions.map((question) =>
     question.id === questionId ? { ...question, user_notes: sanitizeQuestionText(notes) } : question,
   );
 
-  await db.quizzes.update(quizId, { questions: updatedQuestions });
+  const updatedAt = Date.now();
+  const nextVersion = quiz.version + 1;
+  const nextHash = await computeQuizHash({
+    title: quiz.title,
+    description: quiz.description,
+    tags: quiz.tags,
+    questions: updatedQuestions,
+  });
+
+  await db.quizzes.update(quizId, { questions: updatedQuestions, updated_at: updatedAt, version: nextVersion, quiz_hash: nextHash });
 }

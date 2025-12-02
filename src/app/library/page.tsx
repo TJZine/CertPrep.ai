@@ -8,12 +8,16 @@ import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { TestLibrary } from '@/components/dashboard/TestLibrary';
 import { buttonVariants } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/components/providers/AuthProvider';
+import { useEffectiveUserId } from '@/hooks/useEffectiveUserId';
 
 export default function LibraryPage(): React.ReactElement {
+  const { user } = useAuth();
+  const effectiveUserId = useEffectiveUserId(user?.id);
   const { isInitialized, error: dbError } = useInitializeDatabase();
-  const { quizzes, isLoading } = useQuizzes();
+  const { quizzes, isLoading } = useQuizzes(effectiveUserId ?? undefined);
 
-  if (!isInitialized || isLoading) {
+  if (!isInitialized || !effectiveUserId || isLoading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <LoadingSpinner size="lg" text="Loading library..." />
@@ -72,6 +76,7 @@ export default function LibraryPage(): React.ReactElement {
 
       <TestLibrary
         existingQuizzes={quizzes ?? []}
+        userId={effectiveUserId}
         onImportSuccess={(): void => {
           // No-op: useQuizzes live query will refresh imported state automatically.
         }}

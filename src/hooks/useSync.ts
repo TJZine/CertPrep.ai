@@ -2,6 +2,8 @@
 
 import { useAuth } from '@/components/providers/AuthProvider';
 import { syncResults } from '@/lib/sync/syncManager';
+import { syncQuizzes } from '@/lib/sync/quizSyncManager';
+import { FEATURE_FLAGS } from '@/lib/featureFlags';
 import { useCallback, useEffect, useRef } from 'react';
 
 export function useSync(): { sync: () => Promise<void> } {
@@ -22,6 +24,9 @@ export function useSync(): { sync: () => Promise<void> } {
   const sync = useCallback(async () => {
     if (userId) {
       await syncResults(userId);
+      if (FEATURE_FLAGS.quizSync) {
+        await syncQuizzes(userId);
+      }
     }
   }, [userId]);
 

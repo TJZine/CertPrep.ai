@@ -38,8 +38,13 @@ jobs:
           cache: 'npm'
       - name: Install dependencies
         run: npm ci
-      - name: Run tests
-        run: npm test
+      - name: Run tests with coverage
+        run: npm test -- --coverage
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
 
   build:
     runs-on: ubuntu-latest
@@ -61,4 +66,4 @@ jobs:
           SENTRY_DISABLE_AUTO_UPLOAD: 1
           # Provide dummy values to pass build-time validation checks
           NEXT_PUBLIC_SUPABASE_URL: https://supabase-ci.invalid
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpIiwicm9sZSI6ImFub24iLCJpYXQiOjE2MTY1NTU1NTUsImV4cCI6MTkzMjI5MTU1NX0.dummy-signaturey"
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpIiwicm9sZSI6ImFub24iLCJpYXQiOjE2MTY1NTU1NTUsImV4cCI6MTkzMjI5MTU1NX0.dummy-signaturey

@@ -77,22 +77,33 @@ export function useInitializeDatabase(): InitializationState {
 /**
  * Retrieves all quizzes with live updates.
  */
-export function useQuizzes(): UseQuizzesResponse {
-  const quizzes = useLiveQuery(() => db.quizzes.orderBy('created_at').reverse().toArray(), []);
+export function useQuizzes(userId: string | undefined): UseQuizzesResponse {
+  const quizzes = useLiveQuery(
+    () => (userId ? db.quizzes.where('user_id').equals(userId).sortBy('created_at') : []),
+    [userId],
+  );
   return {
-    quizzes: quizzes ?? [],
-    isLoading: quizzes === undefined,
+    quizzes: quizzes ? quizzes.reverse() : [],
+    isLoading: !userId ? true : quizzes === undefined,
   };
 }
 
 /**
  * Retrieves a single quiz with live updates.
  */
-export function useQuiz(id: string | undefined): UseQuizResponse {
-  const quiz = useLiveQuery(() => (id ? db.quizzes.get(id) : undefined), [id]);
+export function useQuiz(id: string | undefined, userId: string | undefined): UseQuizResponse {
+  const quiz = useLiveQuery(
+    async () => {
+      if (!id || !userId) return undefined;
+      const found = await db.quizzes.get(id);
+      if (!found) return undefined;
+      return found.user_id === userId ? found : undefined;
+    },
+    [id, userId],
+  );
   return {
-    quiz: id ? quiz : undefined,
-    isLoading: id ? quiz === undefined : false,
+    quiz: id && userId ? quiz : undefined,
+    isLoading: !id || !userId ? true : quiz === undefined,
   };
 }
 
@@ -107,6 +118,9 @@ export function useQuizWithStats(id: string | undefined, userId: string | undefi
       }
       const quiz = await db.quizzes.get(id);
       if (!quiz) {
+        return { quiz: undefined, stats: null };
+      }
+      if (quiz.user_id !== userId) {
         return { quiz: undefined, stats: null };
       }
       const stats = await getQuizStats(id, userId);

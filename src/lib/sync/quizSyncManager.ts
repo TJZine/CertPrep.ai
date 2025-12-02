@@ -1,0 +1,276 @@
+'use client';
+
+import { db } from '@/db';
+import { NIL_UUID } from '@/db';
+import {
+  getQuizBackfillState,
+  getQuizSyncCursor,
+  setQuizBackfillDone,
+  setQuizSyncCursor,
+} from '@/db/syncState';
+import { logger } from '@/lib/logger';
+import { computeQuizHash, resolveQuizConflict, toLocalQuiz, toRemoteQuiz } from './quizDomain';
+import { fetchUserQuizzes, upsertQuizzes } from './quizRemote';
+import type { Quiz } from '@/types/quiz';
+import { QuestionSchema } from '@/validators/quizSchema';
+import { z } from 'zod';
+
+const BATCH_SIZE = 50;
+const TIME_BUDGET_MS = 5000;
+
+const RemoteQuizSchema = z.object({
+  id: z.string(),
+  user_id: z.string(),
+  title: z.string(),
+  description: z.string().nullable(),
+  tags: z.array(z.string()).nullable(),
+  version: z.number().int(),
+  questions: z.array(QuestionSchema),
+  quiz_hash: z.string().nullable().optional(),
+  created_at: z.string(),
+  updated_at: z.string(),
+  deleted_at: z.string().nullable(),
+});
+
+const syncState = {
+  isSyncing: false,
+  lastSyncAttempt: 0,
+};
+
+export async function syncQuizzes(userId: string): Promise<{ incomplete: boolean }> {
+  if (!userId) return { incomplete: false };
+
+  if (typeof navigator !== 'undefined' && 'locks' in navigator) {
+    try {
+      return (
+        (await navigator.locks.request('sync-quizzes', { ifAvailable: true }, async (lock) => {
+          if (!lock) {
+            logger.debug('Quiz sync already in progress in another tab, skipping');
+            return { incomplete: false };
+          }
+          return performQuizSync(userId);
+        })) || { incomplete: false }
+      );
+    } catch (error) {
+      logger.error('Failed to acquire quiz sync lock', error);
+      return { incomplete: false };
+    }
+  }
+
+  if (syncState.isSyncing) {
+    if (Date.now() - syncState.lastSyncAttempt > 30000) {
+      logger.warn('Quiz sync lock timed out, resetting');
+      syncState.isSyncing = false;
+    } else {
+      return { incomplete: false };
+    }
+  }
+
+  syncState.isSyncing = true;
+  syncState.lastSyncAttempt = Date.now();
+  try {
+    return await performQuizSync(userId);
+  } finally {
+    syncState.isSyncing = false;
+  }
+}
+
+async function performQuizSync(userId: string): Promise<{ incomplete: boolean }> {
+  const startTime = Date.now();
+  let incomplete = false;
+  const stats = { pushed: 0, pulled: 0 };
+
+  const backfillComplete = await getQuizBackfillState(userId);
+  if (!backfillComplete) {
+    await backfillLocalQuizzes(userId);
+  }
+
+  if (Date.now() - startTime > TIME_BUDGET_MS) {
+    return { incomplete: true };
+  }
+
+  incomplete = (await pushLocalChanges(userId, startTime, stats)) || incomplete;
+
+  if (Date.now() - startTime > TIME_BUDGET_MS) {
+    return { incomplete: true };
+  }
+
+  incomplete = (await pullRemoteChanges(userId, startTime, stats)) || incomplete;
+
+  logger.info('Quiz sync complete', { userId, pushed: stats.pushed, pulled: stats.pulled, incomplete });
+  return { incomplete };
+}
+
+async function backfillLocalQuizzes(userId: string): Promise<void> {
+  const quizzes = await db.quizzes.where('user_id').equals(userId).toArray();
+
+  if (quizzes.length === 0) {
+    await setQuizBackfillDone(userId);
+    return;
+  }
+
+  const payload = await Promise.all(quizzes.map((quiz) => toRemoteQuiz(userId, quiz)));
+  const { error } = await upsertQuizzes(userId, payload);
+  if (error) {
+    logger.error('Failed to backfill quizzes to Supabase', { userId, error });
+    return;
+  }
+
+  const now = Date.now();
+  const updated = await Promise.all(
+    quizzes.map(async (quiz, index) => ({
+      ...quiz,
+      user_id: userId,
+      quiz_hash: payload[index]?.quiz_hash ?? quiz.quiz_hash ?? (await computeQuizHash({
+        title: quiz.title,
+        description: quiz.description,
+        tags: quiz.tags,
+        questions: quiz.questions,
+      })),
+      last_synced_version: quiz.version,
+      last_synced_at: now,
+    })),
+  );
+
+  await db.quizzes.bulkPut(updated);
+  await setQuizBackfillDone(userId);
+}
+
+async function pushLocalChanges(userId: string, startTime: number, stats: { pushed: number }): Promise<boolean> {
+  let incomplete = false;
+  const userQuizzes = await db.quizzes.where('user_id').equals(userId).toArray();
+  const dirtyQuizzes = userQuizzes.filter(
+    (quiz) => quiz.user_id === userId && quiz.user_id !== NIL_UUID && (quiz.last_synced_version ?? null) !== quiz.version,
+  );
+
+  for (let i = 0; i < dirtyQuizzes.length; i += BATCH_SIZE) {
+    if (Date.now() - startTime > TIME_BUDGET_MS) {
+      logger.warn('Quiz sync time budget exceeded during push');
+      incomplete = true;
+      break;
+    }
+
+    const batch = dirtyQuizzes.slice(i, i + BATCH_SIZE);
+    const remotePayload = await Promise.all(batch.map((quiz) => toRemoteQuiz(userId, quiz)));
+    const { error } = await upsertQuizzes(userId, remotePayload);
+
+    if (error) {
+      logger.error('Failed to push local quizzes to Supabase', { userId, error });
+      continue;
+    }
+
+    const now = Date.now();
+    const updatedBatch: Quiz[] = await Promise.all(
+      batch.map(async (quiz, index) => ({
+        ...quiz,
+        quiz_hash:
+          remotePayload[index]?.quiz_hash ??
+          quiz.quiz_hash ??
+          (await computeQuizHash({
+            title: quiz.title,
+            description: quiz.description,
+            tags: quiz.tags,
+            questions: quiz.questions,
+          })),
+        last_synced_version: quiz.version,
+        last_synced_at: now,
+      })),
+    );
+
+    await db.quizzes.bulkPut(updatedBatch);
+    stats.pushed += updatedBatch.length;
+  }
+
+  return incomplete;
+}
+
+async function pullRemoteChanges(userId: string, startTime: number, stats: { pulled: number }): Promise<boolean> {
+  let incomplete = false;
+  let hasMore = true;
+
+  while (hasMore) {
+    if (Date.now() - startTime > TIME_BUDGET_MS) {
+      logger.warn('Quiz sync time budget exceeded during pull');
+      incomplete = true;
+      break;
+    }
+
+    const cursor = await getQuizSyncCursor(userId);
+    const { data: remoteQuizzes, error } = await fetchUserQuizzes({
+      userId,
+      updatedAfter: cursor.timestamp,
+      lastId: cursor.lastId,
+      limit: BATCH_SIZE,
+    });
+
+    if (error) {
+      logger.error('Failed to pull quizzes from Supabase', { userId, error });
+      break;
+    }
+
+    if (!remoteQuizzes || remoteQuizzes.length === 0) {
+      break;
+    }
+
+    const quizzesToSave: Quiz[] = [];
+    let lastUpdatedAt = cursor.timestamp;
+    let lastId = cursor.lastId;
+    const now = Date.now();
+
+    for (const remoteQuiz of remoteQuizzes) {
+      const rawUpdatedAt = (remoteQuiz as { updated_at?: unknown }).updated_at;
+      const candidateUpdatedAt =
+        typeof rawUpdatedAt === 'string' && !Number.isNaN(Date.parse(rawUpdatedAt))
+          ? new Date(rawUpdatedAt).toISOString()
+          : lastUpdatedAt;
+      lastUpdatedAt = candidateUpdatedAt;
+
+      const candidateId = typeof (remoteQuiz as { id?: unknown }).id === 'string'
+        ? (remoteQuiz as { id: string }).id
+        : lastId;
+      lastId = candidateId;
+
+      const validation = RemoteQuizSchema.safeParse({
+        ...remoteQuiz,
+        updated_at: candidateUpdatedAt,
+        id: candidateId,
+      });
+      if (!validation.success) {
+        logger.warn('Skipping invalid remote quiz', { issues: validation.error.issues, quizId: remoteQuiz.id });
+        continue;
+      }
+
+      const mappedRemote = await toLocalQuiz(validation.data);
+      const remoteWithUser: Quiz = { ...mappedRemote, user_id: userId };
+      const localQuiz = await db.quizzes.get(mappedRemote.id);
+      if (localQuiz && localQuiz.user_id !== userId) {
+        logger.warn('Skipping remote quiz due to user mismatch', { quizId: mappedRemote.id, userId });
+        continue;
+      }
+      const { winner, merged } = resolveQuizConflict(localQuiz, remoteWithUser);
+
+      const mergedWithSync: Quiz = {
+        ...merged,
+        user_id: userId,
+        quiz_hash: merged.quiz_hash ?? mappedRemote.quiz_hash ?? null,
+        last_synced_version: winner === 'remote' ? mappedRemote.version : localQuiz?.last_synced_version ?? null,
+        last_synced_at: winner === 'remote' ? now : localQuiz?.last_synced_at ?? merged.last_synced_at ?? null,
+      };
+
+      quizzesToSave.push(mergedWithSync);
+    }
+
+    if (quizzesToSave.length > 0) {
+      await db.quizzes.bulkPut(quizzesToSave);
+      stats.pulled += quizzesToSave.length;
+    }
+
+    await setQuizSyncCursor(lastUpdatedAt, userId, lastId);
+
+    if (remoteQuizzes.length < BATCH_SIZE) {
+      hasMore = false;
+    }
+  }
+
+  return incomplete;
+}

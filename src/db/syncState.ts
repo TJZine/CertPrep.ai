@@ -26,3 +26,38 @@ export async function setSyncCursor(timestamp: string, userId: string, lastId?: 
     lastId: lastId || NIL_UUID
   });
 }
+
+export async function getQuizSyncCursor(userId: string): Promise<SyncCursor> {
+  const key = `quizzes:${userId}`;
+  const state = await db.syncState.get(key);
+
+  return {
+    timestamp: state?.lastSyncedAt ? new Date(state.lastSyncedAt).toISOString() : '1970-01-01T00:00:00.000Z',
+    lastId: state?.lastId || NIL_UUID,
+  };
+}
+
+export async function setQuizSyncCursor(timestamp: string, userId: string, lastId?: string): Promise<void> {
+  const key = `quizzes:${userId}`;
+  await db.syncState.put({
+    table: key,
+    lastSyncedAt: new Date(timestamp).getTime(),
+    synced: 1,
+    lastId: lastId || NIL_UUID,
+  });
+}
+
+const QUIZ_BACKFILL_KEY = (userId: string): string => `quizzes:backfill:${userId}`;
+
+export async function getQuizBackfillState(userId: string): Promise<boolean> {
+  const state = await db.syncState.get(QUIZ_BACKFILL_KEY(userId));
+  return state?.synced === 1;
+}
+
+export async function setQuizBackfillDone(userId: string): Promise<void> {
+  await db.syncState.put({
+    table: QUIZ_BACKFILL_KEY(userId),
+    lastSyncedAt: Date.now(),
+    synced: 1,
+  });
+}

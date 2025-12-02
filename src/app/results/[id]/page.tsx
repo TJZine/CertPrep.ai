@@ -10,6 +10,8 @@ import { useResult, useQuiz, useQuizResults, useInitializeDatabase } from '@/hoo
 import { ArrowLeft, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { useEffectiveUserId } from '@/hooks/useEffectiveUserId';
+import { syncQuizzes } from '@/lib/sync/quizSyncManager';
+import { logger } from '@/lib/logger';
 
 /**
  * Results page integrating analytics and review.
@@ -23,8 +25,10 @@ export default function ResultsPage(): React.ReactElement {
 
   const { isInitialized, error: dbError } = useInitializeDatabase();
   const { result, isLoading: resultLoading } = useResult(isInitialized ? resultId : undefined, effectiveUserId ?? undefined);
-  const { quiz, isLoading: quizLoading } = useQuiz(result?.quiz_id);
+  const { quiz, isLoading: quizLoading } = useQuiz(result?.quiz_id, effectiveUserId ?? undefined);
   const { results: allQuizResults } = useQuizResults(result?.quiz_id, effectiveUserId ?? undefined);
+  const [isRestoringQuiz, setIsRestoringQuiz] = React.useState(false);
+  const [restoreAttempted, setRestoreAttempted] = React.useState(false);
 
   const previousScore = React.useMemo(() => {
     if (!allQuizResults || allQuizResults.length < 2 || !result) {
@@ -40,6 +44,32 @@ export default function ResultsPage(): React.ReactElement {
 
     return null;
   }, [allQuizResults, result]);
+
+  React.useEffect(() => {
+    let isMounted = true;
+    if (!result || quiz || !effectiveUserId || restoreAttempted) {
+      return undefined;
+    }
+
+    const restore = async (): Promise<void> => {
+      setIsRestoringQuiz(true);
+      try {
+        await syncQuizzes(effectiveUserId);
+      } catch (error) {
+        logger.error('Failed to restore quiz for result view', error);
+      } finally {
+        if (!isMounted) return;
+        setIsRestoringQuiz(false);
+        setRestoreAttempted(true);
+      }
+    };
+
+    void restore();
+
+    return (): void => {
+      isMounted = false;
+    };
+  }, [effectiveUserId, quiz, result, restoreAttempted]);
 
   if (!isInitialized || !effectiveUserId || resultLoading || quizLoading) {
     return (
@@ -80,12 +110,25 @@ export default function ResultsPage(): React.ReactElement {
   }
 
   if (!quiz) {
+    if (isRestoringQuiz) {
+      return (
+        <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4 dark:bg-slate-950">
+          <div className="flex flex-col items-center gap-3 rounded-lg border border-slate-200 bg-white p-6 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <LoadingSpinner size="lg" text="Restoring quiz..." />
+            <p className="text-sm text-slate-600 dark:text-slate-300">We&apos;re attempting to restore the quiz linked to this result.</p>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4 dark:bg-slate-950">
         <div className="max-w-md rounded-lg border border-slate-200 bg-white p-6 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <AlertCircle className="mx-auto h-12 w-12 text-amber-500" aria-hidden="true" />
           <h1 className="mt-4 text-xl font-semibold text-slate-900 dark:text-slate-50">Quiz Not Found</h1>
-          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">The quiz associated with this result has been deleted.</p>
+          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+            The quiz linked to this result isn&apos;t available right now. Your score is preserved below.
+          </p>
           <div className="mt-2 rounded-lg bg-slate-50 p-3 dark:bg-slate-800">
             <p className="text-sm text-slate-600 dark:text-slate-200">
               Your score was: <span className="font-bold text-slate-900 dark:text-slate-50">{result.score}%</span>

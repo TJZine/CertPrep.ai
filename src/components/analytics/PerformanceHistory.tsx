@@ -83,7 +83,7 @@ export function PerformanceHistory({ results, quizTitles, className }: Performan
         score: r.score,
         date: new Date(r.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
         mode: r.mode,
-        quizTitle: quizTitles.get(r.quiz_id) || 'Unknown Quiz',
+        quizTitle: quizTitles.get(r.quiz_id) || 'Unavailable quiz',
       }));
   }, [sortedResults, quizTitles]);
 

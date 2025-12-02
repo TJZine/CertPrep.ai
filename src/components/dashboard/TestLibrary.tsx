@@ -26,13 +26,14 @@ interface TestManifest {
 
 interface TestLibraryProps {
   existingQuizzes: Quiz[];
+  userId: string;
   onImportSuccess: (quiz: Quiz) => void;
 }
 
 /**
  * Renders the built-in test library with one-click imports.
  */
-export function TestLibrary({ existingQuizzes, onImportSuccess }: TestLibraryProps): React.ReactElement {
+export function TestLibrary({ existingQuizzes, onImportSuccess, userId }: TestLibraryProps): React.ReactElement {
   const [manifest, setManifest] = React.useState<TestManifestEntry[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
@@ -124,7 +125,7 @@ export function TestLibrary({ existingQuizzes, onImportSuccess }: TestLibraryPro
         throw new Error(message);
       }
 
-      const quiz = await createQuiz(validation.data, { sourceId: entry.id });
+      const quiz = await createQuiz(validation.data, { sourceId: entry.id, userId });
       addToast('success', `"${quiz.title}" imported successfully.`);
       onImportSuccess(quiz);
     } catch (err) {

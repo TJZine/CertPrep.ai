@@ -21,6 +21,7 @@ export interface ImportModalProps {
   isOpen: boolean;
   onClose: () => void;
   onImportSuccess: (quiz: Quiz) => void;
+  userId: string | null;
 }
 
 interface ValidationStatus {
@@ -52,7 +53,7 @@ const exampleJson = `{
 /**
  * Handles quiz import via JSON paste or file upload with validation feedback.
  */
-export function ImportModal({ isOpen, onClose, onImportSuccess }: ImportModalProps): React.ReactElement | null {
+export function ImportModal({ isOpen, onClose, onImportSuccess, userId }: ImportModalProps): React.ReactElement | null {
   const [activeTab, setActiveTab] = React.useState<'paste' | 'upload'>('paste');
   const [jsonText, setJsonText] = React.useState('');
   const [fileName, setFileName] = React.useState<string | null>(null);
@@ -142,6 +143,10 @@ export function ImportModal({ isOpen, onClose, onImportSuccess }: ImportModalPro
   };
 
   const handleImport = async (): Promise<void> => {
+    if (!userId) {
+      addToast('error', 'Unable to import without a user context.');
+      return;
+    }
     if (!jsonText.trim()) {
       addToast('error', 'Please provide quiz JSON to import.');
       return;
@@ -158,7 +163,7 @@ export function ImportModal({ isOpen, onClose, onImportSuccess }: ImportModalPro
 
     setIsImporting(true);
     try {
-      const quiz = await createQuiz(result.data);
+      const quiz = await createQuiz(result.data, { userId });
       onImportSuccess(quiz);
       resetState();
       onClose();

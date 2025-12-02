@@ -16,13 +16,19 @@ export interface Question {
 
 export interface Quiz {
   id: string;
+  user_id: string;
   title: string;
   description: string;
   created_at: number;
+  updated_at?: number;
   questions: Question[];
   tags: string[];
   version: number;
   sourceId?: string;
+  deleted_at?: number | null;
+  quiz_hash?: string | null;
+  last_synced_at?: number | null;
+  last_synced_version?: number | null;
 }
 
 export const QUIZ_MODES = ['zen', 'proctor'] as const;

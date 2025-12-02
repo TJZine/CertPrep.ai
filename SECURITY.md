@@ -11,7 +11,7 @@ We take the security of CertPrep.ai seriously. If you believe you have found a s
 
 **Email:** [security@certprep.ai](mailto:security@certprep.ai)
 
-**PGP Key:** [Optional - link to PGP key for encrypted communication]
+**PGP Key:** Not currently provided; please contact us via email and request an encrypted channel if needed.
 
 ### What to Include
 
@@ -95,8 +95,7 @@ CREATE POLICY results_delete_owner ON results FOR DELETE USING (auth.uid() = use
 
 | Version | Supported |
 |---------|-----------|
-| 2.x.x | ✅ Active support |
-| 1.x.x | ⚠️ Security fixes only |
+| 1.x.x | ✅ Active support |
 | < 1.0 | ❌ No longer supported |
 
 ---

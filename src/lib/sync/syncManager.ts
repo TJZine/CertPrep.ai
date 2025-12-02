@@ -83,6 +83,8 @@ export async function syncResults(userId: string): Promise<{ incomplete: boolean
 async function performSync(userId: string): Promise<{ incomplete: boolean }> {
   let incomplete = false;
   const startTime = Date.now();
+  let pushed = 0;
+  let pulled = 0;
 
   try {
     // 1. PUSH: Upload unsynced local results to Supabase
@@ -140,6 +142,7 @@ async function performSync(userId: string): Promise<{ incomplete: boolean }> {
           await db.results.bulkUpdate(
             batch.map((r) => ({ key: r.id, changes: { synced: 1 } }))
           );
+          pushed += batch.length;
         }
       }
     }
@@ -226,6 +229,7 @@ async function performSync(userId: string): Promise<{ incomplete: boolean }> {
       if (resultsToSave.length > 0) {
         // bulkPut handles upserts (idempotent)
         await db.results.bulkPut(resultsToSave);
+        pulled += resultsToSave.length;
       }
       
       // Update cursor to the last seen record's timestamp AND id
@@ -239,5 +243,6 @@ async function performSync(userId: string): Promise<{ incomplete: boolean }> {
     logger.error('Sync failed:', error);
   }
   
+  logger.info('Result sync complete', { userId, pushed, pulled, incomplete });
   return { incomplete };
 }

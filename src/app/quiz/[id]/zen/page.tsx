@@ -10,6 +10,8 @@ import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { Button } from '@/components/ui/Button';
 import { useInitializeDatabase, useQuiz } from '@/hooks/useDatabase';
 import type { Question } from '@/types/quiz';
+import { useAuth } from '@/components/providers/AuthProvider';
+import { useEffectiveUserId } from '@/hooks/useEffectiveUserId';
 
 interface SmartRoundData {
   questionIds: string[];
@@ -28,8 +30,11 @@ export default function ZenModePage(): React.ReactElement {
 
   const isSmartRound = searchParams.get('mode') === 'smart';
 
+  const { user } = useAuth();
+  const effectiveUserId = useEffectiveUserId(user?.id);
+
   const { isInitialized, error: dbError } = useInitializeDatabase();
-  const { quiz, isLoading } = useQuiz(isInitialized ? quizId : undefined);
+  const { quiz, isLoading } = useQuiz(isInitialized ? quizId : undefined, effectiveUserId ?? undefined);
 
   const [smartRoundData, setSmartRoundData] = React.useState<SmartRoundData | null>(null);
   const [filteredQuestions, setFilteredQuestions] = React.useState<Question[] | null>(null);
@@ -75,7 +80,7 @@ export default function ZenModePage(): React.ReactElement {
     router.push('/');
   };
 
-  if (!isInitialized || isLoading) {
+  if (!isInitialized || !effectiveUserId || isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
         <LoadingSpinner size="lg" text="Loading quiz..." />

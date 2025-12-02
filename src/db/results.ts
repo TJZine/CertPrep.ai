@@ -246,7 +246,7 @@ export async function getMissedQuestions(resultId: string, userId: string): Prom
  */
 export async function getOverallStats(userId: string): Promise<OverallStats> {
   const [quizzes, results] = await Promise.all([
-    db.quizzes.toArray(),
+    db.quizzes.where('user_id').equals(userId).toArray(),
     db.results.where('user_id').equals(userId).toArray(),
   ]);
   const quizMap = new Map(quizzes.map((quiz) => [quiz.id, quiz]));
