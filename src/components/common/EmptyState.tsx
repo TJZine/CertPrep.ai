@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import { cn } from '@/lib/utils';
+import * as React from "react";
+import { cn } from "@/lib/utils";
 
 interface EmptyStateProps {
   icon: React.ReactNode;
@@ -24,7 +24,7 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        'flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-white px-6 py-10 text-center dark:border-slate-700 dark:bg-slate-900',
+        "flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-white px-6 py-10 text-center dark:border-slate-700 dark:bg-slate-900",
         className,
       )}
     >
@@ -34,8 +34,12 @@ export function EmptyState({
       >
         {icon}
       </div>
-      <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{title}</h3>
-      <p className="mt-2 max-w-md text-sm text-slate-600 dark:text-slate-300">{description}</p>
+      <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+        {title}
+      </h3>
+      <p className="mt-2 max-w-md text-sm text-slate-600 dark:text-slate-300">
+        {description}
+      </p>
       {action ? <div className="mt-4">{action}</div> : null}
     </div>
   );

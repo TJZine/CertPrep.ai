@@ -1,4 +1,4 @@
-export type Difficulty = 'Easy' | 'Medium' | 'Hard';
+export type Difficulty = "Easy" | "Medium" | "Hard";
 
 export interface Question {
   id: string;
@@ -31,7 +31,7 @@ export interface Quiz {
   last_synced_version?: number | null;
 }
 
-export const QUIZ_MODES = ['zen', 'proctor'] as const;
+export const QUIZ_MODES = ["zen", "proctor"] as const;
 export type QuizMode = (typeof QUIZ_MODES)[number];
 
 export interface QuizSessionState {

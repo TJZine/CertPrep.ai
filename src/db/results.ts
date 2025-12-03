@@ -1,8 +1,8 @@
-import { db } from './index';
-import { calculatePercentage, generateUUID } from '@/lib/utils';
-import type { CategoryPerformance, Result } from '@/types/result';
-import type { Quiz, QuizMode } from '@/types/quiz';
-import { evaluateAnswer } from '@/lib/grading';
+import { db } from "./index";
+import { calculatePercentage, generateUUID } from "@/lib/utils";
+import type { CategoryPerformance, Result } from "@/types/result";
+import type { Quiz, QuizMode } from "@/types/quiz";
+import { evaluateAnswer } from "@/lib/grading";
 
 export interface CreateResultInput {
   quizId: string;
@@ -28,7 +28,7 @@ export interface OverallStats {
 export async function calculateResults(
   quiz: Quiz,
   answers: Record<string, string>,
-  activeQuestionIds?: string[]
+  activeQuestionIds?: string[],
 ): Promise<{ score: number; categoryBreakdown: Record<string, number> }> {
   let correctCount = 0;
   const categoryTotals: Record<string, { correct: number; total: number }> = {};
@@ -41,7 +41,7 @@ export async function calculateResults(
     questionsToScore.map(async (question) => {
       const userAnswer = answers[String(question.id)];
       return evaluateAnswer(question, userAnswer);
-    })
+    }),
   );
 
   questionResults.forEach(({ category, isCorrect }) => {
@@ -72,20 +72,26 @@ export async function calculateResults(
  */
 export async function createResult(input: CreateResultInput): Promise<Result> {
   if (!input.userId) {
-    throw new Error('Cannot create result without a user context.');
+    throw new Error("Cannot create result without a user context.");
   }
 
   const quiz = await db.quizzes.get(input.quizId);
 
   if (!quiz) {
-    throw new Error('Quiz not found.');
+    throw new Error("Quiz not found.");
   }
 
   if (quiz.user_id !== input.userId) {
-    throw new Error('Security mismatch: Quiz does not belong to the current user.');
+    throw new Error(
+      "Security mismatch: Quiz does not belong to the current user.",
+    );
   }
 
-  const { score, categoryBreakdown } = await calculateResults(quiz, input.answers, input.activeQuestionIds);
+  const { score, categoryBreakdown } = await calculateResults(
+    quiz,
+    input.answers,
+    input.activeQuestionIds,
+  );
   const result: Result = {
     id: generateUUID(),
     quiz_id: input.quizId,
@@ -107,7 +113,10 @@ export async function createResult(input: CreateResultInput): Promise<Result> {
 /**
  * Retrieves a result by its identifier.
  */
-export async function getResultById(id: string, userId: string): Promise<Result | undefined> {
+export async function getResultById(
+  id: string,
+  userId: string,
+): Promise<Result | undefined> {
   const result = await db.results.get(id);
   if (result?.user_id !== userId) return undefined;
   return result;
@@ -116,8 +125,14 @@ export async function getResultById(id: string, userId: string): Promise<Result 
 /**
  * Retrieves all results for a quiz ordered by newest first.
  */
-export async function getResultsByQuizId(quizId: string, userId: string): Promise<Result[]> {
-  const results = await db.results.where('[user_id+quiz_id]').equals([userId, quizId]).sortBy('timestamp');
+export async function getResultsByQuizId(
+  quizId: string,
+  userId: string,
+): Promise<Result[]> {
+  const results = await db.results
+    .where("[user_id+quiz_id]")
+    .equals([userId, quizId])
+    .sortBy("timestamp");
   return results.reverse();
 }
 
@@ -125,7 +140,10 @@ export async function getResultsByQuizId(quizId: string, userId: string): Promis
  * Retrieves all results ordered by newest first.
  */
 export async function getAllResults(userId: string): Promise<Result[]> {
-  const results = await db.results.where('user_id').equals(userId).sortBy('timestamp');
+  const results = await db.results
+    .where("user_id")
+    .equals(userId)
+    .sortBy("timestamp");
   return results.reverse();
 }
 
@@ -135,7 +153,7 @@ export async function getAllResults(userId: string): Promise<Result[]> {
 export async function deleteResult(id: string, userId: string): Promise<void> {
   const result = await db.results.get(id);
   if (!result || result.user_id !== userId) {
-    throw new Error('Result not found for this user.');
+    throw new Error("Result not found for this user.");
   }
 
   await db.results.delete(id);
@@ -144,11 +162,14 @@ export async function deleteResult(id: string, userId: string): Promise<void> {
 /**
  * Aggregates category performance across all attempts for a quiz.
  */
-export async function getCategoryPerformance(quizId: string, userId: string): Promise<CategoryPerformance[]> {
+export async function getCategoryPerformance(
+  quizId: string,
+  userId: string,
+): Promise<CategoryPerformance[]> {
   const quiz = await db.quizzes.get(quizId);
 
   if (!quiz) {
-    throw new Error('Quiz not found.');
+    throw new Error("Quiz not found.");
   }
 
   const results = await getResultsByQuizId(quizId, userId);
@@ -160,9 +181,9 @@ export async function getCategoryPerformance(quizId: string, userId: string): Pr
         quiz.questions.map(async (question) => {
           const userAnswer = result.answers[String(question.id)];
           return evaluateAnswer(question, userAnswer);
-        })
+        }),
       );
-    })
+    }),
   );
 
   allResultsData.flat().forEach(({ category, isCorrect }) => {
@@ -189,18 +210,21 @@ export async function getCategoryPerformance(quizId: string, userId: string): Pr
 /**
  * Returns the IDs of questions answered incorrectly for a given result.
  */
-export async function getMissedQuestions(resultId: string, userId: string): Promise<string[]> {
+export async function getMissedQuestions(
+  resultId: string,
+  userId: string,
+): Promise<string[]> {
   const result = await db.results.get(resultId);
   if (!result) {
-    throw new Error('Result not found.');
+    throw new Error("Result not found.");
   }
   if (result.user_id !== userId) {
-    throw new Error('Result not accessible for this user.');
+    throw new Error("Result not accessible for this user.");
   }
 
   const quiz = await db.quizzes.get(result.quiz_id);
   if (!quiz) {
-    throw new Error('Quiz not found.');
+    throw new Error("Quiz not found.");
   }
 
   const questionResults = await Promise.all(
@@ -209,9 +233,9 @@ export async function getMissedQuestions(resultId: string, userId: string): Prom
       if (!userAnswer) return null;
 
       const { isCorrect } = await evaluateAnswer(question, userAnswer);
-      
+
       return !isCorrect ? String(question.id) : null;
-    })
+    }),
   );
 
   return questionResults.filter((id): id is string => id !== null);
@@ -222,16 +246,20 @@ export async function getMissedQuestions(resultId: string, userId: string): Prom
  */
 export async function getOverallStats(userId: string): Promise<OverallStats> {
   const [quizzes, results] = await Promise.all([
-    db.quizzes.where('user_id').equals(userId).toArray(),
-    db.results.where('user_id').equals(userId).toArray(),
+    db.quizzes.where("user_id").equals(userId).toArray(),
+    db.results.where("user_id").equals(userId).toArray(),
   ]);
   const quizMap = new Map(quizzes.map((quiz) => [quiz.id, quiz]));
 
   const totalQuizzes = quizzes.length;
   const totalAttempts = results.length;
-  const totalStudyTime = results.reduce((sum, result) => sum + result.time_taken_seconds, 0);
+  const totalStudyTime = results.reduce(
+    (sum, result) => sum + result.time_taken_seconds,
+    0,
+  );
   const totalScore = results.reduce((sum, result) => sum + result.score, 0);
-  const averageScore = totalAttempts > 0 ? Math.round(totalScore / totalAttempts) : 0;
+  const averageScore =
+    totalAttempts > 0 ? Math.round(totalScore / totalAttempts) : 0;
 
   const categoryTotals: Record<string, { correct: number; total: number }> = {};
 
@@ -250,9 +278,9 @@ export async function getOverallStats(userId: string): Promise<OverallStats> {
           quiz.questions.map(async (question) => {
             const userAnswer = result.answers[String(question.id)];
             return evaluateAnswer(question, userAnswer);
-          })
+          }),
         );
-      })
+      }),
     );
 
     batchData.flat().forEach(({ category, isCorrect }) => {

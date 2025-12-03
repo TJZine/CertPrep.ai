@@ -1,16 +1,16 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { generateUUID } from '@/lib/utils';
-import dotenv from 'dotenv';
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import { generateUUID } from "@/lib/utils";
+import dotenv from "dotenv";
 
-dotenv.config({ path: '.env.local' });
+dotenv.config({ path: ".env.local" });
 
 // Skip tests if credentials are missing
 const shouldRun = Boolean(
   process.env.NEXT_PUBLIC_SUPABASE_URL &&
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY &&
   process.env.SUPABASE_SERVICE_ROLE_KEY &&
-  process.env.RUN_RLS_TESTS === 'true',
+  process.env.RUN_RLS_TESTS === "true",
 );
 
 // Hosts that we explicitly treat as production and should never be cleared.
@@ -19,10 +19,15 @@ const shouldRun = Boolean(
 // to ensure tests behave correctly without embedding production hostnames in source code.
 const productionSupabaseHosts = process.env.PRODUCTION_SUPABASE_HOSTS;
 const knownProductionHosts = productionSupabaseHosts
-  ? new Set(productionSupabaseHosts.split(',').map(host => host.trim()).filter(Boolean))
+  ? new Set(
+      productionSupabaseHosts
+        .split(",")
+        .map((host) => host.trim())
+        .filter(Boolean),
+    )
   : new Set<string>();
 
-describe.skipIf(!shouldRun)('Row Level Security (RLS) Verification', () => {
+describe.skipIf(!shouldRun)("Row Level Security (RLS) Verification", () => {
   let supabase: SupabaseClient;
   let userA: { id: string; email: string; client: SupabaseClient };
   let userB: { id: string; email: string; client: SupabaseClient };
@@ -33,13 +38,15 @@ describe.skipIf(!shouldRun)('Row Level Security (RLS) Verification', () => {
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (!serviceRoleKey) {
-      console.warn('SUPABASE_SERVICE_ROLE_KEY is not set. Cannot clear database for tests.');
+      console.warn(
+        "SUPABASE_SERVICE_ROLE_KEY is not set. Cannot clear database for tests.",
+      );
       return;
     }
 
     // Safety check: Ensure we are in a test environment
-    if (process.env.NODE_ENV !== 'test') {
-      console.warn('Skipping database clear: Not in test environment');
+    if (process.env.NODE_ENV !== "test") {
+      console.warn("Skipping database clear: Not in test environment");
       return;
     }
     const host = new URL(url).hostname;
@@ -47,17 +54,22 @@ describe.skipIf(!shouldRun)('Row Level Security (RLS) Verification', () => {
       return;
     }
 
-    if (!url.includes('localhost') && !url.includes('test')) {
-      console.warn('Supabase URL does not look like a test instance; refusing to clear database');
+    if (!url.includes("localhost") && !url.includes("test")) {
+      console.warn(
+        "Supabase URL does not look like a test instance; refusing to clear database",
+      );
       return;
     }
 
     const adminClient = createClient(url, serviceRoleKey);
 
     // Delete all data from 'results' table
-    const { error: deleteResultsError } = await adminClient.from('results').delete().not('id', 'is', null); // Delete all rows
+    const { error: deleteResultsError } = await adminClient
+      .from("results")
+      .delete()
+      .not("id", "is", null); // Delete all rows
     if (deleteResultsError) {
-      console.error('Error clearing results table:', deleteResultsError);
+      console.error("Error clearing results table:", deleteResultsError);
       throw deleteResultsError;
     }
 
@@ -77,51 +89,66 @@ describe.skipIf(!shouldRun)('Row Level Security (RLS) Verification', () => {
     supabase = createClient(url, key);
 
     // Helper to create a test user and client
-    const createTestUser = async (): Promise<{ id: string; email: string; client: SupabaseClient }> => {
+    const createTestUser = async (): Promise<{
+      id: string;
+      email: string;
+      client: SupabaseClient;
+    }> => {
       const email = `test-${generateUUID()}@example.com`;
-      const password = 'test-password-123';
+      const password = "test-password-123";
       const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-      
+
       let userId: string;
 
       if (serviceRoleKey) {
         // Use admin API to bypass captcha/email verification
         const adminClient = createClient(url, serviceRoleKey);
-        
+
         // 1. Create User
-        const { data: userData, error: createError } = await adminClient.auth.admin.createUser({
-          email,
-          password,
-          email_confirm: true,
-        });
+        const { data: userData, error: createError } =
+          await adminClient.auth.admin.createUser({
+            email,
+            password,
+            email_confirm: true,
+          });
 
         if (createError || !userData.user) {
-          throw new Error(`Failed to create test user (admin): ${createError?.message}`);
+          throw new Error(
+            `Failed to create test user (admin): ${createError?.message}`,
+          );
         }
         userId = userData.user.id;
 
         // 2. Generate Magic Link (to get a valid session without hitting login endpoint)
-        const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
-          type: 'magiclink',
-          email,
-        });
+        const { data: linkData, error: linkError } =
+          await adminClient.auth.admin.generateLink({
+            type: "magiclink",
+            email,
+          });
 
         if (linkError || !linkData.properties?.hashed_token) {
-          throw new Error(`Failed to generate magic link: ${linkError?.message}`);
+          throw new Error(
+            `Failed to generate magic link: ${linkError?.message}`,
+          );
         }
 
         // 3. Verify OTP to get session (bypasses login captcha)
-        const { data: sessionData, error: sessionError } = await supabase.auth.verifyOtp({
-          token_hash: linkData.properties.hashed_token,
-          type: 'email',
-        });
+        const { data: sessionData, error: sessionError } =
+          await supabase.auth.verifyOtp({
+            token_hash: linkData.properties.hashed_token,
+            type: "email",
+          });
 
         if (sessionError || !sessionData.session) {
           throw new Error(`Failed to verify OTP: ${sessionError?.message}`);
         }
 
         const userClient = createClient(url, key, {
-          global: { headers: { Authorization: `Bearer ${sessionData.session.access_token}` } },
+          global: {
+            headers: {
+              Authorization: `Bearer ${sessionData.session.access_token}`,
+            },
+          },
         });
 
         return { id: userId, email, client: userClient };
@@ -133,22 +160,31 @@ describe.skipIf(!shouldRun)('Row Level Security (RLS) Verification', () => {
         });
 
         if (error || !data.user) {
-          throw new Error(`Failed to create test user (public): ${error?.message}`);
+          throw new Error(
+            `Failed to create test user (public): ${error?.message}`,
+          );
         }
         userId = data.user.id;
 
         // Create a client for this user (login to get session)
-        const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
+        const { data: loginData, error: loginError } =
+          await supabase.auth.signInWithPassword({
+            email,
+            password,
+          });
 
         if (loginError || !loginData.session) {
-          throw new Error(`Failed to sign in test user: ${loginError?.message}`);
+          throw new Error(
+            `Failed to sign in test user: ${loginError?.message}`,
+          );
         }
 
         const userClient = createClient(url, key, {
-          global: { headers: { Authorization: `Bearer ${loginData.session.access_token}` } },
+          global: {
+            headers: {
+              Authorization: `Bearer ${loginData.session.access_token}`,
+            },
+          },
         });
 
         return { id: userId, email, client: userClient };
@@ -160,12 +196,19 @@ describe.skipIf(!shouldRun)('Row Level Security (RLS) Verification', () => {
       userB = await createTestUser();
     } catch (e) {
       if (process.env.CI) {
-        throw new Error(`Failed to create test users in CI environment: ${e instanceof Error ? e.message : String(e)}`);
+        throw new Error(
+          `Failed to create test users in CI environment: ${e instanceof Error ? e.message : String(e)}`,
+        );
       }
-      console.warn('Skipping RLS tests: Could not create test users (Auth might be disabled or require confirmation)', e);
-      // Explicitly fail the setup so tests don't run and falsely pass. 
+      console.warn(
+        "Skipping RLS tests: Could not create test users (Auth might be disabled or require confirmation)",
+        e,
+      );
+      // Explicitly fail the setup so tests don't run and falsely pass.
       // In a real scenario, we might want to skip, but for security tests, explicit failure is safer than silent skipping.
-      throw new Error('Setup failed: Could not create test users. Tests cannot run.');
+      throw new Error(
+        "Setup failed: Could not create test users. Tests cannot run.",
+      );
     }
   });
 
@@ -173,28 +216,33 @@ describe.skipIf(!shouldRun)('Row Level Security (RLS) Verification', () => {
   afterAll(async () => {
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (serviceRoleKey && userA && userB) {
-      const adminClient = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceRoleKey);
+      const adminClient = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        serviceRoleKey,
+      );
       try {
         // Clean up results first (cascade might handle this, but explicit is safer)
-        await adminClient.from('results').delete().in('user_id', [userA.id, userB.id]);
+        await adminClient
+          .from("results")
+          .delete()
+          .in("user_id", [userA.id, userB.id]);
         // Delete users
         await adminClient.auth.admin.deleteUser(userA.id);
         await adminClient.auth.admin.deleteUser(userB.id);
       } catch (error) {
-        console.warn('Failed to cleanup test users:', error);
+        console.warn("Failed to cleanup test users:", error);
       }
     }
   });
 
-  it('User A should be able to insert and read their own results', async () => {
-
+  it("User A should be able to insert and read their own results", async () => {
     const resultId = generateUUID();
     const resultData = {
       id: resultId,
       user_id: userA.id,
       quiz_id: generateUUID(),
       timestamp: Date.now(),
-      mode: 'practice',
+      mode: "practice",
       score: 100,
       time_taken_seconds: 60,
       answers: {},
@@ -203,17 +251,17 @@ describe.skipIf(!shouldRun)('Row Level Security (RLS) Verification', () => {
     };
 
     const { error: insertError } = await userA.client
-      .from('results')
+      .from("results")
       .insert(resultData);
 
     if (insertError) {
-        throw new Error(`Insert failed: ${insertError.message}`);
+      throw new Error(`User A failed to insert result: ${insertError.message}`);
     }
 
     const { data, error: selectError } = await userA.client
-      .from('results')
-      .select('*')
-      .eq('id', resultId)
+      .from("results")
+      .select("*")
+      .eq("id", resultId)
       .single();
 
     expect(selectError).toBeNull();
@@ -221,8 +269,7 @@ describe.skipIf(!shouldRun)('Row Level Security (RLS) Verification', () => {
     expect(data.id).toBe(resultId);
   });
 
-  it('User B should NOT be able to read User A\'s results', async () => {
-
+  it("User B should NOT be able to read User A's results", async () => {
     // User A creates a record (already done in previous test, but let's make a new one to be sure)
     const resultId = generateUUID();
     const resultData = {
@@ -230,7 +277,7 @@ describe.skipIf(!shouldRun)('Row Level Security (RLS) Verification', () => {
       user_id: userA.id,
       quiz_id: generateUUID(),
       timestamp: Date.now(),
-      mode: 'practice',
+      mode: "practice",
       score: 100,
       time_taken_seconds: 60,
       answers: {},
@@ -238,14 +285,18 @@ describe.skipIf(!shouldRun)('Row Level Security (RLS) Verification', () => {
       category_breakdown: {},
     };
 
-    const { error: insertError } = await userA.client.from('results').insert(resultData);
-    expect(insertError).toBeNull();
+    const { error: insertError } = await userA.client
+      .from("results")
+      .insert(resultData);
+    if (insertError) {
+      throw new Error(`User A failed to insert result: ${insertError.message}`);
+    }
 
     // User B tries to fetch it
     const { data } = await userB.client
-      .from('results')
-      .select('*')
-      .eq('id', resultId)
+      .from("results")
+      .select("*")
+      .eq("id", resultId)
       .maybeSingle(); // Use maybeSingle to avoid error on 0 rows, we expect 0 rows
 
     // Expect no data found
@@ -253,8 +304,7 @@ describe.skipIf(!shouldRun)('Row Level Security (RLS) Verification', () => {
     // Error might be null (just no rows found) or a permission error depending on policy
   });
 
-  it('User B should NOT be able to update User A\'s results', async () => {
-
+  it("User B should NOT be able to update User A's results", async () => {
     // User A creates a record
     const resultId = generateUUID();
     const resultData = {
@@ -262,7 +312,7 @@ describe.skipIf(!shouldRun)('Row Level Security (RLS) Verification', () => {
       user_id: userA.id,
       quiz_id: generateUUID(),
       timestamp: Date.now(),
-      mode: 'practice',
+      mode: "practice",
       score: 100,
       time_taken_seconds: 60,
       answers: {},
@@ -270,26 +320,30 @@ describe.skipIf(!shouldRun)('Row Level Security (RLS) Verification', () => {
       category_breakdown: {},
     };
 
-    const { error: insertError } = await userA.client.from('results').insert(resultData);
-    expect(insertError).toBeNull();
+    const { error: insertError } = await userA.client
+      .from("results")
+      .insert(resultData);
+    if (insertError) {
+      throw new Error(`User A failed to insert result: ${insertError.message}`);
+    }
 
     // User B tries to update it
     const { data: updateData } = await userB.client
-      .from('results')
+      .from("results")
       .update({ score: 0 })
-      .eq('id', resultId)
+      .eq("id", resultId)
       .select();
 
     // Should not update anything (RLS blocks access)
     expect(updateData?.length ?? 0).toBe(0);
-    
+
     // Note: Supabase update policies often silently ignore rows you can't see/edit
     // So we check if the data actually changed by reading it back as User A
-    
+
     const { data: checkData } = await userA.client
-      .from('results')
-      .select('score')
-      .eq('id', resultId)
+      .from("results")
+      .select("score")
+      .eq("id", resultId)
       .single();
 
     expect(checkData?.score).toBe(100);

@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import { AlertTriangle, CheckCircle2, Info, X, XCircle } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import * as React from "react";
+import { AlertTriangle, CheckCircle2, Info, X, XCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-export type ToastType = 'success' | 'error' | 'warning' | 'info';
+export type ToastType = "success" | "error" | "warning" | "info";
 
 interface Toast {
   id: string;
@@ -19,31 +19,41 @@ interface ToastContextValue {
   removeToast: (id: string) => void;
 }
 
-const ToastContext = React.createContext<ToastContextValue | undefined>(undefined);
+const ToastContext = React.createContext<ToastContextValue | undefined>(
+  undefined,
+);
 
-const typeStyles: Record<ToastType, { icon: React.ReactNode; classes: string }> = {
+const typeStyles: Record<
+  ToastType,
+  { icon: React.ReactNode; classes: string }
+> = {
   success: {
-    icon: <CheckCircle2 className="h-5 w-5 text-green-600" aria-hidden="true" />,
-    classes: 'border-green-200 bg-green-50 text-green-900',
+    icon: (
+      <CheckCircle2 className="h-5 w-5 text-green-600" aria-hidden="true" />
+    ),
+    classes: "border-green-200 bg-green-50 text-green-900",
   },
   error: {
     icon: <XCircle className="h-5 w-5 text-red-600" aria-hidden="true" />,
-    classes: 'border-red-200 bg-red-50 text-red-900',
+    classes: "border-red-200 bg-red-50 text-red-900",
   },
   warning: {
-    icon: <AlertTriangle className="h-5 w-5 text-orange-600" aria-hidden="true" />,
-    classes: 'border-orange-200 bg-orange-50 text-orange-900',
+    icon: (
+      <AlertTriangle className="h-5 w-5 text-orange-600" aria-hidden="true" />
+    ),
+    classes: "border-orange-200 bg-orange-50 text-orange-900",
   },
   info: {
     icon: <Info className="h-5 w-5 text-blue-600" aria-hidden="true" />,
-    classes: 'border-blue-200 bg-blue-50 text-blue-900',
+    classes: "border-blue-200 bg-blue-50 text-blue-900",
   },
 };
 
 let toastCounter = 0;
 const generateId = (): string => {
   const webCrypto =
-    typeof globalThis !== 'undefined' && (globalThis as { crypto?: Crypto }).crypto
+    typeof globalThis !== "undefined" &&
+    (globalThis as { crypto?: Crypto }).crypto
       ? (globalThis as { crypto?: Crypto }).crypto
       : undefined;
 
@@ -67,7 +77,7 @@ const generateId = (): string => {
 export function useToast(): ToastContextValue {
   const context = React.useContext(ToastContext);
   if (!context) {
-    throw new Error('useToast must be used within a ToastProvider');
+    throw new Error("useToast must be used within a ToastProvider");
   }
 
   return context;
@@ -76,7 +86,11 @@ export function useToast(): ToastContextValue {
 /**
  * Toast provider that manages toast stack and renders notifications.
  */
-export function ToastProvider({ children }: { children: React.ReactNode }): React.ReactElement {
+export function ToastProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}): React.ReactElement {
   const [toasts, setToasts] = React.useState<Toast[]>([]);
   const timers = React.useRef<Map<string, number>>(new Map());
 
@@ -120,7 +134,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }): Reac
             <div
               key={toast.id}
               className={cn(
-                'pointer-events-auto flex items-start gap-3 rounded-lg border px-4 py-3 shadow-lg transition',
+                "pointer-events-auto flex items-start gap-3 rounded-lg border px-4 py-3 shadow-lg transition",
                 style.classes,
               )}
               role="alert"

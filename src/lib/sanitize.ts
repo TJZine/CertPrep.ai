@@ -1,4 +1,4 @@
-import DOMPurify from 'isomorphic-dompurify';
+import DOMPurify from "isomorphic-dompurify";
 
 /**
  * Sanitizes HTML content to prevent XSS attacks.
@@ -6,11 +6,24 @@ import DOMPurify from 'isomorphic-dompurify';
  */
 export function sanitizeHTML(dirty: string): string {
   return DOMPurify.sanitize(dirty, {
-    ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'code', 'pre', 'ul', 'ol', 'li', 'p', 'br', 'span'],
+    ALLOWED_TAGS: [
+      "b",
+      "i",
+      "em",
+      "strong",
+      "code",
+      "pre",
+      "ul",
+      "ol",
+      "li",
+      "p",
+      "br",
+      "span",
+    ],
     // ALLOWED_ATTR includes 'class' to support custom styling in user-uploaded quizzes.
     // Risk: Users could inject utility classes to deface the UI (Self-XSS).
     // Decision: Accepted risk to support rich content features.
-    ALLOWED_ATTR: ['class'],
+    ALLOWED_ATTR: ["class"],
   });
 }
 

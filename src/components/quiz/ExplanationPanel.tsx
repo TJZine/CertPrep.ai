@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import { AlertCircle, ChevronDown, ChevronUp, Lightbulb } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
-import { Card, CardContent } from '@/components/ui/Card';
-import { cn } from '@/lib/utils';
-import { sanitizeHTML } from '@/lib/sanitize';
+import * as React from "react";
+import { AlertCircle, ChevronDown, ChevronUp, Lightbulb } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { Card, CardContent } from "@/components/ui/Card";
+import { cn } from "@/lib/utils";
+import { sanitizeHTML } from "@/lib/sanitize";
 
 interface ExplanationPanelProps {
   explanation: string;
@@ -17,8 +17,8 @@ interface ExplanationPanelProps {
 }
 
 /**
-  * Expandable explanation section with optional distractor details.
-  */
+ * Expandable explanation section with optional distractor details.
+ */
 export function ExplanationPanel({
   explanation,
   distractorLogic,
@@ -27,14 +27,17 @@ export function ExplanationPanel({
   onToggle,
   className,
 }: ExplanationPanelProps): React.ReactElement {
-  const sanitizedExplanation = React.useMemo(() => sanitizeHTML(explanation), [explanation]);
+  const sanitizedExplanation = React.useMemo(
+    () => sanitizeHTML(explanation),
+    [explanation],
+  );
   const sanitizedDistractorLogic = React.useMemo(
     () => (distractorLogic ? sanitizeHTML(distractorLogic) : null),
     [distractorLogic],
   );
 
   return (
-    <div className={cn('', className)}>
+    <div className={cn("", className)}>
       <Button
         variant="ghost"
         onClick={onToggle}
@@ -44,22 +47,29 @@ export function ExplanationPanel({
       >
         <span className="flex items-center gap-2">
           <Lightbulb
-            className={cn('h-4 w-4', isCorrect ? 'text-green-600' : 'text-amber-500')}
+            className={cn(
+              "h-4 w-4",
+              isCorrect ? "text-green-600" : "text-amber-500",
+            )}
             aria-hidden="true"
           />
-          {isCorrect ? 'View Explanation' : 'Why is this wrong?'}
+          {isCorrect ? "View Explanation" : "Why is this wrong?"}
         </span>
-        {isExpanded ? <ChevronUp className="h-4 w-4" aria-hidden="true" /> : <ChevronDown className="h-4 w-4" aria-hidden="true" />}
+        {isExpanded ? (
+          <ChevronUp className="h-4 w-4" aria-hidden="true" />
+        ) : (
+          <ChevronDown className="h-4 w-4" aria-hidden="true" />
+        )}
       </Button>
 
       {isExpanded && (
         <Card
           id="explanation-content"
           className={cn(
-            'mt-2',
+            "mt-2",
             isCorrect
-              ? 'border-green-200 bg-green-50 dark:border-green-800/70 dark:bg-green-900/20'
-              : 'border-amber-200 bg-amber-50 dark:border-amber-700/70 dark:bg-amber-900/20',
+              ? "border-green-200 bg-green-50 dark:border-green-800/70 dark:bg-green-900/20"
+              : "border-amber-200 bg-amber-50 dark:border-amber-700/70 dark:bg-amber-900/20",
           )}
         >
           <CardContent className="p-4">
@@ -67,8 +77,10 @@ export function ExplanationPanel({
               <div>
                 <h4
                   className={cn(
-                    'mb-2 flex items-center gap-2 font-semibold',
-                    isCorrect ? 'text-green-800 dark:text-green-100' : 'text-amber-800 dark:text-amber-100',
+                    "mb-2 flex items-center gap-2 font-semibold",
+                    isCorrect
+                      ? "text-green-800 dark:text-green-100"
+                      : "text-amber-800 dark:text-amber-100",
                   )}
                 >
                   <Lightbulb className="h-4 w-4" aria-hidden="true" />
@@ -76,8 +88,10 @@ export function ExplanationPanel({
                 </h4>
                 <div
                   className={cn(
-                    'prose prose-sm max-w-none',
-                    isCorrect ? 'prose-green dark:prose-invert' : 'prose-amber dark:prose-invert',
+                    "prose prose-sm max-w-none",
+                    isCorrect
+                      ? "prose-green dark:prose-invert"
+                      : "prose-amber dark:prose-invert",
                   )}
                   dangerouslySetInnerHTML={{ __html: sanitizedExplanation }}
                 />
@@ -91,7 +105,9 @@ export function ExplanationPanel({
                   </h4>
                   <div
                     className="prose prose-sm prose-amber max-w-none dark:prose-invert"
-                    dangerouslySetInnerHTML={{ __html: sanitizedDistractorLogic }}
+                    dangerouslySetInnerHTML={{
+                      __html: sanitizedDistractorLogic,
+                    }}
                   />
                 </div>
               )}
@@ -117,17 +133,19 @@ export function ExplanationCompact({
   return (
     <div
       className={cn(
-        'rounded-lg border p-3',
+        "rounded-lg border p-3",
         isCorrect
-          ? 'border-green-200 bg-green-50 dark:border-green-800/70 dark:bg-green-900/20'
-          : 'border-amber-200 bg-amber-50 dark:border-amber-700/70 dark:bg-amber-900/20',
+          ? "border-green-200 bg-green-50 dark:border-green-800/70 dark:bg-green-900/20"
+          : "border-amber-200 bg-amber-50 dark:border-amber-700/70 dark:bg-amber-900/20",
         className,
       )}
     >
       <div
         className={cn(
-          'prose prose-sm max-w-none',
-          isCorrect ? 'prose-green dark:prose-invert' : 'prose-amber dark:prose-invert',
+          "prose prose-sm max-w-none",
+          isCorrect
+            ? "prose-green dark:prose-invert"
+            : "prose-amber dark:prose-invert",
         )}
         dangerouslySetInnerHTML={{ __html: sanitizedExplanation }}
       />

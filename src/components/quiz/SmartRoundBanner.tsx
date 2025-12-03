@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import { Sparkles, X, Target, Flag } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
-import { cn } from '@/lib/utils';
+import * as React from "react";
+import { Sparkles, X, Target, Flag } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { cn } from "@/lib/utils";
 
 interface SmartRoundBannerProps {
   totalQuestions: number;
@@ -27,7 +27,7 @@ export function SmartRoundBanner({
   return (
     <div
       className={cn(
-        'rounded-lg border border-purple-200 bg-gradient-to-r from-purple-50 to-indigo-50 p-4 dark:border-purple-800 dark:from-purple-950 dark:to-indigo-950',
+        "rounded-lg border border-purple-200 bg-gradient-to-r from-purple-50 to-indigo-50 p-4 dark:border-purple-800 dark:from-purple-950 dark:to-indigo-950",
         className,
       )}
       role="status"
@@ -36,10 +36,15 @@ export function SmartRoundBanner({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900/50">
-            <Sparkles className="h-5 w-5 text-purple-600 dark:text-purple-300" aria-hidden="true" />
+            <Sparkles
+              className="h-5 w-5 text-purple-600 dark:text-purple-300"
+              aria-hidden="true"
+            />
           </div>
           <div>
-            <h2 className="font-semibold text-purple-900 dark:text-purple-100">Smart Round</h2>
+            <h2 className="font-semibold text-purple-900 dark:text-purple-100">
+              Smart Round
+            </h2>
             <p className="text-sm text-purple-700 dark:text-purple-300">
               Focused practice on {totalQuestions} questions you need to review
             </p>

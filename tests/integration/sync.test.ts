@@ -1,29 +1,29 @@
-import 'fake-indexeddb/auto';
-import { beforeEach, describe, expect, it, vi, afterEach } from 'vitest';
-import { db, clearDatabase } from '@/db';
-import { syncQuizzes } from '@/lib/sync/quizSyncManager';
-import { fetchUserQuizzes, upsertQuizzes } from '@/lib/sync/quizRemote';
-import type { Quiz } from '@/types/quiz';
+import "fake-indexeddb/auto";
+import { beforeEach, describe, expect, it, vi, afterEach } from "vitest";
+import { db, clearDatabase } from "@/db";
+import { syncQuizzes } from "@/lib/sync/quizSyncManager";
+import { fetchUserQuizzes, upsertQuizzes } from "@/lib/sync/quizRemote";
+import type { Quiz } from "@/types/quiz";
 
 // Mock the remote API layer
-vi.mock('@/lib/sync/quizRemote', () => ({
+vi.mock("@/lib/sync/quizRemote", () => ({
   fetchUserQuizzes: vi.fn(),
   upsertQuizzes: vi.fn(),
 }));
 
 // Mock Web Locks API since it's not in Node/JSDOM by default
 const requestLock = vi.fn(async (_name, _options, callback) => {
-  return callback({ name: 'mock-lock' });
+  return callback({ name: "mock-lock" });
 });
-vi.stubGlobal('navigator', { locks: { request: requestLock } });
+vi.stubGlobal("navigator", { locks: { request: requestLock } });
 
-describe('Integration: Quiz Sync Engine', () => {
-  const userId = 'test-user-123';
+describe("Integration: Quiz Sync Engine", () => {
+  const userId = "test-user-123";
 
   beforeEach(async () => {
     vi.clearAllMocks();
     await clearDatabase();
-    
+
     // Default mock responses
     vi.mocked(fetchUserQuizzes).mockResolvedValue({ data: [], error: null });
     vi.mocked(upsertQuizzes).mockResolvedValue({ error: null });
@@ -33,14 +33,14 @@ describe('Integration: Quiz Sync Engine', () => {
     await clearDatabase();
   });
 
-  it('pushes a locally created quiz to remote', async () => {
+  it("pushes a locally created quiz to remote", async () => {
     // 1. Create local quiz
-    const quizId = 'local-quiz-1';
+    const quizId = "local-quiz-1";
     const localQuiz: Quiz = {
       id: quizId,
       user_id: userId,
-      title: 'My Local Quiz',
-      description: 'Created offline',
+      title: "My Local Quiz",
+      description: "Created offline",
       created_at: Date.now(),
       updated_at: Date.now(),
       questions: [],
@@ -51,7 +51,7 @@ describe('Integration: Quiz Sync Engine', () => {
       last_synced_version: null, // Not synced yet
       last_synced_at: null,
     };
-    
+
     await db.quizzes.add(localQuiz);
 
     // 2. Run Sync
@@ -61,14 +61,14 @@ describe('Integration: Quiz Sync Engine', () => {
     expect(upsertQuizzes).toHaveBeenCalledTimes(1);
     const pushCall = vi.mocked(upsertQuizzes).mock.calls[0];
     expect(pushCall).toBeDefined();
-    if (!pushCall) throw new Error('Expected upsertQuizzes to be called');
+    if (!pushCall) throw new Error("Expected upsertQuizzes to be called");
     expect(pushCall[0]).toBe(userId); // userId arg
     const pushedQuizzes = pushCall[1]; // payload arg
     expect(pushedQuizzes).toBeDefined();
-    if (!pushedQuizzes) throw new Error('Expected payload argument');
+    if (!pushedQuizzes) throw new Error("Expected payload argument");
     expect(pushedQuizzes).toHaveLength(1);
     expect(pushedQuizzes[0]?.id).toBe(quizId);
-    expect(pushedQuizzes[0]?.title).toBe('My Local Quiz');
+    expect(pushedQuizzes[0]?.title).toBe("My Local Quiz");
 
     // 4. Verify local state updated (metadata)
     const updatedLocal = await db.quizzes.get(quizId);
@@ -76,18 +76,18 @@ describe('Integration: Quiz Sync Engine', () => {
     expect(updatedLocal?.last_synced_at).not.toBeNull();
   });
 
-  it('pulls a remote quiz and saves it locally', async () => {
+  it("pulls a remote quiz and saves it locally", async () => {
     // 1. Mock remote data
-    const remoteQuizId = 'remote-quiz-99';
+    const remoteQuizId = "remote-quiz-99";
     const remoteQuiz = {
       id: remoteQuizId,
       user_id: userId,
-      title: 'Remote Quiz',
-      description: 'From cloud',
-      tags: ['cloud'],
+      title: "Remote Quiz",
+      description: "From cloud",
+      tags: ["cloud"],
       version: 5,
       questions: [],
-      quiz_hash: 'abc-123',
+      quiz_hash: "abc-123",
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       deleted_at: null,
@@ -103,30 +103,30 @@ describe('Integration: Quiz Sync Engine', () => {
 
     // 3. Verify pull occurred
     expect(fetchUserQuizzes).toHaveBeenCalled();
-    
+
     // 4. Verify local DB has the quiz
     const localCopy = await db.quizzes.get(remoteQuizId);
     expect(localCopy).toBeDefined();
-    expect(localCopy?.title).toBe('Remote Quiz');
+    expect(localCopy?.title).toBe("Remote Quiz");
     expect(localCopy?.version).toBe(5);
     expect(localCopy?.last_synced_version).toBe(5);
   });
 
-  it('handles conflict: remote wins (default policy)', async () => {
+  it("handles conflict: remote wins (default policy)", async () => {
     // 1. Setup Local Quiz (Version 1)
-    const quizId = 'conflict-quiz';
+    const quizId = "conflict-quiz";
     const localQuiz: Quiz = {
       id: quizId,
       user_id: userId,
-      title: 'Local Title',
-      description: '',
+      title: "Local Title",
+      description: "",
       created_at: Date.now(),
       updated_at: Date.now(),
       questions: [],
       tags: [],
       version: 1,
       deleted_at: null,
-      quiz_hash: 'local-hash',
+      quiz_hash: "local-hash",
       last_synced_version: 1,
       last_synced_at: Date.now() - 10000,
     };
@@ -136,12 +136,12 @@ describe('Integration: Quiz Sync Engine', () => {
     const remoteQuiz = {
       id: quizId,
       user_id: userId,
-      title: 'Remote Title Wins',
-      description: '',
+      title: "Remote Title Wins",
+      description: "",
       tags: [],
       version: 2,
       questions: [],
-      quiz_hash: 'remote-hash',
+      quiz_hash: "remote-hash",
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       deleted_at: null,
@@ -157,26 +157,26 @@ describe('Integration: Quiz Sync Engine', () => {
 
     // 4. Verify Remote Won
     const finalState = await db.quizzes.get(quizId);
-    expect(finalState?.title).toBe('Remote Title Wins');
+    expect(finalState?.title).toBe("Remote Title Wins");
     expect(finalState?.version).toBe(2);
     expect(finalState?.last_synced_version).toBe(2);
   });
 
-  it('does not overwrite local changes if local version is higher (optimistic lock)', async () => {
+  it("does not overwrite local changes if local version is higher (optimistic lock)", async () => {
     // 1. Setup Local Quiz (Version 3 - Ahead of last sync)
-    const quizId = 'local-ahead';
+    const quizId = "local-ahead";
     const localQuiz: Quiz = {
       id: quizId,
       user_id: userId,
-      title: 'Local Is Ahead',
-      description: '',
+      title: "Local Is Ahead",
+      description: "",
       created_at: Date.now(),
       updated_at: Date.now(),
       questions: [],
       tags: [],
       version: 3,
       deleted_at: null,
-      quiz_hash: 'local-hash',
+      quiz_hash: "local-hash",
       last_synced_version: 2, // Last time we synced, it was v2
       last_synced_at: Date.now() - 10000,
     };
@@ -187,12 +187,12 @@ describe('Integration: Quiz Sync Engine', () => {
     const remoteQuiz = {
       id: quizId,
       user_id: userId,
-      title: 'Remote Stale',
-      description: '',
+      title: "Remote Stale",
+      description: "",
       tags: [],
       version: 2,
       questions: [],
-      quiz_hash: 'remote-hash',
+      quiz_hash: "remote-hash",
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       deleted_at: null,
@@ -208,9 +208,9 @@ describe('Integration: Quiz Sync Engine', () => {
 
     // 4. Verify Local Kept
     const finalState = await db.quizzes.get(quizId);
-    expect(finalState?.title).toBe('Local Is Ahead');
+    expect(finalState?.title).toBe("Local Is Ahead");
     expect(finalState?.version).toBe(3);
-    
+
     // Note: In a real scenario, we would also expect a PUSH to happen for v3
     expect(upsertQuizzes).toHaveBeenCalled();
   });

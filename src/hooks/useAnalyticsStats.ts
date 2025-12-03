@@ -1,7 +1,7 @@
-import { useState, useEffect, useMemo } from 'react';
-import { hashAnswer } from '@/lib/utils';
-import type { Quiz } from '@/types/quiz';
-import type { Result } from '@/types/result';
+import { useState, useEffect, useMemo } from "react";
+import { hashAnswer } from "@/lib/utils";
+import type { Quiz } from "@/types/quiz";
+import type { Result } from "@/types/result";
 
 export interface CategoryStat {
   category: string;
@@ -20,17 +20,20 @@ export interface AnalyticsStats {
 const DAYS_TO_TRACK = 14;
 
 const formatDate = (timestamp: number | Date): string => {
-  return new Date(timestamp).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
+  return new Date(timestamp).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
   });
 };
 
 /**
  * Asynchronously calculates analytics stats from results and quizzes.
  */
-export function useAnalyticsStats(results: Result[], quizzes: Quiz[]): AnalyticsStats {
-  const [stats, setStats] = useState<Omit<AnalyticsStats, 'isLoading'>>({
+export function useAnalyticsStats(
+  results: Result[],
+  quizzes: Quiz[],
+): AnalyticsStats {
+  const [stats, setStats] = useState<Omit<AnalyticsStats, "isLoading">>({
     categoryPerformance: [],
     weakAreas: [],
     dailyStudyTime: [],
@@ -39,23 +42,25 @@ export function useAnalyticsStats(results: Result[], quizzes: Quiz[]): Analytics
 
   // Create stable keys for dependencies using meaningful fields to avoid stale analytics
   const resultsHash = useMemo(
-    () => results
-      .map((r) => {
-        const answersKey = Object.entries(r.answers || {})
-          .sort(([a], [b]) => a.localeCompare(b))
-          .map(([key, value]) => `${key}:${value}`)
-          .join(',');
-        return `${r.id}:${r.score}:${r.timestamp}:${r.time_taken_seconds}:${answersKey}`;
-      })
-      .sort()
-      .join('|'),
+    () =>
+      results
+        .map((r) => {
+          const answersKey = Object.entries(r.answers || {})
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([key, value]) => `${key}:${value}`)
+            .join(",");
+          return `${r.id}:${r.score}:${r.timestamp}:${r.time_taken_seconds}:${answersKey}`;
+        })
+        .sort()
+        .join("|"),
     [results],
   );
   const quizzesHash = useMemo(
-    () => quizzes
-      .map((q) => `${q.id}:${q.version}:${q.updated_at ?? 0}`)
-      .sort()
-      .join('|'),
+    () =>
+      quizzes
+        .map((q) => `${q.id}:${q.version}:${q.updated_at ?? 0}`)
+        .sort()
+        .join("|"),
     [quizzes],
   );
 
@@ -65,20 +70,27 @@ export function useAnalyticsStats(results: Result[], quizzes: Quiz[]): Analytics
       try {
         // Force async execution to avoid "setState in effect" lint error
         await Promise.resolve();
-        
+
         if (!isMounted) return;
         setIsLoading(true);
 
         if (!results.length || !quizzes.length) {
-          setStats({ categoryPerformance: [], weakAreas: [], dailyStudyTime: [] });
+          setStats({
+            categoryPerformance: [],
+            weakAreas: [],
+            dailyStudyTime: [],
+          });
           return;
         }
 
-        const categories = new Map<string, { correct: number; total: number }>();
-        
+        const categories = new Map<
+          string,
+          { correct: number; total: number }
+        >();
+
         // Calculate category performance
         const quizMap = new Map(quizzes.map((q) => [q.id, q]));
-        
+
         // Calculate category performance
         const allResultsData = await Promise.all(
           results.map(async (result) => {
@@ -87,10 +99,10 @@ export function useAnalyticsStats(results: Result[], quizzes: Quiz[]): Analytics
 
             return Promise.all(
               quiz.questions.map(async (question) => {
-                const category = question.category || 'Uncategorized';
+                const category = question.category || "Uncategorized";
                 const userAnswer = result.answers[String(question.id)];
                 let isCorrect = false;
-                
+
                 if (userAnswer) {
                   const userHash = await hashAnswer(userAnswer);
                   if (userHash === question.correct_answer_hash) {
@@ -98,9 +110,9 @@ export function useAnalyticsStats(results: Result[], quizzes: Quiz[]): Analytics
                   }
                 }
                 return { category, isCorrect };
-              })
+              }),
             );
-          })
+          }),
         );
 
         allResultsData.flat().forEach(({ category, isCorrect }) => {
@@ -115,12 +127,17 @@ export function useAnalyticsStats(results: Result[], quizzes: Quiz[]): Analytics
           }
         });
 
-        const categoryPerformance = Array.from(categories.entries()).map(([category, data]) => ({
-          category,
-          score: data.total > 0 ? Math.round((data.correct / data.total) * 100) : 0,
-          correct: data.correct,
-          total: data.total,
-        }));
+        const categoryPerformance = Array.from(categories.entries()).map(
+          ([category, data]) => ({
+            category,
+            score:
+              data.total > 0
+                ? Math.round((data.correct / data.total) * 100)
+                : 0,
+            correct: data.correct,
+            total: data.total,
+          }),
+        );
 
         const weakAreas = categoryPerformance
           .filter((cat) => cat.score < 70 && cat.total >= 3)
@@ -136,8 +153,6 @@ export function useAnalyticsStats(results: Result[], quizzes: Quiz[]): Analytics
         const now = new Date();
         const days: Map<string, number> = new Map();
 
-
-
         for (let i = DAYS_TO_TRACK - 1; i >= 0; i -= 1) {
           const date = new Date(now);
           date.setDate(date.getDate() - i);
@@ -148,19 +163,34 @@ export function useAnalyticsStats(results: Result[], quizzes: Quiz[]): Analytics
         results.forEach((result) => {
           const resultDate = new Date(result.timestamp);
           // Normalize to start of day for consistent comparison
-          const resultDay = new Date(resultDate.getFullYear(), resultDate.getMonth(), resultDate.getDate());
-          const nowDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-          const daysDiff = Math.floor((nowDay.getTime() - resultDay.getTime()) / (1000 * 60 * 60 * 24));
+          const resultDay = new Date(
+            resultDate.getFullYear(),
+            resultDate.getMonth(),
+            resultDate.getDate(),
+          );
+          const nowDay = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate(),
+          );
+          const daysDiff = Math.floor(
+            (nowDay.getTime() - resultDay.getTime()) / (1000 * 60 * 60 * 24),
+          );
 
           if (daysDiff < DAYS_TO_TRACK) {
             const dateStr = formatDate(resultDate);
             if (days.has(dateStr)) {
-              days.set(dateStr, days.get(dateStr)! + Math.round(result.time_taken_seconds / 60));
+              days.set(
+                dateStr,
+                days.get(dateStr)! + Math.round(result.time_taken_seconds / 60),
+              );
             }
           }
         });
 
-        const dailyStudyTime = Array.from(days.entries()).map(([date, minutes]) => ({ date, minutes }));
+        const dailyStudyTime = Array.from(days.entries()).map(
+          ([date, minutes]) => ({ date, minutes }),
+        );
 
         if (isMounted) {
           setStats({
@@ -170,10 +200,14 @@ export function useAnalyticsStats(results: Result[], quizzes: Quiz[]): Analytics
           });
         }
       } catch (error) {
-        console.error('Failed to calculate analytics stats:', error);
+        console.error("Failed to calculate analytics stats:", error);
         // Reset to empty state on error
         if (isMounted) {
-          setStats({ categoryPerformance: [], weakAreas: [], dailyStudyTime: [] });
+          setStats({
+            categoryPerformance: [],
+            weakAreas: [],
+            dailyStudyTime: [],
+          });
         }
       } finally {
         if (isMounted) {

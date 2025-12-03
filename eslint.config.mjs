@@ -1,29 +1,35 @@
-import nextConfig from 'eslint-config-next';
-import tseslintPlugin from '@typescript-eslint/eslint-plugin';
+import nextConfig from "eslint-config-next";
+import tseslintPlugin from "@typescript-eslint/eslint-plugin";
 
 const config = [
-  { ignores: ['.next/**', 'node_modules/**', 'tailwind.config.ts', 'postcss.config.mjs', 'next.config.js', 'next.config.ts'] },
+  { ignores: [".next/**", "node_modules/**"] },
   ...nextConfig,
   {
     plugins: {
-      '@typescript-eslint': tseslintPlugin,
+      "@typescript-eslint": tseslintPlugin,
     },
     languageOptions: {
       parserOptions: {
-        project: './tsconfig.json',
+        project: "./tsconfig.json",
       },
     },
     rules: {
-      '@typescript-eslint/no-unused-vars': 'error',
-      '@typescript-eslint/no-explicit-any': 'error',
-      '@typescript-eslint/explicit-function-return-type': 'warn',
-      'react/jsx-no-target-blank': 'error',
-      'no-console': [
-        'warn',
+      "@typescript-eslint/no-unused-vars": "error",
+      "@typescript-eslint/no-explicit-any": "error",
+      "@typescript-eslint/explicit-function-return-type": "warn",
+      "react/jsx-no-target-blank": "error",
+      "no-console": [
+        "warn",
         {
-          allow: ['warn', 'error'],
+          allow: ["warn", "error"],
         },
       ],
+    },
+  },
+  {
+    files: ["**/*.js", "**/*.mjs"],
+    rules: {
+      "@typescript-eslint/explicit-function-return-type": "off",
     },
   },
 ];

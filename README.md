@@ -16,23 +16,27 @@ CertPrep.ai is a modern, offline-first quiz application designed to help users p
 <div align="center">
 
   <!-- Primary Badges Row -->
-  [![License](https://img.shields.io/github/license/TJZine/CertPrep.ai?style=flat-square)](LICENSE)
-  [![Version](https://img.shields.io/github/package-json/v/TJZine/CertPrep.ai?style=flat-square)](package.json)
-  [![Build Status](https://img.shields.io/github/actions/workflow/status/TJZine/CertPrep.ai/ci.yml?branch=main&style=flat-square)](https://github.com/TJZine/CertPrep.ai/actions)
-  [![Coverage](https://img.shields.io/codecov/c/github/TJZine/CertPrep.ai?style=flat-square)](https://codecov.io/gh/TJZine/CertPrep.ai)
+
+[![License](https://img.shields.io/github/license/TJZine/CertPrep.ai?style=flat-square)](LICENSE)
+[![Version](https://img.shields.io/github/package-json/v/TJZine/CertPrep.ai?style=flat-square)](package.json)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/TJZine/CertPrep.ai/ci.yml?branch=main&style=flat-square)](https://github.com/TJZine/CertPrep.ai/actions)
+[![Coverage](https://img.shields.io/codecov/c/github/TJZine/CertPrep.ai?style=flat-square)](https://codecov.io/gh/TJZine/CertPrep.ai)
 
   <!-- Secondary Badges Row -->
-  [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
-  [![Next.js](https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js)](https://nextjs.org/)
-  [![Supabase](https://img.shields.io/badge/Supabase-Backend-3ECF8E?style=flat-square&logo=supabase)](https://supabase.com/)
-  [![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC?style=flat-square&logo=tailwind-css)](https://tailwindcss.com/)
+
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js)](https://nextjs.org/)
+[![Supabase](https://img.shields.io/badge/Supabase-Backend-3ECF8E?style=flat-square&logo=supabase)](https://supabase.com/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC?style=flat-square&logo=tailwind-css)](https://tailwindcss.com/)
 
   </div>
 
 ---
 
 <a id="features"></a>
+
 ## Features
+
 <!-- Use a feature grid for visual scanning -->
 <table>
   <tr>
@@ -99,28 +103,33 @@ CertPrep.ai is a modern, offline-first quiz application designed to help users p
 ---
 
 <a id="demo"></a>
+
 ## Demo
 
 > **Live Demo:** [https://certprep-ai.vercel.app](https://certprep-ai.vercel.app)
 
 ## Demo Access
-> *Please sign up for a new account to test the application.*
+
+> _Please sign up for a new account to test the application._
 
 ---
 
 <a id="getting-started"></a>
+
 ## Getting Started
 
 <a id="prerequisites"></a>
+
 ### Prerequisites
 
-| Requirement | Version | Installation |
-|-------------|---------|--------------|
-| Node.js | `>=18.0.0` | [Download](https://nodejs.org/) |
-| npm/yarn/pnpm | Latest | Comes with Node.js |
-| Supabase Account | - | [Sign up](https://supabase.com/) |
+| Requirement      | Version    | Installation                     |
+| ---------------- | ---------- | -------------------------------- |
+| Node.js          | `>=18.0.0` | [Download](https://nodejs.org/)  |
+| npm/yarn/pnpm    | Latest     | Comes with Node.js               |
+| Supabase Account | -          | [Sign up](https://supabase.com/) |
 
 <a id="installation"></a>
+
 ### Installation
 
 ```bash
@@ -139,6 +148,7 @@ pnpm install
 ```
 
 <a id="environment-setup"></a>
+
 ### Environment Setup
 
 1. **Copy the environment template:**
@@ -161,9 +171,9 @@ NEXT_PUBLIC_ANALYTICS_ID=your_analytics_id
 <details>
 <summary>📖 Where to find these values</summary>
 
-| Variable | Location |
-|----------|----------|
-| `SUPABASE_URL` | Supabase Dashboard → Settings → API → Project URL |
+| Variable            | Location                                                  |
+| ------------------- | --------------------------------------------------------- |
+| `SUPABASE_URL`      | Supabase Dashboard → Settings → API → Project URL         |
 | `SUPABASE_ANON_KEY` | Supabase Dashboard → Settings → API → `anon` `public` key |
 
 </details>
@@ -188,6 +198,7 @@ npm run dev
 ---
 
 <a id="usage"></a>
+
 ## 📖 Usage
 
 ### Quick Start
@@ -202,10 +213,10 @@ For code-level examples (auth, quizzes, results, and sync), see the dedicated [A
 
 ### Quiz Modes
 
-| Mode | Description | Best For |
-|------|-------------|----------|
+| Mode           | Description                       | Best For           |
+| -------------- | --------------------------------- | ------------------ |
 | 🎯 **Proctor** | Timed, monitored quiz environment | Assessments, exams |
-| 🧘 **Zen** | Relaxed, self-paced learning | Practice, study |
+| 🧘 **Zen**     | Relaxed, self-paced learning      | Practice, study    |
 
 <details>
 <summary>View mode comparison</summary>
@@ -227,6 +238,7 @@ graph TD
 ---
 
 <a id="architecture"></a>
+
 ## Architecture
 
 ### Tech Stack
@@ -315,21 +327,23 @@ graph TB
 ---
 
 <a id="documentation"></a>
+
 ## 📚 Documentation
 
-| Document | Description |
-|----------|-------------|
-| [📖 API Reference](./docs/API.md) | API overview and examples |
-| [🏗️ Architecture](./docs/ARCHITECTURE.md) | System design and patterns |
-| [🔒 Security](./SECURITY.md) | Security policies and practices |
-| [🤝 Contributing](./CONTRIBUTING.md) | Contribution guidelines |
-| [📝 Changelog](./CHANGELOG.md) | Version history |
-| [❓ FAQ](./docs/FAQ.md) | Frequently asked questions |
+| Document                                               | Description                        |
+| ------------------------------------------------------ | ---------------------------------- |
+| [📖 API Reference](./docs/API.md)                      | API overview and examples          |
+| [🏗️ Architecture](./docs/ARCHITECTURE.md)              | System design and patterns         |
+| [🔒 Security](./SECURITY.md)                           | Security policies and practices    |
+| [🤝 Contributing](./CONTRIBUTING.md)                   | Contribution guidelines            |
+| [📝 Changelog](./CHANGELOG.md)                         | Version history                    |
+| [❓ FAQ](./docs/FAQ.md)                                | Frequently asked questions         |
 | [👩‍💻 Code Review](./docs/CODE_REVIEW_IMPLEMENTATION.md) | Implementation standards & persona |
 
 ---
 
 <a id="testing"></a>
+
 ## Testing
 
 ```bash
@@ -340,6 +354,7 @@ npm test
 ---
 
 <a id="deployment"></a>
+
 ## Deployment
 
 ### Vercel (Recommended)
@@ -361,18 +376,20 @@ npm start
 > [!IMPORTANT]
 > Ensure all required environment variables are set in your production environment.
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `NEXT_PUBLIC_SUPABASE_URL` | ✅ | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✅ | Supabase anonymous key |
-| `NEXT_PUBLIC_SITE_URL` | ✅ | Production site URL |
+| Variable                        | Required | Description            |
+| ------------------------------- | -------- | ---------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`      | ✅       | Supabase project URL   |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✅       | Supabase anonymous key |
+| `NEXT_PUBLIC_SITE_URL`          | ✅       | Production site URL    |
 
 ---
 
 <a id="contributing"></a>
+
 ## 🤝 Contributing
 
 We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
 ### Quick Contribution Steps
 
 1. Fork the repository
@@ -383,17 +400,18 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 
 ### Development Commands
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start development server |
-| `npm run build` | Build for production |
-| `npm run lint` | Run ESLint |
-| `npm test` | Run the test suite |
+| Command                  | Description               |
+| ------------------------ | ------------------------- |
+| `npm run dev`            | Start development server  |
+| `npm run build`          | Build for production      |
+| `npm run lint`           | Run ESLint                |
+| `npm test`               | Run the test suite        |
 | `npm run security-check` | Run basic secret scanning |
 
 ---
 
 <a id="security"></a>
+
 ## Security
 
 > [!CAUTION]
@@ -406,6 +424,7 @@ See [SECURITY.md](SECURITY.md) for our full security policy.
 ---
 
 <a id="license"></a>
+
 ## License
 
 This project is licensed under the **Apache 2.0 License** - see the [LICENSE](LICENSE) file for details.
@@ -421,6 +440,7 @@ Permission is hereby granted, free of charge, to any person obtaining a copy...
 ---
 
 <a id="acknowledgments"></a>
+
 ## Acknowledgments
 
 - [Next.js](https://nextjs.org/) - The React Framework

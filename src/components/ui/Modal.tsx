@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import { X } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { lockBodyScroll, unlockBodyScroll } from '@/lib/bodyScrollLock';
+import * as React from "react";
+import { X } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { lockBodyScroll, unlockBodyScroll } from "@/lib/bodyScrollLock";
 
 interface ModalProps {
   isOpen: boolean;
@@ -12,31 +12,31 @@ interface ModalProps {
   description?: string;
   children: React.ReactNode;
   footer?: React.ReactNode;
-  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
+  size?: "sm" | "md" | "lg" | "xl" | "full";
   closeOnOverlayClick?: boolean;
 }
 
-const modalSizes: Record<NonNullable<ModalProps['size']>, string> = {
-  sm: 'max-w-md',
-  md: 'max-w-lg',
-  lg: 'max-w-2xl',
-  xl: 'max-w-3xl',
-  full: 'max-w-6xl',
+const modalSizes: Record<NonNullable<ModalProps["size"]>, string> = {
+  sm: "max-w-md",
+  md: "max-w-lg",
+  lg: "max-w-2xl",
+  xl: "max-w-3xl",
+  full: "max-w-6xl",
 };
 
 const FOCUSABLE_SELECTORS = [
-  'a[href]',
-  'area[href]',
-  'button:not([disabled])',
-  'input:not([disabled])',
-  'select:not([disabled])',
-  'textarea:not([disabled])',
-  'iframe',
-  'object',
-  'embed',
+  "a[href]",
+  "area[href]",
+  "button:not([disabled])",
+  "input:not([disabled])",
+  "select:not([disabled])",
+  "textarea:not([disabled])",
+  "iframe",
+  "object",
+  "embed",
   '[tabindex]:not([tabindex="-1"])',
   '[contenteditable="true"]',
-].join(',');
+].join(",");
 
 /**
  * Accessible modal dialog with focus trapping and overlay support.
@@ -48,7 +48,7 @@ export function Modal({
   description,
   children,
   footer,
-  size = 'md',
+  size = "md",
   closeOnOverlayClick = true,
 }: ModalProps): React.ReactElement | null {
   const overlayRef = React.useRef<HTMLDivElement>(null);
@@ -57,7 +57,8 @@ export function Modal({
   const descriptionId = React.useId();
 
   const focusFirstElement = React.useCallback((): void => {
-    const focusable = dialogRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTORS);
+    const focusable =
+      dialogRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTORS);
     if (focusable && focusable.length > 0) {
       focusable[0]?.focus();
       return;
@@ -75,14 +76,15 @@ export function Modal({
     const handleKeyDown = (event: KeyboardEvent): void => {
       if (!dialogRef.current) return;
 
-      if (event.key === 'Escape') {
+      if (event.key === "Escape") {
         event.preventDefault();
         onClose();
         return;
       }
 
-      if (event.key === 'Tab') {
-        const focusable = dialogRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTORS);
+      if (event.key === "Tab") {
+        const focusable =
+          dialogRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTORS);
         if (!focusable.length) return;
         const first = focusable[0];
         const last = focusable[focusable.length - 1];
@@ -100,15 +102,17 @@ export function Modal({
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
 
     return (): void => {
       unlockBodyScroll();
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener("keydown", handleKeyDown);
     };
   }, [focusFirstElement, isOpen, onClose]);
 
-  const handleOverlayClick = (event: React.MouseEvent<HTMLDivElement>): void => {
+  const handleOverlayClick = (
+    event: React.MouseEvent<HTMLDivElement>,
+  ): void => {
     if (!closeOnOverlayClick) return;
     if (event.target !== event.currentTarget) return;
     onClose();
@@ -126,8 +130,8 @@ export function Modal({
       <div
         ref={dialogRef}
         className={cn(
-          'relative flex w-full transform flex-col overflow-hidden rounded-xl bg-white shadow-xl transition-all focus:outline-none dark:border dark:border-slate-800 dark:bg-slate-900',
-          'max-h-[calc(100vh-3rem)]',
+          "relative flex w-full transform flex-col overflow-hidden rounded-xl bg-white shadow-xl transition-all focus:outline-none dark:border dark:border-slate-800 dark:bg-slate-900",
+          "max-h-[calc(100vh-3rem)]",
           modalSizes[size],
         )}
         role="dialog"
@@ -138,11 +142,17 @@ export function Modal({
       >
         <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-slate-200 bg-white/95 px-4 py-4 backdrop-blur dark:border-slate-800 dark:bg-slate-900/95 sm:px-6">
           <div className="flex flex-col gap-1">
-            <h2 id={titleId} className="text-lg font-semibold text-slate-900 dark:text-slate-50">
+            <h2
+              id={titleId}
+              className="text-lg font-semibold text-slate-900 dark:text-slate-50"
+            >
               {title}
             </h2>
             {description ? (
-              <p id={descriptionId} className="text-sm text-slate-600 dark:text-slate-300">
+              <p
+                id={descriptionId}
+                className="text-sm text-slate-600 dark:text-slate-300"
+              >
                 {description}
               </p>
             ) : null}
@@ -156,7 +166,9 @@ export function Modal({
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto px-4 py-4 text-slate-800 dark:text-slate-200 sm:px-6">{children}</div>
+        <div className="flex-1 overflow-y-auto px-4 py-4 text-slate-800 dark:text-slate-200 sm:px-6">
+          {children}
+        </div>
         {footer ? (
           <div className="sticky bottom-0 border-t border-slate-200 bg-white/95 px-4 py-3 backdrop-blur dark:border-slate-800 dark:bg-slate-900/95 sm:px-6 sm:py-4">
             {footer}

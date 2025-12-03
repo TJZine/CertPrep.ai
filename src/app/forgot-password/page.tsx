@@ -1,10 +1,10 @@
-import * as React from 'react';
-import ForgotPasswordForm from '@/components/auth/ForgotPasswordForm';
-import { Metadata } from 'next';
+import * as React from "react";
+import ForgotPasswordForm from "@/components/auth/ForgotPasswordForm";
+import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: 'Forgot Password',
-  description: 'Reset your password',
+  title: "Forgot Password",
+  description: "Reset your password",
 };
 
 export default function ForgotPasswordPage(): React.ReactElement {

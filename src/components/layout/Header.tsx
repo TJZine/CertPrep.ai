@@ -1,40 +1,52 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { Menu, X, LogOut, Home, BarChart3, Library, Settings as SettingsIcon, User as UserIcon } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { lockBodyScroll, unlockBodyScroll } from '@/lib/bodyScrollLock';
-import { ThemeToggleButton } from '@/components/common/ThemeToggleButton';
-import { useAuth } from '@/components/providers/AuthProvider';
-import { Button, buttonVariants } from '@/components/ui/Button';
-import { Logo } from '@/components/common/Logo';
-import { useToast } from '@/components/ui/Toast';
-import { useSync } from '@/hooks/useSync';
-import { logger } from '@/lib/logger';
+import * as React from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import {
+  Menu,
+  X,
+  LogOut,
+  Home,
+  BarChart3,
+  Library,
+  Settings as SettingsIcon,
+  User as UserIcon,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { lockBodyScroll, unlockBodyScroll } from "@/lib/bodyScrollLock";
+import { ThemeToggleButton } from "@/components/common/ThemeToggleButton";
+import { useAuth } from "@/components/providers/AuthProvider";
+import { Button, buttonVariants } from "@/components/ui/Button";
+import { Logo } from "@/components/common/Logo";
+import { useToast } from "@/components/ui/Toast";
+import { useSync } from "@/hooks/useSync";
+import { logger } from "@/lib/logger";
 
 const navigation = [
-  { name: 'Dashboard', href: '/', icon: Home, public: true },
-  { name: 'Analytics', href: '/analytics', icon: BarChart3, public: true },
-  { name: 'Library', href: '/library', icon: Library, public: true },
-  { name: 'Settings', href: '/settings', icon: SettingsIcon, public: false },
+  { name: "Dashboard", href: "/", icon: Home, public: true },
+  { name: "Analytics", href: "/analytics", icon: BarChart3, public: true },
+  { name: "Library", href: "/library", icon: Library, public: true },
+  { name: "Settings", href: "/settings", icon: SettingsIcon, public: false },
 ];
 
 export function Header(): React.ReactElement {
   const pathname = usePathname();
   const { user, signOut } = useAuth();
   const { addToast } = useToast();
-  
+
   // Trigger background sync
   useSync();
-  
+
   React.useEffect(() => {
-    logger.debug('Header: Auth state changed', { user: user?.email });
+    logger.debug("Header: Auth state changed", { user: user?.email });
   }, [user]);
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const [scrolled, setScrolled] = React.useState(false);
-  const handleCloseMenu = React.useCallback((): void => setIsMenuOpen(false), []);
+  const handleCloseMenu = React.useCallback(
+    (): void => setIsMenuOpen(false),
+    [],
+  );
   const menuItemTabIndex = isMenuOpen ? 0 : -1;
 
   // Handle scroll effect for glassmorphism border
@@ -44,9 +56,9 @@ export function Header(): React.ReactElement {
     };
 
     handleScroll(); // initialize on mount
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
 
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   // Close mobile menu on route change
@@ -78,11 +90,14 @@ export function Header(): React.ReactElement {
     try {
       const result = await signOut();
       if (!result.success) {
-        addToast('error', result.error ?? 'Failed to sign out. Please try again.');
+        addToast(
+          "error",
+          result.error ?? "Failed to sign out. Please try again.",
+        );
         return;
       }
     } catch {
-      addToast('error', 'Failed to sign out. Please try again.');
+      addToast("error", "Failed to sign out. Please try again.");
     } finally {
       setIsSigningOut(false);
     }
@@ -91,10 +106,12 @@ export function Header(): React.ReactElement {
   return (
     <header
       className={cn(
-        'sticky top-0 z-50 w-full transition-all duration-200',
-        'bg-white/80 dark:bg-slate-950/80 backdrop-blur-md',
-        'border-b',
-        scrolled ? 'border-slate-200/50 dark:border-slate-800/50 shadow-sm' : 'border-transparent'
+        "sticky top-0 z-50 w-full transition-all duration-200",
+        "bg-white/80 dark:bg-slate-950/80 backdrop-blur-md",
+        "border-b",
+        scrolled
+          ? "border-slate-200/50 dark:border-slate-800/50 shadow-sm"
+          : "border-transparent",
       )}
     >
       <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
@@ -108,19 +125,21 @@ export function Header(): React.ReactElement {
           {navigation.map((item) => {
             // Show if public OR if user is authenticated
             if (!item.public && !user) return null;
-            
-            const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href + '/'));
+
+            const isActive =
+              pathname === item.href ||
+              (item.href !== "/" && pathname.startsWith(item.href + "/"));
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  'text-sm font-medium transition-colors duration-200',
+                  "text-sm font-medium transition-colors duration-200",
                   isActive
-                    ? 'text-blue-600 dark:text-blue-400'
-                    : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'
+                    ? "text-blue-600 dark:text-blue-400"
+                    : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100",
                 )}
-                aria-current={isActive ? 'page' : undefined}
+                aria-current={isActive ? "page" : undefined}
               >
                 {item.name}
               </Link>
@@ -153,13 +172,19 @@ export function Header(): React.ReactElement {
             <div className="flex items-center gap-3">
               <Link
                 href="/login"
-                className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'font-medium')}
+                className={cn(
+                  buttonVariants({ variant: "ghost", size: "sm" }),
+                  "font-medium",
+                )}
               >
                 Log In
               </Link>
               <Link
                 href="/signup"
-                className={cn(buttonVariants({ size: 'sm' }), 'font-medium shadow-sm')}
+                className={cn(
+                  buttonVariants({ size: "sm" }),
+                  "font-medium shadow-sm",
+                )}
               >
                 Sign Up
               </Link>
@@ -177,7 +202,11 @@ export function Header(): React.ReactElement {
             aria-expanded={isMenuOpen}
             aria-label="Toggle menu"
           >
-            {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            {isMenuOpen ? (
+              <X className="h-6 w-6" />
+            ) : (
+              <Menu className="h-6 w-6" />
+            )}
           </button>
         </div>
       </div>
@@ -185,10 +214,10 @@ export function Header(): React.ReactElement {
       {/* Mobile Navigation Sheet */}
       <div
         // @ts-expect-error inert is supported but not yet typed in React DOM
-        inert={!isMenuOpen ? '' : undefined}
+        inert={!isMenuOpen ? "" : undefined}
         className={cn(
-          'fixed inset-x-0 top-16 bottom-0 z-40 bg-white dark:bg-slate-950 md:hidden transition-transform duration-300 ease-in-out',
-          isMenuOpen ? 'translate-x-0' : 'translate-x-full'
+          "fixed inset-x-0 top-16 bottom-0 z-40 bg-white dark:bg-slate-950 md:hidden transition-transform duration-300 ease-in-out",
+          isMenuOpen ? "translate-x-0" : "translate-x-full",
         )}
         aria-hidden={!isMenuOpen}
       >
@@ -196,8 +225,10 @@ export function Header(): React.ReactElement {
           <nav className="flex flex-col space-y-2">
             {navigation.map((item) => {
               if (!item.public && !user) return null;
-              
-              const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href + '/'));
+
+              const isActive =
+                pathname === item.href ||
+                (item.href !== "/" && pathname.startsWith(item.href + "/"));
               const Icon = item.icon;
               return (
                 <Link
@@ -206,10 +237,10 @@ export function Header(): React.ReactElement {
                   onClick={handleCloseMenu}
                   tabIndex={menuItemTabIndex}
                   className={cn(
-                    'flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium transition-colors',
+                    "flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium transition-colors",
                     isActive
-                      ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300'
-                      : 'text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'
+                      ? "bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300"
+                      : "text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800",
                   )}
                 >
                   <Icon className="h-5 w-5" />
@@ -227,8 +258,12 @@ export function Header(): React.ReactElement {
                     <UserIcon className="h-5 w-5" />
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-sm font-medium text-slate-900 dark:text-slate-100">Account</span>
-                    <span className="text-xs text-slate-500 dark:text-slate-400">{user.email}</span>
+                    <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                      Account
+                    </span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400">
+                      {user.email}
+                    </span>
                   </div>
                 </div>
                 <Button
@@ -249,7 +284,10 @@ export function Header(): React.ReactElement {
                   href="/login"
                   onClick={handleCloseMenu}
                   tabIndex={menuItemTabIndex}
-                  className={cn(buttonVariants({ variant: 'outline' }), 'w-full justify-center h-11 text-base')}
+                  className={cn(
+                    buttonVariants({ variant: "outline" }),
+                    "w-full justify-center h-11 text-base",
+                  )}
                 >
                   Log In
                 </Link>
@@ -257,7 +295,10 @@ export function Header(): React.ReactElement {
                   href="/signup"
                   onClick={handleCloseMenu}
                   tabIndex={menuItemTabIndex}
-                  className={cn(buttonVariants(), 'w-full justify-center h-11 text-base shadow-sm')}
+                  className={cn(
+                    buttonVariants(),
+                    "w-full justify-center h-11 text-base shadow-sm",
+                  )}
                 >
                   Sign Up
                 </Link>

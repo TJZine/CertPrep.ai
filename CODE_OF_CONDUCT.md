@@ -16,13 +16,13 @@ diverse, inclusive, and healthy community.
 
 ### ✅ Examples of behavior that contributes to a positive environment:
 
-| Behavior | Example |
-|----------|---------|
-| Empathy & Kindness | "I understand this is frustrating. Let me help." |
-| Respectful Disagreement | "I see it differently, and here's why..." |
-| Constructive Feedback | "Have you considered X? It might help with Y." |
-| Accountability | "I made a mistake. Here's how I'll fix it." |
-| Community Focus | "What's best for the project and community?" |
+| Behavior                | Example                                          |
+| ----------------------- | ------------------------------------------------ |
+| Empathy & Kindness      | "I understand this is frustrating. Let me help." |
+| Respectful Disagreement | "I see it differently, and here's why..."        |
+| Constructive Feedback   | "Have you considered X? It might help with Y."   |
+| Accountability          | "I made a mistake. Here's how I'll fix it."      |
+| Community Focus         | "What's best for the project and community?"     |
 
 ### ❌ Examples of unacceptable behavior:
 

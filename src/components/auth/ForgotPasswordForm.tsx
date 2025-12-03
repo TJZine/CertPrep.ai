@@ -1,18 +1,18 @@
-'use client';
+"use client";
 
-import { useState, useRef, useMemo } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { Button, buttonVariants } from '@/components/ui/Button';
-import { cn } from '@/lib/utils';
-import { Input } from '@/components/ui/Input';
-import { getAuthErrorMessage } from '@/lib/auth-utils';
-import Link from 'next/link';
-import { useToast } from '@/components/ui/Toast';
-import HCaptcha from '@hcaptcha/react-hcaptcha';
+import { useState, useRef, useMemo } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { Button, buttonVariants } from "@/components/ui/Button";
+import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/Input";
+import { getAuthErrorMessage } from "@/lib/auth-utils";
+import Link from "next/link";
+import { useToast } from "@/components/ui/Toast";
+import HCaptcha from "@hcaptcha/react-hcaptcha";
 
 export default function ForgotPasswordForm(): React.ReactElement {
   const supabase = useMemo(() => createClient(), []);
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState("");
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const captchaRef = useRef<HCaptcha>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -27,13 +27,13 @@ export default function ForgotPasswordForm(): React.ReactElement {
 
     // Only validate captcha if the key is present
     if (process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY && !captchaToken) {
-      setError('Please complete the captcha');
+      setError("Please complete the captcha");
       setIsLoading(false);
       return;
     }
 
     if (!supabase) {
-      setError('Authentication service unavailable. Please contact support.');
+      setError("Authentication service unavailable. Please contact support.");
       setIsLoading(false);
       return;
     }
@@ -52,10 +52,10 @@ export default function ForgotPasswordForm(): React.ReactElement {
       }
 
       setIsSuccess(true);
-      addToast('success', 'Password reset link sent!');
+      addToast("success", "Password reset link sent!");
     } catch {
       // Do not log full error to avoid PII leaks
-      setError('An unexpected error occurred. Please try again.');
+      setError("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -66,14 +66,15 @@ export default function ForgotPasswordForm(): React.ReactElement {
       <div className="space-y-6 text-center">
         <h1 className="text-3xl font-bold">Check Your Email</h1>
         <p className="text-gray-500 dark:text-gray-400">
-          We&apos;ve sent a password reset link to <span className="font-medium text-foreground">{email}</span>.
+          We&apos;ve sent a password reset link to{" "}
+          <span className="font-medium text-foreground">{email}</span>.
         </p>
         <p className="text-sm text-gray-500 dark:text-gray-400">
           Click the link in the email to set a new password.
         </p>
-        <Link 
-          href="/login" 
-          className={cn(buttonVariants({ variant: 'outline' }), "w-full")}
+        <Link
+          href="/login"
+          className={cn(buttonVariants({ variant: "outline" }), "w-full")}
         >
           Return to Login
         </Link>
@@ -111,7 +112,7 @@ export default function ForgotPasswordForm(): React.ReactElement {
         </div>
 
         <div className="flex justify-center">
-           {process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY ? (
+          {process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY ? (
             <HCaptcha
               ref={captchaRef}
               sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY}
@@ -126,16 +127,23 @@ export default function ForgotPasswordForm(): React.ReactElement {
         </div>
 
         {error && (
-          <div role="alert" id="email-error" className="text-sm text-red-500 font-medium">
+          <div
+            role="alert"
+            id="email-error"
+            className="text-sm text-red-500 font-medium"
+          >
             {error}
           </div>
         )}
         <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? 'Sending Link...' : 'Send Reset Link'}
+          {isLoading ? "Sending Link..." : "Send Reset Link"}
         </Button>
       </form>
       <div className="text-center text-sm">
-        <Link href="/login" className="underline underline-offset-4 hover:text-primary">
+        <Link
+          href="/login"
+          className="underline underline-offset-4 hover:text-primary"
+        >
           Back to Login
         </Link>
       </div>

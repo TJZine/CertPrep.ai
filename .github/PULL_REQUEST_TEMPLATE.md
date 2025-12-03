@@ -24,8 +24,8 @@
 <!-- If applicable, add screenshots for UI changes -->
 
 | Before | After |
-|--------|-------|
-| | |
+| ------ | ----- |
+|        |       |
 
 ## 🧪 How Has This Been Tested?
 
@@ -37,6 +37,7 @@
 - [ ] E2E tests
 
 **Test Configuration:**
+
 - Device:
 - Browser:
 - Node version:

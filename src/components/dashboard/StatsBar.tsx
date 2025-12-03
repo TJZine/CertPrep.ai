@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import { BookOpen, CheckCircle, BarChart3, Clock } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/Card';
-import { cn } from '@/lib/utils';
+import * as React from "react";
+import { BookOpen, CheckCircle, BarChart3, Clock } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/Card";
+import { cn } from "@/lib/utils";
 
 export interface StatsBarProps {
   totalQuizzes: number;
@@ -27,9 +27,14 @@ interface StatItemProps {
   className?: string;
 }
 
-function StatItem({ icon, value, label, className }: StatItemProps): React.ReactElement {
+function StatItem({
+  icon,
+  value,
+  label,
+  className,
+}: StatItemProps): React.ReactElement {
   return (
-    <Card className={cn('border-slate-200 dark:border-slate-800', className)}>
+    <Card className={cn("border-slate-200 dark:border-slate-800", className)}>
       <CardContent className="flex items-center gap-4 p-4">
         <div
           className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-blue-600 dark:bg-blue-900/40 dark:text-blue-100"
@@ -38,7 +43,9 @@ function StatItem({ icon, value, label, className }: StatItemProps): React.React
           {icon}
         </div>
         <div>
-          <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">{value}</p>
+          <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+            {value}
+          </p>
           <p className="text-sm text-slate-500 dark:text-slate-300">{label}</p>
         </div>
       </CardContent>
@@ -59,29 +66,34 @@ export function StatsBar({
     {
       icon: <BookOpen className="h-6 w-6" aria-hidden="true" />,
       value: totalQuizzes,
-      label: 'Quizzes',
+      label: "Quizzes",
     },
     {
       icon: <CheckCircle className="h-6 w-6" aria-hidden="true" />,
       value: totalAttempts,
-      label: 'Attempts',
+      label: "Attempts",
     },
     {
       icon: <BarChart3 className="h-6 w-6" aria-hidden="true" />,
-      value: averageScore !== null ? `${averageScore}%` : '-',
-      label: 'Avg Score',
+      value: averageScore !== null ? `${averageScore}%` : "-",
+      label: "Avg Score",
     },
     {
       icon: <Clock className="h-6 w-6" aria-hidden="true" />,
       value: formatStudyTime(totalStudyTime),
-      label: 'Study Time',
+      label: "Study Time",
     },
   ];
 
   return (
     <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
       {stats.map((stat) => (
-        <StatItem key={stat.label} icon={stat.icon} value={stat.value} label={stat.label} />
+        <StatItem
+          key={stat.label}
+          icon={stat.icon}
+          value={stat.value}
+          label={stat.label}
+        />
       ))}
     </div>
   );

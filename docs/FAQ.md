@@ -64,4 +64,3 @@ For your **Supabase data**:
 - Quiz sync: `src/lib/sync/quizSyncManager.ts`.
 
 Check your browser console (in development) and Supabase logs for detailed errors.
-

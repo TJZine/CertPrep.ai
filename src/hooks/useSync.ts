@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useAuth } from '@/components/providers/AuthProvider';
-import { syncResults } from '@/lib/sync/syncManager';
-import { syncQuizzes } from '@/lib/sync/quizSyncManager';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useAuth } from "@/components/providers/AuthProvider";
+import { syncResults } from "@/lib/sync/syncManager";
+import { syncQuizzes } from "@/lib/sync/quizSyncManager";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export interface UseSyncReturn {
   /** Manually trigger a sync */
@@ -30,8 +30,8 @@ export function useSync(): UseSyncReturn {
       return;
     }
     lastUserIdRef.current = userId;
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('cp_last_user_id', userId);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("cp_last_user_id", userId);
     }
   }, [userId]);
 
@@ -46,29 +46,34 @@ export function useSync(): UseSyncReturn {
       }
     }
   }, [userId]);
-  
+
   // Expose sync function for E2E testing
   useEffect(() => {
-    if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'production') {
-      (window as Window & { __certprepSync?: () => Promise<void> }).__certprepSync = sync;
+    if (
+      typeof window !== "undefined" &&
+      process.env.NODE_ENV !== "production"
+    ) {
+      (
+        window as Window & { __certprepSync?: () => Promise<void> }
+      ).__certprepSync = sync;
     }
   }, [sync]);
 
   // Auto-sync on mount if user is logged in (handles page reloads/initial login)
   useEffect(() => {
     if (!userId) return;
-    
+
     // Only run initial sync once per user session
     if (initialSyncAttemptedRef.current === userId) return;
-    
+
     initialSyncAttemptedRef.current = userId;
     setHasInitialSyncCompleted(false);
-    
+
     const runInitialSync = async (): Promise<void> => {
       await sync();
       setHasInitialSyncCompleted(true);
     };
-    
+
     void runInitialSync();
   }, [userId, sync]);
 

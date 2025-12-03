@@ -1,16 +1,18 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import { Moon, Sun } from 'lucide-react';
-import { useTheme } from '@/components/common/ThemeProvider';
-import { Button } from '@/components/ui/Button';
-import { cn } from '@/lib/utils';
+import * as React from "react";
+import { Moon, Sun } from "lucide-react";
+import { useTheme } from "@/components/common/ThemeProvider";
+import { Button } from "@/components/ui/Button";
+import { cn } from "@/lib/utils";
 
 interface ThemeToggleButtonProps {
   className?: string;
 }
 
-export function ThemeToggleButton({ className }: ThemeToggleButtonProps): React.ReactElement {
+export function ThemeToggleButton({
+  className,
+}: ThemeToggleButtonProps): React.ReactElement {
   const { toggleTheme } = useTheme();
 
   return (
@@ -21,7 +23,7 @@ export function ThemeToggleButton({ className }: ThemeToggleButtonProps): React.
       aria-label="Toggle theme"
       className={cn(
         "relative text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800",
-        className
+        className,
       )}
     >
       <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />

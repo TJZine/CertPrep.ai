@@ -1,9 +1,9 @@
 ---
 name: 🐛 Bug Report
 about: Report a bug to help us improve
-title: '[BUG] '
-labels: 'bug, needs-triage'
-assignees: ''
+title: "[BUG] "
+labels: "bug, needs-triage"
+assignees: ""
 ---
 
 ## 🐛 Bug Description
@@ -31,12 +31,12 @@ If applicable, add screenshots to help explain your problem.
 
 ## 🌐 Environment
 
-| Property | Value |
-|----------|-------|
-| OS | [e.g., macOS 14.0] |
-| Browser | [e.g., Chrome 120] |
-| Version | [e.g., 2.1.0] |
-| Device | [e.g., Desktop, iPhone 15] |
+| Property | Value                      |
+| -------- | -------------------------- |
+| OS       | [e.g., macOS 14.0]         |
+| Browser  | [e.g., Chrome 120]         |
+| Version  | [e.g., 2.1.0]              |
+| Device   | [e.g., Desktop, iPhone 15] |
 
 ## 📝 Additional Context
 

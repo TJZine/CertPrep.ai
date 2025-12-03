@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import * as React from 'react';
+import * as React from "react";
 
 interface ServiceWorkerState {
   isSupported: boolean;
@@ -27,7 +27,7 @@ export function useServiceWorker(): UseServiceWorkerReturn {
   });
 
   React.useEffect((): void | (() => void) => {
-    if (typeof navigator === 'undefined' || !navigator.serviceWorker) {
+    if (typeof navigator === "undefined" || !navigator.serviceWorker) {
       setState((prev) => ({ ...prev, isSupported: false }));
       return;
     }
@@ -36,18 +36,23 @@ export function useServiceWorker(): UseServiceWorkerReturn {
 
     const registerSW = async (): Promise<void> => {
       try {
-        const registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+        const registration = await navigator.serviceWorker.register("/sw.js", {
+          scope: "/",
+        });
         setState((prev) => ({
           ...prev,
           isRegistered: true,
           registration,
         }));
 
-        registration.addEventListener('updatefound', () => {
+        registration.addEventListener("updatefound", () => {
           const newWorker = registration.installing;
           if (newWorker) {
-            newWorker.addEventListener('statechange', () => {
-              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            newWorker.addEventListener("statechange", () => {
+              if (
+                newWorker.state === "installed" &&
+                navigator.serviceWorker.controller
+              ) {
                 setState((prev) => ({ ...prev, isUpdateAvailable: true }));
               }
             });
@@ -58,7 +63,7 @@ export function useServiceWorker(): UseServiceWorkerReturn {
           setState((prev) => ({ ...prev, isUpdateAvailable: true }));
         }
       } catch (error) {
-        console.error('Service worker registration failed:', error);
+        console.error("Service worker registration failed:", error);
         setState((prev) => ({
           ...prev,
           error: error instanceof Error ? error : new Error(String(error)),
@@ -72,16 +77,22 @@ export function useServiceWorker(): UseServiceWorkerReturn {
       window.location.reload();
     };
 
-    navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange);
+    navigator.serviceWorker.addEventListener(
+      "controllerchange",
+      handleControllerChange,
+    );
 
     return (): void => {
-      navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange);
+      navigator.serviceWorker.removeEventListener(
+        "controllerchange",
+        handleControllerChange,
+      );
     };
   }, []);
 
   const update = React.useCallback(async (): Promise<void> => {
     if (state.registration?.waiting) {
-      state.registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+      state.registration.waiting.postMessage({ type: "SKIP_WAITING" });
     }
   }, [state.registration]);
 

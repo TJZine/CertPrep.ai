@@ -1,19 +1,19 @@
-import type { Metadata, Viewport } from 'next';
-import * as React from 'react';
-import { headers } from 'next/headers';
-import { Inter } from 'next/font/google';
-import { Header } from '@/components/layout/Header';
-import { Footer } from '@/components/layout/Footer';
-import { SkipLink } from '@/components/common/SkipLink';
-import { AppProviders } from '@/components/providers/AppProviders';
-import { APP_NAME } from '@/lib/constants';
-import './globals.css';
+import type { Metadata, Viewport } from "next";
+import * as React from "react";
+import { headers } from "next/headers";
+import { Inter } from "next/font/google";
+import { Header } from "@/components/layout/Header";
+import { Footer } from "@/components/layout/Footer";
+import { SkipLink } from "@/components/common/SkipLink";
+import { AppProviders } from "@/components/providers/AppProviders";
+import { APP_NAME } from "@/lib/constants";
+import "./globals.css";
 
 const inter = Inter({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-inter',
-  fallback: ['system-ui', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-inter",
+  fallback: ["system-ui", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
 });
 
 export const metadata: Metadata = {
@@ -22,31 +22,39 @@ export const metadata: Metadata = {
     template: `%s | ${APP_NAME}`,
   },
   description:
-    'Professional exam simulator with AI-assisted learning. Study offline, track progress, and ace your certification exams.',
-  keywords: ['exam', 'certification', 'study', 'quiz', 'learning', 'offline', 'AI tutor'],
-  authors: [{ name: 'CertPrep.ai' }],
-  creator: 'CertPrep.ai',
-  metadataBase: new URL('https://cert-prep-ai.vercel.app'),
+    "Professional exam simulator with AI-assisted learning. Study offline, track progress, and ace your certification exams.",
+  keywords: [
+    "exam",
+    "certification",
+    "study",
+    "quiz",
+    "learning",
+    "offline",
+    "AI tutor",
+  ],
+  authors: [{ name: "CertPrep.ai" }],
+  creator: "CertPrep.ai",
+  metadataBase: new URL("https://cert-prep-ai.vercel.app"),
   openGraph: {
-    type: 'website',
-    locale: 'en_US',
+    type: "website",
+    locale: "en_US",
     title: APP_NAME,
-    description: 'Professional exam simulator with AI-assisted learning',
+    description: "Professional exam simulator with AI-assisted learning",
     siteName: APP_NAME,
   },
   twitter: {
-    card: 'summary_large_image',
+    card: "summary_large_image",
     title: APP_NAME,
-    description: 'Professional exam simulator with AI-assisted learning',
+    description: "Professional exam simulator with AI-assisted learning",
   },
   robots: {
     index: true,
     follow: true,
   },
-  manifest: '/manifest.json',
+  manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
-    statusBarStyle: 'default',
+    statusBarStyle: "default",
     title: APP_NAME,
   },
   formatDetection: {
@@ -55,16 +63,20 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#2563eb',
-  width: 'device-width',
+  themeColor: "#2563eb",
+  width: "device-width",
   initialScale: 1,
   maximumScale: 5,
   userScalable: true,
 };
 
-export default async function RootLayout({ children }: { children: React.ReactNode }): Promise<React.ReactElement> {
+export default async function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}): Promise<React.ReactElement> {
   const headersList = await headers();
-  const nonce = headersList.get('x-nonce') || undefined;
+  const nonce = headersList.get("x-nonce") || undefined;
 
   return (
     <html lang="en" className={inter.variable} suppressHydrationWarning>

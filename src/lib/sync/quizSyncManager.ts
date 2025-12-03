@@ -1,27 +1,38 @@
-'use client';
+"use client";
 
-import { db } from '@/db';
-import { NIL_UUID } from '@/db';
+import { db, NIL_UUID } from "@/db";
 import {
   getQuizBackfillState,
   getQuizSyncCursor,
   setQuizBackfillDone,
   setQuizSyncCursor,
-} from '@/db/syncState';
-import { logger } from '@/lib/logger';
-import { computeQuizHash, resolveQuizConflict, toLocalQuiz, toRemoteQuiz } from './quizDomain';
-import { fetchUserQuizzes, upsertQuizzes } from './quizRemote';
-import type { Quiz } from '@/types/quiz';
-import { QuestionSchema } from '@/validators/quizSchema';
-import { z } from 'zod';
+} from "@/db/syncState";
+import { logger } from "@/lib/logger";
+import {
+  computeQuizHash,
+  resolveQuizConflict,
+  toLocalQuiz,
+  toRemoteQuiz,
+} from "./quizDomain";
+import { fetchUserQuizzes, upsertQuizzes } from "./quizRemote";
+import type { Quiz } from "@/types/quiz";
+import { QuestionSchema } from "@/validators/quizSchema";
+import { z } from "zod";
 
-async function ensureQuizHash(quiz: Quiz, payloadHash?: string | null): Promise<string> {
-  return payloadHash ?? quiz.quiz_hash ?? await computeQuizHash({
-    title: quiz.title,
-    description: quiz.description,
-    tags: quiz.tags,
-    questions: quiz.questions,
-  });
+async function ensureQuizHash(
+  quiz: Quiz,
+  payloadHash?: string | null,
+): Promise<string> {
+  return (
+    payloadHash ??
+    quiz.quiz_hash ??
+    (await computeQuizHash({
+      title: quiz.title,
+      description: quiz.description,
+      tags: quiz.tags,
+      questions: quiz.questions,
+    }))
+  );
 }
 
 const BATCH_SIZE = 50;
@@ -46,34 +57,42 @@ const syncState = {
   lastSyncAttempt: 0,
 };
 
-export async function syncQuizzes(userId: string): Promise<{ incomplete: boolean }> {
+export async function syncQuizzes(
+  userId: string,
+): Promise<{ incomplete: boolean }> {
   if (!userId) return { incomplete: false };
 
-  if (typeof navigator !== 'undefined' && 'locks' in navigator) {
+  if (typeof navigator !== "undefined" && "locks" in navigator) {
     try {
       return (
-        (await navigator.locks.request(`sync-quizzes-${userId}`, { ifAvailable: true }, async (lock) => {
-          if (!lock) {
-            logger.debug('Quiz sync already in progress in another tab, skipping');
-            return { incomplete: false };
-          }
-          try {
-            return await performQuizSync(userId);
-          } catch (error) {
-            logger.error('Quiz sync failed while holding lock', error);
-            return { incomplete: false };
-          }
-        })) || { incomplete: false }
+        (await navigator.locks.request(
+          `sync-quizzes-${userId}`,
+          { ifAvailable: true },
+          async (lock) => {
+            if (!lock) {
+              logger.debug(
+                "Quiz sync already in progress in another tab, skipping",
+              );
+              return { incomplete: false };
+            }
+            try {
+              return await performQuizSync(userId);
+            } catch (error) {
+              logger.error("Quiz sync failed while holding lock", error);
+              return { incomplete: false };
+            }
+          },
+        )) || { incomplete: false }
       );
     } catch (error) {
-      logger.error('Failed to acquire quiz sync lock request', error);
+      logger.error("Failed to acquire quiz sync lock request", error);
       return { incomplete: false };
     }
   }
 
   if (syncState.isSyncing) {
     if (Date.now() - syncState.lastSyncAttempt > 30000) {
-      logger.warn('Quiz sync lock timed out, resetting');
+      logger.warn("Quiz sync lock timed out, resetting");
       syncState.isSyncing = false;
     } else {
       return { incomplete: false };
@@ -85,15 +104,17 @@ export async function syncQuizzes(userId: string): Promise<{ incomplete: boolean
   try {
     return await performQuizSync(userId);
   } catch (error) {
-    logger.error('Quiz sync failed (fallback path)', error);
+    logger.error("Quiz sync failed (fallback path)", error);
     return { incomplete: false };
   } finally {
     syncState.isSyncing = false;
   }
 }
 
-async function performQuizSync(userId: string): Promise<{ incomplete: boolean }> {
-  performance.mark('quizSync-start');
+async function performQuizSync(
+  userId: string,
+): Promise<{ incomplete: boolean }> {
+  performance.mark("quizSync-start");
   const startTime = Date.now();
   let incomplete = false;
   const stats = { pushed: 0, pulled: 0 };
@@ -108,28 +129,39 @@ async function performQuizSync(userId: string): Promise<{ incomplete: boolean }>
       return { incomplete: true };
     }
 
-    incomplete = (await pushLocalChanges(userId, startTime, stats)) || incomplete;
+    incomplete =
+      (await pushLocalChanges(userId, startTime, stats)) || incomplete;
 
     if (Date.now() - startTime > TIME_BUDGET_MS) {
       return { incomplete: true };
     }
 
-    incomplete = (await pullRemoteChanges(userId, startTime, stats)) || incomplete;
+    incomplete =
+      (await pullRemoteChanges(userId, startTime, stats)) || incomplete;
 
-    logger.info('Quiz sync complete', { userId, pushed: stats.pushed, pulled: stats.pulled, incomplete });
+    logger.info("Quiz sync complete", {
+      userId,
+      pushed: stats.pushed,
+      pulled: stats.pulled,
+      incomplete,
+    });
     return { incomplete };
   } finally {
-    performance.mark('quizSync-end');
-    performance.measure('quizSync', 'quizSync-start', 'quizSync-end');
+    performance.mark("quizSync-end");
+    performance.measure("quizSync", "quizSync-start", "quizSync-end");
     const duration = Date.now() - startTime;
     if (duration > 300) {
-      logger.warn('Slow quiz sync detected', { duration, pushed: stats.pushed, pulled: stats.pulled });
+      logger.warn("Slow quiz sync detected", {
+        duration,
+        pushed: stats.pushed,
+        pulled: stats.pulled,
+      });
     }
   }
 }
 
 async function backfillLocalQuizzes(userId: string): Promise<void> {
-  const quizzes = await db.quizzes.where('user_id').equals(userId).toArray();
+  const quizzes = await db.quizzes.where("user_id").equals(userId).toArray();
 
   if (quizzes.length === 0) {
     await setQuizBackfillDone(userId);
@@ -141,16 +173,23 @@ async function backfillLocalQuizzes(userId: string): Promise<void> {
 
   for (let i = 0; i < quizzes.length; i += BATCH_SIZE) {
     if (Date.now() - startTime > TIME_BUDGET_MS) {
-      logger.warn('Quiz backfill time budget exceeded, pausing.');
+      logger.warn("Quiz backfill time budget exceeded, pausing.");
       return;
     }
 
     const batch = quizzes.slice(i, i + BATCH_SIZE);
-    const payload = await Promise.all(batch.map((quiz) => toRemoteQuiz(userId, quiz)));
+    const payload = await Promise.all(
+      batch.map((quiz) => toRemoteQuiz(userId, quiz)),
+    );
     const { error } = await upsertQuizzes(userId, payload);
-    
+
     if (error) {
-      logger.error('Failed to backfill quizzes to Supabase', { userId, error, batchIndex: i, batchSize: batch.length });
+      logger.error("Failed to backfill quizzes to Supabase", {
+        userId,
+        error,
+        batchIndex: i,
+        batchSize: batch.length,
+      });
       hasErrors = true;
       continue; // Try next batch or abort? Continuing allows partial progress.
     }
@@ -174,9 +213,16 @@ async function backfillLocalQuizzes(userId: string): Promise<void> {
   }
 }
 
-async function pushLocalChanges(userId: string, startTime: number, stats: { pushed: number }): Promise<boolean> {
+async function pushLocalChanges(
+  userId: string,
+  startTime: number,
+  stats: { pushed: number },
+): Promise<boolean> {
   let incomplete = false;
-  const userQuizzes = await db.quizzes.where('user_id').equals(userId).toArray();
+  const userQuizzes = await db.quizzes
+    .where("user_id")
+    .equals(userId)
+    .toArray();
   const dirtyQuizzes = userQuizzes.filter(
     (quiz) =>
       quiz.user_id === userId &&
@@ -186,17 +232,22 @@ async function pushLocalChanges(userId: string, startTime: number, stats: { push
 
   for (let i = 0; i < dirtyQuizzes.length; i += BATCH_SIZE) {
     if (Date.now() - startTime > TIME_BUDGET_MS) {
-      logger.warn('Quiz sync time budget exceeded during push');
+      logger.warn("Quiz sync time budget exceeded during push");
       incomplete = true;
       break;
     }
 
     const batch = dirtyQuizzes.slice(i, i + BATCH_SIZE);
-    const remotePayload = await Promise.all(batch.map((quiz) => toRemoteQuiz(userId, quiz)));
+    const remotePayload = await Promise.all(
+      batch.map((quiz) => toRemoteQuiz(userId, quiz)),
+    );
     const { error } = await upsertQuizzes(userId, remotePayload);
 
     if (error) {
-      logger.error('Failed to push local quizzes to Supabase', { userId, error });
+      logger.error("Failed to push local quizzes to Supabase", {
+        userId,
+        error,
+      });
       continue;
     }
 
@@ -217,13 +268,17 @@ async function pushLocalChanges(userId: string, startTime: number, stats: { push
   return incomplete;
 }
 
-async function pullRemoteChanges(userId: string, startTime: number, stats: { pulled: number }): Promise<boolean> {
+async function pullRemoteChanges(
+  userId: string,
+  startTime: number,
+  stats: { pulled: number },
+): Promise<boolean> {
   let incomplete = false;
   let hasMore = true;
 
   while (hasMore) {
     if (Date.now() - startTime > TIME_BUDGET_MS) {
-      logger.warn('Quiz sync time budget exceeded during pull');
+      logger.warn("Quiz sync time budget exceeded during pull");
       incomplete = true;
       break;
     }
@@ -237,7 +292,7 @@ async function pullRemoteChanges(userId: string, startTime: number, stats: { pul
     });
 
     if (error) {
-      logger.error('Failed to pull quizzes from Supabase', { userId, error });
+      logger.error("Failed to pull quizzes from Supabase", { userId, error });
       break;
     }
 
@@ -269,23 +324,37 @@ async function pullRemoteChanges(userId: string, startTime: number, stats: { pul
     for (const remoteQuiz of remoteQuizzes) {
       const rawUpdatedAt = (remoteQuiz as { updated_at?: unknown }).updated_at;
       let candidateUpdatedAt: string;
-      
-      if (typeof rawUpdatedAt === 'string' && !Number.isNaN(Date.parse(rawUpdatedAt))) {
+
+      if (
+        typeof rawUpdatedAt === "string" &&
+        !Number.isNaN(Date.parse(rawUpdatedAt))
+      ) {
         candidateUpdatedAt = new Date(rawUpdatedAt).toISOString();
       } else {
-        logger.error('Invalid updated_at in remote quiz, advancing cursor to skip record', { quizId: remoteQuiz.id, rawUpdatedAt, userId });
-        const safeLastUpdate = !Number.isNaN(Date.parse(lastSeenTimestamp)) ? new Date(lastSeenTimestamp).getTime() : 0;
-        candidateUpdatedAt = new Date(Math.max(safeLastUpdate + 1, Date.now())).toISOString();
+        logger.error(
+          "Invalid updated_at in remote quiz, advancing cursor to skip record",
+          { quizId: remoteQuiz.id, rawUpdatedAt, userId },
+        );
+        const safeLastUpdate = !Number.isNaN(Date.parse(lastSeenTimestamp))
+          ? new Date(lastSeenTimestamp).getTime()
+          : 0;
+        candidateUpdatedAt = new Date(
+          Math.max(safeLastUpdate + 1, Date.now()),
+        ).toISOString();
       }
       lastSeenTimestamp = candidateUpdatedAt;
 
-      const candidateId = typeof (remoteQuiz as { id?: unknown }).id === 'string'
-        ? (remoteQuiz as { id: string }).id
-        : null; // Do not fallback to cursor.lastId, as that corrupts identity
+      const candidateId =
+        typeof (remoteQuiz as { id?: unknown }).id === "string"
+          ? (remoteQuiz as { id: string }).id
+          : null; // Do not fallback to cursor.lastId, as that corrupts identity
 
       if (!candidateId) {
-        logger.error('Invalid id in remote quiz, advancing cursor to skip record', { rawId: (remoteQuiz as { id?: unknown }).id, userId });
-        lastSeenId = 'skip-invalid-id-' + Date.now(); // Synthetic ID to ensure progress
+        logger.error(
+          "Invalid id in remote quiz, advancing cursor to skip record",
+          { rawId: (remoteQuiz as { id?: unknown }).id, userId },
+        );
+        lastSeenId = "skip-invalid-id-" + Date.now(); // Synthetic ID to ensure progress
       } else {
         lastSeenId = candidateId;
       }
@@ -293,13 +362,13 @@ async function pullRemoteChanges(userId: string, startTime: number, stats: { pul
       const validation = RemoteQuizSchema.safeParse({
         ...remoteQuiz,
         updated_at: candidateUpdatedAt,
-        id: candidateId ?? 'invalid-id-placeholder', // Will fail validation below
+        id: candidateId ?? "invalid-id-placeholder", // Will fail validation below
       });
 
       if (!validation.success) {
-        logger.warn('Skipping invalid remote quiz record', {
-          id: candidateId ?? 'unknown',
-          error: validation.error
+        logger.warn("Skipping invalid remote quiz record", {
+          id: candidateId ?? "unknown",
+          error: validation.error,
         });
         sawInvalid = true;
         continue;
@@ -309,12 +378,12 @@ async function pullRemoteChanges(userId: string, startTime: number, stats: { pul
       const remoteWithUser: Quiz = { ...mappedRemote, user_id: userId };
       sawValid = true;
       lastCursorTimestamp = candidateUpdatedAt;
-      lastCursorId = candidateId ?? 'unknown-id'; // Fallback should not happen due to validation, but satisfies TS
-      
+      lastCursorId = candidateId ?? "unknown-id"; // Fallback should not happen due to validation, but satisfies TS
+
       validatedBatch.push({
         remote: remoteWithUser,
         originalUpdatedAt: candidateUpdatedAt,
-        originalId: candidateId ?? 'unknown-id'
+        originalId: candidateId ?? "unknown-id",
       });
       remoteIds.push(mappedRemote.id);
     }
@@ -329,9 +398,12 @@ async function pullRemoteChanges(userId: string, startTime: number, stats: { pul
     // 3. Process conflicts and prepare save batch
     for (const { remote } of validatedBatch) {
       const localQuiz = localQuizMap.get(remote.id);
-      
+
       if (localQuiz && localQuiz.user_id !== userId) {
-        logger.error('Skipping remote quiz due to user mismatch', { quizId: remote.id, userId });
+        logger.error("Skipping remote quiz due to user mismatch", {
+          quizId: remote.id,
+          userId,
+        });
         continue;
       }
 
@@ -341,8 +413,14 @@ async function pullRemoteChanges(userId: string, startTime: number, stats: { pul
         ...merged,
         user_id: userId,
         quiz_hash: merged.quiz_hash ?? remote.quiz_hash ?? null,
-        last_synced_version: winner === 'remote' ? remote.version : localQuiz?.last_synced_version ?? null,
-        last_synced_at: winner === 'remote' ? now : localQuiz?.last_synced_at ?? merged.last_synced_at ?? null,
+        last_synced_version:
+          winner === "remote"
+            ? remote.version
+            : (localQuiz?.last_synced_version ?? null),
+        last_synced_at:
+          winner === "remote"
+            ? now
+            : (localQuiz?.last_synced_at ?? merged.last_synced_at ?? null),
       };
 
       quizzesToSave.push(mergedWithSync);
@@ -356,20 +434,26 @@ async function pullRemoteChanges(userId: string, startTime: number, stats: { pul
     // If we only saw invalid items, advance past the last seen record to avoid getting stuck,
     // but log so we can diagnose server/client schema drift.
     if (!sawValid && sawInvalid) {
-      logger.error('All remote quizzes in batch failed validation; advancing cursor to avoid sync loop', {
-        userId,
-        lastSeenTimestamp,
-        lastSeenId,
-      });
+      logger.error(
+        "All remote quizzes in batch failed validation; advancing cursor to avoid sync loop",
+        {
+          userId,
+          lastSeenTimestamp,
+          lastSeenId,
+        },
+      );
       lastCursorTimestamp = lastSeenTimestamp;
       lastCursorId = lastSeenId;
     } else if (sawValid && sawInvalid) {
       // Some invalid items after valid ones; advance to last seen to avoid reprocessing the same invalid rows forever.
-      logger.warn('Mixed valid/invalid remote quizzes; advancing cursor past last seen item', {
-        userId,
-        lastSeenTimestamp,
-        lastSeenId,
-      });
+      logger.warn(
+        "Mixed valid/invalid remote quizzes; advancing cursor past last seen item",
+        {
+          userId,
+          lastSeenTimestamp,
+          lastSeenId,
+        },
+      );
       lastCursorTimestamp = lastSeenTimestamp;
       lastCursorId = lastSeenId;
     }

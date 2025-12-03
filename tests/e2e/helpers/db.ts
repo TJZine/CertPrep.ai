@@ -1,7 +1,7 @@
-import type { Page } from '@playwright/test';
-import type { Result } from '../../../src/types/result';
-import type { Quiz } from '../../../src/types/quiz';
-import type { CertPrepDatabase } from '../../../src/db';
+import type { Page } from "@playwright/test";
+import type { Result } from "../../../src/types/result";
+import type { Quiz } from "../../../src/types/quiz";
+import type { CertPrepDatabase } from "../../../src/db";
 
 /**
  * Type declaration for the exposed database on window.
@@ -20,7 +20,7 @@ declare global {
 async function openIndexedDB(page: Page): Promise<void> {
   await page.evaluate(async () => {
     return new Promise<void>((resolve, reject) => {
-      const request = indexedDB.open('CertPrepDatabase');
+      const request = indexedDB.open("CertPrepDatabase");
       request.onerror = (): void => reject(request.error);
       request.onsuccess = (): void => {
         request.result.close();
@@ -40,12 +40,15 @@ async function openIndexedDB(page: Page): Promise<void> {
  * Waits for the Dexie database to be available on window.
  * Falls back to checking raw IndexedDB if Dexie isn't exposed.
  */
-export async function waitForDatabase(page: Page, timeout = 10000): Promise<void> {
+export async function waitForDatabase(
+  page: Page,
+  timeout = 10000,
+): Promise<void> {
   try {
     // First try to wait for Dexie to be exposed
     await page.waitForFunction(
-      () => typeof window.__certprepDb !== 'undefined',
-      { timeout }
+      () => typeof window.__certprepDb !== "undefined",
+      { timeout },
     );
   } catch {
     // Fall back to ensuring IndexedDB is accessible
@@ -60,13 +63,13 @@ export async function waitForDatabase(page: Page, timeout = 10000): Promise<void
 async function queryResultsFromIndexedDB(page: Page): Promise<Result[]> {
   return page.evaluate(async () => {
     return new Promise<Result[]>((resolve, reject) => {
-      const request = indexedDB.open('CertPrepDatabase');
+      const request = indexedDB.open("CertPrepDatabase");
       request.onerror = (): void => reject(request.error);
       request.onsuccess = (): void => {
         const db = request.result;
         try {
-          const tx = db.transaction('results', 'readonly');
-          const store = tx.objectStore('results');
+          const tx = db.transaction("results", "readonly");
+          const store = tx.objectStore("results");
           const getAllRequest = store.getAll();
 
           getAllRequest.onerror = (): void => {
@@ -78,7 +81,10 @@ async function queryResultsFromIndexedDB(page: Page): Promise<Result[]> {
             resolve(getAllRequest.result as Result[]);
           };
         } catch (error) {
-          console.warn('Error querying results table (likely does not exist):', error);
+          console.warn(
+            "Error querying results table (likely does not exist):",
+            error,
+          );
           db.close();
           // Table might not exist yet
           resolve([]);
@@ -97,7 +103,7 @@ async function queryResultsFromIndexedDB(page: Page): Promise<Result[]> {
  */
 export async function getResultsBySyncStatus(
   page: Page,
-  synced: 0 | 1
+  synced: 0 | 1,
 ): Promise<Result[]> {
   const allResults = await queryResultsFromIndexedDB(page);
   return allResults.filter((r) => r.synced === synced);
@@ -112,7 +118,7 @@ export async function getResultsBySyncStatus(
  */
 export async function getResultById(
   page: Page,
-  id: string
+  id: string,
 ): Promise<Result | undefined> {
   const allResults = await queryResultsFromIndexedDB(page);
   return allResults.find((r) => r.id === id);
@@ -127,7 +133,7 @@ export async function getResultById(
  */
 export async function getResultsByUserId(
   page: Page,
-  userId: string
+  userId: string,
 ): Promise<Result[]> {
   const allResults = await queryResultsFromIndexedDB(page);
   return allResults.filter((r) => r.user_id === userId);
@@ -139,13 +145,13 @@ export async function getResultsByUserId(
 async function queryQuizzesFromIndexedDB(page: Page): Promise<Quiz[]> {
   return page.evaluate(async () => {
     return new Promise<Quiz[]>((resolve, reject) => {
-      const request = indexedDB.open('CertPrepDatabase');
+      const request = indexedDB.open("CertPrepDatabase");
       request.onerror = (): void => reject(request.error);
       request.onsuccess = (): void => {
         const db = request.result;
         try {
-          const tx = db.transaction('quizzes', 'readonly');
-          const store = tx.objectStore('quizzes');
+          const tx = db.transaction("quizzes", "readonly");
+          const store = tx.objectStore("quizzes");
           const getAllRequest = store.getAll();
 
           getAllRequest.onerror = (): void => {
@@ -157,7 +163,10 @@ async function queryQuizzesFromIndexedDB(page: Page): Promise<Quiz[]> {
             resolve(getAllRequest.result as Quiz[]);
           };
         } catch (error) {
-          console.warn('Error querying quizzes table (likely does not exist):', error);
+          console.warn(
+            "Error querying quizzes table (likely does not exist):",
+            error,
+          );
           db.close();
           // Table might not exist yet
           resolve([]);
@@ -176,7 +185,7 @@ async function queryQuizzesFromIndexedDB(page: Page): Promise<Quiz[]> {
  */
 export async function getQuizById(
   page: Page,
-  id: string
+  id: string,
 ): Promise<Quiz | undefined> {
   const allQuizzes = await queryQuizzesFromIndexedDB(page);
   return allQuizzes.find((q) => q.id === id);
@@ -202,13 +211,13 @@ export async function seedQuiz(page: Page, quiz: Quiz): Promise<string> {
 
     // Fall back to raw IndexedDB
     return new Promise<string>((resolve, reject) => {
-      const request = indexedDB.open('CertPrepDatabase');
+      const request = indexedDB.open("CertPrepDatabase");
       request.onerror = (): void => reject(request.error);
       request.onsuccess = (): void => {
         const db = request.result;
         try {
-          const tx = db.transaction('quizzes', 'readwrite');
-          const store = tx.objectStore('quizzes');
+          const tx = db.transaction("quizzes", "readwrite");
+          const store = tx.objectStore("quizzes");
           const addRequest = store.put(quizData);
 
           addRequest.onerror = (): void => {
@@ -251,14 +260,16 @@ export async function clearDatabase(page: Page): Promise<void> {
 
     // Fall back to raw IndexedDB
     return new Promise<void>((resolve, reject) => {
-      const request = indexedDB.open('CertPrepDatabase');
+      const request = indexedDB.open("CertPrepDatabase");
       request.onerror = (): void => reject(request.error);
       request.onsuccess = (): void => {
         const db = request.result;
-        const storeNames = ['quizzes', 'results', 'syncState'];
+        const storeNames = ["quizzes", "results", "syncState"];
         const availableStores = Array.from(db.objectStoreNames);
 
-        const storesToClear = storeNames.filter((s) => availableStores.includes(s));
+        const storesToClear = storeNames.filter((s) =>
+          availableStores.includes(s),
+        );
 
         if (storesToClear.length === 0) {
           db.close();
@@ -267,7 +278,7 @@ export async function clearDatabase(page: Page): Promise<void> {
         }
 
         try {
-          const tx = db.transaction(storesToClear, 'readwrite');
+          const tx = db.transaction(storesToClear, "readwrite");
 
           tx.oncomplete = (): void => {
             db.close();
@@ -322,7 +333,7 @@ export async function getAllQuizzes(page: Page): Promise<Quiz[]> {
 export async function resultHasSyncStatus(
   page: Page,
   resultId: string,
-  expectedSynced: 0 | 1
+  expectedSynced: 0 | 1,
 ): Promise<boolean> {
   const result = await getResultById(page, resultId);
   return result?.synced === expectedSynced;

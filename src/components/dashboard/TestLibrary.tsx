@@ -1,15 +1,25 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import { Download, FolderOpen } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
-import { LoadingSpinner } from '@/components/common/LoadingSpinner';
-import { useToast } from '@/components/ui/Toast';
-import { createQuiz } from '@/db/quizzes';
-import { formatValidationErrors, validateQuizImport, type QuizImportInput } from '@/validators/quizSchema';
-import type { Quiz } from '@/types/quiz';
+import * as React from "react";
+import { Download, FolderOpen } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
+import { LoadingSpinner } from "@/components/common/LoadingSpinner";
+import { useToast } from "@/components/ui/Toast";
+import { createQuiz } from "@/db/quizzes";
+import {
+  formatValidationErrors,
+  validateQuizImport,
+  type QuizImportInput,
+} from "@/validators/quizSchema";
+import type { Quiz } from "@/types/quiz";
 
 interface TestManifestEntry {
   id: string;
@@ -33,22 +43,28 @@ interface TestLibraryProps {
 /**
  * Renders the built-in test library with one-click imports.
  */
-export function TestLibrary({ existingQuizzes, onImportSuccess, userId }: TestLibraryProps): React.ReactElement {
+export function TestLibrary({
+  existingQuizzes,
+  onImportSuccess,
+  userId,
+}: TestLibraryProps): React.ReactElement {
   const [manifest, setManifest] = React.useState<TestManifestEntry[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [importingId, setImportingId] = React.useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = React.useState('');
-  const [categoryFilter, setCategoryFilter] = React.useState<string>('all');
+  const [searchTerm, setSearchTerm] = React.useState("");
+  const [categoryFilter, setCategoryFilter] = React.useState<string>("all");
   const { addToast } = useToast();
 
   React.useEffect(() => {
     let isMounted = true;
     const loadManifest = async (): Promise<void> => {
       try {
-        const response = await fetch('/tests/index.json', { cache: 'no-cache' });
+        const response = await fetch("/tests/index.json", {
+          cache: "no-cache",
+        });
         if (!response.ok) {
-          throw new Error('Unable to load test library.');
+          throw new Error("Unable to load test library.");
         }
         const data = (await response.json()) as TestManifest;
         if (isMounted) {
@@ -56,9 +72,9 @@ export function TestLibrary({ existingQuizzes, onImportSuccess, userId }: TestLi
           setError(null);
         }
       } catch (err) {
-        console.error('Failed to load test manifest', err);
+        console.error("Failed to load test manifest", err);
         if (isMounted) {
-          setError('Failed to load the test library. Please try again later.');
+          setError("Failed to load the test library. Please try again later.");
         }
       } finally {
         if (isMounted) {
@@ -83,7 +99,10 @@ export function TestLibrary({ existingQuizzes, onImportSuccess, userId }: TestLi
     return ids;
   }, [existingQuizzes]);
 
-  const isImported = React.useCallback((entry: TestManifestEntry): boolean => importedSourceIds.has(entry.id), [importedSourceIds]);
+  const isImported = React.useCallback(
+    (entry: TestManifestEntry): boolean => importedSourceIds.has(entry.id),
+    [importedSourceIds],
+  );
 
   const categories = React.useMemo(() => {
     const unique = new Set<string>();
@@ -92,14 +111,16 @@ export function TestLibrary({ existingQuizzes, onImportSuccess, userId }: TestLi
         unique.add(entry.category);
       }
     });
-    return ['all', ...Array.from(unique).sort((a, b) => a.localeCompare(b))];
+    return ["all", ...Array.from(unique).sort((a, b) => a.localeCompare(b))];
   }, [manifest]);
 
   const filteredManifest = React.useMemo(() => {
     const search = searchTerm.trim().toLowerCase();
     return manifest.filter((entry) => {
-      const matchesCategory = categoryFilter === 'all' || entry.category === categoryFilter;
-      const haystack = `${entry.title} ${entry.description} ${entry.category} ${entry.subcategory ?? ''}`.toLowerCase();
+      const matchesCategory =
+        categoryFilter === "all" || entry.category === categoryFilter;
+      const haystack =
+        `${entry.title} ${entry.description} ${entry.category} ${entry.subcategory ?? ""}`.toLowerCase();
       const matchesSearch = search.length === 0 || haystack.includes(search);
       return matchesCategory && matchesSearch;
     });
@@ -107,7 +128,7 @@ export function TestLibrary({ existingQuizzes, onImportSuccess, userId }: TestLi
 
   const handleImport = async (entry: TestManifestEntry): Promise<void> => {
     if (isImported(entry)) {
-      addToast('info', `"${entry.title}" is already in your library.`);
+      addToast("info", `"${entry.title}" is already in your library.`);
       return;
     }
 
@@ -115,22 +136,30 @@ export function TestLibrary({ existingQuizzes, onImportSuccess, userId }: TestLi
     try {
       const response = await fetch(encodeURI(entry.path));
       if (!response.ok) {
-        throw new Error('Unable to download test file.');
+        throw new Error("Unable to download test file.");
       }
 
       const payload = (await response.json()) as QuizImportInput;
       const validation = validateQuizImport(payload);
       if (!validation.success || !validation.data) {
-        const message = formatValidationErrors(validation.errors ?? []) || 'Test file is invalid.';
+        const message =
+          formatValidationErrors(validation.errors ?? []) ||
+          "Test file is invalid.";
         throw new Error(message);
       }
 
-      const quiz = await createQuiz(validation.data, { sourceId: entry.id, userId });
-      addToast('success', `"${quiz.title}" imported successfully.`);
+      const quiz = await createQuiz(validation.data, {
+        sourceId: entry.id,
+        userId,
+      });
+      addToast("success", `"${quiz.title}" imported successfully.`);
       onImportSuccess(quiz);
     } catch (err) {
-      console.error('Import failed', err);
-      addToast('error', err instanceof Error ? err.message : 'Failed to import test.');
+      console.error("Import failed", err);
+      addToast(
+        "error",
+        err instanceof Error ? err.message : "Failed to import test.",
+      );
     } finally {
       setImportingId(null);
     }
@@ -143,7 +172,10 @@ export function TestLibrary({ existingQuizzes, onImportSuccess, userId }: TestLi
           <FolderOpen className="h-5 w-5" aria-hidden="true" />
           Built-in Test Library
         </CardTitle>
-        <CardDescription>Quickly add curated practice tests to your library. Content stays local to your device.</CardDescription>
+        <CardDescription>
+          Quickly add curated practice tests to your library. Content stays
+          local to your device.
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {isLoading ? (
@@ -155,7 +187,9 @@ export function TestLibrary({ existingQuizzes, onImportSuccess, userId }: TestLi
             {error}
           </div>
         ) : manifest.length === 0 ? (
-          <p className="text-sm text-slate-600 dark:text-slate-300">No built-in tests are available yet.</p>
+          <p className="text-sm text-slate-600 dark:text-slate-300">
+            No built-in tests are available yet.
+          </p>
         ) : (
           <>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -168,7 +202,10 @@ export function TestLibrary({ existingQuizzes, onImportSuccess, userId }: TestLi
                 aria-label="Search built-in tests"
               />
               <div className="flex items-center gap-2">
-                <label htmlFor="category-filter" className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                <label
+                  htmlFor="category-filter"
+                  className="text-sm font-medium text-slate-700 dark:text-slate-200"
+                >
                   Category
                 </label>
                 <select
@@ -179,7 +216,7 @@ export function TestLibrary({ existingQuizzes, onImportSuccess, userId }: TestLi
                 >
                   {categories.map((category) => (
                     <option key={category} value={category}>
-                      {category === 'all' ? 'All' : category}
+                      {category === "all" ? "All" : category}
                     </option>
                   ))}
                 </select>
@@ -187,7 +224,9 @@ export function TestLibrary({ existingQuizzes, onImportSuccess, userId }: TestLi
             </div>
 
             {filteredManifest.length === 0 ? (
-              <p className="text-sm text-slate-600 dark:text-slate-300">No tests match your filters.</p>
+              <p className="text-sm text-slate-600 dark:text-slate-300">
+                No tests match your filters.
+              </p>
             ) : (
               <div className="grid gap-3 md:grid-cols-2">
                 {filteredManifest.map((entry) => {
@@ -200,8 +239,12 @@ export function TestLibrary({ existingQuizzes, onImportSuccess, userId }: TestLi
                       <div className="flex flex-col gap-1">
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0">
-                            <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">{entry.title}</h3>
-                            <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{entry.description}</p>
+                            <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">
+                              {entry.title}
+                            </h3>
+                            <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                              {entry.description}
+                            </p>
                           </div>
                           <Badge
                             variant="secondary"
@@ -211,24 +254,36 @@ export function TestLibrary({ existingQuizzes, onImportSuccess, userId }: TestLi
                           </Badge>
                         </div>
                         {entry.subcategory ? (
-                          <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">{entry.subcategory}</p>
+                          <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                            {entry.subcategory}
+                          </p>
                         ) : null}
                       </div>
                       <div className="flex items-center justify-between">
                         <span
                           className="text-xs text-slate-500 dark:text-slate-300"
-                          aria-label={imported ? 'Already imported' : 'Ready to import'}
+                          aria-label={
+                            imported ? "Already imported" : "Ready to import"
+                          }
                         >
-                          {imported ? 'Already in your library' : 'Not imported yet'}
+                          {imported
+                            ? "Already in your library"
+                            : "Not imported yet"}
                         </span>
                         <Button
-                          variant={imported ? 'outline' : 'default'}
+                          variant={imported ? "outline" : "default"}
                           size="sm"
                           onClick={() => void handleImport(entry)}
                           disabled={imported || importingId === entry.id}
-                          leftIcon={<Download className="h-4 w-4" aria-hidden="true" />}
+                          leftIcon={
+                            <Download className="h-4 w-4" aria-hidden="true" />
+                          }
                         >
-                          {imported ? 'Imported' : importingId === entry.id ? 'Importing...' : 'Import'}
+                          {imported
+                            ? "Imported"
+                            : importingId === entry.id
+                              ? "Importing..."
+                              : "Import"}
                         </Button>
                       </div>
                     </div>

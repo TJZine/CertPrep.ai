@@ -1,19 +1,19 @@
-'use client';
+"use client";
 
-import React, { useState, useRef, useMemo, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { getAuthErrorMessage } from '@/lib/auth-utils';
-import Link from 'next/link';
-import { useToast } from '@/components/ui/Toast';
-import HCaptcha from '@hcaptcha/react-hcaptcha';
+import React, { useState, useRef, useMemo, useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { getAuthErrorMessage } from "@/lib/auth-utils";
+import Link from "next/link";
+import { useToast } from "@/components/ui/Toast";
+import HCaptcha from "@hcaptcha/react-hcaptcha";
 
 export default function LoginForm(): React.ReactElement {
   const supabase = useMemo(() => createClient(), []);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const captchaRef = useRef<HCaptcha>(null);
   const [loading, setLoading] = useState(false);
@@ -24,9 +24,11 @@ export default function LoginForm(): React.ReactElement {
   useEffect(() => {
     const checkSession = async (): Promise<void> => {
       if (!supabase) return;
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (session) {
-        router.push('/dashboard');
+        router.push("/dashboard");
       }
     };
 
@@ -40,13 +42,13 @@ export default function LoginForm(): React.ReactElement {
 
     // Only validate captcha if the key is present
     if (process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY && !captchaToken) {
-      setError('Please complete the captcha');
+      setError("Please complete the captcha");
       setLoading(false);
       return;
     }
 
     if (!supabase) {
-      setError('Authentication service unavailable. Please contact support.');
+      setError("Authentication service unavailable. Please contact support.");
       setLoading(false);
       return;
     }
@@ -64,13 +66,13 @@ export default function LoginForm(): React.ReactElement {
         throw signInError;
       }
 
-      router.push('/dashboard');
+      router.push("/dashboard");
       router.refresh();
     } catch (err: unknown) {
-      console.error('LoginForm: Login error', err);
+      console.error("LoginForm: Login error", err);
       const message = getAuthErrorMessage(err);
       setError(message);
-      addToast('error', message);
+      addToast("error", message);
     } finally {
       setLoading(false);
       // Reset captcha on failure so user can try again
@@ -89,10 +91,7 @@ export default function LoginForm(): React.ReactElement {
           Enter your credentials to access your account
         </p>
       </div>
-      <form 
-        onSubmit={handleSubmit}
-        className="space-y-4"
-      >
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
           <label
             htmlFor="email"
@@ -143,21 +142,18 @@ export default function LoginForm(): React.ReactElement {
         </div>
 
         {error && (
-          <div className="text-sm text-red-500 font-medium">
-            {error}
-          </div>
+          <div className="text-sm text-red-500 font-medium">{error}</div>
         )}
-        <Button
-          type="submit"
-          className="w-full"
-          disabled={loading}
-        >
-          {loading ? 'Signing in...' : 'Sign In'}
+        <Button type="submit" className="w-full" disabled={loading}>
+          {loading ? "Signing in..." : "Sign In"}
         </Button>
       </form>
       <div className="text-center text-sm">
-        Don&apos;t have an account?{' '}
-        <Link href="/signup" className="underline underline-offset-4 hover:text-primary">
+        Don&apos;t have an account?{" "}
+        <Link
+          href="/signup"
+          className="underline underline-offset-4 hover:text-primary"
+        >
           Sign up
         </Link>
       </div>

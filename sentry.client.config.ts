@@ -19,7 +19,7 @@ if (!Sentry.getClient()) {
     ],
 
     // Define how likely traces are sampled. Adjust this value in production, or use tracesSampler for greater control.
-    tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
+    tracesSampleRate: process.env.NODE_ENV === "production" ? 0.1 : 1.0,
 
     // Define how likely Replay events are sampled.
     // This sets the sample rate to be 10%. You may want this to be 100% while
@@ -37,8 +37,10 @@ if (!Sentry.getClient()) {
       if (event.exception?.values) {
         event.exception.values.forEach((exception) => {
           if (exception.value) {
-            exception.value = exception.value
-              .replace(/(password|secret|key|token|auth)[=:\s]+([^\s,;]+)/gi, '$1=[REDACTED]');
+            exception.value = exception.value.replace(
+              /(password|secret|key|token|auth)[=:\s]+([^\s,;]+)/gi,
+              "$1=[REDACTED]",
+            );
           }
         });
       }

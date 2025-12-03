@@ -1,12 +1,16 @@
-import { Dexie } from 'dexie';
-import { db } from './index';
-import { sanitizeQuestionText } from '@/lib/sanitize';
-import { calculatePercentage, generateUUID, hashAnswer } from '@/lib/utils';
-import type { Question, Quiz } from '@/types/quiz';
-import { computeQuizHash } from '@/lib/sync/quizDomain';
-import type { QuizImportInput } from '@/validators/quizSchema';
-import { formatValidationErrors, validateQuizImport, QuestionSchema } from '@/validators/quizSchema';
-import { z } from 'zod';
+import { Dexie } from "dexie";
+import { db } from "./index";
+import { sanitizeQuestionText } from "@/lib/sanitize";
+import { calculatePercentage, generateUUID, hashAnswer } from "@/lib/utils";
+import type { Question, Quiz } from "@/types/quiz";
+import { computeQuizHash } from "@/lib/sync/quizDomain";
+import type { QuizImportInput } from "@/validators/quizSchema";
+import {
+  formatValidationErrors,
+  validateQuizImport,
+  QuestionSchema,
+} from "@/validators/quizSchema";
+import { z } from "zod";
 
 export interface CreateQuizInput {
   title: string;
@@ -29,22 +33,28 @@ export interface QuizStats {
 export function sanitizeQuestions(questions: unknown[]): Question[] {
   // Validate structure first
   const parsedQuestions = z.array(QuestionSchema).safeParse(questions);
-  
+
   if (!parsedQuestions.success) {
     // If validation fails, we log it but try to salvage what we can or throw?
     // For now, let's throw to prevent bad data from entering the DB, as per code review.
-    const errorMsg = formatValidationErrors(parsedQuestions.error.issues.map(issue => ({
-      path: issue.path.map((segment) => typeof segment === 'symbol' ? segment.toString() : segment),
-      message: issue.message
-    })));
+    const errorMsg = formatValidationErrors(
+      parsedQuestions.error.issues.map((issue) => ({
+        path: issue.path.map((segment) =>
+          typeof segment === "symbol" ? segment.toString() : segment,
+        ),
+        message: issue.message,
+      })),
+    );
     throw new Error(`Invalid questions data: ${errorMsg}`);
   }
 
   return parsedQuestions.data.map((q) => {
     // We can trust the shape now, but we still want to sanitize text fields for XSS prevention
     const options = q.options;
-    
-    const sanitizedOptions: Record<string, string> = Object.entries(options).reduce(
+
+    const sanitizedOptions: Record<string, string> = Object.entries(
+      options,
+    ).reduce(
       (acc, [key, value]) => {
         acc[key] = sanitizeQuestionText(value);
         return acc;
@@ -62,12 +72,16 @@ export function sanitizeQuestions(questions: unknown[]): Question[] {
       category: sanitizeQuestionText(q.category),
       question: sanitizeQuestionText(q.question),
       explanation: sanitizeQuestionText(q.explanation),
-      distractor_logic: q.distractor_logic ? sanitizeQuestionText(q.distractor_logic) : undefined,
+      distractor_logic: q.distractor_logic
+        ? sanitizeQuestionText(q.distractor_logic)
+        : undefined,
       ai_prompt: q.ai_prompt ? sanitizeQuestionText(q.ai_prompt) : undefined,
       user_notes: q.user_notes ? sanitizeQuestionText(q.user_notes) : undefined,
       options: sanitizedOptions,
       correct_answer_hash: q.correct_answer_hash,
-      correct_answer: q.correct_answer ? sanitizeQuestionText(q.correct_answer) : undefined,
+      correct_answer: q.correct_answer
+        ? sanitizeQuestionText(q.correct_answer)
+        : undefined,
     };
   });
 }
@@ -75,9 +89,12 @@ export function sanitizeQuestions(questions: unknown[]): Question[] {
 /**
  * Validates, sanitizes, and persists a new quiz.
  */
-export async function createQuiz(input: QuizImportInput, meta: { userId: string; sourceId?: string }): Promise<Quiz> {
+export async function createQuiz(
+  input: QuizImportInput,
+  meta: { userId: string; sourceId?: string },
+): Promise<Quiz> {
   if (!meta.userId) {
-    throw new Error('Missing userId for quiz creation.');
+    throw new Error("Missing userId for quiz creation.");
   }
   const validation = validateQuizImport(input);
 
@@ -90,29 +107,37 @@ export async function createQuiz(input: QuizImportInput, meta: { userId: string;
   const sanitizedQuestionList = sanitizeQuestions(validatedData.questions);
   const sanitizedQuestions = await Promise.all(
     sanitizedQuestionList.map(async (sanitized, index) => {
-      const original = validatedData.questions[index] as Question & { correct_answer?: string };
+      const original = validatedData.questions[index] as Question & {
+        correct_answer?: string;
+      };
 
       let hash = sanitized.correct_answer_hash;
       if (!hash && original.correct_answer) {
         hash = await hashAnswer(original.correct_answer);
       }
       if (!hash) {
-        throw new Error(`Question ${sanitized.id} is missing correct_answer_hash`);
+        throw new Error(
+          `Question ${sanitized.id} is missing correct_answer_hash`,
+        );
       }
-      
+
       const { correct_answer: _correct_answer, ...rest } = sanitized;
       void _correct_answer;
-      
+
       return {
         ...rest,
         correct_answer_hash: hash,
       };
-    })
+    }),
   );
 
   const sanitizedTitle = sanitizeQuestionText(validation.data.title);
-  const sanitizedDescription = sanitizeQuestionText(validation.data.description ?? '');
-  const sanitizedTags = (validation.data.tags ?? []).map((tag) => sanitizeQuestionText(tag));
+  const sanitizedDescription = sanitizeQuestionText(
+    validation.data.description ?? "",
+  );
+  const sanitizedTags = (validation.data.tags ?? []).map((tag) =>
+    sanitizeQuestionText(tag),
+  );
   const createdAt = Date.now();
   const quiz: Quiz = {
     id: generateUUID(),
@@ -145,17 +170,21 @@ export async function createQuiz(input: QuizImportInput, meta: { userId: string;
  */
 export async function getAllQuizzes(userId: string): Promise<Quiz[]> {
   const quizzes = await db.quizzes
-    .where('user_id').equals(userId)
-    .and(quiz => quiz.deleted_at === null || quiz.deleted_at === undefined)
+    .where("user_id")
+    .equals(userId)
+    .and((quiz) => quiz.deleted_at === null || quiz.deleted_at === undefined)
     .toArray();
-  
+
   return quizzes.sort((a, b) => b.created_at - a.created_at);
 }
 
 /**
  * Retrieves a single quiz by its identifier.
  */
-export async function getQuizById(id: string, userId: string): Promise<Quiz | undefined> {
+export async function getQuizById(
+  id: string,
+  userId: string,
+): Promise<Quiz | undefined> {
   const quiz = await db.quizzes.get(id);
   if (!quiz || quiz.user_id !== userId) {
     return undefined;
@@ -166,18 +195,24 @@ export async function getQuizById(id: string, userId: string): Promise<Quiz | un
 /**
  * Searches quizzes by title and tags with case-insensitive matching.
  */
-export async function searchQuizzes(query: string, userId: string): Promise<Quiz[]> {
+export async function searchQuizzes(
+  query: string,
+  userId: string,
+): Promise<Quiz[]> {
   const trimmedQuery = query.trim().toLowerCase();
   if (!trimmedQuery) {
     return getAllQuizzes(userId);
   }
 
   return db.quizzes
-    .where('user_id').equals(userId)
-    .and(quiz => quiz.deleted_at === null || quiz.deleted_at === undefined)
+    .where("user_id")
+    .equals(userId)
+    .and((quiz) => quiz.deleted_at === null || quiz.deleted_at === undefined)
     .filter((quiz) => {
       const titleMatch = quiz.title.toLowerCase().includes(trimmedQuery);
-      const tagMatch = quiz.tags.some((tag) => tag.toLowerCase().includes(trimmedQuery));
+      const tagMatch = quiz.tags.some((tag) =>
+        tag.toLowerCase().includes(trimmedQuery),
+      );
       return titleMatch || tagMatch;
     })
     .toArray();
@@ -189,18 +224,20 @@ export async function searchQuizzes(query: string, userId: string): Promise<Quiz
 export async function updateQuiz(
   id: string,
   userId: string,
-  updates: Partial<Omit<Quiz, 'id' | 'created_at'>>,
+  updates: Partial<Omit<Quiz, "id" | "created_at">>,
 ): Promise<void> {
-  await db.transaction('rw', db.quizzes, async () => {
+  await db.transaction("rw", db.quizzes, async () => {
     const existing = await db.quizzes.get(id);
     if (!existing) {
-      throw new Error('Quiz not found.');
+      throw new Error("Quiz not found.");
     }
     if (existing.user_id !== userId) {
-      throw new Error('Unauthorized quiz update.');
+      throw new Error("Unauthorized quiz update.");
     }
 
-    const sanitizedUpdates: Partial<Omit<Quiz, 'id' | 'created_at'>> = { ...updates };
+    const sanitizedUpdates: Partial<Omit<Quiz, "id" | "created_at">> = {
+      ...updates,
+    };
 
     if (updates.questions !== undefined) {
       // We need to handle hashing BEFORE sanitization strips the correct_answer.
@@ -215,18 +252,20 @@ export async function updateQuiz(
           const rawQWithAnswer = rawQ as Question & { correct_answer?: string };
 
           let hash = q.correct_answer_hash;
-          
+
           // If no hash exists on the sanitized output (meaning none was preserved),
           // try to compute it from the raw input's correct_answer.
           if (!hash && rawQWithAnswer.correct_answer) {
             // Wrap async crypto in Dexie.waitFor to keep transaction alive
-            hash = await Dexie.waitFor(hashAnswer(rawQWithAnswer.correct_answer));
+            hash = await Dexie.waitFor(
+              hashAnswer(rawQWithAnswer.correct_answer),
+            );
           }
 
           if (!hash) {
             // Fallback: check if the existing question had a hash we can preserve
             // if this is an update to an existing question.
-            const existingQ = existing.questions.find(eq => eq.id === q.id);
+            const existingQ = existing.questions.find((eq) => eq.id === q.id);
             if (existingQ?.correct_answer_hash) {
               hash = existingQ.correct_answer_hash;
             }
@@ -252,26 +291,39 @@ export async function updateQuiz(
     }
 
     if (updates.tags !== undefined) {
-      sanitizedUpdates.tags = updates.tags.map((tag) => sanitizeQuestionText(tag));
+      sanitizedUpdates.tags = updates.tags.map((tag) =>
+        sanitizeQuestionText(tag),
+      );
     }
 
     const nextTitle = sanitizedUpdates.title ?? existing.title;
-    const nextDescription = sanitizedUpdates.description ?? existing.description;
+    const nextDescription =
+      sanitizedUpdates.description ?? existing.description;
     const nextTags = sanitizedUpdates.tags ?? existing.tags;
     const nextQuestions = sanitizedUpdates.questions ?? existing.questions;
-    const shouldBumpVersion = ['questions', 'title', 'description', 'tags'].some(
-      (key) => key in sanitizedUpdates,
-    );
-    const updatedAt = shouldBumpVersion || 'deleted_at' in sanitizedUpdates ? Date.now() : (existing.updated_at ?? existing.created_at);
-    const nextVersion = shouldBumpVersion ? existing.version + 1 : existing.version;
-    
+    const shouldBumpVersion = [
+      "questions",
+      "title",
+      "description",
+      "tags",
+    ].some((key) => key in sanitizedUpdates);
+    const updatedAt =
+      shouldBumpVersion || "deleted_at" in sanitizedUpdates
+        ? Date.now()
+        : (existing.updated_at ?? existing.created_at);
+    const nextVersion = shouldBumpVersion
+      ? existing.version + 1
+      : existing.version;
+
     // Wrap async crypto in Dexie.waitFor
-    const nextHash = await Dexie.waitFor(computeQuizHash({
-      title: nextTitle,
-      description: nextDescription,
-      tags: nextTags,
-      questions: nextQuestions,
-    }));
+    const nextHash = await Dexie.waitFor(
+      computeQuizHash({
+        title: nextTitle,
+        description: nextDescription,
+        tags: nextTags,
+        questions: nextQuestions,
+      }),
+    );
 
     await db.quizzes.update(id, {
       ...sanitizedUpdates,
@@ -287,13 +339,13 @@ export async function updateQuiz(
  * Soft-deletes a quiz (sets deleted_at) but preserves associated results.
  */
 export async function deleteQuiz(id: string, userId: string): Promise<void> {
-  await db.transaction('rw', db.quizzes, async () => {
+  await db.transaction("rw", db.quizzes, async () => {
     const existing = await db.quizzes.get(id);
     if (!existing) {
-      throw new Error('Quiz not found.');
+      throw new Error("Quiz not found.");
     }
     if (existing.user_id !== userId) {
-      throw new Error('Unauthorized quiz delete.');
+      throw new Error("Unauthorized quiz delete.");
     }
     const deletedAt = Date.now();
     await db.quizzes.update(id, {
@@ -306,13 +358,13 @@ export async function deleteQuiz(id: string, userId: string): Promise<void> {
 }
 
 export async function undeleteQuiz(id: string, userId: string): Promise<void> {
-  await db.transaction('rw', db.quizzes, async () => {
+  await db.transaction("rw", db.quizzes, async () => {
     const existing = await db.quizzes.get(id);
     if (!existing) {
-      throw new Error('Quiz not found.');
+      throw new Error("Quiz not found.");
     }
     if (existing.user_id !== userId) {
-      throw new Error('Unauthorized quiz restore.');
+      throw new Error("Unauthorized quiz restore.");
     }
     const updatedAt = Date.now();
     await db.quizzes.update(id, {
@@ -327,8 +379,14 @@ export async function undeleteQuiz(id: string, userId: string): Promise<void> {
 /**
  * Aggregates quiz statistics from associated results.
  */
-export async function getQuizStats(quizId: string, userId: string): Promise<QuizStats> {
-  const attempts = await db.results.where('[user_id+quiz_id]').equals([userId, quizId]).sortBy('timestamp');
+export async function getQuizStats(
+  quizId: string,
+  userId: string,
+): Promise<QuizStats> {
+  const attempts = await db.results
+    .where("[user_id+quiz_id]")
+    .equals([userId, quizId])
+    .sortBy("timestamp");
   const attemptCount = attempts.length;
 
   if (attemptCount === 0) {
@@ -358,7 +416,10 @@ export async function getQuizStats(quizId: string, userId: string): Promise<Quiz
   const totalScore = attempts.reduce((sum, attempt) => sum + attempt.score, 0);
   const bestScore = Math.max(...attempts.map((attempt) => attempt.score));
   const averageScore = calculatePercentage(totalScore, attemptCount * 100);
-  const totalStudyTime = attempts.reduce((sum, attempt) => sum + attempt.time_taken_seconds, 0);
+  const totalStudyTime = attempts.reduce(
+    (sum, attempt) => sum + attempt.time_taken_seconds,
+    0,
+  );
 
   return {
     quizId,
@@ -374,32 +435,46 @@ export async function getQuizStats(quizId: string, userId: string): Promise<Quiz
 /**
  * Updates notes for a specific question within a quiz.
  */
-export async function updateQuestionNotes(quizId: string, questionId: string, notes: string, userId: string): Promise<void> {
-  await db.transaction('rw', db.quizzes, async () => {
+export async function updateQuestionNotes(
+  quizId: string,
+  questionId: string,
+  notes: string,
+  userId: string,
+): Promise<void> {
+  await db.transaction("rw", db.quizzes, async () => {
     const quiz = await db.quizzes.get(quizId);
 
     if (!quiz) {
-      throw new Error('Quiz not found.');
+      throw new Error("Quiz not found.");
     }
     if (quiz.user_id !== userId) {
-      throw new Error('Unauthorized quiz update.');
+      throw new Error("Unauthorized quiz update.");
     }
 
     const updatedQuestions = quiz.questions.map((question) =>
-      question.id === questionId ? { ...question, user_notes: sanitizeQuestionText(notes) } : question,
+      question.id === questionId
+        ? { ...question, user_notes: sanitizeQuestionText(notes) }
+        : question,
     );
 
     const updatedAt = Date.now();
     const nextVersion = quiz.version + 1;
-    
-    // Wrap async crypto in Dexie.waitFor
-    const nextHash = await Dexie.waitFor(computeQuizHash({
-      title: quiz.title,
-      description: quiz.description,
-      tags: quiz.tags,
-      questions: updatedQuestions,
-    }));
 
-    await db.quizzes.update(quizId, { questions: updatedQuestions, updated_at: updatedAt, version: nextVersion, quiz_hash: nextHash });
+    // Wrap async crypto in Dexie.waitFor
+    const nextHash = await Dexie.waitFor(
+      computeQuizHash({
+        title: quiz.title,
+        description: quiz.description,
+        tags: quiz.tags,
+        questions: updatedQuestions,
+      }),
+    );
+
+    await db.quizzes.update(quizId, {
+      questions: updatedQuestions,
+      updated_at: updatedAt,
+      version: nextVersion,
+      quiz_hash: nextHash,
+    });
   });
 }

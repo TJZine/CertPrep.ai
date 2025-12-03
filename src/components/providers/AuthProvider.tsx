@@ -1,12 +1,23 @@
-'use client';
+"use client";
 
-import { createContext, useContext, useEffect, useState, useRef, useMemo } from 'react';
-import { User, Session, AuthChangeEvent, SupabaseClient } from '@supabase/supabase-js';
-import { createClient } from '@/lib/supabase/client';
-import { useRouter } from 'next/navigation';
-import { clearDatabase } from '@/db';
-import { requestServiceWorkerCacheClear } from '@/lib/serviceWorkerClient';
-
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useRef,
+  useMemo,
+} from "react";
+import {
+  User,
+  Session,
+  AuthChangeEvent,
+  SupabaseClient,
+} from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
+import { clearDatabase } from "@/db";
+import { requestServiceWorkerCacheClear } from "@/lib/serviceWorkerClient";
 
 type AuthContextType = {
   user: User | null;
@@ -35,31 +46,35 @@ export async function performSignOut({
     void requestServiceWorkerCacheClear();
     await clearDb();
   } catch (error) {
-    console.error('Failed to clear local database during sign out:', error);
-    dbClearError = 'Local data could not be cleared.';
+    console.error("Failed to clear local database during sign out:", error);
+    dbClearError = "Local data could not be cleared.";
   }
 
   if (!supabase) {
-    return { success: false, error: 'Authentication service unavailable.' };
+    return { success: false, error: "Authentication service unavailable." };
   }
 
   try {
     await supabase.auth.signOut();
     onResetAuthState();
-    router.push('/login');
+    router.push("/login");
     return { success: true, error: dbClearError };
   } catch (error) {
-    console.error('Error signing out:', error);
-    return { success: false, error: 'Sign out failed. Please try again.' };
+    console.error("Error signing out:", error);
+    return { success: false, error: "Sign out failed. Please try again." };
   }
 }
 
-export function AuthProvider({ children }: { children: React.ReactNode }): React.ReactElement {
+export function AuthProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}): React.ReactElement {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
-  
+
   const supabaseRef = useRef<SupabaseClient | undefined>(undefined);
   const supabase = useMemo(() => {
     if (!supabaseRef.current) {
@@ -88,7 +103,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }): React
         setSession(session);
         setUser(session?.user ?? null);
       } catch (error) {
-        console.error('Failed to get session:', error);
+        console.error("Failed to get session:", error);
         // Fallback to cleared state
         if (!isMounted) return;
         setSession(null);
@@ -98,15 +113,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }): React
       }
     };
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
-      if (!isMounted) return;
-      setSession(session);
-      setUser(session?.user ?? null);
-      setIsLoading(false);
-      if (_event === 'SIGNED_OUT') {
-        router.refresh();
-      }
-    });
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (_event: AuthChangeEvent, session: Session | null) => {
+        if (!isMounted) return;
+        setSession(session);
+        setUser(session?.user ?? null);
+        setIsLoading(false);
+        if (_event === "SIGNED_OUT") {
+          router.refresh();
+        }
+      },
+    );
 
     void setData();
 
@@ -140,7 +157,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }): React
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };

@@ -1,29 +1,29 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import { useRouter } from 'next/navigation';
-import { QuizLayout } from './QuizLayout';
-import { QuestionDisplay } from './QuestionDisplay';
-import { OptionsList } from './OptionsList';
-import { ExplanationPanel } from './ExplanationPanel';
-import { AITutorButton } from './AITutorButton';
-import { SubmitButton, ZenControls } from './ZenControls';
-import { Card, CardContent } from '@/components/ui/Card';
-import { useToast } from '@/components/ui/Toast';
-import { Button } from '@/components/ui/Button';
+import * as React from "react";
+import { useRouter } from "next/navigation";
+import { QuizLayout } from "./QuizLayout";
+import { QuestionDisplay } from "./QuestionDisplay";
+import { OptionsList } from "./OptionsList";
+import { ExplanationPanel } from "./ExplanationPanel";
+import { AITutorButton } from "./AITutorButton";
+import { SubmitButton, ZenControls } from "./ZenControls";
+import { Card, CardContent } from "@/components/ui/Card";
+import { useToast } from "@/components/ui/Toast";
+import { Button } from "@/components/ui/Button";
 import {
   useCurrentQuestion,
   useProgress,
   useQuizSessionStore,
-} from '@/stores/quizSessionStore';
-import { useKeyboardNav, useSpacedRepetitionNav } from '@/hooks/useKeyboardNav';
-import { useTimer } from '@/hooks/useTimer';
-import { useBeforeUnload } from '@/hooks/useBeforeUnload';
+} from "@/stores/quizSessionStore";
+import { useKeyboardNav, useSpacedRepetitionNav } from "@/hooks/useKeyboardNav";
+import { useTimer } from "@/hooks/useTimer";
+import { useBeforeUnload } from "@/hooks/useBeforeUnload";
 
-import type { Quiz } from '@/types/quiz';
-import { useCorrectAnswer } from '@/hooks/useCorrectAnswer';
-import { useQuizSubmission } from '@/hooks/useQuizSubmission';
-import { clearSmartRoundState } from '@/lib/smartRoundStorage';
+import type { Quiz } from "@/types/quiz";
+import { useCorrectAnswer } from "@/hooks/useCorrectAnswer";
+import { useQuizSubmission } from "@/hooks/useQuizSubmission";
+import { clearSmartRoundState } from "@/lib/smartRoundStorage";
 
 interface ZenQuizContainerProps {
   quiz: Quiz;
@@ -33,10 +33,17 @@ interface ZenQuizContainerProps {
 /**
  * Main orchestrator for Zen mode interactions.
  */
-export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContainerProps): React.ReactElement {
+export function ZenQuizContainer({
+  quiz,
+  isSmartRound = false,
+}: ZenQuizContainerProps): React.ReactElement {
   const router = useRouter();
   const { addToast } = useToast();
-  const { saveError, submitQuiz, retrySave: retrySaveAction } = useQuizSubmission({
+  const {
+    saveError,
+    submitQuiz,
+    retrySave: retrySaveAction,
+  } = useQuizSubmission({
     quizId: quiz.id,
     isSmartRound,
   });
@@ -70,12 +77,20 @@ export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContaine
   const currentQuestion = useCurrentQuestion();
   const progress = useProgress();
 
-  const { formattedTime, start: startTimer, seconds, pause: pauseTimer } = useTimer({ autoStart: true });
-  useBeforeUnload(!isComplete || Boolean(saveError), 'Your quiz progress will be lost. Are you sure?');
+  const {
+    formattedTime,
+    start: startTimer,
+    seconds,
+    pause: pauseTimer,
+  } = useTimer({ autoStart: true });
+  useBeforeUnload(
+    !isComplete || Boolean(saveError),
+    "Your quiz progress will be lost. Are you sure?",
+  );
 
   React.useEffect(() => {
     if (error) {
-      addToast('error', error);
+      addToast("error", error);
       clearError();
     }
   }, [error, addToast, clearError]);
@@ -91,7 +106,7 @@ export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContaine
     async (timeTakenSeconds: number): Promise<void> => {
       await submitQuiz(timeTakenSeconds);
     },
-    [submitQuiz]
+    [submitQuiz],
   );
 
   const retrySave = React.useCallback((): void => {
@@ -99,14 +114,14 @@ export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContaine
     if (elapsedSeconds === null) {
       return;
     }
-    // Don't set hasSavedResultRef.current = true here; 
+    // Don't set hasSavedResultRef.current = true here;
     // let the hook manage success or set it in a callback if needed.
     retrySaveAction(elapsedSeconds);
   }, [retrySaveAction]);
 
   React.useEffect(() => {
     hasSavedResultRef.current = false;
-    initializeSession(quiz.id, 'zen', quiz.questions);
+    initializeSession(quiz.id, "zen", quiz.questions);
     startTimer();
     return (): void => {
       resetSession();
@@ -158,7 +173,7 @@ export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContaine
     if (isSmartRound) {
       clearSmartRoundState();
     }
-    router.push('/');
+    router.push("/");
   }, [resetSession, isSmartRound, router]);
 
   const isCurrentAnswerCorrect = React.useMemo(() => {
@@ -170,18 +185,18 @@ export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContaine
   const { resolvedAnswers, isResolving } = useCorrectAnswer(
     currentQuestion?.id ?? null,
     currentQuestion?.correct_answer_hash ?? null,
-    currentQuestion?.options
+    currentQuestion?.options,
   );
 
   const currentCorrectAnswer = currentQuestion
-    ? (resolvedAnswers[currentQuestion.id] || currentQuestion.correct_answer)
+    ? resolvedAnswers[currentQuestion.id] || currentQuestion.correct_answer
     : undefined;
 
   const isLastQuestion = currentIndex >= questionQueue.length - 1;
 
   React.useEffect(() => {
     if (hasSubmitted && isCurrentAnswerCorrect) {
-      addToast('success', 'Correct! 🎉');
+      addToast("success", "Correct! 🎉");
     }
   }, [hasSubmitted, isCurrentAnswerCorrect, addToast]);
 
@@ -212,7 +227,10 @@ export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContaine
 
               <div className="mt-8">
                 {!hasSubmitted ? (
-                  <SubmitButton onClick={submitAnswer} disabled={!selectedAnswer} />
+                  <SubmitButton
+                    onClick={submitAnswer}
+                    disabled={!selectedAnswer}
+                  />
                 ) : (
                   <div className="space-y-6">
                     <ExplanationPanel
@@ -224,7 +242,10 @@ export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContaine
                     />
 
                     {!isCurrentAnswerCorrect && selectedAnswer && (
-                      <AITutorButton question={currentQuestion} userAnswer={selectedAnswer} />
+                      <AITutorButton
+                        question={currentQuestion}
+                        userAnswer={selectedAnswer}
+                      />
                     )}
 
                     <ZenControls
@@ -235,12 +256,18 @@ export function ZenQuizContainer({ quiz, isSmartRound = false }: ZenQuizContaine
                     />
                     {saveError ? (
                       <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-700/50 dark:bg-amber-950/30 dark:text-amber-100">
-                        <p className="mb-3 font-semibold">We couldn&apos;t save your results.</p>
+                        <p className="mb-3 font-semibold">
+                          We couldn&apos;t save your results.
+                        </p>
                         <div className="flex flex-wrap gap-2">
                           <Button size="sm" onClick={retrySave}>
                             Retry save
                           </Button>
-                          <Button size="sm" variant="ghost" onClick={handleExit}>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={handleExit}
+                          >
                             Exit without saving
                           </Button>
                         </div>

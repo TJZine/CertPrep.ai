@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
+import { useState } from "react";
 
-const GUEST_USER_KEY = 'cp_guest_user_id';
+const GUEST_USER_KEY = "cp_guest_user_id";
 let guestIdCounter = 0;
 
 function ensureGuestUserId(): string | null {
-  if (typeof window === 'undefined') return null;
+  if (typeof window === "undefined") return null;
   let existing = localStorage.getItem(GUEST_USER_KEY);
   if (!existing) {
     const webCrypto = crypto as Crypto | undefined;

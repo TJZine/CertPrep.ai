@@ -19,20 +19,20 @@ We take the security of CertPrep.ai seriously. If you believe you have found a s
 
 Please include as much of the following information as possible:
 
-| Information | Description |
-|-------------|-------------|
-| Type | Type of vulnerability (e.g., XSS, SQL injection, authentication bypass) |
-| Location | Full paths of source file(s) related to the issue |
-| Steps | Step-by-step instructions to reproduce |
-| Impact | Potential impact of the vulnerability, including a CVSS score if possible. |
-| Proof | Proof-of-concept or exploit code (if possible) |
+| Information | Description                                                                |
+| ----------- | -------------------------------------------------------------------------- |
+| Type        | Type of vulnerability (e.g., XSS, SQL injection, authentication bypass)    |
+| Location    | Full paths of source file(s) related to the issue                          |
+| Steps       | Step-by-step instructions to reproduce                                     |
+| Impact      | Potential impact of the vulnerability, including a CVSS score if possible. |
+| Proof       | Proof-of-concept or exploit code (if possible)                             |
 
 ### Response Timeline
 
-| Phase | Timeline |
-|-------|----------|
-| Initial Response | Within 48 hours |
-| Status Update | Within 5 business days |
+| Phase             | Timeline                              |
+| ----------------- | ------------------------------------- |
+| Initial Response  | Within 48 hours                       |
+| Status Update     | Within 5 business days                |
 | Resolution Target | Within 30 days (complexity dependent) |
 
 ### Safe Harbor
@@ -51,19 +51,19 @@ We support safe harbor for security researchers who:
 
 ### Authentication & Authorization
 
-| Measure | Implementation |
-|---------|----------------|
-| Password Hashing | Supabase (bcrypt) |
-| Session Management | Supabase Auth with secure cookies |
-| Cookie Security | `Secure`, `HttpOnly`, `SameSite=Lax` (protects against CSRF in most cases while allowing top-level navigations), `Path=/` |
-| Row-Level Security | Enforced per-table with `auth.uid()` owner checks (see RLS policy checklist below) |
+| Measure            | Implementation                                                                                                            |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------- |
+| Password Hashing   | Supabase (bcrypt)                                                                                                         |
+| Session Management | Supabase Auth with secure cookies                                                                                         |
+| Cookie Security    | `Secure`, `HttpOnly`, `SameSite=Lax` (protects against CSRF in most cases while allowing top-level navigations), `Path=/` |
+| Row-Level Security | Enforced per-table with `auth.uid()` owner checks (see RLS policy checklist below)                                        |
 
 ### Data Protection
 
-| Data Type | Protection Method |
-|-----------|-------------------|
-| In Transit | TLS 1.3 encryption |
-| At Rest (Server) | Supabase encryption |
+| Data Type        | Protection Method          |
+| ---------------- | -------------------------- |
+| In Transit       | TLS 1.3 encryption         |
+| At Rest (Server) | Supabase encryption        |
 | At Rest (Client) | IndexedDB (see note below) |
 
 > [!NOTE]
@@ -85,11 +85,11 @@ CREATE POLICY results_delete_owner ON results FOR DELETE USING (auth.uid() = use
 
 ### Content Security
 
-| Measure | Implementation |
-|---------|----------------|
-| XSS Prevention | React's default escaping + `sanitizeHTML()` (uses **isomorphic-dompurify v2.33.0**; allows specific tags/attributes, including 'class' for styling) |
-| CSRF Protection | SameSite cookies + origin validation |
-| Input Validation | Server-side validation on all inputs |
+| Measure          | Implementation                                                                                                                                      |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| XSS Prevention   | React's default escaping + `sanitizeHTML()` (uses **isomorphic-dompurify v2.33.0**; allows specific tags/attributes, including 'class' for styling) |
+| CSRF Protection  | SameSite cookies + origin validation                                                                                                                |
+| Input Validation | Server-side validation on all inputs                                                                                                                |
 
 ---
 
@@ -97,11 +97,11 @@ CREATE POLICY results_delete_owner ON results FOR DELETE USING (auth.uid() = use
 
 We are committed to providing a secure and stable experience. Our version support policy is as follows:
 
-| Version | Status | Support Level | End of Life (EOL) Date |
-|---------|--------|---------------|------------------------|
-| 2.x.x   | ✅ Current | Full Support  | N/A (actively maintained) |
-| 1.x.x   | ❌ Ended | No Support | Ended on 2024-12-31 |
-| < 1.0   | ❌ End-of-Life | No Support    | Passed                 |
+| Version | Status         | Support Level | End of Life (EOL) Date    |
+| ------- | -------------- | ------------- | ------------------------- |
+| 2.x.x   | ✅ Current     | Full Support  | N/A (actively maintained) |
+| 1.x.x   | ❌ Ended       | No Support    | Ended on 2024-12-31       |
+| < 1.0   | ❌ End-of-Life | No Support    | Passed                    |
 
 ---
 
@@ -132,7 +132,7 @@ When contributing, please ensure:
 We thank the following security researchers for responsible disclosure:
 
 | Researcher | Finding | Date |
-|------------|---------|------|
-| - | - | - |
+| ---------- | ------- | ---- |
+| -          | -       | -    |
 
-*This table will be updated as vulnerabilities are reported and fixed.*
+_This table will be updated as vulnerabilities are reported and fixed._

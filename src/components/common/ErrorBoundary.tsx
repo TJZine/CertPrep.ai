@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import { AlertTriangle, RotateCcw } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
+import * as React from "react";
+import { AlertTriangle, RotateCcw } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 
 interface ErrorBoundaryProps {
   children: React.ReactNode;
@@ -17,7 +17,10 @@ interface ErrorBoundaryState {
 /**
  * Error boundary with resettable fallback UI.
  */
-export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+export class ErrorBoundary extends React.Component<
+  ErrorBoundaryProps,
+  ErrorBoundaryState
+> {
   public state: ErrorBoundaryState = { hasError: false, error: null };
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
@@ -26,7 +29,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
     // In production, send to logging/monitoring.
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
+    console.error("ErrorBoundary caught an error:", error, errorInfo);
   }
 
   private reset = (): void => {
@@ -43,14 +46,23 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
           className="rounded-lg border border-red-200 bg-red-50 p-6 text-red-900 shadow-sm dark:border-red-900 dark:bg-red-950/50 dark:text-red-200"
         >
           <div className="flex items-start gap-3">
-            <AlertTriangle className="mt-0.5 h-6 w-6 text-red-600 dark:text-red-400" aria-hidden="true" />
+            <AlertTriangle
+              className="mt-0.5 h-6 w-6 text-red-600 dark:text-red-400"
+              aria-hidden="true"
+            />
             <div className="flex-1">
               <h2 className="text-lg font-semibold">Something went wrong</h2>
               {this.state.error?.message ? (
-                <p className="mt-2 text-sm text-red-800 dark:text-red-300">{this.state.error.message}</p>
+                <p className="mt-2 text-sm text-red-800 dark:text-red-300">
+                  {this.state.error.message}
+                </p>
               ) : null}
               <div className="mt-4">
-                <Button variant="secondary" onClick={this.reset} leftIcon={<RotateCcw />}>
+                <Button
+                  variant="secondary"
+                  onClick={this.reset}
+                  leftIcon={<RotateCcw />}
+                >
                   Try Again
                 </Button>
               </div>

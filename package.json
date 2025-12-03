@@ -41,7 +41,7 @@
   },
   "lint-staged": {
     "*.{ts,tsx}": "eslint --max-warnings=0",
-    "*.{json,md}": "prettier --check"
+    "*.{json,md}": "prettier --write"
   },
   "devDependencies": {
     "@playwright/test": "^1.57.0",

@@ -1,4 +1,4 @@
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig, devices } from "@playwright/test";
 
 /**
  * Playwright configuration for CertPrep.ai E2E tests.
@@ -6,7 +6,7 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
   // Test directory
-  testDir: './tests/e2e',
+  testDir: "./tests/e2e",
 
   // Run tests in parallel
   fullyParallel: true,
@@ -21,34 +21,34 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
 
   // Reporter configuration
-  reporter: process.env.CI ? 'github' : 'html',
+  reporter: process.env.CI ? "github" : "html",
 
   // Shared settings for all projects
   use: {
     // Base URL to use in actions like `await page.goto('/')`
-    baseURL: 'http://localhost:3000',
+    baseURL: "http://localhost:3000",
 
     // Collect trace on first retry for debugging
-    trace: 'on-first-retry',
+    trace: "on-first-retry",
 
     // Block service workers to prevent interference with network mocking
-    serviceWorkers: 'block',
+    serviceWorkers: "block",
 
     // Screenshot on failure
-    screenshot: 'only-on-failure',
+    screenshot: "only-on-failure",
 
     // Use saved auth state
-    storageState: 'tests/e2e/.auth/user.json',
+    storageState: "tests/e2e/.auth/user.json",
   },
 
   // Configure projects for major browsers
   projects: [
     {
-      name: 'chromium',
-      use: { 
-        ...devices['Desktop Chrome'],
+      name: "chromium",
+      use: {
+        ...devices["Desktop Chrome"],
         launchOptions: {
-          args: ['--disable-web-security'],
+          args: ["--disable-web-security"],
         },
       },
     },
@@ -59,18 +59,18 @@ export default defineConfig({
 
   // Run local dev server before starting the tests
   webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:3000',
+    command: "npm run dev",
+    url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000, // 2 minutes for Next.js to start
     env: {
       // Disable captcha for E2E tests
-      NEXT_PUBLIC_HCAPTCHA_SITE_KEY: '',
+      NEXT_PUBLIC_HCAPTCHA_SITE_KEY: "",
     },
   },
 
   // Global setup to create test user and save auth state
-  globalSetup: require.resolve('./tests/e2e/global-setup.ts'),
+  globalSetup: require.resolve("./tests/e2e/global-setup.ts"),
 
   // Global timeout for each test
   timeout: 30 * 1000,
@@ -80,4 +80,3 @@ export default defineConfig({
     timeout: 10 * 1000,
   },
 });
-

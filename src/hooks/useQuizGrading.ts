@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { hashAnswer } from '@/lib/utils';
-import type { Quiz } from '@/types/quiz';
+import { useState, useEffect } from "react";
+import { hashAnswer } from "@/lib/utils";
+import type { Quiz } from "@/types/quiz";
 
 export interface GradingResult {
   correctCount: number;
@@ -12,7 +12,10 @@ export interface GradingResult {
 /**
  * Asynchronously grades a quiz result against hashed answers.
  */
-export function useQuizGrading(quiz: Quiz | null, answers: Record<string, string>): { grading: GradingResult | null; isLoading: boolean } {
+export function useQuizGrading(
+  quiz: Quiz | null,
+  answers: Record<string, string>,
+): { grading: GradingResult | null; isLoading: boolean } {
   const [grading, setGrading] = useState<GradingResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -41,23 +44,26 @@ export function useQuizGrading(quiz: Quiz | null, answers: Record<string, string
         quiz.questions.map(async (q) => {
           const userAnswer = answers[q.id];
           if (!userAnswer) {
-            return { id: q.id, status: 'unanswered' as const };
+            return { id: q.id, status: "unanswered" as const };
           }
 
           // Hash the user's answer to compare
           const userHash = await hashAnswer(userAnswer);
           const isCorrect = userHash === q.correct_answer_hash;
-          
-          return { id: q.id, status: isCorrect ? 'correct' as const : 'incorrect' as const };
-        })
+
+          return {
+            id: q.id,
+            status: isCorrect ? ("correct" as const) : ("incorrect" as const),
+          };
+        }),
       );
 
       // Synchronously aggregate results
       results.forEach((result) => {
-        if (result.status === 'unanswered') {
+        if (result.status === "unanswered") {
           unanswered++;
           status[result.id] = false;
-        } else if (result.status === 'correct') {
+        } else if (result.status === "correct") {
           correct++;
           status[result.id] = true;
         } else {

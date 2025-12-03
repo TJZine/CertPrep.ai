@@ -22,14 +22,14 @@
 Creates a new user account.
 
 ```typescript
-import { createClient } from '@/lib/supabase/client'
+import { createClient } from "@/lib/supabase/client";
 
-const supabase = createClient()
+const supabase = createClient();
 
 const { data, error } = await supabase.auth.signUp({
-  email: 'user@example.com',
-  password: 'securepassword123'
-})
+  email: "user@example.com",
+  password: "securepassword123",
+});
 ```
 
 <details>
@@ -73,15 +73,15 @@ Authenticates an existing user.
 
 ```typescript
 const { data, error } = await supabase.auth.signInWithPassword({
-  email: 'user@example.com',
-  password: 'securepassword123'
-})
+  email: "user@example.com",
+  password: "securepassword123",
+});
 ```
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `email` | `string` | ✅ | User's email address |
-| `password` | `string` | ✅ | User's password |
+| Parameter  | Type     | Required | Description          |
+| ---------- | -------- | -------- | -------------------- |
+| `email`    | `string` | ✅       | User's email address |
+| `password` | `string` | ✅       | User's password      |
 
 ---
 
@@ -90,7 +90,7 @@ const { data, error } = await supabase.auth.signInWithPassword({
 Ends the current session.
 
 ```typescript
-const { error } = await supabase.auth.signOut()
+const { error } = await supabase.auth.signOut();
 ```
 
 ---
@@ -100,7 +100,10 @@ const { error } = await supabase.auth.signOut()
 Retrieves the current authenticated user.
 
 ```typescript
-const { data: { user }, error } = await supabase.auth.getUser()
+const {
+  data: { user },
+  error,
+} = await supabase.auth.getUser();
 ```
 
 ---
@@ -113,23 +116,23 @@ const { data: { user }, error } = await supabase.auth.getUser()
 
 ```typescript
 interface Question {
-  id: string
-  category: string
-  question: string
-  options: Record<string, string>
-  explanation: string
+  id: string;
+  category: string;
+  question: string;
+  options: Record<string, string>;
+  explanation: string;
 }
 
 interface Quiz {
-  id: string
-  user_id: string
-  title: string
-  description: string
-  created_at: number
-  updated_at?: number
-  questions: Question[]
-  tags: string[]
-  version: number
+  id: string;
+  user_id: string;
+  title: string;
+  description: string;
+  created_at: number;
+  updated_at?: number;
+  questions: Question[];
+  tags: string[];
+  version: number;
 }
 ```
 
@@ -138,26 +141,26 @@ interface Quiz {
 Retrieves quizzes from the local Dexie database. All queries are automatically scoped to the current authenticated user.
 
 ```typescript
-import { getAllQuizzes, searchQuizzes } from '@/db/quizzes'
+import { getAllQuizzes, searchQuizzes } from "@/db/quizzes";
 
 // All quizzes for the current user
-const quizzes = await getAllQuizzes()
+const quizzes = await getAllQuizzes();
 
 // Search by title or tags
-const filtered = await searchQuizzes('aws')
+const filtered = await searchQuizzes("aws");
 ```
 
 ### Get Quiz by ID
 
 ```typescript
-import { getQuizById } from '@/db/quizzes'
+import { getQuizById } from "@/db/quizzes";
 
-const quiz = await getQuizById(quizId)
+const quiz = await getQuizById(quizId);
 ```
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `quizId` | `string` | ✅ | Quiz identifier |
+| Parameter | Type     | Required | Description     |
+| --------- | -------- | -------- | --------------- |
+| `quizId`  | `string` | ✅       | Quiz identifier |
 
 ---
 
@@ -168,20 +171,20 @@ const quiz = await getQuizById(quizId)
 > See `src/types/result.ts` for the full definition used in the app.
 
 ```typescript
-type SyncFlag = 0 | 1
+type SyncFlag = 0 | 1;
 
 interface Result {
-  id: string
-  quiz_id: string
-  user_id: string
-  timestamp: number
-  mode: 'zen' | 'proctor'
-  score: number
-  time_taken_seconds: number
-  answers: Record<string, string>
-  flagged_questions: string[]
-  category_breakdown: Record<string, number>
-  synced?: SyncFlag // 0 = not synced, 1 = synced
+  id: string;
+  quiz_id: string;
+  user_id: string;
+  timestamp: number;
+  mode: "zen" | "proctor";
+  score: number;
+  time_taken_seconds: number;
+  answers: Record<string, string>;
+  flagged_questions: string[];
+  category_breakdown: Record<string, number>;
+  synced?: SyncFlag; // 0 = not synced, 1 = synced
 }
 ```
 
@@ -190,20 +193,20 @@ interface Result {
 Saves a quiz result locally; it will be synchronized to Supabase in the background.
 
 ```typescript
-import { createResult } from '@/db/results'
-import type { QuizMode } from '@/types/quiz'
+import { createResult } from "@/db/results";
+import type { QuizMode } from "@/types/quiz";
 
 const result = await createResult({
-  quizId: 'quiz-uuid',
-  mode: 'proctor' satisfies QuizMode,
+  quizId: "quiz-uuid",
+  mode: "proctor" satisfies QuizMode,
   answers: {
-    'question-id-1': 'A',
-    'question-id-2': 'C'
+    "question-id-1": "A",
+    "question-id-2": "C",
   },
   flaggedQuestions: [],
   timeTakenSeconds: 1200,
-  userId: 'user-uuid'
-})
+  userId: "user-uuid",
+});
 ```
 
 > [!NOTE]
@@ -214,23 +217,20 @@ const result = await createResult({
 ### Get Results
 
 ```typescript
-import { db } from '@/db'
+import { db } from "@/db";
 
 // All results
-const results = await db.results.toArray()
+const results = await db.results.toArray();
 
 // Results for specific quiz
-const quizResults = await db.results
-  .where('quiz_id')
-  .equals(quizId)
-  .toArray()
+const quizResults = await db.results.where("quiz_id").equals(quizId).toArray();
 
 // Results sorted by timestamp
 const recentResults = await db.results
-  .orderBy('timestamp')
+  .orderBy("timestamp")
   .reverse()
   .limit(10)
-  .toArray()
+  .toArray();
 ```
 
 ---
@@ -240,9 +240,9 @@ const recentResults = await db.results
 Manually triggers result synchronization.
 
 ```typescript
-import { syncResults } from '@/lib/sync/syncManager'
+import { syncResults } from "@/lib/sync/syncManager";
 
-await syncResults(userId)
+await syncResults(userId);
 ```
 
 ---
@@ -256,13 +256,13 @@ await syncResults(userId)
 
 ```typescript
 interface UserSettings {
-  id: string
-  user_id: string
-  theme: 'light' | 'dark' | 'system'
-  notifications_enabled: boolean
-  sound_enabled: boolean
-  created_at: string
-  updated_at: string
+  id: string;
+  user_id: string;
+  theme: "light" | "dark" | "system";
+  notifications_enabled: boolean;
+  sound_enabled: boolean;
+  created_at: string;
+  updated_at: string;
 }
 ```
 
@@ -270,22 +270,22 @@ interface UserSettings {
 
 ```typescript
 const { data, error } = await supabase
-  .from('user_settings')
-  .select('*')
-  .eq('user_id', userId)
-  .single()
+  .from("user_settings")
+  .select("*")
+  .eq("user_id", userId)
+  .single();
 ```
 
 ### Update Settings
 
 ```typescript
 const { data, error } = await supabase
-  .from('user_settings')
+  .from("user_settings")
   .update({
-    theme: 'dark',
-    notifications_enabled: true
+    theme: "dark",
+    notifications_enabled: true,
   })
-  .eq('user_id', userId)
+  .eq("user_id", userId);
 ```
 
 ---
@@ -296,42 +296,42 @@ const { data, error } = await supabase
 
 ```typescript
 interface AppError {
-  code: string
-  message: string
-  details?: unknown
+  code: string;
+  message: string;
+  details?: unknown;
 }
 ```
 
 ### Common Error Codes
 
-| Code | Description | HTTP Status |
-|------|-------------|-------------|
-| `auth/invalid-credentials` | Invalid email or password | 401 |
-| `auth/user-not-found` | No user with this email | 404 |
-| `auth/session-expired` | Session has expired | 401 |
-| `db/not-found` | Resource not found | 404 |
-| `db/permission-denied` | RLS policy violation | 403 |
-| `sync/failed` | Sync operation failed | 500 |
-| `validation/invalid-input` | Invalid input data | 400 |
+| Code                       | Description               | HTTP Status |
+| -------------------------- | ------------------------- | ----------- |
+| `auth/invalid-credentials` | Invalid email or password | 401         |
+| `auth/user-not-found`      | No user with this email   | 404         |
+| `auth/session-expired`     | Session has expired       | 401         |
+| `db/not-found`             | Resource not found        | 404         |
+| `db/permission-denied`     | RLS policy violation      | 403         |
+| `sync/failed`              | Sync operation failed     | 500         |
+| `validation/invalid-input` | Invalid input data        | 400         |
 
 ### Error Handling Example
 
 ```typescript
-import { AuthError, DatabaseError } from '@supabase/supabase-js'
+import { AuthError, DatabaseError } from "@supabase/supabase-js";
 
 try {
-  const result = await createResult(data)
+  const result = await createResult(data);
 } catch (error) {
   if (error instanceof AuthError) {
     // Handle auth error
-    toast.error('Please sign in to save results')
+    toast.error("Please sign in to save results");
   } else if (error instanceof DatabaseError) {
     // Handle database error
-    toast.error('Failed to save result')
+    toast.error("Failed to save result");
   } else {
     // Handle unknown error
-    toast.error('An unexpected error occurred')
-    console.error(error)
+    toast.error("An unexpected error occurred");
+    console.error(error);
   }
 }
 ```
@@ -340,12 +340,12 @@ try {
 
 ## Rate Limits
 
-| Endpoint | Limit | Window |
-|----------|-------|--------|
-| Auth (signup) | 30 requests | 1 hour |
-| Auth (signin) | 30 requests | 1 hour |
-| Database reads | 1000 requests | 1 minute |
-| Database writes | 100 requests | 1 minute |
+| Endpoint        | Limit         | Window   |
+| --------------- | ------------- | -------- |
+| Auth (signup)   | 30 requests   | 1 hour   |
+| Auth (signin)   | 30 requests   | 1 hour   |
+| Database reads  | 1000 requests | 1 minute |
+| Database writes | 100 requests  | 1 minute |
 
 > [!NOTE]
 > These limits are illustrative only and depend on your specific Supabase plan.

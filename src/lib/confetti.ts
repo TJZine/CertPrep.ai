@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import confetti from 'canvas-confetti';
+import confetti from "canvas-confetti";
 
 export function celebratePerfectScore(): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
 
   const duration = 3000;
   const end = Date.now() + duration;
-  const colors = ['#22c55e', '#3b82f6', '#f59e0b', '#ec4899'];
+  const colors = ["#22c55e", "#3b82f6", "#f59e0b", "#ec4899"];
 
   const launchFrame = (): void => {
     confetti({

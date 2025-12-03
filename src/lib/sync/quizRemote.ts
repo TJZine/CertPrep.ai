@@ -1,7 +1,7 @@
-import { logger } from '@/lib/logger';
-import { createClient } from '@/lib/supabase/client';
-import type { RemoteQuizInput, RemoteQuizRow } from './quizDomain';
-import type { SupabaseClient } from '@supabase/supabase-js';
+import { logger } from "@/lib/logger";
+import { createClient } from "@/lib/supabase/client";
+import type { RemoteQuizInput, RemoteQuizRow } from "./quizDomain";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 let supabaseInstance: SupabaseClient | undefined;
 
@@ -24,21 +24,24 @@ export async function fetchUserQuizzes({
   updatedAfter,
   lastId,
   limit = 50,
-}: FetchUserQuizzesParams): Promise<{ data: RemoteQuizRow[]; error: unknown | null }> {
+}: FetchUserQuizzesParams): Promise<{
+  data: RemoteQuizRow[];
+  error: unknown | null;
+}> {
   const client = getSupabaseClient();
-  
+
   if (!client) {
-    return { data: [], error: { message: 'Supabase client unavailable' } };
+    return { data: [], error: { message: "Supabase client unavailable" } };
   }
 
   let query = client
-    .from('quizzes')
+    .from("quizzes")
     .select(
-      'id, user_id, title, description, tags, version, questions, quiz_hash, created_at, updated_at, deleted_at',
+      "id, user_id, title, description, tags, version, questions, quiz_hash, created_at, updated_at, deleted_at",
     )
-    .eq('user_id', userId)
-    .order('updated_at', { ascending: true })
-    .order('id', { ascending: true })
+    .eq("user_id", userId)
+    .order("updated_at", { ascending: true })
+    .order("id", { ascending: true })
     .limit(limit);
 
   if (updatedAfter) {
@@ -51,21 +54,24 @@ export async function fetchUserQuizzes({
   const { data, error } = await query;
 
   if (error) {
-    logger.error('Failed to fetch quizzes from Supabase', { error, userId });
+    logger.error("Failed to fetch quizzes from Supabase", { error, userId });
     return { data: [], error };
   }
 
   return { data: data ?? [], error: null };
 }
 
-export async function upsertQuizzes(userId: string, quizzes: RemoteQuizInput[]): Promise<{ error: unknown }> {
+export async function upsertQuizzes(
+  userId: string,
+  quizzes: RemoteQuizInput[],
+): Promise<{ error: unknown }> {
   if (quizzes.length === 0) {
     return { error: null };
   }
 
   const client = getSupabaseClient();
   if (!client) {
-    return { error: { message: 'Supabase client unavailable' } };
+    return { error: { message: "Supabase client unavailable" } };
   }
 
   const payload = quizzes.map((quiz) => ({
@@ -74,36 +80,47 @@ export async function upsertQuizzes(userId: string, quizzes: RemoteQuizInput[]):
   }));
 
   const { error } = await client
-    .from('quizzes')
-    .upsert(payload, { onConflict: 'user_id,id' });
+    .from("quizzes")
+    .upsert(payload, { onConflict: "user_id,id" });
 
   if (error) {
-    logger.error('Failed to upsert quizzes to Supabase', { error, userId, count: quizzes.length });
+    logger.error("Failed to upsert quizzes to Supabase", {
+      error,
+      userId,
+      count: quizzes.length,
+    });
   }
 
   return { error };
 }
 
-export async function softDeleteQuizzes(userId: string, ids: string[]): Promise<{ error: unknown }> {
+export async function softDeleteQuizzes(
+  userId: string,
+  ids: string[],
+): Promise<{ error: unknown }> {
   if (ids.length === 0) {
     return { error: null };
   }
 
   const client = getSupabaseClient();
   if (!client) {
-    return { error: { message: 'Supabase client unavailable' } };
+    return { error: { message: "Supabase client unavailable" } };
   }
 
   const { error } = await client
-    .from('quizzes')
+    .from("quizzes")
     .update({ deleted_at: new Date().toISOString() })
-    .eq('user_id', userId)
-    .in('id', ids);
+    .eq("user_id", userId)
+    .in("id", ids);
 
   if (error) {
-    logger.error('Failed to soft delete quizzes on Supabase', { error, userId, ids });
+    logger.error("Failed to soft delete quizzes on Supabase", {
+      error,
+      userId,
+      ids,
+    });
   }
 
   return { error };
 }
-const NIL_UUID = '00000000-0000-0000-0000-000000000000';
+const NIL_UUID = "00000000-0000-0000-0000-000000000000";

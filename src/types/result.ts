@@ -1,4 +1,4 @@
-import type { QuizMode } from './quiz';
+import type { QuizMode } from "./quiz";
 
 export type SyncFlag = 0 | 1;
 

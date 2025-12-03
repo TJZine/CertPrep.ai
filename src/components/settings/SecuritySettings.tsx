@@ -1,19 +1,25 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
-import { useToast } from '@/components/ui/Toast';
-import { Shield } from 'lucide-react';
-import { getAuthErrorMessage } from '@/lib/auth-utils';
-import { resetPasswordSchema } from '@/validators/authSchema';
-import { ZodError } from 'zod';
+import { useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/Card";
+import { useToast } from "@/components/ui/Toast";
+import { Shield } from "lucide-react";
+import { getAuthErrorMessage } from "@/lib/auth-utils";
+import { resetPasswordSchema } from "@/validators/authSchema";
+import { ZodError } from "zod";
 
 export function SecuritySettings(): React.ReactElement {
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const supabase = createClient();
@@ -25,21 +31,21 @@ export function SecuritySettings(): React.ReactElement {
     setError(null);
 
     try {
-        resetPasswordSchema.parse({ password, confirmPassword });
+      resetPasswordSchema.parse({ password, confirmPassword });
     } catch (err) {
-        if (err instanceof ZodError) {
-            setError((err as ZodError).issues[0]?.message ?? 'Invalid input');
-        } else {
-            setError('Invalid input');
-        }
-        setIsLoading(false);
-        return;
+      if (err instanceof ZodError) {
+        setError((err as ZodError).issues[0]?.message ?? "Invalid input");
+      } else {
+        setError("Invalid input");
+      }
+      setIsLoading(false);
+      return;
     }
 
     if (!supabase) {
-        setError('Authentication service unavailable.');
-        setIsLoading(false);
-        return;
+      setError("Authentication service unavailable.");
+      setIsLoading(false);
+      return;
     }
 
     try {
@@ -49,14 +55,17 @@ export function SecuritySettings(): React.ReactElement {
 
       if (error) throw error;
 
-      addToast('success', 'Password updated successfully');
-      setPassword('');
-      setConfirmPassword('');
+      addToast("success", "Password updated successfully");
+      setPassword("");
+      setConfirmPassword("");
     } catch (error) {
-        const errMsg = getAuthErrorMessage(error);
-        console.error('Error updating password:', error instanceof Error ? error.message : 'Unknown error');
-        setError(errMsg);
-        addToast('error', 'Failed to update password');
+      const errMsg = getAuthErrorMessage(error);
+      console.error(
+        "Error updating password:",
+        error instanceof Error ? error.message : "Unknown error",
+      );
+      setError(errMsg);
+      addToast("error", "Failed to update password");
     } finally {
       setIsLoading(false);
     }
@@ -74,7 +83,10 @@ export function SecuritySettings(): React.ReactElement {
       <CardContent>
         <form onSubmit={handleUpdatePassword} className="space-y-4">
           <div className="space-y-2">
-            <label htmlFor="newPassword" className="text-sm font-medium leading-none">
+            <label
+              htmlFor="newPassword"
+              className="text-sm font-medium leading-none"
+            >
               New Password
             </label>
             <Input
@@ -86,7 +98,10 @@ export function SecuritySettings(): React.ReactElement {
             />
           </div>
           <div className="space-y-2">
-            <label htmlFor="confirmNewPassword" className="text-sm font-medium leading-none">
+            <label
+              htmlFor="confirmNewPassword"
+              className="text-sm font-medium leading-none"
+            >
               Confirm New Password
             </label>
             <Input
@@ -97,11 +112,9 @@ export function SecuritySettings(): React.ReactElement {
               minLength={8}
             />
           </div>
-          
+
           {error && (
-            <div className="text-sm text-red-500 font-medium">
-                {error}
-            </div>
+            <div className="text-sm text-red-500 font-medium">{error}</div>
           )}
 
           <div className="flex justify-end">

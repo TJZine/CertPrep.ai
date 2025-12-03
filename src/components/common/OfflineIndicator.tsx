@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import { WifiOff, Wifi, X } from 'lucide-react';
-import { useOnlineStatus } from '@/hooks/useOnlineStatus';
-import { cn } from '@/lib/utils';
+import * as React from "react";
+import { WifiOff, Wifi, X } from "lucide-react";
+import { useOnlineStatus } from "@/hooks/useOnlineStatus";
+import { cn } from "@/lib/utils";
 
 /**
  * Shows a banner when the user goes offline.
@@ -53,10 +53,10 @@ export function OfflineIndicator(): React.ReactElement | null {
   return (
     <div
       className={cn(
-        'fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-md rounded-lg p-4 shadow-lg transition-all',
-        isOnline 
-          ? 'border border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-900/90' 
-          : 'border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/90',
+        "fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-md rounded-lg p-4 shadow-lg transition-all",
+        isOnline
+          ? "border border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-900/90"
+          : "border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/90",
       )}
       role="status"
       aria-live="polite"
@@ -64,24 +64,46 @@ export function OfflineIndicator(): React.ReactElement | null {
       <div className="flex items-start gap-3">
         <div
           className={cn(
-            'flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full',
-            isOnline ? 'bg-green-100 dark:bg-green-800' : 'bg-amber-100 dark:bg-amber-800',
+            "flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full",
+            isOnline
+              ? "bg-green-100 dark:bg-green-800"
+              : "bg-amber-100 dark:bg-amber-800",
           )}
         >
           {isOnline ? (
-            <Wifi className="h-4 w-4 text-green-600 dark:text-green-200" aria-hidden="true" />
+            <Wifi
+              className="h-4 w-4 text-green-600 dark:text-green-200"
+              aria-hidden="true"
+            />
           ) : (
-            <WifiOff className="h-4 w-4 text-amber-600 dark:text-amber-200" aria-hidden="true" />
+            <WifiOff
+              className="h-4 w-4 text-amber-600 dark:text-amber-200"
+              aria-hidden="true"
+            />
           )}
         </div>
 
         <div className="flex-1">
-          <p className={cn('font-medium', isOnline ? 'text-green-800 dark:text-green-100' : 'text-amber-800 dark:text-amber-100')}>
-            {isOnline ? 'Back Online' : "You're Offline"}
+          <p
+            className={cn(
+              "font-medium",
+              isOnline
+                ? "text-green-800 dark:text-green-100"
+                : "text-amber-800 dark:text-amber-100",
+            )}
+          >
+            {isOnline ? "Back Online" : "You're Offline"}
           </p>
-          <p className={cn('mt-0.5 text-sm', isOnline ? 'text-green-700 dark:text-green-200' : 'text-amber-700 dark:text-amber-200')}>
+          <p
+            className={cn(
+              "mt-0.5 text-sm",
+              isOnline
+                ? "text-green-700 dark:text-green-200"
+                : "text-amber-700 dark:text-amber-200",
+            )}
+          >
             {isOnline
-              ? 'Your connection has been restored.'
+              ? "Your connection has been restored."
               : "Don't worry! CertPrep.ai works offline. All your data is stored locally."}
           </p>
         </div>

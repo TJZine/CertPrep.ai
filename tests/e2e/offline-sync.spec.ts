@@ -13,41 +13,45 @@
  * @see docs/ARCHITECTURE.md for sync architecture details
  */
 
-import { test, expect, TEST_QUIZ, MOCK_USER } from './fixtures';
+import { test, expect, TEST_QUIZ, MOCK_USER } from "./fixtures";
 import {
   getResultsBySyncStatus,
   getResultsByUserId,
   seedQuiz,
   waitForDatabase,
   clearDatabase,
-} from './helpers/db';
+} from "./helpers/db";
 
 /**
  * Helper to select an answer option by its letter key.
  */
 async function selectOption(
-  page: import('@playwright/test').Page,
-  letter: string
+  page: import("@playwright/test").Page,
+  letter: string,
 ): Promise<void> {
-  const option = page.getByRole('radio', { name: new RegExp(`^${letter}\\s`) });
+  const option = page.getByRole("radio", { name: new RegExp(`^${letter}\\s`) });
   await option.click();
 }
 
 /**
  * Helper to complete a quiz by answering all questions.
  */
-async function completeQuiz(page: import('@playwright/test').Page): Promise<void> {
-  const submitButton = page.getByRole('button', { name: /check answer|submit/i });
-  const goodButton = page.getByRole('button', { name: /good/i });
+async function completeQuiz(
+  page: import("@playwright/test").Page,
+): Promise<void> {
+  const submitButton = page.getByRole("button", {
+    name: /check answer|submit/i,
+  });
+  const goodButton = page.getByRole("button", { name: /good/i });
 
   // Answer Question 1
-  await selectOption(page, 'B');
+  await selectOption(page, "B");
   await submitButton.click();
   await expect(goodButton).toBeVisible();
   await goodButton.click();
 
   // Answer Question 2
-  await selectOption(page, 'C');
+  await selectOption(page, "C");
   await submitButton.click();
   await expect(goodButton).toBeVisible();
   await goodButton.click();
@@ -59,23 +63,26 @@ async function completeQuiz(page: import('@playwright/test').Page): Promise<void
  * Instead, we rely on the app's `navigator.onLine` checks (which we added to syncManager).
  */
 async function setOffline(
-  context: import('@playwright/test').BrowserContext,
-  page: import('@playwright/test').Page,
-  offline: boolean
+  context: import("@playwright/test").BrowserContext,
+  page: import("@playwright/test").Page,
+  offline: boolean,
 ): Promise<void> {
   // await context.setOffline(offline); // DISABLED: Blocks IDB access
   await page.evaluate((isOffline) => {
-    Object.defineProperty(navigator, 'onLine', { value: !isOffline, configurable: true });
-    window.dispatchEvent(new Event(isOffline ? 'offline' : 'online'));
+    Object.defineProperty(navigator, "onLine", {
+      value: !isOffline,
+      configurable: true,
+    });
+    window.dispatchEvent(new Event(isOffline ? "offline" : "online"));
   }, offline);
 }
 
-test.describe('Offline Data Persistence', () => {
+test.describe("Offline Data Persistence", () => {
   test.beforeEach(async ({ authenticatedPage }) => {
     await clearDatabase(authenticatedPage);
   });
 
-  test('saves quiz results to IndexedDB when offline', async ({
+  test("saves quiz results to IndexedDB when offline", async ({
     authenticatedPage: page,
     context,
   }) => {
@@ -87,7 +94,9 @@ test.describe('Offline Data Persistence', () => {
 
     // Navigate to quiz while online (page must load first)
     await page.goto(`/quiz/${quiz.id}/zen`);
-    await expect(page.getByText('What is 2 + 2?')).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText("What is 2 + 2?")).toBeVisible({
+      timeout: 15000,
+    });
 
     // Go offline
     await setOffline(context, page, true);
@@ -106,17 +115,17 @@ test.describe('Offline Data Persistence', () => {
     expect(savedResult?.synced).toBe(0); // Pending sync
 
     // Verify result has expected data structure
-    expect(typeof savedResult?.score).toBe('number');
-    expect(typeof savedResult?.time_taken_seconds).toBe('number');
+    expect(typeof savedResult?.score).toBe("number");
+    expect(typeof savedResult?.time_taken_seconds).toBe("number");
     expect(savedResult?.answers).toBeDefined();
 
     // Now go fully online
     await setOffline(context, page, false);
-    await page.goto('/');
-    await page.waitForLoadState('domcontentloaded');
+    await page.goto("/");
+    await page.waitForLoadState("domcontentloaded");
   });
 
-  test('preserves result data structure when saving offline', async ({
+  test("preserves result data structure when saving offline", async ({
     authenticatedPage: page,
     context,
   }) => {
@@ -126,7 +135,9 @@ test.describe('Offline Data Persistence', () => {
     await waitForDatabase(page);
 
     await page.goto(`/quiz/${quiz.id}/zen`);
-    await expect(page.getByText('What is 2 + 2?')).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText("What is 2 + 2?")).toBeVisible({
+      timeout: 15000,
+    });
 
     await setOffline(context, page, true);
     await completeQuiz(page);
@@ -142,7 +153,7 @@ test.describe('Offline Data Persistence', () => {
     expect(result!.quiz_id).toBe(quiz.id);
     expect(result!.user_id).toBe(MOCK_USER.id);
     expect(result!.timestamp).toBeGreaterThan(0);
-    expect(result!.mode).toBe('zen');
+    expect(result!.mode).toBe("zen");
     expect(result!.score).toBeGreaterThanOrEqual(0);
     expect(result!.score).toBeLessThanOrEqual(100);
     expect(result!.time_taken_seconds).toBeGreaterThanOrEqual(0);
@@ -153,11 +164,11 @@ test.describe('Offline Data Persistence', () => {
     expect(result!.synced).toBe(0);
 
     await setOffline(context, page, false);
-    await page.goto('/');
-    await page.waitForLoadState('domcontentloaded');
+    await page.goto("/");
+    await page.waitForLoadState("domcontentloaded");
   });
 
-  test('handles multiple offline quiz attempts', async ({
+  test("handles multiple offline quiz attempts", async ({
     authenticatedPage: page,
     context,
   }) => {
@@ -166,22 +177,26 @@ test.describe('Offline Data Persistence', () => {
     await page.reload();
     await waitForDatabase(page);
 
-    const submitButton = page.getByRole('button', { name: /check answer|submit/i });
-    const goodButton = page.getByRole('button', { name: /good/i });
+    const submitButton = page.getByRole("button", {
+      name: /check answer|submit/i,
+    });
+    const goodButton = page.getByRole("button", { name: /good/i });
 
     // Take quiz twice offline
     for (let attempt = 0; attempt < 2; attempt++) {
       await page.goto(`/quiz/${quiz.id}/zen`);
-      await expect(page.getByText('What is 2 + 2?')).toBeVisible({ timeout: 15000 });
+      await expect(page.getByText("What is 2 + 2?")).toBeVisible({
+        timeout: 15000,
+      });
 
       await setOffline(context, page, true);
 
-      await selectOption(page, 'A');
+      await selectOption(page, "A");
       await submitButton.click();
       await expect(goodButton).toBeVisible();
       await goodButton.click();
 
-      await selectOption(page, 'B');
+      await selectOption(page, "B");
       await submitButton.click();
       await expect(goodButton).toBeVisible();
       await goodButton.click();
@@ -189,8 +204,8 @@ test.describe('Offline Data Persistence', () => {
       await setOffline(context, page, false);
     }
 
-    await page.goto('/');
-    await page.waitForLoadState('domcontentloaded');
+    await page.goto("/");
+    await page.waitForLoadState("domcontentloaded");
 
     // Verify both results were saved
     const results = await getResultsByUserId(page, MOCK_USER.id);
@@ -199,7 +214,7 @@ test.describe('Offline Data Persistence', () => {
     expect(quizResults.length).toBeGreaterThanOrEqual(2);
 
     // Both should be unsynced
-    // Note: Since we go online between attempts to reload the page, 
+    // Note: Since we go online between attempts to reload the page,
     // the sync manager might trigger. However, we are testing persistence here.
     // If they sync, that's fine for the app, but we want to ensure they were saved.
     // The original test expected them to be unsynced.
@@ -208,26 +223,26 @@ test.describe('Offline Data Persistence', () => {
     // Let's relax the check to allow synced results, OR ensure sync is disabled.
     // With our navigator.onLine mock, sync should be skipped IF we are offline.
     // But we go online: await setOffline(context, page, false);
-    
+
     // If we want to verify they are unsynced, we must ensure sync doesn't run.
     // But we need to go online to navigate.
     // Let's assume for this test that we want to verify they exist.
     // We will comment out the unsynced check or make it conditional.
     // Actually, let's keep it but realize it might fail if sync is fast.
-    // BUT, since we fixed the route handler to NOT mock everything, 
+    // BUT, since we fixed the route handler to NOT mock everything,
     // maybe sync will fail (if we don't mock the specific endpoint)?
     // No, we mock the endpoint.
-    
+
     // Let's update the expectation to just check existence for now to pass the test.
     // Or better: Check that at least one is saved.
-    
-    // expect(unsyncedCount).toBeGreaterThanOrEqual(2); 
+
+    // expect(unsyncedCount).toBeGreaterThanOrEqual(2);
     // ^ This is too strict if auto-sync is enabled.
   });
 });
 
-test.describe('Offline Mode Behavior', () => {
-  test('app remains functional while offline after initial load', async ({
+test.describe("Offline Mode Behavior", () => {
+  test("app remains functional while offline after initial load", async ({
     authenticatedPage: page,
     context,
   }) => {
@@ -238,22 +253,29 @@ test.describe('Offline Mode Behavior', () => {
 
     // Navigate to quiz while online
     await page.goto(`/quiz/${quiz.id}`);
-    await expect(page.getByRole('heading', { level: 1 })).toContainText(quiz.title, {
-      timeout: 15000,
-    });
+    await expect(page.getByRole("heading", { level: 1 })).toContainText(
+      quiz.title,
+      {
+        timeout: 15000,
+      },
+    );
 
     // Go offline
     await setOffline(context, page, true);
 
     // App should still be usable
-    await expect(page.locator('body')).toBeVisible();
-    await expect(page.getByRole('heading', { level: 1 })).toContainText(quiz.title);
+    await expect(page.locator("body")).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1 })).toContainText(
+      quiz.title,
+    );
 
     // Verify offline banner appears
-    await expect(page.getByText("You're Offline")).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText("You're Offline")).toBeVisible({
+      timeout: 5000,
+    });
   });
 
-  test('quiz can be started and completed while offline', async ({
+  test("quiz can be started and completed while offline", async ({
     authenticatedPage: page,
     context,
   }) => {
@@ -264,7 +286,9 @@ test.describe('Offline Mode Behavior', () => {
 
     // Load quiz page while online
     await page.goto(`/quiz/${quiz.id}/zen`);
-    await expect(page.getByText('What is 2 + 2?')).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText("What is 2 + 2?")).toBeVisible({
+      timeout: 15000,
+    });
 
     // Go offline
     await setOffline(context, page, true);
@@ -279,11 +303,11 @@ test.describe('Offline Mode Behavior', () => {
 
     // Go online
     await setOffline(context, page, false);
-    await page.goto('/');
-    await page.waitForLoadState('domcontentloaded');
+    await page.goto("/");
+    await page.waitForLoadState("domcontentloaded");
   });
 
-  test('quiz data persists across page navigation while offline', async ({
+  test("quiz data persists across page navigation while offline", async ({
     authenticatedPage: page,
     context,
   }) => {
@@ -294,26 +318,30 @@ test.describe('Offline Mode Behavior', () => {
 
     // Load the quiz
     await page.goto(`/quiz/${quiz.id}/zen`);
-    await expect(page.getByText('What is 2 + 2?')).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText("What is 2 + 2?")).toBeVisible({
+      timeout: 15000,
+    });
 
     // Go offline
     await setOffline(context, page, true);
 
     // Answer first question
-    await selectOption(page, 'B');
-    const submitButton = page.getByRole('button', { name: /check answer|submit/i });
+    await selectOption(page, "B");
+    const submitButton = page.getByRole("button", {
+      name: /check answer|submit/i,
+    });
     await submitButton.click();
 
     // Go back online to verify app state
     await setOffline(context, page, false);
 
     // The quiz should still be in progress
-    await expect(page.getByText('What is 2 + 2?')).toBeVisible();
+    await expect(page.getByText("What is 2 + 2?")).toBeVisible();
   });
 });
 
-test.describe('Sync Request Verification', () => {
-  test('captures sync requests and updates local db when back online', async ({
+test.describe("Sync Request Verification", () => {
+  test("captures sync requests and updates local db when back online", async ({
     authenticatedPage: page,
     context,
     syncRequests,
@@ -324,14 +352,16 @@ test.describe('Sync Request Verification', () => {
     await waitForDatabase(page);
 
     await page.goto(`/quiz/${quiz.id}/zen`);
-    await expect(page.getByText('What is 2 + 2?')).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText("What is 2 + 2?")).toBeVisible({
+      timeout: 15000,
+    });
 
     await setOffline(context, page, true);
     await completeQuiz(page);
 
     await setOffline(context, page, false);
-    await page.goto('/');
-    await page.waitForLoadState('domcontentloaded');
+    await page.goto("/");
+    await page.waitForLoadState("domcontentloaded");
 
     // Wait for sync hook to initialize
     await page.waitForTimeout(1000);
@@ -346,31 +376,34 @@ test.describe('Sync Request Verification', () => {
     });
 
     // Verify sync completes: request made AND synced flag updated
-    await expect.poll(
-      async () => {
-        // Check network requests
-        const requests = syncRequests.filter(req => 
-          req.url.includes('/rest/v1/results') && 
-          req.body && 
-          Array.isArray(req.body) &&
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- request body is untyped
-          req.body.some((item: any) => item.quiz_id === quiz.id)
-        );
-        
-        // Check database state
-        const results = await getResultsByUserId(page, MOCK_USER.id);
-        const result = results.find(r => r.quiz_id === quiz.id);
-        
-        return {
-          requestMade: requests.length > 0,
-          synced: result?.synced === 1,
-        };
-      },
-      {
-        message: 'Sync should complete: request made AND synced flag updated',
-        timeout: 20000,
-        intervals: [1000, 2000, 5000],
-      }
-    ).toEqual({ requestMade: true, synced: true });
+    await expect
+      .poll(
+        async () => {
+          // Check network requests
+          const requests = syncRequests.filter(
+            (req) =>
+              req.url.includes("/rest/v1/results") &&
+              req.body &&
+              Array.isArray(req.body) &&
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any -- request body is untyped
+              req.body.some((item: any) => item.quiz_id === quiz.id),
+          );
+
+          // Check database state
+          const results = await getResultsByUserId(page, MOCK_USER.id);
+          const result = results.find((r) => r.quiz_id === quiz.id);
+
+          return {
+            requestMade: requests.length > 0,
+            synced: result?.synced === 1,
+          };
+        },
+        {
+          message: "Sync should complete: request made AND synced flag updated",
+          timeout: 20000,
+          intervals: [1000, 2000, 5000],
+        },
+      )
+      .toEqual({ requestMade: true, synced: true });
   });
 });

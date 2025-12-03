@@ -22,12 +22,12 @@
 ```mermaid
 C4Context
     title System Context Diagram
-    
+
     Person(user, "User", "Quiz taker or administrator")
     System(webapp, "Quiz Application", "Next.js web application")
     System_Ext(supabase, "Supabase", "Authentication & Database")
     System_Ext(vercel, "Vercel", "Hosting & Edge Functions")
-    
+
     Rel(user, webapp, "Uses", "HTTPS")
     Rel(webapp, supabase, "Auth & Data", "HTTPS")
     Rel(vercel, webapp, "Hosts")
@@ -71,20 +71,20 @@ C4Context
 
 ### Frontend
 
-| Technology | Purpose | Version |
-|------------|---------|---------|
-| [Next.js](https://nextjs.org/) | React Framework | App Router (v16+) |
-| [React](https://react.dev/) | UI Library | 19.x |
-| [TypeScript](https://www.typescriptlang.org/) | Type Safety | 5.x |
-| [Tailwind CSS](https://tailwindcss.com/) | Styling | 3.x |
-| [Dexie.js](https://dexie.org/) | IndexedDB Wrapper | 3.x |
+| Technology                                    | Purpose           | Version           |
+| --------------------------------------------- | ----------------- | ----------------- |
+| [Next.js](https://nextjs.org/)                | React Framework   | App Router (v16+) |
+| [React](https://react.dev/)                   | UI Library        | 19.x              |
+| [TypeScript](https://www.typescriptlang.org/) | Type Safety       | 5.x               |
+| [Tailwind CSS](https://tailwindcss.com/)      | Styling           | 3.x               |
+| [Dexie.js](https://dexie.org/)                | IndexedDB Wrapper | 3.x               |
 
 ### Backend
 
-| Technology | Purpose |
-|------------|---------|
-| [Supabase Auth](https://supabase.com/auth) | Authentication |
-| [Supabase Database](https://supabase.com/database) | PostgreSQL Database |
+| Technology                                                                     | Purpose             |
+| ------------------------------------------------------------------------------ | ------------------- |
+| [Supabase Auth](https://supabase.com/auth)                                     | Authentication      |
+| [Supabase Database](https://supabase.com/database)                             | PostgreSQL Database |
 | [Row Level Security](https://supabase.com/docs/guides/auth/row-level-security) | Data Access Control |
 
 ### Supabase Database Schema
@@ -195,10 +195,10 @@ create policy "quizzes_update_owner" on public.quizzes
 
 ### Infrastructure
 
-| Service | Purpose |
-|---------|---------|
-| [Vercel](https://vercel.com/) | Hosting & Deployment |
-| [Supabase Cloud](https://supabase.com/) | Backend Services |
+| Service                                 | Purpose              |
+| --------------------------------------- | -------------------- |
+| [Vercel](https://vercel.com/)           | Hosting & Deployment |
+| [Supabase Cloud](https://supabase.com/) | Backend Services     |
 
 ---
 
@@ -263,14 +263,14 @@ sequenceDiagram
     participant H as Hook
     participant D as Dexie (Local)
     participant S as Supabase
-    
+
     U->>C: View Results
     C->>H: useResults()
     H->>D: Query local DB
     D-->>H: Local results
     H-->>C: Return results
     C-->>U: Display results
-    
+
     Note over H,S: Background sync (if online)
     H->>S: Fetch remote results
     S-->>H: Remote results
@@ -287,14 +287,14 @@ sequenceDiagram
     participant D as Dexie (Local)
     participant S as Supabase
     participant SM as SyncManager
-    
+
     U->>C: Submit Quiz
     C->>H: submitResult()
     H->>D: Save locally (synced: 0)
     D-->>H: Saved
     H-->>C: Success
     C-->>U: Show confirmation
-    
+
     Note over SM,S: Async sync process
     SM->>D: Get unsynced results
     D-->>SM: Results (synced: 0)
@@ -309,13 +309,13 @@ sequenceDiagram
 
 ### State Locations
 
-| State Type | Location | Example |
-|------------|----------|---------|
-| Server State | Supabase | User data, results |
-| Cache State | IndexedDB | Offline data copy |
-| UI State | React useState | Modal open/close |
-| Form State | React Hook Form | Form inputs |
-| Auth State | Supabase Auth | User session |
+| State Type   | Location        | Example            |
+| ------------ | --------------- | ------------------ |
+| Server State | Supabase        | User data, results |
+| Cache State  | IndexedDB       | Offline data copy  |
+| UI State     | React useState  | Modal open/close   |
+| Form State   | React Hook Form | Form inputs        |
+| Auth State   | Supabase Auth   | User session       |
 
 ### State Flow Diagram
 
@@ -324,15 +324,15 @@ graph TD
     subgraph "Source of Truth"
         A[Supabase Database]
     end
-    
+
     subgraph "Local Cache"
         B[IndexedDB via Dexie]
     end
-    
+
     subgraph "UI State"
         C[React Components]
     end
-    
+
     A <-->|Sync Manager| B
     B -->|Hooks| C
     C -->|Actions| B
@@ -348,14 +348,14 @@ sequenceDiagram
     participant B as Browser
     participant M as Middleware
     participant S as Supabase Auth
-    
+
     U->>B: Enter credentials
     B->>S: signInWithPassword()
     S-->>B: Session + Tokens
     B->>B: Store in cookies
-    
+
     Note over B,M: Subsequent requests
-    
+
     B->>M: Request /dashboard
     M->>M: Read session cookie
     M->>S: Validate/refresh token
@@ -365,12 +365,12 @@ sequenceDiagram
 
 ### Session Management
 
-| Aspect | Implementation |
-|--------|----------------|
-| Storage | HTTP-only cookies |
-| Refresh | Automatic via middleware |
-| Expiry | Configurable (default 1 hour) |
-| Invalidation | Logout clears cookies |
+| Aspect       | Implementation                |
+| ------------ | ----------------------------- |
+| Storage      | HTTP-only cookies             |
+| Refresh      | Automatic via middleware      |
+| Expiry       | Configurable (default 1 hour) |
+| Invalidation | Logout clears cookies         |
 
 ---
 
@@ -403,12 +403,12 @@ sequenceDiagram
 
 ### Conflict Resolution
 
-| Scenario | Strategy |
-|----------|----------|
+| Scenario                | Strategy                           |
+| ----------------------- | ---------------------------------- |
 | Same ID, different data | Last-write-wins (server timestamp) |
-| Local only | Push to server |
-| Remote only | Pull to local |
-| Both exist, same data | No action |
+| Local only              | Push to server                     |
+| Remote only             | Pull to local                      |
+| Both exist, same data   | No action                          |
 
 ---
 
@@ -455,22 +455,22 @@ CREATE POLICY "Users can update own results" ON results
 
 ### Optimization Strategies
 
-| Area | Strategy |
-|------|----------|
-| Initial Load | Code splitting, lazy loading |
-| Data Fetching | Custom hooks with Supabase client + Dexie |
-| Offline Support | IndexedDB caching |
-| Images | Next.js Image optimization |
-| Styles | Tailwind CSS purging |
+| Area            | Strategy                                  |
+| --------------- | ----------------------------------------- |
+| Initial Load    | Code splitting, lazy loading              |
+| Data Fetching   | Custom hooks with Supabase client + Dexie |
+| Offline Support | IndexedDB caching                         |
+| Images          | Next.js Image optimization                |
+| Styles          | Tailwind CSS purging                      |
 
 ### Performance Metrics Targets
 
 | Metric | Target | Current |
-|--------|--------|---------|
-| FCP | < 1.5s | TBD |
-| LCP | < 2.5s | TBD |
-| TTI | < 3.5s | TBD |
-| CLS | < 0.1 | TBD |
+| ------ | ------ | ------- |
+| FCP    | < 1.5s | TBD     |
+| LCP    | < 2.5s | TBD     |
+| TTI    | < 3.5s | TBD     |
+| CLS    | < 0.1  | TBD     |
 
 ---
 
@@ -485,6 +485,7 @@ CREATE POLICY "Users can update own results" ON results
 **Decision:** Use Next.js 16 with App Router.
 
 **Consequences:**
+
 - ✅ Built-in SSR/SSG
 - ✅ File-based routing
 - ✅ Server Components support
@@ -501,6 +502,7 @@ CREATE POLICY "Users can update own results" ON results
 **Decision:** Use Supabase for auth and PostgreSQL database.
 
 **Consequences:**
+
 - ✅ Quick setup
 - ✅ Built-in auth
 - ✅ Row Level Security
@@ -517,6 +519,7 @@ CREATE POLICY "Users can update own results" ON results
 **Decision:** Use Dexie.js as IndexedDB wrapper.
 
 **Consequences:**
+
 - ✅ Offline support
 - ✅ Fast local queries
 - ⚠️ Sync complexity

@@ -86,6 +86,7 @@ create policy "Users can insert their own results."
   on results for insert
   with check ( auth.uid() = user_id );
 
+-- Results are immutable historical records, EXCEPT for sync idempotency (upserts)
 create policy "Users can update their own results."
   on results for update
   using ( auth.uid() = user_id );
@@ -105,7 +106,11 @@ begin
   insert into public.profiles (id, display_name)
   values (
     new.id, 
-    COALESCE(new.raw_user_meta_data ->> 'full_name', new.email, '')
+    CASE 
+      WHEN new.raw_user_meta_data ->> 'full_name' IS NOT NULL AND new.raw_user_meta_data ->> 'full_name' <> '' 
+      THEN new.raw_user_meta_data ->> 'full_name'
+      ELSE COALESCE(new.email, '')
+    END
   );
   return new;
 end;

@@ -1,9 +1,9 @@
-import SignupForm from '@/components/auth/SignupForm';
-import { Metadata } from 'next';
+import SignupForm from "@/components/auth/SignupForm";
+import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: 'Sign Up',
-  description: 'Create a new CertPrep.ai account',
+  title: "Sign Up",
+  description: "Create a new CertPrep.ai account",
 };
 
 export default function SignupPage(): React.ReactElement {
@@ -29,7 +29,8 @@ export default function SignupPage(): React.ReactElement {
         <div className="relative z-20 mt-auto">
           <blockquote className="space-y-2">
             <p className="text-lg">
-              &ldquo;Join thousands of other professionals mastering their craft with CertPrep.ai.&rdquo;
+              &ldquo;Join thousands of other professionals mastering their craft
+              with CertPrep.ai.&rdquo;
             </p>
           </blockquote>
         </div>

@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import * as React from 'react';
+import * as React from "react";
 
 interface OnlineStatus {
   isOnline: boolean;
@@ -13,7 +13,7 @@ interface OnlineStatus {
  */
 export function useOnlineStatus(): OnlineStatus {
   const [isOnline, setIsOnline] = React.useState<boolean>(
-    typeof navigator !== 'undefined' ? navigator.onLine : true,
+    typeof navigator !== "undefined" ? navigator.onLine : true,
   );
   const [wasOffline, setWasOffline] = React.useState<boolean>(false);
 
@@ -27,13 +27,13 @@ export function useOnlineStatus(): OnlineStatus {
       setWasOffline(true);
     };
 
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
     setIsOnline(navigator.onLine);
 
     return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
     };
   }, []);
 

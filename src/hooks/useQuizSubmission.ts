@@ -1,13 +1,13 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useToast } from '@/components/ui/Toast';
-import { createResult } from '@/db/results';
-import { useSync } from '@/hooks/useSync';
-import { useQuizSessionStore } from '@/stores/quizSessionStore';
-import { useAuth } from '@/components/providers/AuthProvider';
-import { useEffectiveUserId } from '@/hooks/useEffectiveUserId';
-import { clearSmartRoundState } from '@/lib/smartRoundStorage';
-import { logger } from '@/lib/logger';
+import { useState, useCallback, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/components/ui/Toast";
+import { createResult } from "@/db/results";
+import { useSync } from "@/hooks/useSync";
+import { useQuizSessionStore } from "@/stores/quizSessionStore";
+import { useAuth } from "@/components/providers/AuthProvider";
+import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
+import { clearSmartRoundState } from "@/lib/smartRoundStorage";
+import { logger } from "@/lib/logger";
 
 interface UseQuizSubmissionProps {
   quizId: string;
@@ -21,7 +21,10 @@ interface UseQuizSubmissionReturn {
   retrySave: (timeTakenSeconds: number) => void;
 }
 
-export function useQuizSubmission({ quizId, isSmartRound = false }: UseQuizSubmissionProps): UseQuizSubmissionReturn {
+export function useQuizSubmission({
+  quizId,
+  isSmartRound = false,
+}: UseQuizSubmissionProps): UseQuizSubmissionReturn {
   const router = useRouter();
   const { addToast } = useToast();
   const { sync } = useSync();
@@ -56,14 +59,17 @@ export function useQuizSubmission({ quizId, isSmartRound = false }: UseQuizSubmi
 
         if (!effectiveUserId) {
           setSaveError(true);
-          addToast('error', 'Unable to save result: no user context available.');
+          addToast(
+            "error",
+            "Unable to save result: no user context available.",
+          );
           return;
         }
 
         const result = await createResult({
           quizId,
           userId: effectiveUserId,
-          mode: 'zen',
+          mode: "zen",
           answers: answersRecord,
           flaggedQuestions: Array.from(flaggedQuestions),
           timeTakenSeconds,
@@ -72,7 +78,7 @@ export function useQuizSubmission({ quizId, isSmartRound = false }: UseQuizSubmi
 
         // Attempt background sync
         sync().catch((err) => {
-          console.warn('Background sync failed:', err);
+          console.warn("Background sync failed:", err);
         });
 
         if (!isMountedRef.current) return;
@@ -81,13 +87,16 @@ export function useQuizSubmission({ quizId, isSmartRound = false }: UseQuizSubmi
           clearSmartRoundState();
         }
 
-        addToast('success', isSmartRound ? 'Smart Round complete!' : 'Study session complete!');
+        addToast(
+          "success",
+          isSmartRound ? "Smart Round complete!" : "Study session complete!",
+        );
         router.push(`/results/${result.id}`);
       } catch (error) {
-        console.error('Failed to save quiz result:', error);
+        console.error("Failed to save quiz result:", error);
         if (isMountedRef.current) {
           setSaveError(true);
-          addToast('error', 'Failed to save result. Please try again.');
+          addToast("error", "Failed to save result. Please try again.");
         }
         throw error;
       } finally {
@@ -97,16 +106,26 @@ export function useQuizSubmission({ quizId, isSmartRound = false }: UseQuizSubmi
         }
       }
     },
-    [addToast, answers, flaggedQuestions, isSmartRound, quizId, router, sync, questions, effectiveUserId]
+    [
+      addToast,
+      answers,
+      flaggedQuestions,
+      isSmartRound,
+      quizId,
+      router,
+      sync,
+      questions,
+      effectiveUserId,
+    ],
   );
 
   const retrySave = useCallback(
     (timeTakenSeconds: number) => {
       void submitQuiz(timeTakenSeconds).catch((error) => {
-        logger.warn('Manual retry failed to save quiz result', error);
+        logger.warn("Manual retry failed to save quiz result", error);
       });
     },
-    [submitQuiz]
+    [submitQuiz],
   );
 
   return {

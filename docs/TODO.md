@@ -8,6 +8,7 @@
 - **Observability & recovery**: Log import/export outcomes (counts, errors) locally for supportability and add a lightweight DB health check screen to guide users through self-recovery steps.
 
 ## Further Recommendations
+
 - **Resilience tests**: Add automated regression covering backup export/import round-trips and Dexie schema migrations to catch breaking changes early.
 - **Accessibility audits**: Run periodic axe/keyboard audits on quiz flows and modals to ensure focus traps, ARIA labels, and screen-reader cues stay intact.
 - **Offline robustness**: Add graceful offline messaging around fetches (e.g., library manifest) and queue retries for sync-like flows to prevent silent failures.

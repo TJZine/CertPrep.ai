@@ -1,9 +1,9 @@
-declare module 'y-dexie' {
+declare module "y-dexie" {
   export interface DexieYProvider {
     name?: string;
   }
 }
 
-declare module 'yjs' {
+declare module "yjs" {
   export class Doc {}
 }

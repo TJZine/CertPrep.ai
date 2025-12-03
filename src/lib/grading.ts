@@ -1,5 +1,5 @@
-import { hashAnswer } from '@/lib/utils';
-import type { Question } from '@/types/quiz';
+import { hashAnswer } from "@/lib/utils";
+import type { Question } from "@/types/quiz";
 
 export interface GradingResult {
   isCorrect: boolean;
@@ -10,8 +10,11 @@ export interface GradingResult {
  * Evaluates a single answer against a question's correct answer.
  * Supports both hashed (preferred) and plaintext correct answer comparisons.
  */
-export async function evaluateAnswer(question: Question, userAnswer: string | undefined | null): Promise<GradingResult> {
-  const category = question.category || 'Uncategorized';
+export async function evaluateAnswer(
+  question: Question,
+  userAnswer: string | undefined | null,
+): Promise<GradingResult> {
+  const category = question.category || "Uncategorized";
   let isCorrect = false;
 
   if (userAnswer) {

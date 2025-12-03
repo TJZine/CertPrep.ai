@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import { AlertTriangle } from 'lucide-react';
-import { Modal } from '@/components/ui/Modal';
-import { Button } from '@/components/ui/Button';
-import type { Quiz } from '@/types/quiz';
+import * as React from "react";
+import { AlertTriangle } from "lucide-react";
+import { Modal } from "@/components/ui/Modal";
+import { Button } from "@/components/ui/Button";
+import type { Quiz } from "@/types/quiz";
 
 export interface DeleteConfirmModalProps {
   quiz: Quiz | null;
@@ -26,7 +26,7 @@ export function DeleteConfirmModal({
   isDeleting = false,
   attemptCount = 0,
 }: DeleteConfirmModalProps): React.ReactElement | null {
-  const title = quiz ? `"${quiz.title}"` : 'this quiz';
+  const title = quiz ? `"${quiz.title}"` : "this quiz";
 
   return (
     <Modal
@@ -39,12 +39,16 @@ export function DeleteConfirmModal({
       size="sm"
     >
       <div className="flex items-start gap-3">
-        <div className="mt-0.5 rounded-full bg-orange-100 p-2 text-orange-600" aria-hidden="true">
+        <div
+          className="mt-0.5 rounded-full bg-orange-100 p-2 text-orange-600"
+          aria-hidden="true"
+        >
           <AlertTriangle className="h-5 w-5" />
         </div>
         <p className="text-sm text-slate-700">
-          Deleting a quiz removes it from your library along with any saved attempts or analytics. You
-          will not be able to recover this data later.
+          Deleting a quiz removes it from your library along with any saved
+          attempts or analytics. You will not be able to recover this data
+          later.
         </p>
       </div>
       <div className="mt-6 flex justify-end gap-3">

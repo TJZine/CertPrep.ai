@@ -1,11 +1,11 @@
-'use strict';
+"use strict";
 /* eslint-disable no-console */
 
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 
 const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
-const iconsDir = path.join(__dirname, '../public/icons');
+const iconsDir = path.join(__dirname, "../public/icons");
 
 // Ensure directory exists
 if (!fs.existsSync(iconsDir)) {
@@ -24,4 +24,6 @@ sizes.forEach((size) => {
   console.log(`Created icon-${size}x${size}.svg`);
 });
 
-console.log('\nNote: Convert SVGs to PNGs for production using a tool like sharp or an online converter.');
+console.log(
+  "\nNote: Convert SVGs to PNGs for production using a tool like sharp or an online converter.",
+);

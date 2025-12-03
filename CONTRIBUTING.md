@@ -31,11 +31,11 @@ This project and everyone participating in it is governed by our [Code of Conduc
 
 Before you begin, ensure you have the following installed:
 
-| Tool | Version | Check Command |
-|------|---------|---------------|
+| Tool    | Version | Check Command    |
+| ------- | ------- | ---------------- |
 | Node.js | ≥18.0.0 | `node --version` |
-| npm | ≥9.0.0 | `npm --version` |
-| Git | Latest | `git --version` |
+| npm     | ≥9.0.0  | `npm --version`  |
+| Git     | Latest  | `git --version`  |
 
 ### Development Setup
 
@@ -104,30 +104,37 @@ Before creating bug reports, please check the [existing issues](https://github.c
 
 ```markdown
 ## Bug Description
+
 A clear and concise description of the bug.
 
 ## Steps to Reproduce
+
 1. Go to '...'
 2. Click on '...'
 3. Scroll down to '...'
 4. See error
 
 ## Expected Behavior
+
 What you expected to happen.
 
 ## Actual Behavior
+
 What actually happened.
 
 ## Screenshots
+
 If applicable, add screenshots.
 
 ## Environment
+
 - OS: [e.g., macOS 14.0]
 - Browser: [e.g., Chrome 120]
 - Node.js: [e.g., 18.17.0]
 - Version: [e.g., 1.2.0]
 
 ## Additional Context
+
 Any other context about the problem.
 ```
 
@@ -154,14 +161,14 @@ Enhancement suggestions are tracked as [GitHub issues](https://github.com/TJZine
 
 We actively welcome your pull requests!
 
-| Type | Branch Prefix | Example |
-|------|---------------|---------|
-| Feature | `feature/` | `feature/add-dark-mode` |
-| Bug Fix | `fix/` | `fix/login-validation` |
-| Documentation | `docs/` | `docs/update-readme` |
-| Refactor | `refactor/` | `refactor/auth-flow` |
-| Performance | `perf/` | `perf/optimize-queries` |
-| Test | `test/` | `test/add-unit-tests` |
+| Type          | Branch Prefix | Example                 |
+| ------------- | ------------- | ----------------------- |
+| Feature       | `feature/`    | `feature/add-dark-mode` |
+| Bug Fix       | `fix/`        | `fix/login-validation`  |
+| Documentation | `docs/`       | `docs/update-readme`    |
+| Refactor      | `refactor/`   | `refactor/auth-flow`    |
+| Performance   | `perf/`       | `perf/optimize-queries` |
+| Test          | `test/`       | `test/add-unit-tests`   |
 
 ---
 
@@ -186,6 +193,7 @@ gitGraph
 ### Workflow
 
 1. **Sync with upstream**
+
    ```bash
    git fetch upstream
    git checkout main
@@ -193,6 +201,7 @@ gitGraph
    ```
 
 2. **Create a branch**
+
    ```bash
    git checkout -b feature/your-feature-name
    ```
@@ -203,6 +212,7 @@ gitGraph
    - Update documentation
 
 4. **Run checks locally**
+
    ```bash
    npm run lint        # Check linting
    npm run typecheck   # Check types
@@ -211,6 +221,7 @@ gitGraph
    ```
 
 5. **Commit your changes**
+
    ```bash
    git add .
    git commit -m "feat: add amazing feature"
@@ -232,9 +243,9 @@ We follow strict TypeScript practices:
 ```typescript
 // ✅ Good
 interface UserProps {
-  id: string
-  name: string
-  email: string
+  id: string;
+  name: string;
+  email: string;
 }
 
 function getUser(id: string): Promise<UserProps> {
@@ -278,13 +289,13 @@ export function Button(props) {
 
 ### File Naming
 
-| Type | Convention | Example |
-|------|------------|---------|
-| Components | PascalCase | `UserProfile.tsx` |
-| Hooks | camelCase with `use` prefix | `useAuth.ts` |
-| Utilities | camelCase | `formatDate.ts` |
-| Types | PascalCase | `User.ts` |
-| Constants | SCREAMING_SNAKE_CASE | `API_ENDPOINTS.ts` |
+| Type       | Convention                  | Example            |
+| ---------- | --------------------------- | ------------------ |
+| Components | PascalCase                  | `UserProfile.tsx`  |
+| Hooks      | camelCase with `use` prefix | `useAuth.ts`       |
+| Utilities  | camelCase                   | `formatDate.ts`    |
+| Types      | PascalCase                  | `User.ts`          |
+| Constants  | SCREAMING_SNAKE_CASE        | `API_ENDPOINTS.ts` |
 
 ### CSS/Tailwind
 
@@ -323,17 +334,17 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/):
 
 ### Types
 
-| Type | Description | Example |
-|------|-------------|---------|
-| `feat` | New feature | `feat(auth): add password reset` |
-| `fix` | Bug fix | `fix(quiz): correct score calculation` |
-| `docs` | Documentation | `docs: update API reference` |
-| `style` | Code style (formatting) | `style: fix indentation` |
-| `refactor` | Code refactoring | `refactor(sync): simplify logic` |
-| `perf` | Performance improvement | `perf: optimize query` |
-| `test` | Adding tests | `test: add auth unit tests` |
-| `chore` | Maintenance | `chore: update dependencies` |
-| `ci` | CI/CD changes | `ci: add coverage report` |
+| Type       | Description             | Example                                |
+| ---------- | ----------------------- | -------------------------------------- |
+| `feat`     | New feature             | `feat(auth): add password reset`       |
+| `fix`      | Bug fix                 | `fix(quiz): correct score calculation` |
+| `docs`     | Documentation           | `docs: update API reference`           |
+| `style`    | Code style (formatting) | `style: fix indentation`               |
+| `refactor` | Code refactoring        | `refactor(sync): simplify logic`       |
+| `perf`     | Performance improvement | `perf: optimize query`                 |
+| `test`     | Adding tests            | `test: add auth unit tests`            |
+| `chore`    | Maintenance             | `chore: update dependencies`           |
+| `ci`       | CI/CD changes           | `ci: add coverage report`              |
 
 ### Examples
 
@@ -395,21 +406,26 @@ docs: description
 
 ```markdown
 ## Description
+
 Brief description of changes.
 
 ## Type of Change
+
 - [ ] 🐛 Bug fix (non-breaking change fixing an issue)
 - [ ] ✨ New feature (non-breaking change adding functionality)
 - [ ] 💥 Breaking change (fix or feature causing existing functionality to change)
 - [ ] 📝 Documentation update
 
 ## How Has This Been Tested?
+
 Describe tests you ran and how to reproduce.
 
 ## Screenshots (if applicable)
+
 Add screenshots for UI changes.
 
 ## Checklist
+
 - [ ] My code follows the project's style guidelines
 - [ ] I have performed a self-review
 - [ ] I have commented my code where necessary
@@ -419,6 +435,7 @@ Add screenshots for UI changes.
 - [ ] All tests pass locally
 
 ## Related Issues
+
 Fixes #(issue number)
 ```
 
@@ -443,16 +460,16 @@ graph LR
 
 ## 🏷️ Issue Labels
 
-| Label | Description | Color |
-|-------|-------------|-------|
-| `bug` | Something isn't working | 🔴 Red |
-| `enhancement` | New feature request | 🔵 Blue |
-| `documentation` | Documentation improvements | 📝 Purple |
-| `good first issue` | Good for newcomers | 🟢 Green |
-| `help wanted` | Extra attention needed | 🟡 Yellow |
-| `priority: high` | High priority | 🟠 Orange |
-| `priority: low` | Low priority | ⚪ Gray |
-| `wontfix` | Will not be worked on | ⚫ Black |
+| Label              | Description                | Color     |
+| ------------------ | -------------------------- | --------- |
+| `bug`              | Something isn't working    | 🔴 Red    |
+| `enhancement`      | New feature request        | 🔵 Blue   |
+| `documentation`    | Documentation improvements | 📝 Purple |
+| `good first issue` | Good for newcomers         | 🟢 Green  |
+| `help wanted`      | Extra attention needed     | 🟡 Yellow |
+| `priority: high`   | High priority              | 🟠 Orange |
+| `priority: low`    | Low priority               | ⚪ Gray   |
+| `wontfix`          | Will not be worked on      | ⚫ Black  |
 
 ---
 
@@ -464,8 +481,8 @@ Contributors are recognized in:
 - [CHANGELOG.md](CHANGELOG.md) for each release
 - GitHub's contributor graph
 
----                                                                                                                                                 
-                                                                                                                                                    
+---
+
 ## Community
 
 Join our community to stay updated and connect with other learners!
@@ -476,14 +493,14 @@ Join our community to stay updated and connect with other learners!
 
 ---
 
-## ❓ Questions?                                                                                                                                     
-                                                                                                                                                    
-- 💬 [GitHub Discussions](https://github.com/TJZine/CertPrep.ai/discussions)                                                                         
-- 📧 Email: [maintainer@certprep.ai](mailto:maintainer@certprep.ai)                                                                                  
-- 🐦 Twitter: [@certprepai](https://twitter.com/certprepai)                                                                                          
-                                                                                                                                                    
----                                                                                                                                                 
-                                                                                                                                                    
+## ❓ Questions?
+
+- 💬 [GitHub Discussions](https://github.com/TJZine/CertPrep.ai/discussions)
+- 📧 Email: [maintainer@certprep.ai](mailto:maintainer@certprep.ai)
+- 🐦 Twitter: [@certprepai](https://twitter.com/certprepai)
+
+---
+
 <div align="center">                                                                                                                                
                                                                                                                                                     
 ## Thank You! 🙌                                                                                                                   
