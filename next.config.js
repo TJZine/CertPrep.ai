@@ -2,15 +2,22 @@
 const { withSentryConfig } = require("@sentry/nextjs");
 
 // FINDING-004: Strict Environment Validation
-if (process.env.NODE_ENV === 'production') {
+// Only enforce on actual production deployments, not local builds or CI.
+// - VERCEL_ENV: Set by Vercel to 'production', 'preview', or 'development'
+// - ENFORCE_ENV_VALIDATION: Custom flag for non-Vercel production deployments
+const isProductionDeployment =
+  process.env.VERCEL_ENV === 'production' ||
+  process.env.ENFORCE_ENV_VALIDATION === 'true';
+
+if (isProductionDeployment) {
   const requiredEnvs = ['NEXT_PUBLIC_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_ANON_KEY'];
   const missingEnvs = requiredEnvs.filter((env) => !process.env[env]);
 
   if (missingEnvs.length > 0) {
     throw new Error(
-      `Production build failed: Missing required environment variables: ${missingEnvs.join(', ')}`
+      `Production deployment failed: Missing required environment variables: ${missingEnvs.join(', ')}`
     );
-    }
+  }
 }
 
 const pkg = require('./package.json');

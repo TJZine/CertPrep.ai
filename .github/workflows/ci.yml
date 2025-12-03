@@ -64,6 +64,3 @@ jobs:
           NEXT_TELEMETRY_DISABLED: 1
           # Disable Sentry source map upload in CI to save time/resources
           SENTRY_DISABLE_AUTO_UPLOAD: 1
-          # Provide dummy values to pass build-time validation checks
-          NEXT_PUBLIC_SUPABASE_URL: https://supabase-ci.invalid
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: dummy-anon-key-for-ci-only
