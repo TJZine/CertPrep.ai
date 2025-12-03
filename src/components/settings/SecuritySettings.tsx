@@ -54,7 +54,7 @@ export function SecuritySettings(): React.ReactElement {
       setConfirmPassword('');
     } catch (error) {
         const errMsg = getAuthErrorMessage(error);
-        console.error('Error updating password:', error);
+        console.error('Error updating password:', error instanceof Error ? error.message : 'Unknown error');
         setError(errMsg);
         addToast('error', 'Failed to update password');
     } finally {

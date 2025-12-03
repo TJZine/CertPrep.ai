@@ -49,6 +49,13 @@ export function useSync(): UseSyncReturn {
       }
     }
   }, [userId]);
+  
+  // Expose sync function for E2E testing
+  useEffect(() => {
+    if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'production') {
+      (window as Window & { __certprepSync?: () => Promise<void> }).__certprepSync = sync;
+    }
+  }, [sync]);
 
   // Auto-sync on mount if user is logged in (handles page reloads/initial login)
   useEffect(() => {

@@ -49,7 +49,7 @@ export async function exchangeRecoverySession(
 
     return { success: true };
   } catch (err) {
-    console.error('Failed to exchange recovery token:', err);
+    console.error('Failed to exchange recovery token:', err instanceof Error ? err.message : 'Unknown error');
     return { success: false, error: 'This recovery link is invalid or has expired. Please request a new password reset email.' };
   }
 }

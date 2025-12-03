@@ -99,7 +99,7 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
     const { data } = await supabase.auth.getUser()
     user = data.user
   } catch (error) {
-    console.error('Middleware auth check failed:', error)
+    console.error('Middleware auth check failed:', error instanceof Error ? error.message : 'Unknown error')
     // Default to unauthenticated
   }
 

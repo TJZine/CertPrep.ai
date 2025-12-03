@@ -54,6 +54,15 @@ function toErrorMessage(error: unknown): string {
 export async function syncResults(userId: string): Promise<SyncResultsOutcome> {
   if (!userId) return { incomplete: false };
 
+  // Optimization: Don't attempt sync if browser is offline
+  if (typeof navigator !== 'undefined') {
+    logger.debug(`[Sync] Checking online status: ${navigator.onLine}`);
+    if (!navigator.onLine) {
+      logger.debug('Browser is offline, skipping sync');
+      return { incomplete: true, error: 'Offline' };
+    }
+  }
+
   // Use Web Locks API for cross-tab synchronization safety
   // This prevents multiple tabs from running sync simultaneously
   if (typeof navigator !== 'undefined' && 'locks' in navigator) {

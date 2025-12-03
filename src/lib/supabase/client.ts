@@ -26,6 +26,13 @@ export const createClient = (): SupabaseClient | undefined => {
     }
 
     client = createBrowserClient(supabaseUrl, supabaseKey)
+    
+    // Expose client on window for E2E testing
+    if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'production') {
+      console.log('Supabase Client URL:', supabaseUrl);
+      (window as any).supabase = client;
+    }
+
     return client
   } catch (error) {
     logger.error('Failed to create Supabase client.', error)

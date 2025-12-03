@@ -11,6 +11,7 @@ import { useToast } from '@/components/ui/Toast';
 import HCaptcha from '@hcaptcha/react-hcaptcha';
 
 export default function LoginForm(): React.ReactElement {
+  console.error('LoginForm rendered (debug)');
   const supabase = useMemo(() => createClient(), []);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -23,23 +24,28 @@ export default function LoginForm(): React.ReactElement {
 
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
+    console.error('LoginForm: handleSubmit called');
     setIsLoading(true);
     setError(null);
 
+    console.log('LoginForm: Checking captcha.');
     // Only validate captcha if the key is present
     if (process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY && !captchaToken) {
+      console.log('LoginForm: Captcha missing');
       setError('Please complete the captcha');
       setIsLoading(false);
       return;
     }
 
     if (!supabase) {
+      console.log('LoginForm: Supabase client missing');
       setError('Authentication service unavailable. Please contact support.');
       setIsLoading(false);
       return;
     }
 
     try {
+      console.log('LoginForm: Calling signInWithPassword', { email });
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -47,6 +53,7 @@ export default function LoginForm(): React.ReactElement {
           captchaToken: captchaToken || undefined,
         },
       });
+      console.log('LoginForm: signInWithPassword returned', { error });
 
       if (error) {
         setError(getAuthErrorMessage(error));
@@ -57,7 +64,8 @@ export default function LoginForm(): React.ReactElement {
 
       addToast('success', 'Successfully logged in!');
       router.push('/');
-    } catch {
+    } catch (err) {
+      console.error('LoginForm: Unexpected error', err);
       // Handle unexpected errors that aren't Supabase AuthErrors
       // Do not log full error to avoid PII leaks
       setError('An unexpected error occurred. Please try again.');
@@ -74,7 +82,11 @@ export default function LoginForm(): React.ReactElement {
           Enter your credentials to access your account
         </p>
       </div>
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form 
+        onSubmit={handleSubmit} 
+        onInvalid={(e) => console.error('Form invalid:', e)}
+        className="space-y-4"
+      >
         <div className="space-y-2">
           <label
             htmlFor="email"
@@ -129,7 +141,11 @@ export default function LoginForm(): React.ReactElement {
             {error}
           </div>
         )}
-        <Button type="submit" className="w-full" disabled={isLoading}>
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={isLoading}
+        >
           {isLoading ? 'Signing in...' : 'Sign In'}
         </Button>
       </form>

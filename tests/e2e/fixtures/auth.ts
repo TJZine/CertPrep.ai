@@ -4,8 +4,34 @@ import type { Page } from '@playwright/test';
  * Mock user data for E2E tests.
  * This ID is used as both the Supabase user ID and the guest user ID fallback.
  */
+import fs from 'fs';
+import path from 'path';
+
+/**
+ * Get the test user ID from the global setup output.
+ */
+function getTestUserId(): string {
+  try {
+    const authDir = path.join(__dirname, '../.auth');
+    const userIdPath = path.join(authDir, 'user-id.json');
+    if (fs.existsSync(userIdPath)) {
+      const data = JSON.parse(fs.readFileSync(userIdPath, 'utf-8'));
+      return data.id;
+    }
+  } catch (e) {
+    console.warn('Could not read test user ID from file, using fallback', e);
+  }
+  return 'e2e-test-user-00000000-0000-0000-0000-000000000001';
+}
+
+export const TEST_USER_ID = getTestUserId();
+
+/**
+ * Mock user data for E2E tests.
+ * This ID is used as both the Supabase user ID and the guest user ID fallback.
+ */
 export const MOCK_USER = {
-  id: 'e2e-test-user-00000000-0000-0000-0000-000000000001',
+  id: TEST_USER_ID,
   email: 'e2e-test@certprep.local',
   role: 'authenticated',
   aud: 'authenticated',
@@ -91,27 +117,29 @@ export function createMockSession(): {
  * @param page - Playwright page to inject auth state into
  */
 export async function injectAuthState(page: Page): Promise<void> {
-  const session = createMockSession();
-
-  // Navigate to the origin first to set localStorage
+  // If storageState is used, the session is already in localStorage/cookies.
+  // We just need to ensure app-specific keys are set if they aren't already.
+  
   await page.goto('/');
 
   await page.evaluate(
-    ({ session, userId, guestKey }) => {
+    ({ userId, guestKey }) => {
       // Set the guest user ID that useEffectiveUserId will use
       localStorage.setItem(guestKey, userId);
 
       // Also set app-specific user tracking for sync
       localStorage.setItem('cp_last_user_id', userId);
-
-      // Set Supabase auth token in localStorage
-      // The key format is: sb-<project-ref>-auth-token
-      const projectRef = 'e2e-test-project';
-      const authKey = `sb-${projectRef}-auth-token`;
-      localStorage.setItem(authKey, JSON.stringify(session));
+      
+      // Note: We don't need to set the Supabase token here because 
+      // Playwright's storageState handles it.
     },
-    { session, userId: MOCK_USER.id, guestKey: GUEST_USER_KEY }
+    { userId: MOCK_USER.id, guestKey: GUEST_USER_KEY }
   );
+  
+  // Debug: Check cookies
+  const cookies = await page.evaluate(() => document.cookie);
+  console.log('injectAuthState: MOCK_USER.id:', MOCK_USER.id);
+  console.log('injectAuthState: Cookies:', cookies);
 
   // Reload to ensure the app picks up the new auth state
   await page.reload();

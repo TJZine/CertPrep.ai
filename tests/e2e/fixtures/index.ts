@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/rules-of-hooks -- Playwright fixtures use `use` which isn't a React hook */
 import { test as base, expect, type Page, type BrowserContext } from '@playwright/test';
-import { injectAuthState, createMockSession, MOCK_USER } from './auth';
+import { injectAuthState, MOCK_USER } from './auth';
 import { clearDatabase, seedQuiz, waitForDatabase } from '../helpers/db';
 import type { Quiz } from '../../../src/types/quiz';
 
@@ -29,69 +29,18 @@ async function setupSupabaseMocks(
   context: BrowserContext,
   syncRequests: { body: unknown; url: string }[]
 ): Promise<void> {
-  const mockSession = createMockSession();
+  // Mock Supabase auth endpoints are REMOVED to allow real auth via storageState
+  // We only mock the data endpoints to prevent polluting the real database
+  // and to allow verifying sync requests.
 
-  // Mock Supabase auth session endpoint
-  // This is called by getSession() in the AuthProvider
-  await context.route('**/auth/v1/token?grant_type=*', async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(mockSession),
-    });
-  });
-
-  // Mock getUser endpoint
-  await context.route('**/auth/v1/user', async (route) => {
-    const method = route.request().method();
-    if (method === 'GET') {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify(mockSession.user),
-      });
-    } else {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({ success: true }),
-      });
-    }
-  });
-
-  // Mock other auth endpoints
-  await context.route('**/auth/v1/**', async (route) => {
-    const method = route.request().method();
-    const url = route.request().url();
-
-    // Token refresh
-    if (url.includes('/token')) {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify(mockSession),
-      });
-      return;
-    }
-
-    if (method === 'GET') {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({ session: mockSession, user: mockSession.user }),
-      });
-    } else {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({ success: true }),
-      });
-    }
-  });
+  // Note: If we needed to mock auth, we would do it here.
+  // But since we are using real Supabase Auth with a test user, 
+  // we let those requests pass through to the real backend.
 
   // Mock Supabase REST API - results endpoint
   // This handles both push (POST) and pull (GET) operations
-  await context.route('**/rest/v1/results**', async (route) => {
+  // Use * at the end to match query parameters
+  await context.route('**/rest/v1/results*', async (route) => {
     const request = route.request();
     const method = request.method();
     const url = request.url();
@@ -130,23 +79,9 @@ async function setupSupabaseMocks(
     }
   });
 
-  // Mock any other Supabase REST API endpoints
-  await context.route('**/rest/v1/**', async (route) => {
-    const method = route.request().method();
-    if (method === 'GET') {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify([]),
-      });
-    } else {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({ success: true }),
-      });
-    }
-  });
+  // Remove the catch-all route that was shadowing the results route
+  // If we need to mock other endpoints, we should add specific routes or a careful catch-all
+  // For now, let other requests pass through (they will fail if offline, which is correct)
 }
 
 /**

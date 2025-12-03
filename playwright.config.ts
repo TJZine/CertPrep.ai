@@ -36,13 +36,21 @@ export default defineConfig({
 
     // Screenshot on failure
     screenshot: 'only-on-failure',
+
+    // Use saved auth state
+    storageState: 'tests/e2e/.auth/user.json',
   },
 
   // Configure projects for major browsers
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: { 
+        ...devices['Desktop Chrome'],
+        launchOptions: {
+          args: ['--disable-web-security'],
+        },
+      },
     },
     // Can add more browsers later:
     // { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
@@ -56,12 +64,13 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000, // 2 minutes for Next.js to start
     env: {
-      // Mock Supabase credentials for E2E tests
-      // Actual API calls are intercepted by Playwright
-      NEXT_PUBLIC_SUPABASE_URL: 'https://e2e-test-project.supabase.co',
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e2UyZS10ZXN0LWtleQ.mock-signature',
+      // Disable captcha for E2E tests
+      NEXT_PUBLIC_HCAPTCHA_SITE_KEY: '',
     },
   },
+
+  // Global setup to create test user and save auth state
+  globalSetup: require.resolve('./tests/e2e/global-setup.ts'),
 
   // Global timeout for each test
   timeout: 30 * 1000,

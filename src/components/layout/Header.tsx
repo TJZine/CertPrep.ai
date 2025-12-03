@@ -11,6 +11,7 @@ import { useAuth } from '@/components/providers/AuthProvider';
 import { Button, buttonVariants } from '@/components/ui/Button';
 import { Logo } from '@/components/common/Logo';
 import { useToast } from '@/components/ui/Toast';
+import { useSync } from '@/hooks/useSync';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: Home, public: true },
@@ -23,6 +24,12 @@ export function Header(): React.ReactElement {
   const pathname = usePathname();
   const { user, signOut } = useAuth();
   const { addToast } = useToast();
+  
+  // Trigger background sync
+  useSync();
+  
+  console.log('Header: Current user:', user?.id);
+
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const [scrolled, setScrolled] = React.useState(false);
   const handleCloseMenu = React.useCallback((): void => setIsMenuOpen(false), []);
