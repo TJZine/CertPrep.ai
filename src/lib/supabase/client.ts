@@ -14,14 +14,10 @@ export const createClient = (): SupabaseClient | undefined => {
     if (!supabaseUrl || !supabaseKey) {
       const message = 'Missing Supabase environment variables.'
       logger.error(message)
-      // Surface hard failure in production to avoid silent auth breakage.
-      if (process.env.NODE_ENV === 'production') {
-        throw new Error(message)
-      }
-      return undefined
+      throw new Error(message)
     }
 
-    if (supabaseUrl && !supabaseUrl.startsWith('http')) {
+    if (!supabaseUrl.startsWith('http')) {
       supabaseUrl = `https://${supabaseUrl}`
     }
 

@@ -21,8 +21,8 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
 
   const isDev = process.env.NODE_ENV === 'development'
   const styleSrc = isDev
-    ? "'self' 'unsafe-inline' https://hcaptcha.com https://*.hcaptcha.com"
-    : "'self' https://hcaptcha.com https://*.hcaptcha.com"
+    ? `'self' 'unsafe-inline' 'nonce-${nonce}' https://hcaptcha.com https://*.hcaptcha.com`
+    : `'self' 'nonce-${nonce}' https://hcaptcha.com https://*.hcaptcha.com`
   
   const cspHeader = `
     default-src 'self';

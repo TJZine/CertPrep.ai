@@ -12,6 +12,7 @@ import { Button, buttonVariants } from '@/components/ui/Button';
 import { Logo } from '@/components/common/Logo';
 import { useToast } from '@/components/ui/Toast';
 import { useSync } from '@/hooks/useSync';
+import { logger } from '@/lib/logger';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: Home, public: true },
@@ -29,8 +30,7 @@ export function Header(): React.ReactElement {
   useSync();
   
   React.useEffect(() => {
-    // eslint-disable-next-line no-console -- Debug logging
-    console.log('Header: Auth state changed', { user: user?.email });
+    logger.debug('Header: Auth state changed', { user: user?.email });
   }, [user]);
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const [scrolled, setScrolled] = React.useState(false);

@@ -42,19 +42,15 @@ async function completeQuiz(page: import('@playwright/test').Page): Promise<void
 
   // Answer Question 1
   await selectOption(page, 'B');
-  await page.waitForTimeout(300);
   await submitButton.click();
-  await page.waitForTimeout(500);
+  await expect(goodButton).toBeVisible();
   await goodButton.click();
-  await page.waitForTimeout(500);
 
   // Answer Question 2
   await selectOption(page, 'C');
-  await page.waitForTimeout(300);
   await submitButton.click();
-  await page.waitForTimeout(500);
+  await expect(goodButton).toBeVisible();
   await goodButton.click();
-  await page.waitForTimeout(1000);
 }
 
 /**
@@ -118,7 +114,6 @@ test.describe('Offline Data Persistence', () => {
     await setOffline(context, page, false);
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
-    await page.waitForTimeout(500);
   });
 
   test('preserves result data structure when saving offline', async ({
@@ -160,7 +155,6 @@ test.describe('Offline Data Persistence', () => {
     await setOffline(context, page, false);
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
-    await page.waitForTimeout(500);
   });
 
   test('handles multiple offline quiz attempts', async ({
@@ -183,25 +177,20 @@ test.describe('Offline Data Persistence', () => {
       await setOffline(context, page, true);
 
       await selectOption(page, 'A');
-      await page.waitForTimeout(300);
       await submitButton.click();
-      await page.waitForTimeout(500);
+      await expect(goodButton).toBeVisible();
       await goodButton.click();
-      await page.waitForTimeout(500);
 
       await selectOption(page, 'B');
-      await page.waitForTimeout(300);
       await submitButton.click();
-      await page.waitForTimeout(500);
+      await expect(goodButton).toBeVisible();
       await goodButton.click();
-      await page.waitForTimeout(1000);
 
       await setOffline(context, page, false);
     }
 
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
-    await page.waitForTimeout(500);
 
     // Verify both results were saved
     const results = await getResultsByUserId(page, MOCK_USER.id);
@@ -295,7 +284,6 @@ test.describe('Offline Mode Behavior', () => {
     await setOffline(context, page, false);
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
-    await page.waitForTimeout(500);
   });
 
   test('quiz data persists across page navigation while offline', async ({
@@ -316,10 +304,8 @@ test.describe('Offline Mode Behavior', () => {
 
     // Answer first question
     await selectOption(page, 'B');
-    await page.waitForTimeout(300);
     const submitButton = page.getByRole('button', { name: /check answer|submit/i });
     await submitButton.click();
-    await page.waitForTimeout(500);
 
     // Go back online to verify app state
     await setOffline(context, page, false);

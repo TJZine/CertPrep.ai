@@ -76,8 +76,6 @@ self.addEventListener('fetch', (event) => {
         }
         return response;
       } catch {
-        const fallback = await cache.match(request);
-        if (fallback) return fallback;
         return new Response('Offline', {
           status: 503,
           statusText: 'Service Unavailable',
@@ -109,12 +107,6 @@ self.addEventListener('message', (event) => {
   }
 });
 
-/**
- * Determines if a request should be cached by the service worker.
- * @param {Request} request - The fetch request object
- * @param {URL} url - The parsed URL of the request
- * @returns {boolean} True if the asset should be cached
- */
 const ALLOWED_DESTINATIONS = new Set(['style', 'script', 'font', 'image', 'manifest']);
 const STATIC_PATH_PREFIXES = ['/icons/', '/_next/static/'];
 
@@ -126,9 +118,6 @@ const STATIC_PATH_PREFIXES = ['/icons/', '/_next/static/'];
  */
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 function isCacheableAsset(request, url) {
-  // Only cache GET requests
-  if (request.method !== 'GET') return false;
-
   // Don't cache API calls or Next.js data
   if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/_next/data/')) return false;
 

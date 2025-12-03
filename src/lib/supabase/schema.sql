@@ -1,10 +1,12 @@
 -- Enable Row Level Security
 alter default privileges revoke execute on functions from public;
 
+create type quiz_mode as enum ('zen', 'proctor');
+
 -- TABLE: profiles
 create table if not exists profiles (
   id uuid references auth.users(id) on delete cascade primary key,
-  display_name text,
+  display_name text not null default '',
   updated_at timestamp with time zone default timezone('utc'::text, now())
 );
 
@@ -31,7 +33,7 @@ create table if not exists quizzes (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users(id) on delete cascade not null,
   title text not null,
-  description text,
+  description text not null default '',
   tags text[] not null default '{}',
   version integer not null default 1,
   questions jsonb not null,
@@ -63,9 +65,9 @@ create policy "Users can delete their own quizzes."
 create table if not exists results (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users(id) on delete cascade not null,
-  quiz_id text not null,
+  quiz_id uuid not null references quizzes(id) on delete cascade,
   timestamp bigint not null, -- Storing Unix timestamp to match local Dexie format
-  mode text not null check (mode in ('zen', 'proctor')),
+  mode quiz_mode not null,
   score integer not null,
   time_taken_seconds integer not null,
   answers jsonb not null default '{}'::jsonb,
@@ -101,7 +103,10 @@ security definer set search_path = public
 as $$
 begin
   insert into public.profiles (id, display_name)
-  values (new.id, COALESCE(new.raw_user_meta_data ->> 'full_name', new.email));
+  values (
+    new.id, 
+    COALESCE(new.raw_user_meta_data ->> 'full_name', new.email, '')
+  );
   return new;
 end;
 $$;

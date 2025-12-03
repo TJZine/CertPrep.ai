@@ -77,7 +77,8 @@ async function queryResultsFromIndexedDB(page: Page): Promise<Result[]> {
             db.close();
             resolve(getAllRequest.result as Result[]);
           };
-        } catch {
+        } catch (error) {
+          console.warn('Error querying results table (likely does not exist):', error);
           db.close();
           // Table might not exist yet
           resolve([]);
@@ -155,7 +156,8 @@ async function queryQuizzesFromIndexedDB(page: Page): Promise<Quiz[]> {
             db.close();
             resolve(getAllRequest.result as Quiz[]);
           };
-        } catch {
+        } catch (error) {
+          console.warn('Error querying quizzes table (likely does not exist):', error);
           db.close();
           // Table might not exist yet
           resolve([]);
@@ -195,7 +197,7 @@ export async function seedQuiz(page: Page, quiz: Quiz): Promise<string> {
       if (!window.__certprepDb.isOpen()) {
         await window.__certprepDb.open();
       }
-      return window.__certprepDb.quizzes.add(quizData);
+      return window.__certprepDb.quizzes.put(quizData);
     }
 
     // Fall back to raw IndexedDB
@@ -207,7 +209,7 @@ export async function seedQuiz(page: Page, quiz: Quiz): Promise<string> {
         try {
           const tx = db.transaction('quizzes', 'readwrite');
           const store = tx.objectStore('quizzes');
-          const addRequest = store.add(quizData);
+          const addRequest = store.put(quizData);
 
           addRequest.onerror = (): void => {
             db.close();

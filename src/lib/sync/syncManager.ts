@@ -81,7 +81,7 @@ export async function syncResults(userId: string): Promise<SyncResultsOutcome> {
   } else {
     // Fallback for environments without Web Locks (e.g. some tests or very old browsers)
     if (syncState.isSyncing) {
-      if (Date.now() - syncState.lastSyncAttempt > 30000) {
+      if (Date.now() - syncState.lastSyncAttempt > 15000) {
         logger.warn('Sync lock timed out, resetting...');
         syncState.isSyncing = false;
       } else {
@@ -158,7 +158,9 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
             code === '429' ||      // Rate limit (if passed as code)
             code === '401' ||      // Unauthorized (if passed as code)
             status === 429 ||      // Rate limit (HTTP status)
-            status === 401         // Unauthorized (HTTP status)
+            status === 401 ||      // Unauthorized (HTTP status)
+            status === 500 ||      // Internal Server Error
+            status === 503         // Service Unavailable
           ) {
             logger.error(`Critical sync error detected (${code || status}). Aborting push to prevent API hammering.`);
             break;

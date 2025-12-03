@@ -47,33 +47,46 @@ export class CertPrepDatabase extends Dexie {
       syncState: 'table, lastSyncedAt, synced, lastId',
     }).upgrade(async (tx) => {
       const quizzesTable = tx.table<Quiz, string>('quizzes');
-      const quizzes = await quizzesTable.toArray();
-      const updatedQuizzes: Quiz[] = [];
+      const count = await quizzesTable.count();
       const BATCH_SIZE = 20;
 
-      for (let i = 0; i < quizzes.length; i += BATCH_SIZE) {
-        const batch = quizzes.slice(i, i + BATCH_SIZE);
-        const processedBatch = await Promise.all(batch.map(async (quiz) => {
-          return {
+      for (let offset = 0; offset < count; offset += BATCH_SIZE) {
+        const batch = await quizzesTable.offset(offset).limit(BATCH_SIZE).toArray();
+        const updatedQuizzes: Quiz[] = [];
+
+        await Promise.all(batch.map(async (quiz) => {
+          let quizHash = quiz.quiz_hash;
+          if (!quizHash) {
+            try {
+              quizHash = await computeQuizHash({
+                title: quiz.title,
+                description: quiz.description,
+                tags: quiz.tags,
+                questions: quiz.questions,
+              });
+            } catch (error) {
+              console.warn(`[DB Upgrade v6] Failed to compute hash for quiz ${quiz.id}, using fallback.`, error);
+              // Fallback to existing ID or a random UUID to prevent migration failure
+              quizHash = quiz.id || crypto.randomUUID();
+            }
+          }
+
+          updatedQuizzes.push({
             ...quiz,
-            user_id: (quiz as Quiz).user_id ?? NIL_UUID,
+            user_id: quiz.user_id ?? NIL_UUID,
             deleted_at: quiz.deleted_at ?? null,
-            quiz_hash: quiz.quiz_hash ?? await computeQuizHash({
-              title: quiz.title,
-              description: quiz.description,
-              tags: quiz.tags,
-              questions: quiz.questions,
-            }),
+            quiz_hash: quizHash,
             version: quiz.version || 1,
             updated_at: quiz.updated_at ?? quiz.created_at,
             last_synced_at: quiz.last_synced_at ?? null,
             last_synced_version: quiz.last_synced_version ?? null,
-          };
+          });
         }));
-        updatedQuizzes.push(...processedBatch);
-      }
 
-      await quizzesTable.bulkPut(updatedQuizzes);
+        if (updatedQuizzes.length > 0) {
+          await quizzesTable.bulkPut(updatedQuizzes);
+        }
+      }
     });
 
     // Version 7: Add per-user scoping to quizzes and backfill legacy quizzes to NIL_UUID to prevent cross-account sync.

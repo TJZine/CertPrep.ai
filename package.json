@@ -38,6 +38,10 @@
     "zod": "^4.1.13",
     "zustand": "^5.0.8"
   },
+  "lint-staged": {
+    "*.{ts,tsx}": "eslint",
+    "*.{json,md}": "prettier --check"
+  },
   "devDependencies": {
     "@playwright/test": "^1.57.0",
     "@tailwindcss/typography": "^0.5.15",

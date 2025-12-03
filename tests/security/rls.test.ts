@@ -238,7 +238,8 @@ describe.skipIf(!shouldRun)('Row Level Security (RLS) Verification', () => {
       category_breakdown: {},
     };
 
-    await userA.client.from('results').insert(resultData);
+    const { error: insertError } = await userA.client.from('results').insert(resultData);
+    expect(insertError).toBeNull();
 
     // User B tries to fetch it
     const { data } = await userB.client
@@ -269,7 +270,8 @@ describe.skipIf(!shouldRun)('Row Level Security (RLS) Verification', () => {
       category_breakdown: {},
     };
 
-    await userA.client.from('results').insert(resultData);
+    const { error: insertError } = await userA.client.from('results').insert(resultData);
+    expect(insertError).toBeNull();
 
     // User B tries to update it
     const { data: updateData } = await userB.client

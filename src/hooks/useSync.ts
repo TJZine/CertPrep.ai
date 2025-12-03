@@ -40,10 +40,10 @@ export function useSync(): UseSyncReturn {
     if (userId) {
       setIsSyncing(true);
       try {
-        await syncResults(userId);
         if (FEATURE_FLAGS.quizSync) {
           await syncQuizzes(userId);
         }
+        await syncResults(userId);
       } finally {
         setIsSyncing(false);
       }
@@ -66,22 +66,14 @@ export function useSync(): UseSyncReturn {
     
     initialSyncAttemptedRef.current = userId;
     setHasInitialSyncCompleted(false);
-    setIsSyncing(true);
     
     const runInitialSync = async (): Promise<void> => {
-      try {
-        await syncResults(userId);
-        if (FEATURE_FLAGS.quizSync) {
-          await syncQuizzes(userId);
-        }
-      } finally {
-        setIsSyncing(false);
-        setHasInitialSyncCompleted(true);
-      }
+      await sync();
+      setHasInitialSyncCompleted(true);
     };
     
     void runInitialSync();
-  }, [userId]);
+  }, [userId, sync]);
 
   return { sync, isSyncing, hasInitialSyncCompleted };
 }

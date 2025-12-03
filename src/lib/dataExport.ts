@@ -196,6 +196,7 @@ export function validateImportData(data: unknown): data is ExportData {
   const obj = data as Record<string, unknown>;
 
   if (typeof obj.version !== 'string') return false;
+  if (typeof obj.exportedAt !== 'string') return false;
   if (!Array.isArray(obj.quizzes)) return false;
   if (!Array.isArray(obj.results)) return false;
 

@@ -137,6 +137,7 @@ async function backfillLocalQuizzes(userId: string): Promise<void> {
   }
 
   const startTime = Date.now();
+  let hasErrors = false;
 
   for (let i = 0; i < quizzes.length; i += BATCH_SIZE) {
     if (Date.now() - startTime > TIME_BUDGET_MS) {
@@ -150,6 +151,7 @@ async function backfillLocalQuizzes(userId: string): Promise<void> {
     
     if (error) {
       logger.error('Failed to backfill quizzes to Supabase', { userId, error, batchIndex: i, batchSize: batch.length });
+      hasErrors = true;
       continue; // Try next batch or abort? Continuing allows partial progress.
     }
 
@@ -167,7 +169,9 @@ async function backfillLocalQuizzes(userId: string): Promise<void> {
     await db.quizzes.bulkPut(updated);
   }
 
-  await setQuizBackfillDone(userId);
+  if (!hasErrors) {
+    await setQuizBackfillDone(userId);
+  }
 }
 
 async function pushLocalChanges(userId: string, startTime: number, stats: { pushed: number }): Promise<boolean> {

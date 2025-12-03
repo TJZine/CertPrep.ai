@@ -137,11 +137,7 @@ export async function injectAuthState(page: Page): Promise<void> {
   );
   
   // Debug: Check cookies
-  const cookies = await page.evaluate(() => document.cookie);
-  // eslint-disable-next-line no-console -- Debug logging for E2E tests
-  console.log(`Injecting auth for user: ${MOCK_USER.email}`);
-  // eslint-disable-next-line no-console -- Debug logging for E2E tests
-  console.log('injectAuthState: Cookies:', cookies);
+  // const cookies = await page.evaluate(() => document.cookie);
 
   // Reload to ensure the app picks up the new auth state
   await page.reload();
@@ -153,9 +149,13 @@ export async function injectAuthState(page: Page): Promise<void> {
  * @param page - Playwright page to clear auth state from
  */
 export async function clearAuthState(page: Page): Promise<void> {
-  await page.evaluate((guestKey) => {
+  // Derive project ref to construct the auth cookie/key name
+  const projectRef = process.env.NEXT_PUBLIC_SUPABASE_URL?.match(/https:\/\/([^.]+)\.supabase\.co/)?.[1] || 'e2e-test-project';
+  const authTokenKey = `sb-${projectRef}-auth-token`;
+
+  await page.evaluate(({ guestKey, authTokenKey }) => {
     localStorage.removeItem(guestKey);
     localStorage.removeItem('cp_last_user_id');
-    localStorage.removeItem('sb-e2e-test-project-auth-token');
-  }, GUEST_USER_KEY);
+    localStorage.removeItem(authTokenKey);
+  }, { guestKey: GUEST_USER_KEY, authTokenKey });
 }

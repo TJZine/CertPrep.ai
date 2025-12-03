@@ -27,7 +27,7 @@ export function useServiceWorker(): UseServiceWorkerReturn {
   });
 
   React.useEffect((): void | (() => void) => {
-    if (!('serviceWorker' in navigator)) {
+    if (typeof navigator === 'undefined' || !navigator.serviceWorker) {
       setState((prev) => ({ ...prev, isSupported: false }));
       return;
     }
