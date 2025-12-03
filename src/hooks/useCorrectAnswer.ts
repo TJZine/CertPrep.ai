@@ -18,11 +18,18 @@ export function useCorrectAnswer(
   // Stable worker reference
   const workerRef = React.useRef<Worker | null>(null);
 
+  // Preserve latest options without re-running the effect on unstable object identity
+  const optionsRef = React.useRef<Record<string, string> | undefined>(options);
+
   // Memoize options key to prevent effect re-runs on unstable object references
   // This fixes the eslint-disable requirement safely.
   const optionsKey = useMemo(() => {
     return options ? JSON.stringify(Object.keys(options).sort()) : '';
   }, [options]);
+
+  useEffect(() => {
+    optionsRef.current = options;
+  }, [optionsKey, options]);
 
   useEffect((): (() => void) => {
     // Initialize worker once
@@ -39,7 +46,8 @@ export function useCorrectAnswer(
     let handler: ((event: MessageEvent) => void) | null = null;
 
     const resolveAnswer = async (): Promise<void> => {
-      if (!questionId || !targetHash || !options || !workerRef.current) return;
+      const currentOptions = optionsRef.current;
+      if (!questionId || !targetHash || !currentOptions || !workerRef.current) return;
 
       const cacheKey = `${questionId}:${targetHash}`;
       if (resolvedRef.current.has(cacheKey)) return;
@@ -93,7 +101,7 @@ export function useCorrectAnswer(
         type: 'hash_bulk',
         payload: {
           id: questionId,
-          options
+          options: currentOptions
         }
       });
     };
@@ -106,7 +114,7 @@ export function useCorrectAnswer(
         workerRef.current.removeEventListener('message', handler);
       }
     };
-  }, [questionId, targetHash, optionsKey, options]); // Safe deps now
+  }, [questionId, targetHash, optionsKey]); // Safe deps now
 
   return { resolvedAnswers, isResolving };
 }

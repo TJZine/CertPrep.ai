@@ -12,10 +12,12 @@ export const createClient = (): SupabaseClient | undefined => {
 
   try {
     if (!supabaseUrl || !supabaseKey) {
-      // In development, this might be fine if mocking, but in prod it's critical.
-      // We log it but don't throw to avoid white-screen loop if possible,
-      // though the app won't work well.
-      logger.error('Missing Supabase environment variables.')
+      const message = 'Missing Supabase environment variables.'
+      logger.error(message)
+      // Surface hard failure in production to avoid silent auth breakage.
+      if (process.env.NODE_ENV === 'production') {
+        throw new Error(message)
+      }
       return undefined
     }
 

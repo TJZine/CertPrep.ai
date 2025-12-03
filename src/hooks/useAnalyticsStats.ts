@@ -40,7 +40,13 @@ export function useAnalyticsStats(results: Result[], quizzes: Quiz[]): Analytics
   // Create stable keys for dependencies using meaningful fields to avoid stale analytics
   const resultsHash = useMemo(
     () => results
-      .map((r) => `${r.id}:${r.score}:${r.timestamp}`)
+      .map((r) => {
+        const answersKey = Object.entries(r.answers || {})
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([key, value]) => `${key}:${value}`)
+          .join(',');
+        return `${r.id}:${r.score}:${r.timestamp}:${r.time_taken_seconds}:${answersKey}`;
+      })
       .sort()
       .join('|'),
     [results],

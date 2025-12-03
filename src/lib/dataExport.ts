@@ -136,15 +136,41 @@ export async function* generateJSONExport(userId: string): AsyncGenerator<string
  * Download data as a JSON file using streaming to minimize memory usage.
  */
 export async function downloadDataAsFile(userId: string): Promise<void> {
-  const parts: string[] = [];
-  
-  // Consume the generator
-  for await (const chunk of generateJSONExport(userId)) {
-    parts.push(chunk);
+  // Stream chunks to avoid holding the full export in memory on low-end devices.
+  if (typeof ReadableStream === 'undefined') {
+    // Fallback for environments without streams (should be rare).
+    const parts: string[] = [];
+    for await (const chunk of generateJSONExport(userId)) {
+      parts.push(chunk);
+    }
+    const blob = new Blob(parts, { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `certprep-backup-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    return;
   }
-  
-  const blob = new Blob(parts, { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
+
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream({
+    async start(controller: ReadableStreamDefaultController<Uint8Array>): Promise<void> {
+      try {
+        for await (const chunk of generateJSONExport(userId)) {
+          controller.enqueue(encoder.encode(chunk));
+        }
+        controller.close();
+      } catch (error) {
+        controller.error(error);
+      }
+    },
+  });
+
+  const response = new Response(stream, { headers: { 'Content-Type': 'application/json' } });
+  const url = URL.createObjectURL(await response.blob());
   const link = document.createElement('a');
   link.href = url;
   link.download = `certprep-backup-${new Date().toISOString().split('T')[0]}.json`;

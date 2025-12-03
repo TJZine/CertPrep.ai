@@ -319,9 +319,23 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
       set((draft) => {
         draft.isSubmitting = true;
       });
-      
-      hashAnswer(currentSelectedAnswer)
-        .then((hashedSelection) => {
+
+      const attemptHashWithRetry = async (): Promise<string> => {
+        let lastError: unknown;
+        for (let attempt = 1; attempt <= HASH_RETRY_ATTEMPTS; attempt += 1) {
+          try {
+            return await hashAnswer(currentSelectedAnswer);
+          } catch (error) {
+            lastError = error;
+            console.error(`Failed to hash answer (attempt ${attempt}/${HASH_RETRY_ATTEMPTS}) for question ${questionId}`, error);
+          }
+        }
+        throw lastError ?? new Error('Failed to hash answer');
+      };
+
+      const persistAnswer = async (): Promise<void> => {
+        try {
+          const hashedSelection = await attemptHashWithRetry();
           set((draft) => {
             // Re-validate state in case it changed during async op
             const currentQ = draft.questions.find((q) => q.id === questionId);
@@ -357,23 +371,20 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
             draft.showExplanation = !isCorrect;
             draft.isSubmitting = false;
           });
-        })
-        .catch((err) => {
-          console.error('Failed to hash answer in submitAnswer', err);
-          // Reset state to allow retry
+        } catch (err) {
+          console.error('Failed to hash answer in submitAnswer after retries', err);
           set((draft) => {
              draft.hasSubmitted = false;
              draft.isSubmitting = false;
+             if (draft.questionQueue[draft.currentIndex] === questionId) {
+               draft.selectedAnswer = null;
+             }
+             draft.error = 'Failed to submit answer. Please try again.';
           });
-          // We can't easily trigger a toast from here without injecting the hook or a global event emitter.
-          // For now, we rely on the UI checking hasSubmitted or we could add an error state to the store.
-          // Let's add a transient error state if we want to be fancy, but resetting hasSubmitted is the minimal fix
-          // to prevent the UI from getting stuck.
-          // Ideally we would dispatch a custom event or use a callback.
-          set((draft) => {
-            draft.error = 'Failed to submit answer. Please try again.';
-          });
-        });
+        }
+      };
+
+      void persistAnswer();
     },
 
     selectAnswerProctor: (answerId): void => {

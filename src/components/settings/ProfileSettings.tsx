@@ -28,31 +28,29 @@ export function ProfileSettings(): React.ReactElement {
 
   const handleUpdateProfile = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
+    const updates: { data?: { full_name: string }; email?: string } = {};
+    let message = 'Profile updated successfully';
+
+    if (fullName !== user?.user_metadata?.full_name) {
+      updates.data = { full_name: fullName };
+    }
+
+    if (isEditingEmail && email !== user?.email) {
+      updates.email = email;
+      message = 'Profile updated. Please check both your old and new emails to confirm the change.';
+    }
+
+    if (Object.keys(updates).length === 0) {
+      setIsEditingEmail(false);
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      const updates: { data?: { full_name: string }; email?: string } = {};
-      let message = 'Profile updated successfully';
-
-      if (fullName !== user?.user_metadata?.full_name) {
-        updates.data = { full_name: fullName };
-      }
-
-      if (isEditingEmail && email !== user?.email) {
-        updates.email = email;
-        message = 'Profile updated. Please check both your old and new emails to confirm the change.';
-      }
-
-      if (Object.keys(updates).length === 0) {
-        setIsLoading(false);
-        setIsEditingEmail(false);
-        return;
-      }
-
       if (!supabase) {
         addToast('error', 'Authentication service unavailable.');
-        setIsLoading(false);
-        return;
+        throw new Error('Authentication service unavailable.');
       }
 
       const { error } = await supabase.auth.updateUser(updates);
@@ -63,7 +61,7 @@ export function ProfileSettings(): React.ReactElement {
       setIsEditingEmail(false);
     } catch (error) {
       console.error('Error updating profile:', error);
-      addToast('error', getAuthErrorMessage(error));
+      addToast('error', getAuthErrorMessage(error, 'profile'));
     } finally {
       setIsLoading(false);
     }

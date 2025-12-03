@@ -26,7 +26,7 @@ describe('Integration: Quiz Sync Engine', () => {
     
     // Default mock responses
     vi.mocked(fetchUserQuizzes).mockResolvedValue({ data: [], error: null });
-    vi.mocked(upsertQuizzes).mockResolvedValue({ data: [], error: null });
+    vi.mocked(upsertQuizzes).mockResolvedValue({ error: null });
   });
 
   afterEach(async () => {

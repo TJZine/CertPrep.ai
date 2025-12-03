@@ -105,6 +105,15 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
       }
     );
 
+    const deleteUserData = async (table: 'results' | 'quizzes'): Promise<unknown> => {
+      if (typeof supabaseAdmin.from !== 'function') {
+        logger.warn('Supabase admin client missing from(); skipping data purge for table', { table });
+        return null;
+      }
+      const { error } = await supabaseAdmin.from(table).delete().eq('user_id', user.id);
+      return error;
+    };
+
     const { error: signOutError } = await supabase.auth.signOut({ scope: 'global' });
     if (signOutError) {
       logger.error('Error signing out before account deletion', signOutError);
@@ -113,7 +122,20 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
 
     logger.info('Initiating account deletion for user', { userId: user.id });
 
-    // 3. Delete User
+    // 3. Delete user data (best effort, fail on error to avoid orphaned PII)
+    const resultsDeleteError = await deleteUserData('results');
+    if (resultsDeleteError) {
+      logger.error('Error deleting user results via service role', resultsDeleteError);
+      return NextResponse.json({ error: 'Failed to delete account data' }, { status: 500 });
+    }
+
+    const quizzesDeleteError = await deleteUserData('quizzes');
+    if (quizzesDeleteError) {
+      logger.error('Error deleting user quizzes via service role', quizzesDeleteError);
+      return NextResponse.json({ error: 'Failed to delete account data' }, { status: 500 });
+    }
+
+    // 4. Delete User
     const { error } = await supabaseAdmin.auth.admin.deleteUser(user.id);
 
     if (error) {

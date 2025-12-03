@@ -48,11 +48,16 @@ export async function syncQuizzes(userId: string): Promise<{ incomplete: boolean
             logger.debug('Quiz sync already in progress in another tab, skipping');
             return { incomplete: false };
           }
-          return performQuizSync(userId);
+          try {
+            return await performQuizSync(userId);
+          } catch (error) {
+            logger.error('Quiz sync failed while holding lock', error);
+            return { incomplete: false };
+          }
         })) || { incomplete: false }
       );
     } catch (error) {
-      logger.error('Failed to acquire quiz sync lock', error);
+      logger.error('Failed to acquire quiz sync lock request', error);
       return { incomplete: false };
     }
   }
@@ -70,6 +75,9 @@ export async function syncQuizzes(userId: string): Promise<{ incomplete: boolean
   syncState.lastSyncAttempt = Date.now();
   try {
     return await performQuizSync(userId);
+  } catch (error) {
+    logger.error('Quiz sync failed (fallback path)', error);
+    return { incomplete: false };
   } finally {
     syncState.isSyncing = false;
   }

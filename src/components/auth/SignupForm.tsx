@@ -60,7 +60,7 @@ export default function SignupForm(): React.ReactElement {
       });
 
       if (error) {
-        setError(getAuthErrorMessage(error));
+        setError(getAuthErrorMessage(error, 'signup'));
         captchaRef.current?.resetCaptcha();
         setCaptchaToken(null);
         return;

@@ -9,6 +9,7 @@
 - [Authentication](#authentication)
 - [Quizzes](#quizzes)
 - [Results](#results)
+- [Rate Limits](#rate-limits)
 - [User Settings](#user-settings)
 - [Error Handling](#error-handling)
 
@@ -348,6 +349,5 @@ try {
 
 > [!NOTE]
 > These limits are illustrative only and depend on your specific Supabase plan.
-
 > [!WARNING]
 > Exceeding rate limits will result in temporary blocking.
