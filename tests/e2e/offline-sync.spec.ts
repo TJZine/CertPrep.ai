@@ -223,9 +223,6 @@ test.describe('Offline Data Persistence', () => {
     
     // expect(unsyncedCount).toBeGreaterThanOrEqual(2); 
     // ^ This is too strict if auto-sync is enabled.
-    
-    // eslint-disable-next-line no-console -- Debug logging for E2E tests
-    console.log(`[TEST] Total results: ${quizResults.length}, Unsynced: ${quizResults.filter(r => r.synced === 0).length}`);
   });
 });
 
@@ -321,11 +318,6 @@ test.describe('Sync Request Verification', () => {
     context,
     syncRequests,
   }) => {
-    // Forward browser logs
-    // eslint-disable-next-line no-console -- Debug logging for E2E tests
-    page.on('console', msg => console.log(`BROWSER LOG: ${msg.text()}`));
-    page.on('pageerror', err => console.error(`BROWSER ERROR: ${err}`));
-
     const quiz = { ...TEST_QUIZ, user_id: MOCK_USER.id };
     await seedQuiz(page, quiz);
     await page.reload();
@@ -369,9 +361,6 @@ test.describe('Sync Request Verification', () => {
         const results = await getResultsByUserId(page, MOCK_USER.id);
         const result = results.find(r => r.quiz_id === quiz.id);
         
-        // eslint-disable-next-line no-console -- Debug logging for E2E tests
-        console.log(`[POLL] Requests: ${requests.length}, Synced: ${result?.synced}`);
-
         return {
           requestMade: requests.length > 0,
           synced: result?.synced === 1,
@@ -383,9 +372,5 @@ test.describe('Sync Request Verification', () => {
         intervals: [1000, 2000, 5000],
       }
     ).toEqual({ requestMade: true, synced: true });
-
-    // Log sync requests for debugging
-    // eslint-disable-next-line no-console -- Debug logging for E2E tests
-    console.log(`[E2E] Sync requests captured: ${syncRequests.length}`);
   });
 });

@@ -40,9 +40,7 @@ export function useSync(): UseSyncReturn {
     if (userId) {
       setIsSyncing(true);
       try {
-        if (FEATURE_FLAGS.quizSync) {
-          await syncQuizzes(userId);
-        }
+        await syncQuizzes(userId);
         await syncResults(userId);
       } finally {
         setIsSyncing(false);
