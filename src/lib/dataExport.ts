@@ -305,8 +305,13 @@ export async function clearAllData(): Promise<void> {
   await db.transaction('rw', db.quizzes, db.results, db.syncState, async () => {
     await Promise.all([db.quizzes.clear(), db.results.clear(), db.syncState.clear()]);
   });
-  localStorage.clear();
-  sessionStorage.clear();
+
+  // Guard against SSR - storage APIs only exist in browser context
+  if (typeof window !== 'undefined') {
+    localStorage.clear();
+    sessionStorage.clear();
+  }
+
   void requestServiceWorkerCacheClear();
 }
 

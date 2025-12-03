@@ -33,9 +33,17 @@ export function useCorrectAnswer(
 
   useEffect((): (() => void) => {
     // Initialize worker once
-    workerRef.current = new Worker(new URL('../workers/hash.worker.ts', import.meta.url));
+    const worker = new Worker(new URL('../workers/hash.worker.ts', import.meta.url));
+    workerRef.current = worker;
+
+    // Handle worker-level errors (e.g., script load failures, uncaught exceptions)
+    worker.onerror = (event: ErrorEvent): void => {
+      console.error('[useCorrectAnswer] Worker error:', event.message);
+      setIsResolving(false);
+    };
 
     return (): void => {
+      worker.onerror = null;
       workerRef.current?.terminate();
       workerRef.current = null;
     };

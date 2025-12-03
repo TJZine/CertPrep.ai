@@ -1,7 +1,5 @@
 'use client';
 
-'use client';
-
 import { useState } from 'react';
 
 const GUEST_USER_KEY = 'cp_guest_user_id';
