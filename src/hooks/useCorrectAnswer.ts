@@ -26,7 +26,7 @@ export function useCorrectAnswer(
 
   useEffect((): (() => void) => {
     // Initialize worker once
-    workerRef.current = new Worker(new URL('@/workers/hash.worker.ts', import.meta.url));
+    workerRef.current = new Worker(new URL('../workers/hash.worker.ts', import.meta.url));
 
     return (): void => {
       workerRef.current?.terminate();
