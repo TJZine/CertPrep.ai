@@ -76,29 +76,39 @@ export async function syncQuizzes(userId: string): Promise<{ incomplete: boolean
 }
 
 async function performQuizSync(userId: string): Promise<{ incomplete: boolean }> {
+  performance.mark('quizSync-start');
   const startTime = Date.now();
   let incomplete = false;
   const stats = { pushed: 0, pulled: 0 };
 
-  const backfillComplete = await getQuizBackfillState(userId);
-  if (!backfillComplete) {
-    await backfillLocalQuizzes(userId);
+  try {
+    const backfillComplete = await getQuizBackfillState(userId);
+    if (!backfillComplete) {
+      await backfillLocalQuizzes(userId);
+    }
+
+    if (Date.now() - startTime > TIME_BUDGET_MS) {
+      return { incomplete: true };
+    }
+
+    incomplete = (await pushLocalChanges(userId, startTime, stats)) || incomplete;
+
+    if (Date.now() - startTime > TIME_BUDGET_MS) {
+      return { incomplete: true };
+    }
+
+    incomplete = (await pullRemoteChanges(userId, startTime, stats)) || incomplete;
+
+    logger.info('Quiz sync complete', { userId, pushed: stats.pushed, pulled: stats.pulled, incomplete });
+    return { incomplete };
+  } finally {
+    performance.mark('quizSync-end');
+    performance.measure('quizSync', 'quizSync-start', 'quizSync-end');
+    const duration = Date.now() - startTime;
+    if (duration > 300) {
+      logger.warn('Slow quiz sync detected', { duration, pushed: stats.pushed, pulled: stats.pulled });
+    }
   }
-
-  if (Date.now() - startTime > TIME_BUDGET_MS) {
-    return { incomplete: true };
-  }
-
-  incomplete = (await pushLocalChanges(userId, startTime, stats)) || incomplete;
-
-  if (Date.now() - startTime > TIME_BUDGET_MS) {
-    return { incomplete: true };
-  }
-
-  incomplete = (await pullRemoteChanges(userId, startTime, stats)) || incomplete;
-
-  logger.info('Quiz sync complete', { userId, pushed: stats.pushed, pulled: stats.pulled, incomplete });
-  return { incomplete };
 }
 
 async function backfillLocalQuizzes(userId: string): Promise<void> {

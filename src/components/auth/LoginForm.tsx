@@ -33,6 +33,12 @@ export default function LoginForm(): React.ReactElement {
       return;
     }
 
+    if (!supabase) {
+      setError('Authentication service unavailable. Please contact support.');
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email,

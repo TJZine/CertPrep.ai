@@ -36,6 +36,12 @@ export function SecuritySettings(): React.ReactElement {
         return;
     }
 
+    if (!supabase) {
+        setError('Authentication service unavailable.');
+        setIsLoading(false);
+        return;
+    }
+
     try {
       const { error } = await supabase.auth.updateUser({
         password: password,

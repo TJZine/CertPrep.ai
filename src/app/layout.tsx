@@ -2,18 +2,10 @@ import type { Metadata, Viewport } from 'next';
 import * as React from 'react';
 import { headers } from 'next/headers';
 import { Inter } from 'next/font/google';
-import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
-import { ToastProvider } from '@/components/ui/Toast';
-import { GlobalErrorHandler } from '@/components/common/GlobalErrorHandler';
-import { OfflineIndicator } from '@/components/common/OfflineIndicator';
-import { InstallPrompt } from '@/components/common/InstallPrompt';
-import { UpdateBanner } from '@/components/common/UpdateBanner';
-import { ThemeProvider } from '@/components/common/ThemeProvider';
 import { SkipLink } from '@/components/common/SkipLink';
-import { SentryInitializer } from '@/components/providers/SentryInitializer';
-import { AuthProvider } from '@/components/providers/AuthProvider';
+import { AppProviders } from '@/components/providers/AppProviders';
 import { APP_NAME } from '@/lib/constants';
 import './globals.css';
 
@@ -93,24 +85,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <body className="flex min-h-screen flex-col bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-50">
         <SkipLink />
-        <ThemeProvider>
-          <GlobalErrorHandler>
-            <ToastProvider>
-              <AuthProvider>
-                <SentryInitializer />
-                <UpdateBanner />
-                <Header />
-                <div id="main-content" className="flex-1" tabIndex={-1}>
-                  {children}
-                </div>
-                <Footer />
-                <OfflineIndicator />
-                <InstallPrompt />
-                <SpeedInsights />
-              </AuthProvider>
-            </ToastProvider>
-          </GlobalErrorHandler>
-        </ThemeProvider>
+        <AppProviders>
+          <Header />
+          <div id="main-content" className="flex-1" tabIndex={-1}>
+            {children}
+          </div>
+          <Footer />
+        </AppProviders>
       </body>
     </html>
   );

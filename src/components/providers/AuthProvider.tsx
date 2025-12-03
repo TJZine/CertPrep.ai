@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, useRef } from 'react';
-import { User, Session, AuthChangeEvent } from '@supabase/supabase-js';
+import { User, Session, AuthChangeEvent, SupabaseClient } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { clearDatabase } from '@/db';
@@ -17,7 +17,7 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 type SignOutDependencies = {
-  supabase: ReturnType<typeof createClient>;
+  supabase: SupabaseClient | undefined;
   router: ReturnType<typeof useRouter>;
   onResetAuthState: () => void;
   clearDb: () => Promise<void>;
@@ -37,6 +37,10 @@ export async function performSignOut({
     dbClearError = 'Local data could not be cleared.';
   }
 
+  if (!supabase) {
+    return { success: false, error: 'Authentication service unavailable.' };
+  }
+
   try {
     await supabase.auth.signOut();
     onResetAuthState();
@@ -54,14 +58,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }): React
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   
-  const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null);
+  const supabaseRef = useRef<SupabaseClient | undefined>(undefined);
   if (!supabaseRef.current) {
-    supabaseRef.current = createClient();
+    // Attempt to create client; might return undefined if env vars missing
+    const client = createClient();
+    if (client) {
+      supabaseRef.current = client;
+    }
   }
   const supabase = supabaseRef.current;
 
   useEffect((): (() => void) => {
     let isMounted = true;
+
+    if (!supabase) {
+      if (isMounted) setIsLoading(false);
+      return () => {};
+    }
 
     const setData = async (): Promise<void> => {
       try {

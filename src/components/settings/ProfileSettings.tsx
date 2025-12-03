@@ -49,6 +49,12 @@ export function ProfileSettings(): React.ReactElement {
         return;
       }
 
+      if (!supabase) {
+        addToast('error', 'Authentication service unavailable.');
+        setIsLoading(false);
+        return;
+      }
+
       const { error } = await supabase.auth.updateUser(updates);
 
       if (error) throw error;

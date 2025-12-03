@@ -25,6 +25,10 @@ export async function exchangeRecoverySession(
     return { success: true };
   }
 
+  if (!supabase) {
+    return { success: false, error: 'Authentication service unavailable.' };
+  }
+
   if (!params.code && !params.accessToken) {
     return { success: false, error: 'This recovery link is invalid or has expired. Please request a new password reset email.' };
   }
@@ -127,6 +131,12 @@ export default function ResetPasswordForm(): React.ReactElement {
       } else {
         setError('Invalid input');
       }
+      setIsLoading(false);
+      return;
+    }
+
+    if (!supabase) {
+      setError('Authentication service unavailable.');
       setIsLoading(false);
       return;
     }

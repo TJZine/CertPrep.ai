@@ -7,10 +7,11 @@ import { createClient } from '@/lib/supabase/client';
 import { QUIZ_MODES, type QuizMode } from '@/types/quiz';
 import type { Result } from '@/types/result';
 import { z } from 'zod';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
-let supabaseInstance: ReturnType<typeof createClient> | null = null;
+let supabaseInstance: SupabaseClient | undefined;
 
-function getSupabaseClient(): ReturnType<typeof createClient> {
+function getSupabaseClient(): SupabaseClient | undefined {
   if (!supabaseInstance) {
     supabaseInstance = createClient();
   }
@@ -89,11 +90,17 @@ export async function syncResults(userId: string): Promise<SyncResultsOutcome> {
 }
 
 async function performSync(userId: string): Promise<SyncResultsOutcome> {
+  performance.mark('syncResults-start');
   let incomplete = false;
   const startTime = Date.now();
   let pushed = 0;
   let pulled = 0;
   let lastError: string | undefined;
+
+  const client = getSupabaseClient();
+  if (!client) {
+    return { incomplete: true, error: 'Supabase client unavailable' };
+  }
 
   try {
     // 1. PUSH: Upload unsynced local results to Supabase
@@ -111,7 +118,7 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
 
         const batch = unsyncedResults.slice(i, i + BATCH_SIZE);
         
-        const { error } = await getSupabaseClient().from('results').upsert(
+        const { error } = await client.from('results').upsert(
           batch.map((r) => ({
             id: r.id,
             user_id: userId,
@@ -181,7 +188,7 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
       // We construct the filter carefully to ensure valid PostgREST syntax
       const filter = `created_at.gt.${timestamp},and(created_at.eq.${timestamp},id.gt.${cursor.lastId})`;
 
-      const { data: remoteResults, error: fetchError } = await getSupabaseClient()
+      const { data: remoteResults, error: fetchError } = await client
         .from('results')
         .select(
           'id, quiz_id, timestamp, mode, score, time_taken_seconds, answers, flagged_questions, category_breakdown, created_at'
@@ -272,6 +279,13 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
     ) {
        logger.error(`Critical sync error detected (${code || status}). Aborting push to prevent API hammering.`);
        // We are in the catch block of the outer loop, so just return
+    }
+  } finally {
+    performance.mark('syncResults-end');
+    performance.measure('syncResults', 'syncResults-start', 'syncResults-end');
+    const duration = Date.now() - startTime;
+    if (duration > 300) {
+      logger.warn('Slow sync detected', { duration, pushed, pulled });
     }
   }
   

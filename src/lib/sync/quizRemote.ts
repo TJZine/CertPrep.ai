@@ -1,10 +1,11 @@
 import { logger } from '@/lib/logger';
 import { createClient } from '@/lib/supabase/client';
 import type { RemoteQuizInput, RemoteQuizRow } from './quizDomain';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
-let supabaseInstance: ReturnType<typeof createClient> | null = null;
+let supabaseInstance: SupabaseClient | undefined;
 
-function getSupabaseClient(): ReturnType<typeof createClient> {
+function getSupabaseClient(): SupabaseClient | undefined {
   if (!supabaseInstance) {
     supabaseInstance = createClient();
   }
@@ -25,6 +26,11 @@ export async function fetchUserQuizzes({
   limit = 50,
 }: FetchUserQuizzesParams): Promise<{ data: RemoteQuizRow[]; error: unknown | null }> {
   const client = getSupabaseClient();
+  
+  if (!client) {
+    return { data: [], error: { message: 'Supabase client unavailable' } };
+  }
+
   let query = client
     .from('quizzes')
     .select(
@@ -57,12 +63,17 @@ export async function upsertQuizzes(userId: string, quizzes: RemoteQuizInput[]):
     return { error: null };
   }
 
+  const client = getSupabaseClient();
+  if (!client) {
+    return { error: { message: 'Supabase client unavailable' } };
+  }
+
   const payload = quizzes.map((quiz) => ({
     ...quiz,
     user_id: quiz.user_id ?? userId,
   }));
 
-  const { error } = await getSupabaseClient()
+  const { error } = await client
     .from('quizzes')
     .upsert(payload, { onConflict: 'user_id,id' });
 
@@ -78,7 +89,12 @@ export async function softDeleteQuizzes(userId: string, ids: string[]): Promise<
     return { error: null };
   }
 
-  const { error } = await getSupabaseClient()
+  const client = getSupabaseClient();
+  if (!client) {
+    return { error: { message: 'Supabase client unavailable' } };
+  }
+
+  const { error } = await client
     .from('quizzes')
     .update({ deleted_at: new Date().toISOString() })
     .eq('user_id', userId)

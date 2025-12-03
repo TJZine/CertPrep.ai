@@ -1,36 +1,31 @@
 'use client';
 
 import * as React from 'react';
-import { Header } from '@/components/layout/Header';
-import { Footer } from '@/components/layout/Footer';
-import { ErrorBoundary } from '@/components/common/ErrorBoundary';
+import { ThemeProvider } from '@/components/common/ThemeProvider';
+import { GlobalErrorHandler } from '@/components/common/GlobalErrorHandler';
 import { ToastProvider } from '@/components/ui/Toast';
-import { useInitializeDatabase } from '@/hooks/useDatabase';
-import { AuthProvider } from './AuthProvider';
+import { AuthProvider } from '@/components/providers/AuthProvider';
+import { SentryInitializer } from '@/components/providers/SentryInitializer';
+import { SpeedInsights } from '@vercel/speed-insights/next';
+import { UpdateBanner } from '@/components/common/UpdateBanner';
+import { OfflineIndicator } from '@/components/common/OfflineIndicator';
+import { InstallPrompt } from '@/components/common/InstallPrompt';
 
-function DatabaseInitializer(): React.ReactElement | null {
-  useInitializeDatabase();
-  return null;
-}
-
-/**
- * Client-side providers and shared layout wrappers.
- */
 export function AppProviders({ children }: { children: React.ReactNode }): React.ReactElement {
   return (
-    <ToastProvider>
-      <ErrorBoundary>
-        <AuthProvider>
-          <DatabaseInitializer />
-          <div className="flex min-h-screen flex-col">
-            <Header />
-            <main className="flex-1">{children}</main>
-            <Footer />
-          </div>
-        </AuthProvider>
-      </ErrorBoundary>
-    </ToastProvider>
+    <ThemeProvider>
+      <GlobalErrorHandler>
+        <ToastProvider>
+          <AuthProvider>
+            <SentryInitializer />
+            <UpdateBanner />
+            {children}
+            <OfflineIndicator />
+            <InstallPrompt />
+            <SpeedInsights />
+          </AuthProvider>
+        </ToastProvider>
+      </GlobalErrorHandler>
+    </ThemeProvider>
   );
 }
-
-export default AppProviders;
