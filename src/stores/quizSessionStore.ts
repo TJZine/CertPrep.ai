@@ -12,13 +12,6 @@ enableMapSet();
 
 const HASH_RETRY_ATTEMPTS = 2;
 
-const emitQuizError = (message: string): void => {
-  if (typeof window === 'undefined') {
-    return;
-  }
-  window.dispatchEvent(new CustomEvent('quiz-error', { detail: { message } }));
-};
-
 // Spaced repetition queue item
 interface QueuedQuestion {
   questionId: string;
@@ -54,6 +47,8 @@ interface QuizSessionState {
   isComplete: boolean;
   isSubmitting: boolean;
   isPaused: boolean;
+  // Error state
+  error: string | null;
   // Proctor-specific
   seenQuestions: Set<string>;
   examDurationMinutes: number;
@@ -95,6 +90,7 @@ interface QuizSessionActions {
   getFlaggedCount: () => number;
   getAnsweredCount: () => number;
   canSubmitExam: () => boolean;
+  clearError: () => void;
 }
 
 type QuizSessionStore = QuizSessionState & QuizSessionActions;
@@ -118,6 +114,7 @@ const createInitialState = (): QuizSessionState => ({
   isComplete: false,
   isSubmitting: false,
   isPaused: false,
+  error: null,
   seenQuestions: new Set<string>(),
   examDurationMinutes: TIMER.DEFAULT_EXAM_DURATION_MINUTES,
   timeRemaining: TIMER.DEFAULT_EXAM_DURATION_MINUTES * 60,

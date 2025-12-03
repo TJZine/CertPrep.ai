@@ -62,6 +62,8 @@ export function ProctorQuizContainer({
     flaggedQuestions,
     answers,
     isComplete,
+    error,
+    clearError,
   } = useQuizSessionStore();
 
   const currentQuestion = useCurrentQuestion();
@@ -85,26 +87,11 @@ export function ProctorQuizContainer({
   useBeforeUnload(!isComplete, 'Your quiz progress will be lost. Are you sure?');
 
   React.useEffect(() => {
-    if (typeof window === 'undefined') {
-      return;
+    if (error) {
+      addToast('error', error);
+      clearError();
     }
-
-    const handleQuizError = (event: Event): void => {
-      if (!(event instanceof CustomEvent)) {
-        return;
-      }
-      const detail = event.detail as { message?: string } | string | undefined;
-      const message = typeof detail === 'string' ? detail : detail?.message;
-      if (message) {
-        addToast('error', message);
-      }
-    };
-
-    window.addEventListener('quiz-error', handleQuizError as EventListener);
-    return (): void => {
-      window.removeEventListener('quiz-error', handleQuizError as EventListener);
-    };
-  }, [addToast]);
+  }, [error, addToast, clearError]);
 
   React.useEffect((): void => {
     updateTimeRemaining(timeRemaining);

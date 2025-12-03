@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { hashAnswer } from '@/lib/utils';
+import React, { useState, useEffect, useMemo } from 'react';
 
 /**
  * Asynchronously resolves the correct answer key for a question by hashing options.
+ * Offloads computation to a Web Worker to prevent main thread blocking.
  */
 export function useCorrectAnswer(
   questionId: string | null,
@@ -11,66 +11,83 @@ export function useCorrectAnswer(
 ): { resolvedAnswers: Record<string, string>; isResolving: boolean } {
   const [resolvedAnswers, setResolvedAnswers] = useState<Record<string, string>>({});
   const [isResolving, setIsResolving] = useState(false);
+  
+  // Keep track of resolved attempts to avoid re-work
   const resolvedRef = React.useRef<Set<string>>(new Set());
+  
+  // Stable worker reference
+  const workerRef = React.useRef<Worker | null>(null);
 
-  // Create a stable key for options to avoid unnecessary re-runs
-  const optionsKey = options ? JSON.stringify(Object.keys(options).sort()) : '';
+  // Memoize options key to prevent effect re-runs on unstable object references
+  // This fixes the eslint-disable requirement safely.
+  const optionsKey = useMemo(() => {
+    return options ? JSON.stringify(Object.keys(options).sort()) : '';
+  }, [options]);
 
-  useEffect(() => {
+  useEffect((): (() => void) => {
+    // Initialize worker once
+    workerRef.current = new Worker(new URL('@/workers/hash.worker.ts', import.meta.url));
+
+    return (): void => {
+      workerRef.current?.terminate();
+      workerRef.current = null;
+    };
+  }, []); // Run once on mount
+
+  useEffect((): (() => void) => {
     let isMounted = true;
 
     const resolveAnswer = async (): Promise<void> => {
-      if (!questionId || !targetHash || !options) return;
-      
-      // Check if already resolved using ref to avoid stale closure
-      const resolvedKey = `${questionId}:${targetHash}`;
-      if (resolvedRef.current.has(resolvedKey)) return;
-      resolvedRef.current.add(resolvedKey);
+      if (!questionId || !targetHash || !options || !workerRef.current) return;
 
+      const cacheKey = `${questionId}:${targetHash}`;
+      if (resolvedRef.current.has(cacheKey)) return;
+      
       setIsResolving(true);
 
-      try {
-        // Brute-force check options
-        for (const key of Object.keys(options)) {
-          const hash = await hashAnswer(key);
-          if (hash === targetHash) {
+      // We need a way to receive the specific result for THIS request.
+      // One-off event listener approach for this specific transaction.
+      const handler = (event: MessageEvent): void => {
+        const { type, payload } = event.data;
+        if (type === 'hash_bulk_result' && payload.id === questionId) {
+          const hashes = payload.hashes as Record<string, string>;
+          // Find match
+          const match = Object.entries(hashes).find((entry) => entry[1] === targetHash);
+          
+          if (match) {
+            const [correctOptionKey] = match;
             if (isMounted) {
-              setResolvedAnswers((prev) => ({
+              setResolvedAnswers(prev => ({
                 ...prev,
-                [questionId]: key,
+                [questionId]: correctOptionKey
               }));
             }
-            break;
           }
+          
+          resolvedRef.current.add(cacheKey);
+          if (isMounted) setIsResolving(false);
+          workerRef.current?.removeEventListener('message', handler);
         }
-      } catch (err) {
-        console.error('Failed to resolve answer:', err);
-        console.error('Failed to resolve answer:', err);
-        // Remove from ref on error so we can retry if needed
-        const resolvedKey = `${questionId}:${targetHash}`;
-        resolvedRef.current.delete(resolvedKey);
-        
-        if (isMounted) {
-          setResolvedAnswers((prev) => {
-            const updated = { ...prev };
-            delete updated[questionId];
-            return updated;
-          });
+      };
+
+      workerRef.current.addEventListener('message', handler);
+      
+      // Send work
+      workerRef.current.postMessage({
+        type: 'hash_bulk',
+        payload: {
+          id: questionId,
+          options
         }
-      } finally {
-        if (isMounted) {
-          setIsResolving(false);
-        }
-      }
+      });
     };
 
     resolveAnswer();
 
-    return (): void => {
+    return () => {
       isMounted = false;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [questionId, targetHash, optionsKey]);
+  }, [questionId, targetHash, optionsKey, options]); // Safe deps now
 
   return { resolvedAnswers, isResolving };
 }
