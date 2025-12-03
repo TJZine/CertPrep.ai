@@ -273,7 +273,7 @@ describe.skipIf(!shouldRun)('Row Level Security (RLS) Verification', () => {
     await userA.client.from('results').insert(resultData);
 
     // User B tries to update it
-    const { count, error: updateError } = await userB.client
+    const { count } = await userB.client
       .from('results')
       .update({ score: 0 })
       .eq('id', resultId)

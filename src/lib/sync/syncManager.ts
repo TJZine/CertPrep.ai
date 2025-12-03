@@ -173,8 +173,8 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
 
       const cursor = await getSyncCursor(userId);
       
-      // Validate timestamp to prevent malformed queries
-      const timestamp = new Date(cursor.timestamp).toISOString();
+      // Use raw timestamp string to preserve microsecond precision if present
+      const timestamp = cursor.timestamp;
       
       // Use keyset pagination (created_at, id) to handle identical timestamps
       // Logic: (created_at > last_ts) OR (created_at = last_ts AND id > last_id)
@@ -256,6 +256,23 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
     logger.error('Sync failed:', error);
     incomplete = true;
     lastError = toErrorMessage(error);
+
+    // Circuit Breaker: Stop syncing if we hit critical errors
+    // Check for standard PostgREST codes or HTTP status codes if available
+    const pgError = error as { code?: string; status?: number };
+    const code = pgError.code;
+    const status = pgError.status;
+
+    if (
+      code === 'PGRST301' || // JWT expired or RLS violation
+      code === '429' ||      // Rate limit (if passed as code)
+      code === '401' ||      // Unauthorized (if passed as code)
+      status === 429 ||      // Rate limit (HTTP status)
+      status === 401         // Unauthorized (HTTP status)
+    ) {
+       logger.error(`Critical sync error detected (${code || status}). Aborting push to prevent API hammering.`);
+       // We are in the catch block of the outer loop, so just return
+    }
   }
   
   logger.info('Result sync complete', { userId, pushed, pulled, incomplete, lastError });

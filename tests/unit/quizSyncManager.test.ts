@@ -4,7 +4,6 @@ import type { Quiz } from '@/types/quiz';
 import { setQuizSyncCursor } from '@/db/syncState';
 
 const FIXED_TIMESTAMP = 1704067200000; // 2024-01-01T00:00:00.000Z
-const FIXED_ISO = new Date(FIXED_TIMESTAMP).toISOString();
 
 const sampleQuiz: Quiz = {
   id: 'quiz-1',
@@ -34,6 +33,9 @@ const {
   const toArray = vi.fn();
   const bulkPut = vi.fn();
   const get = vi.fn();
+  const bulkGet = vi.fn().mockImplementation(async (ids: string[]) => {
+    return ids.map((id) => quizzesData.find((q) => q.id === id));
+  });
   const where = vi.fn().mockReturnValue({
     equals: vi.fn().mockImplementation((userId: string) => ({
       toArray: vi.fn().mockImplementation(async () => quizzesData.filter((quiz) => quiz.user_id === userId)),
@@ -45,6 +47,7 @@ const {
       toArray,
       bulkPut,
       get,
+      bulkGet,
       where,
     },
   };

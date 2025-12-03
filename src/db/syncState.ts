@@ -12,8 +12,15 @@ export async function getSyncCursor(userId: string): Promise<SyncCursor> {
   // Fallback to legacy key if present
   const state = await db.syncState.get(key) ?? await db.syncState.get('results');
 
+  let timestamp = '1970-01-01T00:00:00.000Z';
+  if (state?.lastSyncedAt) {
+    timestamp = typeof state.lastSyncedAt === 'string'
+      ? state.lastSyncedAt
+      : new Date(state.lastSyncedAt).toISOString();
+  }
+
   return {
-    timestamp: state?.lastSyncedAt ? new Date(state.lastSyncedAt).toISOString() : '1970-01-01T00:00:00.000Z',
+    timestamp,
     lastId: state?.lastId || NIL_UUID,
   };
 }
@@ -21,10 +28,10 @@ export async function getSyncCursor(userId: string): Promise<SyncCursor> {
 export async function setSyncCursor(timestamp: string, userId: string, lastId?: string): Promise<void> {
   if (Number.isNaN(Date.parse(timestamp))) throw new Error('Invalid timestamp');
   const key = `results:${userId}`;
-  // We store the timestamp as a number in SyncState
+  // Store the timestamp as a string to preserve microsecond precision from Postgres
   await db.syncState.put({ 
     table: key, 
-    lastSyncedAt: new Date(timestamp).getTime(), 
+    lastSyncedAt: timestamp, 
     synced: 1,
     lastId: lastId || NIL_UUID
   });
@@ -36,8 +43,15 @@ export async function getQuizSyncCursor(userId: string): Promise<SyncCursor> {
   const key = `quizzes:${userId}`;
   const state = await db.syncState.get(key);
 
+  let timestamp = '1970-01-01T00:00:00.000Z';
+  if (state?.lastSyncedAt) {
+    timestamp = typeof state.lastSyncedAt === 'string'
+      ? state.lastSyncedAt
+      : new Date(state.lastSyncedAt).toISOString();
+  }
+
   return {
-    timestamp: state?.lastSyncedAt ? new Date(state.lastSyncedAt).toISOString() : '1970-01-01T00:00:00.000Z',
+    timestamp,
     lastId: state?.lastId || NIL_UUID,
   };
 }
@@ -47,7 +61,7 @@ export async function setQuizSyncCursor(timestamp: string, userId: string, lastI
   const key = `quizzes:${userId}`;
   await db.syncState.put({
     table: key,
-    lastSyncedAt: new Date(timestamp).getTime(),
+    lastSyncedAt: timestamp, // Store as string for precision
     synced: 1,
     lastId: lastId || NIL_UUID,
   });

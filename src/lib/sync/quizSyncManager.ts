@@ -229,6 +229,15 @@ async function pullRemoteChanges(userId: string, startTime: number, stats: { pul
     let lastId = cursor.lastId;
     const now = Date.now();
 
+    // 1. Pre-process and validate remote quizzes to collect IDs
+    interface ValidatedRemote {
+      remote: Quiz;
+      originalUpdatedAt: string;
+      originalId: string;
+    }
+    const validatedBatch: ValidatedRemote[] = [];
+    const remoteIds: string[] = [];
+
     for (const remoteQuiz of remoteQuizzes) {
       const rawUpdatedAt = (remoteQuiz as { updated_at?: unknown }).updated_at;
       let candidateUpdatedAt: string;
@@ -252,6 +261,7 @@ async function pullRemoteChanges(userId: string, startTime: number, stats: { pul
         updated_at: candidateUpdatedAt,
         id: candidateId,
       });
+
       if (!validation.success) {
         logger.warn('Skipping invalid remote quiz', { issues: validation.error.issues, quizId: remoteQuiz.id });
         continue;
@@ -259,18 +269,38 @@ async function pullRemoteChanges(userId: string, startTime: number, stats: { pul
 
       const mappedRemote = await toLocalQuiz(validation.data);
       const remoteWithUser: Quiz = { ...mappedRemote, user_id: userId };
-      const localQuiz = await db.quizzes.get(mappedRemote.id);
+      
+      validatedBatch.push({
+        remote: remoteWithUser,
+        originalUpdatedAt: candidateUpdatedAt,
+        originalId: candidateId
+      });
+      remoteIds.push(mappedRemote.id);
+    }
+
+    // 2. Batch fetch local quizzes to avoid N+1
+    const localQuizzes = await db.quizzes.bulkGet(remoteIds);
+    const localQuizMap = new Map<string, Quiz>();
+    localQuizzes.forEach((q) => {
+      if (q) localQuizMap.set(q.id, q);
+    });
+
+    // 3. Process conflicts and prepare save batch
+    for (const { remote } of validatedBatch) {
+      const localQuiz = localQuizMap.get(remote.id);
+      
       if (localQuiz && localQuiz.user_id !== userId) {
-        logger.warn('Skipping remote quiz due to user mismatch', { quizId: mappedRemote.id, userId });
+        logger.warn('Skipping remote quiz due to user mismatch', { quizId: remote.id, userId });
         continue;
       }
-      const { winner, merged } = resolveQuizConflict(localQuiz, remoteWithUser);
+
+      const { winner, merged } = resolveQuizConflict(localQuiz, remote);
 
       const mergedWithSync: Quiz = {
         ...merged,
         user_id: userId,
-        quiz_hash: merged.quiz_hash ?? mappedRemote.quiz_hash ?? null,
-        last_synced_version: winner === 'remote' ? mappedRemote.version : localQuiz?.last_synced_version ?? null,
+        quiz_hash: merged.quiz_hash ?? remote.quiz_hash ?? null,
+        last_synced_version: winner === 'remote' ? remote.version : localQuiz?.last_synced_version ?? null,
         last_synced_at: winner === 'remote' ? now : localQuiz?.last_synced_at ?? merged.last_synced_at ?? null,
       };
 
