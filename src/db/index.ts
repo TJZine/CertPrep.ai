@@ -99,6 +99,11 @@ export class CertPrepDatabase extends Dexie {
 
 export const db = new CertPrepDatabase();
 
+// Expose db on window for E2E testing (non-production only)
+if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'production') {
+  (window as Window & { __certprepDb?: CertPrepDatabase }).__certprepDb = db;
+}
+
 /**
  * Opens the IndexedDB connection. Throws with contextual information on failure.
  */
