@@ -52,5 +52,11 @@ CLAUDE.md
 .agent
 .cursor
 
+
 # Sentry Config File
 .env.sentry-build-plugin
+
+# playwright
+playwright-report/
+test-results/
+blob-report/
