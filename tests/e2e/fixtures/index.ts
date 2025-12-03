@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks -- Playwright fixtures use `use` which isn't a React hook */
 import { test as base, expect, type Page, type BrowserContext } from '@playwright/test';
 import { injectAuthState, createMockSession, MOCK_USER } from './auth';
 import { clearDatabase, seedQuiz, waitForDatabase } from '../helpers/db';
@@ -263,8 +264,8 @@ export const TEST_QUIZ: Omit<Quiz, 'user_id'> = {
       explanation: 'The sky appears blue due to Rayleigh scattering.',
     },
   ],
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString(),
+  created_at: Date.now(),
+  updated_at: Date.now(),
   version: 1,
   quiz_hash: 'e2e-test-hash-001',
   deleted_at: null,

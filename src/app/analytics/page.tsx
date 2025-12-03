@@ -11,6 +11,7 @@ import { EmptyState } from '@/components/common/EmptyState';
 import { Button } from '@/components/ui/Button';
 import { useResults, useQuizzes, useInitializeDatabase } from '@/hooks/useDatabase';
 import { useAnalyticsStats } from '@/hooks/useAnalyticsStats';
+import { useSync } from '@/hooks/useSync';
 import { getOverallStats, type OverallStats } from '@/db/results';
 import { BarChart3, Plus, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/components/providers/AuthProvider';
@@ -23,6 +24,7 @@ export default function AnalyticsPage(): React.ReactElement {
   const router = useRouter();
   const { user } = useAuth();
   const effectiveUserId = useEffectiveUserId(user?.id);
+  const { isSyncing, hasInitialSyncCompleted } = useSync();
 
   const { isInitialized, error: dbError } = useInitializeDatabase();
   const { results, isLoading: resultsLoading } = useResults(effectiveUserId ?? undefined);
@@ -65,10 +67,15 @@ export default function AnalyticsPage(): React.ReactElement {
 
   const { categoryPerformance, weakAreas, dailyStudyTime, isLoading: statsLoading } = useAnalyticsStats(results, quizzes);
 
-  if (!isInitialized || resultsLoading || quizzesLoading || statsLoading || !effectiveUserId) {
+  // Show loading while initializing database, fetching data, or during initial sync
+  const isLoadingData = !isInitialized || resultsLoading || quizzesLoading || statsLoading || !effectiveUserId;
+  const isWaitingForSync = !hasInitialSyncCompleted && results.length === 0;
+  
+  if (isLoadingData || isWaitingForSync) {
+    const loadingText = isSyncing ? 'Syncing your data...' : 'Loading analytics...';
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <LoadingSpinner size="lg" text="Loading analytics..." />
+        <LoadingSpinner size="lg" text={loadingText} />
       </div>
     );
   }
@@ -87,6 +94,7 @@ export default function AnalyticsPage(): React.ReactElement {
     );
   }
 
+  // Only show empty state after sync has completed and we still have no results
   if (results.length === 0) {
     return (
       <div className="mx-auto max-w-7xl px-4 py-8">

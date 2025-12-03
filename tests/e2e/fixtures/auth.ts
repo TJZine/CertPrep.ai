@@ -1,4 +1,4 @@
-import type { Page, BrowserContext } from '@playwright/test';
+import type { Page } from '@playwright/test';
 
 /**
  * Mock user data for E2E tests.

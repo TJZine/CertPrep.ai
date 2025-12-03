@@ -315,6 +315,7 @@ test.describe('Sync Request Verification', () => {
     expect(results.length).toBeGreaterThanOrEqual(1);
 
     // Log sync requests for debugging (may be empty without auth)
+    // eslint-disable-next-line no-console -- Debug logging for E2E tests
     console.log(`[E2E] Sync requests captured: ${syncRequests.length}`);
   });
 });

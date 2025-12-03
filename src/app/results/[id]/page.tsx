@@ -10,6 +10,7 @@ import { useResult, useQuiz, useQuizResults, useInitializeDatabase } from '@/hoo
 import { ArrowLeft, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { useEffectiveUserId } from '@/hooks/useEffectiveUserId';
+import { useSync } from '@/hooks/useSync';
 import { syncQuizzes } from '@/lib/sync/quizSyncManager';
 import { logger } from '@/lib/logger';
 
@@ -22,11 +23,14 @@ export default function ResultsPage(): React.ReactElement {
   const resultId = params.id as string;
   const { user } = useAuth();
   const effectiveUserId = useEffectiveUserId(user?.id);
+  const { isSyncing, hasInitialSyncCompleted } = useSync();
 
   const { isInitialized, error: dbError } = useInitializeDatabase();
   const { result, isLoading: resultLoading } = useResult(isInitialized ? resultId : undefined, effectiveUserId ?? undefined);
-  const { quiz, isLoading: quizLoading } = useQuiz(result?.quiz_id, effectiveUserId ?? undefined);
-  const { results: allQuizResults } = useQuizResults(result?.quiz_id, effectiveUserId ?? undefined);
+  // Only query for quiz if we have a valid result with quiz_id
+  const quizId = result?.quiz_id;
+  const { quiz, isLoading: quizLoading } = useQuiz(quizId, effectiveUserId ?? undefined);
+  const { results: allQuizResults } = useQuizResults(quizId, effectiveUserId ?? undefined);
   const [isRestoringQuiz, setIsRestoringQuiz] = React.useState(false);
   const [restoreAttempted, setRestoreAttempted] = React.useState(false);
 
@@ -87,10 +91,21 @@ export default function ResultsPage(): React.ReactElement {
     );
   }
 
-  if (!isInitialized || !effectiveUserId || resultLoading || quizLoading) {
+  // Show loading while DB initializes, user is determined, or result is being fetched
+  if (!isInitialized || !effectiveUserId || resultLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
         <LoadingSpinner size="lg" text="Loading your results..." />
+      </div>
+    );
+  }
+
+  // Wait for initial sync to complete before declaring result not found
+  // This handles the case where user opens a result URL on a new browser
+  if (!result && !hasInitialSyncCompleted) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
+        <LoadingSpinner size="lg" text={isSyncing ? 'Syncing your data...' : 'Loading your results...'} />
       </div>
     );
   }
@@ -106,6 +121,15 @@ export default function ResultsPage(): React.ReactElement {
             Back to Dashboard
           </Button>
         </div>
+      </div>
+    );
+  }
+
+  // Only check quiz loading when we have a result (and thus a quiz_id)
+  if (quizLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
+        <LoadingSpinner size="lg" text="Loading quiz details..." />
       </div>
     );
   }
