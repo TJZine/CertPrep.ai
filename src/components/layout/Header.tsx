@@ -28,8 +28,10 @@ export function Header(): React.ReactElement {
   // Trigger background sync
   useSync();
   
-  console.log('Header: Current user:', user?.id);
-
+  React.useEffect(() => {
+    // eslint-disable-next-line no-console -- Debug logging
+    console.log('Header: Auth state changed', { user: user?.email });
+  }, [user]);
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const [scrolled, setScrolled] = React.useState(false);
   const handleCloseMenu = React.useCallback((): void => setIsMenuOpen(false), []);

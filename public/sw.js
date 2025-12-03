@@ -1,7 +1,6 @@
 const STATIC_CACHE = 'certprep-static-v3';
 const APP_SHELL = '/'; // SPA shell - critical for offline navigation
 const STATIC_ASSETS = [APP_SHELL, '/manifest.json', '/icon.svg', '/favicon.ico', '/apple-touch-icon.png'];
-const STATIC_PATH_PREFIXES = ['/icons/', '/_next/static/'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -116,18 +115,26 @@ self.addEventListener('message', (event) => {
  * @param {URL} url - The parsed URL of the request
  * @returns {boolean} True if the asset should be cached
  */
+const ALLOWED_DESTINATIONS = new Set(['style', 'script', 'font', 'image', 'manifest']);
+const STATIC_PATH_PREFIXES = ['/icons/', '/_next/static/'];
+
+/**
+ * Determines if a request should be cached by the service worker.
+ * @param {Request} request - The fetch request object
+ * @param {URL} url - The parsed URL of the request
+ * @returns {boolean} True if the asset should be cached
+ */
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 function isCacheableAsset(request, url) {
-  if (request.mode === 'navigate' || request.destination === 'document') {
-    return false;
-  }
-  if (STATIC_ASSETS.includes(url.pathname)) {
-    return true;
-  }
-  if (STATIC_PATH_PREFIXES.some((prefix) => url.pathname.startsWith(prefix))) {
-    return true;
-  }
+  // Only cache GET requests
+  if (request.method !== 'GET') return false;
 
-  const allowedDestinations = new Set(['style', 'script', 'font', 'image', 'manifest']);
-  return allowedDestinations.has(request.destination);
+  // Don't cache API calls or Next.js data
+  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/_next/data/')) return false;
+
+  // Cache based on destination
+  if (ALLOWED_DESTINATIONS.has(request.destination)) return true;
+
+  // Cache based on path prefix (e.g. icons, static chunks)
+  return STATIC_PATH_PREFIXES.some(prefix => url.pathname.startsWith(prefix));
 }

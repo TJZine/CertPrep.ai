@@ -43,12 +43,12 @@ describe.skipIf(!shouldRun)('Row Level Security (RLS) Verification', () => {
       return;
     }
     const host = new URL(url).hostname;
-    if (!url.includes('localhost') && !url.includes('test') && !knownProductionHosts.has(host)) {
-      console.warn('Supabase URL does not look like a test instance; refusing to clear database');
+    if (knownProductionHosts.has(host)) {
       return;
     }
 
-    if (knownProductionHosts.has(host)) {
+    if (!url.includes('localhost') && !url.includes('test')) {
+      console.warn('Supabase URL does not look like a test instance; refusing to clear database');
       return;
     }
 
@@ -209,7 +209,6 @@ describe.skipIf(!shouldRun)('Row Level Security (RLS) Verification', () => {
     if (insertError) {
         throw new Error(`Insert failed: ${insertError.message}`);
     }
-    expect(insertError).toBeNull();
 
     const { data, error: selectError } = await userA.client
       .from('results')

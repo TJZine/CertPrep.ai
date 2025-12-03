@@ -1,4 +1,4 @@
-import { chromium, FullConfig, expect } from '@playwright/test';
+import { chromium, FullConfig } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
 import fs from 'fs';
@@ -8,7 +8,7 @@ import path from 'path';
 dotenv.config({ path: '.env.local' });
 dotenv.config({ path: '.env' });
 
-export default async function globalSetup(config: FullConfig) {
+export default async function globalSetup(config: FullConfig): Promise<void> {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   
@@ -23,6 +23,7 @@ export default async function globalSetup(config: FullConfig) {
     },
   });
   
+  // eslint-disable-next-line no-console -- Debug logging for E2E tests
   console.log('GlobalSetup Supabase URL:', supabaseUrl);
 
   const testEmail = 'e2e-test@certprep.local';
@@ -35,6 +36,7 @@ export default async function globalSetup(config: FullConfig) {
   let userId = users.find(u => u.email === testEmail)?.id;
   
   if (userId) {
+    // eslint-disable-next-line no-console -- Debug logging for E2E tests
     console.log('Updating E2E test user password...');
     const { error: updateError } = await supabase.auth.admin.updateUserById(userId, {
       password: testPassword,
@@ -42,6 +44,7 @@ export default async function globalSetup(config: FullConfig) {
     });
     if (updateError) throw updateError;
   } else {
+    // eslint-disable-next-line no-console -- Debug logging for E2E tests
     console.log('Creating E2E test user...');
     const { data, error: createError } = await supabase.auth.admin.createUser({
       email: testEmail,
@@ -56,6 +59,7 @@ export default async function globalSetup(config: FullConfig) {
   const baseURL = config.projects?.[0]?.use?.baseURL || 'http://localhost:3000';
 
   // 2. UI Login via Magic Link (Manual Session Injection)
+  // eslint-disable-next-line no-console -- Debug logging for E2E tests
   console.log('Generating magic link for E2E login...');
   const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
     type: 'magiclink',
@@ -69,6 +73,7 @@ export default async function globalSetup(config: FullConfig) {
   if (!linkData.properties?.action_link) throw new Error('Failed to generate magic link');
   
   const magicLink = linkData.properties.action_link;
+  // eslint-disable-next-line no-console -- Debug logging for E2E tests
   console.log('Magic link generated. Fetching to extract tokens...');
 
   // Fetch the magic link to get the redirect URL with tokens
@@ -79,6 +84,7 @@ export default async function globalSetup(config: FullConfig) {
     throw new Error('Magic link did not redirect as expected');
   }
   
+  // eslint-disable-next-line no-console -- Debug logging for E2E tests
   console.log('Redirect location obtained. Extracting tokens...');
   const hash = location.split('#')[1];
   if (!hash) {
@@ -93,15 +99,20 @@ export default async function globalSetup(config: FullConfig) {
     throw new Error('Failed to extract tokens from hash');
   }
 
+  // eslint-disable-next-line no-console -- Debug logging for E2E tests
   console.log('Tokens extracted. Injecting into browser...');
+  // eslint-disable-next-line no-console -- Debug logging for E2E tests
   console.log('Access Token Length:', access_token.length);
+  // eslint-disable-next-line no-console -- Debug logging for E2E tests
   console.log('Refresh Token Length:', refresh_token.length);
   
   try {
     const tokenPart = access_token.split('.')[1];
     if (tokenPart) {
       const payload = JSON.parse(Buffer.from(tokenPart, 'base64').toString());
+      // eslint-disable-next-line no-console -- Debug logging for E2E tests
       console.log('Token Payload sub:', payload.sub);
+      // eslint-disable-next-line no-console -- Debug logging for E2E tests
       console.log('Token Payload aud:', payload.aud);
     }
   } catch (e) {
@@ -114,6 +125,7 @@ export default async function globalSetup(config: FullConfig) {
   const page = await browser.newPage();
   
   // Debug: Forward browser logs to terminal
+  // eslint-disable-next-line no-console -- Debug logging for E2E tests
   page.on('console', msg => console.log(`BROWSER LOG: ${msg.text()}`));
   page.on('pageerror', err => console.error(`BROWSER ERROR: ${err}`));
   
@@ -149,6 +161,7 @@ export default async function globalSetup(config: FullConfig) {
     if (!projectRef) throw new Error('Could not extract project ref from NEXT_PUBLIC_SUPABASE_URL');
     
     const cookieName = `sb-${projectRef}-auth-token`;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- keeping for reference of alternative format
     const cookieValue = 'base64-' + Buffer.from(JSON.stringify(session)).toString('base64');
     // Note: @supabase/ssr might use a different format. 
     // Standard supabase-js uses: key = sb-<ref>-auth-token, value = base64(JSON.stringify(session))
@@ -187,6 +200,7 @@ export default async function globalSetup(config: FullConfig) {
       sameSite: 'Lax',
     }]);
     
+    // eslint-disable-next-line no-console -- Debug logging for E2E tests
     console.log('Cookie injected:', cookieName);
 
     // Navigate to home page
@@ -196,6 +210,7 @@ export default async function globalSetup(config: FullConfig) {
     // We check for the user email in the header
     await page.getByText(testEmail).first().waitFor({ state: 'visible', timeout: 10000 });
     
+    // eslint-disable-next-line no-console -- Debug logging for E2E tests
     console.log('Login successful via manual injection!');
     
     // Ensure auth directory exists
@@ -213,6 +228,7 @@ export default async function globalSetup(config: FullConfig) {
       JSON.stringify({ id: userId }, null, 2)
     );
     
+    // eslint-disable-next-line no-console -- Debug logging for E2E tests
     console.log('E2E auth state saved to tests/e2e/.auth/user.json');
   } catch (error) {
     console.error('UI Login failed:', error);

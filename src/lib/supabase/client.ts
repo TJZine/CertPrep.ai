@@ -29,7 +29,9 @@ export const createClient = (): SupabaseClient | undefined => {
     
     // Expose client on window for E2E testing
     if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'production') {
+      // eslint-disable-next-line no-console -- Debug logging for E2E tests
       console.log('Supabase Client URL:', supabaseUrl);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Exposing for E2E tests
       (window as any).supabase = client;
     }
 

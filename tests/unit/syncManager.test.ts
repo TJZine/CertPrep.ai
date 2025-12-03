@@ -60,6 +60,10 @@ vi.mock('@/lib/supabase/client', () => ({
 describe('SyncManager', () => {
   beforeEach((): void => {
     vi.clearAllMocks();
+    Object.defineProperty(navigator, 'onLine', {
+      value: true,
+      configurable: true,
+    });
   });
 
   it('should advance cursor even if all results in a batch are invalid', async () => {
@@ -103,7 +107,10 @@ describe('SyncManager', () => {
     });
     
     try {
-      vi.stubGlobal('navigator', { locks: { request: mockRequest } });
+      vi.stubGlobal('navigator', { 
+        locks: { request: mockRequest },
+        onLine: true
+      });
       mockSupabase.limit.mockResolvedValueOnce({ data: [], error: null });
 
       await syncResults('user-123');

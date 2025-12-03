@@ -161,15 +161,17 @@ export function Scorecard({
               <div
                 className={cn(
                   'bg-green-500 transition-all duration-500',
-                  `w-pct-${Math.round((correctCount / totalCount) * 100)}`
+                  'bg-green-500 transition-all duration-500'
                 )}
+                style={{ width: `${Math.round((correctCount / totalCount) * 100)}%` }}
                 aria-label={`${correctCount} correct`}
               />
               <div
                 className={cn(
                   'bg-red-400 transition-all duration-500',
-                  `w-pct-${Math.round((incorrectCount / totalCount) * 100)}`
+                  'bg-red-400 transition-all duration-500'
                 )}
+                style={{ width: `${Math.round((incorrectCount / totalCount) * 100)}%` }}
                 aria-label={`${incorrectCount} incorrect`}
               />
             </div>

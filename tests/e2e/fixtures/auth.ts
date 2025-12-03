@@ -138,7 +138,9 @@ export async function injectAuthState(page: Page): Promise<void> {
   
   // Debug: Check cookies
   const cookies = await page.evaluate(() => document.cookie);
-  console.log('injectAuthState: MOCK_USER.id:', MOCK_USER.id);
+  // eslint-disable-next-line no-console -- Debug logging for E2E tests
+  console.log(`Injecting auth for user: ${MOCK_USER.email}`);
+  // eslint-disable-next-line no-console -- Debug logging for E2E tests
   console.log('injectAuthState: Cookies:', cookies);
 
   // Reload to ensure the app picks up the new auth state

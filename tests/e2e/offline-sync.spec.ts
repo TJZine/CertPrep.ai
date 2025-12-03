@@ -235,6 +235,7 @@ test.describe('Offline Data Persistence', () => {
     // expect(unsyncedCount).toBeGreaterThanOrEqual(2); 
     // ^ This is too strict if auto-sync is enabled.
     
+    // eslint-disable-next-line no-console -- Debug logging for E2E tests
     console.log(`[TEST] Total results: ${quizResults.length}, Unsynced: ${quizResults.filter(r => r.synced === 0).length}`);
   });
 });
@@ -335,6 +336,7 @@ test.describe('Sync Request Verification', () => {
     syncRequests,
   }) => {
     // Forward browser logs
+    // eslint-disable-next-line no-console -- Debug logging for E2E tests
     page.on('console', msg => console.log(`BROWSER LOG: ${msg.text()}`));
     page.on('pageerror', err => console.error(`BROWSER ERROR: ${err}`));
 
@@ -358,7 +360,9 @@ test.describe('Sync Request Verification', () => {
 
     // Manually trigger sync to ensure it runs even if auto-sync debouncing interferes
     await page.evaluate(() => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- accessing window global
       if ((window as any).__certprepSync) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- accessing window global
         return (window as any).__certprepSync();
       }
     });
@@ -371,6 +375,7 @@ test.describe('Sync Request Verification', () => {
           req.url.includes('/rest/v1/results') && 
           req.body && 
           Array.isArray(req.body) &&
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- request body is untyped
           req.body.some((item: any) => item.quiz_id === quiz.id)
         );
         
@@ -378,6 +383,7 @@ test.describe('Sync Request Verification', () => {
         const results = await getResultsByUserId(page, MOCK_USER.id);
         const result = results.find(r => r.quiz_id === quiz.id);
         
+        // eslint-disable-next-line no-console -- Debug logging for E2E tests
         console.log(`[POLL] Requests: ${requests.length}, Synced: ${result?.synced}`);
 
         return {

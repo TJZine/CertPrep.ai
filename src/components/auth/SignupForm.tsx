@@ -167,15 +167,19 @@ export default function SignupForm(): React.ReactElement {
         </div>
 
         <div className="flex justify-center">
-          {process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY ? (
+          {hcaptchaConfigured ? (
             <HCaptcha
               ref={captchaRef}
-              sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY}
+              sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY!}
               onVerify={(token) => setCaptchaToken(token)}
               onExpire={() => setCaptchaToken(null)}
             />
           ) : (
-            <p className="text-sm text-red-500 font-medium text-center">
+            <p
+              className="text-sm text-red-500 font-medium text-center"
+              role="alert"
+              aria-live="polite"
+            >
               Sign up is temporarily unavailable due to missing security configuration.
             </p>
           )}

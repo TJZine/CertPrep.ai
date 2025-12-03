@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
@@ -11,66 +11,73 @@ import { useToast } from '@/components/ui/Toast';
 import HCaptcha from '@hcaptcha/react-hcaptcha';
 
 export default function LoginForm(): React.ReactElement {
-  console.error('LoginForm rendered (debug)');
   const supabase = useMemo(() => createClient(), []);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const captchaRef = useRef<HCaptcha>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const { addToast } = useToast();
 
+  useEffect(() => {
+    const checkSession = async (): Promise<void> => {
+      if (!supabase) return;
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        router.push('/dashboard');
+      }
+    };
+
+    checkSession();
+  }, [router, supabase]);
+
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
-    console.error('LoginForm: handleSubmit called');
-    setIsLoading(true);
+    setLoading(true);
     setError(null);
 
-    console.log('LoginForm: Checking captcha.');
     // Only validate captcha if the key is present
     if (process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY && !captchaToken) {
-      console.log('LoginForm: Captcha missing');
       setError('Please complete the captcha');
-      setIsLoading(false);
+      setLoading(false);
       return;
     }
 
     if (!supabase) {
-      console.log('LoginForm: Supabase client missing');
       setError('Authentication service unavailable. Please contact support.');
-      setIsLoading(false);
+      setLoading(false);
       return;
     }
 
     try {
-      console.log('LoginForm: Calling signInWithPassword', { email });
-      const { error } = await supabase.auth.signInWithPassword({
+      const { error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
         options: {
-          captchaToken: captchaToken || undefined,
+          captchaToken: captchaToken ?? undefined,
         },
       });
-      console.log('LoginForm: signInWithPassword returned', { error });
 
-      if (error) {
-        setError(getAuthErrorMessage(error));
-        captchaRef.current?.resetCaptcha();
-        setCaptchaToken(null);
-        return;
+      if (signInError) {
+        throw signInError;
       }
 
-      addToast('success', 'Successfully logged in!');
-      router.push('/');
-    } catch (err) {
-      console.error('LoginForm: Unexpected error', err);
-      // Handle unexpected errors that aren't Supabase AuthErrors
-      // Do not log full error to avoid PII leaks
-      setError('An unexpected error occurred. Please try again.');
+      router.push('/dashboard');
+      router.refresh();
+    } catch (err: unknown) {
+      console.error('LoginForm: Login error', err);
+      const message = getAuthErrorMessage(err);
+      setError(message);
+      addToast('error', message);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
+      // Reset captcha on failure so user can try again
+      if (captchaRef.current) {
+        captchaRef.current.resetCaptcha();
+        setCaptchaToken(null);
+      }
     }
   };
 
@@ -83,8 +90,7 @@ export default function LoginForm(): React.ReactElement {
         </p>
       </div>
       <form 
-        onSubmit={handleSubmit} 
-        onInvalid={(e) => console.error('Form invalid:', e)}
+        onSubmit={handleSubmit}
         className="space-y-4"
       >
         <div className="space-y-2">
@@ -100,7 +106,7 @@ export default function LoginForm(): React.ReactElement {
             placeholder="m@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            disabled={isLoading}
+            disabled={loading}
             required
           />
         </div>
@@ -116,7 +122,7 @@ export default function LoginForm(): React.ReactElement {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            disabled={isLoading}
+            disabled={loading}
             required
           />
         </div>
@@ -144,9 +150,9 @@ export default function LoginForm(): React.ReactElement {
         <Button
           type="submit"
           className="w-full"
-          disabled={isLoading}
+          disabled={loading}
         >
-          {isLoading ? 'Signing in...' : 'Sign In'}
+          {loading ? 'Signing in...' : 'Sign In'}
         </Button>
       </form>
       <div className="text-center text-sm">

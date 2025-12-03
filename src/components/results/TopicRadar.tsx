@@ -121,7 +121,7 @@ export function TopicRadar({ categories, className }: TopicRadarProps): React.Re
                 <span className="font-medium text-slate-700 dark:text-slate-200">{cat.category}</span>
                 <div className="flex items-center gap-2">
                   <div className="h-2 w-24 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
-                    <div className={cn('h-full bg-blue-500', `w-pct-${Math.round(cat.score)}`)} />
+                    <div className={cn('h-full bg-blue-500')} style={{ width: `${Math.round(cat.score)}%` }} />
                   </div>
                   <span className="text-sm font-semibold text-slate-900 dark:text-slate-50">{cat.score}%</span>
                 </div>
@@ -237,7 +237,7 @@ export function CategoryBreakdown({ categories, className }: CategoryBreakdownPr
               </div>
               <div className="flex items-center gap-2">
                 <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
-                  <div className={cn('h-full transition-all', getScoreColor(cat.score), `w-pct-${Math.round(cat.score)}`)} />
+                  <div className={cn('h-full transition-all', getScoreColor(cat.score))} style={{ width: `${Math.round(cat.score)}%` }} />
                 </div>
                 <span className="w-16 text-right text-xs text-slate-500 dark:text-slate-300">
                   {cat.correct}/{cat.total}

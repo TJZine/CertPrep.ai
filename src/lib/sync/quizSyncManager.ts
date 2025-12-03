@@ -15,6 +15,15 @@ import type { Quiz } from '@/types/quiz';
 import { QuestionSchema } from '@/validators/quizSchema';
 import { z } from 'zod';
 
+async function ensureQuizHash(quiz: Quiz, payloadHash?: string | null): Promise<string> {
+  return payloadHash ?? quiz.quiz_hash ?? await computeQuizHash({
+    title: quiz.title,
+    description: quiz.description,
+    tags: quiz.tags,
+    questions: quiz.questions,
+  });
+}
+
 const BATCH_SIZE = 50;
 const TIME_BUDGET_MS = 5000;
 
@@ -149,12 +158,7 @@ async function backfillLocalQuizzes(userId: string): Promise<void> {
       batch.map(async (quiz, index) => ({
         ...quiz,
         user_id: userId,
-        quiz_hash: payload[index]?.quiz_hash ?? quiz.quiz_hash ?? (await computeQuizHash({
-          title: quiz.title,
-          description: quiz.description,
-          tags: quiz.tags,
-          questions: quiz.questions,
-        })),
+        quiz_hash: await ensureQuizHash(quiz, payload[index]?.quiz_hash),
         last_synced_version: quiz.version,
         last_synced_at: now,
       })),
@@ -196,15 +200,7 @@ async function pushLocalChanges(userId: string, startTime: number, stats: { push
     const updatedBatch: Quiz[] = await Promise.all(
       batch.map(async (quiz, index) => ({
         ...quiz,
-        quiz_hash:
-          remotePayload[index]?.quiz_hash ??
-          quiz.quiz_hash ??
-          (await computeQuizHash({
-            title: quiz.title,
-            description: quiz.description,
-            tags: quiz.tags,
-            questions: quiz.questions,
-          })),
+        quiz_hash: await ensureQuizHash(quiz, remotePayload[index]?.quiz_hash),
         last_synced_version: quiz.version,
         last_synced_at: now,
       })),
@@ -246,10 +242,13 @@ async function pullRemoteChanges(userId: string, startTime: number, stats: { pul
     }
 
     const quizzesToSave: Quiz[] = [];
-    let lastCursorTimestamp = cursor.timestamp;
-    let lastCursorId = cursor.lastId;
+    // Track last item seen (including invalid) to avoid reprocessing
     let lastSeenTimestamp = cursor.timestamp;
     let lastSeenId = cursor.lastId;
+
+    // Track last valid item for normal cursor advancement
+    let lastCursorTimestamp = cursor.timestamp;
+    let lastCursorId = cursor.lastId;
     let sawInvalid = false;
     let sawValid = false;
     const now = Date.now();
@@ -278,17 +277,26 @@ async function pullRemoteChanges(userId: string, startTime: number, stats: { pul
 
       const candidateId = typeof (remoteQuiz as { id?: unknown }).id === 'string'
         ? (remoteQuiz as { id: string }).id
-        : cursor.lastId;
-      lastSeenId = candidateId;
+        : null; // Do not fallback to cursor.lastId, as that corrupts identity
+
+      if (!candidateId) {
+        logger.error('Invalid id in remote quiz, advancing cursor to skip record', { rawId: (remoteQuiz as { id?: unknown }).id, userId });
+        lastSeenId = 'skip-invalid-id-' + Date.now(); // Synthetic ID to ensure progress
+      } else {
+        lastSeenId = candidateId;
+      }
 
       const validation = RemoteQuizSchema.safeParse({
         ...remoteQuiz,
         updated_at: candidateUpdatedAt,
-        id: candidateId,
+        id: candidateId ?? 'invalid-id-placeholder', // Will fail validation below
       });
 
       if (!validation.success) {
-        logger.warn('Skipping invalid remote quiz', { issues: validation.error.issues, quizId: remoteQuiz.id });
+        logger.warn('Skipping invalid remote quiz record', {
+          id: candidateId ?? 'unknown',
+          error: validation.error
+        });
         sawInvalid = true;
         continue;
       }
@@ -297,12 +305,12 @@ async function pullRemoteChanges(userId: string, startTime: number, stats: { pul
       const remoteWithUser: Quiz = { ...mappedRemote, user_id: userId };
       sawValid = true;
       lastCursorTimestamp = candidateUpdatedAt;
-      lastCursorId = candidateId;
+      lastCursorId = candidateId ?? 'unknown-id'; // Fallback should not happen due to validation, but satisfies TS
       
       validatedBatch.push({
         remote: remoteWithUser,
         originalUpdatedAt: candidateUpdatedAt,
-        originalId: candidateId
+        originalId: candidateId ?? 'unknown-id'
       });
       remoteIds.push(mappedRemote.id);
     }

@@ -28,6 +28,8 @@ const ResultImportSchema = z.object({
 
 const QuizBackupSchema = QuizSchema.extend({
   sourceId: z.string().optional(),
+  // Allow user_id to be absent in backups; we inject it from the caller.
+  user_id: z.string().optional(),
   deleted_at: z.number().nullable().optional(),
   updated_at: z.number().nullable().optional(),
   quiz_hash: z.string().nullable().optional(),
@@ -137,6 +139,11 @@ export async function* generateJSONExport(userId: string): AsyncGenerator<string
  * Download data as a JSON file using streaming to minimize memory usage.
  */
 export async function downloadDataAsFile(userId: string): Promise<void> {
+  if (typeof window === 'undefined' || typeof document === 'undefined') {
+    // Non-browser environment: nothing to download.
+    return;
+  }
+
   // Stream chunks to avoid holding the full export in memory on low-end devices.
   if (typeof ReadableStream === 'undefined') {
     // Fallback for environments without streams (should be rare).
