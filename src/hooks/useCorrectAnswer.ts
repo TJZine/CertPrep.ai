@@ -73,9 +73,10 @@ export function useCorrectAnswer(
                 [questionId]: correctOptionKey
               }));
             }
+            // Only mark as resolved when we actually find a match to avoid suppressing retries
+            resolvedRef.current.add(cacheKey);
           }
-          
-          resolvedRef.current.add(cacheKey);
+          // If no match, allow future retries (e.g., when options/hash change) by not caching
           if (isMounted) setIsResolving(false);
           
           // Remove self

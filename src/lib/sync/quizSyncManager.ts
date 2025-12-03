@@ -235,8 +235,12 @@ async function pullRemoteChanges(userId: string, startTime: number, stats: { pul
     }
 
     const quizzesToSave: Quiz[] = [];
-    let lastUpdatedAt = cursor.timestamp;
-    let lastId = cursor.lastId;
+    let lastCursorTimestamp = cursor.timestamp;
+    let lastCursorId = cursor.lastId;
+    let lastSeenTimestamp = cursor.timestamp;
+    let lastSeenId = cursor.lastId;
+    let sawInvalid = false;
+    let sawValid = false;
     const now = Date.now();
 
     // 1. Pre-process and validate remote quizzes to collect IDs
@@ -256,15 +260,15 @@ async function pullRemoteChanges(userId: string, startTime: number, stats: { pul
         candidateUpdatedAt = new Date(rawUpdatedAt).toISOString();
       } else {
         logger.error('Invalid updated_at in remote quiz, advancing cursor to skip record', { quizId: remoteQuiz.id, rawUpdatedAt, userId });
-        const safeLastUpdate = (lastUpdatedAt && !Number.isNaN(Date.parse(lastUpdatedAt))) ? new Date(lastUpdatedAt).getTime() : 0;
+        const safeLastUpdate = !Number.isNaN(Date.parse(lastSeenTimestamp)) ? new Date(lastSeenTimestamp).getTime() : 0;
         candidateUpdatedAt = new Date(Math.max(safeLastUpdate + 1, Date.now())).toISOString();
       }
-      lastUpdatedAt = candidateUpdatedAt;
+      lastSeenTimestamp = candidateUpdatedAt;
 
       const candidateId = typeof (remoteQuiz as { id?: unknown }).id === 'string'
         ? (remoteQuiz as { id: string }).id
-        : lastId;
-      lastId = candidateId;
+        : cursor.lastId;
+      lastSeenId = candidateId;
 
       const validation = RemoteQuizSchema.safeParse({
         ...remoteQuiz,
@@ -274,11 +278,15 @@ async function pullRemoteChanges(userId: string, startTime: number, stats: { pul
 
       if (!validation.success) {
         logger.warn('Skipping invalid remote quiz', { issues: validation.error.issues, quizId: remoteQuiz.id });
+        sawInvalid = true;
         continue;
       }
 
       const mappedRemote = await toLocalQuiz(validation.data);
       const remoteWithUser: Quiz = { ...mappedRemote, user_id: userId };
+      sawValid = true;
+      lastCursorTimestamp = candidateUpdatedAt;
+      lastCursorId = candidateId;
       
       validatedBatch.push({
         remote: remoteWithUser,
@@ -322,7 +330,28 @@ async function pullRemoteChanges(userId: string, startTime: number, stats: { pul
       stats.pulled += quizzesToSave.length;
     }
 
-    await setQuizSyncCursor(lastUpdatedAt, userId, lastId);
+    // If we only saw invalid items, advance past the last seen record to avoid getting stuck,
+    // but log so we can diagnose server/client schema drift.
+    if (!sawValid && sawInvalid) {
+      logger.error('All remote quizzes in batch failed validation; advancing cursor to avoid sync loop', {
+        userId,
+        lastSeenTimestamp,
+        lastSeenId,
+      });
+      lastCursorTimestamp = lastSeenTimestamp;
+      lastCursorId = lastSeenId;
+    } else if (sawValid && sawInvalid) {
+      // Some invalid items after valid ones; advance to last seen to avoid reprocessing the same invalid rows forever.
+      logger.warn('Mixed valid/invalid remote quizzes; advancing cursor past last seen item', {
+        userId,
+        lastSeenTimestamp,
+        lastSeenId,
+      });
+      lastCursorTimestamp = lastSeenTimestamp;
+      lastCursorId = lastSeenId;
+    }
+
+    await setQuizSyncCursor(lastCursorTimestamp, userId, lastCursorId);
 
     if (remoteQuizzes.length < BATCH_SIZE) {
       hasMore = false;

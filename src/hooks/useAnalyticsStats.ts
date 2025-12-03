@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { hashAnswer } from '@/lib/utils';
 import type { Quiz } from '@/types/quiz';
 import type { Result } from '@/types/result';
@@ -37,9 +37,21 @@ export function useAnalyticsStats(results: Result[], quizzes: Quiz[]): Analytics
   });
   const [isLoading, setIsLoading] = useState(true);
 
-  // Create stable keys for dependencies
-  const resultsHash = results.map(r => r.id).sort().join(',');
-  const quizzesHash = quizzes.map(q => q.id).sort().join(',');
+  // Create stable keys for dependencies using meaningful fields to avoid stale analytics
+  const resultsHash = useMemo(
+    () => results
+      .map((r) => `${r.id}:${r.score}:${r.timestamp}`)
+      .sort()
+      .join('|'),
+    [results],
+  );
+  const quizzesHash = useMemo(
+    () => quizzes
+      .map((q) => `${q.id}:${q.version}:${q.updated_at ?? 0}`)
+      .sort()
+      .join('|'),
+    [quizzes],
+  );
 
   useEffect(() => {
     let isMounted = true;
