@@ -41,12 +41,16 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
     }
 
     // 1. Verify Session
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    let supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     if (!supabaseUrl || !supabaseAnonKey) {
       logger.error('Missing Supabase env vars for delete-account route', { supabaseUrl: !!supabaseUrl, supabaseAnonKey: !!supabaseAnonKey });
       return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+    }
+
+    if (!supabaseUrl.startsWith('http')) {
+      supabaseUrl = `https://${supabaseUrl}`;
     }
 
     const supabase = createServerClient(
