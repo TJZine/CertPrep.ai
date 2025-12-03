@@ -3,7 +3,6 @@
 import { useAuth } from '@/components/providers/AuthProvider';
 import { syncResults } from '@/lib/sync/syncManager';
 import { syncQuizzes } from '@/lib/sync/quizSyncManager';
-import { FEATURE_FLAGS } from '@/lib/featureFlags';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 export interface UseSyncReturn {
