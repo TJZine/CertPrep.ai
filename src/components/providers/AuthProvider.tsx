@@ -5,6 +5,7 @@ import { User, Session, AuthChangeEvent, SupabaseClient } from '@supabase/supaba
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { clearDatabase } from '@/db';
+import { requestServiceWorkerCacheClear } from '@/lib/serviceWorkerClient';
 
 
 type AuthContextType = {
@@ -31,6 +32,7 @@ export async function performSignOut({
 }: SignOutDependencies): Promise<{ success: boolean; error?: string }> {
   let dbClearError: string | undefined;
   try {
+    void requestServiceWorkerCacheClear();
     await clearDb();
   } catch (error) {
     console.error('Failed to clear local database during sign out:', error);

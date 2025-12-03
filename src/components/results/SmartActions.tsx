@@ -8,6 +8,13 @@ import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
 import { cn } from '@/lib/utils';
+import {
+  SMART_ROUND_QUESTIONS_KEY,
+  SMART_ROUND_QUIZ_ID_KEY,
+  SMART_ROUND_ALL_QUESTIONS_KEY,
+  SMART_ROUND_MISSED_COUNT_KEY,
+  SMART_ROUND_FLAGGED_COUNT_KEY,
+} from '@/lib/smartRoundStorage';
 import type { Question } from '@/types/quiz';
 
 interface MissedQuestion {
@@ -129,11 +136,11 @@ export function SmartActions({
   };
 
   const handleStartSmartRound = (): void => {
-    sessionStorage.setItem('smartRoundQuestions', JSON.stringify(smartRoundQuestionIds));
-    sessionStorage.setItem('smartRoundQuizId', quizId);
-    sessionStorage.setItem('smartRoundAllQuestions', JSON.stringify(allQuestions.map((q) => q.id)));
-    sessionStorage.setItem('smartRoundMissedCount', String(missedQuestions.length));
-    sessionStorage.setItem('smartRoundFlaggedCount', String(flaggedQuestionIds.length));
+    sessionStorage.setItem(SMART_ROUND_QUESTIONS_KEY, JSON.stringify(smartRoundQuestionIds));
+    sessionStorage.setItem(SMART_ROUND_QUIZ_ID_KEY, quizId);
+    sessionStorage.setItem(SMART_ROUND_ALL_QUESTIONS_KEY, JSON.stringify(allQuestions.map((q) => q.id)));
+    sessionStorage.setItem(SMART_ROUND_MISSED_COUNT_KEY, String(missedQuestions.length));
+    sessionStorage.setItem(SMART_ROUND_FLAGGED_COUNT_KEY, String(flaggedQuestionIds.length));
 
     router.push(`/quiz/${quizId}/zen?mode=smart`);
     setShowSmartRoundModal(false);

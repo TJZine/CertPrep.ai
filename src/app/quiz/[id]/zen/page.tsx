@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, AlertCircle } from 'lucide-react';
-import { ZenQuizContainer, clearSmartRoundState } from '@/components/quiz/ZenQuizContainer';
+import { ZenQuizContainer } from '@/components/quiz/ZenQuizContainer';
 import { SmartRoundBanner } from '@/components/quiz/SmartRoundBanner';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
@@ -12,6 +12,13 @@ import { useInitializeDatabase, useQuiz } from '@/hooks/useDatabase';
 import type { Question } from '@/types/quiz';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { useEffectiveUserId } from '@/hooks/useEffectiveUserId';
+import {
+  clearSmartRoundState,
+  SMART_ROUND_QUESTIONS_KEY,
+  SMART_ROUND_QUIZ_ID_KEY,
+  SMART_ROUND_MISSED_COUNT_KEY,
+  SMART_ROUND_FLAGGED_COUNT_KEY,
+} from '@/lib/smartRoundStorage';
 
 interface SmartRoundData {
   questionIds: string[];
@@ -42,10 +49,10 @@ export default function ZenModePage(): React.ReactElement {
   React.useEffect(() => {
     if (isSmartRound && quiz) {
       try {
-        const storedQuestionIds = sessionStorage.getItem('smartRoundQuestions');
-        const storedQuizId = sessionStorage.getItem('smartRoundQuizId');
-        const storedMissedCount = sessionStorage.getItem('smartRoundMissedCount');
-        const storedFlaggedCount = sessionStorage.getItem('smartRoundFlaggedCount');
+        const storedQuestionIds = sessionStorage.getItem(SMART_ROUND_QUESTIONS_KEY);
+        const storedQuizId = sessionStorage.getItem(SMART_ROUND_QUIZ_ID_KEY);
+        const storedMissedCount = sessionStorage.getItem(SMART_ROUND_MISSED_COUNT_KEY);
+        const storedFlaggedCount = sessionStorage.getItem(SMART_ROUND_FLAGGED_COUNT_KEY);
 
         if (storedQuestionIds && storedQuizId === quizId) {
           const questionIds: string[] = JSON.parse(storedQuestionIds);

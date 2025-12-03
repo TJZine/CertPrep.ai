@@ -6,6 +6,8 @@ import { useSync } from '@/hooks/useSync';
 import { useQuizSessionStore } from '@/stores/quizSessionStore';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { useEffectiveUserId } from '@/hooks/useEffectiveUserId';
+import { clearSmartRoundState } from '@/lib/smartRoundStorage';
+import { logger } from '@/lib/logger';
 
 interface UseQuizSubmissionProps {
   quizId: string;
@@ -76,15 +78,7 @@ export function useQuizSubmission({ quizId, isSmartRound = false }: UseQuizSubmi
         if (!isMountedRef.current) return;
 
         if (isSmartRound) {
-          try {
-            sessionStorage.removeItem('smartRoundQuestions');
-            sessionStorage.removeItem('smartRoundQuizId');
-            sessionStorage.removeItem('smartRoundAllQuestions');
-            sessionStorage.removeItem('smartRoundMissedCount');
-            sessionStorage.removeItem('smartRoundFlaggedCount');
-          } catch (e) {
-            console.warn('Failed to clear sessionStorage:', e);
-          }
+          clearSmartRoundState();
         }
 
         addToast('success', isSmartRound ? 'Smart Round complete!' : 'Study session complete!');
@@ -108,7 +102,9 @@ export function useQuizSubmission({ quizId, isSmartRound = false }: UseQuizSubmi
 
   const retrySave = useCallback(
     (timeTakenSeconds: number) => {
-      void submitQuiz(timeTakenSeconds);
+      void submitQuiz(timeTakenSeconds).catch((error) => {
+        logger.warn('Manual retry failed to save quiz result', error);
+      });
     },
     [submitQuiz]
   );

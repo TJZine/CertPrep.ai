@@ -4,6 +4,7 @@ import { sanitizeQuestionText } from '@/lib/sanitize';
 import { QUIZ_MODES, type Quiz } from '@/types/quiz';
 import type { Result } from '@/types/result';
 import { QuizSchema } from '@/validators/quizSchema';
+import { requestServiceWorkerCacheClear } from '@/lib/serviceWorkerClient';
 import { z } from 'zod';
 
 export interface ExportData {
@@ -306,6 +307,7 @@ export async function clearAllData(): Promise<void> {
   });
   localStorage.clear();
   sessionStorage.clear();
+  void requestServiceWorkerCacheClear();
 }
 
 /**

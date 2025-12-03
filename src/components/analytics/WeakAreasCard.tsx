@@ -89,7 +89,7 @@ export function WeakAreasCard({ weakAreas, onStudyArea, className }: WeakAreasCa
 
               <div className="mt-3">
                 <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
-                  <div className={cn('h-full transition-all', getProgressColor(area.avgScore))} style={{ width: `${area.avgScore}%` }} />
+                  <div className={cn('h-full transition-all', getProgressColor(area.avgScore), `w-pct-${Math.round(area.avgScore)}`)} />
                 </div>
               </div>
 

@@ -273,14 +273,14 @@ describe.skipIf(!shouldRun)('Row Level Security (RLS) Verification', () => {
     await userA.client.from('results').insert(resultData);
 
     // User B tries to update it
-    const { count } = await userB.client
+    const { data: updateData } = await userB.client
       .from('results')
       .update({ score: 0 })
       .eq('id', resultId)
-      .select('', { count: 'exact' }); // select to see if it returns anything
+      .select();
 
-    // Should not update anything
-    expect(count).toBe(0);
+    // Should not update anything (RLS blocks access)
+    expect(updateData?.length ?? 0).toBe(0);
     
     // Note: Supabase update policies often silently ignore rows you can't see/edit
     // So we check if the data actually changed by reading it back as User A

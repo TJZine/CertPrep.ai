@@ -48,7 +48,9 @@ agents.md
 .codannaignore
 .vscode
 GEMINI.md
+CLAUDE.md
 .agent
+.cursor
 
 # Sentry Config File
 .env.sentry-build-plugin

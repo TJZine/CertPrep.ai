@@ -23,26 +23,12 @@ import { useBeforeUnload } from '@/hooks/useBeforeUnload';
 import type { Quiz } from '@/types/quiz';
 import { useCorrectAnswer } from '@/hooks/useCorrectAnswer';
 import { useQuizSubmission } from '@/hooks/useQuizSubmission';
+import { clearSmartRoundState } from '@/lib/smartRoundStorage';
 
 interface ZenQuizContainerProps {
   quiz: Quiz;
   isSmartRound?: boolean;
 }
-
-const SMART_ROUND_STATE_KEYS = [
-  'smartRoundQuestions',
-  'smartRoundQuizId',
-  'smartRoundAllQuestions',
-  'smartRoundMissedCount',
-  'smartRoundFlaggedCount',
-] as const;
-
-export const clearSmartRoundState = (): void => {
-  if (typeof window === 'undefined' || !window.sessionStorage) return;
-  SMART_ROUND_STATE_KEYS.forEach((key) => {
-    window.sessionStorage.removeItem(key);
-  });
-};
 
 /**
  * Main orchestrator for Zen mode interactions.

@@ -92,11 +92,11 @@ export function ScoreDistribution({ results, className }: ScoreDistributionProps
   const isDark = useIsDarkMode();
   const distribution = React.useMemo(() => {
     const ranges = [
-      { name: '90-100%', min: 90, max: 100, color: '#22c55e' },
-      { name: '80-89%', min: 80, max: 89, color: '#3b82f6' },
-      { name: '70-79%', min: 70, max: 79, color: '#06b6d4' },
-      { name: '60-69%', min: 60, max: 69, color: '#f59e0b' },
-      { name: 'Below 60%', min: 0, max: 59, color: '#ef4444' },
+      { name: '90-100%', min: 90, max: 100, color: '#22c55e', colorClass: 'legend-dot-green' },
+      { name: '80-89%', min: 80, max: 89, color: '#3b82f6', colorClass: 'legend-dot-blue' },
+      { name: '70-79%', min: 70, max: 79, color: '#06b6d4', colorClass: 'legend-dot-cyan' },
+      { name: '60-69%', min: 60, max: 69, color: '#f59e0b', colorClass: 'legend-dot-amber' },
+      { name: 'Below 60%', min: 0, max: 59, color: '#ef4444', colorClass: 'legend-dot-red' },
     ];
 
     return ranges
@@ -104,6 +104,7 @@ export function ScoreDistribution({ results, className }: ScoreDistributionProps
         name: range.name,
         value: results.filter((r) => r.score >= range.min && r.score <= range.max).length,
         color: range.color,
+        colorClass: range.colorClass,
       }))
       .filter((r) => r.value > 0);
   }, [results]);
@@ -162,7 +163,7 @@ export function ScoreDistribution({ results, className }: ScoreDistributionProps
         <div className="mt-4 flex flex-wrap justify-center gap-4">
           {distribution.map((entry) => (
             <div key={entry.name} className="flex items-center gap-2">
-              <span className="h-3 w-3 rounded-full" style={{ backgroundColor: entry.color }} />
+              <span className={cn('h-3 w-3 rounded-full', entry.colorClass)} />
               <span className="text-sm text-slate-600 dark:text-slate-200">{entry.name}</span>
             </div>
           ))}

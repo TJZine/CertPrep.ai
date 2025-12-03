@@ -58,8 +58,11 @@ export function ProgressBar({
         aria-label={label}
       >
         <div
-          className={cn('h-full rounded-full transition-all duration-300 ease-out', variantClasses[variant])}
-          style={{ width: `${percentage}%` }}
+          className={cn(
+            'h-full rounded-full transition-all duration-300 ease-out',
+            variantClasses[variant],
+            `w-pct-${percentage}`
+          )}
         />
       </div>
     </div>

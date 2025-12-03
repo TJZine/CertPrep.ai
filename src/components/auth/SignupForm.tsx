@@ -11,6 +11,8 @@ import { getAuthErrorMessage } from '@/lib/auth-utils';
 import { logger } from '@/lib/logger';
 import HCaptcha from '@hcaptcha/react-hcaptcha';
 
+const MIN_PASSWORD_LENGTH = 8;
+
 export default function SignupForm(): React.ReactElement {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -32,6 +34,11 @@ export default function SignupForm(): React.ReactElement {
 
     if (password !== confirmPassword) {
       setError("Passwords don't match");
+      setIsLoading(false);
+      return;
+    }
+    if (password.length < MIN_PASSWORD_LENGTH) {
+      setError(`Password must be at least ${MIN_PASSWORD_LENGTH} characters.`);
       setIsLoading(false);
       return;
     }
@@ -138,7 +145,7 @@ export default function SignupForm(): React.ReactElement {
             onChange={(e) => setPassword(e.target.value)}
             disabled={isLoading}
             required
-            minLength={6}
+            minLength={MIN_PASSWORD_LENGTH}
           />
         </div>
         <div className="space-y-2">
@@ -155,7 +162,7 @@ export default function SignupForm(): React.ReactElement {
             onChange={(e) => setConfirmPassword(e.target.value)}
             disabled={isLoading}
             required
-            minLength={6}
+            minLength={MIN_PASSWORD_LENGTH}
           />
         </div>
 
@@ -173,7 +180,6 @@ export default function SignupForm(): React.ReactElement {
             </p>
           )}
         </div>
-        {/* Debug removed for production readiness */}
 
         {error && (
           <div

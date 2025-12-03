@@ -319,7 +319,7 @@ async function pullRemoteChanges(userId: string, startTime: number, stats: { pul
       const localQuiz = localQuizMap.get(remote.id);
       
       if (localQuiz && localQuiz.user_id !== userId) {
-        logger.warn('Skipping remote quiz due to user mismatch', { quizId: remote.id, userId });
+        logger.error('Skipping remote quiz due to user mismatch', { quizId: remote.id, userId });
         continue;
       }
 

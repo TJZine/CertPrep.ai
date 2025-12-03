@@ -60,11 +60,15 @@ describe('Integration: Quiz Sync Engine', () => {
     // 3. Verify push occurred
     expect(upsertQuizzes).toHaveBeenCalledTimes(1);
     const pushCall = vi.mocked(upsertQuizzes).mock.calls[0];
+    expect(pushCall).toBeDefined();
+    if (!pushCall) throw new Error('Expected upsertQuizzes to be called');
     expect(pushCall[0]).toBe(userId); // userId arg
     const pushedQuizzes = pushCall[1]; // payload arg
+    expect(pushedQuizzes).toBeDefined();
+    if (!pushedQuizzes) throw new Error('Expected payload argument');
     expect(pushedQuizzes).toHaveLength(1);
-    expect(pushedQuizzes[0].id).toBe(quizId);
-    expect(pushedQuizzes[0].title).toBe('My Local Quiz');
+    expect(pushedQuizzes[0]?.id).toBe(quizId);
+    expect(pushedQuizzes[0]?.title).toBe('My Local Quiz');
 
     // 4. Verify local state updated (metadata)
     const updatedLocal = await db.quizzes.get(quizId);
