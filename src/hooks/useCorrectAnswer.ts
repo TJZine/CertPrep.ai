@@ -36,6 +36,7 @@ export function useCorrectAnswer(
 
   useEffect((): (() => void) => {
     let isMounted = true;
+    let handler: ((event: MessageEvent) => void) | null = null;
 
     const resolveAnswer = async (): Promise<void> => {
       if (!questionId || !targetHash || !options || !workerRef.current) return;
@@ -45,10 +46,20 @@ export function useCorrectAnswer(
       
       setIsResolving(true);
 
-      // We need a way to receive the specific result for THIS request.
-      // One-off event listener approach for this specific transaction.
-      const handler = (event: MessageEvent): void => {
+      // Define handler in scope where we can clean it up
+      handler = (event: MessageEvent): void => {
         const { type, payload } = event.data;
+        
+        if (type === 'hash_bulk_error' && payload.id === questionId) {
+          console.error('Worker error:', payload.error);
+          if (isMounted) setIsResolving(false);
+          // Remove listener on error to avoid leaking
+          if (handler && workerRef.current) {
+             workerRef.current.removeEventListener('message', handler);
+          }
+          return;
+        }
+
         if (type === 'hash_bulk_result' && payload.id === questionId) {
           const hashes = payload.hashes as Record<string, string>;
           // Find match
@@ -66,7 +77,11 @@ export function useCorrectAnswer(
           
           resolvedRef.current.add(cacheKey);
           if (isMounted) setIsResolving(false);
-          workerRef.current?.removeEventListener('message', handler);
+          
+          // Remove self
+          if (handler && workerRef.current) {
+             workerRef.current.removeEventListener('message', handler);
+          }
         }
       };
 
@@ -82,10 +97,13 @@ export function useCorrectAnswer(
       });
     };
 
-    resolveAnswer();
+    void resolveAnswer();
 
     return () => {
       isMounted = false;
+      if (handler && workerRef.current) {
+        workerRef.current.removeEventListener('message', handler);
+      }
     };
   }, [questionId, targetHash, optionsKey, options]); // Safe deps now
 

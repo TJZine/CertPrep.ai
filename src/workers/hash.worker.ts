@@ -38,13 +38,11 @@ self.onmessage = async (event: MessageEvent<HashRequest>): Promise<void> => {
       });
     } catch (error) {
       console.error('Worker hashing failed', error);
-      // We send back what we have or fail silently?
-      // Ideally send an error type, but for now let's return empty or partial
-       self.postMessage({
-        type: 'hash_bulk_result',
+      self.postMessage({
+        type: 'hash_bulk_error',
         payload: {
           id,
-          hashes: {} // or handle error gracefully
+          error: error instanceof Error ? error.message : 'Unknown worker error'
         }
       });
     }

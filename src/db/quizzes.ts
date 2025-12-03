@@ -1,3 +1,4 @@
+import { Dexie } from 'dexie';
 import { db } from './index';
 import { sanitizeQuestionText } from '@/lib/sanitize';
 import { calculatePercentage, generateUUID, hashAnswer } from '@/lib/utils';
@@ -194,64 +195,95 @@ export async function updateQuiz(
   userId: string,
   updates: Partial<Omit<Quiz, 'id' | 'created_at'>>,
 ): Promise<void> {
-  const existing = await db.quizzes.get(id);
-  if (!existing) {
-    throw new Error('Quiz not found.');
-  }
-  if (existing.user_id !== userId) {
-    throw new Error('Unauthorized quiz update.');
-  }
+  await db.transaction('rw', db.quizzes, async () => {
+    const existing = await db.quizzes.get(id);
+    if (!existing) {
+      throw new Error('Quiz not found.');
+    }
+    if (existing.user_id !== userId) {
+      throw new Error('Unauthorized quiz update.');
+    }
 
-  const sanitizedUpdates: Partial<Omit<Quiz, 'id' | 'created_at'>> = { ...updates };
+    const sanitizedUpdates: Partial<Omit<Quiz, 'id' | 'created_at'>> = { ...updates };
 
-  if (updates.questions !== undefined) {
-    const sanitizedQuestions = sanitizeQuestions(updates.questions);
+    if (updates.questions !== undefined) {
+      // We need to handle hashing BEFORE sanitization strips the correct_answer.
+      // We also need to respect existing hashes if provided.
+      const rawQuestions = updates.questions;
+      const sanitizedQuestions = sanitizeQuestions(rawQuestions);
 
-    sanitizedUpdates.questions = await Promise.all(
-      sanitizedQuestions.map(async ({ correct_answer, correct_answer_hash, ...rest }) => {
-        const hash = correct_answer_hash ?? (correct_answer ? await hashAnswer(correct_answer) : undefined);
-        if (!hash) {
-          throw new Error(`Question ${rest.id} is missing correct_answer_hash`);
-        }
-        return { ...rest, correct_answer_hash: hash };
-      }),
+      sanitizedUpdates.questions = await Promise.all(
+        sanitizedQuestions.map(async (q, index) => {
+          const rawQ = rawQuestions[index];
+          // Cast rawQ to access correct_answer safely as it might be in the update input
+          const rawQWithAnswer = rawQ as Question & { correct_answer?: string };
+
+          let hash = q.correct_answer_hash;
+          
+          // If no hash exists on the sanitized output (meaning none was preserved),
+          // try to compute it from the raw input's correct_answer.
+          if (!hash && rawQWithAnswer.correct_answer) {
+            // Wrap async crypto in Dexie.waitFor to keep transaction alive
+            hash = await Dexie.waitFor(hashAnswer(rawQWithAnswer.correct_answer));
+          }
+
+          if (!hash) {
+            // Fallback: check if the existing question had a hash we can preserve
+            // if this is an update to an existing question.
+            const existingQ = existing.questions.find(eq => eq.id === q.id);
+            if (existingQ?.correct_answer_hash) {
+              hash = existingQ.correct_answer_hash;
+            }
+          }
+
+          if (!hash) {
+            throw new Error(`Question ${q.id} is missing correct_answer_hash`);
+          }
+
+          const { correct_answer: _correct_answer, ...restOfQuestion } = q;
+          void _correct_answer;
+          return { ...restOfQuestion, correct_answer_hash: hash };
+        }),
+      );
+    }
+
+    if (updates.title !== undefined) {
+      sanitizedUpdates.title = sanitizeQuestionText(updates.title);
+    }
+
+    if (updates.description !== undefined) {
+      sanitizedUpdates.description = sanitizeQuestionText(updates.description);
+    }
+
+    if (updates.tags !== undefined) {
+      sanitizedUpdates.tags = updates.tags.map((tag) => sanitizeQuestionText(tag));
+    }
+
+    const nextTitle = sanitizedUpdates.title ?? existing.title;
+    const nextDescription = sanitizedUpdates.description ?? existing.description;
+    const nextTags = sanitizedUpdates.tags ?? existing.tags;
+    const nextQuestions = sanitizedUpdates.questions ?? existing.questions;
+    const shouldBumpVersion = ['questions', 'title', 'description', 'tags'].some(
+      (key) => key in sanitizedUpdates,
     );
-  }
+    const updatedAt = shouldBumpVersion || 'deleted_at' in sanitizedUpdates ? Date.now() : (existing.updated_at ?? existing.created_at);
+    const nextVersion = shouldBumpVersion ? existing.version + 1 : existing.version;
+    
+    // Wrap async crypto in Dexie.waitFor
+    const nextHash = await Dexie.waitFor(computeQuizHash({
+      title: nextTitle,
+      description: nextDescription,
+      tags: nextTags,
+      questions: nextQuestions,
+    }));
 
-  if (updates.title !== undefined) {
-    sanitizedUpdates.title = sanitizeQuestionText(updates.title);
-  }
-
-  if (updates.description !== undefined) {
-    sanitizedUpdates.description = sanitizeQuestionText(updates.description);
-  }
-
-  if (updates.tags !== undefined) {
-    sanitizedUpdates.tags = updates.tags.map((tag) => sanitizeQuestionText(tag));
-  }
-
-  const nextTitle = sanitizedUpdates.title ?? existing.title;
-  const nextDescription = sanitizedUpdates.description ?? existing.description;
-  const nextTags = sanitizedUpdates.tags ?? existing.tags;
-  const nextQuestions = sanitizedUpdates.questions ?? existing.questions;
-  const shouldBumpVersion = ['questions', 'title', 'description', 'tags'].some(
-    (key) => key in sanitizedUpdates,
-  );
-  const updatedAt = shouldBumpVersion || 'deleted_at' in sanitizedUpdates ? Date.now() : (existing.updated_at ?? existing.created_at);
-  const nextVersion = shouldBumpVersion ? existing.version + 1 : existing.version;
-  const nextHash = await computeQuizHash({
-    title: nextTitle,
-    description: nextDescription,
-    tags: nextTags,
-    questions: nextQuestions,
-  });
-
-  await db.quizzes.update(id, {
-    ...sanitizedUpdates,
-    version: nextVersion,
-    updated_at: updatedAt,
-    quiz_hash: nextHash,
-    user_id: userId,
+    await db.quizzes.update(id, {
+      ...sanitizedUpdates,
+      version: nextVersion,
+      updated_at: updatedAt,
+      quiz_hash: nextHash,
+      user_id: userId,
+    });
   });
 }
 
@@ -347,27 +379,31 @@ export async function getQuizStats(quizId: string, userId: string): Promise<Quiz
  * Updates notes for a specific question within a quiz.
  */
 export async function updateQuestionNotes(quizId: string, questionId: string, notes: string, userId: string): Promise<void> {
-  const quiz = await db.quizzes.get(quizId);
+  await db.transaction('rw', db.quizzes, async () => {
+    const quiz = await db.quizzes.get(quizId);
 
-  if (!quiz) {
-    throw new Error('Quiz not found.');
-  }
-  if (quiz.user_id !== userId) {
-    throw new Error('Unauthorized quiz update.');
-  }
+    if (!quiz) {
+      throw new Error('Quiz not found.');
+    }
+    if (quiz.user_id !== userId) {
+      throw new Error('Unauthorized quiz update.');
+    }
 
-  const updatedQuestions = quiz.questions.map((question) =>
-    question.id === questionId ? { ...question, user_notes: sanitizeQuestionText(notes) } : question,
-  );
+    const updatedQuestions = quiz.questions.map((question) =>
+      question.id === questionId ? { ...question, user_notes: sanitizeQuestionText(notes) } : question,
+    );
 
-  const updatedAt = Date.now();
-  const nextVersion = quiz.version + 1;
-  const nextHash = await computeQuizHash({
-    title: quiz.title,
-    description: quiz.description,
-    tags: quiz.tags,
-    questions: updatedQuestions,
+    const updatedAt = Date.now();
+    const nextVersion = quiz.version + 1;
+    
+    // Wrap async crypto in Dexie.waitFor
+    const nextHash = await Dexie.waitFor(computeQuizHash({
+      title: quiz.title,
+      description: quiz.description,
+      tags: quiz.tags,
+      questions: updatedQuestions,
+    }));
+
+    await db.quizzes.update(quizId, { questions: updatedQuestions, updated_at: updatedAt, version: nextVersion, quiz_hash: nextHash });
   });
-
-  await db.quizzes.update(quizId, { questions: updatedQuestions, updated_at: updatedAt, version: nextVersion, quiz_hash: nextHash });
 }
