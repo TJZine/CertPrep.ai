@@ -316,6 +316,8 @@ interface AppError {
 ### Error Handling Example
 
 ```typescript
+import { AuthError, DatabaseError } from '@supabase/supabase-js'
+
 try {
   const result = await createResult(data)
 } catch (error) {

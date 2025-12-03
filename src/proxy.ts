@@ -94,9 +94,14 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   )
 
   // 5. Auth Logic
-  const { 
-    data: { user }, 
-  } = await supabase.auth.getUser()
+  let user = null
+  try {
+    const { data } = await supabase.auth.getUser()
+    user = data.user
+  } catch (error) {
+    console.error('Middleware auth check failed:', error)
+    // Default to unauthenticated
+  }
 
   const isProtectedRoute = PROTECTED_ROUTES.some((route) => request.nextUrl.pathname.startsWith(route))
   const isAuthRoute = AUTH_ROUTES.some((route) => request.nextUrl.pathname.startsWith(route))

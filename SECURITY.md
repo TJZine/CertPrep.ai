@@ -87,7 +87,7 @@ CREATE POLICY results_delete_owner ON results FOR DELETE USING (auth.uid() = use
 
 | Measure | Implementation |
 |---------|----------------|
-| XSS Prevention | React's default escaping + `sanitizeHTML()` |
+| XSS Prevention | React's default escaping + `sanitizeHTML()` (uses **isomorphic-dompurify v2.33.0**; allows specific tags/attributes, including 'class' for styling) |
 | CSRF Protection | SameSite cookies + origin validation |
 | Input Validation | Server-side validation on all inputs |
 
@@ -100,7 +100,7 @@ We are committed to providing a secure and stable experience. Our version suppor
 | Version | Status | Support Level | End of Life (EOL) Date |
 |---------|--------|---------------|------------------------|
 | 2.x.x   | ✅ Current | Full Support  | N/A (actively maintained) |
-| 1.x.x   | ⚠️ Legacy | Critical Fixes Only | 2024-12-31 |
+| 1.x.x   | ❌ Ended | No Support | Ended on 2024-12-31 |
 | < 1.0   | ❌ End-of-Life | No Support    | Passed                 |
 
 ---

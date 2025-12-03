@@ -122,7 +122,7 @@ async function backfillLocalQuizzes(userId: string): Promise<void> {
     const { error } = await upsertQuizzes(userId, payload);
     
     if (error) {
-      logger.error('Failed to backfill quizzes to Supabase', { userId, error });
+      logger.error('Failed to backfill quizzes to Supabase', { userId, error, batchIndex: i, batchSize: batch.length });
       continue; // Try next batch or abort? Continuing allows partial progress.
     }
 

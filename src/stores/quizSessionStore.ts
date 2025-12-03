@@ -370,7 +370,9 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
           // Let's add a transient error state if we want to be fancy, but resetting hasSubmitted is the minimal fix
           // to prevent the UI from getting stuck.
           // Ideally we would dispatch a custom event or use a callback.
-          emitQuizError('Failed to submit answer. Please try again.');
+          set((draft) => {
+            draft.error = 'Failed to submit answer. Please try again.';
+          });
         });
     },
 
@@ -448,8 +450,8 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
             if (draft.questionQueue[draft.currentIndex] === questionId) {
               draft.selectedAnswer = null;
             }
+            draft.error = 'We could not save your answer. Please try again.';
           });
-          emitQuizError('We could not save your answer. Please try again.');
         }
       };
 
@@ -639,6 +641,12 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
     canSubmitExam: (): boolean => {
       const { questions, isComplete } = get();
       return questions.length > 0 && !isComplete;
+    },
+
+    clearError: (): void => {
+      set((state) => {
+        state.error = null;
+      });
     },
   })),
 );

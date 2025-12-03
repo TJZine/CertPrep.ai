@@ -51,8 +51,12 @@ export function sanitizeQuestions(questions: unknown[]): Question[] {
       {} as Record<string, string>,
     );
 
+    // Destructure to omit correct_answer from the returned object
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { correct_answer, ...rest } = q;
+
     return {
-      ...q,
+      ...rest,
       id: String(q.id),
       category: sanitizeQuestionText(q.category),
       question: sanitizeQuestionText(q.question),
@@ -62,7 +66,7 @@ export function sanitizeQuestions(questions: unknown[]): Question[] {
       user_notes: q.user_notes ? sanitizeQuestionText(q.user_notes) : undefined,
       options: sanitizedOptions,
       correct_answer_hash: q.correct_answer_hash,
-      // correct_answer intentionally omitted - callers needing it for hashing should access q.correct_answer directly
+      // correct_answer intentionally omitted
     };
   });
 }
@@ -143,10 +147,12 @@ export async function createQuiz(input: QuizImportInput, meta: { userId: string;
  * Retrieves all quizzes ordered from newest to oldest.
  */
 export async function getAllQuizzes(userId: string): Promise<Quiz[]> {
-  return db.quizzes
+  const quizzes = await db.quizzes
     .where('user_id').equals(userId)
     .and(quiz => quiz.deleted_at === null || quiz.deleted_at === undefined)
-    .sortBy('created_at');
+    .toArray();
+  
+  return quizzes.sort((a, b) => b.created_at - a.created_at);
 }
 
 /**
@@ -250,7 +256,7 @@ export async function updateQuiz(
 }
 
 /**
- * Deletes a quiz and all associated results in a single transaction.
+ * Soft-deletes a quiz (sets deleted_at) but preserves associated results.
  */
 export async function deleteQuiz(id: string, userId: string): Promise<void> {
   await db.transaction('rw', db.quizzes, async () => {
