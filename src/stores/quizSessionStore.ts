@@ -384,7 +384,9 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
         }
       };
 
-      void persistAnswer();
+      persistAnswer().catch((err) => {
+        console.error('Unexpected error in persistAnswer (submitAnswer)', err);
+      });
     },
 
     selectAnswerProctor: (answerId): void => {

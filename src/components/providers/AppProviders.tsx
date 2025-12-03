@@ -15,9 +15,9 @@ export function AppProviders({ children }: { children: React.ReactNode }): React
   return (
     <ThemeProvider>
       <GlobalErrorHandler>
+        <SentryInitializer />
         <ToastProvider>
           <AuthProvider>
-            <SentryInitializer />
             <UpdateBanner />
             {children}
             <OfflineIndicator />

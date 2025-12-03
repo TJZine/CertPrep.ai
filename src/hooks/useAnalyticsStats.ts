@@ -132,7 +132,7 @@ export function useAnalyticsStats(results: Result[], quizzes: Quiz[]): Analytics
             totalQuestions: cat.total,
           }));
 
-        // Calculate daily study time (this doesn't need hashing, but we include it for consistency)
+        // Calculate daily study time for the last DAYS_TO_TRACK days
         const now = new Date();
         const days: Map<string, number> = new Map();
 

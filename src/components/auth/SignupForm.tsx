@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/Input';
 import Link from 'next/link';
 import { useToast } from '@/components/ui/Toast';
 import { getAuthErrorMessage } from '@/lib/auth-utils';
+import { logger } from '@/lib/logger';
 import HCaptcha from '@hcaptcha/react-hcaptcha';
 
 export default function SignupForm(): React.ReactElement {
@@ -22,6 +23,7 @@ export default function SignupForm(): React.ReactElement {
   const router = useRouter();
   const supabase = createClient();
   const { addToast } = useToast();
+  const hcaptchaConfigured = !!process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY;
 
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
@@ -73,7 +75,7 @@ export default function SignupForm(): React.ReactElement {
       setCaptchaToken(null);
       router.push('/login');
     } catch (err) {
-      console.error('Unexpected signup error:', err);
+      logger.error('Unexpected signup error:', err);
       setError('An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);
@@ -183,8 +185,12 @@ export default function SignupForm(): React.ReactElement {
           </div>
         )}
 
-        <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? 'Creating account...' : 'Create Account'}
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={isLoading || !hcaptchaConfigured}
+        >
+          {isLoading ? 'Creating account...' : hcaptchaConfigured ? 'Create Account' : 'Sign Up Unavailable'}
         </Button>
       </form>
       <div className="text-center text-sm">

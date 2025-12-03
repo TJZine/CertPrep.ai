@@ -38,8 +38,9 @@ const SMART_ROUND_STATE_KEYS = [
 ] as const;
 
 export const clearSmartRoundState = (): void => {
+  if (typeof window === 'undefined' || !window.sessionStorage) return;
   SMART_ROUND_STATE_KEYS.forEach((key) => {
-    sessionStorage.removeItem(key);
+    window.sessionStorage.removeItem(key);
   });
 };
 

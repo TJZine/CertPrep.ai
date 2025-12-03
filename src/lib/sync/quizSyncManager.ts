@@ -170,7 +170,10 @@ async function pushLocalChanges(userId: string, startTime: number, stats: { push
   let incomplete = false;
   const userQuizzes = await db.quizzes.where('user_id').equals(userId).toArray();
   const dirtyQuizzes = userQuizzes.filter(
-    (quiz) => quiz.user_id !== NIL_UUID && (quiz.last_synced_version ?? null) !== quiz.version,
+    (quiz) =>
+      quiz.user_id === userId &&
+      quiz.user_id !== NIL_UUID &&
+      (quiz.last_synced_version ?? null) !== quiz.version,
   );
 
   for (let i = 0; i < dirtyQuizzes.length; i += BATCH_SIZE) {

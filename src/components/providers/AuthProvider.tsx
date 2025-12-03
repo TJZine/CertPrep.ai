@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, useRef } from 'react';
+import { createContext, useContext, useEffect, useState, useRef, useMemo } from 'react';
 import { User, Session, AuthChangeEvent, SupabaseClient } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
@@ -59,14 +59,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }): React
   const router = useRouter();
   
   const supabaseRef = useRef<SupabaseClient | undefined>(undefined);
-  if (!supabaseRef.current) {
-    // Attempt to create client; might return undefined if env vars missing
-    const client = createClient();
-    if (client) {
-      supabaseRef.current = client;
+  const supabase = useMemo(() => {
+    if (!supabaseRef.current) {
+      supabaseRef.current = createClient();
     }
-  }
-  const supabase = supabaseRef.current;
+    return supabaseRef.current;
+  }, []);
 
   useEffect((): (() => void) => {
     let isMounted = true;

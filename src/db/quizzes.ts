@@ -34,7 +34,7 @@ export function sanitizeQuestions(questions: unknown[]): Question[] {
     // If validation fails, we log it but try to salvage what we can or throw?
     // For now, let's throw to prevent bad data from entering the DB, as per code review.
     const errorMsg = formatValidationErrors(parsedQuestions.error.issues.map(issue => ({
-      path: issue.path.map(p => p.toString()),
+      path: issue.path.map((segment) => typeof segment === 'symbol' ? segment.toString() : segment),
       message: issue.message
     })));
     throw new Error(`Invalid questions data: ${errorMsg}`);
@@ -86,19 +86,15 @@ export async function createQuiz(input: QuizImportInput, meta: { userId: string;
     throw new Error(`Invalid quiz import: ${message}`);
   }
 
+  const validatedData = validation.data;
+  const sanitizedQuestionList = sanitizeQuestions(validatedData.questions);
   const sanitizedQuestions = await Promise.all(
-    validation.data.questions.map(async (q) => {
-      const sanitized = sanitizeQuestions([q])[0];
-      if (!sanitized) throw new Error('Failed to sanitize question');
-      
-      // If the input has a raw correct_answer, hash it.
-      // If it already has a hash (importing existing export), keep it.
-      // Note: The validator might need adjustment if we strictly require one or the other.
-      // For now, we assume the input might have the raw answer we need to hash.
-      const qWithAnswer = q as Question & { correct_answer?: string };
-      let hash = qWithAnswer.correct_answer_hash;
-      if (!hash && qWithAnswer.correct_answer) {
-        hash = await hashAnswer(qWithAnswer.correct_answer);
+    sanitizedQuestionList.map(async (sanitized, index) => {
+      const original = validatedData.questions[index] as Question & { correct_answer?: string };
+
+      let hash = sanitized.correct_answer_hash;
+      if (!hash && original.correct_answer) {
+        hash = await hashAnswer(original.correct_answer);
       }
       if (!hash) {
         throw new Error(`Question ${sanitized.id} is missing correct_answer_hash`);

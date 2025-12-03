@@ -125,13 +125,13 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
     // 3. Delete user data (best effort, fail on error to avoid orphaned PII)
     const resultsDeleteError = await deleteUserData('results');
     if (resultsDeleteError) {
-      logger.error('Error deleting user results via service role', resultsDeleteError);
+      logger.error('Error deleting user results via service role', { error: resultsDeleteError, userId: user.id });
       return NextResponse.json({ error: 'Failed to delete account data' }, { status: 500 });
     }
 
     const quizzesDeleteError = await deleteUserData('quizzes');
     if (quizzesDeleteError) {
-      logger.error('Error deleting user quizzes via service role', quizzesDeleteError);
+      logger.error('Error deleting user quizzes via service role', { error: quizzesDeleteError, userId: user.id });
       return NextResponse.json({ error: 'Failed to delete account data' }, { status: 500 });
     }
 

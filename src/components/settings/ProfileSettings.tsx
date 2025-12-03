@@ -18,6 +18,10 @@ export function ProfileSettings(): React.ReactElement {
   const [isLoading, setIsLoading] = useState(false);
   const supabase = createClient();
   const { addToast } = useToast();
+  const hasNameChange = fullName !== (user?.user_metadata?.full_name || '');
+  const hasEmailChange = isEditingEmail && email !== (user?.email || '');
+  const hasChanges = hasNameChange || hasEmailChange;
+  const isDisabled = !user || isLoading || !hasChanges;
 
   useEffect(() => {
     if (user) {
@@ -28,6 +32,10 @@ export function ProfileSettings(): React.ReactElement {
 
   const handleUpdateProfile = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
+    if (!user) {
+      addToast('error', 'You must be signed in to update your profile.');
+      return;
+    }
     const updates: { data?: { full_name: string }; email?: string } = {};
     let message = 'Profile updated successfully';
 
@@ -67,10 +75,10 @@ export function ProfileSettings(): React.ReactElement {
     }
   };
 
-  return (
-    <Card className="mb-8">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+    return (
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
           <User className="h-5 w-5" />
           Profile
         </CardTitle>
@@ -109,7 +117,7 @@ export function ProfileSettings(): React.ReactElement {
                 <div className="flex gap-2">
                   <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
                   <p>
-                    Changing your email requires re-verification. You will be logged out and must confirm the change via links sent to <strong>both</strong> your old and new addresses.
+                    Changing your email requires re-verification. Confirm the change via links sent to <strong>both</strong> your old and new addresses; you may be signed out after confirmation.
                   </p>
                 </div>
               </div>
@@ -143,7 +151,7 @@ export function ProfileSettings(): React.ReactElement {
                 Cancel
               </Button>
             )}
-            <Button type="submit" isLoading={isLoading}>
+            <Button type="submit" isLoading={isLoading} disabled={isDisabled}>
               Save Changes
             </Button>
           </div>
