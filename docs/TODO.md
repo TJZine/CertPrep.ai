@@ -1,16 +1,84 @@
 # TODO / Backlog (Import integrity fixes tracked elsewhere)
 
-- **Quiz route UX**: Replace `src/app/quiz/[id]/page.tsx` placeholder with an auto-redirect or mode selector that preserves keyboard/focus behavior and mobile header constraints.
-- **Import UX hardening**: Add preflight validation (non-destructive) with clear toasts, and enforce upload size/type limits to avoid oversized or wrong-file imports before parsing.
-- **Schema enforcement**: Introduce client-side schema for stored results (mirroring quizzes) and guard against orphaned result references during ingest; surface a summary of skipped items.
-- **Sanitization safety**: If the DOMPurify allowlist changes, add/adjust sanitizer tests to cover allowed tags/attrs and confirm bundle impact stays acceptable.
-- **Analytics scalability**: Cache/memoize aggregates and consider pagination/virtualization for large quiz/result sets to reduce render and compute churn.
-- **Observability & recovery**: Log import/export outcomes (counts, errors) locally for supportability and add a lightweight DB health check screen to guide users through self-recovery steps.
+---
 
-## Further Recommendations
+## Technical Debt: Playwright `--disable-web-security` Flag
 
-- **Resilience tests**: Add automated regression covering backup export/import round-trips and Dexie schema migrations to catch breaking changes early.
-- **Accessibility audits**: Run periodic axe/keyboard audits on quiz flows and modals to ensure focus traps, ARIA labels, and screen-reader cues stay intact.
-- **Offline robustness**: Add graceful offline messaging around fetches (e.g., library manifest) and queue retries for sync-like flows to prevent silent failures.
-- **Performance budget**: Track bundle size and add alerts when dependencies or sanitizer allowlist changes expand the bundle beyond a target threshold.
-- **Documentation drift guard**: Link AGENTS/validation expectations into PR templates to keep sanitization, modal usage, and mobile header constraints top-of-mind for contributors.
+**Priority**: Low-Medium | **Effort**: 4-8 hours | **Category**: Test Infrastructure
+
+### Current State
+
+`playwright.config.ts` and `global-setup.ts` include `--disable-web-security` to bypass CSP nonce validation failures in headless Chrome during E2E tests.
+
+### Root Cause Analysis
+
+1. **CSP Implementation** (`src/proxy.ts`):
+   - Generates per-request nonce via `crypto.randomUUID()`
+   - Passes nonce to layout via `x-nonce` header
+   - In **production**: `style-src 'self' 'nonce-${nonce}'` (strict)
+   - In **development**: `style-src 'self' 'unsafe-inline' 'nonce-${nonce}'` (relaxed)
+
+2. **Why Tests Fail Without the Flag**:
+   - Playwright runs `npm run dev` which sets `NODE_ENV=development`
+   - Development mode already includes `'unsafe-inline'`, so CSP _should_ be relaxed
+   - However, **Turbopack/HMR** injects style chunks that don't propagate the nonce
+   - The `x-nonce` header flows correctly, but injected HMR styles lack `nonce` attributes
+   - Headless Chrome enforces CSP strictly, causing silent style failures
+
+3. **Why This Doesn't Affect Production**:
+   - Production builds have static chunks with nonces baked in during SSR
+   - No HMR/Turbopack runtime injection
+   - Real browsers receive consistent nonce across CSP header and inline elements
+
+### Why Common Suggestions Don't Work
+
+| Suggestion                             | Issue                                                                                                      |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| "Use `extraHTTPHeaders` to inject CSP" | Can't inject HTML `nonce` attributes via headers—nonce must be in both CSP header AND every inline element |
+| "Fix dev server nonce propagation"     | Already correct. The issue is Turbopack, not the middleware.                                               |
+| "Create test-specific middleware"      | Would duplicate `proxy.ts` and still wouldn't fix Turbopack's style injection                              |
+
+### Proposed Fix (When Prioritized)
+
+```typescript
+// 1. Add NODE_ENV=test to playwright webServer config
+// playwright.config.ts
+webServer: {
+  command: "NODE_ENV=test npm run dev",
+  // ...
+}
+
+// 2. In proxy.ts, treat 'test' like production (strict CSP)
+const isDev = process.env.NODE_ENV === "development";
+const isTest = process.env.NODE_ENV === "test";
+const useStrictCsp = !isDev || isTest;
+
+const styleSrc = useStrictCsp
+  ? `'self' 'nonce-${nonce}' https://hcaptcha.com https://*.hcaptcha.com`
+  : `'self' 'unsafe-inline' 'nonce-${nonce}' https://hcaptcha.com https://*.hcaptcha.com`;
+
+// 3. Audit all components for inline styles without nonce
+// 4. Either:
+//    a) Disable Turbopack for test runs: command: "NODE_ENV=test npm run dev -- --webpack"
+//    b) Wait for Turbopack to support nonce propagation in HMR styles
+
+// 5. Remove --disable-web-security from:
+//    - playwright.config.ts (line ~51)
+//    - tests/e2e/global-setup.ts (line ~116)
+```
+
+### Acceptance Criteria
+
+- [ ] E2E tests pass without `--disable-web-security`
+- [ ] CSP violations are caught in Playwright (test fails if inline style lacks nonce)
+- [ ] No regression in dev mode DX (HMR still works)
+- [ ] Document any Turbopack limitations in `docs/E2E_DEBUGGING_REFERENCE.md`
+
+### Decision
+
+**Deferred** - Current workaround (flag + documentation) is acceptable because:
+
+1. Production CSP is enforced and validated by real browsers + Sentry
+2. The security flag only affects test infrastructure, not production
+3. Turbopack is actively developing; this may be fixed upstream
+4. Effort-to-value ratio is low for current project scale

@@ -90,6 +90,10 @@ export class GlobalErrorHandler extends React.Component<
         localStorage.getItem("certprep_error_log") || "[]",
       ) as unknown[];
       existingErrors.unshift(errorLog);
+      // lgtm[js/clear-text-storage-of-sensitive-data] - Data is sanitized above:
+      // URLs have tokens stripped, messages are truncated, stack traces are code-only.
+      // This is debugging data, not credentials. Attacker with localStorage access
+      // already has full session access.
       localStorage.setItem(
         "certprep_error_log",
         JSON.stringify(existingErrors.slice(0, 10)),
