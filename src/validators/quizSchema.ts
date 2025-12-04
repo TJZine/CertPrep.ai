@@ -73,14 +73,8 @@ export const QuestionSchema = z
  * Schema for validating imported quiz data provided by users.
  */
 export const QuizImportSchema = z.object({
-  title: requiredString("Title").max(
-    100,
-    "Title must be 100 characters or fewer",
-  ),
-  description: TrimmedString.max(
-    500,
-    "Description must be 500 characters or fewer",
-  )
+  title: requiredString("Title").transform((val) => val.slice(0, 100)),
+  description: TrimmedString.transform((val) => val.slice(0, 500))
     .optional()
     .default(""),
   questions: z
