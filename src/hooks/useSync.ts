@@ -69,12 +69,20 @@ export function useSync(): UseSyncReturn {
     initialSyncAttemptedRef.current = userId;
     setHasInitialSyncCompleted(false);
 
+    let isMounted = true;
+
     const runInitialSync = async (): Promise<void> => {
       await sync();
-      setHasInitialSyncCompleted(true);
+      if (isMounted) {
+        setHasInitialSyncCompleted(true);
+      }
     };
 
     void runInitialSync();
+
+    return (): void => {
+      isMounted = false;
+    };
   }, [userId, sync]);
 
   return { sync, isSyncing, hasInitialSyncCompleted };

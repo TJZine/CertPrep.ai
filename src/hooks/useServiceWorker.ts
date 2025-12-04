@@ -26,10 +26,16 @@ export function useServiceWorker(): UseServiceWorkerReturn {
     error: null,
   });
 
-  React.useEffect((): void | (() => void) => {
+  React.useEffect((): (() => void) => {
+    let isMounted = true;
+    let currentRegistration: ServiceWorkerRegistration | null = null;
+    let updateFoundHandler: (() => void) | null = null;
+
     if (typeof navigator === "undefined" || !navigator.serviceWorker) {
       setState((prev) => ({ ...prev, isSupported: false }));
-      return;
+      return () => {
+        isMounted = false;
+      };
     }
 
     setState((prev) => ({ ...prev, isSupported: true }));
@@ -39,39 +45,50 @@ export function useServiceWorker(): UseServiceWorkerReturn {
         const registration = await navigator.serviceWorker.register("/sw.js", {
           scope: "/",
         });
+
+        if (!isMounted) return;
+
+        currentRegistration = registration;
         setState((prev) => ({
           ...prev,
           isRegistered: true,
           registration,
         }));
 
-        registration.addEventListener("updatefound", () => {
+        updateFoundHandler = (): void => {
           const newWorker = registration.installing;
           if (newWorker) {
-            newWorker.addEventListener("statechange", () => {
+            const stateChangeHandler = (): void => {
               if (
                 newWorker.state === "installed" &&
                 navigator.serviceWorker.controller
               ) {
-                setState((prev) => ({ ...prev, isUpdateAvailable: true }));
+                if (isMounted) {
+                  setState((prev) => ({ ...prev, isUpdateAvailable: true }));
+                }
               }
-            });
+            };
+            newWorker.addEventListener("statechange", stateChangeHandler);
           }
-        });
+        };
 
-        if (registration.waiting) {
+        registration.addEventListener("updatefound", updateFoundHandler);
+
+        if (registration.waiting && isMounted) {
           setState((prev) => ({ ...prev, isUpdateAvailable: true }));
         }
       } catch (error) {
         console.error("Service worker registration failed:", error);
-        setState((prev) => ({
-          ...prev,
-          error: error instanceof Error ? error : new Error(String(error)),
-        }));
+        if (isMounted) {
+          setState((prev) => ({
+            ...prev,
+            error: error instanceof Error ? error : new Error(String(error)),
+          }));
+        }
       }
     };
 
-    registerSW();
+    void registerSW();
 
     const handleControllerChange = (): void => {
       window.location.reload();
@@ -83,10 +100,17 @@ export function useServiceWorker(): UseServiceWorkerReturn {
     );
 
     return (): void => {
+      isMounted = false;
       navigator.serviceWorker.removeEventListener(
         "controllerchange",
         handleControllerChange,
       );
+      if (currentRegistration && updateFoundHandler) {
+        currentRegistration.removeEventListener(
+          "updatefound",
+          updateFoundHandler,
+        );
+      }
     };
   }, []);
 
