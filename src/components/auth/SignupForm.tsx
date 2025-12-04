@@ -62,7 +62,7 @@ export default function SignupForm(): React.ReactElement {
     setIsLoading(true);
 
     try {
-      const { error } = await supabase.auth.signUp({
+      const { error: signUpError } = await supabase.auth.signUp({
         email: trimmedEmail,
         password,
         options: {
@@ -73,8 +73,8 @@ export default function SignupForm(): React.ReactElement {
         },
       });
 
-      if (error) {
-        setError(getAuthErrorMessage(error, "signup"));
+      if (signUpError) {
+        setError(getAuthErrorMessage(signUpError, "signup"));
         captchaRef.current?.resetCaptcha();
         setCaptchaToken(null);
         return;

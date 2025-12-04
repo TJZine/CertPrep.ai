@@ -30,7 +30,9 @@ export interface QuizStats {
   totalStudyTime: number;
 }
 
-export function sanitizeQuestions(questions: unknown[]): Question[] {
+export async function sanitizeQuestions(
+  questions: unknown[],
+): Promise<Question[]> {
   // Validate structure first
   const parsedQuestions = z.array(QuestionSchema).safeParse(questions);
 
@@ -48,42 +50,56 @@ export function sanitizeQuestions(questions: unknown[]): Question[] {
     throw new Error(`Invalid questions data: ${errorMsg}`);
   }
 
-  return parsedQuestions.data.map((q) => {
-    // We can trust the shape now, but we still want to sanitize text fields for XSS prevention
-    const options = q.options;
+  return Promise.all(
+    parsedQuestions.data.map(async (q) => {
+      // We can trust the shape now, but we still want to sanitize text fields for XSS prevention
+      const options = q.options;
 
-    const sanitizedOptions: Record<string, string> = Object.entries(
-      options,
-    ).reduce(
-      (acc, [key, value]) => {
-        acc[key] = sanitizeQuestionText(value);
-        return acc;
-      },
-      {} as Record<string, string>,
-    );
+      const sanitizedOptions: Record<string, string> = Object.entries(
+        options,
+      ).reduce(
+        (acc, [key, value]) => {
+          acc[key] = sanitizeQuestionText(value);
+          return acc;
+        },
+        {} as Record<string, string>,
+      );
 
-    // Destructure to omit correct_answer from the returned object
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { correct_answer, ...rest } = q;
+      let hash = q.correct_answer_hash;
 
-    return {
-      ...rest,
-      id: String(q.id),
-      category: sanitizeQuestionText(q.category),
-      question: sanitizeQuestionText(q.question),
-      explanation: sanitizeQuestionText(q.explanation),
-      distractor_logic: q.distractor_logic
-        ? sanitizeQuestionText(q.distractor_logic)
-        : undefined,
-      ai_prompt: q.ai_prompt ? sanitizeQuestionText(q.ai_prompt) : undefined,
-      user_notes: q.user_notes ? sanitizeQuestionText(q.user_notes) : undefined,
-      options: sanitizedOptions,
-      correct_answer_hash: q.correct_answer_hash,
-      correct_answer: q.correct_answer
-        ? sanitizeQuestionText(q.correct_answer)
-        : undefined,
-    };
-  });
+      // If no hash exists, try to compute it from correct_answer
+      if (!hash && q.correct_answer) {
+        hash = await hashAnswer(q.correct_answer);
+      }
+
+      if (!hash) {
+        throw new Error(`Question ${q.id} is missing correct_answer_hash`);
+      }
+
+      // Destructure to omit correct_answer from the returned object
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { correct_answer: _omitted, ...rest } = q;
+
+      return {
+        ...rest,
+        id: String(q.id),
+        category: sanitizeQuestionText(q.category),
+        question: sanitizeQuestionText(q.question),
+        explanation: sanitizeQuestionText(q.explanation),
+        distractor_logic: q.distractor_logic
+          ? sanitizeQuestionText(q.distractor_logic)
+          : undefined,
+        ai_prompt: q.ai_prompt
+          ? sanitizeQuestionText(q.ai_prompt)
+          : undefined,
+        user_notes: q.user_notes
+          ? sanitizeQuestionText(q.user_notes)
+          : undefined,
+        options: sanitizedOptions,
+        correct_answer_hash: hash,
+      };
+    }),
+  );
 }
 
 /**
@@ -104,32 +120,7 @@ export async function createQuiz(
   }
 
   const validatedData = validation.data;
-  const sanitizedQuestionList = sanitizeQuestions(validatedData.questions);
-  const sanitizedQuestions = await Promise.all(
-    sanitizedQuestionList.map(async (sanitized, index) => {
-      const original = validatedData.questions[index] as Question & {
-        correct_answer?: string;
-      };
-
-      let hash = sanitized.correct_answer_hash;
-      if (!hash && original.correct_answer) {
-        hash = await hashAnswer(original.correct_answer);
-      }
-      if (!hash) {
-        throw new Error(
-          `Question ${sanitized.id} is missing correct_answer_hash`,
-        );
-      }
-
-      const { correct_answer: _correct_answer, ...rest } = sanitized;
-      void _correct_answer;
-
-      return {
-        ...rest,
-        correct_answer_hash: hash,
-      };
-    }),
-  );
+  const sanitizedQuestions = await sanitizeQuestions(validatedData.questions);
 
   const sanitizedTitle = sanitizeQuestionText(validation.data.title);
   const sanitizedDescription = sanitizeQuestionText(
@@ -243,43 +234,29 @@ export async function updateQuiz(
       // We need to handle hashing BEFORE sanitization strips the correct_answer.
       // We also need to respect existing hashes if provided.
       const rawQuestions = updates.questions;
-      const sanitizedQuestions = sanitizeQuestions(rawQuestions);
+      
+      // We need to inject existing hashes if they are missing in the update but present in DB
+      // This is a bit tricky because sanitizeQuestions now enforces hash existence.
+      // So we should pre-fill hashes from existing questions if possible BEFORE calling sanitizeQuestions
+      // OR we rely on sanitizeQuestions to throw if it can't find a hash.
+      
+      // However, sanitizeQuestions only looks at the input object. It doesn't know about DB state.
+      // So if the update is partial and missing correct_answer AND correct_answer_hash, 
+      // but we have it in DB, we should merge it first?
+      // Actually, updates.questions is usually a full replacement of the questions array in this app's logic (editing a quiz).
+      // But let's be safe.
+      
+      // If we are just updating questions, we probably have the full question object.
+      // Let's try to map existing hashes to the raw questions if they are missing.
+      const enrichedQuestions = rawQuestions.map(q => {
+         const existingQ = existing.questions.find(eq => eq.id === q.id);
+         if (!q.correct_answer_hash && existingQ?.correct_answer_hash) {
+             return { ...q, correct_answer_hash: existingQ.correct_answer_hash };
+         }
+         return q;
+      });
 
-      sanitizedUpdates.questions = await Promise.all(
-        sanitizedQuestions.map(async (q, index) => {
-          const rawQ = rawQuestions[index];
-          // Cast rawQ to access correct_answer safely as it might be in the update input
-          const rawQWithAnswer = rawQ as Question & { correct_answer?: string };
-
-          let hash = q.correct_answer_hash;
-
-          // If no hash exists on the sanitized output (meaning none was preserved),
-          // try to compute it from the raw input's correct_answer.
-          if (!hash && rawQWithAnswer.correct_answer) {
-            // Wrap async crypto in Dexie.waitFor to keep transaction alive
-            hash = await Dexie.waitFor(
-              hashAnswer(rawQWithAnswer.correct_answer),
-            );
-          }
-
-          if (!hash) {
-            // Fallback: check if the existing question had a hash we can preserve
-            // if this is an update to an existing question.
-            const existingQ = existing.questions.find((eq) => eq.id === q.id);
-            if (existingQ?.correct_answer_hash) {
-              hash = existingQ.correct_answer_hash;
-            }
-          }
-
-          if (!hash) {
-            throw new Error(`Question ${q.id} is missing correct_answer_hash`);
-          }
-
-          const { correct_answer: _correct_answer, ...restOfQuestion } = q;
-          void _correct_answer;
-          return { ...restOfQuestion, correct_answer_hash: hash };
-        }),
-      );
+      sanitizedUpdates.questions = await sanitizeQuestions(enrichedQuestions);
     }
 
     if (updates.title !== undefined) {

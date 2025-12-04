@@ -7,7 +7,6 @@ import { useQuizSessionStore } from "@/stores/quizSessionStore";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 import { clearSmartRoundState } from "@/lib/smartRoundStorage";
-import { logger } from "@/lib/logger";
 
 interface UseQuizSubmissionProps {
   quizId: string;
@@ -121,8 +120,9 @@ export function useQuizSubmission({
 
   const retrySave = useCallback(
     (timeTakenSeconds: number) => {
-      void submitQuiz(timeTakenSeconds).catch((error) => {
-        logger.warn("Manual retry failed to save quiz result", error);
+      void submitQuiz(timeTakenSeconds).catch(() => {
+        // submitQuiz already updates saveError and shows a toast;
+        // suppress the rejection to avoid unhandled promise errors.
       });
     },
     [submitQuiz],

@@ -35,7 +35,10 @@ const QuizBackupSchema = QuizSchema.extend({
   quiz_hash: z.string().nullable().optional(),
 });
 
-function sanitizeQuizRecord(quiz: unknown, userId: string): Quiz | null {
+async function sanitizeQuizRecord(
+  quiz: unknown,
+  userId: string,
+): Promise<Quiz | null> {
   const parsed = QuizBackupSchema.safeParse(quiz);
 
   if (!parsed.success) {
@@ -59,7 +62,7 @@ function sanitizeQuizRecord(quiz: unknown, userId: string): Quiz | null {
     title: sanitizeQuestionText(parsed.data.title),
     description: sanitizeQuestionText(parsed.data.description ?? ""),
     tags: (parsed.data.tags ?? []).map((tag) => sanitizeQuestionText(tag)),
-    questions: sanitizeQuestions(parsed.data.questions),
+    questions: await sanitizeQuestions(parsed.data.questions),
     created_at: createdAt,
     updated_at: updatedAt,
     deleted_at: deletedAt,
@@ -240,7 +243,7 @@ export async function importData(
   const quizIds = new Set<string>();
 
   for (const quiz of data.quizzes) {
-    const sanitizedQuiz = sanitizeQuizRecord(quiz, userId);
+    const sanitizedQuiz = await sanitizeQuizRecord(quiz, userId);
     if (!sanitizedQuiz) continue;
     if (quizIds.has(sanitizedQuiz.id)) {
       console.warn(
