@@ -82,3 +82,12 @@ const styleSrc = useStrictCsp
 2. The security flag only affects test infrastructure, not production
 3. Turbopack is actively developing; this may be fixed upstream
 4. Effort-to-value ratio is low for current project scale
+
+### Re-evaluation Triggers
+
+Revisit this issue when any of the following occur:
+
+- [ ] Turbopack releases HMR style nonce propagation support
+- [ ] Next.js 17+ ships with improved CSP handling in dev mode
+- [ ] Security audit requires CSP validation in E2E tests
+- [ ] Test suite grows beyond 50 E2E tests (higher confidence needed)

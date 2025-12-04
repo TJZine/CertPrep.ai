@@ -47,6 +47,27 @@ export function ThemeProvider({
     }
   }, [theme]);
 
+  // Listen for system preference changes when user hasn't explicitly set a preference.
+  React.useEffect(() => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") return;
+
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const handler = (e: MediaQueryListEvent): void => {
+      // Only update if user hasn't explicitly set a preference
+      try {
+        const hasExplicitPreference = window.localStorage.getItem("theme");
+        if (!hasExplicitPreference) {
+          setTheme(e.matches ? "dark" : "light");
+        }
+      } catch {
+        // Ignore storage access errors
+      }
+    };
+
+    mediaQuery.addEventListener("change", handler);
+    return (): void => mediaQuery.removeEventListener("change", handler);
+  }, []);
+
   const toggleTheme = React.useCallback(() => {
     setTheme((prev) => (prev === "dark" ? "light" : "dark"));
   }, []);

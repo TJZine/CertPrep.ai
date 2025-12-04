@@ -26,6 +26,13 @@ const variantClasses = {
   warning: "bg-orange-500",
 };
 
+const statusColors = {
+  unanswered: "bg-slate-200 dark:bg-slate-700",
+  correct: "bg-green-500",
+  incorrect: "bg-red-500",
+  flagged: "bg-orange-400",
+};
+
 /**
  * Linear progress bar with optional text indicators.
  */
@@ -96,12 +103,6 @@ export function SegmentedProgress({
   onQuestionClick,
   className,
 }: SegmentedProgressProps): React.ReactElement {
-  const statusColors = {
-    unanswered: "bg-slate-200 dark:bg-slate-700",
-    correct: "bg-green-500",
-    incorrect: "bg-red-500",
-    flagged: "bg-orange-400",
-  };
 
   return (
     <div
@@ -111,6 +112,7 @@ export function SegmentedProgress({
     >
       {questions.map((question, index) => (
         <button
+          type="button"
           key={question.id}
           onClick={() => onQuestionClick?.(index)}
           className={cn(

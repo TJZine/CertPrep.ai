@@ -28,6 +28,7 @@ export function ExplanationPanel({
   className,
 }: ExplanationPanelProps): React.ReactElement {
   const contentId = React.useId();
+  const buttonId = React.useId();
   const sanitizedDistractorLogic = React.useMemo(
     () => (distractorLogic ? sanitizeHTML(distractorLogic) : null),
     [distractorLogic],
@@ -41,6 +42,7 @@ export function ExplanationPanel({
   return (
     <div className={cn(className)}>
       <Button
+        id={buttonId}
         variant="ghost"
         onClick={onToggle}
         className="w-full justify-between"
@@ -66,6 +68,8 @@ export function ExplanationPanel({
 
       <Card
         id={contentId}
+        role="region"
+        aria-labelledby={buttonId}
         hidden={!isExpanded}
         aria-hidden={!isExpanded}
         className={cn(

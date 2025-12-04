@@ -18,7 +18,6 @@ import {
   validateQuizImport,
   formatValidationErrors,
   type ValidationResult,
-  type ValidationError,
   type QuizImportInput,
 } from "@/validators/quizSchema";
 import type { Quiz } from "@/types/quiz";
@@ -176,12 +175,11 @@ export function ImportModal({
 
     const { result, error } = validateJson(jsonText);
     if (!result?.success || !result.data) {
-      const errorMessage = parseError
-        ? parseError
-        : error
-          ? error
-          : formatValidationErrors(result?.errors ?? ([] as ValidationError[])) ||
-            "Please fix validation issues.";
+      const errorMessage =
+        parseError ||
+        error ||
+        formatValidationErrors(result?.errors ?? []) ||
+        "Please fix validation issues.";
       addToast("error", errorMessage);
       return;
     }

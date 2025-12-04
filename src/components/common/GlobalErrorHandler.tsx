@@ -123,6 +123,15 @@ export class GlobalErrorHandler extends React.Component<
     ) {
       const deleteRequest = indexedDB.deleteDatabase("CertPrepDatabase");
 
+      deleteRequest.onblocked = (): void => {
+        console.warn(
+          "Database deletion blocked by open connections, clearing storage anyway",
+        );
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.href = "/";
+      };
+
       deleteRequest.onsuccess = (): void => {
         localStorage.clear();
         sessionStorage.clear();

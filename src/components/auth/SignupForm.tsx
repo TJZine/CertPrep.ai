@@ -29,7 +29,6 @@ export default function SignupForm(): React.ReactElement {
 
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
-    setIsLoading(true);
     setError(null);
 
     const trimmedFullName = fullName.trim();
@@ -37,32 +36,29 @@ export default function SignupForm(): React.ReactElement {
 
     if (password !== confirmPassword) {
       setError("Passwords don't match");
-      setIsLoading(false);
       return;
     }
     if (password.length < MIN_PASSWORD_LENGTH) {
       setError(`Password must be at least ${MIN_PASSWORD_LENGTH} characters.`);
-      setIsLoading(false);
       return;
     }
 
     if (!trimmedFullName) {
       setError("Please enter your full name.");
-      setIsLoading(false);
       return;
     }
 
     if (!captchaToken) {
       setError("Please complete the captcha");
-      setIsLoading(false);
       return;
     }
 
     if (!supabase) {
       setError("Authentication service unavailable. Please contact support.");
-      setIsLoading(false);
       return;
     }
+
+    setIsLoading(true);
 
     try {
       const { error } = await supabase.auth.signUp({
@@ -123,6 +119,7 @@ export default function SignupForm(): React.ReactElement {
             onChange={(e) => setFullName(e.target.value)}
             disabled={isLoading}
             required
+            autoComplete="name"
           />
         </div>
         <div className="space-y-2">
@@ -140,6 +137,7 @@ export default function SignupForm(): React.ReactElement {
             onChange={(e) => setEmail(e.target.value)}
             disabled={isLoading}
             required
+            autoComplete="email"
           />
         </div>
         <div className="space-y-2">
@@ -157,6 +155,7 @@ export default function SignupForm(): React.ReactElement {
             disabled={isLoading}
             required
             minLength={MIN_PASSWORD_LENGTH}
+            autoComplete="new-password"
           />
         </div>
         <div className="space-y-2">
@@ -174,6 +173,7 @@ export default function SignupForm(): React.ReactElement {
             disabled={isLoading}
             required
             minLength={MIN_PASSWORD_LENGTH}
+            autoComplete="new-password"
           />
         </div>
 

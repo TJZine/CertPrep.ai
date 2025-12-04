@@ -15,8 +15,13 @@ function stripControlCharacters(value: string): string {
 
 function normalizeHost(rawHost: string | null): string | null {
   if (!rawHost) return null;
-  const [host] = rawHost.trim().toLowerCase().split(":");
-  return host ?? null;
+  try {
+    const url = new URL(`http://${rawHost.trim()}`);
+    return url.hostname.toLowerCase();
+  } catch {
+    // Malformed host, treat as untrusted
+    return null;
+  }
 }
 
 function isAllowedHost(host: string | null): boolean {
