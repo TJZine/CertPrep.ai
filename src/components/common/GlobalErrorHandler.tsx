@@ -52,13 +52,38 @@ export class GlobalErrorHandler extends React.Component<
       });
     }
 
+    // Store sanitized error log for local debugging.
+    // We deliberately avoid encryption here because:
+    // 1. This is debugging data, not credentials
+    // 2. Error messages are sanitized to limit accidental PII
+    // 3. URLs are scrubbed of sensitive params (tokens, codes)
+    // If an attacker has localStorage access, they already have full app access.
     try {
+      // Sanitize URL by removing sensitive query parameters
+      const sanitizeUrl = (url: string): string => {
+        try {
+          const parsed = new URL(url);
+          const sensitiveParams = ["token", "code", "next", "access_token", "refresh_token"];
+          sensitiveParams.forEach((param) => parsed.searchParams.delete(param));
+          return parsed.toString();
+        } catch {
+          return "[invalid url]";
+        }
+      };
+
+      // Truncate error message to prevent accidental PII in lengthy messages
+      const sanitizeMessage = (msg: string, maxLength = 500): string => {
+        if (msg.length <= maxLength) return msg;
+        return msg.slice(0, maxLength) + "... [truncated]";
+      };
+
       const errorLog = {
-        message: error.message,
-        stack: error.stack,
-        componentStack: errorInfo.componentStack,
+        message: sanitizeMessage(error.message),
+        // Stack traces contain code structure, not user data - safe to store
+        stack: error.stack?.slice(0, 2000),
+        componentStack: errorInfo.componentStack?.slice(0, 1000),
         timestamp: new Date().toISOString(),
-        url: typeof window !== "undefined" ? window.location.href : "unknown",
+        url: typeof window !== "undefined" ? sanitizeUrl(window.location.href) : "unknown",
       };
 
       const existingErrors = JSON.parse(
