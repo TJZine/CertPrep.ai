@@ -13,17 +13,25 @@ function stripControlCharacters(value: string): string {
   return result;
 }
 
-function isAllowedHost(host: string): boolean {
+function normalizeHost(rawHost: string | null): string | null {
+  if (!rawHost) return null;
+  const [host] = rawHost.trim().toLowerCase().split(":");
+  return host ?? null;
+}
+
+function isAllowedHost(host: string | null): boolean {
+  const normalizedHost = normalizeHost(host);
+  if (!normalizedHost) return false;
   const allowedHosts =
     process.env.ALLOWED_HOSTS?.split(",")
-      .map((h) => h.trim())
+      .map((h) => h.trim().toLowerCase())
       .filter(Boolean) ?? [];
   return allowedHosts.some((allowed) => {
     return (
-      host === allowed ||
-      host === `www.${allowed}` ||
-      (host.endsWith(`.${allowed}`) &&
-        host[host.length - allowed.length - 1] === ".")
+      normalizedHost === allowed ||
+      normalizedHost === `www.${allowed}` ||
+      (normalizedHost.endsWith(`.${allowed}`) &&
+        normalizedHost[normalizedHost.length - allowed.length - 1] === ".")
     );
   });
 }

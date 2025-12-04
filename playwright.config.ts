@@ -36,21 +36,30 @@ export default defineConfig({
 
     // Screenshot on failure
     screenshot: "only-on-failure",
-
-    // Use saved auth state
-    storageState: "tests/e2e/.auth/user.json",
   },
 
   // Configure projects for major browsers
   projects: [
     {
-      name: "chromium",
+      name: "chromium-auth",
       use: {
         ...devices["Desktop Chrome"],
+        // Use saved auth state
+        storageState: "tests/e2e/.auth/user.json",
         launchOptions: {
           // Required for Playwright runs: production CSP removes 'unsafe-inline' for styles and relies on nonces;
           // the test server doesn't propagate the nonce header the same way, so inline styles trigger CSP blocks.
           // Disabling web security here avoids false negatives in E2E without affecting production CSP.
+          args: ["--disable-web-security"],
+        },
+      },
+    },
+    {
+      name: "chromium-no-auth",
+      use: {
+        ...devices["Desktop Chrome"],
+        storageState: undefined,
+        launchOptions: {
           args: ["--disable-web-security"],
         },
       },
@@ -73,7 +82,7 @@ export default defineConfig({
   },
 
   // Global setup to create test user and save auth state
-  globalSetup: require.resolve("./tests/e2e/global-setup.ts"),
+  globalSetup: "./tests/e2e/global-setup.ts",
 
   // Global timeout for each test
   timeout: 30 * 1000,

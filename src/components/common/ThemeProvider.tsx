@@ -2,7 +2,7 @@
 
 import * as React from "react";
 
-type Theme = "light" | "dark";
+export type Theme = "light" | "dark";
 
 interface ThemeContextValue {
   theme: Theme;
@@ -18,11 +18,16 @@ export function ThemeProvider({
 }): React.ReactElement {
   const [theme, setTheme] = React.useState<Theme>(() => {
     if (typeof window === "undefined") return "light";
-    const stored = window.localStorage.getItem("theme");
+    let stored: string | null = null;
+    try {
+      stored = window.localStorage.getItem("theme");
+    } catch {
+      // Ignore storage access errors and fall back to system preference.
+    }
     if (stored === "light" || stored === "dark") return stored;
-    const prefersDark = window.matchMedia(
-      "(prefers-color-scheme: dark)",
-    ).matches;
+    const prefersDark =
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches;
     return prefersDark ? "dark" : "light";
   });
 
@@ -35,7 +40,11 @@ export function ThemeProvider({
     } else {
       root.classList.remove("dark");
     }
-    window.localStorage.setItem("theme", theme);
+    try {
+      window.localStorage.setItem("theme", theme);
+    } catch {
+      // Best-effort persistence; ignore storage errors.
+    }
   }, [theme]);
 
   const toggleTheme = React.useCallback(() => {

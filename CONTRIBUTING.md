@@ -477,7 +477,7 @@ graph LR
 
 Contributors are recognized in:
 
-- [README.md Contributors section](#contributors)
+- GitHub's contributor graph and acknowledgments in README.md
 - [CHANGELOG.md](CHANGELOG.md) for each release
 - GitHub's contributor graph
 

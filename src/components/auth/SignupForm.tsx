@@ -32,6 +32,9 @@ export default function SignupForm(): React.ReactElement {
     setIsLoading(true);
     setError(null);
 
+    const trimmedFullName = fullName.trim();
+    const trimmedEmail = email.trim();
+
     if (password !== confirmPassword) {
       setError("Passwords don't match");
       setIsLoading(false);
@@ -39,6 +42,12 @@ export default function SignupForm(): React.ReactElement {
     }
     if (password.length < MIN_PASSWORD_LENGTH) {
       setError(`Password must be at least ${MIN_PASSWORD_LENGTH} characters.`);
+      setIsLoading(false);
+      return;
+    }
+
+    if (!trimmedFullName) {
+      setError("Please enter your full name.");
       setIsLoading(false);
       return;
     }
@@ -56,15 +65,6 @@ export default function SignupForm(): React.ReactElement {
     }
 
     try {
-      const trimmedEmail = email.trim();
-      const trimmedFullName = fullName.trim();
-
-      if (!trimmedFullName) {
-        setError("Please enter your full name.");
-        setIsLoading(false);
-        return;
-      }
-
       const { error } = await supabase.auth.signUp({
         email: trimmedEmail,
         password,

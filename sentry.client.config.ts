@@ -4,11 +4,13 @@
 
 import * as Sentry from "@sentry/nextjs";
 
+const dsn = process.env.NEXT_PUBLIC_SENTRY_DSN;
+
 // Check if Sentry is already initialized to prevent "Multiple Sentry Session Replay instances" error
 // which can happen in React Strict Mode (double useEffect) or if Next.js auto-loads this file.
-if (!Sentry.getClient()) {
+if (dsn && !Sentry.getClient()) {
   Sentry.init({
-    dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+    dsn,
 
     // Add optional integrations for additional features
     integrations: [
@@ -22,9 +24,8 @@ if (!Sentry.getClient()) {
     tracesSampleRate: process.env.NODE_ENV === "production" ? 0.1 : 1.0,
 
     // Define how likely Replay events are sampled.
-    // This sets the sample rate to be 10%. You may want this to be 100% while
-    // in development and sample at a lower rate in production
-    replaysSessionSampleRate: 0.1,
+    // Sample 100% in development for debugging, reduce in production for cost control.
+    replaysSessionSampleRate: process.env.NODE_ENV === "production" ? 0.1 : 1.0,
 
     // Define how likely Replay events are sampled when an error occurs.
     replaysOnErrorSampleRate: 1.0,
@@ -38,11 +39,18 @@ if (!Sentry.getClient()) {
         event.exception.values.forEach((exception) => {
           if (exception.value) {
             exception.value = exception.value.replace(
-              /(password|secret|key|token|auth)[=:\s]+([^\s,;]+)/gi,
+              /\b(password|secret|key|token|auth)\b[=:\s]+([^\s,;]+)/gi,
               "$1=[REDACTED]",
             );
           }
         });
+      }
+
+      if (event.message) {
+        event.message = event.message.replace(
+          /\b(password|secret|key|token|auth)\b[=:\s]+([^\s,;]+)/gi,
+          "$1=[REDACTED]",
+        );
       }
 
       // Drop noisy dev-only worker import failures (e.g., Turbopack/HMR invalidating worker chunks)

@@ -26,23 +26,20 @@ import { cn, formatTime } from "@/lib/utils";
 import { useIsDarkMode } from "@/hooks/useIsDarkMode";
 import type { OverallStats } from "@/db/results";
 
-// Recharts TooltipProps can be tricky with strict types, so we extend it
-interface CustomTooltipProps extends TooltipProps<number, string> {
-  payload?: Array<{
-    name: string;
-    value: number;
-    payload: Record<string, unknown>;
-  }>;
-  label?: string;
-}
+type TooltipEntry = { name?: string; value?: number; payload?: unknown };
+
+type TooltipContentProps = TooltipProps<number, string> & {
+  active?: boolean;
+  payload?: ReadonlyArray<TooltipEntry>;
+  label?: string | number;
+};
 
 const PieTooltip = ({
   active,
   payload,
-}: CustomTooltipProps): React.ReactElement | null => {
-  if (!active || !payload || !payload.length) return null;
-  const data = payload[0];
-  if (!data) return null;
+}: TooltipContentProps): React.ReactElement | null => {
+  const data = payload?.[0];
+  if (!active || !data) return null;
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-lg dark:border-slate-700 dark:bg-slate-900">
       <p className="font-medium text-slate-900 dark:text-slate-50">
@@ -59,15 +56,15 @@ const BarTooltip = ({
   active,
   payload,
   label,
-}: CustomTooltipProps): React.ReactElement | null => {
-  if (!active || !payload || !payload.length) return null;
-  const data = payload[0];
-  if (!data) return null;
+}: TooltipContentProps): React.ReactElement | null => {
+  const data = payload?.[0];
+  if (!active || !data) return null;
+  const minutes = typeof data.value === "number" ? data.value : 0;
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-lg dark:border-slate-700 dark:bg-slate-900">
       <p className="font-medium text-slate-900 dark:text-slate-50">{label}</p>
       <p className="text-sm text-slate-600 dark:text-slate-300">
-        Study Time: {data.value} min
+        Study Time: {formatTime(minutes)}
       </p>
     </div>
   );
@@ -156,6 +153,15 @@ export function ScoreDistribution({
   results,
   className,
 }: ScoreDistributionProps): React.ReactElement {
+  const validResults = React.useMemo(
+    () =>
+      results.filter(
+        (r) =>
+          typeof r.score === "number" && r.score >= 0 && r.score <= 100,
+      ),
+    [results],
+  );
+
   const distribution = React.useMemo(() => {
     const ranges = [
       {
@@ -198,16 +204,16 @@ export function ScoreDistribution({
     return ranges
       .map((range) => ({
         name: range.name,
-        value: results.filter(
+        value: validResults.filter(
           (r) => r.score >= range.min && r.score <= range.max,
         ).length,
         color: range.color,
         colorClass: range.colorClass,
       }))
       .filter((r) => r.value > 0);
-  }, [results]);
+  }, [validResults]);
 
-  if (results.length === 0) {
+  if (validResults.length === 0) {
     return (
       <Card className={className}>
         <CardHeader>

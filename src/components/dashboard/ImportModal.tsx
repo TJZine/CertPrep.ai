@@ -91,18 +91,21 @@ export function ImportModal({
   };
 
   const validateJson = React.useCallback(
-    (text: string): ValidationResult<QuizImportInput> | null => {
+    (
+      text: string,
+    ): { result: ValidationResult<QuizImportInput> | null; error: string | null } => {
       setIsValidating(true);
       try {
         const parsed = JSON.parse(text);
         setParseError(null);
         const result = validateQuizImport(parsed);
         setValidationResult(result);
-        return result;
+        return { result, error: null };
       } catch (error) {
-        setParseError(error instanceof Error ? error.message : "Invalid JSON");
+        const message = error instanceof Error ? error.message : "Invalid JSON";
+        setParseError(message);
         setValidationResult(null);
-        return null;
+        return { result: null, error: message };
       } finally {
         setIsValidating(false);
       }
@@ -171,12 +174,14 @@ export function ImportModal({
       return;
     }
 
-    const result = validateJson(jsonText);
+    const { result, error } = validateJson(jsonText);
     if (!result?.success || !result.data) {
       const errorMessage = parseError
         ? parseError
-        : formatValidationErrors(result?.errors ?? ([] as ValidationError[])) ||
-          "Please fix validation issues.";
+        : error
+          ? error
+          : formatValidationErrors(result?.errors ?? ([] as ValidationError[])) ||
+            "Please fix validation issues.";
       addToast("error", errorMessage);
       return;
     }
@@ -202,12 +207,16 @@ export function ImportModal({
   ): void => {
     if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
     event.preventDefault();
-    const nextTab = activeTab === "paste" ? "upload" : "paste";
-    setActiveTab(nextTab);
     const tabs =
       tabListRef.current?.querySelectorAll<HTMLButtonElement>('[role="tab"]');
-    const target = tabs?.[nextTab === "paste" ? 0 : 1];
-    target?.focus();
+    if (!tabs || tabs.length === 0) return;
+    const tabIds = Array.from(tabs).map((tab) => tab.dataset.tabId ?? "");
+    const currentIndex = tabIds.findIndex((id) => id === activeTab);
+    const direction = event.key === "ArrowRight" ? 1 : -1;
+    const nextIndex = (currentIndex + direction + tabIds.length) % tabIds.length;
+    const nextTab = (tabIds[nextIndex] as "paste" | "upload") ?? "paste";
+    setActiveTab(nextTab);
+    tabs[nextIndex]?.focus();
   };
 
   const validationStatuses: ValidationStatus[] = React.useMemo(() => {
@@ -249,6 +258,7 @@ export function ImportModal({
         isLoading={isImporting}
         disabled={
           isValidating ||
+          !userId ||
           !jsonText.trim() ||
           Boolean(parseError) ||
           !(validationResult?.success && validationResult.data)
@@ -370,6 +380,7 @@ export function ImportModal({
                 key={tab}
                 role="tab"
                 type="button"
+                data-tab-id={tab}
                 aria-selected={isActive}
                 className={cn(
                   "px-4 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900",
@@ -423,7 +434,7 @@ export function ImportModal({
             <input
               ref={fileInputRef}
               type="file"
-              accept="application/json"
+              accept=".json,application/json"
               className="sr-only"
               onChange={(event) => {
                 const file = event.target.files?.[0];

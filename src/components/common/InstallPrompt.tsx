@@ -26,7 +26,12 @@ export function InstallPrompt(): React.ReactElement | null {
       return;
     }
 
-    const dismissedAt = localStorage.getItem("pwa_install_dismissed");
+    let dismissedAt: string | null = null;
+    try {
+      dismissedAt = localStorage.getItem("pwa_install_dismissed");
+    } catch {
+      // Ignore storage access errors and continue without persisted dismissal.
+    }
     if (dismissedAt) {
       const dismissedTime = new Date(dismissedAt).getTime();
       const now = new Date().getTime();
@@ -41,6 +46,9 @@ export function InstallPrompt(): React.ReactElement | null {
 
     const handleBeforeInstall = (e: Event): void => {
       e.preventDefault();
+      if (showPromptTimeoutId) {
+        clearTimeout(showPromptTimeoutId);
+      }
       setDeferredPrompt(e as BeforeInstallPromptEvent);
       showPromptTimeoutId = window.setTimeout(() => {
         setShowPrompt(true);
@@ -84,7 +92,11 @@ export function InstallPrompt(): React.ReactElement | null {
   const handleDismiss = (): void => {
     setShowPrompt(false);
     setDismissed(true);
-    localStorage.setItem("pwa_install_dismissed", new Date().toISOString());
+    try {
+      localStorage.setItem("pwa_install_dismissed", new Date().toISOString());
+    } catch {
+      // Ignore storage persistence failures.
+    }
   };
 
   if (isInstalled || dismissed || !showPrompt || !deferredPrompt) {
