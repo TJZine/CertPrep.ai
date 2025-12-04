@@ -36,6 +36,10 @@ export default defineConfig({
 
     // Screenshot on failure
     screenshot: "only-on-failure",
+
+    // Use saved auth state by default (from global-setup.ts)
+    // Tests that need unauthenticated flow can use the chromium-no-auth project
+    storageState: "tests/e2e/.auth/user.json",
   },
 
   // Configure projects for major browsers
@@ -44,8 +48,6 @@ export default defineConfig({
       name: "chromium-auth",
       use: {
         ...devices["Desktop Chrome"],
-        // Use saved auth state
-        storageState: "tests/e2e/.auth/user.json",
         launchOptions: {
           // Required for Playwright runs: production CSP removes 'unsafe-inline' for styles and relies on nonces;
           // the test server doesn't propagate the nonce header the same way, so inline styles trigger CSP blocks.
