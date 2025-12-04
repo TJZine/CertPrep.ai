@@ -29,6 +29,7 @@ export default function SignupForm(): React.ReactElement {
 
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
+    if (isLoading) return;
     setError(null);
 
     const trimmedFullName = fullName.trim();

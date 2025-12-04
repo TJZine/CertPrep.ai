@@ -31,7 +31,9 @@ const statusColors = {
   correct: "bg-green-500",
   incorrect: "bg-red-500",
   flagged: "bg-orange-400",
-};
+} as const;
+
+type QuestionStatus = keyof typeof statusColors;
 
 /**
  * Linear progress bar with optional text indicators.
@@ -87,7 +89,7 @@ export function ProgressBar({
 interface SegmentedProgressProps {
   questions: Array<{
     id: string;
-    status: "unanswered" | "correct" | "incorrect" | "flagged";
+    status: QuestionStatus;
   }>;
   currentIndex: number;
   onQuestionClick?: (index: number) => void;
@@ -110,22 +112,37 @@ export function SegmentedProgress({
       role="group"
       aria-label="Question progress"
     >
-      {questions.map((question, index) => (
-        <button
-          type="button"
-          key={question.id}
-          onClick={() => onQuestionClick?.(index)}
-          className={cn(
-            "h-2 flex-1 rounded-full transition-all",
-            statusColors[question.status],
-            index === currentIndex &&
-              "ring-2 ring-blue-500 ring-offset-1 ring-offset-slate-100 dark:ring-offset-slate-900",
-            onQuestionClick && "cursor-pointer hover:opacity-80",
-          )}
-          aria-label={`Question ${index + 1}: ${question.status}`}
-          aria-current={index === currentIndex ? "step" : undefined}
-        />
-      ))}
+      {questions.map((question, index) => {
+        const baseClasses = cn(
+          "h-2 flex-1 rounded-full transition-all",
+          statusColors[question.status],
+          index === currentIndex &&
+            "ring-2 ring-blue-500 ring-offset-1 ring-offset-slate-100 dark:ring-offset-slate-900",
+        );
+
+        if (onQuestionClick) {
+          return (
+            <button
+              type="button"
+              key={question.id}
+              onClick={() => onQuestionClick(index)}
+              className={cn(baseClasses, "cursor-pointer hover:opacity-80")}
+              aria-label={`Question ${index + 1}: ${question.status}`}
+              aria-current={index === currentIndex ? "step" : undefined}
+            />
+          );
+        }
+
+        return (
+          <span
+            key={question.id}
+            className={baseClasses}
+            role="presentation"
+            aria-label={`Question ${index + 1}: ${question.status}`}
+            aria-current={index === currentIndex ? "step" : undefined}
+          />
+        );
+      })}
     </div>
   );
 }

@@ -71,7 +71,6 @@ export function ExplanationPanel({
         role="region"
         aria-labelledby={buttonId}
         hidden={!isExpanded}
-        aria-hidden={!isExpanded}
         className={cn(
           "mt-2",
           isCorrect
