@@ -48,6 +48,9 @@ export default defineConfig({
       use: {
         ...devices["Desktop Chrome"],
         launchOptions: {
+          // Required for Playwright runs: production CSP removes 'unsafe-inline' for styles and relies on nonces;
+          // the test server doesn't propagate the nonce header the same way, so inline styles trigger CSP blocks.
+          // Disabling web security here avoids false negatives in E2E without affecting production CSP.
           args: ["--disable-web-security"],
         },
       },

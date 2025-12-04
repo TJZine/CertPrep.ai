@@ -6,7 +6,7 @@ This document provides guidelines and steps for contributing. Following these gu
 
 ---
 
-## 📋 Table of Contents
+## <a id="table-of-contents"></a> 📋 Table of Contents
 
 - [Code of Conduct](#code-of-conduct)
 - [Getting Started](#getting-started)
@@ -19,13 +19,13 @@ This document provides guidelines and steps for contributing. Following these gu
 
 ---
 
-## 📜 Code of Conduct
+## <a id="code-of-conduct"></a> 📜 Code of Conduct
 
 This project and everyone participating in it is governed by our [Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code. Please report unacceptable behavior to [conduct@certprep.ai](mailto:conduct@certprep.ai).
 
 ---
 
-## 🚀 Getting Started
+## <a id="getting-started"></a> 🚀 Getting Started
 
 ### Prerequisites
 
@@ -82,7 +82,7 @@ Before you begin, ensure you have the following installed:
 
 ---
 
-## 🤔 How Can I Contribute?
+## <a id="how-can-i-contribute"></a> 🤔 How Can I Contribute?
 
 ### 🐛 Reporting Bugs
 
@@ -172,7 +172,7 @@ We actively welcome your pull requests!
 
 ---
 
-## 💻 Development Process
+## <a id="development-process"></a> 💻 Development Process
 
 ### Branch Strategy
 
@@ -234,7 +234,7 @@ gitGraph
 
 ---
 
-## 📝 Style Guidelines
+## <a id="style-guidelines"></a> 📝 Style Guidelines
 
 ### TypeScript
 
@@ -320,7 +320,7 @@ export function Button(props) {
 
 ---
 
-## 📨 Commit Messages
+## <a id="commit-messages"></a> 📨 Commit Messages
 
 We follow [Conventional Commits](https://www.conventionalcommits.org/):
 
@@ -379,7 +379,7 @@ Closes #123
 
 ---
 
-## 🔄 Pull Request Process
+## <a id="pull-request-process"></a> 🔄 Pull Request Process
 
 ### Before Submitting
 
@@ -483,7 +483,7 @@ Contributors are recognized in:
 
 ---
 
-## Community
+## <a id="community"></a> Community
 
 Join our community to stay updated and connect with other learners!
 

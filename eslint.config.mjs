@@ -2,7 +2,7 @@ import nextConfig from "eslint-config-next";
 import tseslintPlugin from "@typescript-eslint/eslint-plugin";
 
 const config = [
-  { ignores: [".next/**", "node_modules/**"] },
+  { ignores: ['.next/**', 'node_modules/**', 'out/**', 'build/**', 'coverage/**'] },
   ...nextConfig,
   {
     plugins: {

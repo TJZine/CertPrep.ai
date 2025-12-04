@@ -8,7 +8,7 @@ import * as Sentry from "@sentry/nextjs";
 // which can happen in React Strict Mode (double useEffect) or if Next.js auto-loads this file.
 if (!Sentry.getClient()) {
   Sentry.init({
-    dsn: "https://5d4ce3e5dcc00e821efd1f247d3b1d0e@o4510441029435392.ingest.us.sentry.io/4510441098313728",
+    dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
 
     // Add optional integrations for additional features
     integrations: [
@@ -30,7 +30,7 @@ if (!Sentry.getClient()) {
     replaysOnErrorSampleRate: 1.0,
 
     // Setting this option to true will print useful information to the console while you're setting up Sentry.
-    debug: true,
+    debug: process.env.NODE_ENV === "development",
 
     beforeSend(event) {
       // Scrub Exception Messages for secrets
@@ -43,6 +43,19 @@ if (!Sentry.getClient()) {
             );
           }
         });
+      }
+
+      // Drop noisy dev-only worker import failures (e.g., Turbopack/HMR invalidating worker chunks)
+      if (process.env.NODE_ENV === "development") {
+        const message = event.exception?.values?.[0]?.value ?? event.message;
+        if (
+          message?.includes("importScripts") &&
+          message.includes("WorkerGlobalScope")
+        ) {
+          // Uncomment for local debugging if you want to see when we drop these noisy dev-only worker import errors.
+          // console.debug("[Sentry] Dropped dev-only worker import failure");
+          return null;
+        }
       }
       return event;
     },

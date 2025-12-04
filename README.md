@@ -430,11 +430,11 @@ See [SECURITY.md](SECURITY.md) for our full security policy.
 This project is licensed under the **Apache 2.0 License** - see the [LICENSE](LICENSE) file for details.
 
 ```text
-Apache 2.0 License
-
-Copyright (c) 2025 TJZine
-
-Permission is hereby granted, free of charge, to any person obtaining a copy...
+Copyright 2025 TJZine
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+    http://www.apache.org/licenses/LICENSE-2.0
 ```
 
 ---

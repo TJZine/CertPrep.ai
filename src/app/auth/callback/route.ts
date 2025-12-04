@@ -2,6 +2,17 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { logger } from "@/lib/logger";
 
+function stripControlCharacters(value: string): string {
+  let result = "";
+  for (const char of value) {
+    const code = char.charCodeAt(0);
+    if (code > 0x1f && code !== 0x7f) {
+      result += char;
+    }
+  }
+  return result;
+}
+
 function isAllowedHost(host: string): boolean {
   const allowedHosts =
     process.env.ALLOWED_HOSTS?.split(",")
@@ -29,7 +40,7 @@ export async function GET(request: Request): Promise<NextResponse> {
     const decodedNext = decodeURIComponent(next);
 
     // 2. Strip leading/trailing whitespace and control characters
-    const sanitizedNext = decodedNext.trim().replace(/[\x00-\x1F\x7F]/g, "");
+    const sanitizedNext = stripControlCharacters(decodedNext.trim());
 
     // 3. Reject if it contains backslashes (often used to bypass / checks)
     if (sanitizedNext.includes("\\")) {
