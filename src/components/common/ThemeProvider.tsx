@@ -16,25 +16,15 @@ export function ThemeProvider({
 }: {
   children: React.ReactNode;
 }): React.ReactElement {
-  const [theme, setTheme] = React.useState<Theme>("light");
-
-  // Apply stored or system preference on mount.
-  React.useEffect(() => {
-    const stored =
-      typeof window !== "undefined"
-        ? window.localStorage.getItem("theme")
-        : null;
-    if (stored === "light" || stored === "dark") {
-      setTheme(stored);
-      return;
-    }
-
-    const prefersDark =
-      typeof window !== "undefined"
-        ? window.matchMedia("(prefers-color-scheme: dark)").matches
-        : false;
-    setTheme(prefersDark ? "dark" : "light");
-  }, []);
+  const [theme, setTheme] = React.useState<Theme>(() => {
+    if (typeof window === "undefined") return "light";
+    const stored = window.localStorage.getItem("theme");
+    if (stored === "light" || stored === "dark") return stored;
+    const prefersDark = window.matchMedia(
+      "(prefers-color-scheme: dark)",
+    ).matches;
+    return prefersDark ? "dark" : "light";
+  });
 
   // Sync the class on the root element and persist preference.
   React.useEffect(() => {

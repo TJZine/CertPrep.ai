@@ -27,6 +27,7 @@ export function ExplanationPanel({
   onToggle,
   className,
 }: ExplanationPanelProps): React.ReactElement {
+  const contentId = React.useId();
   const sanitizedExplanation = React.useMemo(
     () => sanitizeHTML(explanation),
     [explanation],
@@ -37,13 +38,13 @@ export function ExplanationPanel({
   );
 
   return (
-    <div className={cn("", className)}>
+    <div className={cn(className)}>
       <Button
         variant="ghost"
         onClick={onToggle}
         className="w-full justify-between"
         aria-expanded={isExpanded}
-        aria-controls="explanation-content"
+        aria-controls={contentId}
       >
         <span className="flex items-center gap-2">
           <Lightbulb
@@ -64,7 +65,7 @@ export function ExplanationPanel({
 
       {isExpanded && (
         <Card
-          id="explanation-content"
+          id={contentId}
           className={cn(
             "mt-2",
             isCorrect

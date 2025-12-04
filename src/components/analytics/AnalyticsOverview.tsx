@@ -245,8 +245,8 @@ export function ScoreDistribution({
                 label={({ name, value }) => `${name}: ${value}`}
                 labelLine={false}
               >
-                {distribution.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
+                {distribution.map((entry) => (
+                  <Cell key={entry.name} fill={entry.color} />
                 ))}
               </Pie>
               <Tooltip content={<PieTooltip />} />

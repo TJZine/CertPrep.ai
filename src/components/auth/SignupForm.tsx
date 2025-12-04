@@ -57,12 +57,20 @@ export default function SignupForm(): React.ReactElement {
 
     try {
       const trimmedEmail = email.trim();
+      const trimmedFullName = fullName.trim();
+
+      if (!trimmedFullName) {
+        setError("Please enter your full name.");
+        setIsLoading(false);
+        return;
+      }
+
       const { error } = await supabase.auth.signUp({
         email: trimmedEmail,
         password,
         options: {
           data: {
-            full_name: fullName.trim(),
+            full_name: trimmedFullName,
           },
           captchaToken,
         },

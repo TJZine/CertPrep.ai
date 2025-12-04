@@ -37,10 +37,12 @@ export function InstallPrompt(): React.ReactElement | null {
       }
     }
 
+    let showPromptTimeoutId: number | null = null;
+
     const handleBeforeInstall = (e: Event): void => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
-      window.setTimeout(() => {
+      showPromptTimeoutId = window.setTimeout(() => {
         setShowPrompt(true);
       }, 5000);
     };
@@ -56,6 +58,9 @@ export function InstallPrompt(): React.ReactElement | null {
     window.addEventListener("appinstalled", handleInstalled);
 
     return (): void => {
+      if (showPromptTimeoutId) {
+        clearTimeout(showPromptTimeoutId);
+      }
       window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
       window.removeEventListener("appinstalled", handleInstalled);
     };

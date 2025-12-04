@@ -90,6 +90,26 @@ export function ImportModal({
     setIsDragOver(false);
   };
 
+  const validateJson = React.useCallback(
+    (text: string): ValidationResult<QuizImportInput> | null => {
+      setIsValidating(true);
+      try {
+        const parsed = JSON.parse(text);
+        setParseError(null);
+        const result = validateQuizImport(parsed);
+        setValidationResult(result);
+        return result;
+      } catch (error) {
+        setParseError(error instanceof Error ? error.message : "Invalid JSON");
+        setValidationResult(null);
+        return null;
+      } finally {
+        setIsValidating(false);
+      }
+    },
+    [],
+  );
+
   React.useEffect((): (() => void) | void => {
     if (!jsonText.trim()) {
       setValidationResult(null);
@@ -102,32 +122,13 @@ export function ImportModal({
     }, 500);
 
     return () => window.clearTimeout(timer);
-  }, [jsonText]);
+  }, [jsonText, validateJson]);
 
   React.useEffect((): void => {
     if (!isOpen) {
       resetState();
     }
   }, [isOpen]);
-
-  const validateJson = (
-    text: string,
-  ): ValidationResult<QuizImportInput> | null => {
-    setIsValidating(true);
-    try {
-      const parsed = JSON.parse(text);
-      setParseError(null);
-      const result = validateQuizImport(parsed);
-      setValidationResult(result);
-      return result;
-    } catch (error) {
-      setParseError(error instanceof Error ? error.message : "Invalid JSON");
-      setValidationResult(null);
-      return null;
-    } finally {
-      setIsValidating(false);
-    }
-  };
 
   const handleFileSelect = (file: File): void => {
     if (

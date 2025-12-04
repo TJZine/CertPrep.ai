@@ -39,7 +39,8 @@ export function ProgressBar({
   className,
   label = "Quiz progress",
 }: ProgressBarProps): React.ReactElement {
-  const percentage = total > 0 ? Math.round((current / total) * 100) : 0;
+  const rawPercentage = total > 0 ? (current / total) * 100 : 0;
+  const percentage = Math.max(0, Math.min(100, Math.round(rawPercentage)));
 
   return (
     <div className={cn("w-full", className)}>
