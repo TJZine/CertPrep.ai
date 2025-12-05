@@ -105,11 +105,11 @@ export function useQuiz(
   const quiz = useLiveQuery(async () => {
     if (!id || !userId) return undefined;
     const found = await db.quizzes.get(id);
-    if (!found) return undefined;
-    return found.user_id === userId ? found : undefined;
+    if (!found) return null;
+    return found.user_id === userId ? found : null;
   }, [id, userId]);
   return {
-    quiz: id && userId ? quiz : undefined,
+    quiz: id && userId && quiz ? quiz : undefined,
     isLoading: !id || !userId ? true : quiz === undefined,
   };
 }

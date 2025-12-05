@@ -28,7 +28,7 @@ export default function LoginForm(): React.ReactElement {
         data: { session },
       } = await supabase.auth.getSession();
       if (session) {
-        router.push("/dashboard");
+        router.push("/");
       }
     };
 
@@ -66,7 +66,7 @@ export default function LoginForm(): React.ReactElement {
         throw signInError;
       }
 
-      router.push("/dashboard");
+      router.push("/");
       router.refresh();
     } catch (err: unknown) {
       console.error("LoginForm: Login error", err);
