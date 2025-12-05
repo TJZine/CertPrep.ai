@@ -99,7 +99,10 @@ export default function AnalyticsPage(): React.ReactElement {
     (effectiveUserId && (resultsLoading || quizzesLoading || statsLoading));
 
   const isWaitingForSync =
-    effectiveUserId && !hasInitialSyncCompleted && results.length === 0;
+    !!user &&
+    effectiveUserId &&
+    !hasInitialSyncCompleted &&
+    results.length === 0;
 
   if (isLoadingData || isWaitingForSync) {
     const loadingText = isSyncing
