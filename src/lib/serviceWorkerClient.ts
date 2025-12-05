@@ -11,9 +11,32 @@ export async function requestServiceWorkerCacheClear(): Promise<void> {
     return;
   }
 
+  let cacheClearRequested = false;
+  const sendClearMessage = (
+    target: ServiceWorker | null | undefined,
+  ): void => {
+    if (cacheClearRequested || !target) return;
+    try {
+      target.postMessage(CACHE_CLEAR_MESSAGE);
+      cacheClearRequested = true;
+    } catch (error) {
+      logger.warn("Failed to post cache clear message to service worker", error);
+    }
+  };
+
   try {
-    const registration = await navigator.serviceWorker.ready;
-    registration.active?.postMessage(CACHE_CLEAR_MESSAGE);
+    // Attempt immediately if we already have a controlling worker.
+    sendClearMessage(navigator.serviceWorker.controller);
+
+    // Also schedule a send once the service worker becomes ready; this resolves
+    // even after slow cold-start installs without blocking the caller.
+    void navigator.serviceWorker.ready
+      .then((registration) => {
+        sendClearMessage(registration?.active);
+      })
+      .catch((error) => {
+        logger.warn("Failed waiting for service worker readiness", error);
+      });
   } catch (error) {
     logger.warn("Failed to request service worker cache clear", error);
   }

@@ -73,6 +73,14 @@ export function Modal({
     lockBodyScroll();
     focusFirstElement();
 
+    return (): void => {
+      unlockBodyScroll();
+    };
+  }, [focusFirstElement, isOpen]);
+
+  React.useEffect(() => {
+    if (!isOpen) return undefined;
+
     const handleKeyDown = (event: KeyboardEvent): void => {
       if (!dialogRef.current) return;
 
@@ -105,10 +113,9 @@ export function Modal({
     document.addEventListener("keydown", handleKeyDown);
 
     return (): void => {
-      unlockBodyScroll();
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [focusFirstElement, isOpen, onClose]);
+  }, [isOpen, onClose]);
 
   const handleOverlayClick = (
     event: React.MouseEvent<HTMLDivElement>,

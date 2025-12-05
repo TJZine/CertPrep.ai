@@ -90,14 +90,16 @@ export default function AnalyticsPage(): React.ReactElement {
     isLoading: statsLoading,
   } = useAnalyticsStats(results, quizzes);
 
-  // Show loading while initializing database, fetching data, or during initial sync
+  // Show loading while initializing database.
+  // If user is present, also wait for their data.
+  // If no user (effectiveUserId is null), we don't wait for resultsLoading/quizzesLoading
+  // as they might be technically "loading" (waiting for a user) but functionally empty.
   const isLoadingData =
     !isInitialized ||
-    resultsLoading ||
-    quizzesLoading ||
-    statsLoading ||
-    !effectiveUserId;
-  const isWaitingForSync = !hasInitialSyncCompleted && results.length === 0;
+    (effectiveUserId && (resultsLoading || quizzesLoading || statsLoading));
+
+  const isWaitingForSync =
+    effectiveUserId && !hasInitialSyncCompleted && results.length === 0;
 
   if (isLoadingData || isWaitingForSync) {
     const loadingText = isSyncing
