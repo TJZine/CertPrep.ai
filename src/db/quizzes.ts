@@ -256,7 +256,9 @@ export async function updateQuiz(
          return q;
       });
 
-      sanitizedUpdates.questions = await sanitizeQuestions(enrichedQuestions);
+      sanitizedUpdates.questions = await Dexie.waitFor(
+        sanitizeQuestions(enrichedQuestions),
+      );
     }
 
     if (updates.title !== undefined) {
