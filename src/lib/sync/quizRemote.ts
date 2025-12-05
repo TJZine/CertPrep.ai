@@ -46,9 +46,23 @@ export async function fetchUserQuizzes({
     .limit(limit);
 
   if (updatedAfter) {
-    const safeUpdatedAfter = new Date(updatedAfter).toISOString();
+    const parsed = Date.parse(updatedAfter);
+    if (Number.isNaN(parsed)) {
+      logger.error(
+        "Invalid updatedAfter timestamp in fetchUserQuizzes; falling back to epoch",
+        {
+          updatedAfter,
+          userId,
+        },
+      );
+      updatedAfter = "1970-01-01T00:00:00.000Z";
+      lastId = NIL_UUID;
+    } else {
+      updatedAfter = new Date(parsed).toISOString();
+    }
+
     const cursorLastId = lastId ?? NIL_UUID;
-    const filter = `updated_at.gt.${safeUpdatedAfter},and(updated_at.eq.${safeUpdatedAfter},id.gt.${cursorLastId})`;
+    const filter = `updated_at.gt.${updatedAfter},and(updated_at.eq.${updatedAfter},id.gt.${cursorLastId})`;
     query = query.or(filter);
   }
 

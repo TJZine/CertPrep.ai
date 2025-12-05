@@ -56,6 +56,29 @@ function toErrorMessage(error: unknown): string {
   }
 }
 
+function toSafeCursorTimestamp(
+  candidate: unknown,
+  fallback: string,
+  context: Record<string, unknown>,
+): string {
+  if (typeof candidate === "string" && !Number.isNaN(Date.parse(candidate))) {
+    return new Date(candidate).toISOString();
+  }
+
+  if (!Number.isNaN(Date.parse(fallback))) {
+    logger.warn("Invalid cursor timestamp encountered, using fallback", {
+      ...context,
+      fallback,
+    });
+    return new Date(fallback).toISOString();
+  }
+
+  logger.error("Invalid cursor timestamp and fallback; defaulting to epoch", {
+    ...context,
+  });
+  return "1970-01-01T00:00:00.000Z";
+}
+
 export async function syncResults(userId: string): Promise<SyncResultsOutcome> {
   if (!userId) return { incomplete: false };
 
@@ -290,12 +313,10 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
       const resultsToSave: Result[] = [];
       let lastRecordCreatedAt = cursor.timestamp;
       let lastRecordId = cursor.lastId;
+      let validRecordsInBatch = 0;
 
       for (const r of remoteResults) {
         if (!r) continue; // Skip if undefined
-
-        lastRecordCreatedAt = r.created_at;
-        lastRecordId = r.id;
 
         const validation = RemoteResultSchema.safeParse(r);
 
@@ -322,6 +343,40 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
           category_breakdown: validResult.category_breakdown,
           synced: 1,
         });
+
+        // Only advance cursor for valid records to ensure we don't skip data
+        // if a subsequent record in this batch is valid.
+        lastRecordCreatedAt = toSafeCursorTimestamp(r.created_at, cursor.timestamp, {
+          userId,
+          resultId: r.id,
+          path: "results-sync-valid",
+        });
+        lastRecordId = r.id;
+        validRecordsInBatch++;
+      }
+
+      // GUARD: If we fetched records but ALL failed validation, we must force-advance
+      // the cursor to the last item in the batch to prevent an infinite loop.
+      // This means we are explicitly accepting the loss of these invalid records.
+      if (remoteResults.length > 0 && validRecordsInBatch === 0) {
+        const lastItem = remoteResults[remoteResults.length - 1];
+        // We checked length > 0, so lastItem exists.
+        if (lastItem) {
+          logger.error(
+            `Batch of ${remoteResults.length} records all failed validation. Force-advancing cursor to prevent infinite loop.`,
+            { lastId: lastItem.id, lastCreatedAt: lastItem.created_at },
+          );
+          lastRecordCreatedAt = toSafeCursorTimestamp(
+            lastItem.created_at,
+            cursor.timestamp,
+            {
+              userId,
+              resultId: lastItem.id,
+              path: "results-sync-all-invalid",
+            },
+          );
+          lastRecordId = lastItem.id;
+        }
       }
 
       if (resultsToSave.length > 0) {
@@ -331,7 +386,12 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
       }
 
       // Update cursor to the last seen record's timestamp AND id
-      await setSyncCursor(lastRecordCreatedAt, userId, lastRecordId);
+      const safeCursorTimestamp = toSafeCursorTimestamp(
+        lastRecordCreatedAt,
+        cursor.timestamp,
+        { userId, resultId: lastRecordId, path: "results-sync-final" },
+      );
+      await setSyncCursor(safeCursorTimestamp, userId, lastRecordId);
 
       if (remoteResults.length < BATCH_SIZE) {
         hasMore = false;
