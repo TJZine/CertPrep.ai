@@ -5,7 +5,7 @@ import type { Result } from "@/types/result";
 
 import type { SyncState } from "@/types/sync";
 
-export const NIL_UUID = "00000000-0000-0000-0000-000000000000";
+import { NIL_UUID } from "@/lib/constants";
 
 // PRIVACY: Data is stored locally in IndexedDB via Dexie (Local-First).
 // Secure cloud sync (Supabase) is used for backup and cross-device synchronization only.

@@ -105,7 +105,8 @@ export default function AnalyticsPage(): React.ReactElement {
     !!user &&
     effectiveUserId &&
     !hasInitialSyncCompleted &&
-    results.length === 0;
+    results.length === 0 &&
+    isSyncing;
 
   if (isLoadingData || isWaitingForSync) {
     const loadingText = isSyncing

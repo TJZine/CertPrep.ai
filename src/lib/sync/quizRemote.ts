@@ -2,6 +2,7 @@ import { logger } from "@/lib/logger";
 import { createClient } from "@/lib/supabase/client";
 import type { RemoteQuizInput, RemoteQuizRow } from "./quizDomain";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { NIL_UUID } from "@/lib/constants";
 
 let supabaseInstance: SupabaseClient | undefined;
 
@@ -81,7 +82,7 @@ export async function upsertQuizzes(
 
   const { error } = await client
     .from("quizzes")
-    .upsert(payload, { onConflict: "user_id,id" });
+    .upsert(payload, { onConflict: "id" });
 
   if (error) {
     logger.error("Failed to upsert quizzes to Supabase", {
@@ -123,4 +124,3 @@ export async function softDeleteQuizzes(
 
   return { error };
 }
-const NIL_UUID = "00000000-0000-0000-0000-000000000000";

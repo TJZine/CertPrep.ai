@@ -6,6 +6,7 @@ import { GlobalErrorHandler } from "@/components/common/GlobalErrorHandler";
 import { ToastProvider } from "@/components/ui/Toast";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import { SentryInitializer } from "@/components/providers/SentryInitializer";
+import { SyncProvider } from "@/components/providers/SyncProvider";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { UpdateBanner } from "@/components/common/UpdateBanner";
 import { OfflineIndicator } from "@/components/common/OfflineIndicator";
@@ -22,11 +23,13 @@ export function AppProviders({
         <SentryInitializer />
         <ToastProvider>
           <AuthProvider>
-            <UpdateBanner />
-            {children}
-            <OfflineIndicator />
-            <InstallPrompt />
-            <SpeedInsights />
+            <SyncProvider>
+              <UpdateBanner />
+              {children}
+              <OfflineIndicator />
+              <InstallPrompt />
+              <SpeedInsights />
+            </SyncProvider>
           </AuthProvider>
         </ToastProvider>
       </GlobalErrorHandler>

@@ -1,5 +1,6 @@
 import { Dexie } from "dexie";
-import { db, NIL_UUID } from "./index";
+import { db } from "./index";
+import { NIL_UUID } from "@/lib/constants";
 import { sanitizeQuestionText } from "@/lib/sanitize";
 import { calculatePercentage, generateUUID, hashAnswer } from "@/lib/utils";
 import type { Question, Quiz } from "@/types/quiz";

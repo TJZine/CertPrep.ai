@@ -1,4 +1,5 @@
-import { db, NIL_UUID } from "./index";
+import { db } from "./index";
+import { NIL_UUID } from "@/lib/constants";
 
 export interface SyncCursor {
   timestamp: string;

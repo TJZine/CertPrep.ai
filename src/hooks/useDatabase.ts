@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
-import { db, initializeDatabase, NIL_UUID } from "@/db";
+import { db, initializeDatabase } from "@/db";
+import { NIL_UUID } from "@/lib/constants";
 import type { Quiz } from "@/types/quiz";
 import type { Result } from "@/types/result";
 import type { QuizStats } from "@/db/quizzes";
@@ -87,6 +88,7 @@ export function useQuizzes(userId: string | undefined): UseQuizzesResponse {
     return await db.quizzes
       .where("user_id")
       .anyOf([userId, NIL_UUID])
+      .filter((quiz) => quiz.deleted_at === null || quiz.deleted_at === undefined)
       .sortBy("created_at");
   }, [userId]);
 
@@ -108,6 +110,8 @@ export function useQuiz(
     const found = await db.quizzes.get(id);
     if (!found) return null;
     // Allow access if user owns it OR it is a public/system quiz
+    // AND it is not deleted
+    if (found.deleted_at) return null;
     return found.user_id === userId || found.user_id === NIL_UUID
       ? found
       : null;
@@ -130,7 +134,7 @@ export function useQuizWithStats(
       return { quiz: undefined, stats: null };
     }
     const quiz = await db.quizzes.get(id);
-    if (!quiz) {
+    if (!quiz || quiz.deleted_at) {
       return { quiz: undefined, stats: null };
     }
     // Allow access if user owns it OR it is a public/system quiz
@@ -155,7 +159,11 @@ export function useResults(userId: string | undefined): UseResultsResponse {
   const results = useLiveQuery(
     () =>
       userId
-        ? db.results.where("user_id").equals(userId).sortBy("timestamp")
+        ? db.results
+            .where("user_id")
+            .equals(userId)
+            .filter((r) => !r.deleted_at)
+            .sortBy("timestamp")
         : [],
     [userId],
   );
@@ -175,7 +183,7 @@ export function useResult(
   const result = useLiveQuery(async () => {
     if (!id || !userId) return undefined;
     const found = await db.results.get(id);
-    if (!found) {
+    if (!found || found.deleted_at) {
       return null;
     }
     return found.user_id === userId ? found : null;
@@ -200,6 +208,7 @@ export function useQuizResults(
     const ordered = await db.results
       .where("[user_id+quiz_id]")
       .equals([userId, quizId])
+      .filter((r) => !r.deleted_at)
       .sortBy("timestamp");
     return ordered.reverse();
   }, [quizId, userId]);

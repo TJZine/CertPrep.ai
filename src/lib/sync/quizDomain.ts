@@ -123,7 +123,7 @@ export async function toRemoteQuiz(
   };
 }
 
-import { NIL_UUID } from "@/db";
+import { NIL_UUID } from "@/lib/constants";
 
 export async function toLocalQuiz(remote: RemoteQuizRow): Promise<Quiz> {
   return {

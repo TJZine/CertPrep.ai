@@ -67,6 +67,11 @@ export function useAnalyticsStats(
   useEffect(() => {
     let isMounted = true;
     const calculate = async (): Promise<void> => {
+      // Safety timeout to ensure we don't hang forever
+      const safetyTimeout = setTimeout(() => {
+        if (isMounted) setIsLoading(false);
+      }, 5000);
+
       try {
         // Force async execution to avoid "setState in effect" lint error
         await Promise.resolve();
@@ -210,6 +215,7 @@ export function useAnalyticsStats(
           });
         }
       } finally {
+        clearTimeout(safetyTimeout);
         if (isMounted) {
           setIsLoading(false);
         }

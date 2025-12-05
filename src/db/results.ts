@@ -1,4 +1,5 @@
-import { db, NIL_UUID } from "./index";
+import { db } from "./index";
+import { NIL_UUID } from "@/lib/constants";
 import { calculatePercentage, generateUUID } from "@/lib/utils";
 import type { CategoryPerformance, Result } from "@/types/result";
 import type { Quiz, QuizMode } from "@/types/quiz";

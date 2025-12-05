@@ -89,12 +89,16 @@ export function QuizCard({
   const extraTagCount = Math.max(quiz.tags.length - 3, 0);
   const extraTags = React.useMemo(() => quiz.tags.slice(3), [quiz.tags]);
 
-  const handleDelete = (): void => {
+  const handleDelete = (e: React.MouseEvent): void => {
+    e.preventDefault();
+    e.stopPropagation();
     setShowMenu(false);
     onDelete(quiz);
   };
 
-  const handleCopyLink = async (): Promise<void> => {
+  const handleCopyLink = async (e: React.MouseEvent): Promise<void> => {
+    e.preventDefault();
+    e.stopPropagation();
     setShowMenu(false);
     if (typeof window === "undefined" || !navigator.clipboard) {
       addToast("error", "Clipboard is unavailable in this environment.");

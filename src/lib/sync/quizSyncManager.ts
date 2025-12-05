@@ -1,6 +1,7 @@
 "use client";
 
-import { db, NIL_UUID } from "@/db";
+import { db } from "@/db";
+import { NIL_UUID } from "@/lib/constants";
 import {
   getQuizBackfillState,
   getQuizSyncCursor,

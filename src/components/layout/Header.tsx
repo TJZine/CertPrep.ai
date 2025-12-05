@@ -20,7 +20,7 @@ import { useAuth } from "@/components/providers/AuthProvider";
 import { Button, buttonVariants } from "@/components/ui/Button";
 import { Logo } from "@/components/common/Logo";
 import { useToast } from "@/components/ui/Toast";
-import { useSync } from "@/hooks/useSync";
+
 import { logger } from "@/lib/logger";
 
 const navigation = [
@@ -35,8 +35,7 @@ export function Header(): React.ReactElement {
   const { user, signOut } = useAuth();
   const { addToast } = useToast();
 
-  // Trigger background sync
-  useSync();
+
 
   React.useEffect(() => {
     logger.debug("Header: Auth state changed", { user: user?.email });
@@ -213,8 +212,7 @@ export function Header(): React.ReactElement {
 
       {/* Mobile Navigation Sheet */}
       <div
-        // @ts-expect-error inert is supported but not yet typed in React DOM
-        inert={!isMenuOpen ? "" : undefined}
+        inert={!isMenuOpen ? true : undefined}
         className={cn(
           "fixed inset-x-0 top-16 bottom-0 z-40 bg-white dark:bg-slate-950 md:hidden transition-transform duration-300 ease-in-out",
           isMenuOpen ? "translate-x-0" : "translate-x-full",
