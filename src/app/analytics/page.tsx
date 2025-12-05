@@ -51,27 +51,32 @@ export default function AnalyticsPage(): React.ReactElement {
     if (!isInitialized) return undefined;
 
     let isMounted = true;
-    const loadStats = async (): Promise<void> => {
-      try {
-        const stats = effectiveUserId
-          ? await getOverallStats(effectiveUserId)
-          : null;
-        if (isMounted) {
-          setOverallStats(stats);
-          setStatsError(null);
-        }
-      } catch (error) {
-        console.error("Failed to load overall stats", error);
-        if (isMounted) {
-          setStatsError("Unable to load overall stats right now.");
-        }
-      }
-    };
 
-    loadStats();
+    // Debounce the stats calculation to prevent UI freezing during rapid updates (e.g., syncing)
+    const timeoutId = setTimeout(() => {
+      const loadStats = async (): Promise<void> => {
+        try {
+          const stats = effectiveUserId
+            ? await getOverallStats(effectiveUserId)
+            : null;
+          if (isMounted) {
+            setOverallStats(stats);
+            setStatsError(null);
+          }
+        } catch (error) {
+          console.error("Failed to load overall stats", error);
+          if (isMounted) {
+            setStatsError("Unable to load overall stats right now.");
+          }
+        }
+      };
+
+      loadStats();
+    }, 500);
 
     return (): void => {
       isMounted = false;
+      clearTimeout(timeoutId);
     };
   }, [effectiveUserId, isInitialized, results]);
 
@@ -90,10 +95,8 @@ export default function AnalyticsPage(): React.ReactElement {
     isLoading: statsLoading,
   } = useAnalyticsStats(results, quizzes);
 
-  // Show loading while initializing database.
-  // If user is present, also wait for their data.
-  // If no user (effectiveUserId is null), we don't wait for resultsLoading/quizzesLoading
-  // as they might be technically "loading" (waiting for a user) but functionally empty.
+  // Show loading while initializing database or during hydration (effectiveUserId is null).
+  // Once hydrated (effectiveUserId assigned for guest or authenticated user), wait for data to load.
   const isLoadingData =
     !isInitialized ||
     (effectiveUserId && (resultsLoading || quizzesLoading || statsLoading));

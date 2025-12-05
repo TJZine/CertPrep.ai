@@ -10,6 +10,8 @@ import Link from "next/link";
 import { useToast } from "@/components/ui/Toast";
 import HCaptcha from "@hcaptcha/react-hcaptcha";
 
+const HCAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY;
+
 export default function LoginForm(): React.ReactElement {
   const supabase = useMemo(() => createClient(), []);
   const [email, setEmail] = useState("");
@@ -41,7 +43,7 @@ export default function LoginForm(): React.ReactElement {
     setError(null);
 
     // Only validate captcha if the key is present
-    if (process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY && !captchaToken) {
+    if (HCAPTCHA_SITE_KEY && !captchaToken) {
       setError("Please complete the captcha");
       setLoading(false);
       return;
@@ -127,10 +129,10 @@ export default function LoginForm(): React.ReactElement {
         </div>
 
         <div className="flex justify-center">
-          {process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY ? (
+          {HCAPTCHA_SITE_KEY ? (
             <HCaptcha
               ref={captchaRef}
-              sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY}
+              sitekey={HCAPTCHA_SITE_KEY}
               onVerify={(token) => setCaptchaToken(token)}
               onExpire={() => setCaptchaToken(null)}
             />
