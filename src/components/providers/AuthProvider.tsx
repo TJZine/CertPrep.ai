@@ -5,7 +5,6 @@ import {
   useContext,
   useEffect,
   useState,
-  useRef,
   useMemo,
 } from "react";
 import {
@@ -32,15 +31,18 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 type SignOutDependencies = {
   supabase: SupabaseClient | undefined;
-  router: ReturnType<typeof useRouter>;
   onResetAuthState: () => void;
   clearDb: () => Promise<void>;
   userId?: string;
 };
 
+/**
+ * Signs out the user, optionally syncing data and clearing local storage.
+ * @returns An object with success (true if sign-out completed) and error (set if local cleanup failed).
+ * Note: success can be true even with an error if sign-out succeeded but cleanup failed.
+ */
 export async function performSignOut({
   supabase,
-  router,
   onResetAuthState,
   clearDb,
   userId,
@@ -79,7 +81,7 @@ export async function performSignOut({
   try {
     await supabase.auth.signOut();
     onResetAuthState();
-    router.push("/login");
+    // Navigation is handled by the onAuthStateChange listener to support cross-tab signouts
     return { success: true, error: dbClearError };
   } catch (error) {
     console.error("Error signing out:", error);
@@ -97,13 +99,7 @@ export function AuthProvider({
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
-  const supabaseRef = useRef<SupabaseClient | undefined>(undefined);
-  const supabase = useMemo(() => {
-    if (!supabaseRef.current) {
-      supabaseRef.current = createClient();
-    }
-    return supabaseRef.current;
-  }, []);
+  const supabase = useMemo(() => createClient(), []);
 
   useEffect((): (() => void) => {
     let isMounted = true;
@@ -142,7 +138,7 @@ export function AuthProvider({
         setUser(session?.user ?? null);
         setIsLoading(false);
         if (_event === "SIGNED_OUT") {
-          router.refresh();
+          router.push("/login");
         }
       },
     );
@@ -158,7 +154,6 @@ export function AuthProvider({
   const signOut = async (): Promise<{ success: boolean; error?: string }> =>
     performSignOut({
       supabase,
-      router,
       clearDb: clearDatabase,
       onResetAuthState: () => {
         setUser(null);
