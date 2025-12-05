@@ -14,19 +14,19 @@ alter table profiles enable row level security;
 
 create policy "Users can view their own profile."
   on profiles for select
-  using ( auth.uid() = id );
+  using ( (SELECT auth.uid()) = id );
 
 create policy "Users can insert their own profile."
   on profiles for insert
-  with check ( auth.uid() = id );
+  with check ( (SELECT auth.uid()) = id );
 
 create policy "Users can update their own profile."
   on profiles for update
-  using ( auth.uid() = id );
+  using ( (SELECT auth.uid()) = id );
 
 create policy "Users can delete their own profile."
   on profiles for delete
-  using ( auth.uid() = id );
+  using ( (SELECT auth.uid()) = id );
 
 -- TABLE: quizzes
 create table if not exists quizzes (
@@ -47,19 +47,19 @@ alter table quizzes enable row level security;
 
 create policy "Users can view their own quizzes."
   on quizzes for select
-  using ( auth.uid() = user_id );
+  using ( (SELECT auth.uid()) = user_id );
 
 create policy "Users can insert their own quizzes."
   on quizzes for insert
-  with check ( auth.uid() = user_id );
+  with check ( (SELECT auth.uid()) = user_id );
 
 create policy "Users can update their own quizzes."
   on quizzes for update
-  using ( auth.uid() = user_id );
+  using ( (SELECT auth.uid()) = user_id );
 
 create policy "Users can delete their own quizzes."
   on quizzes for delete
-  using ( auth.uid() = user_id );
+  using ( (SELECT auth.uid()) = user_id );
 
 -- TABLE: results
 create table if not exists results (
@@ -78,22 +78,22 @@ create table if not exists results (
 
 alter table results enable row level security;
 
-create policy "Users can view their own results."
+create policy "Users can view own results"
   on results for select
-  using ( auth.uid() = user_id );
+  using ( (SELECT auth.uid()) = user_id );
 
-create policy "Users can insert their own results."
+create policy "Users can insert own results"
   on results for insert
-  with check ( auth.uid() = user_id );
+  with check ( (SELECT auth.uid()) = user_id );
 
 -- Results are immutable historical records, EXCEPT for sync idempotency (upserts)
-create policy "Users can update their own results."
+create policy "Users can update own results"
   on results for update
-  using ( auth.uid() = user_id );
+  using ( (SELECT auth.uid()) = user_id );
 
-create policy "Users can delete their own results."
+create policy "Users can delete own results"
   on results for delete
-  using ( auth.uid() = user_id );
+  using ( (SELECT auth.uid()) = user_id );
 
 -- Trigger to automatically create a profile when a new user signs up
 -- (This is a common Supabase pattern)
