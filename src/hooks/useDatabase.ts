@@ -85,11 +85,15 @@ export function useInitializeDatabase(): InitializationState {
 export function useQuizzes(userId: string | undefined): UseQuizzesResponse {
   const quizzes = useLiveQuery(async () => {
     if (!userId) return [];
-    return await db.quizzes
+    // Only query for the user's own quizzes. 
+    // NIL_UUID (orphaned/system data) should not be mixed into the personal library.
+    const results = await db.quizzes
       .where("user_id")
-      .anyOf([userId, NIL_UUID])
+      .equals(userId)
       .filter((quiz) => quiz.deleted_at === null || quiz.deleted_at === undefined)
       .sortBy("created_at");
+
+    return results;
   }, [userId]);
 
   return {

@@ -5,7 +5,7 @@ import { ThemeProvider } from "@/components/common/ThemeProvider";
 import { GlobalErrorHandler } from "@/components/common/GlobalErrorHandler";
 import { ToastProvider } from "@/components/ui/Toast";
 import { AuthProvider } from "@/components/providers/AuthProvider";
-import { SentryInitializer } from "@/components/providers/SentryInitializer";
+import "@/../sentry.client.config";
 import { SyncProvider } from "@/components/providers/SyncProvider";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { UpdateBanner } from "@/components/common/UpdateBanner";
@@ -20,7 +20,6 @@ export function AppProviders({
   return (
     <ThemeProvider>
       <GlobalErrorHandler>
-        <SentryInitializer />
         <ToastProvider>
           <AuthProvider>
             <SyncProvider>

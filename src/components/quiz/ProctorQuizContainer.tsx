@@ -171,9 +171,10 @@ export function ProctorQuizContainer({
         timeTakenSeconds: durationMinutes * 60 - timeRemaining,
       });
       hasSavedResultRef.current = true;
-      void sync().catch((syncError) =>
-        console.error("Failed to sync results after submit:", syncError),
-      );
+      const syncResult = await sync();
+      if (!syncResult.success) {
+        console.error("Failed to sync results after submit:", syncResult.error);
+      }
       addToast("success", "Exam submitted successfully!");
       router.push(`/results/${result.id}`);
     } catch (error) {
@@ -209,9 +210,13 @@ export function ProctorQuizContainer({
       });
       hasSavedResultRef.current = true;
       setAutoResultId(result.id);
-      void sync().catch((syncError) =>
-        console.error("Failed to sync results after auto-submit:", syncError),
-      );
+      const syncResult = await sync();
+      if (!syncResult.success) {
+        console.error(
+          "Failed to sync results after auto-submit:",
+          syncResult.error,
+        );
+      }
       setShowTimeUpModal(true);
       return result.id;
     } catch (error) {

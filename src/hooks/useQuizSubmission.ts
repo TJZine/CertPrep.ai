@@ -76,9 +76,10 @@ export function useQuizSubmission({
         });
 
         // Attempt background sync
-        sync().catch((err) => {
-          console.warn("Background sync failed:", err);
-        });
+        const syncResult = await sync();
+        if (!syncResult.success) {
+          console.warn("Background sync failed:", syncResult.error);
+        }
 
         if (!isMountedRef.current) return;
 

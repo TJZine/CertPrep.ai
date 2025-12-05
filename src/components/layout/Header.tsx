@@ -37,9 +37,7 @@ export function Header(): React.ReactElement {
 
 
 
-  React.useEffect(() => {
-    logger.debug("Header: Auth state changed", { user: user?.email });
-  }, [user]);
+
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const [scrolled, setScrolled] = React.useState(false);
   const handleCloseMenu = React.useCallback(
@@ -95,7 +93,8 @@ export function Header(): React.ReactElement {
         );
         return;
       }
-    } catch {
+    } catch (error) {
+      logger.error("Sign out failed", error);
       addToast("error", "Failed to sign out. Please try again.");
     } finally {
       setIsSigningOut(false);

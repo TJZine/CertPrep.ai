@@ -99,7 +99,9 @@ export default function AnalyticsPage(): React.ReactElement {
   // Once hydrated (effectiveUserId assigned for guest or authenticated user), wait for data to load.
   const isLoadingData =
     !isInitialized ||
-    (effectiveUserId && (resultsLoading || quizzesLoading || statsLoading));
+    effectiveUserId === null ||
+    (Boolean(effectiveUserId) &&
+      (resultsLoading || quizzesLoading || statsLoading));
 
   const isWaitingForSync =
     !!user &&
@@ -107,17 +109,6 @@ export default function AnalyticsPage(): React.ReactElement {
     !hasInitialSyncCompleted &&
     results.length === 0 &&
     isSyncing;
-
-  if (isLoadingData || isWaitingForSync) {
-    const loadingText = isSyncing
-      ? "Syncing your data..."
-      : "Loading analytics...";
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <LoadingSpinner size="lg" text={loadingText} />
-      </div>
-    );
-  }
 
   if (dbError) {
     return (
@@ -137,6 +128,17 @@ export default function AnalyticsPage(): React.ReactElement {
             Back to Dashboard
           </Button>
         </div>
+      </div>
+    );
+  }
+
+  if (isLoadingData || isWaitingForSync) {
+    const loadingText = isSyncing
+      ? "Syncing your data..."
+      : "Loading analytics...";
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <LoadingSpinner size="lg" text={loadingText} />
       </div>
     );
   }
