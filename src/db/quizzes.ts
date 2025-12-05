@@ -1,5 +1,5 @@
 import { Dexie } from "dexie";
-import { db } from "./index";
+import { db, NIL_UUID } from "./index";
 import { sanitizeQuestionText } from "@/lib/sanitize";
 import { calculatePercentage, generateUUID, hashAnswer } from "@/lib/utils";
 import type { Question, Quiz } from "@/types/quiz";
@@ -323,7 +323,7 @@ export async function deleteQuiz(id: string, userId: string): Promise<void> {
     if (!existing) {
       throw new Error("Quiz not found.");
     }
-    if (existing.user_id !== userId) {
+    if (existing.user_id !== userId && existing.user_id !== NIL_UUID) {
       throw new Error("Unauthorized quiz delete.");
     }
     const deletedAt = Date.now();
@@ -342,7 +342,7 @@ export async function undeleteQuiz(id: string, userId: string): Promise<void> {
     if (!existing) {
       throw new Error("Quiz not found.");
     }
-    if (existing.user_id !== userId) {
+    if (existing.user_id !== userId && existing.user_id !== NIL_UUID) {
       throw new Error("Unauthorized quiz restore.");
     }
     const updatedAt = Date.now();
@@ -426,7 +426,7 @@ export async function updateQuestionNotes(
     if (!quiz) {
       throw new Error("Quiz not found.");
     }
-    if (quiz.user_id !== userId) {
+    if (quiz.user_id !== userId && quiz.user_id !== NIL_UUID) {
       throw new Error("Unauthorized quiz update.");
     }
 

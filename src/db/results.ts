@@ -1,4 +1,4 @@
-import { db } from "./index";
+import { db, NIL_UUID } from "./index";
 import { calculatePercentage, generateUUID } from "@/lib/utils";
 import type { CategoryPerformance, Result } from "@/types/result";
 import type { Quiz, QuizMode } from "@/types/quiz";
@@ -81,7 +81,8 @@ export async function createResult(input: CreateResultInput): Promise<Result> {
     throw new Error("Quiz not found.");
   }
 
-  if (quiz.user_id !== input.userId) {
+  // Allow taking a quiz if the user owns it OR if it's a System/Public quiz
+  if (quiz.user_id !== input.userId && quiz.user_id !== NIL_UUID) {
     throw new Error(
       "Security mismatch: Quiz does not belong to the current user.",
     );

@@ -39,7 +39,7 @@ export async function fetchUserQuizzes({
     .select(
       "id, user_id, title, description, tags, version, questions, quiz_hash, created_at, updated_at, deleted_at",
     )
-    .eq("user_id", userId)
+    .in("user_id", [userId, NIL_UUID])
     .order("updated_at", { ascending: true })
     .order("id", { ascending: true })
     .limit(limit);
