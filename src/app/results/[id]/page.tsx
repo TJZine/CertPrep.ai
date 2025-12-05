@@ -12,7 +12,9 @@ import {
   useQuizResults,
   useInitializeDatabase,
 } from "@/hooks/useDatabase";
-import { ArrowLeft, AlertCircle } from "lucide-react";
+import { deleteResult } from "@/db/results";
+import { useToast } from "@/components/ui/Toast";
+import { ArrowLeft, AlertCircle, Trash2 } from "lucide-react";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 import { useSync } from "@/hooks/useSync";
@@ -25,10 +27,11 @@ import { logger } from "@/lib/logger";
 export default function ResultsPage(): React.ReactElement {
   const params = useParams();
   const router = useRouter();
+  const { addToast } = useToast();
   const resultId = params.id as string;
   const { user } = useAuth();
   const effectiveUserId = useEffectiveUserId(user?.id);
-  const { isSyncing, hasInitialSyncCompleted } = useSync();
+  const { isSyncing, hasInitialSyncCompleted, sync } = useSync();
 
   const { isInitialized, error: dbError } = useInitializeDatabase();
   const { result, isLoading: resultLoading } = useResult(
@@ -47,6 +50,26 @@ export default function ResultsPage(): React.ReactElement {
   );
   const [isRestoringQuiz, setIsRestoringQuiz] = React.useState(false);
   const [restoreAttempted, setRestoreAttempted] = React.useState(false);
+  const [isDeleting, setIsDeleting] = React.useState(false);
+
+  const handleDeleteResult = async (): Promise<void> => {
+    if (!effectiveUserId || !result) return;
+    if (!confirm("Are you sure you want to delete this result?")) return;
+
+    setIsDeleting(true);
+    try {
+      await deleteResult(result.id, effectiveUserId);
+      // Trigger sync to push deletion
+      await sync();
+      addToast("success", "Result deleted successfully");
+      router.push("/");
+    } catch (error) {
+      logger.error("Failed to delete result", error);
+      addToast("error", "Failed to delete result");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const previousScore = React.useMemo(() => {
     if (!allQuizResults || allQuizResults.length < 2 || !result) {
@@ -214,13 +237,22 @@ export default function ResultsPage(): React.ReactElement {
               </span>
             </p>
           </div>
-          <Button
-            className="mt-6"
-            onClick={() => router.push("/")}
-            leftIcon={<ArrowLeft className="h-4 w-4" aria-hidden="true" />}
-          >
-            Back to Dashboard
-          </Button>
+          <div className="mt-6 flex justify-center gap-4">
+            <Button
+              onClick={() => router.push("/")}
+              leftIcon={<ArrowLeft className="h-4 w-4" aria-hidden="true" />}
+            >
+              Back to Dashboard
+            </Button>
+            <Button
+              variant="danger"
+              onClick={handleDeleteResult}
+              isLoading={isDeleting}
+              leftIcon={<Trash2 className="h-4 w-4" aria-hidden="true" />}
+            >
+              Delete Result
+            </Button>
+          </div>
         </div>
       </div>
     );

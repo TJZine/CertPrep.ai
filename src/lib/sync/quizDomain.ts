@@ -123,10 +123,12 @@ export async function toRemoteQuiz(
   };
 }
 
+import { NIL_UUID } from "@/db";
+
 export async function toLocalQuiz(remote: RemoteQuizRow): Promise<Quiz> {
   return {
     id: remote.id,
-    user_id: remote.user_id,
+    user_id: remote.user_id ?? NIL_UUID,
     title: remote.title,
     description: remote.description ?? "",
     tags: remote.tags ?? [],
