@@ -90,7 +90,7 @@ export function useQuizzes(userId: string | undefined): UseQuizzesResponse {
     const results = await db.quizzes
       .where("user_id")
       .equals(userId)
-      .filter((quiz) => quiz.deleted_at === null || quiz.deleted_at === undefined)
+      .filter((quiz) => !quiz.deleted_at)
       .sortBy("created_at");
 
     return results;

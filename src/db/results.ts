@@ -254,13 +254,17 @@ export async function getMissedQuestions(
  * Aggregates global statistics across all quizzes and results.
  */
 export async function getOverallStats(userId: string): Promise<OverallStats> {
-  const [quizzes, allResults] = await Promise.all([
+  const [allQuizzes, allResults] = await Promise.all([
     db.quizzes.where("user_id").equals(userId).toArray(),
     db.results.where("user_id").equals(userId).toArray(),
   ]);
 
   // Filter out deleted results manually since we used toArray()
   const results = allResults.filter((r) => !r.deleted_at);
+  const quizzes = allQuizzes.filter((q) => !q.deleted_at);
+
+
+
   const quizMap = new Map(quizzes.map((quiz) => [quiz.id, quiz]));
 
   const totalQuizzes = quizzes.length;
