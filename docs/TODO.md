@@ -91,3 +91,36 @@ Revisit this issue when any of the following occur:
 - [ ] Next.js 17+ ships with improved CSP handling in dev mode
 - [ ] Security audit requires CSP validation in E2E tests
 - [ ] Test suite grows beyond 50 E2E tests (higher confidence needed)
+
+---
+
+## Feature: Storage Maintenance / Garbage Collection
+
+**Priority**: Low | **Effort**: 2-4 hours | **Category**: Data Management
+
+### Context & Reasoning
+
+The application uses an "offline-first" architecture with **soft deletes** (tombstones). When a user deletes a quiz or result, it is marked with `deleted_at: timestamp` rather than being removed from IndexedDB.
+
+**Why?**
+This is critical for synchronization. If a record were hard-deleted immediately, other devices (or the server) would not know to delete their copies during the next sync, leading to "Zombie Data" (deleted items reappearing).
+
+### Problem
+
+Over years of usage, these tombstones could theoretically accumulate. While the storage impact is negligible (text data is tiny), users may want a way to "fresh start" or clean up old data on specific devices.
+
+### Proposed Solution: Manual Maintenance
+
+Instead of risky automated background garbage collection (which could accidentally purge tombstones before they sync), we should implement a **Manual Maintenance** feature.
+
+**UI Location**: Settings > Storage > "Clear Deleted Data"
+
+**Logic**:
+
+1. Check if all pending changes have been successfully synced to the server.
+2. If synced, safe to hard-delete local records where `deleted_at IS NOT NULL`.
+3. If not synced, warn the user that unsynced deletions might reappear.
+
+### Why not automated GC?
+
+Automated GC requires complex logic to know "has every other device seen this deletion?" which is impossible in a peer-to-peer or disconnected environment. Manual cleanup puts the decision in the user's hands and is significantly safer.

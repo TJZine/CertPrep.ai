@@ -18,8 +18,8 @@ export function AppProviders({
   children: React.ReactNode;
 }): React.ReactElement {
   return (
-    <ThemeProvider>
-      <GlobalErrorHandler>
+    <GlobalErrorHandler>
+      <ThemeProvider>
         <ToastProvider>
           <AuthProvider>
             <SyncProvider>
@@ -31,7 +31,7 @@ export function AppProviders({
             </SyncProvider>
           </AuthProvider>
         </ToastProvider>
-      </GlobalErrorHandler>
-    </ThemeProvider>
+      </ThemeProvider>
+    </GlobalErrorHandler>
   );
 }

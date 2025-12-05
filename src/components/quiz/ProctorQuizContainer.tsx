@@ -180,6 +180,7 @@ export function ProctorQuizContainer({
     } catch (error) {
       console.error("Failed to submit exam:", error);
       addToast("error", "Failed to submit exam. Please try again.");
+    } finally {
       setIsSubmitting(false);
     }
   };

@@ -98,7 +98,17 @@ export function SyncProvider({
 
     const runInitialSync = async (): Promise<void> => {
       try {
-        await sync();
+        const result = await sync();
+
+        if (isMounted && !result.success) {
+          const err =
+            result.error instanceof Error
+              ? result.error
+              : new Error(
+                  result.error ? String(result.error) : "Initial sync failed",
+                );
+          setInitialSyncError(err);
+        }
       } catch (error) {
         console.error("Initial sync failed:", error);
         if (isMounted) {

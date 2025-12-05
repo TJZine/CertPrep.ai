@@ -30,6 +30,12 @@ const navigation = [
   { name: "Settings", href: "/settings", icon: SettingsIcon, public: false },
 ];
 
+function isRouteActive(pathname: string, href: string): boolean {
+  return (
+    pathname === href || (href !== "/" && pathname.startsWith(href + "/"))
+  );
+}
+
 export function Header(): React.ReactElement {
   const pathname = usePathname();
   const { user, signOut } = useAuth();
@@ -53,7 +59,7 @@ export function Header(): React.ReactElement {
     };
 
     handleScroll(); // initialize on mount
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
 
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -87,6 +93,7 @@ export function Header(): React.ReactElement {
     try {
       const result = await signOut();
       if (!result.success) {
+        logger.warn("Sign out returned unsuccessful result", result);
         addToast(
           "error",
           result.error ?? "Failed to sign out. Please try again.",
@@ -124,9 +131,7 @@ export function Header(): React.ReactElement {
             // Show if public OR if user is authenticated
             if (!item.public && !user) return null;
 
-            const isActive =
-              pathname === item.href ||
-              (item.href !== "/" && pathname.startsWith(item.href + "/"));
+            const isActive = isRouteActive(pathname, item.href);
             return (
               <Link
                 key={item.href}
@@ -198,6 +203,7 @@ export function Header(): React.ReactElement {
             className="inline-flex h-10 w-10 items-center justify-center rounded-md text-slate-700 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 dark:text-slate-200 dark:hover:bg-slate-800"
             onClick={(): void => setIsMenuOpen((prev) => !prev)}
             aria-expanded={isMenuOpen}
+            aria-controls="mobile-nav"
             aria-label="Toggle menu"
           >
             {isMenuOpen ? (
@@ -217,15 +223,14 @@ export function Header(): React.ReactElement {
           isMenuOpen ? "translate-x-0" : "translate-x-full",
         )}
         aria-hidden={!isMenuOpen}
+        id="mobile-nav"
       >
         <div className="flex flex-col h-full overflow-y-auto p-6 space-y-6">
           <nav className="flex flex-col space-y-2">
             {navigation.map((item) => {
               if (!item.public && !user) return null;
 
-              const isActive =
-                pathname === item.href ||
-                (item.href !== "/" && pathname.startsWith(item.href + "/"));
+              const isActive = isRouteActive(pathname, item.href);
               const Icon = item.icon;
               return (
                 <Link
