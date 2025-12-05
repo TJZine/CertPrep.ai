@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
-import { db, initializeDatabase } from "@/db";
+import { db, initializeDatabase, NIL_UUID } from "@/db";
 import type { Quiz } from "@/types/quiz";
 import type { Result } from "@/types/result";
 import type { QuizStats } from "@/db/quizzes";
@@ -79,16 +79,17 @@ export function useInitializeDatabase(): InitializationState {
 }
 
 /**
- * Retrieves all quizzes with live updates.
+ * Retrieves all quizzes (user-owned and public) with live updates.
  */
 export function useQuizzes(userId: string | undefined): UseQuizzesResponse {
-  const quizzes = useLiveQuery(
-    () =>
-      userId
-        ? db.quizzes.where("user_id").equals(userId).sortBy("created_at")
-        : [],
-    [userId],
-  );
+  const quizzes = useLiveQuery(async () => {
+    if (!userId) return [];
+    return await db.quizzes
+      .where("user_id")
+      .anyOf([userId, NIL_UUID])
+      .sortBy("created_at");
+  }, [userId]);
+
   return {
     quizzes: quizzes ? quizzes.reverse() : [],
     isLoading: !userId ? true : quizzes === undefined,
@@ -96,7 +97,7 @@ export function useQuizzes(userId: string | undefined): UseQuizzesResponse {
 }
 
 /**
- * Retrieves a single quiz with live updates.
+ * Retrieves a single quiz with live updates (user-owned or public).
  */
 export function useQuiz(
   id: string | undefined,
@@ -106,7 +107,10 @@ export function useQuiz(
     if (!id || !userId) return undefined;
     const found = await db.quizzes.get(id);
     if (!found) return null;
-    return found.user_id === userId ? found : null;
+    // Allow access if user owns it OR it is a public/system quiz
+    return found.user_id === userId || found.user_id === NIL_UUID
+      ? found
+      : null;
   }, [id, userId]);
   return {
     quiz: id && userId && quiz ? quiz : undefined,
@@ -129,7 +133,8 @@ export function useQuizWithStats(
     if (!quiz) {
       return { quiz: undefined, stats: null };
     }
-    if (quiz.user_id !== userId) {
+    // Allow access if user owns it OR it is a public/system quiz
+    if (quiz.user_id !== userId && quiz.user_id !== NIL_UUID) {
       return { quiz: undefined, stats: null };
     }
     const stats = await getQuizStats(id, userId);
