@@ -119,7 +119,7 @@ export async function getResultById(
   userId: string,
 ): Promise<Result | undefined> {
   const result = await db.results.get(id);
-  if (result?.user_id !== userId) return undefined;
+  if (result?.user_id !== userId || result?.deleted_at) return undefined;
   return result;
 }
 
@@ -133,6 +133,7 @@ export async function getResultsByQuizId(
   const results = await db.results
     .where("[user_id+quiz_id]")
     .equals([userId, quizId])
+    .filter((r) => !r.deleted_at)
     .sortBy("timestamp");
   return results.reverse();
 }
@@ -144,12 +145,14 @@ export async function getAllResults(userId: string): Promise<Result[]> {
   const results = await db.results
     .where("user_id")
     .equals(userId)
+    .filter((r) => !r.deleted_at)
     .sortBy("timestamp");
   return results.reverse();
 }
 
 /**
  * Deletes a result by its identifier, scoped to the current user.
+ * Performs a soft delete locally to allow sync to propagate the deletion.
  */
 export async function deleteResult(id: string, userId: string): Promise<void> {
   const result = await db.results.get(id);
@@ -157,7 +160,11 @@ export async function deleteResult(id: string, userId: string): Promise<void> {
     throw new Error("Result not found for this user.");
   }
 
-  await db.results.delete(id);
+  // Soft delete: Mark as deleted and reset synced status so sync worker picks it up
+  await db.results.update(id, {
+    deleted_at: Date.now(),
+    synced: 0,
+  });
 }
 
 /**
@@ -173,7 +180,7 @@ export async function getCategoryPerformance(
     throw new Error("Quiz not found.");
   }
 
-  const results = await getResultsByQuizId(quizId, userId);
+  const results = await getResultsByQuizId(quizId, userId); // Uses filtered getter
   const totals: Record<string, { correct: number; total: number }> = {};
 
   const allResultsData = await Promise.all(
@@ -216,7 +223,7 @@ export async function getMissedQuestions(
   userId: string,
 ): Promise<string[]> {
   const result = await db.results.get(resultId);
-  if (!result) {
+  if (!result || result.deleted_at) {
     throw new Error("Result not found.");
   }
   if (result.user_id !== userId) {
@@ -246,10 +253,13 @@ export async function getMissedQuestions(
  * Aggregates global statistics across all quizzes and results.
  */
 export async function getOverallStats(userId: string): Promise<OverallStats> {
-  const [quizzes, results] = await Promise.all([
+  const [quizzes, allResults] = await Promise.all([
     db.quizzes.where("user_id").equals(userId).toArray(),
     db.results.where("user_id").equals(userId).toArray(),
   ]);
+
+  // Filter out deleted results manually since we used toArray()
+  const results = allResults.filter((r) => !r.deleted_at);
   const quizMap = new Map(quizzes.map((quiz) => [quiz.id, quiz]));
 
   const totalQuizzes = quizzes.length;

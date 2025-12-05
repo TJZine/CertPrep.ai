@@ -18,6 +18,8 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { clearDatabase } from "@/db";
 import { requestServiceWorkerCacheClear } from "@/lib/serviceWorkerClient";
+import { syncQuizzes } from "@/lib/sync/quizSyncManager";
+import { syncResults } from "@/lib/sync/syncManager";
 
 type AuthContextType = {
   user: User | null;
@@ -33,6 +35,7 @@ type SignOutDependencies = {
   router: ReturnType<typeof useRouter>;
   onResetAuthState: () => void;
   clearDb: () => Promise<void>;
+  userId?: string;
 };
 
 export async function performSignOut({
@@ -40,8 +43,27 @@ export async function performSignOut({
   router,
   onResetAuthState,
   clearDb,
+  userId,
 }: SignOutDependencies): Promise<{ success: boolean; error?: string }> {
   let dbClearError: string | undefined;
+
+  // Attempt to flush local changes to server before clearing DB
+  if (userId) {
+    try {
+      // We give the sync 3 seconds to finish. If it takes longer, we proceed anyway
+      // to avoid trapping the user in a "signing out..." limbo.
+      const syncPromise = Promise.allSettled([
+        syncQuizzes(userId),
+        syncResults(userId),
+      ]);
+      const timeoutPromise = new Promise((resolve) => setTimeout(resolve, 3000));
+      await Promise.race([syncPromise, timeoutPromise]);
+    } catch (error) {
+      console.warn("Pre-logout sync failed or timed out:", error);
+      // We intentionally ignore errors here to ensure signOut proceeds
+    }
+  }
+
   try {
     void requestServiceWorkerCacheClear();
     await clearDb();
@@ -142,6 +164,7 @@ export function AuthProvider({
         setUser(null);
         setSession(null);
       },
+      userId: user?.id,
     });
 
   const value = {

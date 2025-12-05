@@ -142,54 +142,92 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
         }
 
         const batch = unsyncedResults.slice(i, i + BATCH_SIZE);
+        const toDelete = batch.filter((r) => r.deleted_at);
+        const toUpsert = batch.filter((r) => !r.deleted_at);
 
-        const { error } = await client.from("results").upsert(
-          batch.map((r) => ({
-            id: r.id,
-            user_id: userId,
-            quiz_id: r.quiz_id,
-            timestamp: r.timestamp,
-            mode: r.mode,
-            score: r.score,
-            time_taken_seconds: r.time_taken_seconds,
-            answers: r.answers,
-            flagged_questions: r.flagged_questions,
-            category_breakdown: r.category_breakdown,
-          })),
-          { onConflict: "id" },
-        );
+        // Handle Deletions
+        if (toDelete.length > 0) {
+          const deleteIds = toDelete.map((r) => r.id);
+          const { error: deleteError } = await client
+            .from("results")
+            .delete()
+            .in("id", deleteIds);
 
-        if (error) {
-          logger.error("Failed to push results batch to Supabase:", error);
-          incomplete = true;
-          lastError = toErrorMessage(error);
-
-          // Circuit Breaker: Stop syncing if we hit critical errors
-          // Check for standard PostgREST codes or HTTP status codes if available
-          const code = error.code;
-          const status = (error as unknown as { status?: number }).status; // Supabase error object often contains status
-
-          if (
-            code === "PGRST301" || // JWT expired or RLS violation
-            code === "429" || // Rate limit (if passed as code)
-            code === "401" || // Unauthorized (if passed as code)
-            status === 429 || // Rate limit (HTTP status)
-            status === 401 || // Unauthorized (HTTP status)
-            status === 500 || // Internal Server Error
-            status === 503 // Service Unavailable
-          ) {
-            logger.error(
-              `Critical sync error detected (${code || status}). Aborting push to prevent API hammering.`,
-            );
-            break;
+          if (deleteError) {
+            logger.error("Failed to sync deletions to Supabase:", deleteError);
+            incomplete = true;
+            lastError = toErrorMessage(deleteError);
+            // Check for critical errors (same as upsert)
+            const code = deleteError.code;
+            const status = (deleteError as unknown as { status?: number })
+              .status;
+            if (
+              code === "PGRST301" ||
+              code === "429" ||
+              code === "401" ||
+              status === 429 ||
+              status === 401 ||
+              status === 500 ||
+              status === 503
+            ) {
+              break;
+            }
+          } else {
+            // Successful remote delete -> remove local tombstone
+            await db.results.bulkDelete(deleteIds);
+            pushed += toDelete.length;
           }
-          // Continue to next batch instead of failing completely for non-critical errors
-        } else {
-          // Mark as synced locally
-          await db.results.bulkUpdate(
-            batch.map((r) => ({ key: r.id, changes: { synced: 1 } })),
+        }
+
+        // Handle Upserts
+        if (toUpsert.length > 0) {
+          const { error } = await client.from("results").upsert(
+            toUpsert.map((r) => ({
+              id: r.id,
+              user_id: userId,
+              quiz_id: r.quiz_id,
+              timestamp: r.timestamp,
+              mode: r.mode,
+              score: r.score,
+              time_taken_seconds: r.time_taken_seconds,
+              answers: r.answers,
+              flagged_questions: r.flagged_questions,
+              category_breakdown: r.category_breakdown,
+            })),
+            { onConflict: "id" },
           );
-          pushed += batch.length;
+
+          if (error) {
+            logger.error("Failed to push results batch to Supabase:", error);
+            incomplete = true;
+            lastError = toErrorMessage(error);
+
+            // Circuit Breaker: Stop syncing if we hit critical errors
+            const code = error.code;
+            const status = (error as unknown as { status?: number }).status; // Supabase error object often contains status
+
+            if (
+              code === "PGRST301" || // JWT expired or RLS violation
+              code === "429" || // Rate limit (if passed as code)
+              code === "401" || // Unauthorized (if passed as code)
+              status === 429 || // Rate limit (HTTP status)
+              status === 401 || // Unauthorized (HTTP status)
+              status === 500 || // Internal Server Error
+              status === 503 // Service Unavailable
+            ) {
+              logger.error(
+                `Critical sync error detected (${code || status}). Aborting push to prevent API hammering.`,
+              );
+              break;
+            }
+            // Continue to next batch instead of failing completely for non-critical errors
+          } else {
+            // Mark as synced locally
+            await db.results.bulkUpdate(
+              toUpsert.map((r) => ({ key: r.id, changes: { synced: 1 } })),
+            );
+            pushed += toUpsert.length;
+          }
         }
       }
     }

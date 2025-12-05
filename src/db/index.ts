@@ -125,6 +125,12 @@ export class CertPrepDatabase extends Dexie {
         });
       });
 
+    // Version 8: Add deleted_at to results for soft-delete sync support
+    this.version(8).stores({
+      results:
+        "id, quiz_id, timestamp, synced, user_id, deleted_at, [user_id+synced], [user_id+quiz_id], [user_id+timestamp]",
+    });
+
     this.quizzes = this.table("quizzes");
     this.results = this.table("results");
     this.syncState = this.table("syncState");

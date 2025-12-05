@@ -14,6 +14,7 @@ export interface Result {
   flagged_questions: string[];
   category_breakdown: Record<string, number>;
   synced?: SyncFlag; // 0 = not synced, 1 = synced
+  deleted_at?: number; // Timestamp if soft deleted locally (waiting for sync)
 }
 
 export interface CategoryPerformance {
