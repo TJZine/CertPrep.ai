@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import * as React from 'react';
+import * as React from "react";
 
 const FOCUSABLE_SELECTOR = [
-  'a[href]',
-  'button:not([disabled])',
-  'input:not([disabled])',
-  'select:not([disabled])',
-  'textarea:not([disabled])',
+  "a[href]",
+  "button:not([disabled])",
+  "input:not([disabled])",
+  "select:not([disabled])",
+  "textarea:not([disabled])",
   '[tabindex]:not([tabindex="-1"])',
-].join(', ');
+].join(", ");
 
 interface UseFocusTrapOptions {
   enabled?: boolean;
@@ -39,7 +39,7 @@ export function useFocusTrap<T extends HTMLElement>(
     firstElement?.focus();
 
     const handleKeyDown = (event: KeyboardEvent): void => {
-      if (event.key !== 'Tab') return;
+      if (event.key !== "Tab") return;
       const elements = container.querySelectorAll(FOCUSABLE_SELECTOR);
       const first = elements[0] as HTMLElement | undefined;
       const last = elements[elements.length - 1] as HTMLElement | undefined;
@@ -55,10 +55,10 @@ export function useFocusTrap<T extends HTMLElement>(
       }
     };
 
-    container.addEventListener('keydown', handleKeyDown);
+    container.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      container.removeEventListener('keydown', handleKeyDown);
+      container.removeEventListener("keydown", handleKeyDown);
       if (returnFocusOnDeactivate && previousFocusRef.current) {
         previousFocusRef.current.focus();
       }

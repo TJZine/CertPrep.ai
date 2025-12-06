@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import { useRouter } from 'next/navigation';
-import { Brain, Clock, Check, Zap } from 'lucide-react';
-import { Modal } from '@/components/ui/Modal';
-import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
-import { cn } from '@/lib/utils';
-import type { Quiz, QuizMode } from '@/types/quiz';
+import * as React from "react";
+import { useRouter } from "next/navigation";
+import { Brain, Clock, Check, Zap } from "lucide-react";
+import { Modal } from "@/components/ui/Modal";
+import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
+import { cn } from "@/lib/utils";
+import type { Quiz, QuizMode } from "@/types/quiz";
 
 export interface ModeSelectModalProps {
   quiz: Quiz | null;
@@ -26,30 +26,45 @@ interface ModeOption {
 
 const modeOptions: ModeOption[] = [
   {
-    id: 'zen',
-    name: 'Zen Study',
-    description: 'Learn at your own pace with immediate feedback',
+    id: "zen",
+    name: "Zen Study",
+    description: "Learn at your own pace with immediate feedback",
     icon: <Brain className="h-8 w-8" aria-hidden="true" />,
-    features: ['Instant answer feedback', 'Detailed explanations', 'Spaced repetition controls', 'AI Tutor integration'],
+    features: [
+      "Instant answer feedback",
+      "Detailed explanations",
+      "Spaced repetition controls",
+      "AI Tutor integration",
+    ],
     recommended: true,
   },
   {
-    id: 'proctor',
-    name: 'Proctor Exam',
-    description: 'Simulate real exam conditions',
+    id: "proctor",
+    name: "Proctor Exam",
+    description: "Simulate real exam conditions",
     icon: <Clock className="h-8 w-8" aria-hidden="true" />,
-    features: ['Timed countdown', 'No immediate feedback', 'Flag for review', 'Full results at end'],
+    features: [
+      "Timed countdown",
+      "No immediate feedback",
+      "Flag for review",
+      "Full results at end",
+    ],
   },
 ];
 
 /**
  * Modal for selecting a quiz mode prior to starting.
  */
-export function ModeSelectModal({ quiz, isOpen, onClose }: ModeSelectModalProps): React.ReactElement {
+export function ModeSelectModal({
+  quiz,
+  isOpen,
+  onClose,
+}: ModeSelectModalProps): React.ReactElement {
   const router = useRouter();
-  const [selectedMode, setSelectedMode] = React.useState<QuizMode>('zen');
+  const [selectedMode, setSelectedMode] = React.useState<QuizMode>("zen");
   const questionCount = quiz?.questions.length ?? 0;
-  const estimatedMinutes = questionCount > 0 ? Math.max(1, Math.ceil(questionCount * 1.5)) : null;
+  const estimatedMinutes =
+    questionCount > 0 ? Math.max(1, Math.ceil(questionCount * 1.5)) : null;
 
   const handleStart = (): void => {
     if (!quiz) return;
@@ -59,7 +74,7 @@ export function ModeSelectModal({ quiz, isOpen, onClose }: ModeSelectModalProps)
 
   React.useEffect(() => {
     if (isOpen) {
-      setSelectedMode('zen');
+      setSelectedMode("zen");
     }
   }, [isOpen, quiz]);
 
@@ -68,8 +83,12 @@ export function ModeSelectModal({ quiz, isOpen, onClose }: ModeSelectModalProps)
       <Button variant="outline" onClick={onClose}>
         Cancel
       </Button>
-      <Button onClick={handleStart} leftIcon={<Zap className="h-4 w-4" aria-hidden="true" />} disabled={!quiz}>
-        Start {selectedMode === 'zen' ? 'Study' : 'Exam'}
+      <Button
+        onClick={handleStart}
+        leftIcon={<Zap className="h-4 w-4" aria-hidden="true" />}
+        disabled={!quiz}
+      >
+        Start {selectedMode === "zen" ? "Study" : "Exam"}
       </Button>
     </div>
   );
@@ -116,37 +135,50 @@ function ModeCard({
       type="button"
       onClick={onSelect}
       className={cn(
-        'relative flex h-full flex-col rounded-xl border-2 p-6 text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-100 dark:focus-visible:ring-offset-slate-900',
+        "relative flex h-full flex-col rounded-xl border-2 p-6 text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-100 dark:focus-visible:ring-offset-slate-900",
         isSelected
-          ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-500 ring-offset-2 dark:border-blue-400 dark:bg-blue-900/30'
-          : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:hover:border-slate-600 dark:hover:bg-slate-800',
+          ? "border-blue-500 bg-blue-50 ring-2 ring-blue-500 ring-offset-2 dark:border-blue-400 dark:bg-blue-900/30"
+          : "border-slate-200 hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:hover:border-slate-600 dark:hover:bg-slate-800",
       )}
       aria-pressed={isSelected}
     >
       {mode.recommended ? (
-        <Badge className="absolute -top-2 left-4 dark:border-blue-500 dark:bg-blue-900 dark:text-blue-100" variant="default">
+        <Badge
+          className="absolute -top-2 left-4 dark:border-blue-500 dark:bg-blue-900 dark:text-blue-100"
+          variant="default"
+        >
           Recommended
         </Badge>
       ) : null}
 
       <div
         className={cn(
-          'mb-4 flex h-16 w-16 items-center justify-center rounded-full',
+          "mb-4 flex h-16 w-16 items-center justify-center rounded-full",
           isSelected
-            ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-200'
-            : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-200',
+            ? "bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-200"
+            : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-200",
         )}
       >
         {mode.icon}
       </div>
 
-      <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{mode.name}</h3>
-      <p className="mt-1 text-sm text-slate-500 dark:text-slate-300">{mode.description}</p>
+      <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+        {mode.name}
+      </h3>
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-300">
+        {mode.description}
+      </p>
 
       <ul className="mt-4 space-y-2">
         {mode.features.map((feature) => (
-          <li key={feature} className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-            <Check className="h-4 w-4 text-green-500 dark:text-green-300" aria-hidden="true" />
+          <li
+            key={feature}
+            className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300"
+          >
+            <Check
+              className="h-4 w-4 text-green-500 dark:text-green-300"
+              aria-hidden="true"
+            />
             {feature}
           </li>
         ))}
@@ -155,11 +187,18 @@ function ModeCard({
       <div className="mt-4 flex justify-center">
         <div
           className={cn(
-            'h-5 w-5 rounded-full border-2',
-            isSelected ? 'border-blue-500 bg-blue-500 dark:border-blue-400 dark:bg-blue-400' : 'border-slate-300 dark:border-slate-600',
+            "h-5 w-5 rounded-full border-2",
+            isSelected
+              ? "border-blue-500 bg-blue-500 dark:border-blue-400 dark:bg-blue-400"
+              : "border-slate-300 dark:border-slate-600",
           )}
         >
-          {isSelected ? <Check className="h-full w-full p-0.5 text-white" aria-hidden="true" /> : null}
+          {isSelected ? (
+            <Check
+              className="h-full w-full p-0.5 text-white"
+              aria-hidden="true"
+            />
+          ) : null}
         </div>
       </div>
     </button>

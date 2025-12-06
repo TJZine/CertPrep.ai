@@ -1,6 +1,6 @@
-'use client';
-import * as React from 'react';
-import type { Quiz } from '@/types/quiz';
+"use client";
+import * as React from "react";
+import type { Quiz } from "@/types/quiz";
 
 interface UseQuizState {
   quiz: Quiz | null;

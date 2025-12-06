@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import { LoadingSpinner } from '@/components/common/LoadingSpinner';
+import * as React from "react";
+import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 
 export default function Loading(): React.ReactElement {
   return (

@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import { AlertTriangle, ArrowRight, RotateCcw, ThumbsUp } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
-import { cn } from '@/lib/utils';
+import * as React from "react";
+import { AlertTriangle, ArrowRight, RotateCcw, ThumbsUp } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { cn } from "@/lib/utils";
 
 interface ZenControlsProps {
   onAgain: () => void;
@@ -24,49 +24,59 @@ export function ZenControls({
   className,
 }: ZenControlsProps): React.ReactElement {
   return (
-    <div className={cn('space-y-4', className)}>
-      <p className="text-center text-sm text-slate-500 dark:text-slate-200">How well did you know this?</p>
+    <div className={cn("space-y-4", className)}>
+      <p className="text-center text-sm text-slate-500 dark:text-slate-200">
+        How well did you know this?
+      </p>
 
       <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
         <Button
           variant="outline"
           onClick={onAgain}
           className={cn(
-            'flex-1 border-red-300 text-red-700 hover:bg-red-50 hover:text-red-800',
-            'dark:border-red-400 dark:text-red-200 dark:hover:bg-red-900/40 dark:hover:text-red-100',
-            'sm:flex-initial sm:min-w-[120px]',
+            "flex-1 border-red-300 text-red-700 hover:bg-red-50 hover:text-red-800",
+            "dark:border-red-400 dark:text-red-200 dark:hover:bg-red-900/40 dark:hover:text-red-100",
+            "sm:flex-initial sm:min-w-[120px]",
           )}
           aria-label="Again - show this question again soon"
         >
           <RotateCcw className="mr-2 h-4 w-4" aria-hidden="true" />
           Again
-          <span className="ml-2 hidden text-xs text-red-500 sm:inline">(1)</span>
+          <span className="ml-2 hidden text-xs text-red-500 sm:inline">
+            (1)
+          </span>
         </Button>
 
         <Button
           variant="outline"
           onClick={onHard}
           className={cn(
-            'flex-1 border-orange-300 text-orange-700 hover:bg-orange-50 hover:text-orange-800',
-            'dark:border-orange-400 dark:text-orange-200 dark:hover:bg-orange-900/40 dark:hover:text-orange-100',
-            'sm:flex-initial sm:min-w-[120px]',
+            "flex-1 border-orange-300 text-orange-700 hover:bg-orange-50 hover:text-orange-800",
+            "dark:border-orange-400 dark:text-orange-200 dark:hover:bg-orange-900/40 dark:hover:text-orange-100",
+            "sm:flex-initial sm:min-w-[120px]",
           )}
           aria-label="Hard - add to review list"
         >
           <AlertTriangle className="mr-2 h-4 w-4" aria-hidden="true" />
           Hard
-          <span className="ml-2 hidden text-xs text-orange-500 sm:inline">(2)</span>
+          <span className="ml-2 hidden text-xs text-orange-500 sm:inline">
+            (2)
+          </span>
         </Button>
 
         <Button
           variant="outline"
           onClick={onGood}
           className={cn(
-            'flex-1 border-green-300 text-green-700 hover:bg-green-50 hover:text-green-800',
-            'dark:border-green-400 dark:text-green-200 dark:hover:bg-green-900/40 dark:hover:text-green-100',
-            'sm:flex-initial sm:min-w-[120px]',
+            "flex-1 border-green-300 text-green-700 hover:bg-green-50 hover:text-green-800",
+            "dark:border-green-400 dark:text-green-200 dark:hover:bg-green-900/40 dark:hover:text-green-100",
+            "sm:flex-initial sm:min-w-[120px]",
           )}
-          aria-label={isLastQuestion ? 'Good - finish quiz' : 'Good - continue to next question'}
+          aria-label={
+            isLastQuestion
+              ? "Good - finish quiz"
+              : "Good - continue to next question"
+          }
         >
           {isLastQuestion ? (
             <>
@@ -79,15 +89,26 @@ export function ZenControls({
               Good
             </>
           )}
-          <span className="ml-2 hidden text-xs text-green-500 sm:inline">(3)</span>
+          <span className="ml-2 hidden text-xs text-green-500 sm:inline">
+            (3)
+          </span>
         </Button>
       </div>
 
       <p className="text-center text-xs text-slate-400 dark:text-slate-300">
-        Keyboard shortcuts:{' '}
-        <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono dark:bg-slate-800 dark:text-slate-100">1</kbd> Again,{' '}
-        <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono dark:bg-slate-800 dark:text-slate-100">2</kbd> Hard,{' '}
-        <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono dark:bg-slate-800 dark:text-slate-100">3</kbd> Good
+        Keyboard shortcuts:{" "}
+        <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono dark:bg-slate-800 dark:text-slate-100">
+          1
+        </kbd>{" "}
+        Again,{" "}
+        <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono dark:bg-slate-800 dark:text-slate-100">
+          2
+        </kbd>{" "}
+        Hard,{" "}
+        <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono dark:bg-slate-800 dark:text-slate-100">
+          3
+        </kbd>{" "}
+        Good
       </p>
     </div>
   );
@@ -99,11 +120,18 @@ interface NextButtonProps {
   className?: string;
 }
 
-export function NextButton({ onClick, isLastQuestion = false, className }: NextButtonProps): React.ReactElement {
+export function NextButton({
+  onClick,
+  isLastQuestion = false,
+  className,
+}: NextButtonProps): React.ReactElement {
   return (
-    <div className={cn('flex justify-center', className)}>
-      <Button onClick={onClick} rightIcon={<ArrowRight className="h-4 w-4" aria-hidden="true" />}>
-        {isLastQuestion ? 'Finish Quiz' : 'Next Question'}
+    <div className={cn("flex justify-center", className)}>
+      <Button
+        onClick={onClick}
+        rightIcon={<ArrowRight className="h-4 w-4" aria-hidden="true" />}
+      >
+        {isLastQuestion ? "Finish Quiz" : "Next Question"}
       </Button>
     </div>
   );
@@ -115,15 +143,27 @@ interface SubmitButtonProps {
   className?: string;
 }
 
-export function SubmitButton({ onClick, disabled = false, className }: SubmitButtonProps): React.ReactElement {
+export function SubmitButton({
+  onClick,
+  disabled = false,
+  className,
+}: SubmitButtonProps): React.ReactElement {
   return (
-    <div className={cn('flex flex-col items-center', className)}>
-      <Button onClick={onClick} disabled={disabled} size="lg" className="min-w-[200px]">
+    <div className={cn("flex flex-col items-center", className)}>
+      <Button
+        onClick={onClick}
+        disabled={disabled}
+        size="lg"
+        className="min-w-[200px]"
+      >
         Check Answer
       </Button>
       {!disabled && (
         <p className="mt-2 text-center text-xs text-slate-400 dark:text-slate-300">
-          or press <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono dark:bg-slate-800 dark:text-slate-100">Enter</kbd>
+          or press{" "}
+          <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono dark:bg-slate-800 dark:text-slate-100">
+            Enter
+          </kbd>
         </p>
       )}
     </div>

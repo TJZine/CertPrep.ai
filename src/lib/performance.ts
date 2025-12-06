@@ -1,4 +1,4 @@
-import * as React from 'react';
+import * as React from "react";
 
 /**
  * Debounce a function call.
@@ -91,7 +91,7 @@ export function useLazyRef<T>(initializer: () => T): React.MutableRefObject<T> {
  * Measure component render time (development only).
  */
 export function measureRender(componentName: string): () => void {
-  if (process.env.NODE_ENV !== 'development') {
+  if (process.env.NODE_ENV !== "development") {
     return () => {};
   }
 
@@ -99,6 +99,8 @@ export function measureRender(componentName: string): () => void {
   return () => {
     const end = performance.now();
     // eslint-disable-next-line no-console
-    console.log(`[Performance] ${componentName} rendered in ${(end - start).toFixed(2)}ms`);
+    console.log(
+      `[Performance] ${componentName} rendered in ${(end - start).toFixed(2)}ms`,
+    );
   };
 }

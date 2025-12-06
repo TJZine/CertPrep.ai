@@ -1,13 +1,16 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import { enableMapSet } from 'immer';
-import { create } from 'zustand';
-import { immer } from 'zustand/middleware/immer';
-import { SPACED_REPETITION, TIMER } from '@/lib/constants';
-import type { Question, QuizMode } from '@/types/quiz';
+import * as React from "react";
+import { enableMapSet } from "immer";
+import { create } from "zustand";
+import { immer } from "zustand/middleware/immer";
+import { SPACED_REPETITION, TIMER } from "@/lib/constants";
+import { hashAnswer } from "@/lib/utils";
+import type { Question, QuizMode } from "@/types/quiz";
 
 enableMapSet();
+
+const HASH_RETRY_ATTEMPTS = 2;
 
 // Spaced repetition queue item
 interface QueuedQuestion {
@@ -21,7 +24,7 @@ interface AnswerRecord {
   selectedAnswer: string;
   isCorrect: boolean;
   timestamp: number;
-  difficulty: 'again' | 'hard' | 'good' | null;
+  difficulty: "again" | "hard" | "good" | null;
 }
 
 // Main session state
@@ -40,9 +43,12 @@ interface QuizSessionState {
   hardQuestions: Set<string>;
   flaggedQuestions: Set<string>;
   startTime: number | null;
-  endTime: number | null;
+  endTime?: number | null;
   isComplete: boolean;
+  isSubmitting: boolean;
   isPaused: boolean;
+  // Error state
+  error: string | null;
   // Proctor-specific
   seenQuestions: Set<string>;
   examDurationMinutes: number;
@@ -52,8 +58,16 @@ interface QuizSessionState {
 }
 
 interface QuizSessionActions {
-  initializeSession: (quizId: string, mode: QuizMode, questions: Question[]) => void;
-  initializeProctorSession: (quizId: string, questions: Question[], durationMinutes: number) => void;
+  initializeSession: (
+    quizId: string,
+    mode: QuizMode,
+    questions: Question[],
+  ) => void;
+  initializeProctorSession: (
+    quizId: string,
+    questions: Question[],
+    durationMinutes: number,
+  ) => void;
   resetSession: () => void;
   completeSession: () => void;
   goToQuestion: (index: number) => void;
@@ -79,11 +93,14 @@ interface QuizSessionActions {
   isQuestionAnswered: (questionId: string) => boolean;
   isQuestionFlagged: (questionId: string) => boolean;
   getSessionDuration: () => number;
-  getQuestionStatus: (questionId: string) => 'unseen' | 'answered' | 'flagged' | 'seen';
+  getQuestionStatus: (
+    questionId: string,
+  ) => "unseen" | "answered" | "flagged" | "seen";
   getUnansweredCount: () => number;
   getFlaggedCount: () => number;
   getAnsweredCount: () => number;
   canSubmitExam: () => boolean;
+  clearError: () => void;
 }
 
 type QuizSessionStore = QuizSessionState & QuizSessionActions;
@@ -105,7 +122,9 @@ const createInitialState = (): QuizSessionState => ({
   startTime: null,
   endTime: null,
   isComplete: false,
+  isSubmitting: false,
   isPaused: false,
+  error: null,
   seenQuestions: new Set<string>(),
   examDurationMinutes: TIMER.DEFAULT_EXAM_DURATION_MINUTES,
   timeRemaining: TIMER.DEFAULT_EXAM_DURATION_MINUTES * 60,
@@ -133,7 +152,7 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
       set((state) => {
         Object.assign(state, createInitialState());
         state.quizId = quizId;
-        state.mode = 'proctor';
+        state.mode = "proctor";
         state.questions = questions;
         state.questionQueue = questions.map((question) => question.id);
         state.currentIndex = 0;
@@ -163,8 +182,12 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
 
     goToQuestion: (index): void => {
       set((state) => {
-        if (state.mode === 'proctor') {
-          if (index < 0 || index >= state.questionQueue.length || state.isComplete) {
+        if (state.mode === "proctor") {
+          if (
+            index < 0 ||
+            index >= state.questionQueue.length ||
+            state.isComplete
+          ) {
             return;
           }
           state.currentIndex = index;
@@ -197,8 +220,11 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
         return;
       }
 
-      if (snapshot.mode === 'proctor') {
-        const nextIndex = Math.min(snapshot.currentIndex + 1, snapshot.questionQueue.length - 1);
+      if (snapshot.mode === "proctor") {
+        const nextIndex = Math.min(
+          snapshot.currentIndex + 1,
+          snapshot.questionQueue.length - 1,
+        );
         if (nextIndex !== snapshot.currentIndex) {
           snapshot.navigateToQuestion(nextIndex);
         }
@@ -207,9 +233,13 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
 
       set((state) => {
         const nextIndex = state.currentIndex + 1;
-        const dueQuestions = state.reappearQueue.filter((item) => item.reappearAt <= nextIndex);
+        const dueQuestions = state.reappearQueue.filter(
+          (item) => item.reappearAt <= nextIndex,
+        );
         if (dueQuestions.length > 0) {
-          const remaining = state.reappearQueue.filter((item) => item.reappearAt > nextIndex);
+          const remaining = state.reappearQueue.filter(
+            (item) => item.reappearAt > nextIndex,
+          );
           const insertAt = Math.min(nextIndex, state.questionQueue.length);
           const questionIds = dueQuestions.map((item) => item.questionId);
           state.questionQueue.splice(insertAt, 0, ...questionIds);
@@ -238,7 +268,7 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
         return;
       }
 
-      if (snapshot.mode === 'proctor') {
+      if (snapshot.mode === "proctor") {
         const prevIndex = Math.max(snapshot.currentIndex - 1, 0);
         if (prevIndex !== snapshot.currentIndex) {
           snapshot.navigateToQuestion(prevIndex);
@@ -259,7 +289,11 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
 
     navigateToQuestion: (index): void => {
       set((state) => {
-        if (index < 0 || index >= state.questionQueue.length || state.isComplete) {
+        if (
+          index < 0 ||
+          index >= state.questionQueue.length ||
+          state.isComplete
+        ) {
           return;
         }
         state.currentIndex = index;
@@ -286,63 +320,197 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
     },
 
     submitAnswer: (): void => {
-      set((state) => {
-        if (state.isComplete) {
-          return;
+      const state = get();
+      if (state.isComplete) {
+        return;
+      }
+
+      const questionId = state.questionQueue[state.currentIndex];
+      if (!questionId || !state.selectedAnswer) {
+        return;
+      }
+
+      const question = state.questions.find((q) => q.id === questionId);
+      if (!question) {
+        return;
+      }
+
+      // Capture values needed for async operation
+      const currentSelectedAnswer = state.selectedAnswer;
+
+      // Optimistic update or loading state could go here if needed
+      if (state.isSubmitting) return;
+
+      set((draft) => {
+        draft.isSubmitting = true;
+      });
+
+      const attemptHashWithRetry = async (): Promise<string> => {
+        let lastError: unknown;
+        for (let attempt = 1; attempt <= HASH_RETRY_ATTEMPTS; attempt += 1) {
+          try {
+            return await hashAnswer(currentSelectedAnswer);
+          } catch (error) {
+            lastError = error;
+            console.error(
+              `Failed to hash answer (attempt ${attempt}/${HASH_RETRY_ATTEMPTS}) for question ${questionId}`,
+              error,
+            );
+          }
         }
+        throw lastError ?? new Error("Failed to hash answer");
+      };
 
-        const questionId = state.questionQueue[state.currentIndex];
-        if (!questionId || !state.selectedAnswer) {
-          return;
+      const persistAnswer = async (): Promise<void> => {
+        try {
+          const hashedSelection = await attemptHashWithRetry();
+          set((draft) => {
+            // Re-validate state in case it changed during async op
+            const currentQ = draft.questions.find((q) => q.id === questionId);
+            // Ensure we are still on the same question and state is valid
+            // Also ensure the user hasn't changed their selection while we were hashing
+            if (
+              !currentQ ||
+              draft.questionQueue[draft.currentIndex] !== questionId ||
+              draft.selectedAnswer !== currentSelectedAnswer
+            ) {
+              draft.isSubmitting = false; // Reset if state changed
+              return;
+            }
+
+            let isCorrect = false;
+            if (currentQ.correct_answer_hash) {
+              isCorrect = hashedSelection === currentQ.correct_answer_hash;
+            } else if (currentQ.correct_answer) {
+              // Fallback for legacy quizzes or missing hashes
+              isCorrect = currentSelectedAnswer === currentQ.correct_answer;
+            }
+            const previousDifficulty =
+              draft.answers.get(questionId)?.difficulty ?? null;
+
+            const record: AnswerRecord = {
+              questionId,
+              selectedAnswer: currentSelectedAnswer,
+              isCorrect,
+              timestamp: Date.now(),
+              difficulty: previousDifficulty,
+            };
+
+            draft.answers.set(questionId, record);
+            draft.answeredQuestions.add(questionId);
+            draft.hasSubmitted = true;
+            draft.showExplanation = !isCorrect;
+            draft.isSubmitting = false;
+          });
+        } catch (err) {
+          console.error(
+            "Failed to hash answer in submitAnswer after retries",
+            err,
+          );
+          set((draft) => {
+            draft.hasSubmitted = false;
+            draft.isSubmitting = false;
+            if (draft.questionQueue[draft.currentIndex] === questionId) {
+              draft.selectedAnswer = null;
+            }
+            draft.error = "Failed to submit answer. Please try again.";
+          });
         }
+      };
 
-        const question = state.questions.find((q) => q.id === questionId);
-        if (!question) {
-          return;
-        }
-
-        const isCorrect = state.selectedAnswer === question.correct_answer;
-        const previousDifficulty = state.answers.get(questionId)?.difficulty ?? null;
-        const record: AnswerRecord = {
-          questionId,
-          selectedAnswer: state.selectedAnswer,
-          isCorrect,
-          timestamp: Date.now(),
-          difficulty: previousDifficulty,
-        };
-
-        state.answers.set(questionId, record);
-        state.answeredQuestions.add(questionId);
-        state.hasSubmitted = true;
-        state.showExplanation = !isCorrect;
+      persistAnswer().catch((err) => {
+        console.error("Unexpected error in persistAnswer (submitAnswer)", err);
       });
     },
 
     selectAnswerProctor: (answerId): void => {
-      set((state) => {
-        if (state.isComplete || state.mode !== 'proctor') {
-          return;
-        }
-        const questionId = state.questionQueue[state.currentIndex];
-        if (!questionId) {
-          return;
-        }
-        const question = state.questions.find((q) => q.id === questionId);
-        if (!question) {
-          return;
-        }
-        state.selectedAnswer = answerId;
-        const isCorrect = answerId === question.correct_answer;
-        state.answers.set(questionId, {
-          questionId,
-          selectedAnswer: answerId,
-          isCorrect,
-          timestamp: Date.now(),
-          difficulty: null,
-        });
-        state.answeredQuestions.add(questionId);
-        state.seenQuestions.add(questionId);
+      const state = get();
+      if (state.isComplete || state.mode !== "proctor") {
+        return;
+      }
+      const questionId = state.questionQueue[state.currentIndex];
+      if (!questionId) {
+        return;
+      }
+      const question = state.questions.find((q) => q.id === questionId);
+      if (!question) {
+        return;
+      }
+
+      set((draft) => {
+        draft.selectedAnswer = answerId;
+        draft.isSubmitting = true;
       });
+
+      const attemptHashWithRetry = async (): Promise<string> => {
+        let lastError: unknown;
+        for (let attempt = 1; attempt <= HASH_RETRY_ATTEMPTS; attempt += 1) {
+          try {
+            return await hashAnswer(answerId);
+          } catch (error) {
+            lastError = error;
+            console.error(
+              `Failed to hash answer (attempt ${attempt}/${HASH_RETRY_ATTEMPTS}) for question ${questionId}`,
+              error,
+            );
+          }
+        }
+        throw lastError ?? new Error("Failed to hash answer");
+      };
+
+      // Async hash check for proctor mode with retry and user-visible failure
+      const persistAnswer = async (): Promise<void> => {
+        try {
+          const hashedSelection = await attemptHashWithRetry();
+          set((draft) => {
+            const currentQ = draft.questions.find((q) => q.id === questionId);
+            // Ensure we are still on the same question
+            // And ensure the user hasn't changed their selection since this hash started
+            if (
+              !currentQ ||
+              draft.questionQueue[draft.currentIndex] !== questionId ||
+              draft.selectedAnswer !== answerId
+            ) {
+              draft.isSubmitting = false; // Reset if state changed
+              return;
+            }
+
+            let isCorrect = false;
+            if (currentQ.correct_answer_hash) {
+              isCorrect = hashedSelection === currentQ.correct_answer_hash;
+            } else if (currentQ.correct_answer) {
+              // Fallback for legacy quizzes
+              isCorrect = answerId === currentQ.correct_answer;
+            }
+
+            draft.answers.set(questionId, {
+              questionId,
+              selectedAnswer: answerId,
+              isCorrect,
+              timestamp: Date.now(),
+              difficulty: null,
+            });
+            draft.answeredQuestions.add(questionId);
+            draft.seenQuestions.add(questionId);
+            draft.isSubmitting = false;
+          });
+        } catch (err) {
+          console.error(
+            "Failed to hash answer in selectAnswerProctor after retries",
+            err,
+          );
+          set((draft) => {
+            draft.isSubmitting = false;
+            // Clear selection to avoid implying the answer was saved
+            if (draft.questionQueue[draft.currentIndex] === questionId) {
+              draft.selectedAnswer = null;
+            }
+            draft.error = "We could not save your answer. Please try again.";
+          });
+        }
+      };
+
+      void persistAnswer();
     },
 
     markAgain: (): void => {
@@ -353,12 +521,13 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
       }
 
       set((draft) => {
-        const reappearAt = draft.currentIndex + SPACED_REPETITION.AGAIN_REAPPEAR_TURNS;
+        const reappearAt =
+          draft.currentIndex + SPACED_REPETITION.AGAIN_REAPPEAR_TURNS;
         draft.reappearQueue.push({ questionId, reappearAt });
 
         const existing = draft.answers.get(questionId);
         if (existing) {
-          existing.difficulty = 'again';
+          existing.difficulty = "again";
           draft.answers.set(questionId, existing);
         }
       });
@@ -377,7 +546,7 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
         draft.hardQuestions.add(questionId);
         const existing = draft.answers.get(questionId);
         if (existing) {
-          existing.difficulty = 'hard';
+          existing.difficulty = "hard";
           draft.answers.set(questionId, existing);
         }
       });
@@ -395,7 +564,7 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
       set((draft) => {
         const existing = draft.answers.get(questionId);
         if (existing) {
-          existing.difficulty = 'good';
+          existing.difficulty = "good";
           draft.answers.set(questionId, existing);
         }
       });
@@ -467,8 +636,16 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
     },
 
     getProgress: (): { current: number; total: number; percentage: number } => {
-      const { questionQueue, currentIndex, hasSubmitted, isComplete, mode, answeredQuestions, questions } = get();
-      if (mode === 'proctor') {
+      const {
+        questionQueue,
+        currentIndex,
+        hasSubmitted,
+        isComplete,
+        mode,
+        answeredQuestions,
+        questions,
+      } = get();
+      if (mode === "proctor") {
         const total = questions.length;
         const answered = answeredQuestions.size;
         return {
@@ -483,7 +660,9 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
         return { current: 0, total: 0, percentage: 0 };
       }
 
-      const answeredCount = isComplete ? total : Math.min(currentIndex + (hasSubmitted ? 1 : 0), total);
+      const answeredCount = isComplete
+        ? total
+        : Math.min(currentIndex + (hasSubmitted ? 1 : 0), total);
 
       return {
         current: answeredCount,
@@ -492,11 +671,14 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
       };
     },
 
-    getAnswerForQuestion: (questionId): AnswerRecord | undefined => get().answers.get(questionId),
+    getAnswerForQuestion: (questionId): AnswerRecord | undefined =>
+      get().answers.get(questionId),
 
-    isQuestionAnswered: (questionId): boolean => get().answeredQuestions.has(questionId),
+    isQuestionAnswered: (questionId): boolean =>
+      get().answeredQuestions.has(questionId),
 
-    isQuestionFlagged: (questionId): boolean => get().flaggedQuestions.has(questionId),
+    isQuestionFlagged: (questionId): boolean =>
+      get().flaggedQuestions.has(questionId),
 
     getSessionDuration: (): number => {
       const { startTime, endTime } = get();
@@ -507,12 +689,14 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
       return Math.floor((end - startTime) / 1000);
     },
 
-    getQuestionStatus: (questionId): 'unseen' | 'answered' | 'flagged' | 'seen' => {
+    getQuestionStatus: (
+      questionId,
+    ): "unseen" | "answered" | "flagged" | "seen" => {
       const { flaggedQuestions, answeredQuestions, seenQuestions } = get();
-      if (flaggedQuestions.has(questionId)) return 'flagged';
-      if (answeredQuestions.has(questionId)) return 'answered';
-      if (seenQuestions.has(questionId)) return 'seen';
-      return 'unseen';
+      if (flaggedQuestions.has(questionId)) return "flagged";
+      if (answeredQuestions.has(questionId)) return "answered";
+      if (seenQuestions.has(questionId)) return "seen";
+      return "unseen";
     },
 
     getUnansweredCount: (): number => {
@@ -529,6 +713,12 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
       const { questions, isComplete } = get();
       return questions.length > 0 && !isComplete;
     },
+
+    clearError: (): void => {
+      set((state) => {
+        state.error = null;
+      });
+    },
   })),
 );
 
@@ -536,20 +726,33 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
 export const useCurrentQuestion = (): Question | null =>
   useQuizSessionStore((state) => state.getCurrentQuestion());
 
-export const useProgress = (): { current: number; total: number; percentage: number } => {
+export const useProgress = (): {
+  current: number;
+  total: number;
+  percentage: number;
+} => {
   const currentIndex = useQuizSessionStore((state) => state.currentIndex);
   const hasSubmitted = useQuizSessionStore((state) => state.hasSubmitted);
   const isComplete = useQuizSessionStore((state) => state.isComplete);
-  const questionsLength = useQuizSessionStore((state) => state.questions.length);
-  const queueLength = useQuizSessionStore((state) => state.questionQueue.length);
-  const answeredQuestionsSize = useQuizSessionStore((state) => state.answeredQuestions.size);
-  const isProctorMode = useQuizSessionStore((state) => state.mode === 'proctor');
+  const questionsLength = useQuizSessionStore(
+    (state) => state.questions.length,
+  );
+  const queueLength = useQuizSessionStore(
+    (state) => state.questionQueue.length,
+  );
+  const answeredQuestionsSize = useQuizSessionStore(
+    (state) => state.answeredQuestions.size,
+  );
+  const isProctorMode = useQuizSessionStore(
+    (state) => state.mode === "proctor",
+  );
 
   return React.useMemo(() => {
     if (isProctorMode) {
       const total = questionsLength;
       const answeredCount = Math.min(answeredQuestionsSize, total);
-      const percentage = total > 0 ? Math.round((answeredCount / total) * 100) : 0;
+      const percentage =
+        total > 0 ? Math.round((answeredCount / total) * 100) : 0;
       return { current: answeredCount, total, percentage };
     }
 
@@ -558,7 +761,9 @@ export const useProgress = (): { current: number; total: number; percentage: num
       return { current: 0, total: 0, percentage: 0 };
     }
 
-    const answeredCount = isComplete ? total : Math.min(currentIndex + (hasSubmitted ? 1 : 0), total);
+    const answeredCount = isComplete
+      ? total
+      : Math.min(currentIndex + (hasSubmitted ? 1 : 0), total);
     const percentage = Math.round((answeredCount / total) * 100);
     return { current: answeredCount, total, percentage };
   }, [
@@ -572,7 +777,8 @@ export const useProgress = (): { current: number; total: number; percentage: num
   ]);
 };
 
-export const useIsAnswered = (): boolean => useQuizSessionStore((state) => state.hasSubmitted);
+export const useIsAnswered = (): boolean =>
+  useQuizSessionStore((state) => state.hasSubmitted);
 
 export const useProctorStatus = (): {
   timeRemaining: number;
@@ -584,8 +790,12 @@ export const useProctorStatus = (): {
 } => {
   const timeRemaining = useQuizSessionStore((state) => state.timeRemaining);
   const isTimeWarning = useQuizSessionStore((state) => state.isTimeWarning);
-  const answeredCount = useQuizSessionStore((state) => state.answeredQuestions.size);
-  const flaggedCount = useQuizSessionStore((state) => state.flaggedQuestions.size);
+  const answeredCount = useQuizSessionStore(
+    (state) => state.answeredQuestions.size,
+  );
+  const flaggedCount = useQuizSessionStore(
+    (state) => state.flaggedQuestions.size,
+  );
   const unansweredCount = useQuizSessionStore((state) =>
     Math.max(state.questions.length - state.answeredQuestions.size, 0),
   );
@@ -600,25 +810,41 @@ export const useProctorStatus = (): {
       unansweredCount,
       totalQuestions,
     }),
-    [timeRemaining, isTimeWarning, answeredCount, flaggedCount, unansweredCount, totalQuestions],
+    [
+      timeRemaining,
+      isTimeWarning,
+      answeredCount,
+      flaggedCount,
+      unansweredCount,
+      totalQuestions,
+    ],
   );
 };
 
-export const useQuestionStatuses = (): Array<{ id: string; status: 'unseen' | 'answered' | 'flagged' | 'seen' }> =>
-  {
-    const questions = useQuizSessionStore((state) => state.questions);
-    const answeredQuestions = useQuizSessionStore((state) => state.answeredQuestions);
-    const flaggedQuestions = useQuizSessionStore((state) => state.flaggedQuestions);
-    const seenQuestions = useQuizSessionStore((state) => state.seenQuestions);
+export const useQuestionStatuses = (): Array<{
+  id: string;
+  status: "unseen" | "answered" | "flagged" | "seen";
+}> => {
+  const questions = useQuizSessionStore((state) => state.questions);
+  const answeredQuestions = useQuizSessionStore(
+    (state) => state.answeredQuestions,
+  );
+  const flaggedQuestions = useQuizSessionStore(
+    (state) => state.flaggedQuestions,
+  );
+  const seenQuestions = useQuizSessionStore((state) => state.seenQuestions);
 
-    return React.useMemo(
-      () =>
-        questions.map((q) => {
-          if (flaggedQuestions.has(q.id)) return { id: q.id, status: 'flagged' as const };
-          if (answeredQuestions.has(q.id)) return { id: q.id, status: 'answered' as const };
-          if (seenQuestions.has(q.id)) return { id: q.id, status: 'seen' as const };
-          return { id: q.id, status: 'unseen' as const };
-        }),
-      [questions, answeredQuestions, flaggedQuestions, seenQuestions],
-    );
-  };
+  return React.useMemo(
+    () =>
+      questions.map((q) => {
+        if (flaggedQuestions.has(q.id))
+          return { id: q.id, status: "flagged" as const };
+        if (answeredQuestions.has(q.id))
+          return { id: q.id, status: "answered" as const };
+        if (seenQuestions.has(q.id))
+          return { id: q.id, status: "seen" as const };
+        return { id: q.id, status: "unseen" as const };
+      }),
+    [questions, answeredQuestions, flaggedQuestions, seenQuestions],
+  );
+};

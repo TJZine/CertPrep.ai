@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import { cn } from '@/lib/utils';
+import * as React from "react";
+import { cn } from "@/lib/utils";
 
 export interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
   label?: string;
@@ -18,12 +18,16 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
     const textareaId = id ?? generatedId;
     const helperId = helperText ? `${textareaId}-helper` : undefined;
     const errorId = error ? `${textareaId}-error` : undefined;
-    const describedBy = [helperId, errorId].filter(Boolean).join(' ') || undefined;
+    const describedBy =
+      [helperId, errorId].filter(Boolean).join(" ") || undefined;
 
     return (
       <div className="flex w-full flex-col gap-2">
         {label ? (
-          <label htmlFor={textareaId} className="text-sm font-medium text-slate-900 dark:text-slate-100">
+          <label
+            htmlFor={textareaId}
+            className="text-sm font-medium text-slate-900 dark:text-slate-100"
+          >
             {label}
           </label>
         ) : null}
@@ -32,9 +36,9 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
           ref={ref}
           rows={rows}
           className={cn(
-            'min-h-[120px] w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-slate-100',
-            'dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus-visible:ring-offset-slate-900 dark:disabled:bg-slate-800',
-            error && 'border-red-500 focus-visible:ring-red-500',
+            "min-h-[120px] w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-slate-100",
+            "dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus-visible:ring-offset-slate-900 dark:disabled:bg-slate-800",
+            error && "border-red-500 focus-visible:ring-red-500",
             className,
           )}
           aria-invalid={Boolean(error)}
@@ -56,6 +60,6 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
   },
 );
 
-Textarea.displayName = 'Textarea';
+Textarea.displayName = "Textarea";
 
 export default Textarea;

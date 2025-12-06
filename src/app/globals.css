@@ -23,7 +23,9 @@
 
   body {
     @apply bg-slate-50 text-slate-900 antialiased;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-feature-settings:
+      "rlig" 1,
+      "calt" 1;
   }
 
   /* CRITICAL: Focus visible styles for accessibility */
@@ -88,6 +90,26 @@
   .scrollbar-thin::-webkit-scrollbar-thumb {
     background-color: #cbd5e1;
     border-radius: 9999px;
+  }
+
+  /**
+   * Legend color dots for charts (AnalyticsOverview)
+   * Maps to Tailwind color palette for CSP compliance
+   */
+  .legend-dot-green {
+    background-color: #22c55e;
+  }
+  .legend-dot-blue {
+    background-color: #3b82f6;
+  }
+  .legend-dot-cyan {
+    background-color: #06b6d4;
+  }
+  .legend-dot-amber {
+    background-color: #f59e0b;
+  }
+  .legend-dot-red {
+    background-color: #ef4444;
   }
 }
 

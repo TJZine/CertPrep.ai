@@ -1,27 +1,30 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import { useRouter } from 'next/navigation';
-import { QuizLayout } from './QuizLayout';
-import { QuestionDisplay } from './QuestionDisplay';
-import { ProctorOptionsList } from './ProctorOptionsList';
-import { ProctorControls } from './ProctorControls';
-import { QuestionNavGrid, QuestionNavStrip } from './QuestionNavGrid';
-import { SubmitExamModal, TimeUpModal } from './SubmitExamModal';
-import { Card, CardContent } from '@/components/ui/Card';
-import { useToast } from '@/components/ui/Toast';
+import * as React from "react";
+import { useRouter } from "next/navigation";
+import { QuizLayout } from "./QuizLayout";
+import { QuestionDisplay } from "./QuestionDisplay";
+import { ProctorOptionsList } from "./ProctorOptionsList";
+import { ProctorControls } from "./ProctorControls";
+import { QuestionNavGrid, QuestionNavStrip } from "./QuestionNavGrid";
+import { SubmitExamModal, TimeUpModal } from "./SubmitExamModal";
+import { Card, CardContent } from "@/components/ui/Card";
+import { useToast } from "@/components/ui/Toast";
 import {
   useCurrentQuestion,
   useProctorStatus,
   useQuestionStatuses,
   useQuizSessionStore,
-} from '@/stores/quizSessionStore';
-import { useKeyboardNav } from '@/hooks/useKeyboardNav';
-import { useTimer } from '@/hooks/useTimer';
-import { useBeforeUnload } from '@/hooks/useBeforeUnload';
-import { createResult } from '@/db/results';
-import { TIMER } from '@/lib/constants';
-import type { Quiz } from '@/types/quiz';
+} from "@/stores/quizSessionStore";
+import { useKeyboardNav } from "@/hooks/useKeyboardNav";
+import { useTimer } from "@/hooks/useTimer";
+import { useBeforeUnload } from "@/hooks/useBeforeUnload";
+import { createResult } from "@/db/results";
+import { TIMER } from "@/lib/constants";
+import type { Quiz } from "@/types/quiz";
+import { useSync } from "@/hooks/useSync";
+import { useAuth } from "@/components/providers/AuthProvider";
+import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 
 interface ProctorQuizContainerProps {
   quiz: Quiz;
@@ -37,6 +40,9 @@ export function ProctorQuizContainer({
 }: ProctorQuizContainerProps): React.ReactElement {
   const router = useRouter();
   const { addToast } = useToast();
+  const { sync } = useSync();
+  const { user } = useAuth();
+  const effectiveUserId = useEffectiveUserId(user?.id);
 
   const hasSavedResultRef = React.useRef(false);
 
@@ -56,6 +62,8 @@ export function ProctorQuizContainer({
     flaggedQuestions,
     answers,
     isComplete,
+    error,
+    clearError,
   } = useQuizSessionStore();
 
   const currentQuestion = useCurrentQuestion();
@@ -68,7 +76,12 @@ export function ProctorQuizContainer({
   const [autoResultId, setAutoResultId] = React.useState<string | null>(null);
   const autoSubmitRef = React.useRef<() => Promise<string | null> | null>(null);
 
-  const { seconds: timeRemaining, formattedTime, start: startTimer, pause: pauseTimer } = useTimer({
+  const {
+    seconds: timeRemaining,
+    formattedTime,
+    start: startTimer,
+    pause: pauseTimer,
+  } = useTimer({
     initialSeconds: durationMinutes * 60,
     countDown: true,
     autoStart: false,
@@ -76,7 +89,17 @@ export function ProctorQuizContainer({
       void autoSubmitRef.current?.();
     },
   });
-  useBeforeUnload(!isComplete, 'Your quiz progress will be lost. Are you sure?');
+  useBeforeUnload(
+    !isComplete,
+    "Your quiz progress will be lost. Are you sure?",
+  );
+
+  React.useEffect(() => {
+    if (error) {
+      addToast("error", error);
+      clearError();
+    }
+  }, [error, addToast, clearError]);
 
   React.useEffect((): void => {
     updateTimeRemaining(timeRemaining);
@@ -91,7 +114,15 @@ export function ProctorQuizContainer({
       resetSession();
       hasSavedResultRef.current = false;
     };
-  }, [quiz.id, quiz.questions, durationMinutes, initializeProctorSession, startTimer, pauseTimer, resetSession]);
+  }, [
+    quiz.id,
+    quiz.questions,
+    durationMinutes,
+    initializeProctorSession,
+    startTimer,
+    pauseTimer,
+    resetSession,
+  ]);
 
   useKeyboardNav({
     onNext: goToNextQuestion,
@@ -123,53 +154,92 @@ export function ProctorQuizContainer({
     setIsSubmitting(true);
     setShowSubmitModal(false);
     try {
+      if (!effectiveUserId) {
+        addToast("error", "Unable to save results: no user context available.");
+        setIsSubmitting(false);
+        return;
+      }
       pauseTimer();
       submitExam();
+
       const result = await createResult({
         quizId: quiz.id,
-        mode: 'proctor',
+        userId: effectiveUserId,
+        mode: "proctor",
         answers: buildAnswersRecord(),
         flaggedQuestions: Array.from(flaggedQuestions),
         timeTakenSeconds: durationMinutes * 60 - timeRemaining,
       });
       hasSavedResultRef.current = true;
-      addToast('success', 'Exam submitted successfully!');
+      const syncResult = await sync();
+      if (!syncResult.success) {
+        console.error("Failed to sync results after submit:", syncResult.error);
+      }
+      addToast("success", "Exam submitted successfully!");
       router.push(`/results/${result.id}`);
     } catch (error) {
-      console.error('Failed to submit exam:', error);
-      addToast('error', 'Failed to submit exam. Please try again.');
+      console.error("Failed to submit exam:", error);
+      addToast("error", "Failed to submit exam. Please try again.");
+    } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleAutoSubmit = React.useCallback(async (): Promise<string | null> => {
+  const handleAutoSubmit = React.useCallback(async (): Promise<
+    string | null
+  > => {
     if (isSubmitting || hasSavedResultRef.current) {
       return autoResultId;
+    }
+    if (!effectiveUserId) {
+      addToast("error", "Unable to save results: no user context available.");
+      return null;
     }
     setIsSubmitting(true);
     pauseTimer();
     autoSubmitExam();
     try {
+
       const result = await createResult({
         quizId: quiz.id,
-        mode: 'proctor',
+        userId: effectiveUserId,
+        mode: "proctor",
         answers: buildAnswersRecord(),
         flaggedQuestions: Array.from(flaggedQuestions),
         timeTakenSeconds: durationMinutes * 60,
       });
       hasSavedResultRef.current = true;
       setAutoResultId(result.id);
+      const syncResult = await sync();
+      if (!syncResult.success) {
+        console.error(
+          "Failed to sync results after auto-submit:",
+          syncResult.error,
+        );
+      }
       setShowTimeUpModal(true);
       return result.id;
     } catch (error) {
-      console.error('Failed to auto-submit exam:', error);
-      addToast('error', 'Auto-submit failed. Please submit manually.');
+      console.error("Failed to auto-submit exam:", error);
+      addToast("error", "Auto-submit failed. Please submit manually.");
       setShowSubmitModal(true);
       return null;
     } finally {
       setIsSubmitting(false);
     }
-  }, [addToast, autoResultId, autoSubmitExam, buildAnswersRecord, durationMinutes, flaggedQuestions, isSubmitting, pauseTimer, quiz.id]);
+  }, [
+    addToast,
+    autoResultId,
+    autoSubmitExam,
+    buildAnswersRecord,
+    durationMinutes,
+    effectiveUserId,
+    flaggedQuestions,
+    isSubmitting,
+    pauseTimer,
+    quiz.id,
+    sync,
+  ]);
 
   React.useEffect(() => {
     autoSubmitRef.current = handleAutoSubmit;
@@ -183,8 +253,8 @@ export function ProctorQuizContainer({
         router.push(`/results/${resultId}`);
       }
     } catch (error) {
-      console.error('Failed to save results:', error);
-      addToast('error', 'Failed to save results. Please try again.');
+      console.error("Failed to save results:", error);
+      addToast("error", "Failed to save results. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -193,7 +263,7 @@ export function ProctorQuizContainer({
   const handleExit = (): void => {
     pauseTimer();
     resetSession();
-    router.push('/');
+    router.push("/");
   };
 
   const navItems = React.useMemo(
@@ -206,7 +276,9 @@ export function ProctorQuizContainer({
     [questionStatuses],
   );
 
-  const hasCurrentAnswer = currentQuestion ? answers.has(currentQuestion.id) : false;
+  const hasCurrentAnswer = currentQuestion
+    ? answers.has(currentQuestion.id)
+    : false;
 
   if (!currentQuestion) {
     return (
@@ -227,7 +299,11 @@ export function ProctorQuizContainer({
   }
 
   const sidebarContent = (
-    <QuestionNavGrid questions={navItems} currentIndex={currentIndex} onNavigate={navigateToQuestion} />
+    <QuestionNavGrid
+      questions={navItems}
+      currentIndex={currentIndex}
+      onNavigate={navigateToQuestion}
+    />
   );
 
   return (
@@ -245,7 +321,11 @@ export function ProctorQuizContainer({
       >
         <div className="mx-auto w-full max-w-3xl min-w-0 overflow-x-hidden">
           <div className="mb-4 lg:hidden">
-            <QuestionNavStrip questions={navItems} currentIndex={currentIndex} onNavigate={navigateToQuestion} />
+            <QuestionNavStrip
+              questions={navItems}
+              currentIndex={currentIndex}
+              onNavigate={navigateToQuestion}
+            />
           </div>
 
           <Card className="w-full overflow-hidden">

@@ -1,23 +1,19 @@
-import type { Metadata, Viewport } from 'next';
-import * as React from 'react';
-import { Inter } from 'next/font/google';
-import { Header } from '@/components/layout/Header';
-import { Footer } from '@/components/layout/Footer';
-import { ToastProvider } from '@/components/ui/Toast';
-import { GlobalErrorHandler } from '@/components/common/GlobalErrorHandler';
-import { OfflineIndicator } from '@/components/common/OfflineIndicator';
-import { InstallPrompt } from '@/components/common/InstallPrompt';
-import { UpdateBanner } from '@/components/common/UpdateBanner';
-import { ThemeProvider } from '@/components/common/ThemeProvider';
-import { SkipLink } from '@/components/common/SkipLink';
-import { APP_NAME } from '@/lib/constants';
-import './globals.css';
+import type { Metadata, Viewport } from "next";
+import * as React from "react";
+import { headers } from "next/headers";
+import { Inter } from "next/font/google";
+import { Header } from "@/components/layout/Header";
+import { Footer } from "@/components/layout/Footer";
+import { SkipLink } from "@/components/common/SkipLink";
+import { AppProviders } from "@/components/providers/AppProviders";
+import { APP_NAME } from "@/lib/constants";
+import "./globals.css";
 
 const inter = Inter({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-inter',
-  fallback: ['system-ui', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-inter",
+  fallback: ["system-ui", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
 });
 
 export const metadata: Metadata = {
@@ -26,31 +22,39 @@ export const metadata: Metadata = {
     template: `%s | ${APP_NAME}`,
   },
   description:
-    'Professional exam simulator with AI-assisted learning. Study offline, track progress, and ace your certification exams.',
-  keywords: ['exam', 'certification', 'study', 'quiz', 'learning', 'offline', 'AI tutor'],
-  authors: [{ name: 'CertPrep.ai' }],
-  creator: 'CertPrep.ai',
-  metadataBase: new URL('https://certprep.ai'),
+    "Professional exam simulator with AI-assisted learning. Study offline, track progress, and ace your certification exams.",
+  keywords: [
+    "exam",
+    "certification",
+    "study",
+    "quiz",
+    "learning",
+    "offline",
+    "AI tutor",
+  ],
+  authors: [{ name: "CertPrep.ai" }],
+  creator: "CertPrep.ai",
+  metadataBase: new URL("https://cert-prep-ai.vercel.app"),
   openGraph: {
-    type: 'website',
-    locale: 'en_US',
+    type: "website",
+    locale: "en_US",
     title: APP_NAME,
-    description: 'Professional exam simulator with AI-assisted learning',
+    description: "Professional exam simulator with AI-assisted learning",
     siteName: APP_NAME,
   },
   twitter: {
-    card: 'summary_large_image',
+    card: "summary_large_image",
     title: APP_NAME,
-    description: 'Professional exam simulator with AI-assisted learning',
+    description: "Professional exam simulator with AI-assisted learning",
   },
   robots: {
     index: true,
     follow: true,
   },
-  manifest: '/manifest.json',
+  manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
-    statusBarStyle: 'default',
+    statusBarStyle: "default",
     title: APP_NAME,
   },
   formatDetection: {
@@ -59,14 +63,21 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#2563eb',
-  width: 'device-width',
+  themeColor: "#2563eb",
+  width: "device-width",
   initialScale: 1,
   maximumScale: 5,
   userScalable: true,
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }): React.ReactElement {
+export default async function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}): Promise<React.ReactElement> {
+  const headersList = await headers();
+  const nonce = headersList.get("x-nonce") || undefined;
+
   return (
     <html lang="en" className={inter.variable} suppressHydrationWarning>
       <head>
@@ -77,6 +88,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }):
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <script
+          nonce={nonce}
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{
             __html: `(function(){try{const stored=localStorage.getItem('theme');const prefersDark=window.matchMedia('(prefers-color-scheme: dark)').matches;const shouldDark=stored==='dark'||(!stored&&prefersDark);const root=document.documentElement;if(shouldDark){root.classList.add('dark');}else{root.classList.remove('dark');}}catch(e){}})();`,
           }}
@@ -84,20 +97,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }):
       </head>
       <body className="flex min-h-screen flex-col bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-50">
         <SkipLink />
-        <ThemeProvider>
-          <GlobalErrorHandler>
-            <ToastProvider>
-              <UpdateBanner />
-              <Header />
-              <div id="main-content" className="flex-1" tabIndex={-1}>
-                {children}
-              </div>
-              <Footer />
-              <OfflineIndicator />
-              <InstallPrompt />
-            </ToastProvider>
-          </GlobalErrorHandler>
-        </ThemeProvider>
+        <AppProviders>
+          <Header />
+          <div id="main-content" className="flex-1" tabIndex={-1}>
+            {children}
+          </div>
+          <Footer />
+        </AppProviders>
       </body>
     </html>
   );

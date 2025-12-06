@@ -1,31 +1,37 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import { Download, X, Smartphone, Monitor } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
-import { cn } from '@/lib/utils';
+import * as React from "react";
+import { Download, X, Smartphone, Monitor } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { cn } from "@/lib/utils";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
 /**
  * Component to prompt users to install the PWA.
  */
 export function InstallPrompt(): React.ReactElement | null {
-  const [deferredPrompt, setDeferredPrompt] = React.useState<BeforeInstallPromptEvent | null>(null);
+  const [deferredPrompt, setDeferredPrompt] =
+    React.useState<BeforeInstallPromptEvent | null>(null);
   const [showPrompt, setShowPrompt] = React.useState(false);
   const [isInstalled, setIsInstalled] = React.useState(false);
   const [dismissed, setDismissed] = React.useState(false);
 
   React.useEffect((): void | (() => void) => {
-    if (window.matchMedia('(display-mode: standalone)').matches) {
+    if (window.matchMedia("(display-mode: standalone)").matches) {
       setIsInstalled(true);
       return;
     }
 
-    const dismissedAt = localStorage.getItem('pwa_install_dismissed');
+    let dismissedAt: string | null = null;
+    try {
+      dismissedAt = localStorage.getItem("pwa_install_dismissed");
+    } catch {
+      // Ignore storage access errors and continue without persisted dismissal.
+    }
     if (dismissedAt) {
       const dismissedTime = new Date(dismissedAt).getTime();
       const now = new Date().getTime();
@@ -36,15 +42,20 @@ export function InstallPrompt(): React.ReactElement | null {
       }
     }
 
+    let showPromptTimeoutId: number | null = null;
+
     const handleBeforeInstall = (e: Event): void => {
       e.preventDefault();
+      if (showPromptTimeoutId) {
+        clearTimeout(showPromptTimeoutId);
+      }
       setDeferredPrompt(e as BeforeInstallPromptEvent);
-      window.setTimeout(() => {
+      showPromptTimeoutId = window.setTimeout(() => {
         setShowPrompt(true);
       }, 5000);
     };
 
-    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+    window.addEventListener("beforeinstallprompt", handleBeforeInstall);
 
     const handleInstalled = (): void => {
       setIsInstalled(true);
@@ -52,11 +63,14 @@ export function InstallPrompt(): React.ReactElement | null {
       setDeferredPrompt(null);
     };
 
-    window.addEventListener('appinstalled', handleInstalled);
+    window.addEventListener("appinstalled", handleInstalled);
 
     return (): void => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
-      window.removeEventListener('appinstalled', handleInstalled);
+      if (showPromptTimeoutId) {
+        clearTimeout(showPromptTimeoutId);
+      }
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
+      window.removeEventListener("appinstalled", handleInstalled);
     };
   }, []);
 
@@ -65,20 +79,24 @@ export function InstallPrompt(): React.ReactElement | null {
     try {
       await deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') {
+      if (outcome === "accepted") {
         setIsInstalled(true);
       }
       setShowPrompt(false);
       setDeferredPrompt(null);
     } catch (error) {
-      console.error('Install prompt failed:', error);
+      console.error("Install prompt failed:", error);
     }
   };
 
   const handleDismiss = (): void => {
     setShowPrompt(false);
     setDismissed(true);
-    localStorage.setItem('pwa_install_dismissed', new Date().toISOString());
+    try {
+      localStorage.setItem("pwa_install_dismissed", new Date().toISOString());
+    } catch {
+      // Ignore storage persistence failures.
+    }
   };
 
   if (isInstalled || dismissed || !showPrompt || !deferredPrompt) {
@@ -88,9 +106,9 @@ export function InstallPrompt(): React.ReactElement | null {
   return (
     <div
       className={cn(
-        'fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-md',
-        'rounded-xl border border-blue-200 bg-white p-4 shadow-xl',
-        'animate-in slide-in-from-bottom-4 duration-300',
+        "fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-md",
+        "rounded-xl border border-blue-200 bg-white p-4 shadow-xl",
+        "animate-in slide-in-from-bottom-4 duration-300",
       )}
       role="dialog"
       aria-labelledby="install-prompt-title"
@@ -101,7 +119,10 @@ export function InstallPrompt(): React.ReactElement | null {
         </div>
 
         <div className="flex-1">
-          <h3 id="install-prompt-title" className="font-semibold text-slate-900">
+          <h3
+            id="install-prompt-title"
+            className="font-semibold text-slate-900"
+          >
             Install CertPrep.ai
           </h3>
           <p className="mt-1 text-sm text-slate-600">

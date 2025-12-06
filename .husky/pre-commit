@@ -1,0 +1,6 @@
+#!/bin/sh
+npm run security-check
+npx lint-staged
+npm run typecheck
+# Full tests moved to CI to improve commit velocity
+# npm run test

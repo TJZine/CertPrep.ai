@@ -1,23 +1,23 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import { Modal } from '@/components/ui/Modal';
+import * as React from "react";
+import { Modal } from "@/components/ui/Modal";
 
 const shortcuts = {
-  'Quiz Navigation': [
-    { keys: ['A', 'B', 'C', 'D'], description: 'Select answer option' },
-    { keys: ['Enter'], description: 'Submit answer / Confirm' },
-    { keys: ['←', '→'], description: 'Previous / Next question' },
-    { keys: ['F'], description: 'Flag question for review' },
+  "Quiz Navigation": [
+    { keys: ["A", "B", "C", "D"], description: "Select answer option" },
+    { keys: ["Enter"], description: "Submit answer / Confirm" },
+    { keys: ["←", "→"], description: "Previous / Next question" },
+    { keys: ["F"], description: "Flag question for review" },
   ],
-  'Zen Mode (After Answering)': [
-    { keys: ['1'], description: 'Again - Review soon' },
-    { keys: ['2'], description: 'Hard - Add to review list' },
-    { keys: ['3'], description: 'Good - Move on' },
+  "Zen Mode (After Answering)": [
+    { keys: ["1"], description: "Again - Review soon" },
+    { keys: ["2"], description: "Hard - Add to review list" },
+    { keys: ["3"], description: "Good - Move on" },
   ],
   General: [
-    { keys: ['Esc'], description: 'Close modal / Exit' },
-    { keys: ['?'], description: 'Show this help' },
+    { keys: ["Esc"], description: "Close modal / Exit" },
+    { keys: ["?"], description: "Show this help" },
   ],
 };
 
@@ -26,20 +26,32 @@ interface KeyboardShortcutsHelpProps {
   onClose: () => void;
 }
 
-export function KeyboardShortcutsHelp({ isOpen, onClose }: KeyboardShortcutsHelpProps): React.ReactElement {
+export function KeyboardShortcutsHelp({
+  isOpen,
+  onClose,
+}: KeyboardShortcutsHelpProps): React.ReactElement {
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Keyboard Shortcuts" size="md">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Keyboard Shortcuts"
+      size="md"
+    >
       <div className="space-y-6">
         {Object.entries(shortcuts).map(([category, items]) => (
           <div key={category}>
-            <h3 className="mb-3 font-semibold text-slate-900 dark:text-slate-100">{category}</h3>
+            <h3 className="mb-3 font-semibold text-slate-900 dark:text-slate-100">
+              {category}
+            </h3>
             <div className="space-y-2">
               {items.map((item, index) => (
                 <div
                   key={item.description + index}
                   className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 dark:bg-slate-800"
                 >
-                  <span className="text-sm text-slate-600 dark:text-slate-200">{item.description}</span>
+                  <span className="text-sm text-slate-600 dark:text-slate-200">
+                    {item.description}
+                  </span>
                   <div className="flex gap-1">
                     {item.keys.map((key) => (
                       <kbd
@@ -69,17 +81,21 @@ export function useKeyboardShortcutsHelp(): {
 
   React.useEffect((): (() => void) => {
     const handleKeyDown = (event: KeyboardEvent): void => {
-      if (event.key === '?' && !event.ctrlKey && !event.metaKey) {
+      if (event.key === "?" && !event.ctrlKey && !event.metaKey) {
         const target = event.target as HTMLElement;
-        if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA' && !target.isContentEditable) {
+        if (
+          target.tagName !== "INPUT" &&
+          target.tagName !== "TEXTAREA" &&
+          !target.isContentEditable
+        ) {
           event.preventDefault();
           setIsOpen(true);
         }
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return (): void => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return (): void => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
   return {

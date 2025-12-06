@@ -1,1 +1,1 @@
-export * from './quizSchema';
+export * from "./quizSchema";

@@ -1,27 +1,28 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import { List, CheckCircle, XCircle, Flag } from 'lucide-react';
-import { QuestionReviewCard } from './QuestionReviewCard';
-import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
-import type { Question } from '@/types/quiz';
+import * as React from "react";
+import { List, CheckCircle, XCircle, Flag } from "lucide-react";
+import { QuestionReviewCard } from "./QuestionReviewCard";
+import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
+import type { Question } from "@/types/quiz";
 
-export type FilterType = 'all' | 'correct' | 'incorrect' | 'flagged';
+export type FilterType = "all" | "correct" | "incorrect" | "flagged";
 
 interface QuestionWithAnswer {
   question: Question;
   userAnswer: string | null;
   isCorrect: boolean;
   isFlagged: boolean;
+  correctAnswer?: string | null;
 }
 
 interface QuestionReviewListProps {
   questions: QuestionWithAnswer[];
-  defaultFilter?: FilterType;
   filter?: FilterType;
   onFilterChange?: (filter: FilterType) => void;
   className?: string;
+  isResolving?: boolean;
 }
 
 /**
@@ -29,12 +30,12 @@ interface QuestionReviewListProps {
  */
 export function QuestionReviewList({
   questions,
-  defaultFilter = 'all',
   filter,
   onFilterChange,
   className,
+  isResolving = false,
 }: QuestionReviewListProps): React.ReactElement {
-  const [internalFilter, setInternalFilter] = React.useState<FilterType>(defaultFilter);
+  const [internalFilter, setInternalFilter] = React.useState<FilterType>("all");
   const [expandAll, setExpandAll] = React.useState(false);
   const [expandAllSignal, setExpandAllSignal] = React.useState(0);
 
@@ -51,11 +52,11 @@ export function QuestionReviewList({
 
   const filteredQuestions = React.useMemo(() => {
     switch (activeFilter) {
-      case 'correct':
+      case "correct":
         return questions.filter((q) => q.isCorrect);
-      case 'incorrect':
+      case "incorrect":
         return questions.filter((q) => !q.isCorrect);
-      case 'flagged':
+      case "flagged":
         return questions.filter((q) => q.isFlagged);
       default:
         return questions;
@@ -75,10 +76,30 @@ export function QuestionReviewList({
   };
 
   const filters = [
-    { id: 'all', label: 'All', icon: <List className="h-4 w-4" aria-hidden="true" />, count: counts.all },
-    { id: 'correct', label: 'Correct', icon: <CheckCircle className="h-4 w-4" aria-hidden="true" />, count: counts.correct },
-    { id: 'incorrect', label: 'Incorrect', icon: <XCircle className="h-4 w-4" aria-hidden="true" />, count: counts.incorrect },
-    { id: 'flagged', label: 'Flagged', icon: <Flag className="h-4 w-4" aria-hidden="true" />, count: counts.flagged },
+    {
+      id: "all",
+      label: "All",
+      icon: <List className="h-4 w-4" aria-hidden="true" />,
+      count: counts.all,
+    },
+    {
+      id: "correct",
+      label: "Correct",
+      icon: <CheckCircle className="h-4 w-4" aria-hidden="true" />,
+      count: counts.correct,
+    },
+    {
+      id: "incorrect",
+      label: "Incorrect",
+      icon: <XCircle className="h-4 w-4" aria-hidden="true" />,
+      count: counts.incorrect,
+    },
+    {
+      id: "flagged",
+      label: "Flagged",
+      icon: <Flag className="h-4 w-4" aria-hidden="true" />,
+      count: counts.flagged,
+    },
   ] as const;
 
   return (
@@ -88,14 +109,17 @@ export function QuestionReviewList({
           {filters.map((f) => (
             <Button
               key={f.id}
-              variant={activeFilter === f.id ? 'default' : 'outline'}
+              variant={activeFilter === f.id ? "default" : "outline"}
               size="sm"
               onClick={() => handleFilterChange(f.id)}
               className="gap-1.5"
             >
               {f.icon}
               {f.label}
-              <Badge variant={activeFilter === f.id ? 'secondary' : 'outline'} className="ml-1">
+              <Badge
+                variant={activeFilter === f.id ? "secondary" : "outline"}
+                className="ml-1"
+              >
                 {f.count}
               </Badge>
             </Button>
@@ -103,7 +127,7 @@ export function QuestionReviewList({
         </div>
 
         <Button variant="ghost" size="sm" onClick={handleToggleExpandAll}>
-          {expandAll ? 'Collapse All' : 'Expand All'}
+          {expandAll ? "Collapse All" : "Expand All"}
         </Button>
       </div>
 
@@ -114,16 +138,18 @@ export function QuestionReviewList({
       {filteredQuestions.length === 0 ? (
         <div className="rounded-lg border border-slate-200 bg-slate-50 p-8 text-center dark:border-slate-800 dark:bg-slate-900">
           <p className="text-slate-500 dark:text-slate-200">
-            {activeFilter === 'incorrect' && 'No incorrect answers. Great job!'}
-            {activeFilter === 'flagged' && 'No flagged questions.'}
-            {activeFilter === 'correct' && 'No correct answers yet.'}
-            {activeFilter === 'all' && 'No questions to display.'}
+            {activeFilter === "incorrect" && "No incorrect answers. Great job!"}
+            {activeFilter === "flagged" && "No flagged questions."}
+            {activeFilter === "correct" && "No correct answers yet."}
+            {activeFilter === "all" && "No questions to display."}
           </p>
         </div>
       ) : (
         <div className="space-y-4">
           {filteredQuestions.map((item) => {
-            const originalIndex = questions.findIndex((q) => q.question.id === item.question.id);
+            const originalIndex = questions.findIndex(
+              (q) => q.question.id === item.question.id,
+            );
 
             return (
               <QuestionReviewCard
@@ -131,11 +157,14 @@ export function QuestionReviewList({
                 question={item.question}
                 questionNumber={originalIndex + 1}
                 userAnswer={item.userAnswer}
-                isCorrect={item.isCorrect}
                 isFlagged={item.isFlagged}
-                defaultExpanded={activeFilter === 'incorrect' && !item.isCorrect}
+                defaultExpanded={
+                  activeFilter === "incorrect" && !item.isCorrect
+                }
                 expandAllState={expandAll}
                 expandAllSignal={expandAllSignal}
+                correctAnswer={item.correctAnswer}
+                isResolving={isResolving}
               />
             );
           })}
