@@ -12,7 +12,7 @@ trigger: always_on
 
 ### 1. Middleware Filename
 
-- **File:** [src/proxy.ts](cci:7://file:///Users/tristan/Software/CertPrep.ai/src/proxy.ts:0:0-0:0) is the **correct** middleware filename
+- **File:** src/proxy.ts is the **correct** middleware filename
 - **DO NOT** rename to `middleware.ts`
 - Ignore any linter warnings about this
 
@@ -38,12 +38,12 @@ trigger: always_on
 
 ## High-Risk Directories
 
-| Path                                                                                    | Risk        | Reason                                |
-| --------------------------------------------------------------------------------------- | ----------- | ------------------------------------- |
-| `src/db/**`                                                                             | 🔴 CRITICAL | Schema changes break IndexedDB stores |
-| `src/lib/sync/**`                                                                       | 🔴 CRITICAL | Breaks data integrity                 |
-| [src/proxy.ts](cci:7://file:///Users/tristan/Software/CertPrep.ai/src/proxy.ts:0:0-0:0) | 🟠 HIGH     | Breaks auth/routing                   |
-| `supabase/`                                                                             | 🟠 HIGH     | Remote DB config                      |
+| Path              | Risk        | Reason                                |
+| ----------------- | ----------- | ------------------------------------- |
+| `src/db/**`       | 🔴 CRITICAL | Schema changes break IndexedDB stores |
+| `src/lib/sync/**` | 🔴 CRITICAL | Breaks data integrity                 |
+| src/proxy.ts      | 🟠 HIGH     | Breaks auth/routing                   |
+| `supabase/`       | 🟠 HIGH     | Remote DB config                      |
 
 ---
 

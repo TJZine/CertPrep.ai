@@ -38,20 +38,24 @@ async function openIndexedDB(page: Page): Promise<void> {
 
 /**
  * Waits for the Dexie database to be available on window.
- * Falls back to checking raw IndexedDB if Dexie isn't exposed.
+ * Falls back to raw IndexedDB availability check if not exposed.
  */
 export async function waitForDatabase(
   page: Page,
   timeout = 10000,
 ): Promise<void> {
   try {
-    // First try to wait for Dexie to be exposed
+    // Prefer exposed Dexie instance for reliable E2E testing
     await page.waitForFunction(
       () => typeof window.__certprepDb !== "undefined",
       { timeout },
     );
   } catch {
-    // Fall back to ensuring IndexedDB is accessible
+    // Fallback: ensure raw IndexedDB is accessible (for prod-mode E2E or legacy)
+    console.warn(
+      "[E2E] window.__certprepDb not exposed. Falling back to raw IndexedDB. " +
+      "For reliable tests, set NEXT_PUBLIC_IS_E2E=true in dev builds."
+    );
     await openIndexedDB(page);
   }
 }
@@ -314,12 +318,47 @@ export async function getUnsyncedResultCount(page: Page): Promise<number> {
 
 /**
  * Gets all quizzes from IndexedDB.
+ * Prefers exposed Dexie instance, falls back to raw IndexedDB.
  *
  * @param page - Playwright page
  * @returns Array of all quizzes
  */
 export async function getAllQuizzes(page: Page): Promise<Quiz[]> {
-  return queryQuizzesFromIndexedDB(page);
+  return page.evaluate(async () => {
+    // Prefer exposed Dexie instance
+    if (window.__certprepDb) {
+      if (!window.__certprepDb.isOpen()) {
+        await window.__certprepDb.open();
+      }
+      return window.__certprepDb.quizzes.toArray();
+    }
+
+    // Fallback to raw IndexedDB
+    return new Promise<Quiz[]>((resolve, reject) => {
+      const request = indexedDB.open("CertPrepDatabase");
+      request.onerror = (): void => reject(request.error);
+      request.onsuccess = (): void => {
+        const db = request.result;
+        try {
+          const tx = db.transaction("quizzes", "readonly");
+          const store = tx.objectStore("quizzes");
+          const getAllRequest = store.getAll();
+
+          getAllRequest.onerror = (): void => {
+            db.close();
+            reject(getAllRequest.error);
+          };
+          getAllRequest.onsuccess = (): void => {
+            db.close();
+            resolve(getAllRequest.result as Quiz[]);
+          };
+        } catch {
+          db.close();
+          resolve([]);
+        }
+      };
+    });
+  });
 }
 
 /**

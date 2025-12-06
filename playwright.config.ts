@@ -78,6 +78,8 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000, // 2 minutes for Next.js to start
     env: {
+      // Enable E2E database exposure for reliable test helpers
+      NEXT_PUBLIC_IS_E2E: "true",
       // Disable captcha for E2E tests
       NEXT_PUBLIC_HCAPTCHA_SITE_KEY: "",
     },

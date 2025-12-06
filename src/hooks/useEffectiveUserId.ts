@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const GUEST_USER_KEY = "cp_guest_user_id";
 let guestIdCounter = 0;
@@ -33,6 +33,17 @@ function ensureGuestUserId(): string | null {
  * - Otherwise, a persisted guest id is generated/stored locally.
  */
 export function useEffectiveUserId(authUserId?: string | null): string | null {
-  const [guestId] = useState<string | null>(() => ensureGuestUserId());
-  return authUserId ?? guestId;
+  // Hydration fix: Initialize with null so server/client match initially
+  const [guestId, setGuestId] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Generate/retrieve guest ID only on the client
+    const id = ensureGuestUserId();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setGuestId(id);
+  }, []);
+
+  const effectiveId = authUserId ?? guestId;
+
+  return effectiveId;
 }

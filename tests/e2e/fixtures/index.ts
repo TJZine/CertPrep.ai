@@ -82,6 +82,47 @@ async function setupSupabaseMocks(
         body: JSON.stringify({ success: true }),
       });
     }
+
+  });
+
+  // Mock Supabase REST API - quizzes endpoint
+  await context.route("**/rest/v1/quizzes*", async (route) => {
+    const request = route.request();
+    const method = request.method();
+    const url = request.url();
+
+    if (method === "GET") {
+      // Return empty array for pull sync
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify([]),
+        headers: {
+          "Content-Range": "0-0/0",
+        },
+      });
+    } else if (method === "POST" || method === "PUT" || method === "PATCH") {
+      // Capture the sync request
+      try {
+        const body = request.postDataJSON();
+        syncRequests.push({ body, url });
+      } catch {
+        syncRequests.push({ body: request.postData(), url });
+      }
+
+      // Return success for push sync
+      await route.fulfill({
+        status: 201,
+        contentType: "application/json",
+        body: JSON.stringify([]),
+      });
+    } else {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ success: true }),
+      });
+    }
   });
 
   // Remove the catch-all route that was shadowing the results route

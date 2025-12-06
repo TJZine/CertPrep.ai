@@ -139,8 +139,21 @@ export class CertPrepDatabase extends Dexie {
 
 export const db = new CertPrepDatabase();
 
-// Expose db on window for E2E testing (non-production only)
-if (typeof window !== "undefined" && process.env.NODE_ENV !== "production") {
+/**
+ * Expose db on window for E2E testing.
+ * 
+ * SECURITY: Both conditions must be true:
+ * 1. NODE_ENV !== 'production' (prevents any prod build exposure)
+ * 2. NEXT_PUBLIC_IS_E2E === 'true' (explicit opt-in for E2E builds)
+ * 
+ * This ensures that even if NEXT_PUBLIC_IS_E2E is accidentally set in a prod
+ * environment, the db is NOT exposed because NODE_ENV will be 'production'.
+ */
+if (
+  typeof window !== "undefined" &&
+  process.env.NODE_ENV !== "production" &&
+  process.env.NEXT_PUBLIC_IS_E2E === "true"
+) {
   (window as Window & { __certprepDb?: CertPrepDatabase }).__certprepDb = db;
 }
 
