@@ -42,17 +42,15 @@ yarn-error.log*
 next-env.d.ts
 
 # dev
-GEMINI.md
-CLAUDE.md
 agents.md
+GEMINI.md
 .codanna
 .fastembed_cache
 .codannaignore
 .vscode
 .gemini
-.agent
-
-
+.agent/workflows/*
+!.agent/rules/*
 
 # Sentry Config File
 .env.sentry-build-plugin

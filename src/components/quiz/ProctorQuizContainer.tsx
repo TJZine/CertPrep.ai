@@ -191,15 +191,14 @@ export function ProctorQuizContainer({
     if (isSubmitting || hasSavedResultRef.current) {
       return autoResultId;
     }
+    if (!effectiveUserId) {
+      addToast("error", "Unable to save results: no user context available.");
+      return null;
+    }
     setIsSubmitting(true);
     pauseTimer();
     autoSubmitExam();
     try {
-      if (!effectiveUserId) {
-        addToast("error", "Unable to save results: no user context available.");
-        setIsSubmitting(false);
-        return null;
-      }
 
       const result = await createResult({
         quizId: quiz.id,
