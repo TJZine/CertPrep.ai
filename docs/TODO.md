@@ -1,4 +1,4 @@
-# TODO / Backlog (Import integrity fixes tracked elsewhere)
+# TODO / Backlog
 
 ---
 

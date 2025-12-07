@@ -131,7 +131,7 @@ export default function DashboardPage(): React.ReactElement {
         isOpen={isImportModalOpen}
         onClose={() => setIsImportModalOpen(false)}
         onImportSuccess={handleImportSuccess}
-        userId={effectiveUserId ?? null}
+        userId={effectiveUserId}
       />
 
       <ModeSelectModal

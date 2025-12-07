@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **Sync**: Fixed critical infinite loop bug in `syncManager` when processing invalid records.
-- **CSP**: Corrected `frame-ancestors` directive in `middleware.ts`.
+- **CSP**: Corrected `frame-ancestors` directive in `proxy.ts`.
 
 ## [1.0.4] - 2025-11-20
 

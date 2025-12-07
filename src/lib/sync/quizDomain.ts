@@ -128,7 +128,7 @@ export async function toRemoteQuiz(
 
 import { NIL_UUID } from "@/lib/constants";
 
-export async function toLocalQuiz(remote: RemoteQuizRow): Promise<Quiz> {
+export function toLocalQuiz(remote: RemoteQuizRow): Quiz {
   return {
     id: remote.id,
     user_id: remote.user_id ?? NIL_UUID,

@@ -38,7 +38,7 @@ const nextConfig = {
       {
         source: "/(.*)",
         headers: [
-          // CSP is now handled in middleware.ts to support Nonce-based strict mode
+          // CSP is now handled in proxy.ts to support Nonce-based strict mode
           {
             key: "X-Frame-Options",
             value: "DENY",
