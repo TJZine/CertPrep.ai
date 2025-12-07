@@ -412,7 +412,7 @@ export function DataManagement(): React.ReactElement {
         title="Reset Data"
         size="sm"
         footer={
-          <>
+          <div className="flex flex-wrap items-center justify-end gap-3">
             <Button
               variant="outline"
               onClick={() => {
@@ -422,25 +422,23 @@ export function DataManagement(): React.ReactElement {
             >
               Cancel
             </Button>
-            <div className="flex gap-2">
-              <Button
-                variant="secondary"
-                onClick={handleClearLocalOnly}
-                isLoading={isClearingLocal}
-                disabled={deleteConfirmation.trim().toUpperCase() !== "DELETE"}
-              >
-                Clear Local Data Only
-              </Button>
-              <Button
-                variant="danger"
-                onClick={handleReset}
-                isLoading={isResetting}
-                disabled={deleteConfirmation.trim().toUpperCase() !== "DELETE"}
-              >
-                Delete Account + Local
-              </Button>
-            </div>
-          </>
+            <Button
+              variant="secondary"
+              onClick={handleClearLocalOnly}
+              isLoading={isClearingLocal}
+              disabled={deleteConfirmation.trim().toUpperCase() !== "DELETE"}
+            >
+              Clear Local Data Only
+            </Button>
+            <Button
+              variant="danger"
+              onClick={handleReset}
+              isLoading={isResetting}
+              disabled={deleteConfirmation.trim().toUpperCase() !== "DELETE"}
+            >
+              Delete Account + Local
+            </Button>
+          </div>
         }
       >
         <div className="flex items-start gap-3">

@@ -73,13 +73,11 @@ for FILE in $STAGED_FILES; do
   if git show :"$FILE" | grep -Eq -e "$PATTERNS"; then
     echo "❌ SECURITY WARNING: Potential secret found in $FILE"
     
-    # Extract the matching line
-    MATCH_LINE=$(git show :"$FILE" | grep -E -e "$PATTERNS" | head -n 1)
+    # Extract line numbers of all matches (don't print content to avoid leaking secrets)
+    LINE_NUMS=$(git show :"$FILE" | grep -n -E -e "$PATTERNS" | cut -d: -f1 | tr '\n' ', ' | sed 's/,$//')
     
-    # Masking logic: keep first 4 and last 4 chars of the match, obscure the rest
-    MASKED_OUTPUT=$(echo "$MATCH_LINE" | sed -E 's/([a-zA-Z0-9._-]{4})[a-zA-Z0-9._-]{5,}([a-zA-Z0-9._-]{4})/\1******\2/g')
-    
-    echo "Context: $MASKED_OUTPUT"
+    echo "   → Line(s): $LINE_NUMS"
+    echo "   → To review: git show :$FILE | sed -n '<LINE>p'"
     echo "Please remove this secret before committing."
     
     FOUND_SECRETS=1

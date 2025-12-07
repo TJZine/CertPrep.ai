@@ -251,8 +251,8 @@ export function ResultsContainer({
                 <Button
                   variant="ghost"
                   size="icon-sm"
-                  onClick={handleBackToDashboard}
-                  aria-label="Back to dashboard"
+                  onClick={() => router.back()}
+                  aria-label="Go back"
                 >
                   <ArrowLeft className="h-5 w-5" aria-hidden="true" />
                 </Button>
