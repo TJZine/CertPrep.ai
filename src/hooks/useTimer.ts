@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import * as React from 'react';
+import * as React from "react";
 
 interface UseTimerOptions {
   initialSeconds?: number;
@@ -79,7 +79,7 @@ export function useTimer({
   const formattedTime = React.useMemo(() => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   }, [seconds]);
 
   return {

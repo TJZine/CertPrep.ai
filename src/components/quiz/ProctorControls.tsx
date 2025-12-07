@@ -1,9 +1,16 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import { AlertTriangle, ChevronLeft, ChevronRight, Flag, FlagOff, Send } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
-import { cn } from '@/lib/utils';
+import * as React from "react";
+import {
+  AlertTriangle,
+  ChevronLeft,
+  ChevronRight,
+  Flag,
+  FlagOff,
+  Send,
+} from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { cn } from "@/lib/utils";
 
 interface ProctorControlsProps {
   currentIndex: number;
@@ -35,12 +42,23 @@ export function ProctorControls({
   const isLastQuestion = currentIndex === totalQuestions - 1;
 
   return (
-    <div className={cn('space-y-4', className)}>
+    <div className={cn("space-y-4", className)}>
       <div className="flex justify-center">
         {hasAnswer ? (
           <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-700 dark:bg-blue-900/40 dark:text-blue-100">
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M5 13l4 4L19 7"
+              />
             </svg>
             Answer recorded
           </span>
@@ -65,15 +83,21 @@ export function ProctorControls({
         </Button>
 
         <Button
-          variant={isFlagged ? 'warning' : 'outline'}
+          variant={isFlagged ? "warning" : "outline"}
           onClick={onToggleFlag}
-          aria-label={isFlagged ? 'Remove flag' : 'Flag for review'}
+          aria-label={isFlagged ? "Remove flag" : "Flag for review"}
           aria-pressed={isFlagged}
-          leftIcon={isFlagged ? <Flag className="h-4 w-4 fill-current" /> : <FlagOff className="h-4 w-4" />}
+          leftIcon={
+            isFlagged ? (
+              <Flag className="h-4 w-4 fill-current" />
+            ) : (
+              <FlagOff className="h-4 w-4" />
+            )
+          }
           className="justify-self-center"
         >
           {isFlagged ? (
-            'Flagged'
+            "Flagged"
           ) : (
             <>
               <span className="hidden sm:inline">Mark for Review</span>
@@ -105,14 +129,25 @@ export function ProctorControls({
         >
           Submit Exam
         </Button>
-        <p className="mt-2 text-center text-xs text-slate-500 dark:text-slate-300">You can review and change answers before submitting</p>
+        <p className="mt-2 text-center text-xs text-slate-500 dark:text-slate-300">
+          You can review and change answers before submitting
+        </p>
       </div>
 
       <div className="text-center text-xs text-slate-400 dark:text-slate-300">
         <span className="hidden sm:inline">
-          Use <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono dark:bg-slate-800 dark:text-slate-100">←</kbd>{' '}
-          <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono dark:bg-slate-800 dark:text-slate-100">→</kbd> to navigate,{' '}
-          <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono dark:bg-slate-800 dark:text-slate-100">F</kbd> to flag
+          Use{" "}
+          <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono dark:bg-slate-800 dark:text-slate-100">
+            ←
+          </kbd>{" "}
+          <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono dark:bg-slate-800 dark:text-slate-100">
+            →
+          </kbd>{" "}
+          to navigate,{" "}
+          <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono dark:bg-slate-800 dark:text-slate-100">
+            F
+          </kbd>{" "}
+          to flag
         </span>
       </div>
     </div>
@@ -145,8 +180,14 @@ export function ProctorControlsCompact({
   const isLastQuestion = currentIndex === totalQuestions - 1;
 
   return (
-    <div className={cn('flex items-center justify-between', className)}>
-      <Button variant="ghost" size="icon" onClick={onPrevious} disabled={isFirstQuestion} aria-label="Previous question">
+    <div className={cn("flex items-center justify-between", className)}>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={onPrevious}
+        disabled={isFirstQuestion}
+        aria-label="Previous question"
+      >
         <ChevronLeft className="h-5 w-5" />
       </Button>
 
@@ -154,13 +195,23 @@ export function ProctorControlsCompact({
         variant="ghost"
         size="icon"
         onClick={onToggleFlag}
-        className={cn(isFlagged && 'text-orange-500')}
-        aria-label={isFlagged ? 'Remove flag' : 'Flag for review'}
+        className={cn(isFlagged && "text-orange-500")}
+        aria-label={isFlagged ? "Remove flag" : "Flag for review"}
       >
-        {isFlagged ? <Flag className="h-5 w-5 fill-current" /> : <FlagOff className="h-5 w-5" />}
+        {isFlagged ? (
+          <Flag className="h-5 w-5 fill-current" />
+        ) : (
+          <FlagOff className="h-5 w-5" />
+        )}
       </Button>
 
-      <Button variant="ghost" size="icon" onClick={onNext} disabled={isLastQuestion} aria-label="Next question">
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={onNext}
+        disabled={isLastQuestion}
+        aria-label="Next question"
+      >
         <ChevronRight className="h-5 w-5" />
       </Button>
     </div>

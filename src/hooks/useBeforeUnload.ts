@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import * as React from 'react';
+import * as React from "react";
 
 /**
  * Hook to warn users before leaving the page during a quiz.
@@ -11,13 +11,14 @@ export function useBeforeUnload(shouldWarn: boolean, message?: string): void {
 
     const handleBeforeUnload = (event: BeforeUnloadEvent): void => {
       event.preventDefault();
-      event.returnValue = message || 'You have unsaved progress. Are you sure you want to leave?';
+      event.returnValue =
+        message || "You have unsaved progress. Are you sure you want to leave?";
     };
 
-    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener("beforeunload", handleBeforeUnload);
 
     return (): void => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, [shouldWarn, message]);
 }

@@ -1,15 +1,28 @@
 {
   "name": "certprep-ai",
-  "version": "0.1.0",
+  "version": "1.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "vitest run"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "security-check": "bash scripts/check-secrets.sh",
+    "prepare": "husky || true"
+  },
+  "engines": {
+    "node": ">=20.0.0"
   },
   "dependencies": {
+    "@hcaptcha/react-hcaptcha": "^1.16.0",
+    "@hookform/resolvers": "^5.2.2",
+    "@sentry/nextjs": "^10.27.0",
+    "@supabase/ssr": "^0.8.0",
+    "@supabase/supabase-js": "^2.86.0",
+    "@vercel/speed-insights": "^1.2.0",
     "canvas-confetti": "^1.9.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -18,9 +31,10 @@
     "immer": "^11.0.0",
     "isomorphic-dompurify": "^2.33.0",
     "lucide-react": "^0.554.0",
-    "next": "16.0.7",
-    "react": "19.2.0",
-    "react-dom": "19.2.0",
+    "next": "^16.0.7",
+    "react": "^19.2.1",
+    "react-dom": "^19.2.1",
+    "react-hook-form": "^7.68.0",
     "recharts": "^3.5.0",
     "redux": "^4.2.1",
     "tailwind-merge": "^3.4.0",
@@ -28,7 +42,12 @@
     "zod": "^4.1.13",
     "zustand": "^5.0.8"
   },
+  "lint-staged": {
+    "*.{ts,tsx}": "eslint --max-warnings=0",
+    "*.{json,md}": "prettier --write"
+  },
   "devDependencies": {
+    "@playwright/test": "^1.57.0",
     "@tailwindcss/typography": "^0.5.15",
     "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^20",
@@ -37,11 +56,16 @@
     "@types/uuid": "^10.0.0",
     "@typescript-eslint/eslint-plugin": "^8.48.0",
     "@typescript-eslint/parser": "^8.48.0",
+    "@vitest/coverage-v8": "^4.0.14",
     "autoprefixer": "^10.4.20",
+    "baseline-browser-mapping": "^2.8.32",
     "eslint": "^9.39.1",
-    "eslint-config-next": "16.0.4",
+    "eslint-config-next": "16.0.7",
     "fake-indexeddb": "^6.2.5",
+    "husky": "^9.0.11",
+    "lint-staged": "^15.2.2",
     "postcss": "^8.4.47",
+    "prettier": "^3.7.4",
     "tailwindcss": "^3.4.13",
     "typescript": "^5",
     "vitest": "^4.0.14"

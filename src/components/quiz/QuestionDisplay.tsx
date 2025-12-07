@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import { Flag, FlagOff } from 'lucide-react';
-import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
-import { sanitizeHTML } from '@/lib/sanitize';
-import { cn } from '@/lib/utils';
-import type { Question } from '@/types/quiz';
+import * as React from "react";
+import { Flag, FlagOff } from "lucide-react";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import { sanitizeHTML } from "@/lib/sanitize";
+import { cn } from "@/lib/utils";
+import type { Question } from "@/types/quiz";
 
 interface QuestionDisplayProps {
   question: Question;
@@ -30,10 +30,13 @@ export function QuestionDisplay({
   showFlagButton = true,
   className,
 }: QuestionDisplayProps): React.ReactElement {
-  const sanitizedQuestion = React.useMemo(() => sanitizeHTML(question.question), [question.question]);
+  const sanitizedQuestion = React.useMemo(
+    () => sanitizeHTML(question.question),
+    [question.question],
+  );
 
   return (
-    <div className={cn('space-y-4', className)}>
+    <div className={cn("space-y-4", className)}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex min-w-0 flex-wrap items-center gap-2">
           <span className="text-sm font-medium text-slate-500 dark:text-slate-300">
@@ -43,11 +46,11 @@ export function QuestionDisplay({
           {question.difficulty && (
             <Badge
               variant={
-                question.difficulty === 'Easy'
-                  ? 'success'
-                  : question.difficulty === 'Medium'
-                    ? 'warning'
-                    : 'danger'
+                question.difficulty === "Easy"
+                  ? "success"
+                  : question.difficulty === "Medium"
+                    ? "warning"
+                    : "danger"
               }
             >
               {question.difficulty}
@@ -59,12 +62,18 @@ export function QuestionDisplay({
             variant="ghost"
             size="sm"
             onClick={onToggleFlag}
-            className={cn(isFlagged && 'text-orange-500 hover:text-orange-600')}
-            aria-label={isFlagged ? 'Remove flag' : 'Flag for review'}
+            className={cn(isFlagged && "text-orange-500 hover:text-orange-600")}
+            aria-label={isFlagged ? "Remove flag" : "Flag for review"}
             aria-pressed={isFlagged}
           >
-            {isFlagged ? <Flag className="h-4 w-4 fill-current" /> : <FlagOff className="h-4 w-4" />}
-            <span className="ml-1 hidden sm:inline">{isFlagged ? 'Flagged' : 'Flag'}</span>
+            {isFlagged ? (
+              <Flag className="h-4 w-4 fill-current" />
+            ) : (
+              <FlagOff className="h-4 w-4" />
+            )}
+            <span className="ml-1 hidden sm:inline">
+              {isFlagged ? "Flagged" : "Flag"}
+            </span>
           </Button>
         )}
       </div>
@@ -77,8 +86,12 @@ export function QuestionDisplay({
 
       {question.user_notes && (
         <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-800/70 dark:bg-blue-900/20">
-          <p className="text-xs font-medium text-blue-700 dark:text-blue-200">Your Notes:</p>
-          <p className="mt-1 text-sm text-blue-800 dark:text-blue-100">{question.user_notes}</p>
+          <p className="text-xs font-medium text-blue-700 dark:text-blue-200">
+            Your Notes:
+          </p>
+          <p className="mt-1 text-sm text-blue-800 dark:text-blue-100">
+            {question.user_notes}
+          </p>
         </div>
       )}
     </div>

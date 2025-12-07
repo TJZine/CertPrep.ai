@@ -1,0 +1,387 @@
+{
+  "title": "MA Personal Lines Insurance Practice Exam 2",
+  "description": "Practice exam 2 simulating the Massachusetts Personal Lines Insurance certification. Covers Contract Law, Homeowners, MA Auto, Dwelling, Flood, and State Law.",
+  "questions": [
+    {
+      "id": "exam-2-q01",
+      "category": "Contract Law",
+      "difficulty": "Easy",
+      "question": "An insurance contract is described as 'aleatory'. What does this mean?",
+      "options": {
+        "A": "The contract is drawn up by one party.",
+        "B": "Only one party makes a promise.",
+        "C": "One party may recover more in value than they parted with based on an uncertain event.",
+        "D": "The contract is personal between the insurer and insured."
+      },
+      "correct_answer": "C",
+      "explanation": "An insurance contract is an aleatory contract since one party may recover more in value than he or she has parted with based upon a possible future event (e.g., loss). There is an unequal exchange of value.",
+      "distractor_logic": "A describes Adhesion. B describes Unilateral. D describes Personal."
+    },
+    {
+      "id": "exam-2-q02",
+      "category": "General Insurance Basics",
+      "difficulty": "Medium",
+      "question": "Which principle states that an insured should be restored to the same financial condition they were in prior to the loss, without profiting?",
+      "options": {
+        "A": "Subrogation",
+        "B": "Indemnity",
+        "C": "Adhesion",
+        "D": "Proximate Cause"
+      },
+      "correct_answer": "B",
+      "explanation": "The principle of indemnity states that a contract of indemnity makes the insured financially or economically 'whole' again... This principle prevents an insured from profiting from an insurance policy.",
+      "distractor_logic": "Subrogation is the transfer of rights of recovery. Adhesion refers to contract drafting."
+    },
+    {
+      "id": "exam-2-q03",
+      "category": "MA Personal Auto",
+      "difficulty": "Medium",
+      "question": "Under the Massachusetts Personal Auto Policy, what is the standard deductible for Part 7 (Collision)?",
+      "options": {
+        "A": "$200",
+        "B": "$300",
+        "C": "$500",
+        "D": "$1,000"
+      },
+      "correct_answer": "C",
+      "explanation": "The standard deductible for Part 7 (Collision) is $500.",
+      "distractor_logic": "$300 is listed as an option an insured may select, but $500 is the standard."
+    },
+    {
+      "id": "exam-2-q04",
+      "category": "Homeowners Section I",
+      "difficulty": "Hard",
+      "question": "In a Homeowners policy, Coverage D (Loss of Use) is automatically provided at what percentage of the Coverage A limit for HO-2, HO-3, and HO-5 forms?",
+      "options": {
+        "A": "10%",
+        "B": "20%",
+        "C": "30%",
+        "D": "50%"
+      },
+      "correct_answer": "C",
+      "explanation": "The policy automatically provides coverage in the amount of 30% of the Coverage A limit (in an HO-2, 3 and 5 policy) for Loss of Use.",
+      "distractor_logic": "10% is Coverage B limit. 50% is Coverage C limit."
+    },
+    {
+      "id": "exam-2-q05",
+      "category": "MA Insurance Law",
+      "difficulty": "Medium",
+      "question": "During the first three years of licensure, a Massachusetts resident producer must complete how many credit hours of continuing education?",
+      "options": {
+        "A": "30 hours",
+        "B": "45 hours",
+        "C": "60 hours",
+        "D": "90 hours"
+      },
+      "correct_answer": "C",
+      "explanation": "During the first 3 years (i.e., 36 months) of licensure, a resident producer must complete 60 credit hours of approved study.",
+      "distractor_logic": "45 hours is required for subsequent 3-year periods."
+    },
+    {
+      "id": "exam-2-q06",
+      "category": "Property & Liability Basics",
+      "difficulty": "Easy",
+      "question": "What type of liability is imposed without regard to fault, often applied to dangerous activities or products?",
+      "options": {
+        "A": "Vicarious Liability",
+        "B": "Strict Liability",
+        "C": "Contingent Liability",
+        "D": "Contractual Liability"
+      },
+      "correct_answer": "B",
+      "explanation": "Strict liability is imposed without regard to fault. It holds that anyone who maintains a dangerous condition... may be legally liable for any damages regardless of negligence.",
+      "distractor_logic": "Vicarious liability is liability for the acts of another (e.g., employer/employee)."
+    },
+    {
+      "id": "exam-2-q07",
+      "category": "Homeowners Section I",
+      "difficulty": "Medium",
+      "question": "Under the Homeowners Additional Coverages, what is the specific limit for 'Credit Card, Fund Transfer and Forgery'?",
+      "options": {
+        "A": "$200",
+        "B": "$500",
+        "C": "$1,000",
+        "D": "$2,500"
+      },
+      "correct_answer": "B",
+      "explanation": "The policy provides $500 for Credit Card, Fund Transfer and Forgery coverage.",
+      "distractor_logic": "$200 is the limit for Money. $1,000 is the limit for Loss Assessment."
+    },
+    {
+      "id": "exam-2-q08",
+      "category": "MA Personal Auto",
+      "difficulty": "Medium",
+      "question": "Which optional part of the MA Auto Policy provides coverage for Bodily Injury to others when the accident occurs outside of Massachusetts?",
+      "options": {
+        "A": "Part 1",
+        "B": "Part 3",
+        "C": "Part 5",
+        "D": "Part 7"
+      },
+      "correct_answer": "C",
+      "explanation": "Part 5 (Optional Bodily Injury to Others) provides protection for an insured who is legally responsible for BI to others... while operating a motor vehicle outside Massachusetts.",
+      "distractor_logic": "Part 1 covers accidents in Massachusetts only."
+    },
+    {
+      "id": "exam-2-q09",
+      "category": "MA Insurance Law",
+      "difficulty": "Medium",
+      "question": "Offering something of value not specified in the insurance policy to induce a customer to purchase insurance is an illegal practice known as:",
+      "options": {
+        "A": "Twisting",
+        "B": "Rebating",
+        "C": "Defamation",
+        "D": "Coercion"
+      },
+      "correct_answer": "B",
+      "explanation": "Any valuable consideration or special favor not stated in a policy of insurance which is used to induce an applicant to buy insurance is known as rebating.",
+      "distractor_logic": "Twisting is misrepresentation to force a lapse. Defamation is false statements about a competitor."
+    },
+    {
+      "id": "exam-2-q10",
+      "category": "Dwelling Policies",
+      "difficulty": "Medium",
+      "question": "Which Dwelling Policy form provides 'Open Peril' (All-Risk) coverage on the dwelling/structures and 'Broad Form' (Named Peril) coverage on personal property?",
+      "options": {
+        "A": "DP-1",
+        "B": "DP-2",
+        "C": "DP-3",
+        "D": "DP-4"
+      },
+      "correct_answer": "C",
+      "explanation": "The DP-3 (Special Form) provides open-peril coverage on Coverages A and B, whereas Coverage C is protected on a 'broad form peril' basis.",
+      "distractor_logic": "DP-1 and DP-2 are named peril policies on the dwelling."
+    },
+    {
+      "id": "exam-2-q11",
+      "category": "MA Personal Auto",
+      "difficulty": "Easy",
+      "question": "Under the MA Auto Policy, Part 3 (Uninsured Motorist) protects an insured if they are struck by:",
+      "options": {
+        "A": "A vehicle with sufficient liability insurance",
+        "B": "A hit-and-run vehicle with an unidentified driver",
+        "C": "A vehicle owned by the state government",
+        "D": "A vehicle used as a livery"
+      },
+      "correct_answer": "B",
+      "explanation": "Part 3 protects an insured if he or she is struck by a hit-and-run vehicle (i.e., the at-fault driver cannot be identified).",
+      "distractor_logic": "State owned vehicles and livery vehicles are generally excluded from UM coverage scenarios in specific contexts, but hit-and-run is explicitly covered."
+    },
+    {
+      "id": "exam-2-q12",
+      "category": "General Insurance Basics",
+      "difficulty": "Medium",
+      "question": "When an agent or producer knows of adverse information about an applicant but submits the application without revealing it, they have engaged in:",
+      "options": {
+        "A": "Waiver",
+        "B": "Estoppel",
+        "C": "Warranty",
+        "D": "Concealment"
+      },
+      "correct_answer": "A",
+      "explanation": "If the agent taking the application knows the entire story and still submits the application... the agent has performed a waiver. He or she has knowingly and voluntarily waived the insurer's right to deny coverage.",
+      "distractor_logic": "Concealment is usually by the applicant. Estoppel is the legal result preventing denial after a waiver."
+    },
+    {
+      "id": "exam-2-q13",
+      "category": "Homeowners Section I",
+      "difficulty": "Hard",
+      "question": "The Homeowners policy 'Special Limit of Liability' for money, bank notes, and bullion is:",
+      "options": {
+        "A": "$200",
+        "B": "$500",
+        "C": "$1,000",
+        "D": "$1,500"
+      },
+      "correct_answer": "A",
+      "explanation": "The policy includes Special Limits of Liability... $200 for money.",
+      "distractor_logic": "$1,500 is for Securities. $500 is for Credit Cards."
+    },
+    {
+      "id": "exam-2-q14",
+      "category": "MA Insurance Law",
+      "difficulty": "Easy",
+      "question": "An insurer that is chartered in another state (e.g., Vermont) but authorized to do business in Massachusetts is called a:",
+      "options": {
+        "A": "Domestic Insurer",
+        "B": "Foreign Insurer",
+        "C": "Alien Insurer",
+        "D": "Unauthorized Insurer"
+      },
+      "correct_answer": "B",
+      "explanation": "A foreign insurer is one that is authorized to operate in a particular state but it is chartered or domiciled in another state.",
+      "distractor_logic": "Domestic is chartered in MA. Alien is chartered in another country."
+    },
+    {
+      "id": "exam-2-q15",
+      "category": "Homeowners Section I",
+      "difficulty": "Medium",
+      "question": "Which Homeowners form is intended for tenants (renters) and covers personal property but not the building structure?",
+      "options": {
+        "A": "HO-2",
+        "B": "HO-3",
+        "C": "HO-4",
+        "D": "HO-6"
+      },
+      "correct_answer": "C",
+      "explanation": "The HO-4 is the Tenant's Broad Form... it covers a renter's unscheduled personal property... and does not cover real property.",
+      "distractor_logic": "HO-6 is for Condo owners. HO-2 and HO-3 are for homeowners."
+    },
+    {
+      "id": "exam-2-q16",
+      "category": "MA Insurance Law",
+      "difficulty": "Medium",
+      "question": "A person who falsely represents themselves as a licensed producer when they are not licensed is guilty of impersonation and subject to a fine of:",
+      "options": {
+        "A": "$10 to $100",
+        "B": "$100 to $500",
+        "C": "$500 to $1,000",
+        "D": "$1,000 to $5,000"
+      },
+      "correct_answer": "A",
+      "explanation": "A specific fine applies to impersonation. Anyone engaging in this unfair practice may be fined from $10 to $100.",
+      "distractor_logic": "Other fines apply to different violations, such as $100-$500 for unlicensed compensation."
+    },
+    {
+      "id": "exam-2-q17",
+      "category": "MA Personal Auto",
+      "difficulty": "Easy",
+      "question": "In Massachusetts, a Senior Citizen Discount is available on auto policies for individuals age:",
+      "options": {
+        "A": "55 or older",
+        "B": "60 or older",
+        "C": "62 or older",
+        "D": "65 or older"
+      },
+      "correct_answer": "D",
+      "explanation": "A senior citizen discount is available for those age 65 and older which is 25% on all Coverage Parts.",
+      "distractor_logic": "65 is the specific age listed in the text."
+    },
+    {
+      "id": "exam-2-q18",
+      "category": "Property & Liability Basics",
+      "difficulty": "Medium",
+      "question": "Which term describes the 'efficient cause' of a loss, or the event that sets in motion an unbroken chain of events leading to the loss?",
+      "options": {
+        "A": "Indirect Loss",
+        "B": "Proximate Cause",
+        "C": "Intervening Cause",
+        "D": "Concurrent Causation"
+      },
+      "correct_answer": "B",
+      "explanation": "Proximate cause may be described as the efficient cause of loss... responsible for the loss or destruction through a domino effect.",
+      "distractor_logic": "Intervening cause breaks the chain of events."
+    },
+    {
+      "id": "exam-2-q19",
+      "category": "Dwelling Policies",
+      "difficulty": "Hard",
+      "question": "Under a Dwelling Policy (DP-1), coverage for Vandalism is excluded if the building has been vacant for more than how many consecutive days immediately before the loss?",
+      "options": {
+        "A": "30 days",
+        "B": "45 days",
+        "C": "60 days",
+        "D": "90 days"
+      },
+      "correct_answer": "C",
+      "explanation": "If the dwelling has been vacant for more than sixty (60) consecutive days immediately before the damage occurs, there is no coverage for Vandalism.",
+      "distractor_logic": "30 days is the waiting period for flood insurance or address change notice."
+    },
+    {
+      "id": "exam-2-q20",
+      "category": "MA Insurance Law",
+      "difficulty": "Medium",
+      "question": "A producer must report any administrative action taken against them in another jurisdiction to the Commissioner within how many days of the final disposition?",
+      "options": {
+        "A": "10 days",
+        "B": "15 days",
+        "C": "30 days",
+        "D": "60 days"
+      },
+      "correct_answer": "C",
+      "explanation": "A producer must report to the Commissioner any administrative action against him or her by another State... within 30 days of a final disposition.",
+      "distractor_logic": "30 days is the statutory requirement."
+    },
+    {
+      "id": "exam-2-q21",
+      "category": "Homeowners Section I",
+      "difficulty": "Medium",
+      "question": "Under the Homeowners Additional Coverages, the policy will pay up to what amount for the removal of any *one* tree felled by a covered peril (like windstorm) if it damages a covered structure?",
+      "options": {
+        "A": "$250",
+        "B": "$500",
+        "C": "$1,000",
+        "D": "$1,500"
+      },
+      "correct_answer": "B",
+      "explanation": "The policy will not pay more than $500 for any one tree.",
+      "distractor_logic": "$1,000 is the total maximum for all trees in one loss."
+    },
+    {
+      "id": "exam-2-q22",
+      "category": "MA Personal Auto",
+      "difficulty": "Hard",
+      "question": "Under the MA Auto Policy, Part 11 (Towing and Labor) pays up to what standard limit per disablement (unless increased)?",
+      "options": {
+        "A": "$25",
+        "B": "$50",
+        "C": "$75",
+        "D": "$100"
+      },
+      "correct_answer": "B",
+      "explanation": "This optional coverage will pay up to $50 for the cost of towing a disabled covered auto.",
+      "distractor_logic": "Limits can be increased to $100, but $50 is the standard base mentioned."
+    },
+    {
+      "id": "exam-2-q23",
+      "category": "MA Insurance Law",
+      "difficulty": "Medium",
+      "question": "How often must the Commissioner of Insurance examine the financial condition of a Domestic Insurer?",
+      "options": {
+        "A": "Every year",
+        "B": "Every 2 years",
+        "C": "Every 3 years",
+        "D": "Every 5 years"
+      },
+      "correct_answer": "D",
+      "explanation": "The Commissioner of Insurance is required to examine domestic insurers at least once every five years to ensure that they are financially stable.",
+      "distractor_logic": "Five years is the statutory period for domestic examinations."
+    },
+    {
+      "id": "exam-2-q24",
+      "category": "Flood Insurance",
+      "difficulty": "Medium",
+      "question": "How does the National Flood Insurance Program (NFIP) policy define a 'flood'?",
+      "options": {
+        "A": "Water damage from a broken pipe",
+        "B": "Water backup from a sewer or drain",
+        "C": "A general and temporary condition of partial or complete inundation of normally dry land area",
+        "D": "Accumulation of water on a single property due to poor grading"
+      },
+      "correct_answer": "C",
+      "explanation": "Chapter 8 under Flood Defined quotes the policy definition: 'A general and temporary condition of partial or complete inundation of normally dry land area resulting from overflow of inland or tidal waters...'.",
+      "distractor_logic": "A is incorrect (broken pipes are not flood). B is incorrect (sewer backup is generally excluded unless directly caused by flood). D is incorrect (flood must be general, affecting 2+ acres or properties)."
+    },
+    {
+      "id": "exam-2-q25",
+      "category": "General Insurance Basics",
+      "difficulty": "Easy",
+      "question": "Which legal doctrine prevents an insurer from denying a claim if its producer knowingly made a false statement that the insured relied upon to their detriment?",
+      "options": {
+        "A": "Estoppel",
+        "B": "Subrogation",
+        "C": "Indemnity",
+        "D": "Adhesion"
+      },
+      "correct_answer": "A",
+      "explanation": "Estoppel involves a false statement made by one party which is relied on by another... the insurer would be 'stopped' or 'estopped' from denying the claim.",
+      "distractor_logic": "Subrogation is recovery rights. Indemnity is making whole. Adhesion is contract interpretation."
+    }
+  ],
+  "tags": [
+    "Massachusetts",
+    "MA Personal Lines",
+    "Insurance Exam",
+    "Property & Casualty"
+  ]
+}

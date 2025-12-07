@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import * as React from 'react';
+import * as React from "react";
 
 interface ServiceWorkerState {
   isSupported: boolean;
@@ -26,62 +26,97 @@ export function useServiceWorker(): UseServiceWorkerReturn {
     error: null,
   });
 
-  React.useEffect((): void | (() => void) => {
-    if (!('serviceWorker' in navigator)) {
+  React.useEffect((): (() => void) => {
+    let isMounted = true;
+    let currentRegistration: ServiceWorkerRegistration | null = null;
+    let updateFoundHandler: (() => void) | null = null;
+
+    if (typeof navigator === "undefined" || !navigator.serviceWorker) {
       setState((prev) => ({ ...prev, isSupported: false }));
-      return;
+      return () => {
+        isMounted = false;
+      };
     }
 
     setState((prev) => ({ ...prev, isSupported: true }));
 
     const registerSW = async (): Promise<void> => {
       try {
-        const registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+        const registration = await navigator.serviceWorker.register("/sw.js", {
+          scope: "/",
+        });
+
+        if (!isMounted) return;
+
+        currentRegistration = registration;
         setState((prev) => ({
           ...prev,
           isRegistered: true,
           registration,
         }));
 
-        registration.addEventListener('updatefound', () => {
+        updateFoundHandler = (): void => {
           const newWorker = registration.installing;
           if (newWorker) {
-            newWorker.addEventListener('statechange', () => {
-              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                setState((prev) => ({ ...prev, isUpdateAvailable: true }));
+            const stateChangeHandler = (): void => {
+              if (
+                newWorker.state === "installed" &&
+                navigator.serviceWorker.controller
+              ) {
+                if (isMounted) {
+                  setState((prev) => ({ ...prev, isUpdateAvailable: true }));
+                }
               }
-            });
+            };
+            newWorker.addEventListener("statechange", stateChangeHandler);
           }
-        });
+        };
 
-        if (registration.waiting) {
+        registration.addEventListener("updatefound", updateFoundHandler);
+
+        if (registration.waiting && isMounted) {
           setState((prev) => ({ ...prev, isUpdateAvailable: true }));
         }
       } catch (error) {
-        console.error('Service worker registration failed:', error);
-        setState((prev) => ({
-          ...prev,
-          error: error instanceof Error ? error : new Error(String(error)),
-        }));
+        console.error("Service worker registration failed:", error);
+        if (isMounted) {
+          setState((prev) => ({
+            ...prev,
+            error: error instanceof Error ? error : new Error(String(error)),
+          }));
+        }
       }
     };
 
-    registerSW();
+    void registerSW();
 
     const handleControllerChange = (): void => {
       window.location.reload();
     };
 
-    navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange);
+    navigator.serviceWorker.addEventListener(
+      "controllerchange",
+      handleControllerChange,
+    );
 
     return (): void => {
-      navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange);
+      isMounted = false;
+      navigator.serviceWorker.removeEventListener(
+        "controllerchange",
+        handleControllerChange,
+      );
+      if (currentRegistration && updateFoundHandler) {
+        currentRegistration.removeEventListener(
+          "updatefound",
+          updateFoundHandler,
+        );
+      }
     };
   }, []);
 
   const update = React.useCallback(async (): Promise<void> => {
     if (state.registration?.waiting) {
-      state.registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+      state.registration.waiting.postMessage({ type: "SKIP_WAITING" });
     }
   }, [state.registration]);
 

@@ -1,24 +1,34 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import { CheckCircle, XCircle, ChevronDown, ChevronUp, Flag, Lightbulb } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
-import { AITutorButton } from '@/components/quiz/AITutorButton';
-import { cn } from '@/lib/utils';
-import { sanitizeHTML } from '@/lib/sanitize';
-import type { Question } from '@/types/quiz';
+import * as React from "react";
+import {
+  CheckCircle,
+  CheckCircle2,
+  XCircle,
+  ChevronDown,
+  ChevronUp,
+  Flag,
+  HelpCircle,
+  Lightbulb,
+} from "lucide-react";
+import { Card, CardContent } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
+import { AITutorButton } from "@/components/quiz/AITutorButton";
+import { cn } from "@/lib/utils";
+import { sanitizeHTML } from "@/lib/sanitize";
+import type { Question } from "@/types/quiz";
 
 interface QuestionReviewCardProps {
   question: Question;
   questionNumber: number;
-  userAnswer: string | null;
-  isCorrect: boolean;
+  userAnswer?: string | null;
   isFlagged: boolean;
   defaultExpanded?: boolean;
   className?: string;
   expandAllState?: boolean;
   expandAllSignal?: number;
+  correctAnswer?: string | null;
+  isResolving?: boolean;
 }
 
 /**
@@ -28,20 +38,54 @@ export function QuestionReviewCard({
   question,
   questionNumber,
   userAnswer,
-  isCorrect,
   isFlagged,
   defaultExpanded = false,
   className,
   expandAllState,
   expandAllSignal,
+  correctAnswer,
+  isResolving = false,
 }: QuestionReviewCardProps): React.ReactElement {
   const [isExpanded, setIsExpanded] = React.useState(defaultExpanded);
 
-  const sanitizedQuestion = React.useMemo(() => sanitizeHTML(question.question), [question.question]);
-  const sanitizedExplanation = React.useMemo(() => sanitizeHTML(question.explanation), [question.explanation]);
+  const sanitizedQuestion = React.useMemo(
+    () => sanitizeHTML(question.question),
+    [question.question],
+  );
+  const sanitizedExplanation = React.useMemo(
+    () => sanitizeHTML(question.explanation),
+    [question.explanation],
+  );
+
+  // Determine the canonical correct answer (prefer prop, fallback to question data)
+  const canonicalCorrectAnswer = correctAnswer || question.correct_answer;
+  const hasCanonicalAnswer = !!canonicalCorrectAnswer;
+  const hasUserAnswer = userAnswer != null && userAnswer !== "";
+
+  // Compute correctness based on the canonical answer
+  const isCorrect =
+    hasCanonicalAnswer &&
+    hasUserAnswer &&
+    userAnswer.trim() === canonicalCorrectAnswer.trim();
+  const isWrong = hasCanonicalAnswer && hasUserAnswer && !isCorrect;
+
+  // Determine what to display for the correct answer
+  let correctAnswerDisplay = canonicalCorrectAnswer;
+  const correctAnswerKey = canonicalCorrectAnswer;
+
+  const showResolutionError =
+    !canonicalCorrectAnswer && !isResolving && !!question.correct_answer_hash;
+
+  if (!correctAnswerDisplay && isResolving) {
+    correctAnswerDisplay = "Resolving...";
+  } else if (!correctAnswerDisplay && !!question.correct_answer_hash) {
+    correctAnswerDisplay = "Unable to resolve";
+  }
 
   const sortedOptions = React.useMemo(() => {
-    return Object.entries(question.options).sort(([a], [b]) => a.localeCompare(b));
+    return Object.entries(question.options).sort(([a], [b]) =>
+      a.localeCompare(b),
+    );
   }, [question.options]);
 
   const truncatedQuestion = React.useMemo(() => {
@@ -58,9 +102,9 @@ export function QuestionReviewCard({
   return (
     <Card
       className={cn(
-        'overflow-hidden transition-shadow dark:border-slate-800 dark:bg-slate-900',
-        !isCorrect && 'border-l-4 border-l-red-400',
-        isCorrect && 'border-l-4 border-l-green-400',
+        "overflow-hidden transition-shadow dark:border-slate-800 dark:bg-slate-900",
+        isWrong && "border-l-4 border-l-red-400",
+        isCorrect && "border-l-4 border-l-green-400",
         className,
       )}
     >
@@ -72,24 +116,47 @@ export function QuestionReviewCard({
       >
         <div
           className={cn(
-            'flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full',
-            isCorrect ? 'bg-green-100 dark:bg-green-900/40' : 'bg-red-100 dark:bg-red-900/40',
+            "flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full",
+            isCorrect
+              ? "bg-green-100 dark:bg-green-900/40"
+              : isWrong
+                ? "bg-red-100 dark:bg-red-900/40"
+                : "bg-slate-100 dark:bg-slate-700",
           )}
         >
           {isCorrect ? (
-            <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-200" aria-hidden="true" />
+            <CheckCircle
+              className="h-5 w-5 text-green-600 dark:text-green-200"
+              aria-hidden="true"
+            />
+          ) : isWrong ? (
+            <XCircle
+              className="h-5 w-5 text-red-600 dark:text-red-200"
+              aria-hidden="true"
+            />
           ) : (
-            <XCircle className="h-5 w-5 text-red-600 dark:text-red-200" aria-hidden="true" />
+            <HelpCircle
+              className="h-5 w-5 text-slate-500 dark:text-slate-400"
+              aria-hidden="true"
+            />
           )}
         </div>
 
         <div className="min-w-0 flex-1">
           <div className="mb-1 flex flex-wrap items-center gap-2">
-            <span className="font-medium text-slate-500 dark:text-slate-300">Q{questionNumber}</span>
+            <span className="font-medium text-slate-500 dark:text-slate-300">
+              Q{questionNumber}
+            </span>
             <Badge variant="secondary">{question.category}</Badge>
             {question.difficulty && (
               <Badge
-                variant={question.difficulty === 'Easy' ? 'success' : question.difficulty === 'Medium' ? 'warning' : 'danger'}
+                variant={
+                  question.difficulty === "Easy"
+                    ? "success"
+                    : question.difficulty === "Medium"
+                      ? "warning"
+                      : "danger"
+                }
               >
                 {question.difficulty}
               </Badge>
@@ -102,7 +169,12 @@ export function QuestionReviewCard({
             )}
           </div>
 
-          <p className={cn('text-slate-700 dark:text-slate-100', !isExpanded && 'line-clamp-2')}>
+          <p
+            className={cn(
+              "text-slate-700 dark:text-slate-100",
+              !isExpanded && "line-clamp-2",
+            )}
+          >
             <span
               dangerouslySetInnerHTML={{
                 __html: isExpanded ? sanitizedQuestion : truncatedQuestion,
@@ -122,26 +194,38 @@ export function QuestionReviewCard({
 
       {isExpanded && (
         <CardContent className="border-t border-slate-100 pt-4 dark:border-slate-800">
-          <div className="prose prose-sm prose-slate mb-4 max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: sanitizedQuestion }} />
+          <div
+            className="prose prose-sm prose-slate mb-4 max-w-none dark:prose-invert"
+            dangerouslySetInnerHTML={{ __html: sanitizedQuestion }}
+          />
+
+          {showResolutionError && (
+            <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200">
+              Unable to determine the correct answer from stored quiz data.
+            </div>
+          )}
 
           <div className="mb-4 space-y-2">
             {sortedOptions.map(([key, text]) => {
               const isUserAnswer = key === userAnswer;
-              const isCorrectAnswer = key === question.correct_answer;
+              const isCorrectAnswer = key === correctAnswerKey;
               const sanitizedText = sanitizeHTML(text);
 
-              let optionStyle = 'border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900';
+              let optionStyle =
+                "border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900";
               let badgeContent: React.ReactNode = null;
 
               if (isCorrectAnswer) {
-                optionStyle = 'border-green-300 bg-green-50 dark:border-green-700 dark:bg-green-900/20';
+                optionStyle =
+                  "border-green-300 bg-green-50 dark:border-green-700 dark:bg-green-900/20";
                 badgeContent = (
                   <Badge variant="success" className="ml-2">
                     Correct
                   </Badge>
                 );
               } else if (isUserAnswer && !isCorrect) {
-                optionStyle = 'border-red-300 bg-red-50 dark:border-red-700 dark:bg-red-900/20';
+                optionStyle =
+                  "border-red-300 bg-red-50 dark:border-red-700 dark:bg-red-900/20";
                 badgeContent = (
                   <Badge variant="danger" className="ml-2">
                     Your Answer
@@ -150,43 +234,82 @@ export function QuestionReviewCard({
               }
 
               return (
-                <div key={key} className={cn('flex items-start gap-3 rounded-lg border p-3', optionStyle)}>
+                <div
+                  key={key}
+                  className={cn(
+                    "flex items-start gap-3 rounded-lg border p-3",
+                    optionStyle,
+                  )}
+                >
                   <span
                     className={cn(
-                      'flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-sm font-medium',
+                      "flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-sm font-medium",
                       isCorrectAnswer
-                        ? 'bg-green-200 text-green-800 dark:bg-green-800 dark:text-green-100'
+                        ? "bg-green-200 text-green-800 dark:bg-green-800 dark:text-green-100"
                         : isUserAnswer && !isCorrect
-                          ? 'bg-red-200 text-red-800 dark:bg-red-800 dark:text-red-100'
-                          : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-100',
+                          ? "bg-red-200 text-red-800 dark:bg-red-800 dark:text-red-100"
+                          : "bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-100",
                     )}
                   >
                     {key}
                   </span>
-                  <span className="flex-1 text-sm text-slate-700 dark:text-slate-100" dangerouslySetInnerHTML={{ __html: sanitizedText }} />
+                  <span
+                    className="flex-1 text-sm text-slate-700 dark:text-slate-100"
+                    dangerouslySetInnerHTML={{ __html: sanitizedText }}
+                  />
                   {badgeContent}
                 </div>
               );
             })}
           </div>
 
-          {!userAnswer && (
+          {/* Correct Answer (if wrong) */}
+          {isWrong && correctAnswerDisplay && (
+            <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-900/30 rounded-md">
+              <div className="flex items-start gap-2">
+                <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5 shrink-0" />
+                <div>
+                  <span className="font-medium text-green-900 dark:text-green-100 block mb-1">
+                    Correct Answer:
+                  </span>
+                  <span className="text-green-800 dark:text-green-200">
+                    {correctAnswerDisplay}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+          {!hasUserAnswer && (
             <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-700/70 dark:bg-amber-900/20">
-              <p className="text-sm text-amber-800 dark:text-amber-100">You did not answer this question.</p>
+              <p className="text-sm text-amber-800 dark:text-amber-100">
+                You did not answer this question.
+              </p>
             </div>
           )}
 
           <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900">
             <div className="mb-2 flex items-center gap-2">
-              <Lightbulb className="h-4 w-4 text-amber-500" aria-hidden="true" />
-              <span className="font-medium text-slate-700 dark:text-slate-100">Explanation</span>
+              <Lightbulb
+                className="h-4 w-4 text-amber-500"
+                aria-hidden="true"
+              />
+              <span className="font-medium text-slate-700 dark:text-slate-100">
+                Explanation
+              </span>
             </div>
-            <div className="prose prose-sm prose-slate max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: sanitizedExplanation }} />
+            <div
+              className="prose prose-sm prose-slate max-w-none dark:prose-invert"
+              dangerouslySetInnerHTML={{ __html: sanitizedExplanation }}
+            />
           </div>
 
-          {!isCorrect && userAnswer && (
+          {!isCorrect && hasUserAnswer && (
             <div className="mt-4">
-              <AITutorButton question={question} userAnswer={userAnswer} variant="compact" />
+              <AITutorButton
+                question={question}
+                userAnswer={userAnswer}
+                variant="compact"
+              />
             </div>
           )}
         </CardContent>

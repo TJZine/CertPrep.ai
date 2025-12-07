@@ -1,0 +1,389 @@
+{
+  "title": "MA Personal Lines Remediation Exam 2",
+  "description": "A 25-question practice exam targeting critical weaknesses in General Insurance and Regulation, plus P&C Basics and Other Coverages, avoiding topics covered in previous uploaded exams.",
+  "questions": [
+    {
+      "id": "gen-ins-056",
+      "category": "General Insurance",
+      "difficulty": "Medium",
+      "question": "Which characteristic of an insurance contract states that the insured must perform a specific act (pay premiums) in exchange for the insurer's promise to pay claims, making it a 'promise in exchange for an act'?",
+      "options": {
+        "A": "Aleatory",
+        "B": "Unilateral",
+        "C": "Conditional",
+        "D": "Personal"
+      },
+      "correct_answer": "B",
+      "explanation": "A unilateral contract is described as an 'act in exchange for a promise' or a 'promise in exchange for an act already performed.' Only one party (the insurer) makes a legally enforceable promise.",
+      "distractor_logic": "Aleatory refers to unequal value exchange. Conditional means the contract requires specific conditions to be met. Personal means it covers the person, not the property."
+    },
+    {
+      "id": "reg-057",
+      "category": "Insurance Regulation",
+      "difficulty": "Hard",
+      "question": "If a producer violates a Cease and Desist order issued by the Commissioner, they may be subject to a fine of up to:",
+      "options": {
+        "A": "$1,000 per violation",
+        "B": "$5,000 per violation",
+        "C": "$10,000 per violation",
+        "D": "$25,000 per violation"
+      },
+      "correct_answer": "C",
+      "explanation": "Anyone who violates a cease and desist order may be fined up to $10,000 per violation and be subject to license suspension or revocation.",
+      "distractor_logic": "$1,000 is the fine for general unfair practices or failing to appear. $500 is for unlicensed compensation. $25,000 is not a standard fine limit in this section."
+    },
+    {
+      "id": "pc-basics-058",
+      "category": "Property & Casualty Basics",
+      "difficulty": "Medium",
+      "question": "When an insured cancels a property insurance policy during the policy period, the return premium is calculated on what basis?",
+      "options": {
+        "A": "Pro rata",
+        "B": "Short rate",
+        "C": "Flat rate",
+        "D": "Earned rate"
+      },
+      "correct_answer": "B",
+      "explanation": "Property and liability contracts involve two basic cancellation concepts: short rate when an insured cancels the policy, and pro rata when the insurer cancels.",
+      "distractor_logic": "Pro rata applies when the *insurer* cancels. Flat rate implies the policy was never in force."
+    },
+    {
+      "id": "gen-ins-059",
+      "category": "General Insurance",
+      "difficulty": "Medium",
+      "question": "The Fair Credit Reporting Act of 1970 allows an insurer to conduct consumer reports. If a consumer questions the accuracy of the report, they have the right to:",
+      "options": {
+        "A": "Sue the insurer immediately.",
+        "B": "Request a copy of the report from the insurer.",
+        "C": "Request a copy of the report from the reporting agency and demand correction.",
+        "D": "Demand the insurer reveal the source of all underwriting data."
+      },
+      "correct_answer": "C",
+      "explanation": "The applicant has a right to request a copy of the report from the *provider* (the reporting agency), not the insurer. If information is incorrect, they may request it be corrected.",
+      "distractor_logic": "The law does not require the insurer to send the copy; the consumer must go to the agency. Suing is not the immediate remedy provided by the Act."
+    },
+    {
+      "id": "reg-060",
+      "category": "Insurance Regulation",
+      "difficulty": "Medium",
+      "question": "In Massachusetts, an insurer must file a notice of appointment with the Commissioner within how many days of executing an agency contract?",
+      "options": {
+        "A": "10 days",
+        "B": "15 days",
+        "C": "30 days",
+        "D": "45 days"
+      },
+      "correct_answer": "B",
+      "explanation": "To appoint a producer as its agent, the appointing insurer shall file a notice of appointment within 15 days from the date the agency contract is executed.",
+      "distractor_logic": "30 days is the timeframe for notifying the Commissioner of *termination*. 10 and 45 days are incorrect for appointments."
+    },
+    {
+      "id": "other-061",
+      "category": "Other Coverages and Options",
+      "difficulty": "Medium",
+      "question": "Under the National Flood Insurance Program, the standard 30-day waiting period for coverage to take effect may be waived if:",
+      "options": {
+        "A": "The applicant pays the premium in full immediately.",
+        "B": "The property is located in an Emergency Program community.",
+        "C": "The policy is written in conjunction with a mortgage loan closing.",
+        "D": "The applicant has previously had flood insurance."
+      },
+      "correct_answer": "C",
+      "explanation": "The waiting period may be waived if a new policy is being written in conjunction with a mortgage loan.",
+      "distractor_logic": "Payment of premium starts the clock but does not waive the wait. Program status and prior insurance do not automatically waive the statutory waiting period."
+    },
+    {
+      "id": "gen-ins-062",
+      "category": "General Insurance",
+      "difficulty": "Medium",
+      "question": "Which of the following is an example of a 'Physical Hazard'?",
+      "options": {
+        "A": "Falsifying a claim",
+        "B": "Leaving keys in an unlocked car",
+        "C": "Storing gasoline in a garage",
+        "D": "A reckless driving history"
+      },
+      "correct_answer": "C",
+      "explanation": "Physical hazards are physical items or conditions that increase the chance of loss, such as storing gasoline in a garage, faulty wiring, or a pothole.",
+      "distractor_logic": "A is Moral hazard (dishonesty). B and D are Morale hazards (carelessness/attitude)."
+    },
+    {
+      "id": "reg-063",
+      "category": "Insurance Regulation",
+      "difficulty": "Hard",
+      "question": "Producers and adjusters are required to maintain records of any written complaints received for a period of:",
+      "options": {
+        "A": "1 year",
+        "B": "2 years",
+        "C": "3 years",
+        "D": "5 years"
+      },
+      "correct_answer": "B",
+      "explanation": "Producers and adjusters must maintain any complaints received for a period of two years with a record of their disposition.",
+      "distractor_logic": "3 years is the license renewal period. 5 years is the domestic insurer exam frequency. 1 year is incorrect."
+    },
+    {
+      "id": "pc-basics-064",
+      "category": "Property & Casualty Basics",
+      "difficulty": "Easy",
+      "question": "In liability insurance, the term 'Robbery' is best distinguished from 'Burglary' by which characteristic?",
+      "options": {
+        "A": "Visible signs of forced entry",
+        "B": "A person-to-person encounter or threat of violence",
+        "C": "Theft of money only",
+        "D": "Theft by an employee"
+      },
+      "correct_answer": "B",
+      "explanation": "Robbery involves a person-to-person encounter between the robber and victim or a physical threat. Burglary requires visible signs of forcible entry but generally no person-to-person encounter.",
+      "distractor_logic": "A describes Burglary. C is incorrect (robbery can involve any property). D is Embezzlement or Larceny."
+    },
+    {
+      "id": "reg-065",
+      "category": "Insurance Regulation",
+      "difficulty": "Medium",
+      "question": "Which of the following persons would be EXEMPT from the continuing education requirements in Massachusetts?",
+      "options": {
+        "A": "A producer licensed for less than 1 year",
+        "B": "A nonresident producer who has satisfied CE requirements in their home state",
+        "C": "A producer selling only auto insurance",
+        "D": "A business entity producer"
+      },
+      "correct_answer": "B",
+      "explanation": "An individual who holds a nonresident license in this State is exempt from the C.E. requirement if they are subject to a C.E. requirement in their home State.",
+      "distractor_logic": "New resident producers must still complete CE. Auto producers are not exempt. Business entities are licensed differently, but the individuals within them must comply."
+    },
+    {
+      "id": "pc-basics-066",
+      "category": "Property & Casualty Basics",
+      "difficulty": "Medium",
+      "question": "Which type of liability limit applies to the total amount of losses occurring during the entire policy period, rather than per accident?",
+      "options": {
+        "A": "Split Limit",
+        "B": "Combined Single Limit",
+        "C": "Aggregate Limit",
+        "D": "Per Occurrence Limit"
+      },
+      "correct_answer": "C",
+      "explanation": "Aggregate limits provide a maximum limit of liability for the total amount of losses occurring during the policy period. Every claim paid reduces this limit.",
+      "distractor_logic": "Split and Combined Single limits generally apply per accident. Per Occurrence limits reinstate after each loss."
+    },
+    {
+      "id": "other-067",
+      "category": "Other Coverages and Options",
+      "difficulty": "Medium",
+      "question": "To qualify for a Personal Umbrella Policy, insurers generally require the insured to maintain underlying liability coverage for all of the following EXCEPT:",
+      "options": {
+        "A": "Personal Auto",
+        "B": "Homeowners (Section II)",
+        "C": "Professional Liability",
+        "D": "Watercraft Liability"
+      },
+      "correct_answer": "C",
+      "explanation": "Underlying policies for a personal umbrella include personal auto, homeowners, comprehensive personal liability, and watercraft liability. Professional liability is a commercial exposure.",
+      "distractor_logic": "A, B, and D are standard underlying personal requirements."
+    },
+    {
+      "id": "reg-068",
+      "category": "Insurance Regulation",
+      "difficulty": "Medium",
+      "question": "If an insurer terminates a producer's appointment, they must notify the Commissioner within:",
+      "options": {
+        "A": "10 days",
+        "B": "15 days",
+        "C": "30 days",
+        "D": "60 days"
+      },
+      "correct_answer": "C",
+      "explanation": "An insurer that terminates the appointment, employment, or contract with a producer shall notify the Commissioner within 30 days following the effective date of termination.",
+      "distractor_logic": "15 days is for the *initial* appointment notice. 10 and 60 days are incorrect."
+    },
+    {
+      "id": "gen-ins-069",
+      "category": "General Insurance",
+      "difficulty": "Hard",
+      "question": "The 'Loss Ratio' of an insurer is calculated by dividing:",
+      "options": {
+        "A": "Expenses incurred by premiums earned",
+        "B": "Losses incurred by premiums earned",
+        "C": "Losses incurred by expenses incurred",
+        "D": "Premiums collected by claims paid"
+      },
+      "correct_answer": "B",
+      "explanation": "A loss ratio is determined by dividing the losses an insurer incurs during the year by the amount of earned premiums collected.",
+      "distractor_logic": "A describes the Expense Ratio. C and D are incorrect calculations."
+    },
+    {
+      "id": "pc-basics-070",
+      "category": "Property & Casualty Basics",
+      "difficulty": "Easy",
+      "question": "Absolute or Strict Liability is often imposed on owners of wild animals or explosives because:",
+      "options": {
+        "A": "The risk is uninsurable.",
+        "B": "The owner was negligent.",
+        "C": "Liability is imposed without regard to fault.",
+        "D": "The damages are punitive."
+      },
+      "correct_answer": "C",
+      "explanation": "Strict (or absolute) liability is imposed without regard to fault... applicable to hazardous activities like owning dangerous animals or explosives.",
+      "distractor_logic": "Negligence does not need to be proven (B). The risk is insurable (A). Damages are compensatory, not necessarily punitive (D)."
+    },
+    {
+      "id": "reg-071",
+      "category": "Insurance Regulation",
+      "difficulty": "Easy",
+      "question": "Making false or untrue statements regarding a competing insurer's financial condition is defined as:",
+      "options": {
+        "A": "Twisting",
+        "B": "Rebating",
+        "C": "Defamation",
+        "D": "Coercion"
+      },
+      "correct_answer": "C",
+      "explanation": "No person may make false or untrue statements regarding a competing insurer. Any such comments or remarks will be deemed to be defamation.",
+      "distractor_logic": "Twisting involves policy replacement. Rebating is offering inducements. Coercion is restraint of trade."
+    },
+    {
+      "id": "other-072",
+      "category": "Other Coverages and Options",
+      "difficulty": "Medium",
+      "question": "To be eligible for the Massachusetts FAIR Plan, a property generally must:",
+      "options": {
+        "A": "Be located in a rural area.",
+        "B": "Be vacant for more than 60 days.",
+        "C": "Pass an inspection.",
+        "D": "Be a commercial property only."
+      },
+      "correct_answer": "C",
+      "explanation": "The FAIR Plan must inspect the property to be covered before coverage will be provided. It will not provide coverage for vacant or structurally inferior buildings.",
+      "distractor_logic": "A is incorrect (FAIR Plan is often for urban areas). B is incorrect (vacant properties are ineligible). D is incorrect (covers personal and commercial)."
+    },
+    {
+      "id": "reg-073",
+      "category": "Insurance Regulation",
+      "difficulty": "Medium",
+      "question": "A person who falsifies information in a sworn statement (such as a claim form) to collect benefits may be guilty of:",
+      "options": {
+        "A": "Larceny",
+        "B": "Perjury",
+        "C": "Defamation",
+        "D": "Coercion"
+      },
+      "correct_answer": "B",
+      "explanation": "If a person falsifies information in a sworn statement (i.e., claim form)... he or she may be guilty of perjury. The penalty is a fine of $100-$1,000 or up to 1 year prison.",
+      "distractor_logic": "Larceny typically involves theft of funds (premiums). Defamation involves reputation. Coercion involves force."
+    },
+    {
+      "id": "pc-basics-074",
+      "category": "Property & Casualty Basics",
+      "difficulty": "Medium",
+      "question": "The concept of 'Subrogation' refers to:",
+      "options": {
+        "A": "The insurer's right to seek reimbursement from a negligent third party.",
+        "B": "The insured's right to abandon property to the insurer.",
+        "C": "The sharing of risk among multiple insurers.",
+        "D": "The automatic increase of coverage limits."
+      },
+      "correct_answer": "A",
+      "explanation": "Subrogation involves the legal right of an insurer to seek reimbursement from a negligent third party who caused damage to an insured.",
+      "distractor_logic": "B is Abandonment (which is prohibited). C is Reinsurance or Sharing. D is Inflation Guard."
+    },
+    {
+      "id": "other-075",
+      "category": "Other Coverages and Options",
+      "difficulty": "Hard",
+      "question": "Which of the following causes of loss is explicitly EXCLUDED from coverage under a standard Flood Insurance policy?",
+      "options": {
+        "A": "Overflow of tidal waters",
+        "B": "Mudflow",
+        "C": "Sewer backup not caused by a general flood",
+        "D": "Rapid accumulation of surface waters"
+      },
+      "correct_answer": "C",
+      "explanation": "The policy will not cover damage caused by a broken or stopped up sewer [unless caused by flood]. Covered floods include overflow of tidal waters, mudflow, and surface runoff.",
+      "distractor_logic": "A, B, and D are part of the definition of a covered Flood."
+    },
+    {
+      "id": "gen-ins-076",
+      "category": "General Insurance",
+      "difficulty": "Medium",
+      "question": "The fiduciary responsibility of a producer primarily involves:",
+      "options": {
+        "A": "Evaluating the risk for the underwriter.",
+        "B": "Handling premiums and funds in a trust capacity.",
+        "C": "Drafting the legal language of the policy.",
+        "D": "Setting the premium rates."
+      },
+      "correct_answer": "B",
+      "explanation": "All producers are required to act in a fiduciary capacity... This means that all producers possess a fiduciary responsibility when engaging in insurance transactions, specifically regarding funds collected.",
+      "distractor_logic": "A is a field underwriting duty. C and D are insurer responsibilities."
+    },
+    {
+      "id": "pc-basics-077",
+      "category": "Property & Casualty Basics",
+      "difficulty": "Medium",
+      "question": "In Liability insurance, 'Supplementary Payments' such as defense costs and appeal bond premiums are paid:",
+      "options": {
+        "A": "Within the policy limits.",
+        "B": "In addition to the policy limits.",
+        "C": "Only if the insured is found liable.",
+        "D": "Subject to the policy deductible."
+      },
+      "correct_answer": "B",
+      "explanation": "Such expenses (supplementary payments like legal defense) are paid 'in addition' to the policy's coverage limit or limit of liability.",
+      "distractor_logic": "They do not reduce the limit (A). They are paid even if the suit is groundless (C). They generally have no deductible (D)."
+    },
+    {
+      "id": "reg-078",
+      "category": "Insurance Regulation",
+      "difficulty": "Medium",
+      "question": "Any person who pays a commission to an unlicensed person for selling insurance may be fined:",
+      "options": {
+        "A": "Not less than $50 nor more than $500",
+        "B": "Not less than $100 nor more than $1,000",
+        "C": "Up to $5,000",
+        "D": "Up to $10,000"
+      },
+      "correct_answer": "A",
+      "explanation": "Anyone violating the regulation against compensating unlicensed persons may be fined not less than $50 nor more than $500.",
+      "distractor_logic": "$1,000 is for Larceny/Perjury/Unfair practices. $10,000 is for Cease & Desist violation."
+    },
+    {
+      "id": "other-079",
+      "category": "Other Coverages and Options",
+      "difficulty": "Easy",
+      "question": "Under the Massachusetts Personal Auto Policy, Part 2 (PIP) covers medical expenses for all of the following EXCEPT:",
+      "options": {
+        "A": "The named insured",
+        "B": "Passengers in the insured's car",
+        "C": "A pedestrian struck by the insured's car in MA",
+        "D": "A motorcyclist struck by the insured's car"
+      },
+      "correct_answer": "D",
+      "explanation": "PIP benefits will not be paid for anyone who was operating or occupying a motorcycle. However, the owner of the motorcycle must purchase PIP to protect pedestrians they might strike.",
+      "distractor_logic": "A, B, and C are all covered persons under Part 2 PIP."
+    },
+    {
+      "id": "gen-ins-080",
+      "category": "General Insurance",
+      "difficulty": "Easy",
+      "question": "Which element of a legal contract ensures that the agreement is not contrary to public policy (e.g., not a contract to rob a bank)?",
+      "options": {
+        "A": "Agreement",
+        "B": "Consideration",
+        "C": "Competent Parties",
+        "D": "Legal Purpose"
+      },
+      "correct_answer": "D",
+      "explanation": "A contract must be created with the public interest in mind. Contractual arrangements may not be contrary to public policy (Legal Purpose).",
+      "distractor_logic": "Agreement is offer/acceptance. Consideration is exchange of value. Competent parties refers to legal capacity (age/mental state)."
+    }
+  ],
+  "tags": [
+    "Massachusetts",
+    "Remediation",
+    "Regulation",
+    "General Insurance",
+    "Flood",
+    "Basics"
+  ]
+}

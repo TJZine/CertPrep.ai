@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import { BookOpen } from 'lucide-react';
-import { QuizCard } from './QuizCard';
-import { LoadingSpinner } from '@/components/common/LoadingSpinner';
-import { EmptyState } from '@/components/common/EmptyState';
-import type { Quiz } from '@/types/quiz';
-import type { QuizStats } from '@/db/quizzes';
+import * as React from "react";
+import { BookOpen } from "lucide-react";
+import { QuizCard } from "./QuizCard";
+import { LoadingSpinner } from "@/components/common/LoadingSpinner";
+import { EmptyState } from "@/components/common/EmptyState";
+import type { Quiz } from "@/types/quiz";
+import type { QuizStats } from "@/db/quizzes";
 
 export interface QuizGridProps {
   quizzes: Quiz[];

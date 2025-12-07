@@ -11,7 +11,7 @@
     {
       "id": "insurance-personal-lines-2",
       "title": "MA Personal Lines Focused Review",
-      "description": "30-question practice exam targeting weak areas in General Insurance, P&C Basics, and Regulation from MAIA material.",
+      "description": "30-question practice exam targeting weak areas in General Insurance, P&C Basics, and Regulation from MA Personal Lines material.",
       "category": "Insurance",
       "subcategory": "Massachusetts Personal Lines",
       "path": "/tests/Insurance/Massachusetts Personal Lines/Personal Lines Weakness Practice Exam 2.json"
@@ -23,6 +23,46 @@
       "category": "Insurance",
       "subcategory": "Massachusetts Personal Lines",
       "path": "/tests/Insurance/Massachusetts Personal Lines/Personal Lines Weakness Practice Exam 3.json"
+    },
+    {
+      "id": "insurance-personal-lines-general-1",
+      "title": "MA Personal Lines Insurance Practice Exam 1",
+      "description": "Practice exam simulating the Massachusetts Personal Lines Insurance certification. Covers Contract Law, Homeowners, MA Auto, Dwelling, Flood, and State Law.",
+      "category": "Insurance",
+      "subcategory": "Massachusetts Personal Lines",
+      "path": "/tests/Insurance/Massachusetts Personal Lines/Personal Lines General Practice Exam 1.json"
+    },
+    {
+      "id": "insurance-personal-lines-general-2",
+      "title": "MA Personal Lines Insurance Practice Exam 2",
+      "description": "Practice exam 2 simulating the Massachusetts Personal Lines Insurance certification. Covers Contract Law, Homeowners, MA Auto, Dwelling, Flood, and State Law.",
+      "category": "Insurance",
+      "subcategory": "Massachusetts Personal Lines",
+      "path": "/tests/Insurance/Massachusetts Personal Lines/Personal Lines General Practice Exam 2.json"
+    },
+    {
+      "id": "insurance-personal-lines-law-1",
+      "title": "MA Personal Lines Insurance Law Practice Exam 1",
+      "description": "Practice exam targeting weak performance areas: General Insurance, Property & Casualty Basics, Insurance Regulation, and Other Coverages.",
+      "category": "Insurance",
+      "subcategory": "Massachusetts Personal Lines",
+      "path": "/tests/Insurance/Massachusetts Personal Lines/Personal Lines Law Practice Exam 1.json"
+    },
+    {
+      "id": "insurance-personal-lines-law-2",
+      "title": "MA Personal Lines Law & Basics Remediation Exam",
+      "description": "25-question practice exam targeting General Insurance, P&C Basics, and Insurance Regulation with emphasis on Massachusetts state law.",
+      "category": "Insurance",
+      "subcategory": "Massachusetts Personal Lines",
+      "path": "/tests/Insurance/Massachusetts Personal Lines/Personal Lines Law Practice Exam 2.json"
+    },
+    {
+      "id": "insurance-personal-lines-law-3",
+      "title": "MA Personal Lines Remediation Exam 2",
+      "description": "25-question practice exam targeting critical weaknesses in General Insurance and Regulation, plus P&C Basics and Other Coverages.",
+      "category": "Insurance",
+      "subcategory": "Massachusetts Personal Lines",
+      "path": "/tests/Insurance/Massachusetts Personal Lines/Personal Lines Law Practice Exam 3.json"
     },
     {
       "id": "firearms-ma-law-mastery-2024",

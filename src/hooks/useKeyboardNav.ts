@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import * as React from 'react';
+import * as React from "react";
 
 interface KeyboardNavOptions {
   onNext?: () => void;
@@ -22,7 +22,7 @@ export function useKeyboardNav({
   onSubmit,
   onFlag,
   enabled = true,
-  optionKeys = ['A', 'B', 'C', 'D'],
+  optionKeys = ["A", "B", "C", "D"],
 }: KeyboardNavOptions): void {
   React.useEffect(() => {
     if (!enabled) return;
@@ -30,8 +30,8 @@ export function useKeyboardNav({
     const handleKeyDown = (event: KeyboardEvent): void => {
       const target = event.target as HTMLElement;
       if (
-        target.tagName === 'INPUT' ||
-        target.tagName === 'TEXTAREA' ||
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
         target.isContentEditable
       ) {
         return;
@@ -40,27 +40,27 @@ export function useKeyboardNav({
       const key = event.key.toUpperCase();
 
       switch (event.key) {
-        case 'ArrowRight':
-        case 'j':
-        case 'J':
+        case "ArrowRight":
+        case "j":
+        case "J":
           event.preventDefault();
           onNext?.();
           break;
-        case 'ArrowLeft':
-        case 'k':
-        case 'K':
+        case "ArrowLeft":
+        case "k":
+        case "K":
           event.preventDefault();
           onPrevious?.();
           break;
-        case 'Enter':
-        case ' ':
-          if (target.tagName !== 'BUTTON') {
+        case "Enter":
+        case " ":
+          if (target.tagName !== "BUTTON") {
             event.preventDefault();
             onSubmit?.();
           }
           break;
-        case 'f':
-        case 'F':
+        case "f":
+        case "F":
           event.preventDefault();
           onFlag?.();
           break;
@@ -73,9 +73,17 @@ export function useKeyboardNav({
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return (): void => window.removeEventListener('keydown', handleKeyDown);
-  }, [enabled, onNext, onPrevious, onSelectOption, onSubmit, onFlag, optionKeys]);
+    window.addEventListener("keydown", handleKeyDown);
+    return (): void => window.removeEventListener("keydown", handleKeyDown);
+  }, [
+    enabled,
+    onNext,
+    onPrevious,
+    onSelectOption,
+    onSubmit,
+    onFlag,
+    optionKeys,
+  ]);
 }
 
 interface SpacedRepetitionNavOptions {
@@ -100,23 +108,23 @@ export function useSpacedRepetitionNav({
     const handleKeyDown = (event: KeyboardEvent): void => {
       const target = event.target as HTMLElement;
       if (
-        target.tagName === 'INPUT' ||
-        target.tagName === 'TEXTAREA' ||
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
         target.isContentEditable
       ) {
         return;
       }
 
       switch (event.key) {
-        case '1':
+        case "1":
           event.preventDefault();
           onAgain?.();
           break;
-        case '2':
+        case "2":
           event.preventDefault();
           onHard?.();
           break;
-        case '3':
+        case "3":
           event.preventDefault();
           onGood?.();
           break;
@@ -125,7 +133,7 @@ export function useSpacedRepetitionNav({
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return (): void => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return (): void => window.removeEventListener("keydown", handleKeyDown);
   }, [enabled, onAgain, onHard, onGood]);
 }

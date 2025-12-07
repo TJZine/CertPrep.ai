@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import { cn } from '@/lib/utils';
+import * as React from "react";
+import { cn } from "@/lib/utils";
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -18,12 +18,16 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     const inputId = id ?? generatedId;
     const helperId = helperText ? `${inputId}-helper` : undefined;
     const errorId = error ? `${inputId}-error` : undefined;
-    const describedBy = [helperId, errorId].filter(Boolean).join(' ') || undefined;
+    const describedBy =
+      [helperId, errorId].filter(Boolean).join(" ") || undefined;
 
     return (
       <div className="flex w-full flex-col gap-2">
         {label ? (
-          <label htmlFor={inputId} className="text-sm font-medium text-slate-900">
+          <label
+            htmlFor={inputId}
+            className="text-sm font-medium text-slate-900"
+          >
             {label}
           </label>
         ) : null}
@@ -31,8 +35,8 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           id={inputId}
           ref={ref}
           className={cn(
-            'flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-slate-100',
-            error && 'border-red-500 focus-visible:ring-red-500',
+            "flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-slate-100",
+            error && "border-red-500 focus-visible:ring-red-500",
             className,
           )}
           aria-invalid={Boolean(error)}
@@ -54,6 +58,6 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
   },
 );
 
-Input.displayName = 'Input';
+Input.displayName = "Input";
 
 export default Input;

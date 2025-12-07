@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import Link from 'next/link';
-import { ArrowLeft, FileQuestion, Home } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
+import * as React from "react";
+import Link from "next/link";
+import { ArrowLeft, FileQuestion, Home } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 
 export default function NotFound(): React.ReactElement {
   return (

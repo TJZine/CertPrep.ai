@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import { OptionsList } from './OptionsList';
+import * as React from "react";
+import { OptionsList } from "./OptionsList";
 
 /**
  * Memoized wrapper for OptionsList to avoid unnecessary re-renders.
@@ -16,6 +16,6 @@ export const MemoizedOptionsList = React.memo(
     JSON.stringify(prevProps.options) === JSON.stringify(nextProps.options),
 );
 
-MemoizedOptionsList.displayName = 'MemoizedOptionsList';
+MemoizedOptionsList.displayName = "MemoizedOptionsList";
 
 export default MemoizedOptionsList;

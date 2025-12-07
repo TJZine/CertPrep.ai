@@ -1,0 +1,18 @@
+import { NextResponse } from "next/server";
+
+export const dynamic = "force-dynamic";
+class SentryExampleAPIError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "SentryExampleAPIError";
+  }
+}
+// A faulty API route to test Sentry's error monitoring
+export function GET(): NextResponse {
+  if (process.env.NODE_ENV === "production") {
+    return new NextResponse(null, { status: 404 });
+  }
+  throw new SentryExampleAPIError(
+    "This error is raised on the backend called by the example page.",
+  );
+}

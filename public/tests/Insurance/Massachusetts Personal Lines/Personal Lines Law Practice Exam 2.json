@@ -1,0 +1,390 @@
+{
+  "title": "MA Personal Lines Law & Basics Remediation Exam",
+  "description": "A 25-question practice exam specifically targeting identified weaknesses in General Insurance, P&C Basics, and Insurance Regulation, with a strong emphasis on Massachusetts state law.",
+  "questions": [
+    {
+      "id": "ma-law-001",
+      "category": "Insurance Regulation",
+      "difficulty": "Medium",
+      "question": "Under Massachusetts law, a Temporary License may be issued to a surviving spouse or court-appointed designee for what maximum duration without requiring an examination?",
+      "options": {
+        "A": "90 days",
+        "B": "120 days",
+        "C": "180 days",
+        "D": "365 days"
+      },
+      "correct_answer": "C",
+      "explanation": "Chapter 9-3 of the text states that a temporary license may be issued to a surviving spouse or court-appointed designee for a period of 180 days and does not require a State examination.",
+      "distractor_logic": "90 days applies to the window for new residents to apply for a license. 120 and 365 days are not standard temporary license durations in MA."
+    },
+    {
+      "id": "gen-ins-002",
+      "category": "General Insurance",
+      "difficulty": "Hard",
+      "question": "Which of the following statements best describes a 'Warranty' in an insurance contract, as opposed to a Representation?",
+      "options": {
+        "A": "A statement that is believed to be true to the best of the applicant's knowledge.",
+        "B": "A statement guaranteed to be absolutely true and made part of the contract.",
+        "C": "A statement made by the agent regarding the insurer's financial health.",
+        "D": "A voluntary relinquishment of a known legal right."
+      },
+      "correct_answer": "B",
+      "explanation": "According to Chapter 1-3, a warranty is a statement made by the applicant/insured that is guaranteed to be absolutely true. It is made part of the contract. Representations are statements believed to be true.",
+      "distractor_logic": "A describes a Representation. C is irrelevant to contract terms. D describes a Waiver."
+    },
+    {
+      "id": "pc-basics-003",
+      "category": "Property and Casualty Basics",
+      "difficulty": "Medium",
+      "question": "If an individual voluntarily exposes themselves to a known danger, which legal defense might absolve the defendant of liability?",
+      "options": {
+        "A": "Last Clear Chance",
+        "B": "Assumption of Risk",
+        "C": "Vicarious Liability",
+        "D": "Comparative Negligence"
+      },
+      "correct_answer": "B",
+      "explanation": "Chapter 3-3 explains that under the common law defense of Assumption of Risk, an insured is absolved of liability if the injured third party assumed the risk of injury voluntarily.",
+      "distractor_logic": "Last Clear Chance favors the injured party. Vicarious Liability assigns liability to another. Comparative Negligence apportions fault."
+    },
+    {
+      "id": "ma-law-004",
+      "category": "Insurance Regulation",
+      "difficulty": "Medium",
+      "question": "A lender conditioning a loan approval on the borrower purchasing insurance from a specific agency is engaging in which unfair trade practice?",
+      "options": {
+        "A": "Rebating",
+        "B": "Twisting",
+        "C": "Boycott, Coercion, and Intimidation",
+        "D": "Defamation"
+      },
+      "correct_answer": "C",
+      "explanation": "Chapter 9-15 states that a lender may not inform a borrower that in order to receive a loan he or she must purchase insurance from a specific insurer or agency. This is coercion or intimidation.",
+      "distractor_logic": "Rebating is offering value to induce a sale. Twisting is inducing a lapse to sell a new policy. Defamation is false statements about a competitor."
+    },
+    {
+      "id": "other-cov-005",
+      "category": "Other Coverages and Options",
+      "difficulty": "Medium",
+      "question": "Under the National Flood Insurance Program (NFIP) Emergency Program, what is the maximum amount of coverage available for a single-family residential dwelling?",
+      "options": {
+        "A": "$35,000",
+        "B": "$100,000",
+        "C": "$250,000",
+        "D": "$500,000"
+      },
+      "correct_answer": "A",
+      "explanation": "Chapter 8-2 lists the limits of coverage. Under the Emergency Program, the limit for a single-family residential dwelling is $35,000.",
+      "distractor_logic": "$100,000 is the limit for other residential/nonresidential buildings in the Emergency Program. $250,000 is the Regular Program limit for dwellings. $500,000 is the Regular Program limit for nonresidential buildings."
+    },
+    {
+      "id": "gen-ins-006",
+      "category": "General Insurance",
+      "difficulty": "Medium",
+      "question": "An insurance company owned by its policyholders that issues participating policies is known as a:",
+      "options": {
+        "A": "Stock Company",
+        "B": "Mutual Company",
+        "C": "Risk Retention Group",
+        "D": "Lloyds Association"
+      },
+      "correct_answer": "B",
+      "explanation": "Chapter 1-9 defines a Mutual Company as an insurer without capital stock that is owned by its policyholders and issues participating policies (dividends).",
+      "distractor_logic": "Stock companies are owned by stockholders. Risk Retention Groups are liability insurers owned by members in similar businesses."
+    },
+    {
+      "id": "ma-law-007",
+      "category": "Insurance Regulation",
+      "difficulty": "Hard",
+      "question": "If a Massachusetts producer fails to remit premiums to an insurer within 30 days of receipt, and subsequently ignores a written demand for payment, they may be charged with:",
+      "options": {
+        "A": "Perjury",
+        "B": "Larceny",
+        "C": "Impersonation",
+        "D": "Defamation"
+      },
+      "correct_answer": "B",
+      "explanation": "Chapter 9-12 states that ignoring a written demand for premiums due constitutes larcenous activity (Larceny).",
+      "distractor_logic": "Perjury involves false sworn statements. Impersonation is acting under a false name/license. Defamation is damaging a competitor's reputation."
+    },
+    {
+      "id": "pc-basics-008",
+      "category": "Property and Casualty Basics",
+      "difficulty": "Medium",
+      "question": "Which of the following construction classifications is considered the 'best' from a rating standpoint (lowest rate) because the materials resist fire for at least two hours?",
+      "options": {
+        "A": "Frame",
+        "B": "Joisted Masonry",
+        "C": "Fire-Resistive",
+        "D": "Modified Fire-Resistive"
+      },
+      "correct_answer": "C",
+      "explanation": "Chapter 1-7 states that Fire-Resistive construction is the best from a rating standpoint and generally includes materials that resist fire for at least two hours.",
+      "distractor_logic": "Frame is the least fire-resistive. Modified Fire-Resistive resists fire for up to one hour."
+    },
+    {
+      "id": "ma-law-009",
+      "category": "Insurance Regulation",
+      "difficulty": "Medium",
+      "question": "The Massachusetts Insurance Guaranty Fund protects policyholders against:",
+      "options": {
+        "A": "High premium increases",
+        "B": "Insurer insolvency",
+        "C": "Unfair trade practices",
+        "D": "Producer fraud"
+      },
+      "correct_answer": "B",
+      "explanation": "Chapter 9-17 states the purpose of the Guaranty Fund is to protect the public against the insolvency of insurers and pays claims of persons whose insurer has become insolvent.",
+      "distractor_logic": "The fund does not regulate premiums, trade practices, or producer fraud directly; it specifically addresses ability to pay claims due to insolvency."
+    },
+    {
+      "id": "gen-ins-010",
+      "category": "General Insurance",
+      "difficulty": "Medium",
+      "question": "Which risk management technique involves forming a partnership or agreement to assume a portion of a loss with others?",
+      "options": {
+        "A": "Transfer",
+        "B": "Sharing",
+        "C": "Reduction",
+        "D": "Avoidance"
+      },
+      "correct_answer": "B",
+      "explanation": "Chapter 2-14 describes Sharing as distributing risk among an assortment of persons, such as in a partnership.",
+      "distractor_logic": "Transfer involves insurance policies. Reduction minimizes severity. Avoidance eliminates the activity."
+    },
+    {
+      "id": "other-cov-011",
+      "category": "Other Coverages and Options",
+      "difficulty": "Hard",
+      "question": "In a Personal Umbrella Policy, the 'Self-Insured Retention' (SIR) applies only when:",
+      "options": {
+        "A": "The umbrella policy acts as excess coverage over a primary policy.",
+        "B": "The claim is covered by the underlying policy.",
+        "C": "The loss is not covered by any underlying policy but is covered by the Umbrella.",
+        "D": "The insured is found not liable."
+      },
+      "correct_answer": "C",
+      "explanation": "Chapter 7-2 states the SIR is absorbed by the insured before the umbrella pays benefits if the loss is NOT covered by any underlying coverage.",
+      "distractor_logic": "The SIR does not apply when the umbrella is paying in excess of a claim covered by the primary policy."
+    },
+    {
+      "id": "ma-law-012",
+      "category": "Insurance Regulation",
+      "difficulty": "Medium",
+      "question": "Under Massachusetts law, an 'Adviser' is an individual who:",
+      "options": {
+        "A": "Adjusts fire losses for the public.",
+        "B": "Provides insurance advice for a fee.",
+        "C": "Appraises damage to motor vehicles.",
+        "D": "Negotiates reinsurance contracts."
+      },
+      "correct_answer": "B",
+      "explanation": "Chapter 9-2 defines an Adviser as an individual who provides insurance advice for compensation (a fee).",
+      "distractor_logic": "A is a Public Adjuster. C is a Motor Vehicle Damage Appraiser. D is a Reinsurance Intermediary."
+    },
+    {
+      "id": "pc-basics-013",
+      "category": "Property and Casualty Basics",
+      "difficulty": "Easy",
+      "question": "Which type of damages are awarded to punish a wrongdoer for anti-social or particularly egregious actions?",
+      "options": {
+        "A": "Special Damages",
+        "B": "General Damages",
+        "C": "Punitive Damages",
+        "D": "Compensatory Damages"
+      },
+      "correct_answer": "C",
+      "explanation": "Chapter 3-4 describes Punitive damages as additional damages awarded as punishment against the party causing injury, to 'teach them a lesson'.",
+      "distractor_logic": "Special and General damages are types of Compensatory damages intended to reimburse the injured party, not punish the wrongdoer."
+    },
+    {
+      "id": "gen-ins-014",
+      "category": "General Insurance",
+      "difficulty": "Medium",
+      "question": "The tendency for poorer risks to seek insurance to a greater extent than average risks is known as:",
+      "options": {
+        "A": "Adverse Selection",
+        "B": "Moral Hazard",
+        "C": "Law of Large Numbers",
+        "D": "Risk Retention"
+      },
+      "correct_answer": "A",
+      "explanation": "Chapter 1-6 defines Adverse Selection as the tendency of poorer risks to seek insurance or a bias where an applicant has a greater exposure than a random sampling.",
+      "distractor_logic": "Moral Hazard involves dishonesty. Law of Large Numbers aids prediction. Risk Retention is assuming risk."
+    },
+    {
+      "id": "ma-law-015",
+      "category": "Insurance Regulation",
+      "difficulty": "Medium",
+      "question": "A producer must report any administrative action taken against them in another jurisdiction to the Commissioner within how many days of the final disposition?",
+      "options": {
+        "A": "10 days",
+        "B": "15 days",
+        "C": "30 days",
+        "D": "45 days"
+      },
+      "correct_answer": "C",
+      "explanation": "Chapter 9-5 requires a producer to report to the Commissioner any administrative action against them by another State within 30 days of final disposition.",
+      "distractor_logic": "10, 15, and 45 days are incorrect reporting periods for this specific requirement."
+    },
+    {
+      "id": "other-cov-016",
+      "category": "Other Coverages and Options",
+      "difficulty": "Medium",
+      "question": "Which of the following items is generally covered under a National Flood Insurance Program (NFIP) policy when located in a basement?",
+      "options": {
+        "A": "Finished walls and ceilings",
+        "B": "Personal furniture",
+        "C": "Clothes washers and dryers",
+        "D": "Carpeting"
+      },
+      "correct_answer": "C",
+      "explanation": "Chapter 8-3 lists items covered in a basement, which include air conditioning units, clothes washers and dryers, and food freezers.",
+      "distractor_logic": "Finished walls, furniture, and carpeting are generally not covered in a basement under NFIP."
+    },
+    {
+      "id": "pc-basics-017",
+      "category": "Property and Casualty Basics",
+      "difficulty": "Medium",
+      "question": "What common law defense against negligence prevents an injured party from recovering damages if they were partially responsible for the loss?",
+      "options": {
+        "A": "Comparative Negligence",
+        "B": "Contributory Negligence",
+        "C": "Strict Liability",
+        "D": "Intervening Cause"
+      },
+      "correct_answer": "B",
+      "explanation": "Chapter 3-3 explains that Contributory Negligence prevents an injured third party from recovering damages if the injured party was in any way responsible for the loss.",
+      "distractor_logic": "Comparative negligence allows proportional recovery. Strict liability applies regardless of fault. Intervening cause breaks the chain of causation."
+    },
+    {
+      "id": "ma-law-018",
+      "category": "Insurance Regulation",
+      "difficulty": "Easy",
+      "question": "Under the Insurance Information and Privacy Protection Act, if an individual requests access to personal information collected by an insurer, the insurer must provide it within:",
+      "options": {
+        "A": "10 days",
+        "B": "20 days",
+        "C": "30 days",
+        "D": "60 days"
+      },
+      "correct_answer": "C",
+      "explanation": "Chapter 9-17 states that once a request is made, the insurance organization must provide the individual with the information within 30 days.",
+      "distractor_logic": "Other timeframes are incorrect for this specific privacy act provision."
+    },
+    {
+      "id": "gen-ins-019",
+      "category": "General Insurance",
+      "difficulty": "Medium",
+      "question": "Which type of producer authority is not explicitly written in the contract but is assumed to be necessary to conduct business (e.g., asking medical questions)?",
+      "options": {
+        "A": "Express Authority",
+        "B": "Implied Authority",
+        "C": "Apparent Authority",
+        "D": "Absolute Authority"
+      },
+      "correct_answer": "B",
+      "explanation": "Chapter 1-9 defines Implied Authority as unwritten authority that is an extension of an agent's regular duties, such as asking questions on an application.",
+      "distractor_logic": "Express is written. Apparent is what the public perceives. Absolute is not a standard authority type."
+    },
+    {
+      "id": "ma-law-020",
+      "category": "Insurance Regulation",
+      "difficulty": "Medium",
+      "question": "According to Massachusetts law, if an insurer cancels a standard fire policy, the return premium to the insured is calculated on what basis?",
+      "options": {
+        "A": "Short rate",
+        "B": "Pro rata",
+        "C": "Flat rate",
+        "D": "Earned rate"
+      },
+      "correct_answer": "B",
+      "explanation": "Chapter 2-7 states that when the insurer cancels the policy, the refund is Pro Rata. (Note: If the *insured* cancels, it is short rate).",
+      "distractor_logic": "Short rate applies when the insured cancels. Flat rate means the policy was voided from inception."
+    },
+    {
+      "id": "pc-basics-021",
+      "category": "Property and Casualty Basics",
+      "difficulty": "Medium",
+      "question": "A building that contains furnishings but has no occupants is best described as:",
+      "options": {
+        "A": "Vacant",
+        "B": "Unoccupied",
+        "C": "Abandoned",
+        "D": "Condemned"
+      },
+      "correct_answer": "B",
+      "explanation": "Chapter 2-7 defines Unoccupied as meaning no one is present but the building is furnished. Vacancy means empty or unfurnished.",
+      "distractor_logic": "Vacancy implies no contents and no people. Abandonment is giving up property to the insurer (not a condition of occupancy)."
+    },
+    {
+      "id": "other-cov-022",
+      "category": "Other Coverages and Options",
+      "difficulty": "Hard",
+      "question": "Which of the following correctly describes the standard deductible options available for the National Flood Insurance Program (NFIP) policies?",
+      "options": {
+        "A": "$100 for all risks",
+        "B": "$250 for low risk, $500 for high risk",
+        "C": "$500 for low risk, $1,000 for high risk",
+        "D": "$1,000 for all risks"
+      },
+      "correct_answer": "C",
+      "explanation": "Chapter 8-2 states that for NFIP policies, the standard deductible is $500 for low risk and $1,000 for high risk exposures.",
+      "distractor_logic": "Options A, B, and D do not match the standard deductibles listed in the text."
+    },
+    {
+      "id": "gen-ins-023",
+      "category": "General Insurance",
+      "difficulty": "Easy",
+      "question": "Which section of an insurance policy contains the insured's name, address, policy period, and coverage limits?",
+      "options": {
+        "A": "Insuring Agreement",
+        "B": "Conditions",
+        "C": "Exclusions",
+        "D": "Declarations"
+      },
+      "correct_answer": "D",
+      "explanation": "Chapter 1-5 states that the Declarations page 'personalizes' the policy and lists the name, address, limits, and premium.",
+      "distractor_logic": "Insuring Agreement is the promise to pay. Conditions are duties. Exclusions are what is not covered."
+    },
+    {
+      "id": "ma-law-024",
+      "category": "Insurance Regulation",
+      "difficulty": "Hard",
+      "question": "In Massachusetts, if an insurer receives a proof of loss and decides to repair or replace the damaged property instead of paying cash, it must notify the insured of this decision within:",
+      "options": {
+        "A": "10 days",
+        "B": "15 days",
+        "C": "30 days",
+        "D": "45 days"
+      },
+      "correct_answer": "B",
+      "explanation": "Chapter 9-20 states the insurer has the option of repairing/replacing property as long as 15 days notice of such decision is provided to the insured.",
+      "distractor_logic": "30 days is the time to pay the claim. 10 and 45 days are incorrect for this specific notice."
+    },
+    {
+      "id": "gen-ins-025",
+      "category": "General Insurance",
+      "difficulty": "Medium",
+      "question": "An insurance contract is 'Conditional' because:",
+      "options": {
+        "A": "The insurer drafts the language.",
+        "B": "Values exchanged are unequal.",
+        "C": "The insurer's promise to pay is dependent on the insured satisfying specific obligations.",
+        "D": "Only one party makes a promise."
+      },
+      "correct_answer": "C",
+      "explanation": "Chapter 1-2 explains that a conditional contract requires both parties to satisfy specific conditions (like paying premiums) for the contract to be executed.",
+      "distractor_logic": "A refers to Adhesion. B refers to Aleatory. D refers to Unilateral."
+    }
+  ],
+  "tags": [
+    "Massachusetts",
+    "Remediation",
+    "Insurance Regulation",
+    "General Insurance",
+    "Property Basics",
+    "Flood",
+    "Law"
+  ]
+}

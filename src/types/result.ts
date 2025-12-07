@@ -1,8 +1,11 @@
-import type { QuizMode } from './quiz';
+import type { QuizMode } from "./quiz";
+
+export type SyncFlag = 0 | 1;
 
 export interface Result {
   id: string;
   quiz_id: string;
+  user_id: string;
   timestamp: number;
   mode: QuizMode;
   score: number;
@@ -10,6 +13,8 @@ export interface Result {
   answers: Record<string, string>;
   flagged_questions: string[];
   category_breakdown: Record<string, number>;
+  synced?: SyncFlag; // 0 = not synced, 1 = synced
+  deleted_at?: number; // Timestamp if soft deleted locally (waiting for sync)
 }
 
 export interface CategoryPerformance {

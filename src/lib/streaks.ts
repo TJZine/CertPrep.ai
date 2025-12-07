@@ -5,10 +5,10 @@ export interface StudyStreak {
 }
 
 function isLocalStorageAvailable(): boolean {
-  if (typeof window === 'undefined') return false;
+  if (typeof window === "undefined") return false;
   try {
-    const key = '__certprep_streak_test__';
-    window.localStorage.setItem(key, '1');
+    const key = "__certprep_streak_test__";
+    window.localStorage.setItem(key, "1");
     window.localStorage.removeItem(key);
     return true;
   } catch {
@@ -21,7 +21,7 @@ export function getStudyStreak(): StudyStreak {
     return { currentStreak: 0, longestStreak: 0, lastStudyDate: null };
   }
 
-  const stored = localStorage.getItem('study_streak');
+  const stored = localStorage.getItem("study_streak");
   if (!stored) {
     return { currentStreak: 0, longestStreak: 0, lastStudyDate: null };
   }
@@ -38,7 +38,8 @@ export function updateStudyStreak(): StudyStreak {
   }
 
   const streak = getStudyStreak();
-  const today = new Date().toISOString().split('T')[0] ?? null;
+  // Use local time for streak calculation, not UTC
+  const today = new Date().toLocaleDateString("en-CA");
 
   if (streak.lastStudyDate === today) {
     return streak;
@@ -46,7 +47,7 @@ export function updateStudyStreak(): StudyStreak {
 
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
-  const yesterdayStr = yesterday.toISOString().split('T')[0];
+  const yesterdayStr = yesterday.toLocaleDateString("en-CA");
 
   if (streak.lastStudyDate === yesterdayStr) {
     streak.currentStreak += 1;
@@ -57,6 +58,6 @@ export function updateStudyStreak(): StudyStreak {
   streak.longestStreak = Math.max(streak.currentStreak, streak.longestStreak);
   streak.lastStudyDate = today;
 
-  localStorage.setItem('study_streak', JSON.stringify(streak));
+  localStorage.setItem("study_streak", JSON.stringify(streak));
   return streak;
 }

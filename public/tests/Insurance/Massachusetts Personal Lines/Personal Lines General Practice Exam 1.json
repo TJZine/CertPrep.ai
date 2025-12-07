@@ -1,0 +1,387 @@
+{
+  "title": "MA Personal Lines Insurance Practice Exam 1",
+  "description": "Practice exam simulating the Massachusetts Personal Lines Insurance certification. Covers Contract Law, Homeowners, MA Auto, Dwelling, Flood, and State Law.",
+  "questions": [
+    {
+      "id": "exam-1-q01",
+      "category": "Contract Law",
+      "difficulty": "Easy",
+      "question": "Which distinct characteristic of an insurance contract signifies that the contract is drafted by one party (the insurer) and accepted by the other (the applicant), where ambiguities are generally resolved in favor of the insured?",
+      "options": {
+        "A": "Aleatory",
+        "B": "Unilateral",
+        "C": "Adhesion",
+        "D": "Conditional"
+      },
+      "correct_answer": "C",
+      "explanation": "An insurance policy is a contract of adhesion. This means it is drafted by the insurer and accepted by the applicant. Since the insurer drafts the language, any ambiguity is generally decided by a court in favor of the insured.",
+      "distractor_logic": "Aleatory refers to unequal exchange of value. Unilateral means only one party makes a promise. Conditional means the contract requires specific conditions to be met."
+    },
+    {
+      "id": "exam-1-q02",
+      "category": "General Insurance Basics",
+      "difficulty": "Medium",
+      "question": "Which of the following is considered a 'morale' hazard?",
+      "options": {
+        "A": "Storing gasoline in a garage",
+        "B": "Leaving keys in an unlocked car ignition due to indifference",
+        "C": "Intentionally burning down a house for profit",
+        "D": "A pothole in a driveway"
+      },
+      "correct_answer": "B",
+      "explanation": "A morale hazard results from the indifferent or careless attitudes of an insured, such as leaving a car unlocked with keys in the ignition.",
+      "distractor_logic": "Storing gasoline and potholes are physical hazards. Intentional destruction is a moral hazard (dishonesty)."
+    },
+    {
+      "id": "exam-1-q03",
+      "category": "Property & Liability Basics",
+      "difficulty": "Easy",
+      "question": "In liability insurance, which legal defense generally prevents an injured third party from recovering damages if they were partially responsible for the loss, unless the state uses a comparative negligence standard?",
+      "options": {
+        "A": "Assumption of Risk",
+        "B": "Contributory Negligence",
+        "C": "Strict Liability",
+        "D": "Intervening Cause"
+      },
+      "correct_answer": "B",
+      "explanation": "Contributory negligence is a common law defense that prevents an injured third party from recovering damages if the injured party was in any way responsible for the loss.",
+      "distractor_logic": "Assumption of risk involves voluntarily assuming danger. Strict liability is liability without fault. Intervening cause interrupts the chain of events."
+    },
+    {
+      "id": "exam-1-q04",
+      "category": "Dwelling Policies",
+      "difficulty": "Medium",
+      "question": "Under a Dwelling Property Basic Form (DP-1), which of the following perils is automatically covered without endorsement?",
+      "options": {
+        "A": "Vandalism",
+        "B": "Windstorm",
+        "C": "Internal Explosion",
+        "D": "Falling Objects"
+      },
+      "correct_answer": "C",
+      "explanation": "The DP-1 Basic Form covers loss by fire, lightning, and internal explosion.",
+      "distractor_logic": "Vandalism and Windstorm must be added via endorsement (Extended Coverages or V&MM). Falling Objects is a Broad Form (DP-2) peril."
+    },
+    {
+      "id": "exam-1-q05",
+      "category": "Homeowners Section I",
+      "difficulty": "Medium",
+      "question": "In a Homeowners policy (HO-3), what is the specific limit of liability for the theft of jewelry, watches, and furs?",
+      "options": {
+        "A": "$500",
+        "B": "$1,000",
+        "C": "$1,500",
+        "D": "$2,500"
+      },
+      "correct_answer": "C",
+      "explanation": "The policy includes Special Limits of Liability, specifically $1,500 for loss by theft of jewelry, watches, and furs.",
+      "distractor_logic": "$500 is not a standard theft limit for jewelry. $1,000 is often the loss assessment limit. $2,500 is the limit for theft of silverware or firearms."
+    },
+    {
+      "id": "exam-1-q06",
+      "category": "Homeowners Section II",
+      "difficulty": "Easy",
+      "question": "Coverage F (Medical Payments to Others) in a Homeowners policy will pay for necessary medical expenses incurred within how many years of an accident?",
+      "options": {
+        "A": "One year",
+        "B": "Two years",
+        "C": "Three years",
+        "D": "Five years"
+      },
+      "correct_answer": "C",
+      "explanation": "Coverage F states the insurer will pay necessary medical expenses incurred within three years of an accident causing bodily injury.",
+      "distractor_logic": "Two years is the limit for Medical Payments in the MA Auto Policy. One and five years are incorrect."
+    },
+    {
+      "id": "exam-1-q07",
+      "category": "MA Personal Auto",
+      "difficulty": "Hard",
+      "question": "Under Part 2 (Personal Injury Protection) of the MA Auto Policy, if an injured person has private health insurance, how much of the medical expenses will PIP pay before the health insurer must be billed?",
+      "options": {
+        "A": "$0",
+        "B": "$2,000",
+        "C": "$5,000",
+        "D": "$8,000"
+      },
+      "correct_answer": "B",
+      "explanation": "If an injured person is covered by health insurance, PIP will pay up to $2,000 of medical expenses. Expenses in excess of $2,000 must be submitted to the health plan.",
+      "distractor_logic": "$8,000 is the total maximum PIP benefit. $5,000 is the minimum Property Damage limit."
+    },
+    {
+      "id": "exam-1-q08",
+      "category": "MA Personal Auto",
+      "difficulty": "Medium",
+      "question": "Which part of the Massachusetts Personal Auto Policy is Compulsory (Mandatory)?",
+      "options": {
+        "A": "Part 5: Optional Bodily Injury",
+        "B": "Part 3: Uninsured Motorist",
+        "C": "Part 7: Collision",
+        "D": "Part 9: Comprehensive"
+      },
+      "correct_answer": "B",
+      "explanation": "Compulsory Insurance includes four parts, one of which is Part 3: Uninsured Motorist Coverage.",
+      "distractor_logic": "Part 5, Part 7, and Part 9 are all listed under Optional Insurance."
+    },
+    {
+      "id": "exam-1-q09",
+      "category": "MA Personal Auto",
+      "difficulty": "Medium",
+      "question": "If a Massachusetts auto insurer cancels a policy for non-payment of premium, how many days' written notice must be provided?",
+      "options": {
+        "A": "10 days",
+        "B": "20 days",
+        "C": "30 days",
+        "D": "45 days"
+      },
+      "correct_answer": "A",
+      "explanation": "For non-payment of premium, 10 days written notice of cancellation must be provided to the insured by the insurer.",
+      "distractor_logic": "20 days is required for cancellation for other reasons. 45 days is required for non-renewal."
+    },
+    {
+      "id": "exam-1-q10",
+      "category": "Flood Insurance",
+      "difficulty": "Easy",
+      "question": "Under the National Flood Insurance Program (NFIP), what is the standard waiting period for a new policy to become effective?",
+      "options": {
+        "A": "10 days",
+        "B": "15 days",
+        "C": "30 days",
+        "D": "45 days"
+      },
+      "correct_answer": "C",
+      "explanation": "A policy issued after the initial thirty-day period will become effective after an additional thirty (30) day waiting period.",
+      "distractor_logic": "10 days applies to auto pre-insurance inspection deferrals. 45 days applies to Property Removed coverage in flood policies."
+    },
+    {
+      "id": "exam-1-q11",
+      "category": "MA Insurance Law",
+      "difficulty": "Medium",
+      "question": "A Massachusetts resident producer license is valid for what period of time?",
+      "options": {
+        "A": "Two years",
+        "B": "Three years",
+        "C": "Four years",
+        "D": "Five years"
+      },
+      "correct_answer": "B",
+      "explanation": "Once issued, a producer's license is good for three years and renews on the holder's birthday.",
+      "distractor_logic": "Other states may use 2 years, but Massachusetts law specifies a triennial (3-year) renewal."
+    },
+    {
+      "id": "exam-1-q12",
+      "category": "MA Insurance Law",
+      "difficulty": "Medium",
+      "question": "If a producer changes their address, they must notify the Division of Insurance within how many days?",
+      "options": {
+        "A": "10 days",
+        "B": "15 days",
+        "C": "30 days",
+        "D": "60 days"
+      },
+      "correct_answer": "C",
+      "explanation": "Whenever a licensed individual changes his, her or its residence, business or email name or address, the Division of Insurance must be notified of the change within 30 days.",
+      "distractor_logic": "30 days is the specific statutory requirement."
+    },
+    {
+      "id": "exam-1-q13",
+      "category": "MA Insurance Law",
+      "difficulty": "Easy",
+      "question": "An insurer that is chartered in another country but authorized to do business in Massachusetts is referred to as:",
+      "options": {
+        "A": "Domestic Insurer",
+        "B": "Foreign Insurer",
+        "C": "Alien Insurer",
+        "D": "Unauthorized Insurer"
+      },
+      "correct_answer": "C",
+      "explanation": "An Alien Insurer is a company whose principal office and charter is located in another country.",
+      "distractor_logic": "Domestic is chartered in MA. Foreign is chartered in another US state."
+    },
+    {
+      "id": "exam-1-q14",
+      "category": "Homeowners Section I",
+      "difficulty": "Hard",
+      "question": "Under an unendorsed Homeowners policy, what is the maximum coverage available for watercraft and its trailers?",
+      "options": {
+        "A": "$500",
+        "B": "$1,000",
+        "C": "$1,500",
+        "D": "$2,500"
+      },
+      "correct_answer": "C",
+      "explanation": "The policy includes Special Limits of Liability of $1,500 for watercraft and its accessories including a boat trailer.",
+      "distractor_logic": "$2,500 is the limit for business property on premises. $1,000 is for loss assessment."
+    },
+    {
+      "id": "exam-1-q15",
+      "category": "Contract Law",
+      "difficulty": "Easy",
+      "question": "Which element of a contract involves the exchange of value, such as the insured paying a premium and the insurer promising to pay claims?",
+      "options": {
+        "A": "Agreement",
+        "B": "Consideration",
+        "C": "Legal Capacity",
+        "D": "Legal Purpose"
+      },
+      "correct_answer": "B",
+      "explanation": "Consideration means there must be an exchange of values between the parties. The applicant's consideration is the premium paid; the insurer's is the promise to pay claims.",
+      "distractor_logic": "Agreement refers to offer and acceptance. Capacity refers to competence."
+    },
+    {
+      "id": "exam-1-q16",
+      "category": "Homeowners Section I",
+      "difficulty": "Medium",
+      "question": "If a Homeowners policy (HO-3) insures a home (Coverage A) for $300,000, what is the automatic limit for Coverage B (Other Structures)?",
+      "options": {
+        "A": "$15,000",
+        "B": "$30,000",
+        "C": "$150,000",
+        "D": "$300,000"
+      },
+      "correct_answer": "B",
+      "explanation": "Coverage B automatically provides a coverage limit of 10% of the Coverage A amount. $300,000 * 10% = $30,000.",
+      "distractor_logic": "$150,000 is 50% (Coverage C limit). $15,000 is 5%."
+    },
+    {
+      "id": "exam-1-q17",
+      "category": "MA Personal Auto",
+      "difficulty": "Hard",
+      "question": "Under the Massachusetts Personal Auto Policy, Part 10 (Substitute Transportation) will pay up to what standard daily limit?",
+      "options": {
+        "A": "$15",
+        "B": "$25",
+        "C": "$50",
+        "D": "$100"
+      },
+      "correct_answer": "A",
+      "explanation": "The policy will pay $15 per day to a maximum of $450 for Substitute Transportation.",
+      "distractor_logic": "$50 is the Towing limit. Higher limits are available, but $15 is the standard mentioned in the text."
+    },
+    {
+      "id": "exam-1-q18",
+      "category": "MA Insurance Law",
+      "difficulty": "Medium",
+      "question": "A producer who embezzles premiums for personal use may be charged with larceny. The monetary penalty for this specific act is not more than:",
+      "options": {
+        "A": "$500",
+        "B": "$1,000",
+        "C": "$5,000",
+        "D": "$10,000"
+      },
+      "correct_answer": "B",
+      "explanation": "If a producer misappropriates premiums, he or she may be charged with larceny. The monetary penalty for larceny is not more than $1,000.",
+      "distractor_logic": "$10,000 is the fine for violating a cease and desist order. $500 is the fine for unlicensed compensation."
+    },
+    {
+      "id": "exam-1-q19",
+      "category": "Umbrella Liability",
+      "difficulty": "Easy",
+      "question": "What is the primary purpose of a Self-Insured Retention (SIR) in an Umbrella policy?",
+      "options": {
+        "A": "To act as a deductible for losses not covered by underlying policies",
+        "B": "To reduce the premium for the underlying auto policy",
+        "C": "To replace the need for defense costs",
+        "D": "To increase the aggregate limits of the primary policy"
+      },
+      "correct_answer": "A",
+      "explanation": "A self-insured retention limit is similar to a deductible... It is absorbed by the insured before the umbrella policy pays any benefits if the loss is not covered by any underlying coverage.",
+      "distractor_logic": "SIR applies to the Umbrella, not the underlying policy. Defense costs are often provided in full (first-dollar)."
+    },
+    {
+      "id": "exam-1-q20",
+      "category": "General Insurance Basics",
+      "difficulty": "Medium",
+      "question": "Which risk management technique involves purchasing an insurance policy?",
+      "options": {
+        "A": "Avoidance",
+        "B": "Retention",
+        "C": "Transfer",
+        "D": "Reduction"
+      },
+      "correct_answer": "C",
+      "explanation": "Purchasing insurance coverage is the most common method of risk transfer (i.e., from an insured to an insurer).",
+      "distractor_logic": "Avoidance means not engaging in activity. Retention means paying for losses oneself. Reduction means lowering severity."
+    },
+    {
+      "id": "exam-1-q21",
+      "category": "Dwelling Policies",
+      "difficulty": "Hard",
+      "question": "Under a DP-2 Broad Form, coverage for the 'Weight of Ice, Snow, or Sleet' generally excludes damage to which of the following?",
+      "options": {
+        "A": "The roof of the dwelling",
+        "B": "Household furniture inside the dwelling",
+        "C": "Fences, patios, and swimming pools",
+        "D": "Plumbing systems"
+      },
+      "correct_answer": "C",
+      "explanation": "The policy covers Weight of ice, snow and sleet... but not to fences, awnings, retaining walls, swimming pools, patios or foundations.",
+      "distractor_logic": "Roof and contents (if building is damaged) are covered."
+    },
+    {
+      "id": "exam-1-q22",
+      "category": "MA Insurance Law",
+      "difficulty": "Medium",
+      "question": "Making false statements about the financial condition of a competing insurer to damage their reputation is known as:",
+      "options": {
+        "A": "Twisting",
+        "B": "Rebating",
+        "C": "Defamation",
+        "D": "Coercion"
+      },
+      "correct_answer": "C",
+      "explanation": "No person may make false or untrue statements regarding a competing insurer. Any such comments or remarks will be deemed to be defamation.",
+      "distractor_logic": "Twisting involves misrepresentation to induce a policy lapse. Rebating involves offering value to induce purchase."
+    },
+    {
+      "id": "exam-1-q23",
+      "category": "MA Personal Auto",
+      "difficulty": "Medium",
+      "question": "Under the Massachusetts Personal Auto Policy, Part 6 (Medical Payments) excludes expenses incurred more than how many years after the accident?",
+      "options": {
+        "A": "One year",
+        "B": "Two years",
+        "C": "Three years",
+        "D": "Four years"
+      },
+      "correct_answer": "B",
+      "explanation": "The insurer will not pay for expenses incurred more than two years after the date of the accident under Part 6 Medical Payments.",
+      "distractor_logic": "Three years is the limit for Homeowners Medical Payments."
+    },
+    {
+      "id": "exam-1-q24",
+      "category": "MA Insurance Law",
+      "difficulty": "Easy",
+      "question": "If an insurer cancels a fire insurance policy in Massachusetts, it must provide the mortgagee with how many days' written notice?",
+      "options": {
+        "A": "10 days",
+        "B": "20 days",
+        "C": "30 days",
+        "D": "45 days"
+      },
+      "correct_answer": "B",
+      "explanation": "If an insurer cancels a property insurance policy, it must provide a mortgagee or lienholder with 20 days written notice of cancellation.",
+      "distractor_logic": "10 days is for non-renewal to the mortgagee."
+    },
+    {
+      "id": "exam-1-q25",
+      "category": "Homeowners Section I",
+      "difficulty": "Medium",
+      "question": "Which Homeowners form is designed specifically for condominium unit owners?",
+      "options": {
+        "A": "HO-2",
+        "B": "HO-4",
+        "C": "HO-5",
+        "D": "HO-6"
+      },
+      "correct_answer": "D",
+      "explanation": "The Condominium Unitowners Form is known as the HO-6 form.",
+      "distractor_logic": "HO-4 is for tenants. HO-2 and HO-5 are for owner-occupied dwellings."
+    }
+  ],
+  "tags": [
+    "Massachusetts",
+    "MA Personal Lines",
+    "Insurance Exam",
+    "Property & Casualty"
+  ]
+}

@@ -1,198 +1,312 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { BarChart3, BookOpen, Home, Library, Menu, Settings as SettingsIcon, X } from 'lucide-react';
-import { APP_NAME } from '@/lib/constants';
-import { cn } from '@/lib/utils';
-import { ThemeToggle } from '@/components/common/ThemeToggle';
-import { lockBodyScroll, unlockBodyScroll } from '@/lib/bodyScrollLock';
+import * as React from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import {
+  Menu,
+  X,
+  LogOut,
+  Home,
+  BarChart3,
+  Library,
+  Settings as SettingsIcon,
+  User as UserIcon,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { lockBodyScroll, unlockBodyScroll } from "@/lib/bodyScrollLock";
+import { ThemeToggleButton } from "@/components/common/ThemeToggleButton";
+import { useAuth } from "@/components/providers/AuthProvider";
+import { Button, buttonVariants } from "@/components/ui/Button";
+import { Logo } from "@/components/common/Logo";
+import { useToast } from "@/components/ui/Toast";
+
+import { logger } from "@/lib/logger";
 
 const navigation = [
-  { name: 'Dashboard', href: '/', icon: Home },
-  { name: 'Analytics', href: '/analytics', icon: BarChart3 },
-  { name: 'Library', href: '/library', icon: Library },
-  { name: 'Settings', href: '/settings', icon: SettingsIcon },
+  { name: "Dashboard", href: "/", icon: Home, public: true },
+  { name: "Analytics", href: "/analytics", icon: BarChart3, public: true },
+  { name: "Library", href: "/library", icon: Library, public: true },
+  { name: "Settings", href: "/settings", icon: SettingsIcon, public: false },
 ];
 
-const linkBase =
-  'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900';
+function isRouteActive(pathname: string, href: string): boolean {
+  return (
+    pathname === href || (href !== "/" && pathname.startsWith(href + "/"))
+  );
+}
 
-/**
- * Sticky application header with main navigation.
- */
 export function Header(): React.ReactElement {
   const pathname = usePathname();
-  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
-  const mobilePanelId = React.useId();
-  const firstMobileLinkRef = React.useRef<HTMLAnchorElement>(null);
-  const toggleButtonRef = React.useRef<HTMLButtonElement>(null);
-  const mobilePanelRef = React.useRef<HTMLDivElement>(null);
+  const { user, signOut } = useAuth();
+  const { addToast } = useToast();
 
+
+
+
+  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  const [scrolled, setScrolled] = React.useState(false);
+  const handleCloseMenu = React.useCallback(
+    (): void => setIsMenuOpen(false),
+    [],
+  );
+  const menuItemTabIndex = isMenuOpen ? 0 : -1;
+
+  // Handle scroll effect for glassmorphism border
+  React.useEffect((): (() => void) => {
+    const handleScroll = (): void => {
+      setScrolled(window.scrollY > 0);
+    };
+
+    handleScroll(); // initialize on mount
+    window.addEventListener("scroll", handleScroll, { passive: true });
+
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Close mobile menu on route change
   React.useEffect((): void => {
-    // Close the mobile menu when navigating
     setIsMenuOpen(false);
   }, [pathname]);
 
-  React.useEffect((): (() => void) | void => {
-    if (!isMenuOpen) return;
+  // Lock body scroll when mobile menu is open
+  React.useEffect(() => {
+    if (!isMenuOpen) {
+      return;
+    }
+
     lockBodyScroll();
-    return () => {
+
+    return (): void => {
       unlockBodyScroll();
     };
   }, [isMenuOpen]);
 
-  React.useEffect(() => {
-    const panel = mobilePanelRef.current;
-    if (!panel) return;
+  const [isSigningOut, setIsSigningOut] = React.useState(false);
 
-    if (isMenuOpen) {
-      panel.removeAttribute('inert');
-    } else {
-      panel.setAttribute('inert', '');
-    }
-  }, [isMenuOpen]);
+  const handleSignOut = async (): Promise<void> => {
+    if (isSigningOut) return;
 
-  React.useEffect((): (() => void) | undefined => {
-    if (!isMenuOpen) return undefined;
+    setIsSigningOut(true);
+    setIsMenuOpen(false);
 
-    const panelElements = mobilePanelRef.current
-      ? Array.from(
-          mobilePanelRef.current.querySelectorAll<HTMLElement>(
-            'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
-          ),
-        )
-      : [];
-
-    const focusableList = (
-      [toggleButtonRef.current, ...panelElements] as Array<HTMLElement | null>
-    ).filter((el): el is HTMLElement => Boolean(el));
-
-    (firstMobileLinkRef.current ?? focusableList[0])?.focus();
-
-    const handleKeyDown = (event: KeyboardEvent): void => {
-      if (!isMenuOpen) return;
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        setIsMenuOpen(false);
-        toggleButtonRef.current?.focus();
+    try {
+      const result = await signOut();
+      if (!result.success) {
+        logger.warn("Sign out returned unsuccessful result", result);
+        addToast(
+          "error",
+          result.error ?? "Failed to sign out. Please try again.",
+        );
         return;
       }
-
-      if (event.key === 'Tab') {
-        if (!focusableList.length) return;
-        const first = focusableList[0];
-        const last = focusableList[focusableList.length - 1];
-        if (!first || !last) return;
-        if (event.shiftKey) {
-          if (document.activeElement === first) {
-            event.preventDefault();
-            last.focus();
-          }
-        } else if (document.activeElement === last) {
-          event.preventDefault();
-          first.focus();
-        }
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return (): void => document.removeEventListener('keydown', handleKeyDown);
-  }, [isMenuOpen]);
+    } catch (error) {
+      logger.error("Sign out failed", error);
+      addToast("error", "Failed to sign out. Please try again.");
+    } finally {
+      setIsSigningOut(false);
+    }
+  };
 
   return (
     <header
-      className="sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur dark:border-slate-800 dark:bg-slate-900/80"
+      className={cn(
+        "sticky top-0 z-50 w-full transition-all duration-200",
+        "bg-white/80 dark:bg-slate-950/80 backdrop-blur-md",
+        "border-b",
+        scrolled
+          ? "border-slate-200/50 dark:border-slate-800/50 shadow-sm"
+          : "border-transparent",
+      )}
     >
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-3">
-          <Link
-            href="/"
-            className="flex items-center gap-2 text-lg font-semibold text-slate-900 dark:text-slate-50"
-            aria-label={`${APP_NAME} home`}
-          >
-            <BookOpen className="h-6 w-6 text-blue-600 dark:text-blue-400" aria-hidden="true" />
-            <span className="whitespace-nowrap">{APP_NAME}</span>
-          </Link>
+      <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
+        {/* Logo */}
+        <div className="flex items-center gap-2">
+          <Logo />
         </div>
 
-        <div className="flex items-center gap-3">
-          <nav aria-label="Main navigation" className="hidden items-center gap-2 md:flex">
-            {navigation.map((item) => {
-              const isActive =
-                item.href === '/' ? pathname === '/' : pathname === item.href || pathname.startsWith(`${item.href}/`);
-              const Icon = item.icon;
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={cn(
-                    linkBase,
-                    isActive
-                      ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-100'
-                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-slate-50',
-                  )}
-                  aria-current={isActive ? 'page' : undefined}
-                >
-                  <Icon className="h-5 w-5" aria-hidden="true" />
-                  <span>{item.name}</span>
-                </Link>
-              );
-            })}
-          </nav>
-          <ThemeToggle />
+        {/* Desktop Navigation */}
+        <nav className="hidden md:flex items-center gap-8" aria-label="Main navigation">
+          {navigation.map((item) => {
+            // Show if public OR if user is authenticated
+            if (!item.public && !user) return null;
+
+            const isActive = isRouteActive(pathname, item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "text-sm font-medium transition-colors duration-200",
+                  isActive
+                    ? "text-blue-600 dark:text-blue-400"
+                    : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100",
+                )}
+                aria-current={isActive ? "page" : undefined}
+              >
+                {item.name}
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* Desktop Actions */}
+        <div className="hidden md:flex items-center gap-4">
+          <ThemeToggleButton />
+
+          {user ? (
+            <div className="flex items-center gap-4 pl-4 border-l border-slate-200 dark:border-slate-800">
+              <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+                <UserIcon className="h-4 w-4" />
+                <span className="max-w-[150px] truncate">{user.email}</span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleSignOut}
+                isLoading={isSigningOut}
+                disabled={isSigningOut}
+                className="text-slate-600 hover:text-red-600 hover:bg-red-50 dark:text-slate-400 dark:hover:text-red-400 dark:hover:bg-red-900/20"
+              >
+                Sign Out
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3">
+              <Link
+                href="/login"
+                className={cn(
+                  buttonVariants({ variant: "ghost", size: "sm" }),
+                  "font-medium",
+                )}
+              >
+                Log In
+              </Link>
+              <Link
+                href="/signup"
+                className={cn(
+                  buttonVariants({ size: "sm" }),
+                  "font-medium shadow-sm",
+                )}
+              >
+                Sign Up
+              </Link>
+            </div>
+          )}
+        </div>
+
+        {/* Mobile Menu Button */}
+        <div className="flex items-center gap-4 md:hidden">
+          <ThemeToggleButton />
           <button
-            ref={toggleButtonRef}
             type="button"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-md text-slate-700 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 dark:text-slate-200 dark:hover:bg-slate-800 dark:focus-visible:ring-offset-slate-900 md:hidden"
-            aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-md text-slate-700 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 dark:text-slate-200 dark:hover:bg-slate-800"
+            onClick={(): void => setIsMenuOpen((prev) => !prev)}
             aria-expanded={isMenuOpen}
-            aria-controls={mobilePanelId}
-            onClick={() => setIsMenuOpen((open) => !open)}
+            aria-controls="mobile-nav"
+            aria-label="Toggle menu"
           >
-            {isMenuOpen ? <X className="h-5 w-5" aria-hidden="true" /> : <Menu className="h-5 w-5" aria-hidden="true" />}
+            {isMenuOpen ? (
+              <X className="h-6 w-6" />
+            ) : (
+              <Menu className="h-6 w-6" />
+            )}
           </button>
         </div>
       </div>
 
-      {/* Mobile nav panel */}
+      {/* Mobile Navigation Sheet */}
       <div
-        ref={mobilePanelRef}
-        id={mobilePanelId}
-        aria-hidden={!isMenuOpen}
+        inert={!isMenuOpen ? true : undefined}
         className={cn(
-          'md:hidden',
-          isMenuOpen ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0',
-          'overflow-hidden transition-all duration-200 ease-out',
+          "fixed inset-x-0 top-16 bottom-0 z-40 bg-white dark:bg-slate-950 md:hidden transition-transform duration-300 ease-in-out",
+          isMenuOpen ? "translate-x-0" : "translate-x-full",
         )}
+        aria-hidden={!isMenuOpen}
+        id="mobile-nav"
       >
-        <div className="space-y-1 border-t border-slate-200 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-900">
-          <nav aria-label="Mobile navigation" className="space-y-1">
-            {navigation.map((item, index) => {
-              const isActive =
-                item.href === '/' ? pathname === '/' : pathname === item.href || pathname.startsWith(`${item.href}/`);
+        <div className="flex flex-col h-full overflow-y-auto p-6 space-y-6">
+          <nav className="flex flex-col space-y-2">
+            {navigation.map((item) => {
+              if (!item.public && !user) return null;
+
+              const isActive = isRouteActive(pathname, item.href);
               const Icon = item.icon;
               return (
                 <Link
-                  key={item.name}
+                  key={item.href}
                   href={item.href}
-                  onClick={() => setIsMenuOpen(false)}
+                  onClick={handleCloseMenu}
+                  tabIndex={menuItemTabIndex}
                   className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-3 text-base font-medium',
+                    "flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium transition-colors",
                     isActive
-                      ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-100'
-                      : 'text-slate-700 hover:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-800',
+                      ? "bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300"
+                      : "text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800",
                   )}
-                  aria-current={isActive ? 'page' : undefined}
-                  ref={index === 0 ? firstMobileLinkRef : undefined}
                 >
-                  <Icon className="h-5 w-5" aria-hidden="true" />
-                  <span>{item.name}</span>
+                  <Icon className="h-5 w-5" />
+                  {item.name}
                 </Link>
               );
             })}
           </nav>
+
+          <div className="border-t border-slate-200 dark:border-slate-800 pt-6 mt-auto">
+            {user ? (
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 px-4 py-2">
+                  <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                    <UserIcon className="h-5 w-5" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                      Account
+                    </span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400">
+                      {user.email}
+                    </span>
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                  onClick={handleSignOut}
+                  isLoading={isSigningOut}
+                  disabled={isSigningOut}
+                  tabIndex={menuItemTabIndex}
+                  leftIcon={<LogOut className="h-4 w-4" />}
+                >
+                  Sign Out
+                </Button>
+              </div>
+            ) : (
+              <div className="grid gap-4">
+                <Link
+                  href="/login"
+                  onClick={handleCloseMenu}
+                  tabIndex={menuItemTabIndex}
+                  className={cn(
+                    buttonVariants({ variant: "outline" }),
+                    "w-full justify-center h-11 text-base",
+                  )}
+                >
+                  Log In
+                </Link>
+                <Link
+                  href="/signup"
+                  onClick={handleCloseMenu}
+                  tabIndex={menuItemTabIndex}
+                  className={cn(
+                    buttonVariants(),
+                    "w-full justify-center h-11 text-base shadow-sm",
+                  )}
+                >
+                  Sign Up
+                </Link>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </header>
