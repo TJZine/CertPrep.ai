@@ -54,13 +54,16 @@ export function ResultsContainer({
   const [showDeleteModal, setShowDeleteModal] = React.useState(false);
   const [isDeleting, setIsDeleting] = React.useState(false);
 
-  const { grading, isLoading: gradingLoading } = useQuizGrading(
-    quiz,
-    result.answers,
-  );
-  const { resolvedAnswers, isResolving } = useResolveCorrectAnswers(
-    quiz.questions,
-  );
+  const {
+    grading,
+    isLoading: gradingLoading,
+    error: gradingError,
+  } = useQuizGrading(quiz, result.answers);
+  const {
+    resolvedAnswers,
+    isResolving,
+    error: resolvingError,
+  } = useResolveCorrectAnswers(quiz.questions);
 
   const stats = React.useMemo(() => {
     if (!grading) return null;
@@ -139,29 +142,26 @@ export function ResultsContainer({
   );
 
   const [questionFilter, setQuestionFilter] = React.useState<FilterType>("all");
-
-  const hasSetInitialFilter = React.useRef(false);
-  const userHasChangedFilter = React.useRef(false);
+  const [autoFilterApplied, setAutoFilterApplied] = React.useState(false);
 
   // Update filter once grading is done
   React.useEffect(() => {
     if (
       !gradingLoading &&
       hasMissedQuestions &&
-      !hasSetInitialFilter.current &&
-      !userHasChangedFilter.current
+      !autoFilterApplied
     ) {
       setQuestionFilter("incorrect");
-      hasSetInitialFilter.current = true;
+      setAutoFilterApplied(true);
       addToast(
         "info",
         "Showing incorrect answers to help you focus on areas to improve.",
       );
     }
-  }, [gradingLoading, hasMissedQuestions, addToast]);
+  }, [gradingLoading, hasMissedQuestions, autoFilterApplied, addToast]);
 
   const handleFilterChange = (filter: FilterType): void => {
-    userHasChangedFilter.current = true;
+    setAutoFilterApplied(true);
     setQuestionFilter(filter);
   };
 
@@ -236,6 +236,33 @@ export function ResultsContainer({
     }
     updateStudyStreak();
   }, [result.score]);
+
+  if (gradingError || resolvingError) {
+    return (
+      <div className="flex h-screen flex-col items-center justify-center bg-slate-50 p-4 dark:bg-slate-950">
+        <div className="text-center">
+          <h2 className="text-lg font-semibold text-red-600 dark:text-red-400">
+            Failed to load results
+          </h2>
+          <p className="mt-2 text-slate-600 dark:text-slate-300">
+            {gradingError?.message ||
+              resolvingError?.message ||
+              "An unexpected error occurred."}
+          </p>
+          <div className="mt-4 flex justify-center gap-3">
+            <Button onClick={() => window.location.reload()}>Retry</Button>
+            <Button
+              variant="outline"
+              onClick={() => router.push("/")}
+              leftIcon={<Home className="h-4 w-4" />}
+            >
+              Dashboard
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">

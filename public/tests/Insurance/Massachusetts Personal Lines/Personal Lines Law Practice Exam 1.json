@@ -1,0 +1,381 @@
+{
+  "title": "MA Personal Lines Insurance Law Practice Exam 1",
+  "description": "Practice exam 1, specifically targeting weak performance areas: General Insurance, Property & Casualty Basics, Insurance Regulation, and Other Coverages.",
+  "questions": [
+    {
+      "id": "exam-3-q01",
+      "category": "General Insurance Basics",
+      "difficulty": "Easy",
+      "question": "Which type of risk involves the possibility of loss only, with no opportunity for gain, and is generally the only type of risk that is insurable?",
+      "options": {
+        "A": "Speculative Risk",
+        "B": "Pure Risk",
+        "C": "Fundamental Risk",
+        "D": "Dynamic Risk"
+      },
+      "correct_answer": "B",
+      "explanation": "Pure risk provides only for the possibility of a loss. Property and casualty insurance protects against pure risk only. Speculative risk involves an opportunity for gain that could result in loss (e.g., gambling) and cannot be insured.",
+      "distractor_logic": "Speculative risk involves gain or loss. Fundamental and Dynamic risks are not the primary terms used to define insurability in the provided text."
+    },
+    {
+      "id": "exam-3-q02",
+      "category": "Property & Casualty Basics",
+      "difficulty": "Medium",
+      "question": "Which section of an insurance policy personalizes the contract by identifying the named insured, the address of the property, the coverage limits, and the premium amount?",
+      "options": {
+        "A": "Insuring Agreement",
+        "B": "Conditions",
+        "C": "Declarations",
+        "D": "Exclusions"
+      },
+      "correct_answer": "C",
+      "explanation": "The declarations page 'personalizes' the policy and provides an assortment of information regarding the property or exposures being insured, including the name/address of the insured, coverage limits, and premium.",
+      "distractor_logic": "The Insuring Agreement describes the promise to pay. Conditions identify responsibilities. Exclusions identify what is not covered."
+    },
+    {
+      "id": "exam-3-q03",
+      "category": "MA Insurance Law",
+      "difficulty": "Medium",
+      "question": "Under Massachusetts law, a producer who pays a commission or fee to an unlicensed person for selling insurance is subject to a fine of:",
+      "options": {
+        "A": "Not less than $10 nor more than $100",
+        "B": "Not less than $50 nor more than $500",
+        "C": "Not less than $100 nor more than $1,000",
+        "D": "Not less than $500 nor more than $5,000"
+      },
+      "correct_answer": "B",
+      "explanation": "An insurer or producer shall not pay a commission... to a person for selling insurance unless such person is duly licensed. Anyone violating this regulation may be fined not less than $50 nor more than $500.",
+      "distractor_logic": "$10-$100 is for Impersonation. $100-$1,000 is for Perjury. $500-$5,000 is for operating an auto without insurance."
+    },
+    {
+      "id": "exam-3-q04",
+      "category": "General Insurance Basics",
+      "difficulty": "Easy",
+      "question": "A dishonest character of an insured, such as someone who intentionally damages their own property to file a claim, is classified as what type of hazard?",
+      "options": {
+        "A": "Physical Hazard",
+        "B": "Morale Hazard",
+        "C": "Moral Hazard",
+        "D": "Legal Hazard"
+      },
+      "correct_answer": "C",
+      "explanation": "Moral hazard may heighten the chance of a loss due to the dishonest character of an insured. An insured who intentionally damages his or her own property... is an illustration of this type of hazard.",
+      "distractor_logic": "Physical hazards are tangible conditions (e.g., gasoline storage). Morale hazards involve carelessness or indifference (e.g., leaving keys in car)."
+    },
+    {
+      "id": "exam-3-q05",
+      "category": "Other Coverages and Options",
+      "difficulty": "Medium",
+      "question": "Under the Massachusetts Personal Auto Policy, Part 8 (Limited Collision) will pay for direct and accidental damage to the covered auto ONLY if:",
+      "options": {
+        "A": "The insured is more than 50% at fault",
+        "B": "The insured is not more than 50% at fault and can identify the responsible driver",
+        "C": "The damage is caused by a hit-and-run driver",
+        "D": "The insured carries Comprehensive coverage"
+      },
+      "correct_answer": "B",
+      "explanation": "Part 8 covers direct and accidental damage to the covered auto if the insured is not more than 50% at-fault and he or she can identify the responsible driver.",
+      "distractor_logic": "A is incorrect because the insured must be *not more than* 50% at fault. C is incorrect because the driver must be identified. D is incorrect as Comprehensive is a separate part (Part 9)."
+    },
+    {
+      "id": "exam-3-q06",
+      "category": "Property & Casualty Basics",
+      "difficulty": "Hard",
+      "question": "Which legal defense against negligence asserts that an intervening cause interrupted the chain of events, thereby relieving the defendant of liability?",
+      "options": {
+        "A": "Comparative Negligence",
+        "B": "Last Clear Chance",
+        "C": "Intervening Cause",
+        "D": "Assumption of Risk"
+      },
+      "correct_answer": "C",
+      "explanation": "Under the Intervening Cause defense, a defendant possesses no liability if an injury to a third party is caused by a separate unrelated cause which interrupts a series chain of events.",
+      "distractor_logic": "Comparative negligence apportions fault based on degree. Last clear chance applies if the injured party could have avoided the loss. Assumption of risk applies when danger is voluntarily accepted."
+    },
+    {
+      "id": "exam-3-q07",
+      "category": "MA Insurance Law",
+      "difficulty": "Medium",
+      "question": "When an insurer pays a property claim in Massachusetts, within how many days must they pay the claim after receiving the written proof of loss?",
+      "options": {
+        "A": "10 days",
+        "B": "15 days",
+        "C": "30 days",
+        "D": "60 days"
+      },
+      "correct_answer": "C",
+      "explanation": "Massachusetts regulations state that once an insurer receives a written proof of loss from an insured, it must pay the claim, if legitimate, within thirty (30) days.",
+      "distractor_logic": "15 days applies to the notice of decision to repair/replace. 60 days is the timeframe for an insured to demand appraisers if there is a dispute."
+    },
+    {
+      "id": "exam-3-q08",
+      "category": "General Insurance Basics",
+      "difficulty": "Medium",
+      "question": "Which method of handling risk involves a group of people agreeing to assume a specific portion of a loss, such as a partnership?",
+      "options": {
+        "A": "Retention",
+        "B": "Sharing",
+        "C": "Reduction",
+        "D": "Avoidance"
+      },
+      "correct_answer": "B",
+      "explanation": "Sharing involves risk distributed among an assortment of persons. Each party agrees to assume a specific portion of the loss.",
+      "distractor_logic": "Retention is assuming the risk oneself. Reduction is minimizing severity. Avoidance is eliminating the activity entirely."
+    },
+    {
+      "id": "exam-3-q09",
+      "category": "Property & Casualty Basics",
+      "difficulty": "Medium",
+      "question": "A 'Binder' provides temporary coverage while the actual policy is being produced. What is the typical maximum duration for a binder in Massachusetts fire/property insurance?",
+      "options": {
+        "A": "10 days",
+        "B": "30 days",
+        "C": "60 days",
+        "D": "90 days"
+      },
+      "correct_answer": "B",
+      "explanation": "A binder provides temporary insurance and is usually not good for more than 30 days... Massachusetts fire regulations specifically mention binders may be extended for up to 30 days.",
+      "distractor_logic": "60 days is listed as a possibility in general text, but 30 days is the specific MA fire regulation limit mentioned."
+    },
+    {
+      "id": "exam-3-q10",
+      "category": "MA Insurance Law",
+      "difficulty": "Easy",
+      "question": "Which entity establishes the Safe Driver Insurance Plan (SDIP) in Massachusetts to modify premium rates based on driving records?",
+      "options": {
+        "A": "The Division of Insurance",
+        "B": "Commonwealth Auto Reinsurers (CAR)",
+        "C": "The Registry of Motor Vehicles",
+        "D": "The Attorney General"
+      },
+      "correct_answer": "B",
+      "explanation": "The Safe Driver Insurance Plan was established by CAR (Commonwealth Auto Reinsurers) to modify premium rates based on accident frequency, moving violations, etc..",
+      "distractor_logic": "The Division of Insurance regulates. The RMV handles licensing. The AG prosecutes illegal activity."
+    },
+    {
+      "id": "exam-3-q11",
+      "category": "General Insurance Basics",
+      "difficulty": "Medium",
+      "question": "Which type of insurer is owned by its policyholders and issues participating policies that may pay dividends?",
+      "options": {
+        "A": "Stock Company",
+        "B": "Mutual Company",
+        "C": "Lloyds Association",
+        "D": "Risk Retention Group"
+      },
+      "correct_answer": "B",
+      "explanation": "A mutual insurer is an insurance company without capital stock that is owned by its policyholders. Mutual insurers issue participating policies.",
+      "distractor_logic": "Stock companies are owned by stockholders. Risk Retention Groups are group-owned liability insurers for specific businesses."
+    },
+    {
+      "id": "exam-3-q12",
+      "category": "Other Coverages and Options",
+      "difficulty": "Hard",
+      "question": "Under the Massachusetts Personal Auto Policy, Optional Part 5 (Optional Bodily Injury to Others) includes coverage for bail bonds up to what amount?",
+      "options": {
+        "A": "$250",
+        "B": "$500",
+        "C": "$1,000",
+        "D": "$2,000"
+      },
+      "correct_answer": "A",
+      "explanation": "Part 5 also includes coverage for bail bonds up to $250 if the insured or a family member is arrested as a result of an auto accident.",
+      "distractor_logic": "$500 is the Fire Dept charge limit in HO policies. $1,000 is the limit for non-installed electronics in auto policies."
+    },
+    {
+      "id": "exam-3-q13",
+      "category": "Property & Casualty Basics",
+      "difficulty": "Medium",
+      "question": "What is the primary difference between a 'Direct Loss' and an 'Indirect Loss'?",
+      "options": {
+        "A": "Direct loss is physical damage; Indirect loss is the consequential financial loss resulting from the physical damage.",
+        "B": "Direct loss covers buildings; Indirect loss covers contents.",
+        "C": "Direct loss is paid at Replacement Cost; Indirect loss is paid at ACV.",
+        "D": "Direct loss implies negligence; Indirect loss implies strict liability."
+      },
+      "correct_answer": "A",
+      "explanation": "A direct loss involves direct physical loss to tangible property... An indirect loss is an additional form of loss that results from a direct physical loss (e.g., loss of use, loss of income).",
+      "distractor_logic": "B, C, and D are incorrect definitions. Coverage type and valuation method do not define direct vs. indirect."
+    },
+    {
+      "id": "exam-3-q14",
+      "category": "MA Insurance Law",
+      "difficulty": "Hard",
+      "question": "If an insurer in Massachusetts wishes to non-renew a Homeowners policy, how many days' written notice must be provided to the insured?",
+      "options": {
+        "A": "10 days",
+        "B": "20 days",
+        "C": "30 days",
+        "D": "45 days"
+      },
+      "correct_answer": "D",
+      "explanation": "The Massachusetts Amendatory Endorsement (HO-01-20) specifies that an insured must be provided with 45 days written notice of non-renewal.",
+      "distractor_logic": "20 days is for cancellation to the mortgagee. 10 days is for non-payment of premium."
+    },
+    {
+      "id": "exam-3-q15",
+      "category": "Other Coverages and Options",
+      "difficulty": "Medium",
+      "question": "When a personal property item is 'Scheduled' on a Homeowners policy (e.g., via the Scheduled Personal Property Endorsement), which of the following is TRUE?",
+      "options": {
+        "A": "It is subject to the standard policy deductible.",
+        "B": "It is covered against broad form perils only.",
+        "C": "It is covered against mysterious disappearance and has no deductible.",
+        "D": "Coverage is limited to the residence premises."
+      },
+      "correct_answer": "C",
+      "explanation": "Once property is scheduled individually it is: (1) taken out of the Coverage C limit... (3) covered against mysterious disappearance: and (4) not affected by a deductible.",
+      "distractor_logic": "A is false (no deductible). B is false (open peril/mysterious disappearance). D is false (worldwide coverage)."
+    },
+    {
+      "id": "exam-3-q16",
+      "category": "General Insurance Basics",
+      "difficulty": "Medium",
+      "question": "Under the Law of Agency, the 'Principal' refers to which party?",
+      "options": {
+        "A": "The Producer/Agent",
+        "B": "The Insurer/Insurance Company",
+        "C": "The Applicant/Insured",
+        "D": "The State/Commissioner"
+      },
+      "correct_answer": "B",
+      "explanation": "The insurer is referred to as the principal. The principal is the entity that the agent/producer represents with regard to agreements with third parties.",
+      "distractor_logic": "The producer is the agent. The applicant is the third party."
+    },
+    {
+      "id": "exam-3-q17",
+      "category": "MA Insurance Law",
+      "difficulty": "Easy",
+      "question": "Which of the following acts is considered 'Coercion' under Massachusetts unfair trade practice laws?",
+      "options": {
+        "A": "Comparing policies to induce a lapse",
+        "B": "A lender requiring a borrower to purchase insurance from a specific agency to get a loan",
+        "C": "Misrepresenting policy terms",
+        "D": "Making false statements about a competitor"
+      },
+      "correct_answer": "B",
+      "explanation": "A lender may not inform a borrower that in order to receive a loan he or she must purchase property or casualty insurance from a specific insurer or agency. This is coercion or intimidation.",
+      "distractor_logic": "A is Twisting. C is Misrepresentation. D is Defamation."
+    },
+    {
+      "id": "exam-3-q18",
+      "category": "Property & Casualty Basics",
+      "difficulty": "Medium",
+      "question": "Which type of loss valuation pays the cost to repair or replace damaged property without deduction for depreciation?",
+      "options": {
+        "A": "Actual Cash Value",
+        "B": "Replacement Cost",
+        "C": "Market Value",
+        "D": "Stated Amount"
+      },
+      "correct_answer": "B",
+      "explanation": "Replacement Cost is the amount needed today to replace damaged or destroyed property... paying for new materials... without a deduction for depreciation.",
+      "distractor_logic": "ACV is replacement cost minus depreciation. Market value is based on the price property would sell for."
+    },
+    {
+      "id": "exam-3-q19",
+      "category": "MA Insurance Law",
+      "difficulty": "Medium",
+      "question": "The Massachusetts Insurance Commissioner has the power to do all of the following EXCEPT:",
+      "options": {
+        "A": "Issue Certificates of Authority to insurers",
+        "B": "Approve policy forms and premium rates",
+        "C": "Prosecute producers in criminal court",
+        "D": "Conduct examinations of insurers"
+      },
+      "correct_answer": "C",
+      "explanation": "The Commissioner refers information regarding licensees who break the law to the Attorney General... for prosecution. The Attorney General will then prosecute licensees. The Commissioner acts regarding regulatory issues.",
+      "distractor_logic": "A, B, and D are explicit powers of the Commissioner listed in the text."
+    },
+    {
+      "id": "exam-3-q20",
+      "category": "Other Coverages and Options",
+      "difficulty": "Hard",
+      "question": "Under Part 9 (Comprehensive) of the MA Auto Policy, what specific optional deductible is available for glass damage?",
+      "options": {
+        "A": "$0",
+        "B": "$50",
+        "C": "$100",
+        "D": "$250"
+      },
+      "correct_answer": "C",
+      "explanation": "The policy states regarding Part 9: 'Also, a $100 glass damage deductible is optional'.",
+      "distractor_logic": "$0, $50, and $250 are not the specific optional glass deductible cited in the text."
+    },
+    {
+      "id": "exam-3-q21",
+      "category": "Property & Casualty Basics",
+      "difficulty": "Easy",
+      "question": "In a liability claim, 'Vicarious Liability' refers to:",
+      "options": {
+        "A": "Liability without fault",
+        "B": "Liability assumed by contract",
+        "C": "Liability for the actions of another person",
+        "D": "Liability for intentional torts"
+      },
+      "correct_answer": "C",
+      "explanation": "Vicarious liability exists because of the negligence of a person engaged by an insured (e.g., employee or child). The insured is found liable for negligent acts by that individual.",
+      "distractor_logic": "A is Strict Liability. B is Contractual Liability."
+    },
+    {
+      "id": "exam-3-q22",
+      "category": "MA Insurance Law",
+      "difficulty": "Medium",
+      "question": "According to continuing education requirements, how many credit hours in 'ethics' must a Massachusetts producer complete during each renewal cycle?",
+      "options": {
+        "A": "1 credit",
+        "B": "2 credits",
+        "C": "3 credits",
+        "D": "5 credits"
+      },
+      "correct_answer": "C",
+      "explanation": "Licensees must complete three (3) credit hours of continuing education in ethics. These three credits are part of the requirement.",
+      "distractor_logic": "A, B, and D are incorrect. 3 credits is the specific requirement stated in the text."
+    },
+    {
+      "id": "exam-3-q23",
+      "category": "Flood Insurance",
+      "difficulty": "Medium",
+      "question": "How is 'Flood' defined in a standard flood policy regarding the area affected?",
+      "options": {
+        "A": "It must affect at least 50% of the insured's property.",
+        "B": "It must be a general condition affecting two or more acres of normally dry land or two or more properties.",
+        "C": "It must result from a hurricane or tidal wave.",
+        "D": "It must last for at least 24 hours."
+      },
+      "correct_answer": "B",
+      "explanation": "A covered flood must be a general condition of the area... two or more properties or two or more acres of land must be affected.",
+      "distractor_logic": "A, C, and D are not part of the standard NFIP definition of flood provided in the text."
+    },
+    {
+      "id": "exam-3-q24",
+      "category": "General Insurance Basics",
+      "difficulty": "Easy",
+      "question": "Which of the following describes 'Reinsurance'?",
+      "options": {
+        "A": "Insurance purchased by an individual to cover high value items.",
+        "B": "Insurance purchased by an insurer to transfer risk to another insurer.",
+        "C": "Insurance provided by the state for high-risk drivers.",
+        "D": "Insurance that covers illegal acts."
+      },
+      "correct_answer": "B",
+      "explanation": "Reinsurance is actually insurance from insurers... The transfer of risk from one insurance company to another.",
+      "distractor_logic": "A is typically a Personal Articles Floater. C is the Residual Market/Assigned Risk. D is uninsurable."
+    },
+    {
+      "id": "exam-3-q25",
+      "category": "MA Insurance Law",
+      "difficulty": "Medium",
+      "question": "Once a Massachusetts auto policy has been in effect for 90 days, the insurer may cancel it for all of the following reasons EXCEPT:",
+      "options": {
+        "A": "Non-payment of premium",
+        "B": "Suspension of the driver's license",
+        "C": "Failure to pay surcharges for moving violations",
+        "D": "Involvement in two at-fault accidents"
+      },
+      "correct_answer": "D",
+      "explanation": "Once a policy has been in effect for 90 days, an insurer may only cancel for: nonpayment, license/registration suspension, failure to pay surcharges, or fraud.",
+      "distractor_logic": "Accident frequency (e.g., four or more at-fault) is a reason for cancelling *Collision* coverage or non-renewal, but 'Involvement in two at-fault accidents' is not a listed valid reason for cancelling the entire policy after 90 days."
+    }
+  ]
+}

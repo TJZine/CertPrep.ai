@@ -9,9 +9,11 @@ import type { Question } from "@/types/quiz";
 export function useResolveCorrectAnswers(questions: Question[]): {
   resolvedAnswers: Record<string, string>;
   isResolving: boolean;
+  error: Error | null;
 } {
   const [resolved, setResolved] = useState<Record<string, string>>({});
   const [isResolving, setIsResolving] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
   // Create stable key for dependency comparison to prevent unnecessary re-runs
   const questionsKey = useMemo(
@@ -21,12 +23,14 @@ export function useResolveCorrectAnswers(questions: Question[]): {
 
   useEffect((): (() => void) | void => {
     if (!questions.length) {
+      setResolved({});
       setIsResolving(false);
       return;
     }
 
     let isMounted = true;
     setIsResolving(true);
+    setError(null);
 
     const resolveAll = async (): Promise<void> => {
       try {
@@ -50,17 +54,15 @@ export function useResolveCorrectAnswers(questions: Question[]): {
         );
 
         if (isMounted) {
-          // Merge with previous state to avoid flashing empty
-          setResolved((prev) => ({ ...prev, ...updates }));
+          // Overwrite previous state to ensure no stale keys remain
+          setResolved(updates);
+          setIsResolving(false);
         }
-      } catch (error) {
-        console.error("Failed to resolve answers:", error);
-        // Reset to empty state on error to prevent stale data
+      } catch (err) {
+        console.error("Failed to resolve answers:", err);
         if (isMounted) {
+          setError(err instanceof Error ? err : new Error("Failed to resolve answers"));
           setResolved({});
-        }
-      } finally {
-        if (isMounted) {
           setIsResolving(false);
         }
       }
@@ -74,5 +76,5 @@ export function useResolveCorrectAnswers(questions: Question[]): {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [questionsKey]); // Depend on stable key only
 
-  return { resolvedAnswers: resolved, isResolving };
+  return { resolvedAnswers: resolved, isResolving, error };
 }

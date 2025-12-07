@@ -15,9 +15,10 @@ export interface GradingResult {
 export function useQuizGrading(
   quiz: Quiz | null,
   answers: Record<string, string>,
-): { grading: GradingResult | null; isLoading: boolean } {
+): { grading: GradingResult | null; isLoading: boolean; error: Error | null } {
   const [grading, setGrading] = useState<GradingResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
   // Memoize the answers string to prevent the effect from running on every render
   // useLiveQuery returns a new object reference every time, even if data hasn't changed
@@ -32,54 +33,62 @@ export function useQuizGrading(
     let isMounted = true;
     setIsLoading(true);
     setGrading(null); // Clear previous result while loading
+    setError(null);
 
     const grade = async (): Promise<void> => {
-      const status: Record<string, boolean> = {};
-      let correct = 0;
-      let incorrect = 0;
-      let unanswered = 0;
+      try {
+        const status: Record<string, boolean> = {};
+        let correct = 0;
+        let incorrect = 0;
+        let unanswered = 0;
 
-      // Collect results in a local array to avoid race conditions on shared counters
-      const results = await Promise.all(
-        quiz.questions.map(async (q) => {
-          const userAnswer = answers[q.id];
-          if (!userAnswer) {
-            return { id: q.id, status: "unanswered" as const };
+        // Collect results in a local array to avoid race conditions on shared counters
+        const results = await Promise.all(
+          quiz.questions.map(async (q) => {
+            const userAnswer = answers[q.id];
+            if (!userAnswer) {
+              return { id: q.id, status: "unanswered" as const };
+            }
+
+            // Hash the user's answer to compare
+            const userHash = await hashAnswer(userAnswer);
+            const isCorrect = userHash === q.correct_answer_hash;
+
+            return {
+              id: q.id,
+              status: isCorrect ? ("correct" as const) : ("incorrect" as const),
+            };
+          }),
+        );
+
+        // Synchronously aggregate results
+        results.forEach((result) => {
+          if (result.status === "unanswered") {
+            unanswered++;
+            status[result.id] = false;
+          } else if (result.status === "correct") {
+            correct++;
+            status[result.id] = true;
+          } else {
+            incorrect++;
+            status[result.id] = false;
           }
-
-          // Hash the user's answer to compare
-          const userHash = await hashAnswer(userAnswer);
-          const isCorrect = userHash === q.correct_answer_hash;
-
-          return {
-            id: q.id,
-            status: isCorrect ? ("correct" as const) : ("incorrect" as const),
-          };
-        }),
-      );
-
-      // Synchronously aggregate results
-      results.forEach((result) => {
-        if (result.status === "unanswered") {
-          unanswered++;
-          status[result.id] = false;
-        } else if (result.status === "correct") {
-          correct++;
-          status[result.id] = true;
-        } else {
-          incorrect++;
-          status[result.id] = false;
-        }
-      });
-
-      if (isMounted) {
-        setGrading({
-          correctCount: correct,
-          incorrectCount: incorrect,
-          unansweredCount: unanswered,
-          questionStatus: status,
         });
-        setIsLoading(false);
+
+        if (isMounted) {
+          setGrading({
+            correctCount: correct,
+            incorrectCount: incorrect,
+            unansweredCount: unanswered,
+            questionStatus: status,
+          });
+          setIsLoading(false);
+        }
+      } catch (err) {
+        if (isMounted) {
+          setError(err instanceof Error ? err : new Error("Grading failed"));
+          setIsLoading(false);
+        }
       }
     };
 
@@ -91,5 +100,5 @@ export function useQuizGrading(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quiz, answersJson]); // Depend on answersJson instead of answers
 
-  return { grading, isLoading };
+  return { grading, isLoading, error };
 }

@@ -61,7 +61,7 @@ fi
 # - Generic API Keys (simple heuristics)
 # - Database Connection Strings
 # More specific patterns with context to reduce false positives
-PATTERNS="-----BEGIN.*PRIVATE KEY-----|aws_access_key_id\s*=|ghp_[a-zA-Z0-9]{20,}|sk_live_[a-zA-Z0-9]{20,}|sk_test_[a-zA-Z0-9]{20,}|xox[baprs]-[a-zA-Z0-9-]{10,}|PRIVATE_KEY\s*=\s*['\"][^'\"]+|password\s*=\s*['\"][^'\"]+|Authorization:\s*Bearer [a-zA-Z0-9\-\._\~\+\/]+=*|postgres://[^:]+:[^@]+@|SG\.[a-zA-Z0-9_-]{20,}"
+PATTERNS="-----BEGIN.*PRIVATE KEY-----|aws_access_key_id[ \t]*=|ghp_[a-zA-Z0-9]{20,}|sk_live_[a-zA-Z0-9]{20,}|sk_test_[a-zA-Z0-9]{20,}|xox[baprs]-[a-zA-Z0-9-]{10,}|PRIVATE_KEY[ \t]*=[ \t]*['\"][^'\"]+|password[ \t]*=[ \t]*['\"][^'\"]+|Authorization:[ \t]*Bearer [a-zA-Z0-9\-\._\~\+\/]+=*|postgres://[^:]+:[^@]+@|SG\.[a-zA-Z0-9_-]{20,}"
 
 FOUND_SECRETS=0
 
@@ -77,7 +77,7 @@ for FILE in $STAGED_FILES; do
     LINE_NUMS=$(git show :"$FILE" | grep -n -E -e "$PATTERNS" | cut -d: -f1 | tr '\n' ', ' | sed 's/,$//')
     
     echo "   → Line(s): $LINE_NUMS"
-    echo "   → To review: git show :$FILE | sed -n '<LINE>p'"
+    echo "   → To review: git show :\"$FILE\" | sed -n 'Np' (replace N with a line number above)"
     echo "Please remove this secret before committing."
     
     FOUND_SECRETS=1
