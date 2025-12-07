@@ -98,7 +98,7 @@ export function useQuizzes(userId: string | undefined): UseQuizzesResponse {
 
   return {
     quizzes: quizzes ? quizzes.reverse() : [],
-    isLoading: !userId ? true : quizzes === undefined,
+    isLoading: !userId ? false : quizzes === undefined,
   };
 }
 

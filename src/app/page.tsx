@@ -2,8 +2,8 @@
 
 import * as React from "react";
 import { useQuizzes, useInitializeDatabase } from "@/hooks/useDatabase";
-import { deleteQuiz, getQuizStats, type QuizStats } from "@/db/quizzes";
-import { getOverallStats, type OverallStats } from "@/db/results";
+import { useDashboardStats } from "@/hooks/useDashboardStats";
+import { deleteQuiz } from "@/db/quizzes";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { StatsBar } from "@/components/dashboard/StatsBar";
 import { QuizGrid } from "@/components/dashboard/QuizGrid";
@@ -23,13 +23,13 @@ export default function DashboardPage(): React.ReactElement {
   const { quizzes, isLoading: quizzesLoading } = useQuizzes(
     effectiveUserId ?? undefined,
   );
+  
+  const { 
+    quizStats, 
+    overallStats, 
+    isLoading: statsLoading 
+  } = useDashboardStats(effectiveUserId ?? undefined);
 
-  const [quizStats, setQuizStats] = React.useState<Map<string, QuizStats>>(
-    new Map(),
-  );
-  const [overallStats, setOverallStats] = React.useState<OverallStats | null>(
-    null,
-  );
   const [isImportModalOpen, setIsImportModalOpen] = React.useState(false);
   const [modeSelectQuiz, setModeSelectQuiz] = React.useState<Quiz | null>(null);
   const [deleteContext, setDeleteContext] = React.useState<{
@@ -39,47 +39,6 @@ export default function DashboardPage(): React.ReactElement {
   const [isDeleting, setIsDeleting] = React.useState(false);
 
   const { addToast } = useToast();
-
-  React.useEffect((): (() => void) | void => {
-    if (!isInitialized || quizzesLoading || !effectiveUserId) {
-      return;
-    }
-
-    let isMounted = true;
-
-    const fetchStats = async (): Promise<void> => {
-      if (quizzes.length === 0) {
-        if (isMounted) {
-          setQuizStats(new Map());
-          setOverallStats(null);
-        }
-        return;
-      }
-
-      try {
-        const statsEntries = await Promise.all(
-          quizzes.map(async (quiz) => {
-            // effectiveUserId is guaranteed to be present by the useEffect guard
-            const stats = await getQuizStats(quiz.id, effectiveUserId);
-            return [quiz.id, stats] as const;
-          }),
-        );
-        const overall = await getOverallStats(effectiveUserId);
-
-        if (!isMounted) return;
-        setQuizStats(new Map(statsEntries));
-        setOverallStats(overall);
-      } catch (error) {
-        console.error("Failed to fetch quiz stats", error);
-      }
-    };
-
-    fetchStats();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [effectiveUserId, isInitialized, quizzes, quizzesLoading]);
 
   const handleImportSuccess = (quiz: Quiz): void => {
     setIsImportModalOpen(false);
@@ -114,7 +73,7 @@ export default function DashboardPage(): React.ReactElement {
     }
   };
 
-  if (!isInitialized || quizzesLoading) {
+  if (!isInitialized || quizzesLoading || statsLoading) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
         <LoadingSpinner size="lg" text="Loading your quiz library..." />
