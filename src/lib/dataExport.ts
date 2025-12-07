@@ -259,10 +259,10 @@ export async function importData(
   const existingQuizIds =
     mode === "merge"
       ? new Set<string>(
-          (await db.quizzes.where("user_id").equals(userId).toArray()).map(
-            (quiz) => quiz.id,
-          ),
-        )
+        (await db.quizzes.where("user_id").equals(userId).toArray()).map(
+          (quiz) => quiz.id,
+        ),
+      )
       : new Set<string>();
   const allowedQuizIds = new Set<string>([...quizIds, ...existingQuizIds]);
 
@@ -402,7 +402,12 @@ export async function getStorageStats(
   }
 
   // Optimized: Use count() instead of toArray() to avoid loading all data
-  const quizCount = await db.quizzes.where("user_id").equals(userId).count();
+  // Filter out soft-deleted quizzes (deleted_at !== null)
+  const quizCount = await db.quizzes
+    .where("user_id")
+    .equals(userId)
+    .filter((quiz) => quiz.deleted_at === null || quiz.deleted_at === undefined)
+    .count();
   const resultCount = await db.results.where("user_id").equals(userId).count();
 
   // Estimation: ~2KB per quiz (with questions), ~1KB per result
