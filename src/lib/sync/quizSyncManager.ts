@@ -48,6 +48,7 @@ const RemoteQuizSchema = z.object({
   version: z.number().int(),
   questions: z.array(QuestionSchema),
   quiz_hash: z.string().nullable().optional(),
+  source_id: z.string().nullable().optional(),
   created_at: z.string(),
   updated_at: z.string(),
   deleted_at: z.string().nullable(),
