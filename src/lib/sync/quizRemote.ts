@@ -38,7 +38,7 @@ export async function fetchUserQuizzes({
   let query = client
     .from("quizzes")
     .select(
-      "id, user_id, title, description, tags, version, questions, quiz_hash, created_at, updated_at, deleted_at",
+      "id, user_id, title, description, tags, version, questions, quiz_hash, source_id, created_at, updated_at, deleted_at",
     )
     .in("user_id", [userId, NIL_UUID])
     .order("updated_at", { ascending: true })

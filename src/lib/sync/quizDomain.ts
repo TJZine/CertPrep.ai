@@ -23,6 +23,7 @@ export interface RemoteQuizRow {
   version: number;
   questions: Question[];
   quiz_hash?: string | null;
+  source_id?: string | null;
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
@@ -37,6 +38,7 @@ export interface RemoteQuizInput {
   version: number;
   questions: Question[];
   quiz_hash?: string | null;
+  source_id?: string | null;
   created_at?: string;
   updated_at?: string;
   deleted_at?: string | null;
@@ -115,6 +117,7 @@ export async function toRemoteQuiz(
     version: local.version,
     questions: local.questions,
     quiz_hash: quizHash,
+    source_id: local.sourceId ?? null,
     created_at: new Date(local.created_at).toISOString(),
     updated_at: new Date(updatedAt).toISOString(),
     deleted_at: local.deleted_at
@@ -134,6 +137,7 @@ export async function toLocalQuiz(remote: RemoteQuizRow): Promise<Quiz> {
     tags: remote.tags ?? [],
     questions: remote.questions,
     version: remote.version,
+    sourceId: remote.source_id ?? undefined,
     created_at: new Date(remote.created_at).getTime(),
     updated_at: new Date(remote.updated_at).getTime(),
     deleted_at: remote.deleted_at
