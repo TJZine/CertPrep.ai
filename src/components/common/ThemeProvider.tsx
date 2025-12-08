@@ -2,7 +2,7 @@
 
 import * as React from "react";
 
-export type Theme = "light" | "dark" | "midnight" | "focus" | "forest" | "retro" | "ocean" | "nord" | "holiday" | "vapor";
+export type Theme = "light" | "dark" | "midnight" | "focus" | "forest" | "retro" | "ocean" | "nord" | "holiday" | "vapor" | "blossom" | "mint";
 
 interface ThemeContextValue {
   theme: Theme;
@@ -36,7 +36,9 @@ export function ThemeProvider({
       stored === "ocean" ||
       stored === "nord" ||
       stored === "holiday" ||
-      stored === "vapor"
+      stored === "vapor" ||
+      stored === "blossom" ||
+      stored === "mint"
     ) {
       return stored as Theme;
     }

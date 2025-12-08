@@ -16,6 +16,8 @@ import {
     Snowflake,
     Gift,
     Zap,
+    Flower2,
+    Leaf,
 } from "lucide-react";
 
 interface ThemeOption {
@@ -100,6 +102,20 @@ const themes: ThemeOption[] = [
         description: "Synthwave neon pink & cyan",
         icon: Zap,
         preview: { bg: "bg-[#1a0d24]", accent: "bg-pink-500", text: "text-pink-100" },
+    },
+    {
+        id: "blossom",
+        name: "Blossom",
+        description: "Pastel pink for a soft aesthetic",
+        icon: Flower2,
+        preview: { bg: "bg-[#FFF0F5]", accent: "bg-[#E599A8]", text: "text-[#4A4A4A]" },
+    },
+    {
+        id: "mint",
+        name: "Mint",
+        description: "Fresh sage for earthy vibes",
+        icon: Leaf,
+        preview: { bg: "bg-[#F1F8E9]", accent: "bg-[#81C784]", text: "text-[#37474F]" },
     },
 ];
 

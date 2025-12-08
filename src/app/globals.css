@@ -741,6 +741,169 @@
     --tier-failing: 350 100% 60%;
     --tier-failing-foreground: 270 40% 8%;
   }
+
+  /* BLOSSOM THEME (Pastel Pink / Soft) */
+  [data-theme="blossom"] {
+    --background: 340 100% 97%;
+    /* Lavender Blush */
+    --foreground: 0 0% 29%;
+    /* Dark Charcoal */
+
+    --radius: 1rem;
+    /* Very round/soft comers */
+
+    --card: 340 100% 98.5%;
+    --card-foreground: 0 0% 29%;
+
+    --popover: 340 100% 98.5%;
+    --popover-foreground: 0 0% 29%;
+
+    --primary: 351 77% 88%;
+    /* Pastel Pink */
+    --primary-foreground: 0 0% 29%;
+    /* Dark Charcoal text on light pink */
+
+    --secondary: 340 40% 92%;
+    --secondary-foreground: 0 0% 29%;
+
+    --muted: 340 30% 92%;
+    --muted-foreground: 0 0% 50%;
+
+    --accent: 348 60% 75%;
+    /* Deeper Pink */
+    --accent-foreground: 0 0% 29%;
+
+    --destructive: 0 60% 65%;
+    /* Soft Red */
+    --destructive-foreground: 340 100% 97%;
+
+    --border: 351 40% 75%;
+    /* Darker Pink for definition */
+    --input: 340 30% 92%;
+    --ring: 348 60% 75%;
+
+    --success: 95 28% 70%;
+    /* Muted Sage */
+    --success-foreground: 0 0% 29%;
+
+    --warning: 35 80% 70%;
+    /* Soft Gold */
+    --warning-foreground: 0 0% 29%;
+
+    --correct: 95 28% 70%;
+    /* Muted Sage */
+    --correct-foreground: 0 0% 29%;
+
+    --incorrect: 0 60% 70%;
+    /* Soft Red */
+    --incorrect-foreground: 0 0% 29%;
+
+    --flagged: 35 80% 70%;
+    /* Soft Gold */
+    --flagged-foreground: 0 0% 29%;
+
+    --info: 240 60% 75%;
+    /* Soft Periwinkle - floral vibe */
+    --info-foreground: 0 0% 29%;
+
+    /* Performance tier colors (pastel variants) */
+    --tier-excellent: 95 28% 60%;
+    /* Slightly darker sage for text/icons */
+    --tier-excellent-foreground: 0 0% 29%;
+    --tier-great: 240 60% 75%;
+    /* Soft Periwinkle */
+    --tier-great-foreground: 0 0% 29%;
+    --tier-good: 180 50% 60%;
+    /* Soft Teal */
+    --tier-good-foreground: 0 0% 29%;
+    --tier-passing: 35 80% 60%;
+    /* Soft Gold */
+    --tier-passing-foreground: 0 0% 29%;
+    --tier-failing: 0 60% 65%;
+    /* Soft Red */
+    --tier-failing-foreground: 0 0% 29%;
+  }
+
+  /* MINT THEME (Fresh Sage / Earthy) */
+  [data-theme="mint"] {
+    --background: 96 44% 95%;
+    /* Off-White Mint */
+    --foreground: 200 18% 26%;
+    /* Blue Grey */
+
+    --radius: 0.75rem;
+    /* Soft rounded comers */
+
+    --card: 96 40% 97%;
+    --card-foreground: 200 18% 26%;
+
+    --popover: 96 40% 97%;
+    --popover-foreground: 200 18% 26%;
+
+    --primary: 122 39% 84%;
+    /* Pastel Sage */
+    --primary-foreground: 200 18% 26%;
+
+    --secondary: 120 20% 90%;
+    --secondary-foreground: 200 18% 26%;
+
+    --muted: 120 20% 88%;
+    --muted-foreground: 200 15% 55%;
+
+    --accent: 122 39% 64%;
+    /* Fresh Green */
+    --accent-foreground: 200 18% 26%;
+
+    --destructive: 0 50% 65%;
+    /* Muted Rose */
+    --destructive-foreground: 96 44% 95%;
+
+    --border: 122 20% 70%;
+    /* Darker Sage for definition */
+    --input: 120 20% 88%;
+    --ring: 122 39% 64%;
+
+    --success: 122 43% 39%;
+    /* Forest Green */
+    --success-foreground: 96 44% 95%;
+    /* Light text on dark success */
+
+    --warning: 40 60% 60%;
+    /* Earthy Gold */
+    --warning-foreground: 200 18% 26%;
+
+    --correct: 122 43% 39%;
+    /* Forest Green */
+    --correct-foreground: 96 44% 95%;
+
+    --incorrect: 0 50% 60%;
+    /* Muted Rose */
+    --incorrect-foreground: 96 44% 95%;
+
+    --flagged: 40 60% 60%;
+    --flagged-foreground: 200 18% 26%;
+
+    --info: 200 40% 50%;
+    /* River Blue - fresh water */
+    --info-foreground: 200 18% 26%;
+
+    /* Performance tier colors (earthy mint variants) */
+    --tier-excellent: 122 43% 39%;
+    /* Forest Green */
+    --tier-excellent-foreground: 96 44% 95%;
+    --tier-great: 200 40% 50%;
+    /* River Blue */
+    --tier-great-foreground: 96 44% 95%;
+    --tier-good: 160 30% 50%;
+    /* Muted Teal */
+    --tier-good-foreground: 96 44% 95%;
+    --tier-passing: 40 60% 55%;
+    /* Earthy Gold */
+    --tier-passing-foreground: 200 18% 26%;
+    --tier-failing: 0 50% 60%;
+    /* Muted Rose */
+    --tier-failing-foreground: 96 44% 95%;
+  }
 }
 
 @layer base {
