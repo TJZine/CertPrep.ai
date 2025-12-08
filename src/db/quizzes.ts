@@ -28,7 +28,7 @@ export function sortQuizzesByNewest(quizzes: Quiz[]): Quiz[] {
   return [...quizzes].sort((a, b) => {
     const timeDiff = b.created_at - a.created_at;
     if (timeDiff !== 0) return timeDiff;
-    return a.title.localeCompare(b.title);
+    return a.title.localeCompare(b.title, "en", { sensitivity: "base" });
   });
 }
 

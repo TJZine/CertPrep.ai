@@ -35,7 +35,13 @@ const sanitizeForSentry = (args: unknown[]): string => {
       /\b(ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9_]{36,}\b/g,
       "[GH_TOKEN_REDACTED]",
     )
-    .replace(/\bsk_(live|test)_[A-Za-z0-9]{24,}\b/g, "[STRIPE_KEY_REDACTED]");
+    .replace(/\bsk_(live|test)_[A-Za-z0-9]{24,}\b/g, "[STRIPE_KEY_REDACTED]")
+    .replace(
+      /\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b/g,
+      "[JWT_REDACTED]",
+    )
+    .replace(/\b(AKIA|ASIA)[A-Z0-9]{16}\b/g, "[AWS_KEY_REDACTED]")
+    .replace(/\b(api[_-]?key|apikey)\s*[:=]\s*\S+/gi, "$1=[REDACTED]");
 };
 
 export const logger = {
@@ -99,12 +105,14 @@ export const logger = {
         args.find((arg) => arg instanceof Error) ||
         new Error(sanitizeForSentry(args));
       const extras = args.filter((arg) => arg !== errorObj);
-      const sanitizedExtras = extras.map((extra) =>
-        typeof extra === "object" ? sanitizeForSentry([extra]) : extra,
+
+      const normalizedExtras = extras.map((extra) =>
+        typeof extra === "object" && extra !== null ? extra : { value: extra },
       );
+      const serializedExtras = sanitizeForSentry(normalizedExtras);
 
       Sentry.captureException(errorObj, {
-        extra: { rawArgs: sanitizedExtras },
+        extra: { rawArgs: serializedExtras },
       });
     }
   },
