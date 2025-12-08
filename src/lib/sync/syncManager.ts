@@ -31,6 +31,7 @@ const RemoteResultSchema = z.object({
   answers: z.record(z.string(), z.string()),
   flagged_questions: z.array(z.string()),
   category_breakdown: z.record(z.string(), z.number()),
+  question_ids: z.array(z.string()).optional().nullable(),
   created_at: z.string(),
 });
 
@@ -216,6 +217,7 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
               answers: r.answers,
               flagged_questions: r.flagged_questions,
               category_breakdown: r.category_breakdown,
+              question_ids: r.question_ids,
             })),
             { onConflict: "id" },
           );
@@ -289,7 +291,7 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
       const { data: remoteResults, error: fetchError } = await client
         .from("results")
         .select(
-          "id, quiz_id, timestamp, mode, score, time_taken_seconds, answers, flagged_questions, category_breakdown, created_at",
+          "id, quiz_id, timestamp, mode, score, time_taken_seconds, answers, flagged_questions, category_breakdown, question_ids, created_at",
         )
         .eq("user_id", userId)
         .or(filter)
@@ -341,6 +343,7 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
           answers: validResult.answers,
           flagged_questions: validResult.flagged_questions,
           category_breakdown: validResult.category_breakdown,
+          question_ids: validResult.question_ids || undefined,
           synced: 1,
         });
 

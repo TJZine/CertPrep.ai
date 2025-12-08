@@ -13,6 +13,7 @@ export interface Result {
   answers: Record<string, string>;
   flagged_questions: string[];
   category_breakdown: Record<string, number>;
+  question_ids?: string[]; // Subset of questions in this session (Smart Round, Review Missed)
   synced?: SyncFlag; // 0 = not synced, 1 = synced
   deleted_at?: number; // Timestamp if soft deleted locally (waiting for sync)
 }

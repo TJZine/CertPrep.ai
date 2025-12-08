@@ -11,10 +11,12 @@ export interface GradingResult {
 
 /**
  * Asynchronously grades a quiz result against hashed answers.
+ * @param questionIds - Optional array of question IDs to scope grading (for Smart Round / Review Missed)
  */
 export function useQuizGrading(
   quiz: Quiz | null,
   answers: Record<string, string>,
+  questionIds?: string[],
 ): { grading: GradingResult | null; isLoading: boolean; error: Error | null } {
   const [grading, setGrading] = useState<GradingResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -23,6 +25,7 @@ export function useQuizGrading(
   // Memoize the answers string to prevent the effect from running on every render
   // useLiveQuery returns a new object reference every time, even if data hasn't changed
   const answersJson = JSON.stringify(answers);
+  const questionIdsJson = JSON.stringify(questionIds);
 
   useEffect((): (() => void) | void => {
     if (!quiz || !answers) {
@@ -42,9 +45,14 @@ export function useQuizGrading(
         let incorrect = 0;
         let unanswered = 0;
 
+        // If questionIds provided (Smart Round/Review Missed), only grade those questions
+        const questionsToGrade = questionIds
+          ? quiz.questions.filter((q) => questionIds.includes(q.id))
+          : quiz.questions;
+
         // Collect results in a local array to avoid race conditions on shared counters
         const results = await Promise.all(
-          quiz.questions.map(async (q) => {
+          questionsToGrade.map(async (q) => {
             const userAnswer = answers[q.id];
             if (!userAnswer) {
               return { id: q.id, status: "unanswered" as const };
@@ -98,7 +106,7 @@ export function useQuizGrading(
       isMounted = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [quiz, answersJson]); // Depend on answersJson instead of answers
+  }, [quiz, answersJson, questionIdsJson]); // Depend on JSON strings instead of objects
 
   return { grading, isLoading, error };
 }

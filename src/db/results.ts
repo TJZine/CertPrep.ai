@@ -105,6 +105,7 @@ export async function createResult(input: CreateResultInput): Promise<Result> {
     answers: input.answers,
     flagged_questions: input.flaggedQuestions,
     category_breakdown: categoryBreakdown,
+    question_ids: input.activeQuestionIds, // Persist for accurate grading on results page
     synced: 0,
   };
 
