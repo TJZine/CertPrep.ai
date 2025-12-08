@@ -714,8 +714,8 @@
 
     --background: 35 50% 98%;
     /* Warm Vanilla / Eggnog */
-    --foreground: 140 60% 20%;
-    /* Deep Pine Green Text */
+    --foreground: 351 86% 20%;
+    /* Deep Santa Red (Darker, richer) */
 
     --card: 35 30% 96%;
     /* Parchment */
@@ -724,18 +724,6 @@
     --popover: 35 30% 96%;
     --popover-foreground: 140 50% 20%;
 
-    --primary: 350 80% 55%;
-    /* Ruby Red */
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 140 60% 30%;
-    /* Pine Green Secondary */
-    --secondary-foreground: 35 50% 98%;
-
-    --muted: 35 20% 92%;
-    --muted-foreground: 140 40% 40%;
-
-    --accent: 45 90% 50%;
     /* Deep Gold Accent */
     --accent-foreground: 140 60% 20%;
 
@@ -1163,10 +1151,10 @@
   [data-theme="retro"] .shadow-md,
   [data-theme="retro"] .shadow-lg,
   [data-theme="retro"] .glass,
-  [data-theme="forest"] .shadow-sm,
-  [data-theme="forest"] .shadow-md,
-  [data-theme="forest"] .shadow-lg,
-  [data-theme="forest"] .glass {
+  [data-theme="retro-dark"] .shadow-sm,
+  [data-theme="retro-dark"] .shadow-md,
+  [data-theme="retro-dark"] .shadow-lg,
+  [data-theme="retro-dark"] .glass {
     box-shadow: 4px 4px 0px 0px currentColor !important;
     backdrop-filter: none !important;
     border: 2px solid currentColor !important;
@@ -1174,7 +1162,7 @@
 
   /* RETRO RADIUS OVERRIDE (Nuclear Option) */
   [data-theme="retro"] [class*="rounded-"],
-  [data-theme="forest"] [class*="rounded-"] {
+  [data-theme="retro-dark"] [class*="rounded-"] {
     border-radius: 0px !important;
   }
 
@@ -1196,75 +1184,85 @@
     /* Ensure opacity is reset if overridden elsewhere */
   }
 
-  /* BLOSSOM "SAKURA" ENHANCEMENTS */
-  /* 1. Falling Petals Overlay */
-  /* BLOSSOM "SAKURA" ENHANCEMENTS - V2 (PHYSICALITY) */
-  /* 1. Tumbling Petals Overlay */
+  /* BLOSSOM "SAKURA" ENHANCEMENTS - V5 (REAL PETAL IMAGE) */
+  /* Using actual sakura petal PNG for realistic falling effect */
   [data-theme="blossom"] body::before {
     content: "";
     position: fixed;
-    top: -10%;
+    top: 0;
     left: 0;
     width: 100%;
-    height: 120%;
+    height: 200%;
+    /* Double height for seamless loop */
     pointer-events: none;
     z-index: 50;
-    /* Create petals using small, shaped gradients or SVGs would be better, 
-       but for CSS-only we stick to a cleaner gradient scatter pattern that feels more organic */
-    background-image:
-      radial-gradient(circle at 10% 10%, #ffb7b2 0%, transparent 20%),
-      radial-gradient(circle at 20% 40%, #ffdac1 0%, transparent 20%),
-      radial-gradient(circle at 80% 30%, #ff9aa2 0%, transparent 20%);
-    /* We will use a dedicated element for shape-based petals in a future iteration if this fails.
-       For now, we use a much subtler, 3D rotating animation on pseudo-elements. */
-    /* ACTUALLY: Let's use `box-shadow` on a single pixel to replicate "particles" if we want dots, 
-       BUT user specifically requested proper shapes. 
-       
-       Solution: Gradient-based particles are limited. 
-       Let's use a CLIP-PATH technique on ::before and ::after to create two layers of "confetti" 
-       that look like petals. 
-    */
-    background: transparent;
-    /* We'll use a complex mask or just simplified falling "sheets" of petals? 
-       Actually, standard "confetti" CSS uses a background-image of a small SVG. */
-    background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M10 0C5 0 0 5 0 10C0 15 5 20 10 20C15 20 20 15 20 10C20 5 15 0 10 0Z' fill='%23ffb7b2' fill-opacity='0.6'/%3E%3C/svg%3E");
-    background-size: 30px 30px;
-    /* Spaced out pattern */
-    background-position: 0 0;
-    animation: falling-sakura-3d 12s linear infinite;
-    opacity: 0;
+    background-image: url('/images/sakura-petal.png');
+    background-size: 40px 40px;
+    /* Small petals, spaced apart */
+    background-repeat: space;
+    /* Evenly distribute with gaps */
+    animation: blossom-fall-vertical 18s linear infinite;
+    opacity: 0.6;
   }
 
-  /* Second layer for depth */
+  /* Second layer for parallax depth (smaller, slower) */
   [data-theme="blossom"] body::after {
     content: "";
     position: fixed;
-    top: -20%;
-    left: 10%;
+    top: 0;
+    left: 50px;
+    /* Offset to avoid alignment with first layer */
     width: 100%;
-    height: 120%;
+    height: 200%;
     pointer-events: none;
     z-index: 49;
-    background-image: url("data:image/svg+xml,%3Csvg width='15' height='15' viewBox='0 0 15 15' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7.5 0C3.5 0 0 3.5 0 7.5C0 11.5 3.5 15 7.5 15C11.5 15 15 11.5 15 7.5C15 3.5 11.5 0 7.5 0Z' fill='%23E599A8' fill-opacity='0.4'/%3E%3C/svg%3E");
-    background-size: 45px 45px;
-    animation: falling-sakura-3d 18s linear infinite reverse;
-    /* Reverse rotation for variety */
-    opacity: 0;
+    background-image: url('/images/sakura-petal.png');
+    background-size: 25px 25px;
+    /* Smaller for depth */
+    background-repeat: space;
+    animation: blossom-fall-vertical 25s linear infinite;
+    /* Slower */
+    animation-delay: -8s;
+    /* Offset timing */
+    opacity: 0.4;
   }
 
-  @keyframes falling-sakura-3d {
+  @keyframes blossom-fall-vertical {
     0% {
-      opacity: 0;
-      transform: translateY(-10vh) translateX(-5vw) rotate3d(1, 1, 1, 0deg);
-    }
-
-    10% {
-      opacity: 0.8;
+      transform: translateY(-50%);
     }
 
     100% {
-      opacity: 0;
-      transform: translateY(100vh) translateX(5vw) rotate3d(1, 1, 1, 720deg);
+      transform: translateY(0%);
+    }
+  }
+
+  /* HOLIDAY SNOWFALL OVERRIDE */
+  [data-theme="holiday"] body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 50;
+    background-image:
+      radial-gradient(3px 3px at 20% 30%, rgba(200, 200, 255, 0.6) 50%, transparent),
+      radial-gradient(3px 3px at 40% 70%, rgba(200, 200, 255, 0.6) 50%, transparent),
+      radial-gradient(3px 3px at 60% 40%, rgba(200, 200, 255, 0.6) 50%, transparent),
+      radial-gradient(3px 3px at 80% 80%, rgba(200, 200, 255, 0.6) 50%, transparent);
+    background-size: 200px 200px;
+    animation: snow-drift 10s linear infinite;
+  }
+
+  @keyframes snow-drift {
+    0% {
+      transform: translateY(0);
+    }
+
+    100% {
+      transform: translateY(200px);
     }
   }
 
@@ -1320,8 +1318,8 @@
   /* RETRO FONT SCALE CORRECTIONS */
   [data-theme="retro"],
   [data-theme="retro-dark"] {
-    /* Pixel fonts need to be slightly larger to be readable */
-    font-size: 14px;
+    /* Pixel fonts are wide; scaling down to match visual density of other themes */
+    font-size: 12px;
   }
 
   /* Improve Focus Visibility for A11y in High Contrast Themes */
@@ -1416,7 +1414,7 @@
 
   /* RETRO CRT SCANLINE */
   [data-theme="retro"] body::after,
-  [data-theme="forest"] body::after {
+  [data-theme="retro-dark"] body::after {
     content: " ";
     display: block;
     position: fixed;

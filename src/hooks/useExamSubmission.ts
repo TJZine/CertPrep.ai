@@ -141,7 +141,7 @@ export function useExamSubmission({
             return null;
         }
         setIsSubmitting(true);
-        setShowSubmitModal(false); // Valid guard: prevent overlapping modals
+        setShowSubmitModal(false); // Close submit modal to prevent overlap with time-up modal
         pauseTimer();
         autoSubmitExam();
         try {
@@ -197,19 +197,19 @@ export function useExamSubmission({
                 setIsSubmitting(true);
                 router.push(`/results/${resultId}`);
             } else {
-                // Determine effective result ID *before* setting submitting state
-                // to avoid blocking the fallback auto-submit call
+                // Fallback: handleAutoSubmit manages its own isSubmitting state
                 const finalResultId = await handleAutoSubmit();
-                setIsSubmitting(true);
                 if (finalResultId) {
                     router.push(`/results/${finalResultId}`);
+                } else {
+                    // Inform user if fallback submission also failed
+                    addToast("error", "Unable to save results. Please try again.");
                 }
             }
         } catch (error) {
             console.error("Failed to save results:", error);
             if (isMountedRef.current) {
                 addToast("error", "Failed to save results. Please try again.");
-                setIsSubmitting(false);
             }
         }
     }, [autoResultId, handleAutoSubmit, router, addToast]);
