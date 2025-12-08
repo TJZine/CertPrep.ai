@@ -49,7 +49,7 @@ export interface ButtonProps
   VariantProps<typeof buttonVariants> {
   /**
    * If true, displays a loading spinner and disables interaction.
-   * Accessibly announces "Loading" to screen readers.
+   * Signals busy/loading state to screen readers via aria-busy.
    *
    * @default false
    */
@@ -83,7 +83,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const iconSize =
       size === "sm" || size === "icon-sm"
         ? "h-4 w-4"
-        : size === "xl"
+        : size === "lg" || size === "xl"
           ? "h-5 w-5"
           : "h-4 w-4";
 

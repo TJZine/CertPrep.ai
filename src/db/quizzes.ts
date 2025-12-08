@@ -21,6 +21,17 @@ export interface CreateQuizInput {
   sourceId?: string;
 }
 
+/**
+ * Stable sort helper: Newest created first -> Alphabetical by title.
+ */
+export function sortQuizzesByNewest(quizzes: Quiz[]): Quiz[] {
+  return quizzes.sort((a, b) => {
+    const timeDiff = b.created_at - a.created_at;
+    if (timeDiff !== 0) return timeDiff;
+    return a.title.localeCompare(b.title);
+  });
+}
+
 export interface QuizStats {
   quizId: string;
   attemptCount: number;
@@ -167,7 +178,11 @@ export async function getAllQuizzes(userId: string): Promise<Quiz[]> {
     .and((quiz) => quiz.deleted_at === null || quiz.deleted_at === undefined)
     .toArray();
 
-  return quizzes.sort((a, b) => b.created_at - a.created_at);
+  return quizzes.sort((a, b) => {
+    const timeDiff = b.created_at - a.created_at;
+    if (timeDiff !== 0) return timeDiff;
+    return a.title.localeCompare(b.title);
+  });
 }
 
 /**
@@ -196,7 +211,7 @@ export async function searchQuizzes(
     return getAllQuizzes(userId);
   }
 
-  return db.quizzes
+  const results = await db.quizzes
     .where("user_id")
     .equals(userId)
     .and((quiz) => quiz.deleted_at === null || quiz.deleted_at === undefined)
@@ -208,6 +223,8 @@ export async function searchQuizzes(
       return titleMatch || tagMatch;
     })
     .toArray();
+
+  return sortQuizzesByNewest(results);
 }
 
 /**
@@ -235,26 +252,26 @@ export async function updateQuiz(
       // We need to handle hashing BEFORE sanitization strips the correct_answer.
       // We also need to respect existing hashes if provided.
       const rawQuestions = updates.questions;
-      
+
       // We need to inject existing hashes if they are missing in the update but present in DB
       // This is a bit tricky because sanitizeQuestions now enforces hash existence.
       // So we should pre-fill hashes from existing questions if possible BEFORE calling sanitizeQuestions
       // OR we rely on sanitizeQuestions to throw if it can't find a hash.
-      
+
       // However, sanitizeQuestions only looks at the input object. It doesn't know about DB state.
       // So if the update is partial and missing correct_answer AND correct_answer_hash, 
       // but we have it in DB, we should merge it first?
       // Actually, updates.questions is usually a full replacement of the questions array in this app's logic (editing a quiz).
       // But let's be safe.
-      
+
       // If we are just updating questions, we probably have the full question object.
       // Let's try to map existing hashes to the raw questions if they are missing.
       const enrichedQuestions = rawQuestions.map(q => {
-         const existingQ = existing.questions.find(eq => eq.id === q.id);
-         if (!q.correct_answer_hash && existingQ?.correct_answer_hash) {
-             return { ...q, correct_answer_hash: existingQ.correct_answer_hash };
-         }
-         return q;
+        const existingQ = existing.questions.find(eq => eq.id === q.id);
+        if (!q.correct_answer_hash && existingQ?.correct_answer_hash) {
+          return { ...q, correct_answer_hash: existingQ.correct_answer_hash };
+        }
+        return q;
       });
 
       sanitizedUpdates.questions = await Dexie.waitFor(

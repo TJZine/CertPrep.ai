@@ -7,7 +7,7 @@ import { NIL_UUID } from "@/lib/constants";
 import type { Quiz } from "@/types/quiz";
 import type { Result } from "@/types/result";
 import type { QuizStats } from "@/db/quizzes";
-import { getQuizStats } from "@/db/quizzes";
+import { getQuizStats, sortQuizzesByNewest } from "@/db/quizzes";
 
 interface InitializationState {
   isInitialized: boolean;
@@ -85,19 +85,20 @@ export function useInitializeDatabase(): InitializationState {
 export function useQuizzes(userId: string | undefined): UseQuizzesResponse {
   const quizzes = useLiveQuery(async () => {
     if (!userId) return [];
-    // Only query for the user's own quizzes. 
+    // Only query for the user's own quizzes.
     // NIL_UUID (orphaned/system data) should not be mixed into the personal library.
     const results = await db.quizzes
       .where("user_id")
       .equals(userId)
       .filter((quiz) => !quiz.deleted_at)
-      .sortBy("created_at");
+      .toArray();
 
-    return results;
+    // Stable sort: Newest created first -> Alphabetical by title
+    return sortQuizzesByNewest(results);
   }, [userId]);
 
   return {
-    quizzes: quizzes ? quizzes.reverse() : [],
+    quizzes: quizzes ?? [],
     isLoading: !userId ? false : quizzes === undefined,
   };
 }
@@ -164,10 +165,10 @@ export function useResults(userId: string | undefined): UseResultsResponse {
     () =>
       userId
         ? db.results
-            .where("user_id")
-            .equals(userId)
-            .filter((r) => !r.deleted_at)
-            .sortBy("timestamp")
+          .where("user_id")
+          .equals(userId)
+          .filter((r) => !r.deleted_at)
+          .sortBy("timestamp")
         : [],
     [userId],
   );

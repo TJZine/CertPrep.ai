@@ -3,6 +3,36 @@ import * as Sentry from "@sentry/nextjs";
 
 const isProduction = process.env.NODE_ENV === "production";
 
+/**
+ * Sanitizes log arguments by removing or redacting sensitive patterns.
+ * Also handles JSON serialization for objects.
+ * 
+ * @param args - Raw arguments to sanitize
+ * @returns Sanitized string safe for external logging
+ */
+const sanitizeForSentry = (args: unknown[]): string => {
+  const serialized = args
+    .map((arg) => {
+      if (typeof arg === "object" && arg !== null) {
+        try {
+          return JSON.stringify(arg, null, 2);
+        } catch {
+          return String(arg); // Fallback for circular refs
+        }
+      }
+      return String(arg);
+    })
+    .join(" ");
+
+  // Redact common sensitive patterns (emails, tokens, etc.)
+  return serialized
+    .replace(/\b[\w.%+-]+@[\w.-]+\.[A-Z]{2,}\b/gi, "[EMAIL_REDACTED]")
+    .replace(
+      /\b(Bearer|Token|token|key|password|pwd|secret)\s*[:=]\s*\S+/gi,
+      "$1=[REDACTED]",
+    );
+};
+
 export const logger = {
   /**
    * Logs an informational message.
@@ -20,7 +50,7 @@ export const logger = {
       // Add breadcrumbs for debugging context without logging to console
       Sentry.addBreadcrumb({
         category: "log",
-        message: args.map(String).join(" "),
+        message: sanitizeForSentry(args),
         level: "info",
       });
     }
@@ -39,7 +69,7 @@ export const logger = {
     if (!isProduction) {
       console.warn(...args);
     } else {
-      Sentry.captureMessage(args.map(String).join(" "), "warning");
+      Sentry.captureMessage(sanitizeForSentry(args), "warning");
     }
   },
 
@@ -62,7 +92,7 @@ export const logger = {
     if (isProduction) {
       const errorObj =
         args.find((arg) => arg instanceof Error) ||
-        new Error(args.map(String).join(" "));
+        new Error(sanitizeForSentry(args));
       const extras = args.filter((arg) => arg !== errorObj);
 
       Sentry.captureException(errorObj, {
@@ -83,6 +113,12 @@ export const logger = {
   info: (...args: unknown[]): void => {
     if (!isProduction) {
       console.info(...args);
+    } else {
+      Sentry.addBreadcrumb({
+        category: "log",
+        message: sanitizeForSentry(args),
+        level: "info",
+      });
     }
   },
 

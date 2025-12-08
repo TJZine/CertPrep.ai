@@ -62,6 +62,6 @@ export interface CategoryPerformance {
   correct: number;
   /** Total number of questions answered in this category. */
   total: number;
-  /** Calcualted percentage (0-100). */
+  /** Calculated percentage (0-100). */
   percentage: number;
 }

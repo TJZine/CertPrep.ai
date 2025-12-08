@@ -54,7 +54,14 @@ export function useAnalyticsStats(
             .sort(([a], [b]) => a.localeCompare(b))
             .map(([key, value]) => `${key}:${value}`)
             .join(",");
-          return `${r.id}:${r.score}:${r.timestamp}:${r.time_taken_seconds}:${answersKey}`;
+          const questionIdsKey = (r.question_ids ?? []).join(",");
+          const categoryBreakdownKey = r.category_breakdown
+            ? Object.entries(r.category_breakdown)
+              .sort(([a], [b]) => a.localeCompare(b))
+              .map(([cat, val]) => `${cat}:${val}`)
+              .join(",")
+            : "";
+          return `${r.id}:${r.score}:${r.timestamp}:${r.time_taken_seconds}:${answersKey}:${questionIdsKey}:${categoryBreakdownKey}`;
         })
         .sort()
         .join("|"),
@@ -118,7 +125,7 @@ export function useAnalyticsStats(
             return Promise.all(
               sessionQuestions.map(async (question) => {
                 const category = question.category || "Uncategorized";
-                const userAnswer = result.answers[String(question.id)];
+                const userAnswer = result.answers[question.id];
                 let isCorrect = false;
 
                 if (userAnswer) {

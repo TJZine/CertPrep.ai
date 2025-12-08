@@ -1,6 +1,6 @@
 import { describe, expect, it, beforeEach } from "vitest";
 import { db, clearDatabase } from "@/db/index";
-import { createQuiz, updateQuiz, getQuizById } from "@/db/quizzes";
+import { createQuiz, updateQuiz, getQuizById, getAllQuizzes } from "@/db/quizzes";
 import { hashAnswer } from "@/lib/utils";
 import type { QuizImportInput } from "@/validators/quizSchema";
 
@@ -91,5 +91,32 @@ describe("DB: quizzes", () => {
     // Check DB directly
     const stored = await db.quizzes.get(quiz.id);
     expect(stored!.questions[0]!.correct_answer).toBeUndefined();
+  });
+  it("should sort quizzes by created_at desc, then title asc (stable sort)", async () => {
+    const now = Date.now();
+
+    // Create 3 quizzes. logic:
+    // Q1: Newer timestamp
+    // Q2: Older timestamp, Title "B"
+    // Q3: Older timestamp (same as Q2), Title "A"
+    // Expected order: Q1, Q3, Q2
+
+    // 1. Create them (timestamps will be slightly different by default)
+    const q1 = await createQuiz({ ...mockQuizInput, title: "Newest" }, { userId });
+    const q2 = await createQuiz({ ...mockQuizInput, title: "ZQuiz" }, { userId });
+    const q3 = await createQuiz({ ...mockQuizInput, title: "AQuiz" }, { userId });
+
+    // 2. Manually force timestamps in DB to ensure collision test
+    await db.quizzes.update(q1.id, { created_at: now + 10000 });
+    await db.quizzes.update(q2.id, { created_at: now });
+    await db.quizzes.update(q3.id, { created_at: now });
+
+    // 3. Fetch
+    const sorted = await getAllQuizzes(userId);
+
+    expect(sorted).toHaveLength(3);
+    expect(sorted[0]!.title).toBe("Newest"); // Most recent
+    expect(sorted[1]!.title).toBe("AQuiz"); // Tie-breaker: A comes before Z
+    expect(sorted[2]!.title).toBe("ZQuiz");
   });
 });
