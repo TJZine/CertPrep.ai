@@ -2,13 +2,29 @@
 
 import * as React from "react";
 
+import {
+  Sun,
+  Moon,
+  Sparkles,
+  BookOpen,
+  Trees,
+  Gamepad2,
+  Waves,
+  Snowflake,
+  Gift,
+  Zap,
+  Flower2,
+  Leaf,
+  Monitor,
+} from "lucide-react";
+
 export type Theme =
   | "system"
   | "light"
   | "dark"
   | "midnight"
   | "focus"
-  | "forest"
+  | "retro-dark"
   | "retro"
   | "ocean"
   | "nord"
@@ -19,21 +35,121 @@ export type Theme =
 
 export const THEME_CONFIG: Record<
   Theme,
-  { isDark: boolean; label: string; hidden?: boolean }
+  {
+    isDark: boolean;
+    label: string;
+    description: string;
+    icon: React.ElementType;
+    swatch: string;
+    preview: { bg: string; accent: string; text: string };
+    hidden?: boolean;
+  }
 > = {
-  system: { isDark: false, label: "System", hidden: true },
-  light: { isDark: false, label: "Light" },
-  dark: { isDark: true, label: "Dark" },
-  midnight: { isDark: true, label: "Midnight" },
-  focus: { isDark: false, label: "Focus" },
-  forest: { isDark: true, label: "Retro (Dark)" },
-  retro: { isDark: false, label: "Retro" },
-  ocean: { isDark: true, label: "Ocean" },
-  nord: { isDark: true, label: "Nord" },
-  holiday: { isDark: false, label: "Holiday" },
-  vapor: { isDark: true, label: "Vapor" },
-  blossom: { isDark: false, label: "Blossom" },
-  mint: { isDark: false, label: "Mint" },
+  system: {
+    isDark: false,
+    label: "System",
+    description: "Follows your system's color scheme",
+    icon: Monitor,
+    swatch: "#94a3b8",
+    preview: { bg: "bg-slate-200", accent: "bg-slate-600", text: "text-slate-900" },
+    hidden: true,
+  },
+  light: {
+    isDark: false,
+    label: "Light",
+    description: "Clean and bright, easy on the eyes",
+    icon: Sun,
+    swatch: "#ffffff",
+    preview: { bg: "bg-slate-50", accent: "bg-blue-500", text: "text-slate-900" },
+  },
+  dark: {
+    isDark: true,
+    label: "Dark",
+    description: "Classic dark mode for night sessions",
+    icon: Moon,
+    swatch: "#0f172a",
+    preview: { bg: "bg-slate-900", accent: "bg-blue-500", text: "text-slate-50" },
+  },
+  midnight: {
+    isDark: true,
+    label: "Midnight",
+    description: "Cyber neon with electric cyan accents",
+    icon: Sparkles,
+    swatch: "#0ea5e9",
+    preview: { bg: "bg-[#0d1117]", accent: "bg-cyan-400", text: "text-cyan-100" },
+  },
+  focus: {
+    isDark: false,
+    label: "Focus",
+    description: "Warm sepia for distraction-free studying",
+    icon: BookOpen,
+    swatch: "#f5f5f4",
+    preview: { bg: "bg-amber-50", accent: "bg-orange-600", text: "text-amber-900" },
+  },
+  "retro-dark": {
+    isDark: true,
+    label: "Retro (Dark)",
+    description: "High contrast terminal green on black",
+    icon: Trees,
+    swatch: "#22c55e",
+    preview: { bg: "bg-[#141f1a]", accent: "bg-green-500", text: "text-green-100" },
+  },
+  retro: {
+    isDark: false,
+    label: "Retro",
+    description: "8-bit NES style with blocky aesthetics",
+    icon: Gamepad2,
+    swatch: "#eab308",
+    preview: { bg: "bg-gray-300", accent: "bg-pink-500", text: "text-gray-900" },
+  },
+  ocean: {
+    isDark: true,
+    label: "Ocean",
+    description: "Deep sea calm with teal waves",
+    icon: Waves,
+    swatch: "#0ea5e9",
+    preview: { bg: "bg-[#0d1a24]", accent: "bg-teal-400", text: "text-teal-100" },
+  },
+  nord: {
+    isDark: true,
+    label: "Nord",
+    description: "Arctic Scandinavian with aurora accents",
+    icon: Snowflake,
+    swatch: "#818cf8",
+    preview: { bg: "bg-[#2e3440]", accent: "bg-sky-300", text: "text-slate-200" },
+  },
+  holiday: {
+    isDark: false,
+    label: "Holiday",
+    description: "Festive red & green for the season",
+    icon: Gift,
+    swatch: "#e11d48",
+    preview: { bg: "bg-white", accent: "bg-red-500", text: "text-green-800" },
+  },
+  vapor: {
+    isDark: true,
+    label: "Vapor",
+    description: "Synthwave neon pink & cyan",
+    icon: Zap,
+    swatch: "#d946ef",
+    preview: { bg: "bg-[#1a0d24]", accent: "bg-pink-500", text: "text-pink-100" },
+  },
+  blossom: {
+    isDark: false,
+    label: "Blossom",
+    description: "Pastel pink for a soft aesthetic",
+    icon: Flower2,
+    swatch: "#f472b6",
+    preview: { bg: "bg-[#FFF0F5]", accent: "bg-[#E599A8]", text: "text-[#4A4A4A]" },
+  },
+  mint: {
+    isDark: false,
+    label: "Mint",
+    description: "Fresh sage for earthy vibes",
+    icon: Leaf,
+    swatch: "#86efac",
+    preview: { bg: "bg-[#F1F8E9]", accent: "bg-[#81C784]", text: "text-[#37474F]" },
+  },
 };
 
 interface ThemeContextValue {
@@ -132,21 +248,11 @@ export function ThemeProvider({
   }, []);
 
   const toggleTheme = React.useCallback(() => {
-    setThemeState((prev): Theme => {
-      // If currently system, we need to know what we are resolving to
-      // to toggle to the *opposite*.
-      const currentResolved = prev === "system" ? systemTheme : prev;
-
-      // Logic:
-      // If Light -> Dark
-      // If Dark -> Light
-      // If Custom (Dark-ish) -> Light
-      // If Custom (Light-ish) -> Dark
-
-      const isCurrentlyDark = THEME_CONFIG[currentResolved]?.isDark;
+    setThemeState((): Theme => {
+      const isCurrentlyDark = THEME_CONFIG[resolvedTheme]?.isDark;
       return isCurrentlyDark ? "light" : "dark";
     });
-  }, [systemTheme]);
+  }, [resolvedTheme]);
 
   const value = React.useMemo(
     () => ({
@@ -158,18 +264,10 @@ export function ThemeProvider({
     [theme, resolvedTheme, setTheme, toggleTheme],
   );
 
-  // Avoid rendering children until mounted to prevent hydration mismatch
-  // strictly if the children's rendering depends on the theme.
-  // HOWEVER, preventing children render can hurt SEO/LCP.
-  // Better approach: Render children, but since our theme only affects CSS variables/attributes
-  // on the <html> tag, hydration mismatch within *children* is rare unless they inspect `useTheme`.
-  // If children inspect `useTheme`, they might mismtach.
-  // We will simply return children. The `mounted` check protects the DOM manipulation inside the provider.
-  // But wait, `useTheme` returns `theme`.
-  // On server: 'system'. On client initial: 'system'.
-  // If stored is 'dark', client effect updates to 'dark'.
-  // This causes a re-render on client, no mismatch error, just a repaint (flash).
-  // Standard Next.js practice for theme providers.
+  // We render children immediately to avoid SEO/LCP impact.
+  // Theme state initializes to "system" on both server and client,
+  // then hydrates from localStorage, causing a repaint but no mismatch.
+  // This is standard practice for Next.js theme providers.
 
   return (
     <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>

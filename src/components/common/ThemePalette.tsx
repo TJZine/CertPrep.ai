@@ -7,22 +7,7 @@ import { useTheme, type Theme, THEME_CONFIG } from "@/components/common/ThemePro
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 
-// Mapping of themes to visual swatch colors
-const THEME_SWATCHES: Record<Theme, string> = {
-    system: "#94a3b8", // Slate 400
-    light: "#ffffff",
-    dark: "#0f172a", // Slate 900
-    midnight: "#0ea5e9", // Cyan 500
-    focus: "#f5f5f4", // Stone 100
-    retro: "#eab308", // Yellow 500
-    forest: "#22c55e", // Green 500 (Retro Dark)
-    ocean: "#0ea5e9", // Sky 500
-    nord: "#818cf8", // Indigo 400
-    holiday: "#e11d48", // Rose 600
-    vapor: "#d946ef", // Fuchsia 500
-    blossom: "#f472b6", // Pink 400
-    mint: "#86efac", // Green 300
-};
+
 
 export function ThemePalette(): React.ReactElement {
     const { theme, setTheme } = useTheme();
@@ -71,61 +56,67 @@ export function ThemePalette(): React.ReactElement {
                         animate={{ opacity: 1, scale: 1, y: 5 }}
                         exit={{ opacity: 0, scale: 0.95, y: -5 }}
                         transition={{ duration: 0.15, ease: "easeOut" }}
-                        className="absolute right-0 top-full z-50 w-64 rounded-xl border border-border bg-popover/95 p-4 shadow-lg backdrop-blur-md"
+                        className="absolute right-0 top-full z-50 w-72 rounded-xl border border-border bg-popover/95 p-2 shadow-lg backdrop-blur-md"
                     >
-                        <div className="mb-3 flex items-center justify-between">
+                        <div className="mb-2 px-2 py-1.5">
                             <span className="text-sm font-semibold text-foreground">Theme</span>
-                            <span className="text-xs text-muted-foreground">Select appearance</span>
                         </div>
 
-                        <div className="grid grid-cols-4 gap-2">
-                            {Object.entries(THEME_CONFIG).map(([key, config]) => {
-                                if (config.hidden) return null; // Skip hidden/system if desired, or handle separately
+                        <div className="max-h-[60vh] overflow-y-auto pr-1">
+                            <div className="space-y-1">
+                                {Object.entries(THEME_CONFIG).map(([key, config]) => {
+                                    if (config.hidden) return null;
 
-                                const themeKey = key as Theme;
-                                const isActive = theme === themeKey;
-                                const swatchColor = THEME_SWATCHES[themeKey];
+                                    const themeKey = key as Theme;
+                                    const isActive = theme === themeKey;
 
-                                return (
-                                    <button
-                                        key={themeKey}
-                                        onClick={() => handleSelect(themeKey)}
-                                        className={cn(
-                                            "group relative flex h-10 w-10 items-center justify-center rounded-full border border-border transition-all hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                                            isActive && "ring-2 ring-primary ring-offset-2 ring-offset-popover"
-                                        )}
-                                        aria-label={`Select ${config.label} theme`}
-                                        title={config.label}
-                                    >
-                                        <span
-                                            className="absolute inset-0 rounded-full opacity-90"
-                                            style={{ backgroundColor: swatchColor }}
-                                        />
+                                    return (
+                                        <button
+                                            key={themeKey}
+                                            onClick={() => handleSelect(themeKey)}
+                                            className={cn(
+                                                "group flex w-full items-center gap-3 rounded-lg p-2 text-left transition-colors",
+                                                isActive ? "bg-accent text-accent-foreground" : "hover:bg-muted"
+                                            )}
+                                        >
+                                            {/* Mini-UI Preview */}
+                                            <div className={cn(
+                                                "flex h-8 w-12 shrink-0 flex-col overflow-hidden rounded border shadow-sm",
+                                                config.preview.bg
+                                            )}>
+                                                {/* Header Bar */}
+                                                <div className={cn("h-2 w-full opacity-80", config.preview.accent)} />
+                                                {/* Body Content */}
+                                                <div className="flex flex-1 items-center justify-center p-1">
+                                                    <div className={cn("h-1.5 w-6 rounded-full opacity-40", config.preview.accent)} />
+                                                </div>
+                                            </div>
 
-                                        {/* Visual indicator for active state (optional, ring handles it mostly) */}
-                                        {isActive && (
-                                            <Check className={cn(
-                                                "z-10 h-4 w-4",
-                                                config.isDark ? "text-white" : "text-black"
-                                            )} />
-                                        )}
-                                    </button>
-                                );
-                            })}
+                                            <span className="flex-1 text-sm font-medium">
+                                                {config.label}
+                                            </span>
+
+                                            {isActive && <Check className="h-4 w-4 text-primary" />}
+                                        </button>
+                                    );
+                                })}
+                            </div>
                         </div>
 
-                        {/* System Option - Separated for utility */}
-                        <div className="mt-4 border-t border-border pt-3">
+                        {/* System Option */}
+                        <div className="mt-2 border-t border-border pt-2">
                             <button
                                 onClick={() => handleSelect("system")}
                                 className={cn(
-                                    "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-accent hover:text-accent-foreground",
-                                    theme === "system" ? "font-medium text-primary" : "text-muted-foreground"
+                                    "flex w-full items-center gap-2 rounded-lg p-2 text-sm transition-colors hover:bg-muted",
+                                    theme === "system" ? "bg-accent text-accent-foreground" : "text-muted-foreground"
                                 )}
                             >
-                                <Monitor className="h-4 w-4" />
-                                <span>System Default</span>
-                                {theme === "system" && <Check className="ml-auto h-3 w-3" />}
+                                <div className="flex h-8 w-8 items-center justify-center rounded border border-border bg-background">
+                                    <Monitor className="h-4 w-4" />
+                                </div>
+                                <span className="font-medium">System Default</span>
+                                {theme === "system" && <Check className="ml-auto h-4 w-4 text-primary" />}
                             </button>
                         </div>
 
@@ -135,3 +126,5 @@ export function ThemePalette(): React.ReactElement {
         </div>
     );
 }
+
+export default ThemePalette;
