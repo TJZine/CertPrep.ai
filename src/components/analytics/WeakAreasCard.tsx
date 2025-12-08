@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { AlertTriangle, TrendingUp, BookOpen, ArrowRight } from "lucide-react";
+import { AlertTriangle, TrendingUp, TrendingDown, BookOpen, ArrowRight } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -105,6 +105,12 @@ export function WeakAreasCard({
                       <Badge variant="success" className="gap-1">
                         <TrendingUp className="h-3 w-3" aria-hidden="true" />
                         Improving
+                      </Badge>
+                    )}
+                    {area.recentTrend === "declining" && (
+                      <Badge variant="danger" className="gap-1">
+                        <TrendingDown className="h-3 w-3" aria-hidden="true" />
+                        Declining
                       </Badge>
                     )}
                   </div>
