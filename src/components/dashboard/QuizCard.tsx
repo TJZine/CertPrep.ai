@@ -135,18 +135,18 @@ export function QuizCard({
   };
 
   return (
-    <Card className="group relative flex h-full flex-col overflow-hidden border border-slate-200 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-slate-800">
+    <Card className="group relative flex h-full flex-col overflow-hidden border border-border shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
       <div
-        className="pointer-events-none absolute right-4 top-4 hidden max-w-[220px] rounded-lg border border-slate-200 bg-white/95 px-3 py-2 text-left text-xs text-slate-700 shadow-lg backdrop-blur group-focus-within:block group-hover:block dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200"
+        className="pointer-events-none absolute right-4 top-4 hidden max-w-[220px] rounded-lg border border-border bg-popover/95 px-3 py-2 text-left text-xs text-muted-foreground shadow-lg backdrop-blur group-focus-within:block group-hover:block"
         role="presentation"
       >
-        <p className="mb-1 font-semibold text-slate-900 dark:text-slate-100">
+        <p className="mb-1 font-semibold text-foreground">
           Quick stats
         </p>
         <ul className="space-y-1">
           <li className="flex items-center gap-2">
             <BarChart3
-              className="h-3.5 w-3.5 text-blue-600 dark:text-blue-300"
+              className="h-3.5 w-3.5 text-primary"
               aria-hidden="true"
             />
             <span>Best: {bestScore !== null ? `${bestScore}%` : "—"}</span>
@@ -157,7 +157,7 @@ export function QuizCard({
           </li>
           <li className="flex items-center gap-2">
             <Clock
-              className="h-3.5 w-3.5 text-slate-500 dark:text-slate-300"
+              className="h-3.5 w-3.5 text-muted-foreground"
               aria-hidden="true"
             />
             <span>Study time: {formatStudyTime(totalStudyTime)}</span>
@@ -168,7 +168,7 @@ export function QuizCard({
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 space-y-1">
             <CardTitle className="line-clamp-2 text-lg">{quiz.title}</CardTitle>
-            <p className="text-sm text-slate-600 dark:text-slate-300">
+            <p className="text-sm text-muted-foreground">
               {quiz.description?.trim()
                 ? quiz.description
                 : `${quiz.questions.length} questions`}
@@ -178,9 +178,9 @@ export function QuizCard({
             <button
               type="button"
               className={cn(
-                "rounded-full p-2 text-slate-500 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 dark:text-slate-400 dark:hover:bg-slate-700",
+                "rounded-full p-2 text-muted-foreground transition hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                 showMenu &&
-                  "bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-100",
+                "bg-accent text-accent-foreground",
               )}
               aria-label="Quiz options"
               aria-expanded={showMenu}
@@ -191,13 +191,13 @@ export function QuizCard({
             </button>
             {showMenu ? (
               <div
-                className="absolute right-0 z-10 mt-2 w-40 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900"
+                className="absolute right-0 z-10 mt-2 w-40 overflow-hidden rounded-lg border border-border bg-popover shadow-lg"
                 role="menu"
               >
                 <button
                   type="button"
                   onClick={handleCopyLink}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 dark:text-slate-200 dark:hover:bg-slate-800"
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-foreground transition hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   role="menuitem"
                 >
                   <LinkIcon className="h-4 w-4" aria-hidden="true" />
@@ -206,7 +206,7 @@ export function QuizCard({
                 <button
                   type="button"
                   onClick={handleDelete}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-600 transition hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 dark:text-red-400 dark:hover:bg-red-950/30"
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-destructive transition hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   role="menuitem"
                 >
                   <Trash2 className="h-4 w-4" aria-hidden="true" />
@@ -222,7 +222,7 @@ export function QuizCard({
               <Badge
                 key={tag}
                 variant="secondary"
-                className="dark:bg-slate-800 dark:text-slate-100"
+                className="bg-secondary text-secondary-foreground"
               >
                 {tag}
               </Badge>
@@ -232,7 +232,7 @@ export function QuizCard({
                 <button
                   type="button"
                   onClick={() => setShowTagsPopover((open) => !open)}
-                  className="inline-flex items-center gap-1 rounded-full border border-slate-300 bg-white px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-slate-800 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800 dark:focus-visible:ring-offset-slate-900"
+                  className="inline-flex items-center gap-1 rounded-full border border-input bg-background px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   aria-expanded={showTagsPopover}
                   aria-haspopup="true"
                   aria-label={`Show ${extraTagCount} more tags`}
@@ -240,8 +240,8 @@ export function QuizCard({
                   +{extraTagCount}
                 </button>
                 {showTagsPopover ? (
-                  <div className="absolute z-10 mt-2 w-48 rounded-lg border border-slate-200 bg-white p-2 text-left shadow-lg dark:border-slate-700 dark:bg-slate-900">
-                    <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">
+                  <div className="absolute z-10 mt-2 w-48 rounded-lg border border-border bg-popover p-2 text-left shadow-lg">
+                    <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                       More tags
                     </p>
                     <div className="flex flex-wrap gap-1.5">
@@ -249,7 +249,7 @@ export function QuizCard({
                         <Badge
                           key={tag}
                           variant="secondary"
-                          className="dark:bg-slate-800 dark:text-slate-100"
+                          className="bg-secondary text-secondary-foreground"
                         >
                           {tag}
                         </Badge>
@@ -283,7 +283,7 @@ export function QuizCard({
         </div>
 
         {lastAttemptDate ? (
-          <div className="rounded-lg bg-slate-50 px-3 py-2 text-center text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-200">
+          <div className="rounded-lg bg-muted/50 px-3 py-2 text-center text-xs text-muted-foreground">
             Last attempt: {formatDate(lastAttemptDate)}
           </div>
         ) : null}
@@ -310,12 +310,12 @@ interface StatItemProps {
 
 function StatItem({ icon, value, label }: StatItemProps): React.ReactElement {
   return (
-    <div className="flex flex-col items-center gap-1 rounded-lg border border-slate-100 px-3 py-2 dark:border-slate-800 dark:bg-slate-800/80">
-      <div className="flex items-center gap-1 text-base font-semibold text-slate-900 dark:text-slate-100">
-        <span className="text-blue-600 dark:text-blue-300">{icon}</span>
+    <div className="flex flex-col items-center gap-1 rounded-lg border border-border px-3 py-2 bg-background/50">
+      <div className="flex items-center gap-1 text-base font-semibold text-foreground">
+        <span className="text-primary">{icon}</span>
         <span>{value}</span>
       </div>
-      <span className="text-[11px] uppercase tracking-wide text-slate-500 dark:text-slate-300">
+      <span className="text-[11px] uppercase tracking-wide text-muted-foreground">
         {label}
       </span>
     </div>

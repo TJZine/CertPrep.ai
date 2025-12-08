@@ -41,11 +41,11 @@ const PieTooltip = ({
   const data = payload?.[0];
   if (!active || !data) return null;
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-lg dark:border-slate-700 dark:bg-slate-900">
-      <p className="font-medium text-slate-900 dark:text-slate-50">
+    <div className="rounded-lg border border-border bg-popover p-3 shadow-lg">
+      <p className="font-medium text-popover-foreground">
         {data.name}
       </p>
-      <p className="text-sm text-slate-600 dark:text-slate-300">
+      <p className="text-sm text-muted-foreground">
         {data.value} attempts
       </p>
     </div>
@@ -61,9 +61,9 @@ const BarTooltip = ({
   if (!active || !data) return null;
   const minutes = typeof data.value === "number" ? data.value : 0;
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-lg dark:border-slate-700 dark:bg-slate-900">
-      <p className="font-medium text-slate-900 dark:text-slate-50">{label}</p>
-      <p className="text-sm text-slate-600 dark:text-slate-300">
+    <div className="rounded-lg border border-border bg-popover p-3 shadow-lg">
+      <p className="font-medium text-popover-foreground">{label}</p>
+      <p className="text-sm text-muted-foreground">
         Study Time: {formatTime(minutes * 60)}
       </p>
     </div>
@@ -126,10 +126,10 @@ export function AnalyticsOverview({
                 />
               </div>
               <div>
-                <p className="text-2xl font-bold text-slate-900 dark:text-slate-50">
+                <p className="text-2xl font-bold text-foreground">
                   {stat.value}
                 </p>
-                <p className="text-sm text-slate-500 dark:text-slate-300">
+                <p className="text-sm text-muted-foreground">
                   {stat.label}
                 </p>
               </div>
@@ -220,7 +220,7 @@ export function ScoreDistribution({
           <CardTitle>Score Distribution</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-center text-slate-500 dark:text-slate-300">
+          <p className="text-center text-muted-foreground">
             No data yet
           </p>
         </CardContent>
@@ -264,7 +264,7 @@ export function ScoreDistribution({
           {distribution.map((entry) => (
             <div key={entry.name} className="flex items-center gap-2">
               <span className={cn("h-3 w-3 rounded-full", entry.colorClass)} />
-              <span className="text-sm text-slate-600 dark:text-slate-200">
+              <span className="text-sm text-muted-foreground">
                 {entry.name}
               </span>
             </div>
@@ -298,7 +298,7 @@ export function StudyTimeChart({
           <CardTitle>Study Activity</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-center text-slate-500 dark:text-slate-300">
+          <p className="text-center text-muted-foreground">
             No study data yet
           </p>
         </CardContent>

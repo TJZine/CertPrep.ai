@@ -123,7 +123,7 @@ function getTrendIndicator(
   return {
     icon: <Minus className="h-4 w-4" aria-hidden="true" />,
     text: "Same as last attempt",
-    color: "text-slate-600",
+    color: "text-muted-foreground",
   };
 }
 
@@ -166,7 +166,7 @@ export function Scorecard({
             {tier.label}
           </Badge>
 
-          <p className="mb-2 text-lg text-slate-700 dark:text-slate-200">
+          <p className="mb-2 text-lg text-muted-foreground">
             <span className="font-semibold text-green-600 dark:text-green-200">
               {correctCount}
             </span>
@@ -175,14 +175,14 @@ export function Scorecard({
               {incorrectCount}
             </span>
             {" incorrect out of "}
-            <span className="font-semibold text-slate-900 dark:text-slate-50">
+            <span className="font-semibold text-foreground">
               {totalCount}
             </span>
             {" questions"}
           </p>
 
           <div className="mb-6 w-full max-w-md" role="presentation">
-            <div className="flex h-4 w-full overflow-hidden rounded-full bg-slate-200">
+            <div className="flex h-4 w-full overflow-hidden rounded-full bg-secondary">
               <div
                 className={cn(
                   "bg-green-500 transition-all duration-500",
@@ -208,39 +208,39 @@ export function Scorecard({
           )}
 
           <div className="grid w-full max-w-md grid-cols-3 gap-4">
-            <div className="rounded-lg bg-white/50 p-3 dark:border dark:border-slate-800 dark:bg-slate-900/70">
+            <div className="rounded-lg bg-background/50 p-3 border border-border">
               <Clock
-                className="mx-auto mb-1 h-5 w-5 text-slate-500 dark:text-slate-200"
+                className="mx-auto mb-1 h-5 w-5 text-muted-foreground"
                 aria-hidden="true"
               />
-              <p className="text-lg font-semibold text-slate-900 dark:text-slate-50">
+              <p className="text-lg font-semibold text-foreground">
                 {formatTime(timeTakenSeconds)}
               </p>
-              <p className="text-xs text-slate-500 dark:text-slate-300">
+              <p className="text-xs text-muted-foreground">
                 Duration
               </p>
             </div>
 
-            <div className="rounded-lg bg-white/50 p-3 dark:border dark:border-slate-800 dark:bg-slate-900/70">
+            <div className="rounded-lg bg-background/50 p-3 border border-border">
               <Target
-                className="mx-auto mb-1 h-5 w-5 text-slate-500 dark:text-slate-200"
+                className="mx-auto mb-1 h-5 w-5 text-muted-foreground"
                 aria-hidden="true"
               />
-              <p className="text-lg font-semibold capitalize text-slate-900 dark:text-slate-50">
+              <p className="text-lg font-semibold capitalize text-foreground">
                 {mode}
               </p>
-              <p className="text-xs text-slate-500 dark:text-slate-300">Mode</p>
+              <p className="text-xs text-muted-foreground">Mode</p>
             </div>
 
-            <div className="rounded-lg bg-white/50 p-3 dark:border dark:border-slate-800 dark:bg-slate-900/70">
+            <div className="rounded-lg bg-background/50 p-3 border border-border">
               <Calendar
-                className="mx-auto mb-1 h-5 w-5 text-slate-500 dark:text-slate-200"
+                className="mx-auto mb-1 h-5 w-5 text-muted-foreground"
                 aria-hidden="true"
               />
-              <p className="text-lg font-semibold text-slate-900 dark:text-slate-50">
+              <p className="text-lg font-semibold text-foreground">
                 {formatDate(timestamp)}
               </p>
-              <p className="text-xs text-slate-500 dark:text-slate-300">Date</p>
+              <p className="text-xs text-muted-foreground">Date</p>
             </div>
           </div>
         </div>
@@ -276,8 +276,8 @@ export function ScorecardCompact({
       type="button"
       onClick={onClick}
       className={cn(
-        "flex w-full items-center gap-4 rounded-lg border p-4 text-left transition-colors",
-        "hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800/80",
+        "flex w-full items-center gap-4 rounded-lg border border-border p-4 text-left transition-colors",
+        "hover:bg-accent bg-card",
         onClick ? "cursor-pointer" : "cursor-default",
         className,
       )}
@@ -300,11 +300,11 @@ export function ScorecardCompact({
           >
             {mode === "zen" ? "Study" : "Exam"}
           </Badge>
-          <span className="text-sm text-slate-500 dark:text-slate-300">
+          <span className="text-sm text-muted-foreground">
             {formatDate(timestamp)}
           </span>
         </div>
-        <p className="mt-1 text-sm text-slate-600 dark:text-slate-200">
+        <p className="mt-1 text-sm text-foreground">
           Completed in {formatTime(timeTakenSeconds)}
         </p>
       </div>

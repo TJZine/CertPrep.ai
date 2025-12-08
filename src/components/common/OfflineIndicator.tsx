@@ -53,10 +53,10 @@ export function OfflineIndicator(): React.ReactElement | null {
   return (
     <div
       className={cn(
-        "fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-md rounded-lg p-4 shadow-lg transition-all",
+        "fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-md rounded-lg p-4 shadow-lg transition-all border glass",
         isOnline
-          ? "border border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-900/90"
-          : "border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/90",
+          ? "border-green-500/20 dark:border-green-500/30"
+          : "border-amber-500/20 dark:border-amber-500/30",
       )}
       role="status"
       aria-live="polite"
@@ -66,20 +66,14 @@ export function OfflineIndicator(): React.ReactElement | null {
           className={cn(
             "flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full",
             isOnline
-              ? "bg-green-100 dark:bg-green-800"
-              : "bg-amber-100 dark:bg-amber-800",
+              ? "bg-green-500/10 text-green-600 dark:text-green-400"
+              : "bg-amber-500/10 text-amber-600 dark:text-amber-400",
           )}
         >
           {isOnline ? (
-            <Wifi
-              className="h-4 w-4 text-green-600 dark:text-green-200"
-              aria-hidden="true"
-            />
+            <Wifi className="h-4 w-4" aria-hidden="true" />
           ) : (
-            <WifiOff
-              className="h-4 w-4 text-amber-600 dark:text-amber-200"
-              aria-hidden="true"
-            />
+            <WifiOff className="h-4 w-4" aria-hidden="true" />
           )}
         </div>
 
@@ -88,18 +82,15 @@ export function OfflineIndicator(): React.ReactElement | null {
             className={cn(
               "font-medium",
               isOnline
-                ? "text-green-800 dark:text-green-100"
-                : "text-amber-800 dark:text-amber-100",
+                ? "text-green-700 dark:text-green-400"
+                : "text-amber-700 dark:text-amber-400",
             )}
           >
             {isOnline ? "Back Online" : "You're Offline"}
           </p>
           <p
             className={cn(
-              "mt-0.5 text-sm",
-              isOnline
-                ? "text-green-700 dark:text-green-200"
-                : "text-amber-700 dark:text-amber-200",
+              "mt-0.5 text-sm text-muted-foreground",
             )}
           >
             {isOnline
@@ -112,7 +103,7 @@ export function OfflineIndicator(): React.ReactElement | null {
           <button
             type="button"
             onClick={() => setDismissed(true)}
-            className="flex-shrink-0 rounded p-1 text-amber-600 hover:bg-amber-100 dark:text-amber-300 dark:hover:bg-amber-800"
+            className="flex-shrink-0 rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
             aria-label="Dismiss notification"
           >
             <X className="h-4 w-4" />

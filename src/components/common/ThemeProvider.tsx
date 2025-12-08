@@ -2,10 +2,11 @@
 
 import * as React from "react";
 
-export type Theme = "light" | "dark";
+export type Theme = "light" | "dark" | "midnight" | "focus" | "forest";
 
 interface ThemeContextValue {
   theme: Theme;
+  setTheme: (theme: Theme) => void;
   toggleTheme: () => void;
 }
 
@@ -16,52 +17,76 @@ export function ThemeProvider({
 }: {
   children: React.ReactNode;
 }): React.ReactElement {
-  const [theme, setTheme] = React.useState<Theme>(() => {
+  const [theme, setThemeState] = React.useState<Theme>(() => {
     if (typeof window === "undefined") return "light";
     let stored: string | null = null;
     try {
       stored = window.localStorage.getItem("theme");
     } catch {
-      // Ignore storage access errors and fall back to system preference.
+      // Ignore
     }
-    if (stored === "light" || stored === "dark") return stored;
+    // Validate stored theme
+    if (
+      stored === "light" ||
+      stored === "dark" ||
+      stored === "midnight" ||
+      stored === "focus" ||
+      stored === "forest"
+    ) {
+      return stored as Theme;
+    }
     const prefersDark =
       typeof window.matchMedia === "function" &&
       window.matchMedia("(prefers-color-scheme: dark)").matches;
     return prefersDark ? "dark" : "light";
   });
 
-  // Sync the class on the root element and persist preference.
+  const setTheme = React.useCallback((newTheme: Theme) => {
+    setThemeState(newTheme);
+  }, []);
+
+  // Sync the class/attribute on the root element
   React.useEffect(() => {
     if (typeof document === "undefined") return;
     const root = document.documentElement;
-    if (theme === "dark") {
+
+    // Reset classes
+    root.classList.remove("dark");
+
+    // Set data attribute for all themes
+    root.setAttribute("data-theme", theme);
+
+    // Add 'dark' class for Tailwind dark mode utilities if the theme is dark-ish
+    if (theme === "dark" || theme === "midnight" || theme === "forest") {
       root.classList.add("dark");
-    } else {
-      root.classList.remove("dark");
     }
+
     try {
       window.localStorage.setItem("theme", theme);
     } catch {
-      // Best-effort persistence; ignore storage errors.
+      // Ignore
     }
   }, [theme]);
 
-  // Listen for system preference changes when user hasn't explicitly set a preference.
+  // Listen for system preference only if no user preference
   React.useEffect(() => {
-    if (typeof window === "undefined" || typeof window.matchMedia !== "function") return;
+    if (typeof window === "undefined") return;
+
+    // Check if user has explicit preference in storage
+    let hasExplicit = null;
+    try {
+      hasExplicit = window.localStorage.getItem("theme");
+    } catch {
+      // Ignore storage errors
+    }
+
+    if (hasExplicit) return;
+
+    if (typeof window.matchMedia !== "function") return;
 
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
     const handler = (e: MediaQueryListEvent): void => {
-      // Only update if user hasn't explicitly set a preference
-      try {
-        const hasExplicitPreference = window.localStorage.getItem("theme");
-        if (!hasExplicitPreference) {
-          setTheme(e.matches ? "dark" : "light");
-        }
-      } catch {
-        // Ignore storage access errors
-      }
+      setThemeState(e.matches ? "dark" : "light");
     };
 
     mediaQuery.addEventListener("change", handler);
@@ -69,15 +94,21 @@ export function ThemeProvider({
   }, []);
 
   const toggleTheme = React.useCallback(() => {
-    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+    setThemeState((prev): Theme => {
+      // Simple toggle cycle
+      if (prev === "light") return "dark";
+      if (prev === "dark") return "light";
+      return "light"; // Default back to light from custom themes if invoked
+    });
   }, []);
 
   const value = React.useMemo(
     () => ({
       theme,
+      setTheme,
       toggleTheme,
     }),
-    [theme, toggleTheme],
+    [theme, setTheme, toggleTheme],
   );
 
   return (

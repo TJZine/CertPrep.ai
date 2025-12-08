@@ -55,7 +55,7 @@ function ReadinessGauge({
                     fill="none"
                     stroke="currentColor"
                     strokeWidth={strokeWidth}
-                    className="text-slate-200 dark:text-slate-700"
+                    className="text-secondary"
                 />
                 {/* Progress circle */}
                 <circle
@@ -85,7 +85,7 @@ function ReadinessGauge({
                     strokeWidth={2}
                     strokeDasharray={`2 ${circumference - 2}`}
                     strokeDashoffset={circumference - (threshold / 100) * circumference}
-                    className="text-slate-400 dark:text-slate-500"
+                    className="text-muted-foreground/30"
                 />
             </svg>
             <div className="absolute flex flex-col items-center">
@@ -99,7 +99,7 @@ function ReadinessGauge({
                 >
                     {score}%
                 </span>
-                <span className="text-sm text-slate-500 dark:text-slate-400">
+                <span className="text-sm text-muted-foreground">
                     Readiness
                 </span>
             </div>
@@ -124,7 +124,7 @@ function CategoryBar({
     return (
         <div className="space-y-1">
             <div className="flex items-center justify-between text-sm">
-                <span className="truncate font-medium text-slate-700 dark:text-slate-200">
+                <span className="truncate font-medium text-foreground">
                     {category}
                 </span>
                 <span
@@ -139,7 +139,7 @@ function CategoryBar({
                 </span>
             </div>
             <div
-                className="h-2 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700"
+                className="h-2 w-full overflow-hidden rounded-full bg-secondary"
                 role="progressbar"
                 aria-valuenow={score}
                 aria-valuemin={0}
@@ -210,7 +210,7 @@ export function ExamReadinessCard({
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <p className="text-center text-slate-500 dark:text-slate-400">
+                    <p className="text-center text-muted-foreground">
                         Complete some quizzes to see your exam readiness score.
                     </p>
                 </CardContent>
@@ -242,7 +242,7 @@ export function ExamReadinessCard({
                     </div>
 
                     <div className="space-y-3">
-                        <h4 className="font-semibold text-slate-900 dark:text-slate-100">
+                        <h4 className="font-semibold text-foreground">
                             Category Breakdown
                         </h4>
                         {categories.map(([category, score]) => (
