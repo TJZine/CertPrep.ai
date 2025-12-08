@@ -83,6 +83,14 @@
     --tier-failing-foreground: 0 0% 100%;
 
     --radius: 0.5rem;
+
+    /* Font Variables Initialized */
+    --font-heading: var(--font-inter);
+    --font-sans: var(--font-inter);
+    --font-mono: monospace;
+
+    /* Default Shadow */
+    --shadow-color: 220 40% 2%;
   }
 
   .dark {
@@ -231,22 +239,31 @@
     --tier-passing-foreground: 230 25% 7%;
     --tier-failing: 350 100% 60%;
     --tier-failing-foreground: 230 25% 7%;
+
+    /* Unique: Neon Cyan Glows */
+    --shadow-color: 186 100% 50%;
   }
 
   /* FOCUS THEME (Warm Sepia / Distraction-Free) */
   [data-theme="focus"] {
-    --background: 35 30% 96%;
+    /* Unique: Serif Font for "Writer" Feel */
+    --font-sans: "Georgia", "Cambria", "Times New Roman", serif;
+    --font-heading: "Georgia", "Cambria", "Times New Roman", serif;
+
+    --background: 35 30% 94%;
+    /* Darker Cream for contrast */
     /* Warm Cream Paper */
     --foreground: 25 20% 18%;
     /* Rich Espresso */
 
-    --radius: 0.75rem;
-    /* Softer "Paper" comers */
+    --radius: 0.25rem;
+    /* Sharper/Notebook paper comers */
 
-    --card: 35 35% 93%;
+    --card: 35 30% 97%;
+    /* Slightly lighter than bg */
     --card-foreground: 25 20% 18%;
 
-    --popover: 35 35% 93%;
+    --popover: 35 30% 97%;
     --popover-foreground: 25 20% 18%;
 
     --primary: 22 78% 45%;
@@ -256,7 +273,7 @@
     --secondary: 35 25% 88%;
     --secondary-foreground: 25 20% 18%;
 
-    --muted: 35 20% 88%;
+    --muted: 35 20% 86%;
     --muted-foreground: 25 15% 50%;
 
     --accent: 30 40% 82%;
@@ -267,8 +284,8 @@
     /* Muted Terracotta Red */
     --destructive-foreground: 35 30% 96%;
 
-    --border: 35 20% 82%;
-    --input: 35 35% 90%;
+    --border: 35 20% 80%;
+    --input: 35 35% 88%;
     --ring: 22 78% 45%;
 
     --success: 145 55% 40%;
@@ -309,75 +326,81 @@
   }
 
   /* FOREST THEME (Deep Nature / Evening Woods) */
+  /* FOREST THEME (Ranger Refresh / Bone & Pine) */
   [data-theme="forest"] {
-    --background: 140 15% 8%;
-    /* Deep Pine Night */
-    --foreground: 75 30% 90%;
-    /* Soft Moss */
+    --background: 40 20% 94%;
+    /* Bone / Parchment */
+    --foreground: 140 30% 15%;
+    /* Dark Pine Text */
 
-    --card: 140 15% 12%;
-    --card-foreground: 75 30% 90%;
+    --radius: 0.5rem;
 
-    --popover: 140 15% 14%;
-    --popover-foreground: 75 30% 90%;
+    --card: 40 20% 97%;
+    /* Light Parchment */
+    --card-foreground: 140 30% 15%;
 
-    --primary: 90 60% 45%;
-    /* Bright Moss Green */
-    --primary-foreground: 140 15% 8%;
+    --popover: 40 20% 97%;
+    --popover-foreground: 140 30% 15%;
 
-    --secondary: 140 12% 18%;
-    --secondary-foreground: 75 30% 90%;
+    --primary: 150 40% 30%;
+    /* Deep Pine Green */
+    --primary-foreground: 40 20% 94%;
 
-    --muted: 140 12% 18%;
-    --muted-foreground: 140 15% 55%;
+    --secondary: 140 15% 85%;
+    /* Light Moss */
+    --secondary-foreground: 140 30% 15%;
 
-    --accent: 35 70% 55%;
-    /* Autumn Amber */
-    --accent-foreground: 140 15% 8%;
+    --muted: 140 15% 85%;
+    --muted-foreground: 140 20% 40%;
+
+    --accent: 35 50% 50%;
+    /* Leather Brown */
+    --accent-foreground: 40 20% 94%;
 
     --destructive: 0 55% 45%;
     /* Deep Berry Red */
-    --destructive-foreground: 75 30% 90%;
+    --destructive-foreground: 40 20% 94%;
 
-    --border: 140 12% 22%;
-    --input: 140 12% 18%;
-    --ring: 90 60% 45%;
+    --border: 140 15% 80%;
+    --input: 140 15% 85%;
+    --ring: 150 40% 30%;
 
-    --success: 120 50% 50%;
-    /* Leaf Green */
-    --success-foreground: 140 15% 8%;
+    --success: 120 40% 40%;
+    /* Forest Green */
+    --success-foreground: 40 20% 94%;
 
-    --warning: 40 85% 55%;
-    /* Warm Honey */
-    --warning-foreground: 140 15% 8%;
+    --warning: 35 70% 50%;
+    /* Amber */
+    --warning-foreground: 40 20% 94%;
 
-    --correct: 120 50% 50%;
-    /* Leaf Green */
-    --correct-foreground: 140 15% 8%;
+    --correct: 120 40% 40%;
+    /* Forest Green */
+    --correct-foreground: 40 20% 94%;
 
     --incorrect: 0 55% 50%;
     /* Autumn Berry */
-    --incorrect-foreground: 75 30% 90%;
+    --incorrect-foreground: 40 20% 94%;
 
-    --flagged: 40 85% 55%;
-    /* Warm Honey */
-    --flagged-foreground: 140 15% 8%;
+    --flagged: 35 70% 50%;
+    /* Amber */
+    --flagged-foreground: 40 20% 94%;
 
-    --info: 180 50% 45%;
-    /* Forest Stream Teal */
-    --info-foreground: 140 15% 8%;
+    --info: 200 40% 40%;
+    /* Deep Lake Blue */
+    --info-foreground: 40 20% 94%;
 
-    /* Performance tier colors (nature variants) */
-    --tier-excellent: 120 50% 50%;
-    --tier-excellent-foreground: 140 15% 8%;
-    --tier-great: 180 50% 45%;
-    --tier-great-foreground: 140 15% 8%;
-    --tier-good: 160 45% 50%;
-    --tier-good-foreground: 140 15% 8%;
-    --tier-passing: 40 85% 55%;
-    --tier-passing-foreground: 140 15% 8%;
+    /* Performance tier colors (ranger variants) */
+    --tier-excellent: 120 40% 40%;
+    --tier-excellent-foreground: 40 20% 94%;
+    --tier-great: 200 40% 40%;
+    --tier-great-foreground: 40 20% 94%;
+    --tier-good: 90 40% 45%;
+    /* Moss */
+    --tier-good-foreground: 40 20% 94%;
+    --tier-passing: 35 70% 50%;
+    --tier-passing-foreground: 40 20% 94%;
     --tier-failing: 0 55% 50%;
-    --tier-failing-foreground: 75 30% 90%;
+    --tier-failing-foreground: 40 20% 94%;
   }
 
   /* RETRO THEME (8-Bit / NES Style) */
@@ -388,6 +411,9 @@
 
     /* 0px Radius for Blocky Look */
     --radius: 0px;
+
+    /* Hard Shadows Token */
+    --shadow-color: 0 0% 0%;
 
     /* High Contrast Palette */
     --background: 210 20% 90%;
@@ -470,10 +496,11 @@
     --radius: 0.75rem;
     /* Softer "Wave" comers */
 
-    --card: 200 50% 12%;
+    /* Mist Blue Card Background (Glassy) */
+    --card: 200 30% 15% / 0.8;
     --card-foreground: 180 40% 95%;
 
-    --popover: 200 50% 14%;
+    --popover: 200 30% 15% / 0.9;
     --popover-foreground: 180 40% 95%;
 
     --primary: 175 70% 45%;
@@ -562,7 +589,8 @@
     /* Aurora Red */
     --destructive-foreground: 218 27% 88%;
 
-    --border: 220 16% 26%;
+    --border: 193 43% 67%;
+    /* Unique: Icy Borders (Primary color/lighter) */
     --input: 220 16% 22%;
     --ring: 193 43% 67%;
 
@@ -597,6 +625,9 @@
     --tier-passing-foreground: 220 16% 16%;
     --tier-failing: 354 42% 56%;
     --tier-failing-foreground: 218 27% 88%;
+
+    /* Unique: Frosty Shadows */
+    --shadow-color: 193 43% 67%;
   }
 
   /* HOLIDAY THEME (Festive Red & Green) */
@@ -740,22 +771,30 @@
     --tier-passing-foreground: 270 40% 8%;
     --tier-failing: 350 100% 60%;
     --tier-failing-foreground: 270 40% 8%;
+
+    /* Unique: Hot Pink Glow */
+    --shadow-color: 320 100% 60%;
   }
 
   /* BLOSSOM THEME (Pastel Pink / Soft) */
   [data-theme="blossom"] {
+    /* Unique: Nunito Font for Rounded Feel */
+    --font-heading: var(--font-nunito), sans-serif;
+    --font-sans: var(--font-nunito), sans-serif;
+
     --background: 340 100% 97%;
     /* Lavender Blush */
     --foreground: 0 0% 29%;
     /* Dark Charcoal */
 
-    --radius: 1rem;
-    /* Very round/soft comers */
+    --radius: 1.5rem;
+    /* Unique: Super-Round "Cloud" styling */
 
-    --card: 340 100% 98.5%;
+    /* Tinted Card Background + Frosted Glass */
+    --card: 340 50% 99% / 0.7;
     --card-foreground: 0 0% 29%;
 
-    --popover: 340 100% 98.5%;
+    --popover: 340 50% 99% / 0.8;
     --popover-foreground: 0 0% 29%;
 
     --primary: 351 77% 88%;
@@ -777,7 +816,8 @@
     /* Soft Red */
     --destructive-foreground: 340 100% 97%;
 
-    --border: 351 40% 75%;
+    --border: 351 40% 90%;
+    /* Very subtle border */
     /* Darker Pink for definition */
     --input: 340 30% 92%;
     --ring: 348 60% 75%;
@@ -822,10 +862,17 @@
     --tier-failing: 0 60% 65%;
     /* Soft Red */
     --tier-failing-foreground: 0 0% 29%;
+
+    /* Unique: Soft Pink Diffuse Shadows */
+    --shadow-color: 351 77% 88%;
   }
 
   /* MINT THEME (Fresh Sage / Earthy) */
   [data-theme="mint"] {
+    /* Unique: Slab Serif for Field Guide Feel */
+    --font-heading: var(--font-roboto-slab), serif;
+    --font-sans: var(--font-roboto-slab), serif;
+
     --background: 96 44% 95%;
     /* Off-White Mint */
     --foreground: 200 18% 26%;
@@ -992,9 +1039,88 @@
   [data-theme="retro"] .shadow-md,
   [data-theme="retro"] .shadow-lg,
   [data-theme="retro"] .glass {
-    box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1) !important;
+    box-shadow: 4px 4px 0px 0px currentColor !important;
     backdrop-filter: none !important;
-    border: 2px solid black !important;
+    border: 2px solid currentColor !important;
+  }
+
+  /* RETRO RADIUS OVERRIDE (Nuclear Option) */
+  [data-theme="retro"] [class*="rounded-"] {
+    border-radius: 0px !important;
+  }
+
+  /* MINT BORDER THICKNESS OVERRIDE */
+  [data-theme="mint"] * {
+    border-width: 2px;
+  }
+
+  [data-theme="mint"] .border-0 {
+    border-width: 0px;
+  }
+
+  /* BLOSSOM FROSTED OVERRIDE */
+  [data-theme="blossom"] .glass,
+  [data-theme="blossom"] .card,
+  [data-theme="blossom"] .popover {
+    backdrop-filter: blur(12px) saturate(140%) !important;
+  }
+
+  /* RETRO FOCUS OVERRIDE */
+  [data-theme="retro"] *:focus-visible {
+    outline: 2px dashed currentColor !important;
+    outline-offset: 2px !important;
+    box-shadow: none !important;
+  }
+
+  /* RETRO SCROLLBARS */
+  [data-theme="retro"] ::-webkit-scrollbar {
+    width: 16px;
+    height: 16px;
+    background: #000;
+  }
+
+  [data-theme="retro"] ::-webkit-scrollbar-thumb {
+    background: #fff;
+    border: 4px solid #000;
+    border-radius: 0px;
+  }
+
+  [data-theme="retro"] ::-webkit-scrollbar-track {
+    background: #000;
+  }
+
+  /* RETRO PIXELATION */
+  [data-theme="retro"] * {
+    image-rendering: pixelated;
+  }
+
+  /* GLOBAL SHADOWS with Variable Color Support */
+  .shadow-sm {
+    box-shadow: 0 1px 2px 0 hsl(var(--shadow-color, 220 40% 2%) / 0.05);
+  }
+
+  .shadow {
+    box-shadow: 0 1px 3px 0 hsl(var(--shadow-color, 220 40% 2%) / 0.1), 0 1px 2px -1px hsl(var(--shadow-color, 220 40% 2%) / 0.1);
+  }
+
+  .shadow-md {
+    box-shadow: 0 4px 6px -1px hsl(var(--shadow-color, 220 40% 2%) / 0.1), 0 2px 4px -2px hsl(var(--shadow-color, 220 40% 2%) / 0.1);
+  }
+
+  .shadow-lg {
+    box-shadow: 0 10px 15px -3px hsl(var(--shadow-color, 220 40% 2%) / 0.1), 0 4px 6px -4px hsl(var(--shadow-color, 220 40% 2%) / 0.1);
+  }
+
+  .shadow-xl {
+    box-shadow: 0 20px 25px -5px hsl(var(--shadow-color, 220 40% 2%) / 0.1), 0 8px 10px -6px hsl(var(--shadow-color, 220 40% 2%) / 0.1);
+  }
+
+  .shadow-2xl {
+    box-shadow: 0 25px 50px -12px hsl(var(--shadow-color, 220 40% 2%) / 0.25);
+  }
+
+  .shadow-inner {
+    box-shadow: inset 0 2px 4px 0 hsl(var(--shadow-color, 220 40% 2%) / 0.05);
   }
 
   /* MESH GRADIENT BACKGROUND */
@@ -1004,6 +1130,21 @@
       radial-gradient(at 100% 0%, hsla(var(--secondary) / 0.15) 0px, transparent 50%),
       radial-gradient(at 100% 100%, hsla(var(--accent) / 0.15) 0px, transparent 50%),
       radial-gradient(at 0% 100%, hsla(var(--primary) / 0.05) 0px, transparent 50%);
+  }
+
+  /* RETRO CRT SCANLINE */
+  [data-theme="retro"] body::after {
+    content: " ";
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+    z-index: 9999;
+    background-size: 100% 2px, 3px 100%;
+    pointer-events: none;
   }
 
   /**

@@ -112,9 +112,14 @@ const config: Config = {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+        xl: "calc(var(--radius) + 4px)",
+        "2xl": "calc(var(--radius) + 8px)",
+        "3xl": "calc(var(--radius) + 12px)",
       },
       fontFamily: {
-        sans: ["Inter", "Roboto", "system-ui", "sans-serif"],
+        sans: ["var(--font-sans)", "Inter", "Roboto", "system-ui", "sans-serif"],
+        heading: ["var(--font-heading)", "Inter", "Roboto", "system-ui", "sans-serif"],
+        mono: ["var(--font-mono)", "ui-monospace", "SFMono-Regular", "Menlo", "Monaco", "Consolas", "monospace"],
       },
       fontSize: {
         question: ["1.25rem", { lineHeight: "1.75rem", fontWeight: "600" }],

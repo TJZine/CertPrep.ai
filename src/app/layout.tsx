@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import * as React from "react";
 import { headers } from "next/headers";
-import { Inter, Press_Start_2P } from "next/font/google";
+import { Inter, Press_Start_2P, Nunito, Roboto_Slab } from "next/font/google";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { SkipLink } from "@/components/common/SkipLink";
@@ -22,6 +22,20 @@ const pressStart2P = Press_Start_2P({
   display: "swap",
   variable: "--font-press-start",
   fallback: ["monospace"],
+});
+
+const nunito = Nunito({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-nunito",
+  fallback: ["system-ui", "sans-serif"],
+});
+
+const robotoSlab = Roboto_Slab({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-roboto-slab",
+  fallback: ["serif"],
 });
 
 export const metadata: Metadata = {
@@ -89,7 +103,7 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${pressStart2P.variable}`}
+      className={`${inter.variable} ${pressStart2P.variable} ${nunito.variable} ${robotoSlab.variable}`}
       suppressHydrationWarning
     >
       <head>
