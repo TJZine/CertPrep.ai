@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Moon, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useTheme } from "./ThemeProvider";
+import { useTheme, THEME_CONFIG } from "./ThemeProvider";
 
 interface ThemeToggleProps {
   className?: string;
@@ -12,8 +12,8 @@ interface ThemeToggleProps {
 export function ThemeToggle({
   className,
 }: ThemeToggleProps): React.ReactElement {
-  const { theme, toggleTheme } = useTheme();
-  const isDark = theme === "dark";
+  const { resolvedTheme, toggleTheme } = useTheme();
+  const isDark = THEME_CONFIG[resolvedTheme]?.isDark;
 
   return (
     <button

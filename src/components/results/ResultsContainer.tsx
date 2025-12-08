@@ -4,6 +4,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
+  CloudOff,
   Home,
   Printer,
   RotateCcw,
@@ -29,6 +30,7 @@ import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 import type { Quiz } from "@/types/quiz";
 import type { Result } from "@/types/result";
 import { Badge } from "@/components/ui/Badge";
+import { useSync } from "@/hooks/useSync";
 
 interface ResultsContainerProps {
   result: Result;
@@ -50,6 +52,27 @@ export function ResultsContainer({
   const effectiveUserId = useEffectiveUserId(user?.id);
   const isQuizRemoved =
     quiz.deleted_at !== null && quiz.deleted_at !== undefined;
+
+  const { sync } = useSync();
+  const [isSyncing, setIsSyncing] = React.useState(false);
+
+  const handleManualSync = async (): Promise<void> => {
+    if (isSyncing) return;
+    setIsSyncing(true);
+    try {
+      const result = await sync();
+      if (result.success) {
+        addToast("success", "Result synced successfully!");
+        router.refresh(); // Refresh to update derived UI state if needed
+      } else {
+        addToast("error", "Sync failed. Please check your connection.");
+      }
+    } catch {
+      addToast("error", "Sync failed. Please try again.");
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   const [showDeleteModal, setShowDeleteModal] = React.useState(false);
   const [isDeleting, setIsDeleting] = React.useState(false);
@@ -298,9 +321,29 @@ export function ResultsContainer({
                     {quiz.title}
                   </h1>
                   <div className="flex items-center gap-2">
+
                     <p className="text-xs text-muted-foreground">
                       Results
                     </p>
+                    {result.synced === 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleManualSync}
+                        disabled={isSyncing}
+                        className="h-auto p-0 hover:bg-transparent"
+                        title="Click to retry sync"
+                      >
+                        <Badge variant="warning" className="gap-1 text-xs cursor-pointer hover:bg-warning/80">
+                          {isSyncing ? (
+                            <LoadingSpinner size="sm" className="h-3 w-3" />
+                          ) : (
+                            <CloudOff className="h-3 w-3" />
+                          )}
+                          {isSyncing ? "Syncing..." : "Unsynced"}
+                        </Badge>
+                      </Button>
+                    )}
                     {isQuizRemoved && (
                       <Badge variant="secondary" className="text-xs">
                         Removed quiz

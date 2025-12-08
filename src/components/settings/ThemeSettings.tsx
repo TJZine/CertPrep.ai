@@ -18,6 +18,7 @@ import {
     Zap,
     Flower2,
     Leaf,
+    Monitor,
 } from "lucide-react";
 
 interface ThemeOption {
@@ -33,6 +34,13 @@ interface ThemeOption {
 }
 
 const themes: ThemeOption[] = [
+    {
+        id: "system",
+        name: "System",
+        description: "Follows your system's color scheme",
+        icon: Monitor,
+        preview: { bg: "bg-slate-200", accent: "bg-slate-600", text: "text-slate-900" },
+    },
     {
         id: "light",
         name: "Light",

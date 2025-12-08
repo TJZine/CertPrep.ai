@@ -232,6 +232,9 @@ export function TimeUpModal({
           Your exam time has expired. Your answers have been automatically
           submitted.
         </p>
+        <p className="mt-2 text-sm font-medium text-success">
+          Your result has been saved locally.
+        </p>
         <p className="mt-4 text-lg font-semibold text-foreground">
           {answeredCount} of {totalQuestions} questions answered
         </p>
