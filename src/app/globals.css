@@ -168,6 +168,10 @@
 
   /* MIDNIGHT THEME (Cyber/Tech Neon) */
   [data-theme="midnight"] {
+    /* Tech/Space Font */
+    --font-heading: var(--font-space), sans-serif;
+    --font-sans: var(--font-space), sans-serif;
+
     --background: 230 25% 7%;
     /* Deep Space Black */
     --foreground: 200 60% 95%;
@@ -242,6 +246,29 @@
 
     /* Unique: Neon Cyan Glows */
     --shadow-color: 186 100% 50%;
+  }
+
+  /* MIDNIGHT THEME - STARFIELD */
+  [data-theme="midnight"] body {
+    background-color: hsl(230, 25%, 7%);
+    background-image:
+      radial-gradient(2px 2px at 20px 30px, #eee, rgba(0, 0, 0, 0)),
+      radial-gradient(2px 2px at 40px 70px, #fff, rgba(0, 0, 0, 0)),
+      radial-gradient(2px 2px at 50px 160px, #ddd, rgba(0, 0, 0, 0)),
+      radial-gradient(2px 2px at 90px 40px, #fff, rgba(0, 0, 0, 0)),
+      radial-gradient(2px 2px at 130px 80px, #fff, rgba(0, 0, 0, 0));
+    background-size: 200px 200px;
+    animation: twinkle 10s infinite linear;
+  }
+
+  @keyframes twinkle {
+    0% {
+      background-position: 0 0;
+    }
+
+    100% {
+      background-position: -200px -200px;
+    }
   }
 
   /* FOCUS THEME (Warm Sepia / Distraction-Free) */
@@ -480,6 +507,50 @@
     --tier-passing-foreground: 200 50% 8%;
     --tier-failing: 0 70% 55%;
     --tier-failing-foreground: 180 40% 95%;
+
+    /* Unique: Hot Pink Glow */
+    --shadow-color: 175 70% 45%;
+  }
+
+  /* OCEAN THEME - DEEP SEA WAVES */
+  [data-theme="ocean"] body::before {
+    content: "";
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 200%;
+    height: 15%;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 88.7'%3E%3Cpath d='M800 56.9c-155.5 0-204.9-50-405.5-49.9-200 0-250 49.9-394.5 49.9v31.8h800v-.2-31.6z' fill='%23004a5e' opacity='0.3'/%3E%3C/svg%3E");
+    background-position: 0 bottom;
+    background-repeat: repeat-x;
+    animation: wave-slide 20s linear infinite;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  [data-theme="ocean"] body::after {
+    content: "";
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 200%;
+    height: 10%;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 88.7'%3E%3Cpath d='M800 56.9c-155.5 0-204.9-50-405.5-49.9-200 0-250 49.9-394.5 49.9v31.8h800v-.2-31.6z' fill='%230ea5e9' opacity='0.2'/%3E%3C/svg%3E");
+    background-position: 0 bottom;
+    background-repeat: repeat-x;
+    animation: wave-slide 15s linear infinite reverse;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  @keyframes wave-slide {
+    0% {
+      transform: translateX(0);
+    }
+
+    100% {
+      transform: translateX(-50%);
+    }
   }
 
   /* NORD THEME (Arctic Scandinavian) */
@@ -597,7 +668,7 @@
 
     --border: 120 100% 25%;
     /* Dark Green definition */
-    --input: 0 0% 20%;
+    --input: 120 100% 20%;
     --ring: 120 100% 50%;
 
     --success: 120 100% 50%;
@@ -638,12 +709,12 @@
   /* HOLIDAY THEME (The Festive Hearth / Cozy Cottage) */
   [data-theme="holiday"] {
     /* Typography: Storybook Serif */
-    --font-heading: Georgia, Cambria, "Times New Roman", Times, serif;
-    --font-sans: Georgia, Cambria, "Times New Roman", Times, serif;
+    --font-heading: var(--font-playfair), Georgia, serif;
+    --font-sans: var(--font-playfair), Georgia, serif;
 
     --background: 35 50% 98%;
     /* Warm Vanilla / Eggnog */
-    --foreground: 140 50% 20%;
+    --foreground: 140 60% 20%;
     /* Deep Pine Green Text */
 
     --card: 35 30% 96%;
@@ -657,24 +728,25 @@
     /* Ruby Red */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 45 90% 60%;
-    /* Warm Gold */
-    --secondary-foreground: 140 50% 20%;
+    --secondary: 140 60% 30%;
+    /* Pine Green Secondary */
+    --secondary-foreground: 35 50% 98%;
 
     --muted: 35 20% 92%;
     --muted-foreground: 140 40% 40%;
 
-    --accent: 45 90% 60%;
-    /* Gold Accent */
-    --accent-foreground: 140 50% 20%;
+    --accent: 45 90% 50%;
+    /* Deep Gold Accent */
+    --accent-foreground: 140 60% 20%;
 
     --destructive: 350 80% 55%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 45 90% 60%;
-    /* Golden Borders */
+    --border: 350 80% 55%;
+    /* Santa Red Borders for structure */
     --input: 35 20% 92%;
-    --ring: 45 90% 60%;
+    --ring: 140 60% 30%;
+    /* Pine Ring */
 
     --radius: 1rem;
     /* Soft/Friendly Roundness */
@@ -708,7 +780,43 @@
     --tier-failing: 350 80% 55%;
 
     /* Unique: Golden Candlelight Glow */
+    /* Unique: Golden Candlelight Glow */
     --shadow-color: 45 90% 60%;
+  }
+
+  /* HOLIDAY THEME - SNOWFALL ANIMATION & BORDER FIXES */
+  [data-theme="holiday"] body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 50;
+    background-image:
+      radial-gradient(4px 4px at 10% 10%, #fff, transparent),
+      radial-gradient(4px 4px at 20% 30%, #fff, transparent),
+      radial-gradient(4px 4px at 30% 10%, #fff, transparent),
+      radial-gradient(4px 4px at 40% 40%, #fff, transparent),
+      radial-gradient(4px 4px at 50% 20%, #fff, transparent),
+      radial-gradient(4px 4px at 60% 30%, #fff, transparent),
+      radial-gradient(4px 4px at 70% 10%, #fff, transparent),
+      radial-gradient(4px 4px at 80% 40%, #fff, transparent),
+      radial-gradient(4px 4px at 90% 20%, #fff, transparent);
+    background-size: 500px 500px;
+    opacity: 0.6;
+    animation: snowfall 20s linear infinite;
+  }
+
+  @keyframes snowfall {
+    0% {
+      transform: translateY(-500px);
+    }
+
+    100% {
+      transform: translateY(500px);
+    }
   }
 
   /* VAPOR THEME (Synthwave/Retrowave) */
@@ -956,6 +1064,17 @@
     /* Muted Rose */
     --tier-failing-foreground: 96 44% 95%;
   }
+
+  /* MINT THEME - GRAPH PAPER & GRAIN */
+  [data-theme="mint"] body {
+    /* Graph Paper Grid */
+    background-color: hsl(96, 44%, 95%);
+    background-image:
+      linear-gradient(rgba(55, 71, 79, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(55, 71, 79, 0.05) 1px, transparent 1px);
+    background-size: 20px 20px;
+    /* We could add 'grain' via a pseudo-element if needed, but this grid is clean */
+  }
 }
 
 @layer base {
@@ -1079,68 +1198,73 @@
 
   /* BLOSSOM "SAKURA" ENHANCEMENTS */
   /* 1. Falling Petals Overlay */
+  /* BLOSSOM "SAKURA" ENHANCEMENTS - V2 (PHYSICALITY) */
+  /* 1. Tumbling Petals Overlay */
   [data-theme="blossom"] body::before {
     content: "";
     position: fixed;
-    top: 0;
+    top: -10%;
     left: 0;
     width: 100%;
-    height: 100%;
+    height: 120%;
     pointer-events: none;
     z-index: 50;
+    /* Create petals using small, shaped gradients or SVGs would be better, 
+       but for CSS-only we stick to a cleaner gradient scatter pattern that feels more organic */
     background-image:
-      radial-gradient(circle, #ffb7b2 2px, transparent 2.5px),
-      radial-gradient(circle, #ffdac1 2px, transparent 2.5px),
-      radial-gradient(circle, #ff9aa2 3px, transparent 3.5px);
-    background-size: 250px 250px, 350px 350px, 150px 150px;
-    background-position: 0 0, 50px 50px, 100px 100px;
-    animation: falling-sakura 15s linear infinite;
-    opacity: 0.6;
+      radial-gradient(circle at 10% 10%, #ffb7b2 0%, transparent 20%),
+      radial-gradient(circle at 20% 40%, #ffdac1 0%, transparent 20%),
+      radial-gradient(circle at 80% 30%, #ff9aa2 0%, transparent 20%);
+    /* We will use a dedicated element for shape-based petals in a future iteration if this fails.
+       For now, we use a much subtler, 3D rotating animation on pseudo-elements. */
+    /* ACTUALLY: Let's use `box-shadow` on a single pixel to replicate "particles" if we want dots, 
+       BUT user specifically requested proper shapes. 
+       
+       Solution: Gradient-based particles are limited. 
+       Let's use a CLIP-PATH technique on ::before and ::after to create two layers of "confetti" 
+       that look like petals. 
+    */
+    background: transparent;
+    /* We'll use a complex mask or just simplified falling "sheets" of petals? 
+       Actually, standard "confetti" CSS uses a background-image of a small SVG. */
+    background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M10 0C5 0 0 5 0 10C0 15 5 20 10 20C15 20 20 15 20 10C20 5 15 0 10 0Z' fill='%23ffb7b2' fill-opacity='0.6'/%3E%3C/svg%3E");
+    background-size: 30px 30px;
+    /* Spaced out pattern */
+    background-position: 0 0;
+    animation: falling-sakura-3d 12s linear infinite;
+    opacity: 0;
   }
 
-  /* 2. Pill Buttons (Soft Organic Shapes) */
-  [data-theme="blossom"] .btn,
-  [data-theme="blossom"] button:not(.option-base) {
-    border-radius: 9999px !important;
+  /* Second layer for depth */
+  [data-theme="blossom"] body::after {
+    content: "";
+    position: fixed;
+    top: -20%;
+    left: 10%;
+    width: 100%;
+    height: 120%;
+    pointer-events: none;
+    z-index: 49;
+    background-image: url("data:image/svg+xml,%3Csvg width='15' height='15' viewBox='0 0 15 15' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7.5 0C3.5 0 0 3.5 0 7.5C0 11.5 3.5 15 7.5 15C11.5 15 15 11.5 15 7.5C15 3.5 11.5 0 7.5 0Z' fill='%23E599A8' fill-opacity='0.4'/%3E%3C/svg%3E");
+    background-size: 45px 45px;
+    animation: falling-sakura-3d 18s linear infinite reverse;
+    /* Reverse rotation for variety */
+    opacity: 0;
   }
 
-  /* 3. Floating Glass Cards */
-  [data-theme="blossom"] .card {
-    background-color: hsl(var(--card) / 0.6) !important;
-    backdrop-filter: blur(8px) !important;
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    box-shadow: 0 4px 20px -2px rgba(255, 183, 178, 0.2) !important;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-  }
-
-  [data-theme="blossom"] .card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 10px 25px -5px rgba(255, 183, 178, 0.4) !important;
-  }
-
-  /* SAKURA ANIMATION KEYFRAMES */
-  @keyframes falling-sakura {
+  @keyframes falling-sakura-3d {
     0% {
       opacity: 0;
-      transform: translate(0, -10px) rotateZ(0deg);
+      transform: translateY(-10vh) translateX(-5vw) rotate3d(1, 1, 1, 0deg);
     }
 
-    20% {
-      opacity: 1;
-    }
-
-    25% {
-      transform: translate(5px, 25vh) rotateZ(45deg);
-    }
-
-    75% {
+    10% {
       opacity: 0.8;
-      transform: translate(-5px, 75vh) rotateZ(-45deg);
     }
 
     100% {
       opacity: 0;
-      transform: translate(0, 100vh) rotateZ(0deg);
+      transform: translateY(100vh) translateX(5vw) rotate3d(1, 1, 1, 720deg);
     }
   }
 
@@ -1150,204 +1274,203 @@
   [data-theme="holiday"] .border-b,
   [data-theme="holiday"] .border-l,
   [data-theme="holiday"] .border-r {
-    border-width: 2px !important;
-  }
+    /* Using a fixed color here to ensure the "Gold" override works even on input borders if needed, 
+       but primarily we rely on the --border variable. 
+       Let's remove the forceful width override that might be breaking layouts. */
+    border-color: hsl(var(--border)) !important;
+    /* Only force width if absolutely necessary for the 'style', 
+       but user reported "strange borders on some boxes". 
+       Let's REDUCE the aggressiveness. */
 
-  /* HOLIDAY CANDY CANE SCROLLBAR */
-  [data-theme="holiday"] ::-webkit-scrollbar {
-    width: 14px;
-    background: transparent;
-  }
+    [data-theme="holiday"] ::-webkit-scrollbar-thumb {
+      background: repeating-linear-gradient(45deg,
+          #d32f2f,
+          #d32f2f 10px,
+          #ffffff 10px,
+          #ffffff 20px);
+      border: 3px solid transparent;
+      background-clip: content-box;
+      border-radius: 1rem;
+      box-shadow: 0 0 0 1px rgba(211, 47, 47, 0.5);
+    }
 
-  [data-theme="holiday"] ::-webkit-scrollbar-thumb {
-    background: repeating-linear-gradient(45deg,
-        #d32f2f,
-        #d32f2f 10px,
-        #ffffff 10px,
-        #ffffff 20px);
-    border: 3px solid transparent;
-    background-clip: content-box;
-    border-radius: 1rem;
-    box-shadow: 0 0 0 1px rgba(211, 47, 47, 0.5);
-  }
+    [data-theme="holiday"] ::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.5);
+    }
 
-  [data-theme="holiday"] ::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.5);
-  }
+    [data-theme="retro-dark"] .shadow-sm,
+    [data-theme="retro-dark"] .shadow-md,
+    [data-theme="retro-dark"] .shadow-lg,
+    [data-theme="retro-dark"] .glass {
+      box-shadow: none !important;
+      background: var(--card);
+    }
 
-  [data-theme="retro-dark"] .shadow-sm,
-  [data-theme="retro-dark"] .shadow-md,
-  [data-theme="retro-dark"] .shadow-lg,
-  [data-theme="retro-dark"] .glass {
-    box-shadow: none !important;
-    background: var(--card);
-  }
+    /* Force sharp comers on everything in Retro/Retro-Dark */
+    [data-theme="retro"] [class*="rounded-"],
+    [data-theme="retro-dark"] [class*="rounded-"] {
+      border-radius: 0px !important;
+    }
 
-  /* Force sharp comers on everything in Retro/Retro-Dark */
-  [data-theme="retro"] [class*="rounded-"],
-  [data-theme="retro-dark"] [class*="rounded-"] {
-    border-radius: 0px !important;
-  }
+    /* -------------------------------------------------------------------------- */
+    /* TYPOGRAPHY & TEXTURE OVERRIDES */
+    /* -------------------------------------------------------------------------- */
 
-  /* -------------------------------------------------------------------------- */
-  /* TYPOGRAPHY & TEXTURE OVERRIDES */
-  /* -------------------------------------------------------------------------- */
+    /* RETRO FONT SCALE CORRECTIONS */
+    [data-theme="retro"],
+    [data-theme="retro-dark"] {
+      /* Pixel fonts need to be slightly larger to be readable */
+      font-size: 14px;
+    }
 
-  /* RETRO FONT SCALE CORRECTIONS */
-  [data-theme="retro"],
-  [data-theme="retro-dark"] {
-    /* Pixel fonts need to be slightly larger to be readable */
-    font-size: 14px;
-  }
+    /* Improve Focus Visibility for A11y in High Contrast Themes */
+    [data-theme="retro"] *:focus-visible,
+    [data-theme="retro-dark"] *:focus-visible,
+    [data-theme="midnight"] *:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
 
-  /* Improve Focus Visibility for A11y in High Contrast Themes */
-  [data-theme="retro"] *:focus-visible,
-  [data-theme="retro-dark"] *:focus-visible,
-  [data-theme="midnight"] *:focus-visible {
-    outline: 2px solid var(--primary);
-    outline-offset: 2px;
-  }
+    /* CUSTOM SCROLLBARS (For themes that need it) */
+    /* Retro / Retro-Dark / Midnight - Blocky or Neon Scrollbars */
+    [data-theme="retro"] ::-webkit-scrollbar,
+    [data-theme="retro-dark"] ::-webkit-scrollbar,
+    [data-theme="midnight"] ::-webkit-scrollbar {
+      width: 12px;
+      height: 12px;
+    }
 
-  /* CUSTOM SCROLLBARS (For themes that need it) */
-  /* Retro / Retro-Dark / Midnight - Blocky or Neon Scrollbars */
-  [data-theme="retro"] ::-webkit-scrollbar,
-  [data-theme="retro-dark"] ::-webkit-scrollbar,
-  [data-theme="midnight"] ::-webkit-scrollbar {
-    width: 12px;
-    height: 12px;
-  }
+    [data-theme="retro"] ::-webkit-scrollbar-thumb,
+    [data-theme="retro-dark"] ::-webkit-scrollbar-thumb,
+    [data-theme="midnight"] ::-webkit-scrollbar-thumb {
+      background: var(--primary);
+      border: 2px solid var(--background);
+    }
 
-  [data-theme="retro"] ::-webkit-scrollbar-thumb,
-  [data-theme="retro-dark"] ::-webkit-scrollbar-thumb,
-  [data-theme="midnight"] ::-webkit-scrollbar-thumb {
-    background: var(--primary);
-    border: 2px solid var(--background);
-  }
+    [data-theme="retro"] ::-webkit-scrollbar-track,
+    [data-theme="retro-dark"] ::-webkit-scrollbar-track,
+    [data-theme="midnight"] ::-webkit-scrollbar-track {
+      background: var(--secondary);
+    }
 
-  [data-theme="retro"] ::-webkit-scrollbar-track,
-  [data-theme="retro-dark"] ::-webkit-scrollbar-track,
-  [data-theme="midnight"] ::-webkit-scrollbar-track {
-    background: var(--secondary);
-  }
+    /* GLOBAL RESET for Specific Themes */
+    [data-theme="retro"] *,
+    [data-theme="retro-dark"] * {
+      /* Ensure clean rendering for pixel fonts */
+      -webkit-font-smoothing: none;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeSpeed;
+    }
 
-  /* GLOBAL RESET for Specific Themes */
-  [data-theme="retro"] *,
-  [data-theme="retro-dark"] * {
-    /* Ensure clean rendering for pixel fonts */
-    -webkit-font-smoothing: none;
-    -moz-osx-font-smoothing: grayscale;
-    text-rendering: optimizeSpeed;
-  }
+    /* BLOSSOM FROSTED OVERRIDE */
+    [data-theme="blossom"] .glass,
+    [data-theme="blossom"] .card,
+    [data-theme="blossom"] .popover {
+      backdrop-filter: blur(12px) saturate(140%) !important;
+    }
 
-  /* BLOSSOM FROSTED OVERRIDE */
-  [data-theme="blossom"] .glass,
-  [data-theme="blossom"] .card,
-  [data-theme="blossom"] .popover {
-    backdrop-filter: blur(12px) saturate(140%) !important;
-  }
+    /* RETRO PIXELATION */
+    [data-theme="retro"] *,
+    [data-theme="retro-dark"] * {
+      image-rendering: pixelated;
+    }
 
-  /* RETRO PIXELATION */
-  [data-theme="retro"] *,
-  [data-theme="retro-dark"] * {
-    image-rendering: pixelated;
-  }
+    /* GLOBAL SHADOWS with Variable Color Support */
+    .shadow-sm {
+      box-shadow: 0 1px 2px 0 hsl(var(--shadow-color, 220 40% 2%) / 0.05);
+    }
 
-  /* GLOBAL SHADOWS with Variable Color Support */
-  .shadow-sm {
-    box-shadow: 0 1px 2px 0 hsl(var(--shadow-color, 220 40% 2%) / 0.05);
-  }
+    .shadow {
+      box-shadow: 0 1px 3px 0 hsl(var(--shadow-color, 220 40% 2%) / 0.1), 0 1px 2px -1px hsl(var(--shadow-color, 220 40% 2%) / 0.1);
+    }
 
-  .shadow {
-    box-shadow: 0 1px 3px 0 hsl(var(--shadow-color, 220 40% 2%) / 0.1), 0 1px 2px -1px hsl(var(--shadow-color, 220 40% 2%) / 0.1);
-  }
+    .shadow-md {
+      box-shadow: 0 4px 6px -1px hsl(var(--shadow-color, 220 40% 2%) / 0.1), 0 2px 4px -2px hsl(var(--shadow-color, 220 40% 2%) / 0.1);
+    }
 
-  .shadow-md {
-    box-shadow: 0 4px 6px -1px hsl(var(--shadow-color, 220 40% 2%) / 0.1), 0 2px 4px -2px hsl(var(--shadow-color, 220 40% 2%) / 0.1);
-  }
+    .shadow-lg {
+      box-shadow: 0 10px 15px -3px hsl(var(--shadow-color, 220 40% 2%) / 0.1), 0 4px 6px -4px hsl(var(--shadow-color, 220 40% 2%) / 0.1);
+    }
 
-  .shadow-lg {
-    box-shadow: 0 10px 15px -3px hsl(var(--shadow-color, 220 40% 2%) / 0.1), 0 4px 6px -4px hsl(var(--shadow-color, 220 40% 2%) / 0.1);
-  }
+    .shadow-xl {
+      box-shadow: 0 20px 25px -5px hsl(var(--shadow-color, 220 40% 2%) / 0.1), 0 8px 10px -6px hsl(var(--shadow-color, 220 40% 2%) / 0.1);
+    }
 
-  .shadow-xl {
-    box-shadow: 0 20px 25px -5px hsl(var(--shadow-color, 220 40% 2%) / 0.1), 0 8px 10px -6px hsl(var(--shadow-color, 220 40% 2%) / 0.1);
-  }
+    .shadow-2xl {
+      box-shadow: 0 25px 50px -12px hsl(var(--shadow-color, 220 40% 2%) / 0.25);
+    }
 
-  .shadow-2xl {
-    box-shadow: 0 25px 50px -12px hsl(var(--shadow-color, 220 40% 2%) / 0.25);
-  }
+    .shadow-inner {
+      box-shadow: inset 0 2px 4px 0 hsl(var(--shadow-color, 220 40% 2%) / 0.05);
+    }
 
-  .shadow-inner {
-    box-shadow: inset 0 2px 4px 0 hsl(var(--shadow-color, 220 40% 2%) / 0.05);
-  }
+    /* MESH GRADIENT BACKGROUND */
+    .bg-mesh {
+      background-image:
+        radial-gradient(at 0% 0%, hsla(var(--primary) / 0.15) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, hsla(var(--secondary) / 0.15) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, hsla(var(--accent) / 0.15) 0px, transparent 50%),
+        radial-gradient(at 0% 100%, hsla(var(--primary) / 0.05) 0px, transparent 50%);
+    }
 
-  /* MESH GRADIENT BACKGROUND */
-  .bg-mesh {
-    background-image:
-      radial-gradient(at 0% 0%, hsla(var(--primary) / 0.15) 0px, transparent 50%),
-      radial-gradient(at 100% 0%, hsla(var(--secondary) / 0.15) 0px, transparent 50%),
-      radial-gradient(at 100% 100%, hsla(var(--accent) / 0.15) 0px, transparent 50%),
-      radial-gradient(at 0% 100%, hsla(var(--primary) / 0.05) 0px, transparent 50%);
-  }
+    /* RETRO CRT SCANLINE */
+    [data-theme="retro"] body::after,
+    [data-theme="forest"] body::after {
+      content: " ";
+      display: block;
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      right: 0;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+      z-index: 9999;
+      background-size: 100% 2px, 3px 100%;
+      pointer-events: none;
+    }
 
-  /* RETRO CRT SCANLINE */
-  [data-theme="retro"] body::after,
-  [data-theme="forest"] body::after {
-    content: " ";
-    display: block;
-    position: fixed;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    right: 0;
-    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
-    z-index: 9999;
-    background-size: 100% 2px, 3px 100%;
-    pointer-events: none;
-  }
-
-  /**
+    /**
    * Legend color dots for charts (AnalyticsOverview)
    * Uses tier CSS variables for theme consistency
    */
-  .legend-dot-excellent {
-    background-color: hsl(var(--tier-excellent));
+    .legend-dot-excellent {
+      background-color: hsl(var(--tier-excellent));
+    }
+
+    .legend-dot-great {
+      background-color: hsl(var(--tier-great));
+    }
+
+    .legend-dot-good {
+      background-color: hsl(var(--tier-good));
+    }
+
+    .legend-dot-passing {
+      background-color: hsl(var(--tier-passing));
+    }
+
+    .legend-dot-failing {
+      background-color: hsl(var(--tier-failing));
+    }
   }
 
-  .legend-dot-great {
-    background-color: hsl(var(--tier-great));
-  }
+  @media print {
+    body {
+      background: white;
+      color: #0f172a;
+    }
 
-  .legend-dot-good {
-    background-color: hsl(var(--tier-good));
-  }
+    .no-print {
+      display: none !important;
+    }
 
-  .legend-dot-passing {
-    background-color: hsl(var(--tier-passing));
-  }
+    .print-break {
+      page-break-before: always;
+    }
 
-  .legend-dot-failing {
-    background-color: hsl(var(--tier-failing));
+    .card,
+    .card-hover {
+      box-shadow: none !important;
+      border-color: #cbd5e1 !important;
+    }
   }
-}
-
-@media print {
-  body {
-    background: white;
-    color: #0f172a;
-  }
-
-  .no-print {
-    display: none !important;
-  }
-
-  .print-break {
-    page-break-before: always;
-  }
-
-  .card,
-  .card-hover {
-    box-shadow: none !important;
-    border-color: #cbd5e1 !important;
-  }
-}

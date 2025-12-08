@@ -1,11 +1,12 @@
 import type { Metadata, Viewport } from "next";
 import * as React from "react";
 import { headers } from "next/headers";
-import { Inter, Press_Start_2P, Nunito, Roboto_Slab } from "next/font/google";
+import { Inter, Press_Start_2P, Nunito, Roboto_Slab, Space_Grotesk, Playfair_Display } from "next/font/google";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { SkipLink } from "@/components/common/SkipLink";
 import { AppProviders } from "@/components/providers/AppProviders";
+import { PageTransition } from "@/components/layout/PageTransition";
 import { APP_NAME } from "@/lib/constants";
 import "./globals.css";
 
@@ -35,6 +36,20 @@ const robotoSlab = Roboto_Slab({
   subsets: ["latin"],
   display: "swap",
   variable: "--font-roboto-slab",
+  fallback: ["serif"],
+});
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-space",
+  fallback: ["sans-serif"],
+});
+
+const playfairDisplay = Playfair_Display({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-playfair",
   fallback: ["serif"],
 });
 
@@ -103,7 +118,7 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${pressStart2P.variable} ${nunito.variable} ${robotoSlab.variable}`}
+      className={`${inter.variable} ${pressStart2P.variable} ${nunito.variable} ${robotoSlab.variable} ${spaceGrotesk.variable} ${playfairDisplay.variable}`}
       suppressHydrationWarning
     >
       <head>
@@ -125,8 +140,8 @@ export default async function RootLayout({
         <SkipLink />
         <AppProviders>
           <Header />
-          <div id="main-content" className="flex-1" tabIndex={-1}>
-            {children}
+          <div id="main-content" className="flex-1 flex flex-col" tabIndex={-1}>
+            <PageTransition>{children}</PageTransition>
           </div>
           <Footer />
         </AppProviders>
