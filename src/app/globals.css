@@ -671,7 +671,8 @@
     --destructive: 0 100% 50%;
     --destructive-foreground: 0 0% 5%;
 
-    --border: 120 100% 25%; /* Dark Green definition */
+    --border: 120 100% 25%;
+    /* Dark Green definition */
     --input: 0 0% 20%;
     --ring: 120 100% 50%;
 
@@ -706,79 +707,84 @@
     --tier-failing-foreground: 0 0% 5%;
 
     /* Unique: Retro Dark Shadows (Green Tinted or Hard Black) */
-    --shadow-color: 0 0% 0%; /* Hard black shadow */
+    --shadow-color: 0 0% 0%;
+    /* Hard black shadow */
   }
 
-  /* HOLIDAY THEME (Festive Red & Green) */
+  /* HOLIDAY THEME (The Festive Hearth / Cozy Cottage) */
   [data-theme="holiday"] {
-    --background: 0 0% 98%;
-    /* Snow White */
-    --foreground: 150 30% 15%;
-    /* Pine Green */
+    /* Typography: Storybook Serif */
+    --font-heading: Georgia, Cambria, "Times New Roman", Times, serif;
+    --font-sans: Georgia, Cambria, "Times New Roman", Times, serif;
 
-    --radius: 0.75rem;
-    /* Friendly "Festive" comers */
+    --background: 35 50% 98%;
+    /* Warm Vanilla / Eggnog */
+    --foreground: 140 50% 20%;
+    /* Deep Pine Green Text */
 
-    --card: 0 0% 100%;
-    --card-foreground: 150 30% 15%;
+    --card: 35 30% 96%;
+    /* Parchment */
+    --card-foreground: 140 50% 20%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 150 30% 15%;
+    --popover: 35 30% 96%;
+    --popover-foreground: 140 50% 20%;
 
-    --primary: 0 75% 50%;
-    /* Christmas Red */
+    --primary: 350 80% 55%;
+    /* Ruby Red */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 150 40% 92%;
-    /* Light Pine */
-    --secondary-foreground: 150 30% 15%;
+    --secondary: 45 90% 60%;
+    /* Warm Gold */
+    --secondary-foreground: 140 50% 20%;
 
-    --muted: 150 30% 92%;
-    --muted-foreground: 150 20% 40%;
+    --muted: 35 20% 92%;
+    --muted-foreground: 140 40% 40%;
 
-    --accent: 45 100% 50%;
-    /* Gold - distinct from Red/Green */
-    --accent-foreground: 0 0% 100%;
+    --accent: 45 90% 60%;
+    /* Gold Accent */
+    --accent-foreground: 140 50% 20%;
 
-    --destructive: 0 75% 50%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 350 80% 55%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 150 20% 85%;
-    --input: 150 40% 95%;
-    --ring: 0 75% 50%;
+    --border: 45 90% 60%;
+    /* Golden Borders */
+    --input: 35 20% 92%;
+    --ring: 45 90% 60%;
 
-    --success: 150 60% 35%;
-    /* Evergreen */
-    --success-foreground: 0 0% 100%;
+    --radius: 1rem;
+    /* Soft/Friendly Roundness */
 
-    --warning: 45 100% 50%;
-    /* Gold Star */
-    --warning-foreground: 150 30% 15%;
+    --success: 140 60% 40%;
+    /* Holly Green */
+    --success-foreground: 35 50% 98%;
 
-    --correct: 150 60% 35%;
-    --correct-foreground: 0 0% 100%;
+    --warning: 45 90% 50%;
+    /* Gold Warning */
+    --warning-foreground: 140 50% 20%;
 
-    --incorrect: 0 75% 50%;
-    --incorrect-foreground: 0 0% 100%;
+    --correct: 140 60% 40%;
+    --correct-foreground: 35 50% 98%;
 
-    --flagged: 45 100% 50%;
-    --flagged-foreground: 150 30% 15%;
+    --incorrect: 350 80% 55%;
+    --incorrect-foreground: 35 50% 98%;
 
-    --info: 200 70% 50%;
-    /* Icy Blue */
-    --info-foreground: 0 0% 100%;
+    --flagged: 45 90% 50%;
+    --flagged-foreground: 140 50% 20%;
 
-    /* Performance tier colors (festive variants) */
-    --tier-excellent: 150 60% 35%;
-    --tier-excellent-foreground: 0 0% 100%;
-    --tier-great: 200 70% 50%;
-    --tier-great-foreground: 0 0% 100%;
-    --tier-good: 180 50% 45%;
-    --tier-good-foreground: 0 0% 100%;
-    --tier-passing: 45 100% 50%;
-    --tier-passing-foreground: 150 30% 15%;
-    --tier-failing: 0 75% 50%;
-    --tier-failing-foreground: 0 0% 100%;
+    --info: 200 60% 40%;
+    /* Icy Blue for contrast */
+    --info-foreground: 35 50% 98%;
+
+    /* Performance tier colors */
+    --tier-excellent: 140 60% 40%;
+    --tier-great: 45 90% 60%;
+    --tier-good: 35 50% 60%;
+    --tier-passing: 350 60% 60%;
+    --tier-failing: 350 80% 55%;
+
+    /* Unique: Golden Candlelight Glow */
+    --shadow-color: 45 90% 60%;
   }
 
   /* VAPOR THEME (Synthwave/Retrowave) */
@@ -1136,6 +1142,37 @@
   /* MINT BORDER THICKNESS OVERRIDE */
   [data-theme="mint"] * {
     border-width: 2px;
+  }
+
+  /* HOLIDAY GOLD BORDER OVERRIDE */
+  [data-theme="holiday"] .border,
+  [data-theme="holiday"] .border-t,
+  [data-theme="holiday"] .border-b,
+  [data-theme="holiday"] .border-l,
+  [data-theme="holiday"] .border-r {
+    border-width: 2px !important;
+  }
+
+  /* HOLIDAY CANDY CANE SCROLLBAR */
+  [data-theme="holiday"] ::-webkit-scrollbar {
+    width: 14px;
+    background: transparent;
+  }
+
+  [data-theme="holiday"] ::-webkit-scrollbar-thumb {
+    background: repeating-linear-gradient(45deg,
+        #d32f2f,
+        #d32f2f 10px,
+        #ffffff 10px,
+        #ffffff 20px);
+    border: 3px solid transparent;
+    background-clip: content-box;
+    border-radius: 1rem;
+    box-shadow: 0 0 0 1px rgba(211, 47, 47, 0.5);
+  }
+
+  [data-theme="holiday"] ::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.5);
   }
 
   [data-theme="mint"] .border-0 {
