@@ -219,7 +219,7 @@ export function Header(): React.ReactElement {
       <div
         inert={!isMenuOpen ? true : undefined}
         className={cn(
-          "fixed inset-x-0 top-16 bottom-0 z-40 bg-white dark:bg-slate-950 md:hidden transition-transform duration-300 ease-in-out",
+          "fixed inset-x-0 top-16 z-40 bg-white dark:bg-slate-950 md:hidden transition-transform duration-300 ease-in-out h-[calc(100dvh-4rem)] min-h-[calc(100vh-4rem)]",
           isMenuOpen ? "translate-x-0" : "translate-x-full",
         )}
         aria-hidden={!isMenuOpen}

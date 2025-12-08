@@ -8,13 +8,10 @@ updates:
       day: "monday"
     open-pull-requests-limit: 10
     groups:
-      # Group all minor and patch updates together to reduce noise
-      dependencies:
+      # Group ALL updates (major, minor, patch) into one PR to reduce noise
+      all-dependencies:
         patterns:
           - "*"
-        update-types:
-          - "minor"
-          - "patch"
 
   # Maintain dependencies for GitHub Actions
   - package-ecosystem: "github-actions"
