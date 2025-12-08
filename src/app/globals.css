@@ -178,6 +178,50 @@
     --input: 150 10% 20%;
     --ring: 142 70% 45%;
   }
+
+  /* RETRO THEME (8-Bit / NES Style) */
+  [data-theme="retro"] {
+    --font-heading: var(--font-press-start), monospace;
+    --font-sans: var(--font-press-start), monospace;
+    --font-mono: var(--font-press-start), monospace;
+
+    /* 0px Radius for Blocky Look */
+    --radius: 0px;
+
+    /* High Contrast Palette */
+    --background: 210 20% 90%;
+    /* Light Grey */
+    --foreground: 0 0% 10%;
+    /* Near Black */
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
+
+    --primary: 340 75% 55%;
+    /* Retro Pink/Red */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 210 20% 80%;
+    /* Darker Grey */
+    --secondary-foreground: 0 0% 10%;
+
+    --muted: 210 20% 80%;
+    --muted-foreground: 0 0% 40%;
+
+    --accent: 340 75% 55%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 0%;
+    /* Pitch Black Borders */
+    --input: 0 0% 100%;
+    --ring: 340 75% 55%;
+  }
 }
 
 @layer base {
@@ -259,6 +303,16 @@
   /* GLASSMORPHISM */
   .glass {
     @apply bg-background/70 backdrop-blur-lg border-b border-white/10 shadow-sm supports-[backdrop-filter]:bg-background/60;
+  }
+
+  /* RETRO SHADOWS OVERRIDE */
+  [data-theme="retro"] .shadow-sm,
+  [data-theme="retro"] .shadow-md,
+  [data-theme="retro"] .shadow-lg,
+  [data-theme="retro"] .glass {
+    box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1) !important;
+    backdrop-filter: none !important;
+    border: 2px solid black !important;
   }
 
   /* MESH GRADIENT BACKGROUND */

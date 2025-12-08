@@ -11,8 +11,8 @@ import {
 } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { useToast } from "@/components/ui/Toast";
+import { QuizCardSkeleton } from "@/components/dashboard/QuizCardSkeleton";
 import { createQuiz } from "@/db/quizzes";
 import {
   formatValidationErrors,
@@ -179,8 +179,10 @@ export function TestLibrary({
       </CardHeader>
       <CardContent className="space-y-4">
         {isLoading ? (
-          <div className="flex justify-center py-6">
-            <LoadingSpinner text="Loading tests..." />
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <QuizCardSkeleton key={i} />
+            ))}
           </div>
         ) : error ? (
           <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800 dark:border-red-500/50 dark:bg-red-950 dark:text-red-100">

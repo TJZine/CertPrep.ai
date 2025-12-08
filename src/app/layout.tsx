@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import * as React from "react";
 import { headers } from "next/headers";
-import { Inter } from "next/font/google";
+import { Inter, Press_Start_2P } from "next/font/google";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { SkipLink } from "@/components/common/SkipLink";
@@ -14,6 +14,14 @@ const inter = Inter({
   display: "swap",
   variable: "--font-inter",
   fallback: ["system-ui", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
+});
+
+const pressStart2P = Press_Start_2P({
+  weight: "400",
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-press-start",
+  fallback: ["monospace"],
 });
 
 export const metadata: Metadata = {
@@ -79,7 +87,11 @@ export default async function RootLayout({
   const nonce = headersList.get("x-nonce") || undefined;
 
   return (
-    <html lang="en" className={inter.variable} suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${inter.variable} ${pressStart2P.variable}`}
+      suppressHydrationWarning
+    >
       <head>
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="icon" href="/icon.svg" type="image/svg+xml" />

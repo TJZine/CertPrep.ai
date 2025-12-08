@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import * as React from "react";
 import {
   MoreVertical,
@@ -135,170 +136,176 @@ export function QuizCard({
   };
 
   return (
-    <Card className="group relative flex h-full flex-col overflow-hidden border border-border shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-      <div
-        className="pointer-events-none absolute right-4 top-4 hidden max-w-[220px] rounded-lg border border-border bg-popover/95 px-3 py-2 text-left text-xs text-muted-foreground shadow-lg backdrop-blur group-focus-within:block group-hover:block"
-        role="presentation"
-      >
-        <p className="mb-1 font-semibold text-foreground">
-          Quick stats
-        </p>
-        <ul className="space-y-1">
-          <li className="flex items-center gap-2">
-            <BarChart3
-              className="h-3.5 w-3.5 text-primary"
-              aria-hidden="true"
-            />
-            <span>Best: {bestScore !== null ? `${bestScore}%` : "—"}</span>
-          </li>
-          <li className="flex items-center gap-2">
-            <Trophy className="h-3.5 w-3.5 text-amber-500" aria-hidden="true" />
-            <span>Avg: {averageScore !== null ? `${averageScore}%` : "—"}</span>
-          </li>
-          <li className="flex items-center gap-2">
-            <Clock
-              className="h-3.5 w-3.5 text-muted-foreground"
-              aria-hidden="true"
-            />
-            <span>Study time: {formatStudyTime(totalStudyTime)}</span>
-          </li>
-        </ul>
-      </div>
-      <CardHeader className="pb-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 space-y-1">
-            <CardTitle className="line-clamp-2 text-lg">{quiz.title}</CardTitle>
-            <p className="text-sm text-muted-foreground">
-              {quiz.description?.trim()
-                ? quiz.description
-                : `${quiz.questions.length} questions`}
-            </p>
-          </div>
-          <div className="relative" ref={menuRef}>
-            <button
-              type="button"
-              className={cn(
-                "rounded-full p-2 text-muted-foreground transition hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                showMenu &&
-                "bg-accent text-accent-foreground",
-              )}
-              aria-label="Quiz options"
-              aria-expanded={showMenu}
-              aria-haspopup="menu"
-              onClick={() => setShowMenu((open) => !open)}
-            >
-              <MoreVertical className="h-5 w-5" aria-hidden="true" />
-            </button>
-            {showMenu ? (
-              <div
-                className="absolute right-0 z-10 mt-2 w-40 overflow-hidden rounded-lg border border-border bg-popover shadow-lg"
-                role="menu"
-              >
-                <button
-                  type="button"
-                  onClick={handleCopyLink}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-foreground transition hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  role="menuitem"
-                >
-                  <LinkIcon className="h-4 w-4" aria-hidden="true" />
-                  Copy link
-                </button>
-                <button
-                  type="button"
-                  onClick={handleDelete}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-destructive transition hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  role="menuitem"
-                >
-                  <Trash2 className="h-4 w-4" aria-hidden="true" />
-                  Delete
-                </button>
-              </div>
-            ) : null}
-          </div>
-        </div>
-        {quiz.tags.length > 0 ? (
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            {visibleTags.map((tag) => (
-              <Badge
-                key={tag}
-                variant="secondary"
-                className="bg-secondary text-secondary-foreground"
-              >
-                {tag}
-              </Badge>
-            ))}
-            {extraTagCount > 0 ? (
-              <div className="relative" ref={tagsPopoverRef}>
-                <button
-                  type="button"
-                  onClick={() => setShowTagsPopover((open) => !open)}
-                  className="inline-flex items-center gap-1 rounded-full border border-input bg-background px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  aria-expanded={showTagsPopover}
-                  aria-haspopup="true"
-                  aria-label={`Show ${extraTagCount} more tags`}
-                >
-                  +{extraTagCount}
-                </button>
-                {showTagsPopover ? (
-                  <div className="absolute z-10 mt-2 w-48 rounded-lg border border-border bg-popover p-2 text-left shadow-lg">
-                    <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      More tags
-                    </p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {extraTags.map((tag) => (
-                        <Badge
-                          key={tag}
-                          variant="secondary"
-                          className="bg-secondary text-secondary-foreground"
-                        >
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
-              </div>
-            ) : null}
-          </div>
-        ) : null}
-      </CardHeader>
-
-      <CardContent className="flex-1 space-y-4 pt-0">
-        <div className="grid grid-cols-3 gap-2 text-center text-sm">
-          <StatItem
-            icon={<Target className="h-4 w-4" aria-hidden="true" />}
-            label="Questions"
-            value={quiz.questions.length}
-          />
-          <StatItem
-            icon={<Clock className="h-4 w-4" aria-hidden="true" />}
-            label="Attempts"
-            value={attemptCount}
-          />
-          <StatItem
-            icon={<Trophy className="h-4 w-4" aria-hidden="true" />}
-            label="Last Score"
-            value={lastScore !== null ? `${lastScore}%` : "-"}
-          />
-        </div>
-
-        {lastAttemptDate ? (
-          <div className="rounded-lg bg-muted/50 px-3 py-2 text-center text-xs text-muted-foreground">
-            Last attempt: {formatDate(lastAttemptDate)}
-          </div>
-        ) : null}
-      </CardContent>
-
-      <CardFooter className="pt-0">
-        <Button
-          className="w-full"
-          leftIcon={<Play className="h-4 w-4" aria-hidden="true" />}
-          onClick={() => onStart(quiz)}
+    <motion.div
+      whileHover={{ y: -5, scale: 1.02 }}
+      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+      className="h-full"
+    >
+      <Card className="group relative flex h-full flex-col overflow-hidden border border-border shadow-sm transition-colors hover:shadow-md">
+        <div
+          className="pointer-events-none absolute right-4 top-4 hidden max-w-[220px] rounded-lg border border-border bg-popover/95 px-3 py-2 text-left text-xs text-muted-foreground shadow-lg backdrop-blur group-focus-within:block group-hover:block"
+          role="presentation"
         >
-          Start Quiz
-        </Button>
-      </CardFooter>
-    </Card>
+          <p className="mb-1 font-semibold text-foreground">
+            Quick stats
+          </p>
+          <ul className="space-y-1">
+            <li className="flex items-center gap-2">
+              <BarChart3
+                className="h-3.5 w-3.5 text-primary"
+                aria-hidden="true"
+              />
+              <span>Best: {bestScore !== null ? `${bestScore}%` : "—"}</span>
+            </li>
+            <li className="flex items-center gap-2">
+              <Trophy className="h-3.5 w-3.5 text-amber-500" aria-hidden="true" />
+              <span>Avg: {averageScore !== null ? `${averageScore}%` : "—"}</span>
+            </li>
+            <li className="flex items-center gap-2">
+              <Clock
+                className="h-3.5 w-3.5 text-muted-foreground"
+                aria-hidden="true"
+              />
+              <span>Study time: {formatStudyTime(totalStudyTime)}</span>
+            </li>
+          </ul>
+        </div>
+        <CardHeader className="pb-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 space-y-1">
+              <CardTitle className="line-clamp-2 text-lg">{quiz.title}</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                {quiz.description?.trim()
+                  ? quiz.description
+                  : `${quiz.questions.length} questions`}
+              </p>
+            </div>
+            <div className="relative" ref={menuRef}>
+              <button
+                type="button"
+                className={cn(
+                  "rounded-full p-2 text-muted-foreground transition hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                  showMenu &&
+                  "bg-accent text-accent-foreground",
+                )}
+                aria-label="Quiz options"
+                aria-expanded={showMenu}
+                aria-haspopup="menu"
+                onClick={() => setShowMenu((open) => !open)}
+              >
+                <MoreVertical className="h-5 w-5" aria-hidden="true" />
+              </button>
+              {showMenu ? (
+                <div
+                  className="absolute right-0 z-10 mt-2 w-40 overflow-hidden rounded-lg border border-border bg-popover shadow-lg"
+                  role="menu"
+                >
+                  <button
+                    type="button"
+                    onClick={handleCopyLink}
+                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-foreground transition hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    role="menuitem"
+                  >
+                    <LinkIcon className="h-4 w-4" aria-hidden="true" />
+                    Copy link
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDelete}
+                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-destructive transition hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    role="menuitem"
+                  >
+                    <Trash2 className="h-4 w-4" aria-hidden="true" />
+                    Delete
+                  </button>
+                </div>
+              ) : null}
+            </div>
+          </div>
+          {quiz.tags.length > 0 ? (
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              {visibleTags.map((tag) => (
+                <Badge
+                  key={tag}
+                  variant="secondary"
+                  className="bg-secondary text-secondary-foreground"
+                >
+                  {tag}
+                </Badge>
+              ))}
+              {extraTagCount > 0 ? (
+                <div className="relative" ref={tagsPopoverRef}>
+                  <button
+                    type="button"
+                    onClick={() => setShowTagsPopover((open) => !open)}
+                    className="inline-flex items-center gap-1 rounded-full border border-input bg-background px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    aria-expanded={showTagsPopover}
+                    aria-haspopup="true"
+                    aria-label={`Show ${extraTagCount} more tags`}
+                  >
+                    +{extraTagCount}
+                  </button>
+                  {showTagsPopover ? (
+                    <div className="absolute z-10 mt-2 w-48 rounded-lg border border-border bg-popover p-2 text-left shadow-lg">
+                      <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        More tags
+                      </p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {extraTags.map((tag) => (
+                          <Badge
+                            key={tag}
+                            variant="secondary"
+                            className="bg-secondary text-secondary-foreground"
+                          >
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+        </CardHeader>
+
+        <CardContent className="flex-1 space-y-4 pt-0">
+          <div className="grid grid-cols-3 gap-2 text-center text-sm">
+            <StatItem
+              icon={<Target className="h-4 w-4" aria-hidden="true" />}
+              label="Questions"
+              value={quiz.questions.length}
+            />
+            <StatItem
+              icon={<Clock className="h-4 w-4" aria-hidden="true" />}
+              label="Attempts"
+              value={attemptCount}
+            />
+            <StatItem
+              icon={<Trophy className="h-4 w-4" aria-hidden="true" />}
+              label="Last Score"
+              value={lastScore !== null ? `${lastScore}%` : "-"}
+            />
+          </div>
+
+          {lastAttemptDate ? (
+            <div className="rounded-lg bg-muted/50 px-3 py-2 text-center text-xs text-muted-foreground">
+              Last attempt: {formatDate(lastAttemptDate)}
+            </div>
+          ) : null}
+        </CardContent>
+
+        <CardFooter className="pt-0">
+          <Button
+            className="w-full"
+            leftIcon={<Play className="h-4 w-4" aria-hidden="true" />}
+            onClick={() => onStart(quiz)}
+          >
+            Start Quiz
+          </Button>
+        </CardFooter>
+      </Card>
+    </motion.div>
   );
 }
 
