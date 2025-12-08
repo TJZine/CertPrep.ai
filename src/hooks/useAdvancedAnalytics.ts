@@ -30,6 +30,8 @@ export interface AdvancedAnalytics {
     isLoading: boolean;
 }
 
+import { calculateCategoryTrends } from "@/lib/analytics/trends";
+
 /**
  * Normalizes a timestamp to the start of day in local timezone.
  * Returns ISO-style YYYY-MM-DD format for proper sorting.
@@ -83,11 +85,16 @@ function calculateReadiness(
 
     const score = totalWeight > 0 ? Math.round(totalWeightedScore / totalWeight) : 0;
 
-    // Confidence based on total attempts
+    // Count results with category data for confidence
+    const resultsWithData = results.filter(
+        (r) => r.category_breakdown && Object.keys(r.category_breakdown).length > 0,
+    ).length;
+
+    // Confidence based on total attempts with data
     let confidence: ConfidenceLevel = "low";
-    if (results.length >= 10) {
+    if (resultsWithData >= 10) {
         confidence = "high";
-    } else if (results.length >= 5) {
+    } else if (resultsWithData >= 5) {
         confidence = "medium";
     }
 
@@ -133,7 +140,9 @@ function calculateStreaks(
 
     if (startFromToday || startFromYesterday) {
         const startOffset = startFromToday ? 0 : 1;
-        for (let i = startOffset; ; i++) {
+        // Safety bound to prevent infinite loop
+        const MAX_STREAK_DAYS = 365 * 10;
+        for (let i = startOffset; i < MAX_STREAK_DAYS; i++) {
             const checkDate = new Date(today);
             checkDate.setDate(checkDate.getDate() - i);
             if (daySet.has(getDateKey(checkDate.getTime()))) {
@@ -185,58 +194,7 @@ function calculateStreaks(
     return { current, longest, consistency, last7Days };
 }
 
-/**
- * Calculates category trends by comparing recent vs prior performance.
- */
-function calculateCategoryTrends(
-    results: Result[],
-): Map<string, TrendDirection> {
-    const trends = new Map<string, TrendDirection>();
 
-    if (results.length < 2) return trends;
-
-    // Group results by category with timestamps
-    const categoryResults = new Map<string, Array<{ score: number; timestamp: number }>>();
-
-    for (const result of results) {
-        if (!result.category_breakdown) continue;
-
-        for (const [category, score] of Object.entries(result.category_breakdown)) {
-            const existing = categoryResults.get(category) || [];
-            existing.push({ score, timestamp: result.timestamp });
-            categoryResults.set(category, existing);
-        }
-    }
-
-    // Calculate trend for each category
-    for (const [category, scores] of categoryResults) {
-        if (scores.length < 6) {
-            trends.set(category, "stable");
-            continue;
-        }
-
-        // Sort by timestamp descending (newest first)
-        scores.sort((a, b) => b.timestamp - a.timestamp);
-
-        const last3 = scores.slice(0, 3);
-        const prior3 = scores.slice(3, 6);
-
-        const last3Avg = last3.reduce((sum, s) => sum + s.score, 0) / last3.length;
-        const prior3Avg = prior3.reduce((sum, s) => sum + s.score, 0) / prior3.length;
-
-        const diff = last3Avg - prior3Avg;
-
-        if (diff >= 5) {
-            trends.set(category, "improving");
-        } else if (diff <= -5) {
-            trends.set(category, "declining");
-        } else {
-            trends.set(category, "stable");
-        }
-    }
-
-    return trends;
-}
 
 /**
  * Calculates first attempt vs retry comparison.
