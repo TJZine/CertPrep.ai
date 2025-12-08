@@ -135,13 +135,7 @@ export function ThemeProvider({
     setThemeState((prev): Theme => {
       // If currently system, we need to know what we are resolving to
       // to toggle to the *opposite*.
-      const currentResolved =
-        prev === "system"
-          ? typeof window !== "undefined" &&
-            window.matchMedia("(prefers-color-scheme: dark)").matches
-            ? "dark"
-            : "light"
-          : prev;
+      const currentResolved = prev === "system" ? systemTheme : prev;
 
       // Logic:
       // If Light -> Dark
@@ -152,7 +146,7 @@ export function ThemeProvider({
       const isCurrentlyDark = THEME_CONFIG[currentResolved]?.isDark;
       return isCurrentlyDark ? "light" : "dark";
     });
-  }, []);
+  }, [systemTheme]);
 
   const value = React.useMemo(
     () => ({

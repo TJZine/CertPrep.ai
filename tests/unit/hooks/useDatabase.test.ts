@@ -11,39 +11,41 @@ describe("useDatabase Hooks", () => {
 
     beforeEach(async () => {
         await db.quizzes.clear();
-        await db.quizzes.add({
-            id: "quiz-1",
-            user_id: userId,
-            title: "My Quiz",
-            description: "Desc",
-            questions: [],
-            created_at: Date.now(),
-            updated_at: Date.now(),
-            version: 1,
-            tags: [],
-        });
-        await db.quizzes.add({
-            id: "quiz-public",
-            user_id: NIL_UUID,
-            title: "Public Quiz",
-            description: "Desc",
-            questions: [],
-            created_at: Date.now(),
-            updated_at: Date.now(),
-            version: 1,
-            tags: [],
-        });
-        await db.quizzes.add({
-            id: "quiz-other",
-            user_id: otherUserId,
-            title: "Other Quiz",
-            description: "Desc",
-            questions: [],
-            created_at: Date.now(),
-            updated_at: Date.now(),
-            version: 1,
-            tags: [],
-        });
+        await db.quizzes.bulkAdd([
+            {
+                id: "quiz-1",
+                user_id: userId,
+                title: "My Quiz",
+                description: "Desc",
+                questions: [],
+                created_at: Date.now(),
+                updated_at: Date.now(),
+                version: 1,
+                tags: [],
+            },
+            {
+                id: "quiz-public",
+                user_id: NIL_UUID,
+                title: "Public Quiz",
+                description: "Desc",
+                questions: [],
+                created_at: Date.now(),
+                updated_at: Date.now(),
+                version: 1,
+                tags: [],
+            },
+            {
+                id: "quiz-other",
+                user_id: otherUserId,
+                title: "Other Quiz",
+                description: "Desc",
+                questions: [],
+                created_at: Date.now(),
+                updated_at: Date.now(),
+                version: 1,
+                tags: [],
+            },
+        ]);
     });
 
     describe("useQuizzes", () => {

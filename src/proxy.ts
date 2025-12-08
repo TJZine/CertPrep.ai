@@ -143,9 +143,9 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   }
 
   // Authenticated users trying to access auth routes -> Redirect to Dashboard
-  // DISABLED: This causes issues when the client side session is invalid/stale but the server
-  // side cookie is still valid. We let the client component (LoginForm) handle the redirect
-  // if the session is genuinely valid.
+  // TODO: Re-enable this once client/server session sync is robust.
+  // Currently, we let the client (LoginForm) handle the redirect to avoid
+  // infinite loops if the server cookie is valid but client state is stale.
   /*
   if (isAuthRoute && user) {
     const redirectUrl = new URL("/", request.url);

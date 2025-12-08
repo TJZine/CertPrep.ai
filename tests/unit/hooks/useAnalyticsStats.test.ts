@@ -6,9 +6,13 @@ import type { Quiz } from "@/types/quiz";
 import type { Result } from "@/types/result";
 
 // Mock hashAnswer
-vi.mock("@/lib/utils", () => ({
-    hashAnswer: vi.fn(async (input: string) => `hashed_${input}`),
-}));
+vi.mock("@/lib/utils", async () => {
+    const actual = await vi.importActual<typeof import("@/lib/utils")>("@/lib/utils");
+    return {
+        ...actual,
+        hashAnswer: vi.fn(async (input: string) => `hashed_${input}`),
+    };
+});
 
 // Mock Trends Calculation
 vi.mock("@/lib/analytics/trends", () => ({

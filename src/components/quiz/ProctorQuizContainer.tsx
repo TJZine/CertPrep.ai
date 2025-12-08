@@ -99,7 +99,7 @@ export function ProctorQuizContainer({
     flaggedQuestions,
   });
 
-  const autoSubmitRef = React.useRef<() => Promise<string | null> | null>(null);
+  const autoSubmitRef = React.useRef<(() => Promise<string | null>) | null>(null);
 
   React.useEffect(() => {
     autoSubmitRef.current = handleAutoSubmit;

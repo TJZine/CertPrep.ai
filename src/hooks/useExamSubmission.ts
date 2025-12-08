@@ -59,6 +59,13 @@ export function useExamSubmission({
     const [isSubmitting, setIsSubmitting] = React.useState(false);
     const [autoResultId, setAutoResultId] = React.useState<string | null>(null);
     const hasSavedResultRef = React.useRef(false);
+    const isMountedRef = React.useRef(true);
+
+    React.useEffect((): (() => void) => {
+        return () => {
+            isMountedRef.current = false;
+        };
+    }, []);
 
     // Helper to convert Map to Record
     const buildAnswersRecord = React.useCallback((): Record<string, string> => {
@@ -99,9 +106,13 @@ export function useExamSubmission({
             router.push(`/results/${result.id}`);
         } catch (error) {
             console.error("Failed to submit exam:", error);
-            addToast("error", "Failed to submit exam. Please try again.");
+            if (isMountedRef.current) {
+                addToast("error", "Failed to submit exam. Please try again.");
+            }
         } finally {
-            setIsSubmitting(false);
+            if (isMountedRef.current) {
+                setIsSubmitting(false);
+            }
         }
     }, [
         addToast,
@@ -154,11 +165,15 @@ export function useExamSubmission({
             return result.id;
         } catch (error) {
             console.error("Failed to auto-submit exam:", error);
-            addToast("error", "Auto-submit failed. Please submit manually.");
-            setShowSubmitModal(true);
+            if (isMountedRef.current) {
+                addToast("error", "Auto-submit failed. Please submit manually.");
+                setShowSubmitModal(true);
+            }
             return null;
         } finally {
-            setIsSubmitting(false);
+            if (isMountedRef.current) {
+                setIsSubmitting(false);
+            }
         }
     }, [
         addToast,
@@ -188,9 +203,13 @@ export function useExamSubmission({
             }
         } catch (error) {
             console.error("Failed to save results:", error);
-            addToast("error", "Failed to save results. Please try again.");
+            if (isMountedRef.current) {
+                addToast("error", "Failed to save results. Please try again.");
+            }
         } finally {
-            setIsSubmitting(false);
+            if (isMountedRef.current) {
+                setIsSubmitting(false);
+            }
         }
     }, [autoResultId, handleAutoSubmit, router, addToast]);
 

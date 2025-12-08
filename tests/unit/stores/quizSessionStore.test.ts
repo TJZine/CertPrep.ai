@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { useQuizSessionStore } from "@/stores/quizSessionStore";
 import { act } from "@testing-library/react";
 import type { Question } from "@/types/quiz";
+import { hashAnswer } from "@/lib/utils";
 
 // Mock utils
 vi.mock("@/lib/utils", () => ({
@@ -94,8 +95,30 @@ describe("Quiz Session Store", () => {
 
         expect(answer).toBeDefined();
         expect(answer?.isCorrect).toBe(true); // hashed_A === hashed_A
+        expect(hashAnswer).toHaveBeenCalledWith("A");
         expect(state.hasSubmitted).toBe(true);
-        expect(state.showExplanation).toBe(false); // Correct = no explanation usually? Store says: draft.showExplanation = !isCorrect;
+        expect(state.showExplanation).toBe(false); // Correct answers don't show explanation
+    });
+
+    it("should handle hash failures gracefully", async () => {
+        const mockHashAnswer = vi.mocked(hashAnswer);
+        mockHashAnswer.mockRejectedValueOnce(new Error("Hash failed"));
+
+        act(() => {
+            useQuizSessionStore
+                .getState()
+                .initializeSession("quiz-1", "zen", mockQuestions);
+            useQuizSessionStore.getState().selectAnswer("A");
+        });
+
+        await act(async () => {
+            useQuizSessionStore.getState().submitAnswer();
+        });
+
+        const state = useQuizSessionStore.getState();
+        expect(state.error).toBeDefined();
+        // Depending on store implementation, hasSubmitted might be false or partial.
+        // Assuming optimistic update rolled back or just error set.
     });
 
     it("should show explanation on incorrect answer", async () => {

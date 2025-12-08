@@ -174,4 +174,19 @@ describe("useExamSubmission", () => {
         expect(mockAddToast).toHaveBeenCalledWith("error", expect.stringContaining("no user context"));
         expect(ResultsDB.createResult).not.toHaveBeenCalled();
     });
+
+    it("handles createResult failure gracefully", async () => {
+        const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => { });
+        vi.mocked(ResultsDB.createResult).mockRejectedValueOnce(new Error("DB Error"));
+
+        const { result } = renderHook(() => useExamSubmission(defaultProps));
+
+        await act(async () => {
+            await result.current.handleSubmitExam();
+        });
+
+        expect(mockAddToast).toHaveBeenCalledWith("error", expect.stringContaining("Failed to submit"));
+        expect(mockRouterPush).not.toHaveBeenCalled();
+        consoleSpy.mockRestore();
+    });
 });
