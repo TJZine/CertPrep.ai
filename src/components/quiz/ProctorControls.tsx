@@ -45,7 +45,11 @@ export function ProctorControls({
     <div className={cn("space-y-4", className)}>
       <div className="flex justify-center">
         {hasAnswer ? (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-info/10 px-3 py-1 text-sm font-medium text-info">
+          <span
+            role="status"
+            aria-live="polite"
+            className="inline-flex items-center gap-1.5 rounded-full bg-info/10 px-3 py-1 text-sm font-medium text-info"
+          >
             <svg
               className="h-4 w-4"
               fill="none"
@@ -63,7 +67,11 @@ export function ProctorControls({
             Answer recorded
           </span>
         ) : (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-warning/10 px-3 py-1 text-sm font-medium text-warning">
+          <span
+            role="status"
+            aria-live="polite"
+            className="inline-flex items-center gap-1.5 rounded-full bg-warning/10 px-3 py-1 text-sm font-medium text-warning"
+          >
             <AlertTriangle className="h-4 w-4" />
             No answer selected
           </span>

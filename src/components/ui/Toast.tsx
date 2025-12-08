@@ -167,7 +167,7 @@ export function ToastProvider({
               <button
                 type="button"
                 onClick={() => removeToast(toast.id)}
-                className="rounded-full p-1 text-inherit transition hover:bg-white/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                className="rounded-full p-1 text-inherit transition hover:bg-white/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 aria-label="Dismiss notification"
               >
                 <X className="h-4 w-4" aria-hidden="true" />

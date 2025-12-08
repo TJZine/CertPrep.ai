@@ -142,10 +142,8 @@ export function TopicRadar({
                 <div className="flex items-center gap-2">
                   <div className="h-2 w-24 overflow-hidden rounded-full bg-muted">
                     <div
-                      className={cn(
-                        "h-full bg-primary",
-                        `w-[${Math.round(cat.score)}%]`,
-                      )}
+                      className="h-full bg-primary"
+                      style={{ width: `${Math.round(cat.score)}%` }}
                     />
                   </div>
                   <span className="text-sm font-semibold text-foreground">
@@ -312,11 +310,8 @@ export function CategoryBreakdown({
               <div className="flex items-center gap-2">
                 <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
                   <div
-                    className={cn(
-                      "h-full transition-all",
-                      getScoreColor(cat.score),
-                      `w-[${Math.round(cat.score)}%]`,
-                    )}
+                    className={cn("h-full transition-all", getScoreColor(cat.score))}
+                    style={{ width: `${Math.round(cat.score)}%` }}
                   />
                 </div>
                 <span className="w-16 text-right text-xs text-muted-foreground">

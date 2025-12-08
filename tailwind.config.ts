@@ -1,12 +1,9 @@
+import tailwindcssAnimate from "tailwindcss-animate";
 import type { Config } from "tailwindcss";
 import typography from "@tailwindcss/typography";
 
-// Safelist all width percentages 0-100% for dynamic progress bars (avoiding inline styles for CSP)
-const widthSafelist = Array.from({ length: 101 }, (_, i) => `w-[${i}%]`);
-
 const config: Config = {
   darkMode: "class",
-  safelist: [...widthSafelist],
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -22,14 +19,14 @@ const config: Config = {
     },
     extend: {
       colors: {
-        border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
+        border: "hsl(var(--border) / <alpha-value>)",
+        input: "hsl(var(--input) / <alpha-value>)",
+        ring: "hsl(var(--ring) / <alpha-value>)",
+        background: "hsl(var(--background) / <alpha-value>)",
+        foreground: "hsl(var(--foreground) / <alpha-value>)",
         primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
+          DEFAULT: "hsl(var(--primary) / <alpha-value>)",
+          foreground: "hsl(var(--primary-foreground) / <alpha-value>)",
           50: "#eff6ff",
           100: "#dbeafe",
           200: "#bfdbfe",
@@ -42,73 +39,73 @@ const config: Config = {
           900: "#1e3a8a",
         },
         secondary: {
-          DEFAULT: "hsl(var(--secondary))",
-          foreground: "hsl(var(--secondary-foreground))",
+          DEFAULT: "hsl(var(--secondary) / <alpha-value>)",
+          foreground: "hsl(var(--secondary-foreground) / <alpha-value>)",
         },
         destructive: {
-          DEFAULT: "hsl(var(--destructive))",
-          foreground: "hsl(var(--destructive-foreground))",
+          DEFAULT: "hsl(var(--destructive) / <alpha-value>)",
+          foreground: "hsl(var(--destructive-foreground) / <alpha-value>)",
         },
         muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
+          DEFAULT: "hsl(var(--muted) / <alpha-value>)",
+          foreground: "hsl(var(--muted-foreground) / <alpha-value>)",
         },
         accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
+          DEFAULT: "hsl(var(--accent) / <alpha-value>)",
+          foreground: "hsl(var(--accent-foreground) / <alpha-value>)",
         },
         popover: {
-          DEFAULT: "hsl(var(--popover))",
-          foreground: "hsl(var(--popover-foreground))",
+          DEFAULT: "hsl(var(--popover) / <alpha-value>)",
+          foreground: "hsl(var(--popover-foreground) / <alpha-value>)",
         },
         card: {
-          DEFAULT: "hsl(var(--card))",
-          foreground: "hsl(var(--card-foreground))",
+          DEFAULT: "hsl(var(--card) / <alpha-value>)",
+          foreground: "hsl(var(--card-foreground) / <alpha-value>)",
         },
         success: {
-          DEFAULT: "hsl(var(--success))",
-          foreground: "hsl(var(--success-foreground))",
+          DEFAULT: "hsl(var(--success) / <alpha-value>)",
+          foreground: "hsl(var(--success-foreground) / <alpha-value>)",
         },
         warning: {
-          DEFAULT: "hsl(var(--warning))",
-          foreground: "hsl(var(--warning-foreground))",
+          DEFAULT: "hsl(var(--warning) / <alpha-value>)",
+          foreground: "hsl(var(--warning-foreground) / <alpha-value>)",
         },
         correct: {
-          DEFAULT: "hsl(var(--correct))",
-          foreground: "hsl(var(--correct-foreground))",
+          DEFAULT: "hsl(var(--correct) / <alpha-value>)",
+          foreground: "hsl(var(--correct-foreground) / <alpha-value>)",
         },
         incorrect: {
-          DEFAULT: "hsl(var(--incorrect))",
-          foreground: "hsl(var(--incorrect-foreground))",
+          DEFAULT: "hsl(var(--incorrect) / <alpha-value>)",
+          foreground: "hsl(var(--incorrect-foreground) / <alpha-value>)",
         },
         flagged: {
-          DEFAULT: "hsl(var(--flagged))",
-          foreground: "hsl(var(--flagged-foreground))",
+          DEFAULT: "hsl(var(--flagged) / <alpha-value>)",
+          foreground: "hsl(var(--flagged-foreground) / <alpha-value>)",
         },
         info: {
-          DEFAULT: "hsl(var(--info))",
-          foreground: "hsl(var(--info-foreground))",
+          DEFAULT: "hsl(var(--info) / <alpha-value>)",
+          foreground: "hsl(var(--info-foreground) / <alpha-value>)",
         },
         // Performance tier colors (Scorecard, Analytics charts)
         "tier-excellent": {
-          DEFAULT: "hsl(var(--tier-excellent))",
-          foreground: "hsl(var(--tier-excellent-foreground))",
+          DEFAULT: "hsl(var(--tier-excellent) / <alpha-value>)",
+          foreground: "hsl(var(--tier-excellent-foreground) / <alpha-value>)",
         },
         "tier-great": {
-          DEFAULT: "hsl(var(--tier-great))",
-          foreground: "hsl(var(--tier-great-foreground))",
+          DEFAULT: "hsl(var(--tier-great) / <alpha-value>)",
+          foreground: "hsl(var(--tier-great-foreground) / <alpha-value>)",
         },
         "tier-good": {
-          DEFAULT: "hsl(var(--tier-good))",
-          foreground: "hsl(var(--tier-good-foreground))",
+          DEFAULT: "hsl(var(--tier-good) / <alpha-value>)",
+          foreground: "hsl(var(--tier-good-foreground) / <alpha-value>)",
         },
         "tier-passing": {
-          DEFAULT: "hsl(var(--tier-passing))",
-          foreground: "hsl(var(--tier-passing-foreground))",
+          DEFAULT: "hsl(var(--tier-passing) / <alpha-value>)",
+          foreground: "hsl(var(--tier-passing-foreground) / <alpha-value>)",
         },
         "tier-failing": {
-          DEFAULT: "hsl(var(--tier-failing))",
-          foreground: "hsl(var(--tier-failing-foreground))",
+          DEFAULT: "hsl(var(--tier-failing) / <alpha-value>)",
+          foreground: "hsl(var(--tier-failing-foreground) / <alpha-value>)",
         },
       },
       borderRadius: {
@@ -124,7 +121,7 @@ const config: Config = {
       },
     },
   },
-  plugins: [typography, require("tailwindcss-animate")],
+  plugins: [typography, tailwindcssAnimate],
 };
 
 export default config;

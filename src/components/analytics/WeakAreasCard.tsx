@@ -54,7 +54,7 @@ export function WeakAreasCard({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <AlertTriangle
-              className="h-5 w-5 text-warning"
+              className="h-5 w-5 text-success"
               aria-hidden="true"
             />
             Areas to Improve

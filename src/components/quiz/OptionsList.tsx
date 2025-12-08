@@ -45,6 +45,20 @@ export function OptionsList({
     return "default";
   };
 
+  const badgeStyles: Record<OptionStatus, string> = {
+    correct: "bg-correct/20 text-correct",
+    incorrect: "bg-incorrect/20 text-incorrect",
+    selected: "bg-primary/20 text-primary",
+    default: "bg-muted text-muted-foreground",
+  };
+
+  const textStyles: Record<OptionStatus, string> = {
+    correct: "text-correct",
+    incorrect: "text-incorrect",
+    selected: "text-primary",
+    default: "text-foreground",
+  };
+
   const statusStyles: Record<OptionStatus, string> = {
     default:
       "border-border bg-card hover:border-primary/30 hover:bg-muted/50",
@@ -91,27 +105,14 @@ export function OptionsList({
             <span
               className={cn(
                 "flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full font-semibold",
-                status === "correct" &&
-                "bg-correct/20 text-correct",
-                status === "incorrect" &&
-                "bg-incorrect/20 text-incorrect",
-                status === "selected" &&
-                "bg-primary/20 text-primary",
-                status === "default" &&
-                "bg-muted text-muted-foreground",
+                badgeStyles[status],
               )}
             >
               {key}
             </span>
 
             <span
-              className={cn(
-                "flex-1 pt-1 text-base",
-                status === "correct" && "text-correct",
-                status === "incorrect" && "text-incorrect",
-                status === "selected" && "text-primary",
-                status === "default" && "text-foreground",
-              )}
+              className={cn("flex-1 pt-1 text-base", textStyles[status])}
               dangerouslySetInnerHTML={{ __html: sanitizedText }}
             />
 

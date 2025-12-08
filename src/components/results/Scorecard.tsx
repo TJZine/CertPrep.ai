@@ -179,21 +179,21 @@ export function Scorecard({
           <div className="mb-6 w-full max-w-md" role="presentation">
             <div className="flex h-4 w-full overflow-hidden rounded-full bg-secondary">
               <div
-                className={cn(
-                  "bg-success transition-all duration-500",
-                  totalCount
-                    ? `w-[${Math.round((correctCount / totalCount) * 100)}%]`
-                    : "w-0",
-                )}
+                className={cn("bg-success transition-all duration-500")}
+                style={{
+                  width: totalCount
+                    ? `${Math.round((correctCount / totalCount) * 100)}%`
+                    : "0%",
+                }}
                 aria-label={`${correctCount} correct`}
               />
               <div
-                className={cn(
-                  "bg-destructive/70 transition-all duration-500",
-                  totalCount
-                    ? `w-[${Math.round((incorrectCount / totalCount) * 100)}%]`
-                    : "w-0",
-                )}
+                className={cn("bg-destructive/70 transition-all duration-500")}
+                style={{
+                  width: totalCount
+                    ? `${Math.round((incorrectCount / totalCount) * 100)}%`
+                    : "0%",
+                }}
                 aria-label={`${incorrectCount} incorrect`}
               />
             </div>

@@ -194,7 +194,7 @@ export function SmartActions({
             <Sparkles className="h-5 w-5 text-amber-500" aria-hidden="true" />
             Smart Actions
           </CardTitle>
-          <CardDescription className="text-muted-foreground">
+          <CardDescription>
             AI-powered tools to improve your weak areas
           </CardDescription>
         </CardHeader>

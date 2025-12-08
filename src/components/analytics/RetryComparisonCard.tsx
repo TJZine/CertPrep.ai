@@ -27,11 +27,13 @@ function StatBar({
     value,
     maxValue = 100,
     color,
+    bgColor,
 }: {
     label: string;
     value: number;
     maxValue?: number;
     color: string;
+    bgColor: string;
 }): React.ReactElement {
     const percentage = Math.min(100, (value / maxValue) * 100);
 
@@ -45,7 +47,7 @@ function StatBar({
             </div>
             <div className="h-3 w-full overflow-hidden rounded-full bg-muted">
                 <div
-                    className={cn("h-full transition-all duration-500", color.replaceAll("text-", "bg-"))}
+                    className={cn("h-full transition-all duration-500", bgColor)}
                     style={{ width: `${percentage}%` }}
                 />
             </div>
@@ -131,6 +133,7 @@ export function RetryComparisonCard({
                         label="First Attempt Average"
                         value={firstAttemptAvg}
                         color="text-muted-foreground"
+                        bgColor="bg-muted-foreground"
                     />
 
                     <StatBar
@@ -140,6 +143,11 @@ export function RetryComparisonCard({
                             retryAvg >= firstAttemptAvg
                                 ? "text-correct"
                                 : "text-warning"
+                        }
+                        bgColor={
+                            retryAvg >= firstAttemptAvg
+                                ? "bg-correct"
+                                : "bg-warning"
                         }
                     />
                 </div>

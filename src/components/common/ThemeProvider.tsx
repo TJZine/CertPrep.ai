@@ -4,6 +4,21 @@ import * as React from "react";
 
 export type Theme = "light" | "dark" | "midnight" | "focus" | "forest" | "retro" | "ocean" | "nord" | "holiday" | "vapor" | "blossom" | "mint";
 
+export const THEME_CONFIG: Record<Theme, { isDark: boolean; label: string }> = {
+  light: { isDark: false, label: "Light" },
+  dark: { isDark: true, label: "Dark" },
+  midnight: { isDark: true, label: "Midnight" },
+  focus: { isDark: false, label: "Focus" },
+  forest: { isDark: true, label: "Forest" },
+  retro: { isDark: false, label: "Retro" },
+  ocean: { isDark: true, label: "Ocean" },
+  nord: { isDark: true, label: "Nord" },
+  holiday: { isDark: false, label: "Holiday" },
+  vapor: { isDark: true, label: "Vapor" },
+  blossom: { isDark: false, label: "Blossom" },
+  mint: { isDark: false, label: "Mint" },
+};
+
 interface ThemeContextValue {
   theme: Theme;
   setTheme: (theme: Theme) => void;
@@ -26,20 +41,7 @@ export function ThemeProvider({
       // Ignore
     }
     // Validate stored theme
-    if (
-      stored === "light" ||
-      stored === "dark" ||
-      stored === "midnight" ||
-      stored === "focus" ||
-      stored === "forest" ||
-      stored === "retro" ||
-      stored === "ocean" ||
-      stored === "nord" ||
-      stored === "holiday" ||
-      stored === "vapor" ||
-      stored === "blossom" ||
-      stored === "mint"
-    ) {
+    if (stored && Object.keys(THEME_CONFIG).includes(stored)) {
       return stored as Theme;
     }
     const prefersDark =
@@ -64,7 +66,7 @@ export function ThemeProvider({
     root.setAttribute("data-theme", theme);
 
     // Add 'dark' class for Tailwind dark mode utilities if the theme is dark-ish
-    if (theme === "dark" || theme === "midnight" || theme === "forest" || theme === "ocean" || theme === "nord" || theme === "vapor") {
+    if (THEME_CONFIG[theme]?.isDark) {
       root.classList.add("dark");
     }
 

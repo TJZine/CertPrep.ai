@@ -114,11 +114,7 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   const isProtectedRoute = PROTECTED_ROUTES.some((route) =>
     request.nextUrl.pathname.startsWith(route),
   );
-  /*
-  const isAuthRoute = AUTH_ROUTES.some((route) =>
-    request.nextUrl.pathname.startsWith(route),
-  );
-  */
+
 
   // Unauthenticated users trying to access protected routes -> Redirect to Login
   if (isProtectedRoute && !user) {
