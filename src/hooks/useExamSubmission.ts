@@ -59,9 +59,10 @@ export function useExamSubmission({
     const [isSubmitting, setIsSubmitting] = React.useState(false);
     const [autoResultId, setAutoResultId] = React.useState<string | null>(null);
     const hasSavedResultRef = React.useRef(false);
-    const isMountedRef = React.useRef(true);
+    const isMountedRef = React.useRef(false);
 
     React.useEffect((): (() => void) => {
+        isMountedRef.current = true;
         return () => {
             isMountedRef.current = false;
         };

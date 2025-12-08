@@ -1305,12 +1305,6 @@
     background: var(--card);
   }
 
-  /* Force sharp comers on everything in Retro/Retro-Dark */
-  [data-theme="retro"] [class*="rounded-"],
-  [data-theme="retro-dark"] [class*="rounded-"] {
-    border-radius: 0px !important;
-  }
-
   /* -------------------------------------------------------------------------- */
   /* TYPOGRAPHY & TEXTURE OVERRIDES */
   /* -------------------------------------------------------------------------- */
