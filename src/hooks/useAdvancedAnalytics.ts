@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import type { Result } from "@/types/result";
 import type { Quiz } from "@/types/quiz";
 
-export type TrendDirection = "improving" | "declining" | "stable";
+import { type TrendDirection, calculateCategoryTrends } from "@/lib/analytics/trends";
 export type ConfidenceLevel = "low" | "medium" | "high";
 
 export interface AdvancedAnalytics {
@@ -30,7 +30,7 @@ export interface AdvancedAnalytics {
     isLoading: boolean;
 }
 
-import { calculateCategoryTrends } from "@/lib/analytics/trends";
+// calculateCategoryTrends import moved to top
 
 /**
  * Normalizes a timestamp to the start of day in local timezone.

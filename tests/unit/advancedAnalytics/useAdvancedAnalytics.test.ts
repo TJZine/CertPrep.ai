@@ -149,10 +149,8 @@ describe("useAdvancedAnalytics", () => {
             // So we just verify the array length and specific slots.
             expect(result.current.last7DaysActivity).toHaveLength(7);
 
-            // Ensure no "phantom" activity from day 7 leaks in
-            // Depending on implementation, day 7 might be ignored for the "last7DaysActivity" 
-            // array but might count for streaks if contiguous. 
-            // "last7DaysActivity" typically maps index 0->today, 6->6daysAgo.
+            // Verify all intermediate days are false (indices 1-5 had no activity)
+            expect(result.current.last7DaysActivity.slice(1, 6).every(v => v === false)).toBe(true);
         });
     });
 });
