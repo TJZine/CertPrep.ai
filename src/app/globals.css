@@ -861,51 +861,47 @@
     --shadow-color: 320 100% 60%;
   }
 
-  /* BLOSSOM THEME (Pastel Pink / Soft) */
+  /* BLOSSOM THEME (Sakura Season / Hanami) */
   [data-theme="blossom"] {
-    /* Unique: Nunito Font for Rounded Feel */
-    --font-heading: var(--font-nunito), sans-serif;
-    --font-sans: var(--font-nunito), sans-serif;
+    --font-heading: Nunito, system-ui, sans-serif;
+    --font-sans: Nunito, system-ui, sans-serif;
 
     --background: 340 100% 97%;
-    /* Lavender Blush */
-    --foreground: 0 0% 29%;
-    /* Dark Charcoal */
+    /* Soft Pink Gradient Base */
+    --foreground: 340 60% 25%;
+    /* Deep Cherry Wood */
 
-    --radius: 1.5rem;
-    /* Unique: Super-Round "Cloud" styling */
+    --card: 340 100% 98%;
+    /* Frosted Petal */
+    --card-foreground: 340 60% 25%;
 
-    /* Tinted Card Background + Frosted Glass */
-    --card: 340 50% 99% / 0.7;
-    --card-foreground: 0 0% 29%;
+    --popover: 340 100% 98%;
+    --popover-foreground: 340 60% 25%;
 
-    --popover: 340 50% 99% / 0.8;
-    --popover-foreground: 0 0% 29%;
+    --primary: 340 80% 65%;
+    /* Vibrant Cherry Blossom */
+    --primary-foreground: 0 0% 100%;
 
-    --primary: 351 77% 88%;
-    /* Pastel Pink */
-    --primary-foreground: 0 0% 29%;
-    /* Dark Charcoal text on light pink */
-
-    --secondary: 340 40% 92%;
-    --secondary-foreground: 0 0% 29%;
+    --secondary: 340 40% 90%;
+    /* Pale Bud */
+    --secondary-foreground: 340 60% 25%;
 
     --muted: 340 30% 92%;
-    --muted-foreground: 0 0% 50%;
+    --muted-foreground: 340 40% 40%;
 
-    --accent: 348 60% 75%;
-    /* Deeper Pink */
-    --accent-foreground: 0 0% 29%;
+    --accent: 340 80% 65%;
+    /* Pink Accent */
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 60% 65%;
-    /* Soft Red */
-    --destructive-foreground: 340 100% 97%;
+    --destructive: 350 80% 55%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 351 40% 90%;
-    /* Very subtle border */
-    /* Darker Pink for definition */
+    --border: 340 40% 85%;
     --input: 340 30% 92%;
-    --ring: 348 60% 75%;
+    --ring: 340 80% 65%;
+
+    --radius: 1.5rem;
+    /* Super Round / Soft / Cloud */
 
     --success: 95 28% 70%;
     /* Muted Sage */
@@ -1155,6 +1151,73 @@
     box-shadow: 5px 5px 0px 0px hsl(var(--primary) / 0.4) !important;
     opacity: 1 !important;
     /* Ensure opacity is reset if overridden elsewhere */
+  }
+
+  /* BLOSSOM "SAKURA" ENHANCEMENTS */
+  /* 1. Falling Petals Overlay */
+  [data-theme="blossom"] body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 50;
+    background-image:
+      radial-gradient(circle, #ffb7b2 2px, transparent 2.5px),
+      radial-gradient(circle, #ffdac1 2px, transparent 2.5px),
+      radial-gradient(circle, #ff9aa2 3px, transparent 3.5px);
+    background-size: 250px 250px, 350px 350px, 150px 150px;
+    background-position: 0 0, 50px 50px, 100px 100px;
+    animation: falling-sakura 15s linear infinite;
+    opacity: 0.6;
+  }
+
+  /* 2. Pill Buttons (Soft Organic Shapes) */
+  [data-theme="blossom"] .btn,
+  [data-theme="blossom"] button:not(.option-base) {
+    border-radius: 9999px !important;
+  }
+
+  /* 3. Floating Glass Cards */
+  [data-theme="blossom"] .card {
+    background-color: hsl(var(--card) / 0.6) !important;
+    backdrop-filter: blur(8px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 4px 20px -2px rgba(255, 183, 178, 0.2) !important;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  [data-theme="blossom"] .card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px -5px rgba(255, 183, 178, 0.4) !important;
+  }
+
+  /* SAKURA ANIMATION KEYFRAMES */
+  @keyframes falling-sakura {
+    0% {
+      opacity: 0;
+      transform: translate(0, -10px) rotateZ(0deg);
+    }
+
+    20% {
+      opacity: 1;
+    }
+
+    25% {
+      transform: translate(5px, 25vh) rotateZ(45deg);
+    }
+
+    75% {
+      opacity: 0.8;
+      transform: translate(-5px, 75vh) rotateZ(-45deg);
+    }
+
+    100% {
+      opacity: 0;
+      transform: translate(0, 100vh) rotateZ(0deg);
+    }
   }
 
   /* HOLIDAY GOLD BORDER OVERRIDE */
