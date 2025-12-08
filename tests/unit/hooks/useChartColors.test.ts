@@ -31,6 +31,11 @@ describe("useChartColors", () => {
                     "--muted-foreground": "215 16 47",
                     "--background": "210 40 98",
                     "--foreground": "222 47 11",
+                    "--tier-excellent": "142 76 36",
+                    "--tier-great": "221 83 53",
+                    "--tier-good": "186 94 41",
+                    "--tier-passing": "38 92 50",
+                    "--tier-failing": "0 84 60",
                 };
                 return values[prop] || "";
             },
@@ -108,6 +113,13 @@ describe("useChartColors", () => {
             expect(colors.muted).toBeDefined();
             expect(colors.background).toBeDefined();
             expect(colors.foreground).toBeDefined();
+
+            // Tier colors
+            expect(colors.tierExcellent).toBeDefined();
+            expect(colors.tierGreat).toBeDefined();
+            expect(colors.tierGood).toBeDefined();
+            expect(colors.tierPassing).toBeDefined();
+            expect(colors.tierFailing).toBeDefined();
         });
     });
 
@@ -133,6 +145,11 @@ describe("useChartColors", () => {
                         "--muted-foreground": "200 20 60",
                         "--background": "230 25 7",
                         "--foreground": "200 60 95",
+                        "--tier-excellent": "160 100 40",
+                        "--tier-great": "186 100 50",
+                        "--tier-good": "200 100 50",
+                        "--tier-passing": "45 100 55",
+                        "--tier-failing": "350 100 60",
                     };
                     return values[prop] || "";
                 },
