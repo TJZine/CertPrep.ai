@@ -104,7 +104,7 @@ export function useAnalyticsStats(
 
             // Filter to only questions served in this session (Smart Round, Review Missed)
             const idSet = result.question_ids
-              ? new Set(result.question_ids)
+              ? new Set(result.question_ids.map(String))
               : null;
             const sessionQuestions = idSet
               ? quiz.questions.filter((q) => idSet.has(String(q.id)))

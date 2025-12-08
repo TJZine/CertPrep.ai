@@ -33,8 +33,9 @@ export interface AdvancedAnalytics {
 /**
  * Normalizes a timestamp to the start of day in local timezone.
  * Returns ISO-style YYYY-MM-DD format for proper sorting.
+ * @public - Exported for testing purposes
  */
-function getDateKey(timestamp: number): string {
+export function getDateKey(timestamp: number): string {
     const date = new Date(timestamp);
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -44,8 +45,9 @@ function getDateKey(timestamp: number): string {
 
 /**
  * Calculates exam readiness based on category performance.
+ * @public - Exported for testing purposes
  */
-function calculateReadiness(
+export function calculateReadiness(
     results: Result[],
     quizzes: Quiz[],
 ): { score: number; confidence: ConfidenceLevel; categoryReadiness: Map<string, number> } {
@@ -96,8 +98,9 @@ function calculateReadiness(
 
 /**
  * Calculates study streaks from result timestamps.
+ * @public - Exported for testing purposes
  */
-function calculateStreaks(
+export function calculateStreaks(
     results: Result[],
 ): { current: number; longest: number; consistency: number; last7Days: boolean[] } {
     if (results.length === 0) {
@@ -187,8 +190,9 @@ function calculateStreaks(
 
 /**
  * Calculates category trends by comparing recent vs prior performance.
+ * @public - Exported for testing purposes
  */
-function calculateCategoryTrends(
+export function calculateCategoryTrends(
     results: Result[],
 ): Map<string, TrendDirection> {
     const trends = new Map<string, TrendDirection>();
@@ -240,8 +244,9 @@ function calculateCategoryTrends(
 
 /**
  * Calculates first attempt vs retry comparison.
+ * @public - Exported for testing purposes
  */
-function calculateRetryComparison(
+export function calculateRetryComparison(
     results: Result[],
 ): { firstAttemptAvg: number | null; retryAvg: number | null; avgImprovement: number | null } {
     if (results.length === 0) {
