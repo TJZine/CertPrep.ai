@@ -1,4 +1,5 @@
 import { logger } from "@/lib/logger";
+import { sanitizeQuestionText } from "@/lib/sanitize";
 import type { Question, Quiz } from "@/types/quiz";
 
 export type QuizId = string;
@@ -135,7 +136,15 @@ export function toLocalQuiz(remote: RemoteQuizRow): Quiz {
     title: remote.title,
     description: remote.description ?? "",
     tags: remote.tags ?? [],
-    questions: remote.questions,
+    questions: remote.questions.map((q) => ({
+      ...q,
+      question: sanitizeQuestionText(q.question),
+      explanation: sanitizeQuestionText(q.explanation),
+      options: Object.fromEntries(
+        Object.entries(q.options).map(([k, v]) => [k, sanitizeQuestionText(v)]),
+      ),
+      category: sanitizeQuestionText(q.category),
+    })),
     version: remote.version,
     sourceId: remote.source_id ?? undefined,
     created_at: new Date(remote.created_at).getTime(),

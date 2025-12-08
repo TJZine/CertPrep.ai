@@ -124,3 +124,53 @@ Instead of risky automated background garbage collection (which could accidental
 ### Why not automated GC?
 
 Automated GC requires complex logic to know "has every other device seen this deletion?" which is impossible in a peer-to-peer or disconnected environment. Manual cleanup puts the decision in the user's hands and is significantly safer.
+
+---
+
+## Feature: Custom Study Sessions ("Areas to Improve")
+
+**Priority**: Medium | **Effort**: 1-2 days | **Category**: Analytics / Core Features
+
+### Context
+
+In the Analytics dashboard, the "Values" card (Weak Areas) has a "Study This Topic" button. Currently, this button triggers an empty handler because the quiz runner (`ZenModePage`) requires a static Quiz ID, but "Weak Areas" aggregate questions across _multiple_ quizzes.
+
+### Proposed Solution (Option B: Generated Custom Quizzes)
+
+Enable users to launch a practice session containing _all_ questions for a specific category (e.g., "Biology") from their entire library.
+
+### Implementation Plan
+
+#### 1. Database & Types
+
+- Add `isGenerated?: boolean` (or `type: 'standard' | 'generated'`) to the `Quiz` interface (`src/types/quiz.ts`).
+- Implement `createGeneratedQuiz` in `src/db/quizzes.ts`:
+  - Accepts a title (e.g., "Biology Practice") and a list of Questions.
+  - Generates a UUID and saves to Dexie.
+  - Sets `created_at` timestamp.
+
+#### 2. Aggregation Logic (`src/lib/quiz-generator.ts`)
+
+- Create `generateCategoryQuiz(category: string, allQuizzes: Quiz[]): Quiz`.
+- Logic:
+  - Iterate through all available quizzes.
+  - Extract unique questions matching `category` (case-insensitive).
+  - Return a new `Quiz` object ready for persistence.
+
+#### 3. Frontend Integration (`src/app/analytics/page.tsx`)
+
+- Implement the `handleStudyTopic` function:
+  1. Call `generateCategoryQuiz` with the selected category.
+  2. Persist the result via `createGeneratedQuiz`.
+  3. Redirect to the filtered quiz: `router.push('/quiz/[new-id]/zen')`.
+
+#### 4. Maintenance / Cleanup
+
+- Since these are temporary sessions, add a cleanup routine (e.g., on app init) to delete `isGenerated: true` quizzes older than 24 hours to prevent database bloat.
+
+### Acceptance Criteria
+
+- [ ] Clicking "Study This Topic" on "Biology" creates a new quiz session.
+- [ ] The session contains all Biology questions from the user's library.
+- [ ] The session works with existing Zen Mode features (scoring, explanations).
+- [ ] Generated quizzes do not permanently clutter the main "Library" view (or are marked clearly).

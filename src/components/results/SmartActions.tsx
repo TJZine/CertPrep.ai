@@ -327,9 +327,11 @@ export function SmartActions({
         }
       >
         <div className="space-y-4">
-          <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-            <h4 className="font-medium text-slate-900">Questions Included:</h4>
-            <ul className="mt-2 space-y-1 text-sm text-slate-600">
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900/50">
+            <h4 className="font-medium text-slate-900 dark:text-slate-100">
+              Questions Included:
+            </h4>
+            <ul className="mt-2 space-y-1 text-sm text-slate-600 dark:text-slate-300">
               <li className="flex items-center gap-2">
                 <span className="h-2 w-2 rounded-full bg-red-400" />
                 {missedQuestions.length} missed questions
@@ -339,17 +341,17 @@ export function SmartActions({
                 {flaggedQuestionIds.length} flagged questions
               </li>
               {flaggedAndMissed.length > 0 && (
-                <li className="text-xs text-slate-400">
+                <li className="text-xs text-slate-400 dark:text-slate-500">
                   ({flaggedAndMissed.length} overlap - counted once)
                 </li>
               )}
             </ul>
-            <p className="mt-3 font-semibold text-slate-900">
+            <p className="mt-3 font-semibold text-slate-900 dark:text-slate-100">
               Total: {smartRoundQuestionIds.length} questions
             </p>
           </div>
 
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-slate-500 dark:text-slate-400">
             This will start a new Zen study session with only the questions you
             need to practice. Perfect for focused review!
           </p>

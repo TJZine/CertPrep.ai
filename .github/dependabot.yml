@@ -8,8 +8,14 @@ updates:
       day: "monday"
     open-pull-requests-limit: 10
     groups:
-      # Group all minor and patch updates together to reduce noise
-      dependencies:
+      # Major updates often have breaking changes - review separately
+      major-updates:
+        patterns:
+          - "*"
+        update-types:
+          - "major"
+      # Minor/patch updates are usually safe to batch together
+      routine-updates:
         patterns:
           - "*"
         update-types:

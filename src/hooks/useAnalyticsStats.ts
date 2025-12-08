@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { calculateCategoryTrends, type TrendDirection } from "@/lib/analytics/trends";
 import { hashAnswer } from "@/lib/utils";
 import type { Quiz } from "@/types/quiz";
 import type { Result } from "@/types/result";
@@ -12,7 +13,7 @@ export interface CategoryStat {
 
 export interface AnalyticsStats {
   categoryPerformance: CategoryStat[];
-  weakAreas: { category: string; avgScore: number; totalQuestions: number }[];
+  weakAreas: { category: string; avgScore: number; totalQuestions: number; recentTrend?: TrendDirection }[];
   dailyStudyTime: { date: string; minutes: number }[];
   isLoading: boolean;
 }
@@ -28,6 +29,10 @@ const formatDate = (timestamp: number | Date): string => {
 
 /**
  * Asynchronously calculates analytics stats from results and quizzes.
+ *
+ * @param results - Array of all quiz results.
+ * @param quizzes - Array of available quizzes.
+ * @returns An `AnalyticsStats` object containing category performance, weak areas, and daily study time.
  */
 export function useAnalyticsStats(
   results: Result[],
@@ -49,7 +54,14 @@ export function useAnalyticsStats(
             .sort(([a], [b]) => a.localeCompare(b))
             .map(([key, value]) => `${key}:${value}`)
             .join(",");
-          return `${r.id}:${r.score}:${r.timestamp}:${r.time_taken_seconds}:${answersKey}`;
+          const questionIdsKey = (r.question_ids ?? []).join(",");
+          const categoryBreakdownKey = r.category_breakdown
+            ? Object.entries(r.category_breakdown)
+              .sort(([a], [b]) => a.localeCompare(b))
+              .map(([cat, val]) => `${cat}:${val}`)
+              .join(",")
+            : "";
+          return `${r.id}:${r.score}:${r.timestamp}:${r.time_taken_seconds}:${answersKey}:${questionIdsKey}:${categoryBreakdownKey}`;
         })
         .sort()
         .join("|"),
@@ -69,7 +81,10 @@ export function useAnalyticsStats(
     const calculate = async (): Promise<void> => {
       // Safety timeout to ensure we don't hang forever
       const safetyTimeout = setTimeout(() => {
-        if (isMounted) setIsLoading(false);
+        if (isMounted) {
+          console.warn("Analytics calculation timed out after 5s");
+          setIsLoading(false);
+        }
       }, 5000);
 
       try {
@@ -102,10 +117,18 @@ export function useAnalyticsStats(
             const quiz = quizMap.get(result.quiz_id);
             if (!quiz) return [];
 
+            // Filter to only questions served in this session (Smart Round, Review Missed)
+            const idSet = result.question_ids
+              ? new Set(result.question_ids)
+              : null;
+            const sessionQuestions = idSet
+              ? quiz.questions.filter((q) => idSet.has(q.id))
+              : quiz.questions;
+
             return Promise.all(
-              quiz.questions.map(async (question) => {
+              sessionQuestions.map(async (question) => {
                 const category = question.category || "Uncategorized";
-                const userAnswer = result.answers[String(question.id)];
+                const userAnswer = result.answers[question.id];
                 let isCorrect = false;
 
                 if (userAnswer) {
@@ -144,6 +167,9 @@ export function useAnalyticsStats(
           }),
         );
 
+        // Calculate trends per category using shared utility
+        const categoryTrends = calculateCategoryTrends(results);
+
         const weakAreas = categoryPerformance
           .filter((cat) => cat.score < 70 && cat.total >= 3)
           .sort((a, b) => a.score - b.score)
@@ -152,6 +178,7 @@ export function useAnalyticsStats(
             category: cat.category,
             avgScore: cat.score,
             totalQuestions: cat.total,
+            recentTrend: categoryTrends.get(cat.category),
           }));
 
         // Calculate daily study time for the last DAYS_TO_TRACK days

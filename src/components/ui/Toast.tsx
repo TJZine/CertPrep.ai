@@ -4,18 +4,41 @@ import * as React from "react";
 import { AlertTriangle, CheckCircle2, Info, X, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+/**
+ * Available styles for toast notifications.
+ */
 export type ToastType = "success" | "error" | "warning" | "info";
 
-interface Toast {
+export interface Toast {
+  /** Unique identifier for the toast instance. */
   id: string;
+  /** The visual style and icon of the toast. */
   type: ToastType;
+  /** The text content to display. */
   message: string;
+  /**
+   * Duration in milliseconds before auto-dismissing.
+   * Defaults to 5000ms.
+   */
   duration?: number;
 }
 
-interface ToastContextValue {
+export interface ToastContextValue {
+  /** Current list of active toasts. */
   toasts: Toast[];
+  /**
+   * Triggers a new toast notification.
+   *
+   * @param type - The style of toast (success, error, warning, info).
+   * @param message - The text content.
+   * @param duration - Duration in ms (optional, default 5000). Use 0 to disable auto-dismiss.
+   */
   addToast: (type: ToastType, message: string, duration?: number) => void;
+  /**
+   * Manually dismisses a specific toast.
+   *
+   * @param id - The ID of the toast to remove.
+   */
   removeToast: (id: string) => void;
 }
 
@@ -52,8 +75,7 @@ const typeStyles: Record<
 let toastCounter = 0;
 const generateId = (): string => {
   const webCrypto =
-    typeof globalThis !== "undefined" &&
-    (globalThis as { crypto?: Crypto }).crypto
+    typeof globalThis !== "undefined"
       ? (globalThis as { crypto?: Crypto }).crypto
       : undefined;
 

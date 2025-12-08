@@ -58,12 +58,22 @@ export function ResultsContainer({
     grading,
     isLoading: gradingLoading,
     error: gradingError,
-  } = useQuizGrading(quiz, result.answers);
+  } = useQuizGrading(quiz, result.answers, result.question_ids);
   const {
     resolvedAnswers,
     isResolving,
     error: resolvingError,
   } = useResolveCorrectAnswers(quiz.questions);
+
+  // Questions actually included in this session (subset for Smart Round/Review Missed)
+  const scopedQuestions = React.useMemo(() => {
+    if (!result.question_ids) return quiz.questions;
+    const idSet = new Set(result.question_ids);
+    return quiz.questions.filter((q) => idSet.has(q.id));
+  }, [quiz.questions, result.question_ids]);
+
+  // Get the effective question count (subset for Smart Round, full quiz otherwise)
+  const sessionQuestionCount = scopedQuestions.length;
 
   const stats = React.useMemo(() => {
     if (!grading) return null;
@@ -74,18 +84,18 @@ export function ResultsContainer({
       unansweredCount: grading.unansweredCount,
       answeredCount: grading.correctCount + grading.incorrectCount,
       averageTimePerQuestion:
-        quiz.questions.length > 0
-          ? result.time_taken_seconds / quiz.questions.length
+        sessionQuestionCount > 0
+          ? result.time_taken_seconds / sessionQuestionCount
           : 0,
     };
-  }, [grading, result.time_taken_seconds, quiz.questions.length]);
+  }, [grading, result.time_taken_seconds, sessionQuestionCount]);
 
   const categoryScores = React.useMemo(() => {
     if (!grading) return [];
 
     const categories = new Map<string, { correct: number; total: number }>();
 
-    quiz.questions.forEach((q) => {
+    scopedQuestions.forEach((q) => {
       if (!categories.has(q.category)) {
         categories.set(q.category, { correct: 0, total: 0 });
       }
@@ -104,19 +114,19 @@ export function ResultsContainer({
       correct: data.correct,
       total: data.total,
     }));
-  }, [quiz, grading]);
+  }, [scopedQuestions, grading]);
 
   const questionsWithAnswers = React.useMemo(() => {
     if (!grading) return [];
 
-    return quiz.questions.map((q) => ({
+    return scopedQuestions.map((q) => ({
       question: q,
       userAnswer: result.answers[q.id] || null,
       isCorrect: grading.questionStatus[q.id] === true,
       isFlagged: result.flagged_questions.includes(q.id),
       correctAnswer: resolvedAnswers[q.id] || null,
     }));
-  }, [quiz, result, grading, resolvedAnswers]);
+  }, [scopedQuestions, result, grading, resolvedAnswers]);
 
   const missedQuestions = React.useMemo(() => {
     if (!grading) return [];
@@ -125,7 +135,7 @@ export function ResultsContainer({
       return [];
     }
 
-    return quiz.questions
+    return scopedQuestions
       .filter(
         (q) => grading.questionStatus[q.id] !== true && result.answers[q.id],
       ) // Incorrect and answered
@@ -134,7 +144,7 @@ export function ResultsContainer({
         userAnswer: result.answers[q.id] || null,
         correctAnswer: resolvedAnswers[q.id] || null, // Use null instead of string fallback
       }));
-  }, [quiz, result, grading, resolvedAnswers, isResolving]);
+  }, [scopedQuestions, result, grading, resolvedAnswers, isResolving]);
 
   const hasMissedQuestions = React.useMemo(
     () => missedQuestions.length > 0,
@@ -363,7 +373,7 @@ export function ResultsContainer({
               score={result.score}
               previousScore={previousScore}
               correctCount={stats.correctCount}
-              totalCount={quiz.questions.length}
+              totalCount={sessionQuestionCount}
               timeTakenSeconds={result.time_taken_seconds}
               mode={result.mode}
               timestamp={result.timestamp}
@@ -378,7 +388,7 @@ export function ResultsContainer({
                 incorrectCount={stats.incorrectCount}
                 unansweredCount={stats.unansweredCount}
                 flaggedCount={result.flagged_questions.length}
-                totalQuestions={quiz.questions.length}
+                totalQuestions={sessionQuestionCount}
                 timeTakenSeconds={result.time_taken_seconds}
                 mode={result.mode}
                 averageTimePerQuestion={stats.averageTimePerQuestion}

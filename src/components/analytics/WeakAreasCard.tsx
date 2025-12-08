@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { AlertTriangle, TrendingUp, BookOpen, ArrowRight } from "lucide-react";
+import { AlertTriangle, TrendingUp, TrendingDown, BookOpen, ArrowRight } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -107,6 +107,12 @@ export function WeakAreasCard({
                         Improving
                       </Badge>
                     )}
+                    {area.recentTrend === "declining" && (
+                      <Badge variant="danger" className="gap-1">
+                        <TrendingDown className="h-3 w-3" aria-hidden="true" />
+                        Declining
+                      </Badge>
+                    )}
                   </div>
                   <p className="mt-1 text-sm text-slate-500 dark:text-slate-300">
                     {area.totalQuestions} questions attempted
@@ -129,8 +135,8 @@ export function WeakAreasCard({
                     className={cn(
                       "h-full transition-all",
                       getProgressColor(area.avgScore),
-                      `w-[${Math.round(area.avgScore)}%]`,
                     )}
+                    style={{ width: `${Math.round(area.avgScore)}%` }}
                   />
                 </div>
               </div>

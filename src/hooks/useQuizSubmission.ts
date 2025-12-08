@@ -13,13 +13,33 @@ interface UseQuizSubmissionProps {
   isSmartRound?: boolean;
 }
 
-interface UseQuizSubmissionReturn {
+export interface UseQuizSubmissionReturn {
+  /** True if the last save attempt failed. */
   saveError: boolean;
+  /** True while the submission is being processed. */
   isSaving: boolean;
+  /**
+   * Submits the quiz result to the local database and triggers a background sync.
+   * Redirects to the results page on success.
+   *
+   * @param timeTakenSeconds - The total duration of the quiz session.
+   */
   submitQuiz: (timeTakenSeconds: number) => Promise<void>;
+  /**
+   * Retries the submission logic (wrapper around submitQuiz).
+   *
+   * @param timeTakenSeconds - The total duration of the quiz session.
+   */
   retrySave: (timeTakenSeconds: number) => void;
 }
 
+/**
+ * Hook to handle quiz completion and result submission.
+ * Manages local persistence, syncing, and navigation.
+ *
+ * @param props - Configuration props (quizId, smartRound flag).
+ * @returns State flags and submission handlers.
+ */
 export function useQuizSubmission({
   quizId,
   isSmartRound = false,

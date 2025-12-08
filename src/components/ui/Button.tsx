@@ -45,11 +45,22 @@ export const buttonVariants = cva(
  * Accessible button component with variants, icon slots, and loading state.
  */
 export interface ButtonProps
-  extends
-    React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+  VariantProps<typeof buttonVariants> {
+  /**
+   * If true, displays a loading spinner and disables interaction.
+   * Signals busy/loading state to screen readers via aria-busy.
+   *
+   * @default false
+   */
   isLoading?: boolean;
+  /**
+   * Icon element to render before the button text.
+   */
   leftIcon?: React.ReactNode;
+  /**
+   * Icon element to render after the button text.
+   */
   rightIcon?: React.ReactNode;
 }
 
@@ -72,7 +83,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const iconSize =
       size === "sm" || size === "icon-sm"
         ? "h-4 w-4"
-        : size === "xl"
+        : size === "lg" || size === "xl"
           ? "h-5 w-5"
           : "h-4 w-4";
 

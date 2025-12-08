@@ -73,6 +73,7 @@ create table if not exists results (
   answers jsonb not null default '{}'::jsonb,
   flagged_questions jsonb not null default '[]'::jsonb,
   category_breakdown jsonb not null default '{}'::jsonb,
+  question_ids jsonb default null, -- Optional: Subset of questions for Smart Round / Review Missed
   created_at timestamp with time zone default timezone('utc'::text, now())
 );
 

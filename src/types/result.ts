@@ -1,25 +1,67 @@
 import type { QuizMode } from "./quiz";
 
+/**
+ * Flag indicating synchronization status with the remote database.
+ * - `0`: Local only (not yet synced).
+ * - `1`: Synced with Supabase.
+ */
 export type SyncFlag = 0 | 1;
 
+/**
+ * Represents the outcome of a completed quiz session.
+ *
+ * This record is immutable once created, except for the `synced` status
+ * which changes after successful upload to the remote database.
+ */
 export interface Result {
+  /** Unique UUID for this result record. */
   id: string;
+  /** UUID of the quiz that was taken. */
   quiz_id: string;
+  /** UUID of the user who took the quiz. */
   user_id: string;
+  /** Unix timestamp (ms) when the quiz was finished. */
   timestamp: number;
+  /** Mode the quiz was taken in (e.g., "zen", "proctor"). */
   mode: QuizMode;
+  /** Raw score (number of correct answers). */
   score: number;
+  /** Total duration of the session in seconds. */
   time_taken_seconds: number;
+  /** Map of Question ID -> Selected Option ID. */
   answers: Record<string, string>;
+  /** ID strings of questions flagged by the user during the session. */
   flagged_questions: string[];
+  /** Breakdown of performance metrics by category. */
   category_breakdown: Record<string, number>;
-  synced?: SyncFlag; // 0 = not synced, 1 = synced
-  deleted_at?: number; // Timestamp if soft deleted locally (waiting for sync)
+  /**
+   * Optional list of specific question IDs included in this session.
+   *
+   * Used for "Smart Round" or "Review Missed" sessions where the quiz
+   * is a dynamically generated subset of the original source quiz.
+   */
+  question_ids?: string[];
+  /** Synchronization status flag (0 = pending, 1 = synced). */
+  synced?: SyncFlag;
+  /**
+   * Timestamp (ms) indicating when this result was soft-deleted locally.
+   *
+   * If present, this record is pending permanent deletion on the server
+   * during the next sync cycle.
+   */
+  deleted_at?: number;
 }
 
+/**
+ * Performance metrics for a specific question category.
+ */
 export interface CategoryPerformance {
+  /** Name of the category. */
   category: string;
+  /** Number of questions answered correctly in this category. */
   correct: number;
+  /** Total number of questions answered in this category. */
   total: number;
+  /** Calculated percentage (0-100). */
   percentage: number;
 }

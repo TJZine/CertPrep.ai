@@ -9,6 +9,9 @@ import {
 } from "@/components/analytics/AnalyticsOverview";
 import { PerformanceHistory } from "@/components/analytics/PerformanceHistory";
 import { WeakAreasCard } from "@/components/analytics/WeakAreasCard";
+import { ExamReadinessCard } from "@/components/analytics/ExamReadinessCard";
+import { StreakCard } from "@/components/analytics/StreakCard";
+import { RetryComparisonCard } from "@/components/analytics/RetryComparisonCard";
 import { CategoryBreakdown } from "@/components/results/TopicRadar";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { EmptyState } from "@/components/common/EmptyState";
@@ -19,6 +22,7 @@ import {
   useInitializeDatabase,
 } from "@/hooks/useDatabase";
 import { useAnalyticsStats } from "@/hooks/useAnalyticsStats";
+import { useAdvancedAnalytics } from "@/hooks/useAdvancedAnalytics";
 import { useSync } from "@/hooks/useSync";
 import { getOverallStats, type OverallStats } from "@/db/results";
 import { BarChart3, Plus, ArrowLeft } from "lucide-react";
@@ -94,6 +98,8 @@ export default function AnalyticsPage(): React.ReactElement {
     dailyStudyTime,
     isLoading: statsLoading,
   } = useAnalyticsStats(results, quizzes);
+
+  const advancedAnalytics = useAdvancedAnalytics(results, quizzes);
 
   // Show loading while initializing database or during hydration (effectiveUserId is null).
   // Once hydrated (effectiveUserId assigned for guest or authenticated user), wait for data to load.
@@ -184,6 +190,25 @@ export default function AnalyticsPage(): React.ReactElement {
           {statsError}
         </p>
       )}
+      {/* Hero: Exam Readiness */}
+      <div className="mb-8">
+        <ExamReadinessCard
+          readinessScore={advancedAnalytics.readinessScore}
+          readinessConfidence={advancedAnalytics.readinessConfidence}
+          categoryReadiness={advancedAnalytics.categoryReadiness}
+        />
+      </div>
+
+      {/* Streaks */}
+      <div className="mb-8">
+        <StreakCard
+          currentStreak={advancedAnalytics.currentStreak}
+          longestStreak={advancedAnalytics.longestStreak}
+          consistencyScore={advancedAnalytics.consistencyScore}
+          last7DaysActivity={advancedAnalytics.last7DaysActivity}
+        />
+      </div>
+
       {overallStats && (
         <AnalyticsOverview stats={overallStats} className="mb-8" />
       )}
@@ -197,13 +222,22 @@ export default function AnalyticsPage(): React.ReactElement {
         <PerformanceHistory results={results} quizTitles={quizTitles} />
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-2">
+      <div className="mb-8 grid gap-8 lg:grid-cols-2">
         <CategoryBreakdown categories={categoryPerformance} />
         <WeakAreasCard
           weakAreas={weakAreas}
           onStudyArea={() => {
             // Future enhancement: start a filtered practice session for this category.
           }}
+        />
+      </div>
+
+      {/* Retry Comparison */}
+      <div className="mb-8">
+        <RetryComparisonCard
+          firstAttemptAvg={advancedAnalytics.firstAttemptAvg}
+          retryAvg={advancedAnalytics.retryAvg}
+          avgImprovement={advancedAnalytics.avgImprovement}
         />
       </div>
     </div>
