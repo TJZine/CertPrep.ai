@@ -28,7 +28,7 @@ const sanitizeForSentry = (args: unknown[]): string => {
   return serialized
     .replace(/\b[\w.%+-]+@[\w.-]+\.[A-Z]{2,}\b/gi, "[EMAIL_REDACTED]")
     .replace(
-      /\b(Bearer|Token|token|key|password|pwd|secret)\s*[:=]\s*\S+/gi,
+      /\b(Bearer|token|key|password|pwd|secret)\s*[:=]\s*\S+/gi,
       "$1=[REDACTED]",
     )
     .replace(

@@ -248,22 +248,13 @@ export async function updateQuiz(
       // We need to handle hashing BEFORE sanitization strips the correct_answer.
       // We also need to respect existing hashes if provided.
       const rawQuestions = updates.questions;
-
-      // We need to inject existing hashes if they are missing in the update but present in DB
-      // This is a bit tricky because sanitizeQuestions now enforces hash existence.
-      // So we should pre-fill hashes from existing questions if possible BEFORE calling sanitizeQuestions
-      // OR we rely on sanitizeQuestions to throw if it can't find a hash.
-
-      // However, sanitizeQuestions only looks at the input object. It doesn't know about DB state.
-      // So if the update is partial and missing correct_answer AND correct_answer_hash, 
-      // but we have it in DB, we should merge it first?
-      // Actually, updates.questions is usually a full replacement of the questions array in this app's logic (editing a quiz).
-      // But let's be safe.
+      // Pre-index existing questions for O(1) lookup
+      const existingById = new Map(existing.questions.map((eq) => [eq.id, eq]));
 
       // If we are just updating questions, we probably have the full question object.
       // Let's try to map existing hashes to the raw questions if they are missing.
       const enrichedQuestions = rawQuestions.map((q) => {
-        const existingQ = existing.questions.find((eq) => eq.id === q.id);
+        const existingQ = existingById.get(q.id);
         // Only backfill the hash when the caller hasn't supplied either
         // `correct_answer` or `correct_answer_hash`. If a new answer is
         // provided, let `sanitizeQuestions` compute a fresh hash.
