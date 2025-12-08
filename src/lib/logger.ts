@@ -99,9 +99,12 @@ export const logger = {
         args.find((arg) => arg instanceof Error) ||
         new Error(sanitizeForSentry(args));
       const extras = args.filter((arg) => arg !== errorObj);
+      const sanitizedExtras = extras.map((extra) =>
+        typeof extra === "object" ? sanitizeForSentry([extra]) : extra,
+      );
 
       Sentry.captureException(errorObj, {
-        extra: { rawArgs: extras },
+        extra: { rawArgs: sanitizedExtras },
       });
     }
   },

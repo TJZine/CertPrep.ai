@@ -74,11 +74,10 @@ const typeStyles: Record<
 
 let toastCounter = 0;
 const generateId = (): string => {
-  const globalCrypto =
+  const webCrypto =
     typeof globalThis !== "undefined"
       ? (globalThis as { crypto?: Crypto }).crypto
       : undefined;
-  const webCrypto = globalCrypto ?? undefined;
 
   const uuid = webCrypto?.randomUUID?.();
   if (uuid) return uuid;

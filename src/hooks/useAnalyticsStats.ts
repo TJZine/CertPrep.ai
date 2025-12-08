@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { calculateCategoryTrends } from "@/lib/analytics/trends";
+import { calculateCategoryTrends, type TrendDirection } from "@/lib/analytics/trends";
 import { hashAnswer } from "@/lib/utils";
 import type { Quiz } from "@/types/quiz";
 import type { Result } from "@/types/result";
@@ -13,7 +13,7 @@ export interface CategoryStat {
 
 export interface AnalyticsStats {
   categoryPerformance: CategoryStat[];
-  weakAreas: { category: string; avgScore: number; totalQuestions: number; recentTrend?: "improving" | "declining" | "stable" }[];
+  weakAreas: { category: string; avgScore: number; totalQuestions: number; recentTrend?: TrendDirection }[];
   dailyStudyTime: { date: string; minutes: number }[];
   isLoading: boolean;
 }
