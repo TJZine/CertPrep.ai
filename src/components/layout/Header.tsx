@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { lockBodyScroll, unlockBodyScroll } from "@/lib/bodyScrollLock";
-import { ThemeToggleButton } from "@/components/common/ThemeToggleButton";
+import { ThemePalette } from "@/components/common/ThemePalette";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { Button, buttonVariants } from "@/components/ui/Button";
 import { Logo } from "@/components/common/Logo";
@@ -151,7 +151,7 @@ export function Header(): React.ReactElement {
 
         {/* Desktop Actions */}
         <div className="hidden md:flex items-center gap-4">
-          <ThemeToggleButton />
+          <ThemePalette />
 
           {user ? (
             <div className="flex items-center gap-4 pl-4 border-l border-border">
@@ -196,7 +196,7 @@ export function Header(): React.ReactElement {
 
         {/* Mobile Menu Button */}
         <div className="flex items-center gap-4 md:hidden">
-          <ThemeToggleButton />
+          <ThemePalette />
           <button
             type="button"
             className="inline-flex h-10 w-10 items-center justify-center rounded-md text-foreground transition hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
