@@ -71,8 +71,8 @@ const themes: ThemeOption[] = [
     },
     {
         id: "forest",
-        name: "Forest",
-        description: "Deep pine with calming earth tones",
+        name: "Retro (Dark)",
+        description: "High contrast terminal green on black",
         icon: Trees,
         preview: { bg: "bg-[#141f1a]", accent: "bg-green-500", text: "text-green-100" },
     },

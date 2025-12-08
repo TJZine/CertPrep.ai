@@ -15,20 +15,20 @@ CertPrep.ai uses a semantic token system that allows complete theme customizatio
 
 ## Available Themes
 
-| Theme    | Selector                  | Description                              | Radius  |
-| -------- | ------------------------- | ---------------------------------------- | ------- |
-| Light    | `:root`                   | Default warm slate theme                 | 0.5rem  |
-| Dark     | `.dark`                   | Dark slate for night mode                | 0.5rem  |
-| Midnight | `[data-theme="midnight"]` | Cyber neon with electric cyan            | 0.25rem |
-| Focus    | `[data-theme="focus"]`    | Warm sepia for distraction-free studying | 0.75rem |
-| Forest   | `[data-theme="forest"]`   | Deep pine with autumn accents            | 0.5rem  |
-| Retro    | `[data-theme="retro"]`    | 8-bit NES style with blocky UI           | 0px     |
-| Ocean    | `[data-theme="ocean"]`    | Deep sea navy with coral accents         | 0.75rem |
-| Nord     | `[data-theme="nord"]`     | Arctic blue-grey palette                 | 0.5rem  |
-| Holiday  | `[data-theme="holiday"]`  | Festive Red/Green with Gold accents      | 0.75rem |
-| Vapor    | `[data-theme="vapor"]`    | Synthwave neon pink & cyan               | 0px     |
-| Blossom  | `[data-theme="blossom"]`  | Pastel pink with periwinkle accents      | 1rem    |
-| Mint     | `[data-theme="mint"]`     | Fresh sage with river blue accents       | 0.75rem |
+| Theme        | Selector                  | Description                              | Radius  |
+| ------------ | ------------------------- | ---------------------------------------- | ------- |
+| Light        | `:root`                   | Default warm slate theme                 | 0.5rem  |
+| Dark         | `.dark`                   | Dark slate for night mode                | 0.5rem  |
+| Midnight     | `[data-theme="midnight"]` | Cyber neon with electric cyan            | 0.25rem |
+| Focus        | `[data-theme="focus"]`    | Warm sepia for distraction-free studying | 0.75rem |
+| Retro (Dark) | `[data-theme="forest"]`   | High contrast terminal green on black    | 0px     |
+| Retro        | `[data-theme="retro"]`    | 8-bit NES style with blocky UI           | 0px     |
+| Ocean        | `[data-theme="ocean"]`    | Deep sea navy with coral accents         | 0.75rem |
+| Nord         | `[data-theme="nord"]`     | Arctic blue-grey palette                 | 0.5rem  |
+| Holiday      | `[data-theme="holiday"]`  | Festive Red/Green with Gold accents      | 0.75rem |
+| Vapor        | `[data-theme="vapor"]`    | Synthwave neon pink & cyan               | 0px     |
+| Blossom      | `[data-theme="blossom"]`  | Pastel pink with periwinkle accents      | 1rem    |
+| Mint         | `[data-theme="mint"]`     | Fresh sage with river blue accents       | 0.75rem |
 
 ---
 

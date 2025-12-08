@@ -26,7 +26,7 @@ export const THEME_CONFIG: Record<
   dark: { isDark: true, label: "Dark" },
   midnight: { isDark: true, label: "Midnight" },
   focus: { isDark: false, label: "Focus" },
-  forest: { isDark: true, label: "Forest" },
+  forest: { isDark: true, label: "Retro (Dark)" },
   retro: { isDark: false, label: "Retro" },
   ocean: { isDark: true, label: "Ocean" },
   nord: { isDark: true, label: "Nord" },

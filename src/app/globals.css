@@ -630,6 +630,85 @@
     --shadow-color: 193 43% 67%;
   }
 
+  /* FOREST THEME (RETRO DARK MODE) */
+  [data-theme="forest"] {
+    /* Use Pixel Font */
+    --font-heading: var(--font-press-start), monospace;
+    --font-sans: var(--font-press-start), monospace;
+    --font-mono: var(--font-press-start), monospace;
+
+    /* Base Sizing (match Retro) */
+    font-size: 13px;
+
+    --background: 0 0% 5%;
+    /* Deep Black */
+    --foreground: 120 100% 60%;
+    /* Terminal Green */
+
+    --radius: 0px;
+    /* Strict Retro */
+
+    --card: 0 0% 10%;
+    --card-foreground: 120 100% 60%;
+
+    --popover: 0 0% 12%;
+    --popover-foreground: 120 100% 60%;
+
+    --primary: 120 100% 50%;
+    /* Bright Terminal Green */
+    --primary-foreground: 0 0% 5%;
+
+    --secondary: 0 0% 20%;
+    --secondary-foreground: 120 100% 60%;
+
+    --muted: 0 0% 15%;
+    --muted-foreground: 120 60% 50%;
+
+    --accent: 40 100% 50%;
+    /* Retro Orange Accent */
+    --accent-foreground: 0 0% 5%;
+
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 0 0% 5%;
+
+    --border: 120 100% 25%; /* Dark Green definition */
+    --input: 0 0% 20%;
+    --ring: 120 100% 50%;
+
+    --success: 120 100% 50%;
+    --success-foreground: 0 0% 5%;
+
+    --warning: 40 100% 50%;
+    --warning-foreground: 0 0% 5%;
+
+    --correct: 120 100% 50%;
+    --correct-foreground: 0 0% 5%;
+
+    --incorrect: 0 100% 50%;
+    --incorrect-foreground: 0 0% 5%;
+
+    --flagged: 40 100% 50%;
+    --flagged-foreground: 0 0% 5%;
+
+    --info: 210 100% 50%;
+    --info-foreground: 0 0% 5%;
+
+    /* Performance tier colors (Terminal variants) */
+    --tier-excellent: 120 100% 50%;
+    --tier-excellent-foreground: 0 0% 5%;
+    --tier-great: 210 100% 50%;
+    --tier-great-foreground: 0 0% 5%;
+    --tier-good: 40 100% 50%;
+    --tier-good-foreground: 0 0% 5%;
+    --tier-passing: 300 100% 50%;
+    --tier-passing-foreground: 0 0% 5%;
+    --tier-failing: 0 100% 50%;
+    --tier-failing-foreground: 0 0% 5%;
+
+    /* Unique: Retro Dark Shadows (Green Tinted or Hard Black) */
+    --shadow-color: 0 0% 0%; /* Hard black shadow */
+  }
+
   /* HOLIDAY THEME (Festive Red & Green) */
   [data-theme="holiday"] {
     --background: 0 0% 98%;
@@ -1034,18 +1113,23 @@
     @apply bg-background/70 backdrop-blur-lg border-b border-white/10 shadow-sm supports-[backdrop-filter]:bg-background/60;
   }
 
-  /* RETRO SHADOWS OVERRIDE */
+  /* RETRO SHADOWS OVERRIDE (Includes Forest for Retro Dark) */
   [data-theme="retro"] .shadow-sm,
   [data-theme="retro"] .shadow-md,
   [data-theme="retro"] .shadow-lg,
-  [data-theme="retro"] .glass {
+  [data-theme="retro"] .glass,
+  [data-theme="forest"] .shadow-sm,
+  [data-theme="forest"] .shadow-md,
+  [data-theme="forest"] .shadow-lg,
+  [data-theme="forest"] .glass {
     box-shadow: 4px 4px 0px 0px currentColor !important;
     backdrop-filter: none !important;
     border: 2px solid currentColor !important;
   }
 
   /* RETRO RADIUS OVERRIDE (Nuclear Option) */
-  [data-theme="retro"] [class*="rounded-"] {
+  [data-theme="retro"] [class*="rounded-"],
+  [data-theme="forest"] [class*="rounded-"] {
     border-radius: 0px !important;
   }
 
@@ -1066,31 +1150,36 @@
   }
 
   /* RETRO FOCUS OVERRIDE */
-  [data-theme="retro"] *:focus-visible {
+  [data-theme="retro"] *:focus-visible,
+  [data-theme="forest"] *:focus-visible {
     outline: 2px dashed currentColor !important;
     outline-offset: 2px !important;
     box-shadow: none !important;
   }
 
   /* RETRO SCROLLBARS */
-  [data-theme="retro"] ::-webkit-scrollbar {
+  [data-theme="retro"] ::-webkit-scrollbar,
+  [data-theme="forest"] ::-webkit-scrollbar {
     width: 16px;
     height: 16px;
     background: #000;
   }
 
-  [data-theme="retro"] ::-webkit-scrollbar-thumb {
+  [data-theme="retro"] ::-webkit-scrollbar-thumb,
+  [data-theme="forest"] ::-webkit-scrollbar-thumb {
     background: #fff;
     border: 4px solid #000;
     border-radius: 0px;
   }
 
-  [data-theme="retro"] ::-webkit-scrollbar-track {
+  [data-theme="retro"] ::-webkit-scrollbar-track,
+  [data-theme="forest"] ::-webkit-scrollbar-track {
     background: #000;
   }
 
   /* RETRO PIXELATION */
-  [data-theme="retro"] * {
+  [data-theme="retro"] *,
+  [data-theme="forest"] * {
     image-rendering: pixelated;
   }
 
@@ -1133,7 +1222,8 @@
   }
 
   /* RETRO CRT SCANLINE */
-  [data-theme="retro"] body::after {
+  [data-theme="retro"] body::after,
+  [data-theme="forest"] body::after {
     content: " ";
     display: block;
     position: fixed;
