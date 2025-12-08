@@ -4,8 +4,20 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  /**
+   * Text label displayed above the input.
+   * Automatically associates with the input via `htmlFor`.
+   */
   label?: string;
+  /**
+   * Error message displayed below the input in red.
+   * Sets `aria-invalid` to true and links via `aria-describedby`.
+   */
   error?: string;
+  /**
+   * Informational text displayed below the input (if no error present).
+   * Links via `aria-describedby`.
+   */
   helperText?: string;
 }
 

@@ -11,7 +11,11 @@ export interface GradingResult {
 
 /**
  * Asynchronously grades a quiz result against hashed answers.
- * @param questionIds - Optional array of question IDs to scope grading (for Smart Round / Review Missed)
+ *
+ * @param quiz - The quiz object containing questions and correct answer hashes.
+ * @param answers - Map of Question ID to User Answer (ID).
+ * @param questionIds - Optional array of question IDs to scope grading (for Smart Round / Review Missed).
+ * @returns An object containing the `grading` result (null while loading), `isLoading` flag, and any `error`.
  */
 export function useQuizGrading(
   quiz: Quiz | null,

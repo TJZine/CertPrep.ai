@@ -253,6 +253,10 @@ function calculateRetryComparison(
 /**
  * Advanced analytics hook providing exam readiness, streaks, trends, and retry comparison.
  * Performance optimized with memoization.
+ *
+ * @param results - Array of all quiz results.
+ * @param quizzes - Array of available quizzes.
+ * @returns An `AdvancedAnalytics` object containing calculated metrics and loading state.
  */
 export function useAdvancedAnalytics(
     results: Result[],

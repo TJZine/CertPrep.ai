@@ -29,6 +29,10 @@ const formatDate = (timestamp: number | Date): string => {
 
 /**
  * Asynchronously calculates analytics stats from results and quizzes.
+ *
+ * @param results - Array of all quiz results.
+ * @param quizzes - Array of available quizzes.
+ * @returns An `AnalyticsStats` object containing category performance, weak areas, and daily study time.
  */
 export function useAnalyticsStats(
   results: Result[],
