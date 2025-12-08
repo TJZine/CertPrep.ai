@@ -114,9 +114,11 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   const isProtectedRoute = PROTECTED_ROUTES.some((route) =>
     request.nextUrl.pathname.startsWith(route),
   );
+  /*
   const isAuthRoute = AUTH_ROUTES.some((route) =>
     request.nextUrl.pathname.startsWith(route),
   );
+  */
 
   // Unauthenticated users trying to access protected routes -> Redirect to Login
   if (isProtectedRoute && !user) {
@@ -145,6 +147,10 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   }
 
   // Authenticated users trying to access auth routes -> Redirect to Dashboard
+  // DISABLED: This causes issues when the client side session is invalid/stale but the server
+  // side cookie is still valid. We let the client component (LoginForm) handle the redirect
+  // if the session is genuinely valid.
+  /*
   if (isAuthRoute && user) {
     const redirectUrl = new URL("/", request.url);
     const redirectResponse = NextResponse.redirect(redirectUrl);
@@ -157,6 +163,7 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
 
     return redirectResponse;
   }
+  */
 
   return response;
 }
