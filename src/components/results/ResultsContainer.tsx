@@ -249,12 +249,12 @@ export function ResultsContainer({
 
   if (gradingError || resolvingError) {
     return (
-      <div className="flex h-screen flex-col items-center justify-center bg-slate-50 p-4 dark:bg-slate-950">
+      <div className="flex h-screen flex-col items-center justify-center bg-background p-4">
         <div className="text-center">
-          <h2 className="text-lg font-semibold text-red-600 dark:text-red-400">
+          <h2 className="text-lg font-semibold text-destructive">
             Failed to load results
           </h2>
-          <p className="mt-2 text-slate-600 dark:text-slate-300">
+          <p className="mt-2 text-muted-foreground">
             {gradingError?.message ||
               resolvingError?.message ||
               "An unexpected error occurred."}
@@ -275,14 +275,14 @@ export function ResultsContainer({
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+    <div className="min-h-screen bg-background">
       {gradingLoading || !stats ? (
         <div className="flex h-screen items-center justify-center">
           <LoadingSpinner size="lg" text="Calculating results..." />
         </div>
       ) : (
         <>
-          <header className="no-print sticky top-0 z-40 border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/95">
+          <header className="no-print sticky top-0 z-40 border-b border-border bg-card">
             <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4">
               <div className="flex items-center gap-3">
                 <Button
@@ -294,11 +294,11 @@ export function ResultsContainer({
                   <ArrowLeft className="h-5 w-5" aria-hidden="true" />
                 </Button>
                 <div>
-                  <h1 className="line-clamp-1 text-sm font-semibold text-slate-900 dark:text-slate-50">
+                  <h1 className="line-clamp-1 text-sm font-semibold text-foreground">
                     {quiz.title}
                   </h1>
                   <div className="flex items-center gap-2">
-                    <p className="text-xs text-slate-500 dark:text-slate-300">
+                    <p className="text-xs text-muted-foreground">
                       Results
                     </p>
                     {isQuizRemoved && (
@@ -331,7 +331,7 @@ export function ResultsContainer({
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowDeleteModal(true)}
-                  className="text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-300 dark:hover:bg-red-900/40 dark:hover:text-red-100"
+                  className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                   aria-label="Delete result"
                 >
                   <Trash2 className="h-4 w-4" aria-hidden="true" />
@@ -363,7 +363,7 @@ export function ResultsContainer({
               </Button>
             </div>
             {isQuizRemoved && (
-              <p className="mb-6 text-sm text-amber-700 dark:text-amber-300">
+              <p className="mb-6 text-sm text-warning">
                 This quiz has been removed. Restore it from your dashboard
                 before retaking or editing.
               </p>
@@ -410,7 +410,7 @@ export function ResultsContainer({
             />
 
             <div id="question-review" className="print-break">
-              <h2 className="mb-4 text-xl font-semibold text-slate-900 dark:text-slate-50">
+              <h2 className="mb-4 text-xl font-semibold text-foreground">
                 Question Review
               </h2>
               <QuestionReviewList
@@ -447,11 +447,11 @@ export function ResultsContainer({
               </>
             }
           >
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-muted-foreground">
               Are you sure you want to delete this result? Your score and
               answers will be permanently removed.
             </p>
-            <div className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+            <div className="mt-1 text-sm text-muted-foreground">
               Score: {result.score}%
             </div>
           </Modal>

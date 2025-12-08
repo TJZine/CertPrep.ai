@@ -33,19 +33,18 @@ export function DeleteConfirmModal({
       isOpen={isOpen}
       onClose={onClose}
       title="Delete Quiz"
-      description={`Are you sure you want to delete ${title}? This will also delete all ${
-        attemptCount ?? 0
-      } attempt records. This action cannot be undone.`}
+      description={`Are you sure you want to delete ${title}? This will also delete all ${attemptCount ?? 0
+        } attempt records. This action cannot be undone.`}
       size="sm"
     >
       <div className="flex items-start gap-3">
         <div
-          className="mt-0.5 rounded-full bg-orange-100 p-2 text-orange-600"
+          className="mt-0.5 rounded-full bg-warning/10 p-2 text-warning"
           aria-hidden="true"
         >
           <AlertTriangle className="h-5 w-5" />
         </div>
-        <p className="text-sm text-slate-700">
+        <p className="text-sm text-muted-foreground">
           Deleting a quiz removes it from your library along with any saved
           attempts or analytics. You will not be able to recover this data
           later.

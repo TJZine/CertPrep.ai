@@ -55,8 +55,8 @@ export function OfflineIndicator(): React.ReactElement | null {
       className={cn(
         "fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-md rounded-lg p-4 shadow-lg transition-all border glass",
         isOnline
-          ? "border-green-500/20 dark:border-green-500/30"
-          : "border-amber-500/20 dark:border-amber-500/30",
+          ? "border-success/30"
+          : "border-warning/30",
       )}
       role="status"
       aria-live="polite"
@@ -66,8 +66,8 @@ export function OfflineIndicator(): React.ReactElement | null {
           className={cn(
             "flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full",
             isOnline
-              ? "bg-green-500/10 text-green-600 dark:text-green-400"
-              : "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+              ? "bg-success/10 text-success"
+              : "bg-warning/10 text-warning",
           )}
         >
           {isOnline ? (
@@ -82,8 +82,8 @@ export function OfflineIndicator(): React.ReactElement | null {
             className={cn(
               "font-medium",
               isOnline
-                ? "text-green-700 dark:text-green-400"
-                : "text-amber-700 dark:text-amber-400",
+                ? "text-success"
+                : "text-warning",
             )}
           >
             {isOnline ? "Back Online" : "You're Offline"}

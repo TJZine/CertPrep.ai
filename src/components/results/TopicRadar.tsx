@@ -16,7 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/utils";
 import { TrendingUp, TrendingDown, Target } from "lucide-react";
-import { useIsDarkMode } from "@/hooks/useIsDarkMode";
+import { useChartColors } from "@/hooks/useChartColors";
 
 interface CategoryScore {
   category: string;
@@ -52,14 +52,14 @@ function TopicRadarTooltip({
 
   const data = currentPayload.payload as CategoryTooltipData;
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-lg dark:border-slate-700 dark:bg-slate-900">
-      <p className="font-semibold text-slate-900 dark:text-slate-50">
+    <div className="rounded-lg border border-border bg-popover p-3 shadow-lg">
+      <p className="font-semibold text-popover-foreground">
         {data.fullName}
       </p>
-      <p className="text-sm text-slate-600 dark:text-slate-200">
+      <p className="text-sm text-muted-foreground">
         Score: <span className="font-semibold">{data.score}%</span>
       </p>
-      <p className="text-sm text-slate-600 dark:text-slate-200">
+      <p className="text-sm text-muted-foreground">
         {data.correct} of {data.total} correct
       </p>
     </div>
@@ -74,7 +74,7 @@ export function TopicRadar({
   categories,
   className,
 }: TopicRadarProps): React.ReactElement {
-  const isDark = useIsDarkMode();
+  const { colors } = useChartColors();
 
   const chartData = React.useMemo(() => {
     return categories.map((cat) => ({
@@ -115,7 +115,7 @@ export function TopicRadar({
           <CardTitle>Topic Performance</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-center text-slate-500 dark:text-slate-300">
+          <p className="text-center text-muted-foreground">
             No category data available
           </p>
         </CardContent>
@@ -136,19 +136,19 @@ export function TopicRadar({
                 key={cat.category}
                 className="flex items-center justify-between"
               >
-                <span className="font-medium text-slate-700 dark:text-slate-200">
+                <span className="font-medium text-foreground">
                   {cat.category}
                 </span>
                 <div className="flex items-center gap-2">
-                  <div className="h-2 w-24 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
+                  <div className="h-2 w-24 overflow-hidden rounded-full bg-muted">
                     <div
                       className={cn(
-                        "h-full bg-blue-500",
+                        "h-full bg-primary",
                         `w-[${Math.round(cat.score)}%]`,
                       )}
                     />
                   </div>
-                  <span className="text-sm font-semibold text-slate-900 dark:text-slate-50">
+                  <span className="text-sm font-semibold text-foreground">
                     {cat.score}%
                   </span>
                 </div>
@@ -175,30 +175,30 @@ export function TopicRadar({
               data={chartData}
               margin={{ top: 20, right: 30, bottom: 20, left: 30 }}
             >
-              <PolarGrid stroke={isDark ? "#1f2937" : "#e2e8f0"} />
+              <PolarGrid stroke={colors.grid} />
               <PolarAngleAxis
                 dataKey="subject"
-                tick={{ fill: isDark ? "#cbd5e1" : "#64748b", fontSize: 12 }}
+                tick={{ fill: colors.muted, fontSize: 12 }}
                 tickLine={false}
               />
               <PolarRadiusAxis
                 angle={90}
                 domain={[0, 100]}
-                tick={{ fill: isDark ? "#cbd5e1" : "#94a3b8", fontSize: 10 }}
+                tick={{ fill: colors.muted, fontSize: 10 }}
                 tickCount={5}
               />
               <Radar
                 name="Score"
                 dataKey="score"
-                stroke="#2563eb"
-                fill="#3b82f6"
+                stroke={colors.primary}
+                fill={colors.primary}
                 fillOpacity={0.3}
                 strokeWidth={2}
               />
               <Tooltip content={<TopicRadarTooltip />} />
               <Legend
                 formatter={(value: string) => (
-                  <span className="font-medium text-slate-700 dark:text-slate-300">
+                  <span className="font-medium text-muted-foreground">
                     {value}
                   </span>
                 )}
@@ -207,12 +207,12 @@ export function TopicRadar({
           </ResponsiveContainer>
         </div>
 
-        <div className="mt-4 grid grid-cols-3 gap-4 border-t border-slate-200 pt-4 dark:border-slate-800">
+        <div className="mt-4 grid grid-cols-3 gap-4 border-t border-border pt-4">
           <div className="text-center">
-            <p className="text-2xl font-bold text-slate-900 dark:text-slate-50">
+            <p className="text-2xl font-bold text-foreground">
               {averageScore}%
             </p>
-            <p className="text-xs text-slate-500 dark:text-slate-300">
+            <p className="text-xs text-muted-foreground">
               Average
             </p>
           </div>
@@ -221,15 +221,15 @@ export function TopicRadar({
             <div className="text-center">
               <div className="flex items-center justify-center gap-1">
                 <TrendingUp
-                  className="h-4 w-4 text-green-500"
+                  className="h-4 w-4 text-success"
                   aria-hidden="true"
                 />
-                <p className="text-sm font-semibold text-green-700 dark:text-green-200">
+                <p className="text-sm font-semibold text-success">
                   {strongest.score}%
                 </p>
               </div>
               <p
-                className="truncate text-xs text-slate-500 dark:text-slate-300"
+                className="truncate text-xs text-muted-foreground"
                 title={strongest.category}
               >
                 {strongest.category}
@@ -241,15 +241,15 @@ export function TopicRadar({
             <div className="text-center">
               <div className="flex items-center justify-center gap-1">
                 <TrendingDown
-                  className="h-4 w-4 text-red-500"
+                  className="h-4 w-4 text-destructive"
                   aria-hidden="true"
                 />
-                <p className="text-sm font-semibold text-red-700 dark:text-red-200">
+                <p className="text-sm font-semibold text-destructive">
                   {weakest.score}%
                 </p>
               </div>
               <p
-                className="truncate text-xs text-slate-500 dark:text-slate-300"
+                className="truncate text-xs text-muted-foreground"
                 title={weakest.category}
               >
                 {weakest.category}
@@ -279,10 +279,10 @@ export function CategoryBreakdown({
   }, [categories]);
 
   const getScoreColor = (score: number): string => {
-    if (score >= 80) return "bg-green-500";
-    if (score >= 60) return "bg-blue-500";
-    if (score >= 40) return "bg-amber-500";
-    return "bg-red-500";
+    if (score >= 80) return "bg-tier-excellent";
+    if (score >= 60) return "bg-tier-great";
+    if (score >= 40) return "bg-tier-passing";
+    return "bg-tier-failing";
   };
 
   const getScoreBadge = (
@@ -304,13 +304,13 @@ export function CategoryBreakdown({
           {sorted.map((cat) => (
             <div key={cat.category}>
               <div className="mb-1 flex items-center justify-between">
-                <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                <span className="text-sm font-medium text-foreground">
                   {cat.category}
                 </span>
                 <Badge variant={getScoreBadge(cat.score)}>{cat.score}%</Badge>
               </div>
               <div className="flex items-center gap-2">
-                <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
+                <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
                   <div
                     className={cn(
                       "h-full transition-all",
@@ -319,7 +319,7 @@ export function CategoryBreakdown({
                     )}
                   />
                 </div>
-                <span className="w-16 text-right text-xs text-slate-500 dark:text-slate-300">
+                <span className="w-16 text-right text-xs text-muted-foreground">
                   {cat.correct}/{cat.total}
                 </span>
               </div>

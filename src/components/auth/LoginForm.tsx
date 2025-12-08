@@ -89,7 +89,7 @@ export default function LoginForm(): React.ReactElement {
     <div className="space-y-6">
       <div className="space-y-2 text-center">
         <h1 className="text-3xl font-bold">Welcome Back</h1>
-        <p className="text-gray-500 dark:text-gray-400">
+        <p className="text-muted-foreground">
           Enter your credentials to access your account
         </p>
       </div>
@@ -137,14 +137,14 @@ export default function LoginForm(): React.ReactElement {
               onExpire={() => setCaptchaToken(null)}
             />
           ) : (
-            <div className="text-sm text-gray-500 italic dark:text-gray-400">
+            <div className="text-sm text-muted-foreground italic">
               (Captcha disabled in development)
             </div>
           )}
         </div>
 
         {error && (
-          <div className="text-sm text-red-500 font-medium">{error}</div>
+          <div className="text-sm text-destructive font-medium">{error}</div>
         )}
         <Button type="submit" className="w-full" disabled={loading}>
           {loading ? "Signing in..." : "Sign In"}

@@ -21,16 +21,16 @@ const sizeClasses = {
 };
 
 const variantClasses = {
-  default: "bg-blue-600",
-  success: "bg-green-600",
-  warning: "bg-orange-500",
+  default: "bg-primary",
+  success: "bg-success",
+  warning: "bg-warning",
 };
 
 const statusColors = {
-  unanswered: "bg-slate-200 dark:bg-slate-700",
-  correct: "bg-green-500",
-  incorrect: "bg-red-500",
-  flagged: "bg-orange-400",
+  unanswered: "bg-muted",
+  correct: "bg-correct",
+  incorrect: "bg-incorrect",
+  flagged: "bg-flagged",
 } as const;
 
 type QuestionStatus = keyof typeof statusColors;
@@ -54,7 +54,7 @@ export function ProgressBar({
   return (
     <div className={cn("w-full", className)}>
       {(showPercentage || showFraction) && (
-        <div className="mb-1 flex items-center justify-between text-sm text-slate-600 dark:text-slate-300">
+        <div className="mb-1 flex items-center justify-between text-sm text-muted-foreground">
           {showFraction && (
             <span>
               {current} / {total}
@@ -65,7 +65,7 @@ export function ProgressBar({
       )}
       <div
         className={cn(
-          "w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800",
+          "w-full overflow-hidden rounded-full bg-muted",
           sizeClasses[size],
         )}
         role="progressbar"
@@ -117,7 +117,7 @@ export function SegmentedProgress({
           "h-2 flex-1 rounded-full transition-all",
           statusColors[question.status],
           index === currentIndex &&
-            "ring-2 ring-blue-500 ring-offset-1 ring-offset-slate-100 dark:ring-offset-slate-900",
+          "ring-2 ring-primary ring-offset-1 ring-offset-background",
         );
 
         if (onQuestionClick) {

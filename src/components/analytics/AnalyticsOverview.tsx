@@ -23,7 +23,7 @@ import {
   CardDescription,
 } from "@/components/ui/Card";
 import { cn, formatTime } from "@/lib/utils";
-import { useIsDarkMode } from "@/hooks/useIsDarkMode";
+import { useChartColors } from "@/hooks/useChartColors";
 import type { OverallStats } from "@/db/results";
 
 type TooltipEntry = { name?: string; value?: number; payload?: unknown };
@@ -87,29 +87,29 @@ export function AnalyticsOverview({
       label: "Total Quizzes",
       value: stats.totalQuizzes,
       icon: BookOpen,
-      color: "text-blue-600 dark:text-blue-200",
-      bgColor: "bg-blue-100 dark:bg-blue-900/30",
+      color: "text-info",
+      bgColor: "bg-info/10",
     },
     {
       label: "Total Attempts",
       value: stats.totalAttempts,
       icon: Target,
-      color: "text-green-600 dark:text-green-200",
-      bgColor: "bg-green-100 dark:bg-green-900/30",
+      color: "text-success",
+      bgColor: "bg-success/10",
     },
     {
       label: "Average Score",
       value: stats.totalAttempts > 0 ? `${stats.averageScore}%` : "-",
       icon: Award,
-      color: "text-amber-600 dark:text-amber-200",
-      bgColor: "bg-amber-100 dark:bg-amber-900/30",
+      color: "text-warning",
+      bgColor: "bg-warning/10",
     },
     {
       label: "Study Time",
       value: formatTime(stats.totalStudyTime),
       icon: Clock,
-      color: "text-purple-600 dark:text-purple-200",
-      bgColor: "bg-purple-100 dark:bg-purple-900/30",
+      color: "text-accent",
+      bgColor: "bg-accent/10",
     },
   ] as const;
 
@@ -153,6 +153,7 @@ export function ScoreDistribution({
   results,
   className,
 }: ScoreDistributionProps): React.ReactElement {
+  const { colors } = useChartColors();
   const validResults = React.useMemo(
     () =>
       results.filter(
@@ -168,36 +169,36 @@ export function ScoreDistribution({
         name: "90-100%",
         min: 90,
         max: 100,
-        color: "#22c55e",
-        colorClass: "legend-dot-green",
+        colorKey: "tierExcellent" as const,
+        colorClass: "legend-dot-excellent",
       },
       {
         name: "80-89%",
         min: 80,
         max: 89,
-        color: "#3b82f6",
-        colorClass: "legend-dot-blue",
+        colorKey: "tierGreat" as const,
+        colorClass: "legend-dot-great",
       },
       {
         name: "70-79%",
         min: 70,
         max: 79,
-        color: "#06b6d4",
-        colorClass: "legend-dot-cyan",
+        colorKey: "tierGood" as const,
+        colorClass: "legend-dot-good",
       },
       {
         name: "60-69%",
         min: 60,
         max: 69,
-        color: "#f59e0b",
-        colorClass: "legend-dot-amber",
+        colorKey: "tierPassing" as const,
+        colorClass: "legend-dot-passing",
       },
       {
         name: "Below 60%",
         min: 0,
         max: 59,
-        color: "#ef4444",
-        colorClass: "legend-dot-red",
+        colorKey: "tierFailing" as const,
+        colorClass: "legend-dot-failing",
       },
     ];
 
@@ -207,7 +208,7 @@ export function ScoreDistribution({
         value: validResults.filter(
           (r) => r.score >= range.min && r.score <= range.max,
         ).length,
-        color: range.color,
+        colorKey: range.colorKey,
         colorClass: range.colorClass,
       }))
       .filter((r) => r.value > 0);
@@ -221,7 +222,7 @@ export function ScoreDistribution({
         </CardHeader>
         <CardContent>
           <p className="text-center text-muted-foreground">
-            No data yet
+            Complete some quizzes to see your score distribution
           </p>
         </CardContent>
       </Card>
@@ -232,9 +233,7 @@ export function ScoreDistribution({
     <Card className={className}>
       <CardHeader>
         <CardTitle>Score Distribution</CardTitle>
-        <CardDescription>
-          Breakdown of your scores across all attempts
-        </CardDescription>
+        <CardDescription>Performance breakdown by score range</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="h-[250px]">
@@ -252,7 +251,7 @@ export function ScoreDistribution({
                 labelLine={false}
               >
                 {distribution.map((entry) => (
-                  <Cell key={entry.name} fill={entry.color} />
+                  <Cell key={entry.name} fill={colors[entry.colorKey]} />
                 ))}
               </Pie>
               <Tooltip content={<PieTooltip />} />
@@ -287,9 +286,7 @@ export function StudyTimeChart({
   dailyData,
   className,
 }: StudyTimeChartProps): React.ReactElement {
-  const isDark = useIsDarkMode();
-  const tickColor = isDark ? "#cbd5e1" : "#64748b";
-  const gridColor = isDark ? "#1f2937" : "#e2e8f0";
+  const { colors } = useChartColors();
 
   if (dailyData.length === 0) {
     return (
@@ -318,19 +315,19 @@ export function StudyTimeChart({
         <div className="h-[250px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={dailyData}>
-              <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
+              <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} />
               <XAxis
                 dataKey="date"
-                tick={{ fill: tickColor, fontSize: 12 }}
+                tick={{ fill: colors.muted, fontSize: 12 }}
                 tickLine={false}
               />
               <YAxis
-                tick={{ fill: tickColor, fontSize: 12 }}
+                tick={{ fill: colors.muted, fontSize: 12 }}
                 tickLine={false}
                 axisLine={false}
               />
               <Tooltip content={<BarTooltip />} />
-              <Bar dataKey="minutes" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="minutes" fill={colors.primary} radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>

@@ -65,6 +65,51 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          foreground: "hsl(var(--success-foreground))",
+        },
+        warning: {
+          DEFAULT: "hsl(var(--warning))",
+          foreground: "hsl(var(--warning-foreground))",
+        },
+        correct: {
+          DEFAULT: "hsl(var(--correct))",
+          foreground: "hsl(var(--correct-foreground))",
+        },
+        incorrect: {
+          DEFAULT: "hsl(var(--incorrect))",
+          foreground: "hsl(var(--incorrect-foreground))",
+        },
+        flagged: {
+          DEFAULT: "hsl(var(--flagged))",
+          foreground: "hsl(var(--flagged-foreground))",
+        },
+        info: {
+          DEFAULT: "hsl(var(--info))",
+          foreground: "hsl(var(--info-foreground))",
+        },
+        // Performance tier colors (Scorecard, Analytics charts)
+        "tier-excellent": {
+          DEFAULT: "hsl(var(--tier-excellent))",
+          foreground: "hsl(var(--tier-excellent-foreground))",
+        },
+        "tier-great": {
+          DEFAULT: "hsl(var(--tier-great))",
+          foreground: "hsl(var(--tier-great-foreground))",
+        },
+        "tier-good": {
+          DEFAULT: "hsl(var(--tier-good))",
+          foreground: "hsl(var(--tier-good-foreground))",
+        },
+        "tier-passing": {
+          DEFAULT: "hsl(var(--tier-passing))",
+          foreground: "hsl(var(--tier-passing-foreground))",
+        },
+        "tier-failing": {
+          DEFAULT: "hsl(var(--tier-failing))",
+          foreground: "hsl(var(--tier-failing-foreground))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

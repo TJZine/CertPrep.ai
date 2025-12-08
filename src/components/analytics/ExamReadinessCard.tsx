@@ -71,8 +71,8 @@ function ReadinessGauge({
                     className={cn(
                         "transition-all duration-700 ease-out",
                         isPassing
-                            ? "text-green-500 dark:text-green-400"
-                            : "text-amber-500 dark:text-amber-400",
+                            ? "text-success"
+                            : "text-warning",
                     )}
                 />
                 {/* Threshold marker */}
@@ -93,8 +93,8 @@ function ReadinessGauge({
                     className={cn(
                         "text-4xl font-bold",
                         isPassing
-                            ? "text-green-600 dark:text-green-400"
-                            : "text-amber-600 dark:text-amber-400",
+                            ? "text-success"
+                            : "text-warning",
                     )}
                 >
                     {score}%
@@ -131,8 +131,8 @@ function CategoryBar({
                     className={cn(
                         "font-semibold",
                         isPassing
-                            ? "text-green-600 dark:text-green-400"
-                            : "text-amber-600 dark:text-amber-400",
+                            ? "text-success"
+                            : "text-warning",
                     )}
                 >
                     {score}%
@@ -149,7 +149,7 @@ function CategoryBar({
                 <div
                     className={cn(
                         "h-full transition-all duration-500",
-                        isPassing ? "bg-green-500" : "bg-amber-500",
+                        isPassing ? "bg-success" : "bg-warning",
                     )}
                     style={{ width: `${Math.min(100, score)}%` }}
                 />

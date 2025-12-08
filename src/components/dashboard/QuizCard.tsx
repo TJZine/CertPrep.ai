@@ -225,11 +225,7 @@ export function QuizCard({
           {quiz.tags.length > 0 ? (
             <div className="mt-3 flex flex-wrap items-center gap-2">
               {visibleTags.map((tag) => (
-                <Badge
-                  key={tag}
-                  variant="secondary"
-                  className="bg-secondary text-secondary-foreground"
-                >
+                <Badge key={tag} variant="secondary">
                   {tag}
                 </Badge>
               ))}
@@ -252,11 +248,7 @@ export function QuizCard({
                       </p>
                       <div className="flex flex-wrap gap-1.5">
                         {extraTags.map((tag) => (
-                          <Badge
-                            key={tag}
-                            variant="secondary"
-                            className="bg-secondary text-secondary-foreground"
-                          >
+                          <Badge key={tag} variant="secondary">
                             {tag}
                           </Badge>
                         ))}

@@ -27,14 +27,14 @@ export function Logo({
     >
       <BrainCircuit
         className={cn(
-          "h-6 w-6 text-blue-600 dark:text-blue-400",
+          "h-6 w-6 text-primary",
           iconClassName,
         )}
         aria-hidden="true"
       />
       <span
         className={cn(
-          "font-bold tracking-tight text-slate-900 dark:text-slate-100",
+          "font-bold tracking-tight text-foreground",
           textClassName,
         )}
       >

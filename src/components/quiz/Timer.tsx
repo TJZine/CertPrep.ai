@@ -18,8 +18,8 @@ export function Timer({ secondsRemaining }: TimerProps): React.ReactElement {
       <span
         className={
           warning
-            ? "text-red-600 dark:text-red-300"
-            : "text-slate-800 dark:text-slate-100"
+            ? "text-destructive"
+            : "text-foreground"
         }
       >
         {formatTime(Math.max(secondsRemaining, 0))}

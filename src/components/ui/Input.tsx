@@ -45,7 +45,7 @@ export const Input = ({
       {label ? (
         <label
           htmlFor={inputId}
-          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          className="text-sm font-medium leading-none"
         >
           {label}
         </label>
@@ -68,7 +68,7 @@ export const Input = ({
         </p>
       ) : null}
       {helperText ? (
-        <p id={helperId} className="text-sm text-slate-600">
+        <p id={helperId} className="text-sm text-muted-foreground">
           {helperText}
         </p>
       ) : null}

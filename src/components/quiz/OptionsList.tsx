@@ -47,18 +47,18 @@ export function OptionsList({
 
   const statusStyles: Record<OptionStatus, string> = {
     default:
-      "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-slate-600 dark:hover:bg-slate-800",
+      "border-border bg-card hover:border-primary/30 hover:bg-muted/50",
     selected:
-      "border-blue-500 bg-blue-50 ring-2 ring-blue-500 ring-offset-1 dark:border-blue-400 dark:bg-blue-900/30 dark:ring-offset-slate-900",
+      "border-primary bg-primary/10 ring-2 ring-primary ring-offset-1 ring-offset-background",
     correct:
-      "border-green-500 bg-green-50 dark:border-green-500 dark:bg-green-900/30",
+      "border-correct bg-correct/10",
     incorrect:
-      "border-red-500 bg-red-50 dark:border-red-500 dark:bg-red-900/30",
+      "border-incorrect bg-incorrect/10",
   };
 
   const statusIcons: Partial<Record<OptionStatus, React.ReactNode>> = {
-    correct: <Check className="h-5 w-5 text-green-600" aria-hidden="true" />,
-    incorrect: <X className="h-5 w-5 text-red-600" aria-hidden="true" />,
+    correct: <Check className="h-5 w-5 text-correct" aria-hidden="true" />,
+    incorrect: <X className="h-5 w-5 text-incorrect" aria-hidden="true" />,
   };
 
   return (
@@ -92,13 +92,13 @@ export function OptionsList({
               className={cn(
                 "flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full font-semibold",
                 status === "correct" &&
-                  "bg-green-200 text-green-800 dark:bg-green-800 dark:text-green-100",
+                "bg-correct/20 text-correct",
                 status === "incorrect" &&
-                  "bg-red-200 text-red-800 dark:bg-red-800 dark:text-red-100",
+                "bg-incorrect/20 text-incorrect",
                 status === "selected" &&
-                  "bg-blue-200 text-blue-800 dark:bg-blue-800 dark:text-blue-100",
+                "bg-primary/20 text-primary",
                 status === "default" &&
-                  "bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-100",
+                "bg-muted text-muted-foreground",
               )}
             >
               {key}
@@ -107,10 +107,10 @@ export function OptionsList({
             <span
               className={cn(
                 "flex-1 pt-1 text-base",
-                status === "correct" && "text-green-800 dark:text-green-100",
-                status === "incorrect" && "text-red-800 dark:text-red-100",
-                status === "selected" && "text-blue-900 dark:text-blue-100",
-                status === "default" && "text-slate-700 dark:text-slate-100",
+                status === "correct" && "text-correct",
+                status === "incorrect" && "text-incorrect",
+                status === "selected" && "text-primary",
+                status === "default" && "text-foreground",
               )}
               dangerouslySetInnerHTML={{ __html: sanitizedText }}
             />
@@ -123,21 +123,21 @@ export function OptionsList({
       })}
 
       {!hasSubmitted && !disabled && (
-        <p className="mt-2 text-center text-xs text-slate-400 dark:text-slate-300">
+        <p className="mt-2 text-center text-xs text-muted-foreground">
           Press{" "}
-          <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono dark:bg-slate-800 dark:text-slate-100">
+          <kbd className="rounded bg-muted px-1 py-0.5 font-mono text-foreground">
             A
           </kbd>
           ,{" "}
-          <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono dark:bg-slate-800 dark:text-slate-100">
+          <kbd className="rounded bg-muted px-1 py-0.5 font-mono text-foreground">
             B
           </kbd>
           ,{" "}
-          <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono dark:bg-slate-800 dark:text-slate-100">
+          <kbd className="rounded bg-muted px-1 py-0.5 font-mono text-foreground">
             C
           </kbd>
           , or{" "}
-          <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono dark:bg-slate-800 dark:text-slate-100">
+          <kbd className="rounded bg-muted px-1 py-0.5 font-mono text-foreground">
             D
           </kbd>{" "}
           to select

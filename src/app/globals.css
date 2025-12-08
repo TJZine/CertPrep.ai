@@ -29,8 +29,9 @@
     --muted-foreground: 215 16% 47%;
     /* Slate-500 */
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222 47% 11%;
+    --accent: 262 83% 58%;
+    /* Violet-500 - Feature highlights */
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
@@ -39,6 +40,47 @@
     /* Slate-200 */
     --input: 214.3 31.8% 91.4%;
     --ring: 221 83% 53%;
+
+    --success: 142 76% 36%;
+    /* Green-600 */
+    --success-foreground: 0 0% 100%;
+
+    --warning: 25 95% 53%;
+    /* Orange-500 */
+    --warning-foreground: 0 0% 100%;
+
+    --correct: 142 76% 36%;
+    /* Green-600 - quiz correct answers */
+    --correct-foreground: 0 0% 100%;
+
+    --incorrect: 0 84% 60%;
+    /* Red-500 - quiz incorrect answers */
+    --incorrect-foreground: 0 0% 100%;
+
+    --flagged: 25 95% 53%;
+    /* Orange-500 - flagged questions */
+    --flagged-foreground: 0 0% 100%;
+
+    --info: 221 83% 53%;
+    /* Blue-600 - informational highlights */
+    --info-foreground: 0 0% 100%;
+
+    /* Performance tier colors */
+    --tier-excellent: 142 76% 36%;
+    /* Green-600 - 90%+ */
+    --tier-excellent-foreground: 0 0% 100%;
+    --tier-great: 221 83% 53%;
+    /* Blue-600 - 80-89% */
+    --tier-great-foreground: 0 0% 100%;
+    --tier-good: 186 94% 41%;
+    /* Cyan-600 - 70-79% */
+    --tier-good-foreground: 0 0% 100%;
+    --tier-passing: 38 92% 50%;
+    /* Amber-500 - 60-69% */
+    --tier-passing-foreground: 0 0% 0%;
+    --tier-failing: 0 84% 60%;
+    /* Red-500 - <60% */
+    --tier-failing-foreground: 0 0% 100%;
 
     --radius: 0.5rem;
   }
@@ -68,7 +110,8 @@
     --muted-foreground: 215 20.2% 65.1%;
     /* Slate-400 */
 
-    --accent: 217.2 32.6% 17.5%;
+    --accent: 262 83% 58%;
+    /* Violet-500 - Feature highlights */
     --accent-foreground: 210 40% 98%;
 
     --destructive: 0 62.8% 30.6%;
@@ -77,106 +120,264 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 224.3 76.3% 48%;
+
+    --success: 142 70% 45%;
+    /* Green-500 */
+    --success-foreground: 222 47% 11%;
+
+    --warning: 25 95% 53%;
+    /* Orange-500 */
+    --warning-foreground: 222 47% 11%;
+
+    --correct: 142 70% 45%;
+    /* Green-500 */
+    --correct-foreground: 222 47% 11%;
+
+    --incorrect: 0 84% 60%;
+    /* Red-500 */
+    --incorrect-foreground: 210 40% 98%;
+
+    --flagged: 25 95% 53%;
+    /* Orange-500 */
+    --flagged-foreground: 222 47% 11%;
+
+    --info: 217 91% 60%;
+    /* Blue-500 */
+    --info-foreground: 222 47% 11%;
+
+    /* Performance tier colors (dark variants) */
+    --tier-excellent: 142 70% 45%;
+    --tier-excellent-foreground: 222 47% 11%;
+    --tier-great: 217 91% 60%;
+    --tier-great-foreground: 222 47% 11%;
+    --tier-good: 186 94% 50%;
+    --tier-good-foreground: 222 47% 11%;
+    --tier-passing: 38 92% 50%;
+    --tier-passing-foreground: 222 47% 11%;
+    --tier-failing: 0 84% 60%;
+    --tier-failing-foreground: 210 40% 98%;
   }
 
-  /* MIDNIGHT THEME (Cyber/Tech) */
+  /* MIDNIGHT THEME (Cyber/Tech Neon) */
   [data-theme="midnight"] {
-    --background: 222 47% 6%;
-    /* Very Dark Slate */
-    --foreground: 210 40% 98%;
+    --background: 230 25% 7%;
+    /* Deep Space Black */
+    --foreground: 200 60% 95%;
+    /* Cool White */
 
-    --card: 222 47% 8%;
-    --card-foreground: 210 40% 98%;
+    --radius: 0.25rem;
+    /* Sharper "Tech" comers */
 
-    --popover: 222 47% 8%;
-    --popover-foreground: 210 40% 98%;
+    --card: 230 25% 10%;
+    --card-foreground: 200 60% 95%;
 
-    --primary: 199 89% 48%;
-    /* Cyan/Blue Neon */
-    --primary-foreground: 222 47% 11%;
+    --popover: 230 25% 12%;
+    --popover-foreground: 200 60% 95%;
 
-    --secondary: 217 33% 15%;
-    --secondary-foreground: 210 40% 98%;
+    --primary: 186 100% 50%;
+    /* Electric Cyan */
+    --primary-foreground: 230 25% 7%;
 
-    --muted: 217 33% 12%;
-    --muted-foreground: 215 20% 65%;
+    --secondary: 230 25% 15%;
+    --secondary-foreground: 200 60% 95%;
 
-    --accent: 217 33% 15%;
-    --accent-foreground: 210 40% 98%;
+    --muted: 230 25% 14%;
+    --muted-foreground: 200 20% 60%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --accent: 270 80% 60%;
+    /* Neon Purple accent */
+    --accent-foreground: 200 60% 95%;
 
-    --border: 217 33% 15%;
-    --input: 217 33% 15%;
-    --ring: 199 89% 48%;
+    --destructive: 350 100% 60%;
+    /* Hot Pink/Red */
+    --destructive-foreground: 230 25% 7%;
+
+    --border: 230 25% 18%;
+    --input: 230 25% 15%;
+    --ring: 186 100% 50%;
+
+    --success: 160 100% 40%;
+    /* Electric Teal */
+    --success-foreground: 230 25% 7%;
+
+    --warning: 45 100% 55%;
+    /* Neon Yellow */
+    --warning-foreground: 230 25% 7%;
+
+    --correct: 160 100% 40%;
+    /* Electric Teal */
+    --correct-foreground: 230 25% 7%;
+
+    --incorrect: 350 100% 60%;
+    /* Hot Pink/Red */
+    --incorrect-foreground: 230 25% 7%;
+
+    --flagged: 45 100% 55%;
+    /* Neon Yellow */
+    --flagged-foreground: 230 25% 7%;
+
+    --info: 186 100% 50%;
+    /* Electric Cyan */
+    --info-foreground: 230 25% 7%;
+
+    /* Performance tier colors (neon variants) */
+    --tier-excellent: 160 100% 40%;
+    --tier-excellent-foreground: 230 25% 7%;
+    --tier-great: 186 100% 50%;
+    --tier-great-foreground: 230 25% 7%;
+    --tier-good: 200 100% 50%;
+    --tier-good-foreground: 230 25% 7%;
+    --tier-passing: 45 100% 55%;
+    --tier-passing-foreground: 230 25% 7%;
+    --tier-failing: 350 100% 60%;
+    --tier-failing-foreground: 230 25% 7%;
   }
 
-  /* FOCUS THEME (Warm/Paper) */
+  /* FOCUS THEME (Warm Sepia / Distraction-Free) */
   [data-theme="focus"] {
-    --background: 40 20% 97%;
-    /* Warm Paper */
-    --foreground: 20 10% 20%;
-    /* Dark Brown */
+    --background: 35 30% 96%;
+    /* Warm Cream Paper */
+    --foreground: 25 20% 18%;
+    /* Rich Espresso */
 
-    --card: 40 20% 95%;
-    --card-foreground: 20 10% 20%;
+    --radius: 0.75rem;
+    /* Softer "Paper" comers */
 
-    --popover: 40 20% 95%;
-    --popover-foreground: 20 10% 20%;
+    --card: 35 35% 93%;
+    --card-foreground: 25 20% 18%;
 
-    --primary: 25 80% 50%;
-    /* Amber/Orange */
-    --primary-foreground: 40 20% 97%;
+    --popover: 35 35% 93%;
+    --popover-foreground: 25 20% 18%;
 
-    --secondary: 40 10% 90%;
-    --secondary-foreground: 20 10% 20%;
+    --primary: 22 78% 45%;
+    /* Burnt Sienna */
+    --primary-foreground: 35 30% 96%;
 
-    --muted: 40 10% 90%;
-    --muted-foreground: 25 10% 45%;
+    --secondary: 35 25% 88%;
+    --secondary-foreground: 25 20% 18%;
 
-    --accent: 40 10% 88%;
-    --accent-foreground: 20 10% 20%;
+    --muted: 35 20% 88%;
+    --muted-foreground: 25 15% 50%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 40 20% 97%;
+    --accent: 30 40% 82%;
+    /* Warm Sand */
+    --accent-foreground: 25 20% 18%;
 
-    --border: 40 10% 85%;
-    --input: 40 10% 85%;
-    --ring: 25 80% 50%;
+    --destructive: 0 65% 50%;
+    /* Muted Terracotta Red */
+    --destructive-foreground: 35 30% 96%;
+
+    --border: 35 20% 82%;
+    --input: 35 35% 90%;
+    --ring: 22 78% 45%;
+
+    --success: 145 55% 40%;
+    /* Sage Green */
+    --success-foreground: 35 30% 96%;
+
+    --warning: 35 90% 50%;
+    /* Warm Orange */
+    --warning-foreground: 25 20% 18%;
+
+    --correct: 145 55% 40%;
+    /* Sage Green */
+    --correct-foreground: 35 30% 96%;
+
+    --incorrect: 0 55% 52%;
+    /* Muted Brick Red */
+    --incorrect-foreground: 35 30% 96%;
+
+    --flagged: 35 90% 50%;
+    /* Warm Orange */
+    --flagged-foreground: 25 20% 18%;
+
+    --info: 210 40% 50%;
+    /* Muted Ink Blue */
+    --info-foreground: 35 30% 96%;
+
+    /* Performance tier colors (warm/muted variants) */
+    --tier-excellent: 145 55% 40%;
+    --tier-excellent-foreground: 35 30% 96%;
+    --tier-great: 200 50% 45%;
+    --tier-great-foreground: 35 30% 96%;
+    --tier-good: 180 40% 45%;
+    --tier-good-foreground: 35 30% 96%;
+    --tier-passing: 35 90% 50%;
+    --tier-passing-foreground: 25 20% 18%;
+    --tier-failing: 0 55% 52%;
+    --tier-failing-foreground: 35 30% 96%;
   }
 
-  /* FOREST THEME (Nature/Calm) */
+  /* FOREST THEME (Deep Nature / Evening Woods) */
   [data-theme="forest"] {
-    --background: 150 10% 10%;
-    /* Deep Green Grey */
-    --foreground: 150 10% 95%;
+    --background: 140 15% 8%;
+    /* Deep Pine Night */
+    --foreground: 75 30% 90%;
+    /* Soft Moss */
 
-    --card: 150 10% 13%;
-    --card-foreground: 150 10% 95%;
+    --card: 140 15% 12%;
+    --card-foreground: 75 30% 90%;
 
-    --popover: 150 10% 13%;
-    --popover-foreground: 150 10% 95%;
+    --popover: 140 15% 14%;
+    --popover-foreground: 75 30% 90%;
 
-    --primary: 142 70% 45%;
-    /* Soft Green */
-    --primary-foreground: 150 10% 10%;
+    --primary: 90 60% 45%;
+    /* Bright Moss Green */
+    --primary-foreground: 140 15% 8%;
 
-    --secondary: 150 10% 18%;
-    --secondary-foreground: 150 10% 95%;
+    --secondary: 140 12% 18%;
+    --secondary-foreground: 75 30% 90%;
 
-    --muted: 150 10% 18%;
-    --muted-foreground: 150 10% 60%;
+    --muted: 140 12% 18%;
+    --muted-foreground: 140 15% 55%;
 
-    --accent: 150 10% 20%;
-    --accent-foreground: 150 10% 95%;
+    --accent: 35 70% 55%;
+    /* Autumn Amber */
+    --accent-foreground: 140 15% 8%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 150 10% 95%;
+    --destructive: 0 55% 45%;
+    /* Deep Berry Red */
+    --destructive-foreground: 75 30% 90%;
 
-    --border: 150 10% 20%;
-    --input: 150 10% 20%;
-    --ring: 142 70% 45%;
+    --border: 140 12% 22%;
+    --input: 140 12% 18%;
+    --ring: 90 60% 45%;
+
+    --success: 120 50% 50%;
+    /* Leaf Green */
+    --success-foreground: 140 15% 8%;
+
+    --warning: 40 85% 55%;
+    /* Warm Honey */
+    --warning-foreground: 140 15% 8%;
+
+    --correct: 120 50% 50%;
+    /* Leaf Green */
+    --correct-foreground: 140 15% 8%;
+
+    --incorrect: 0 55% 50%;
+    /* Autumn Berry */
+    --incorrect-foreground: 75 30% 90%;
+
+    --flagged: 40 85% 55%;
+    /* Warm Honey */
+    --flagged-foreground: 140 15% 8%;
+
+    --info: 180 50% 45%;
+    /* Forest Stream Teal */
+    --info-foreground: 140 15% 8%;
+
+    /* Performance tier colors (nature variants) */
+    --tier-excellent: 120 50% 50%;
+    --tier-excellent-foreground: 140 15% 8%;
+    --tier-great: 180 50% 45%;
+    --tier-great-foreground: 140 15% 8%;
+    --tier-good: 160 45% 50%;
+    --tier-good-foreground: 140 15% 8%;
+    --tier-passing: 40 85% 55%;
+    --tier-passing-foreground: 140 15% 8%;
+    --tier-failing: 0 55% 50%;
+    --tier-failing-foreground: 75 30% 90%;
   }
 
   /* RETRO THEME (8-Bit / NES Style) */
@@ -221,6 +422,324 @@
     /* Pitch Black Borders */
     --input: 0 0% 100%;
     --ring: 340 75% 55%;
+
+    --success: 120 100% 35%;
+    /* NES Green */
+    --success-foreground: 0 0% 100%;
+
+    --warning: 45 100% 50%;
+    /* NES Yellow */
+    --warning-foreground: 0 0% 0%;
+
+    --correct: 120 100% 35%;
+    /* NES Green */
+    --correct-foreground: 0 0% 100%;
+
+    --incorrect: 0 100% 50%;
+    /* NES Red */
+    --incorrect-foreground: 0 0% 100%;
+
+    --flagged: 45 100% 50%;
+    /* NES Yellow */
+    --flagged-foreground: 0 0% 0%;
+
+    --info: 240 100% 50%;
+    /* NES Blue */
+    --info-foreground: 0 0% 100%;
+
+    /* Performance tier colors (8-bit variants) */
+    --tier-excellent: 120 100% 35%;
+    --tier-excellent-foreground: 0 0% 100%;
+    --tier-great: 240 100% 50%;
+    --tier-great-foreground: 0 0% 100%;
+    --tier-good: 180 100% 40%;
+    --tier-good-foreground: 0 0% 0%;
+    --tier-passing: 45 100% 50%;
+    --tier-passing-foreground: 0 0% 0%;
+    --tier-failing: 0 100% 50%;
+    --tier-failing-foreground: 0 0% 100%;
+  }
+
+  /* OCEAN THEME (Deep Sea Calm) */
+  [data-theme="ocean"] {
+    --background: 200 50% 8%;
+    /* Deep Ocean */
+    --foreground: 180 40% 95%;
+    /* Seafoam White */
+
+    --radius: 0.75rem;
+    /* Softer "Wave" comers */
+
+    --card: 200 50% 12%;
+    --card-foreground: 180 40% 95%;
+
+    --popover: 200 50% 14%;
+    --popover-foreground: 180 40% 95%;
+
+    --primary: 175 70% 45%;
+    /* Teal Wave */
+    --primary-foreground: 200 50% 8%;
+
+    --secondary: 200 40% 18%;
+    --secondary-foreground: 180 40% 95%;
+
+    --muted: 200 40% 16%;
+    --muted-foreground: 180 25% 55%;
+
+    --accent: 30 80% 55%;
+    /* Coral accent */
+    --accent-foreground: 200 50% 8%;
+
+    --destructive: 0 70% 55%;
+    --destructive-foreground: 180 40% 95%;
+
+    --border: 200 40% 20%;
+    --input: 200 40% 16%;
+    --ring: 175 70% 45%;
+
+    --success: 160 60% 45%;
+    /* Sea Green */
+    --success-foreground: 200 50% 8%;
+
+    --warning: 35 90% 55%;
+    /* Sandy Orange */
+    --warning-foreground: 200 50% 8%;
+
+    --correct: 160 60% 45%;
+    --correct-foreground: 200 50% 8%;
+
+    --incorrect: 0 70% 55%;
+    --incorrect-foreground: 180 40% 95%;
+
+    --flagged: 35 90% 55%;
+    --flagged-foreground: 200 50% 8%;
+
+    --info: 195 90% 60%;
+    /* Bright Aqua */
+    --info-foreground: 200 50% 8%;
+
+    /* Performance tier colors (ocean variants) */
+    --tier-excellent: 160 60% 45%;
+    --tier-excellent-foreground: 200 50% 8%;
+    --tier-great: 190 80% 50%;
+    --tier-great-foreground: 200 50% 8%;
+    --tier-good: 180 70% 50%;
+    --tier-good-foreground: 200 50% 8%;
+    --tier-passing: 35 90% 55%;
+    --tier-passing-foreground: 200 50% 8%;
+    --tier-failing: 0 70% 55%;
+    --tier-failing-foreground: 180 40% 95%;
+  }
+
+  /* NORD THEME (Arctic Scandinavian) */
+  [data-theme="nord"] {
+    --background: 220 16% 16%;
+    /* Polar Night */
+    --foreground: 218 27% 88%;
+    /* Snow Storm */
+
+    --card: 220 16% 20%;
+    --card-foreground: 218 27% 88%;
+
+    --popover: 220 16% 22%;
+    --popover-foreground: 218 27% 88%;
+
+    --primary: 193 43% 67%;
+    /* Frost Blue */
+    --primary-foreground: 220 16% 16%;
+
+    --secondary: 220 16% 24%;
+    --secondary-foreground: 218 27% 88%;
+
+    --muted: 220 16% 22%;
+    --muted-foreground: 219 28% 65%;
+
+    --accent: 179 25% 65%;
+    /* Aurora Teal */
+    --accent-foreground: 220 16% 16%;
+
+    --destructive: 354 42% 56%;
+    /* Aurora Red */
+    --destructive-foreground: 218 27% 88%;
+
+    --border: 220 16% 26%;
+    --input: 220 16% 22%;
+    --ring: 193 43% 67%;
+
+    --success: 92 28% 65%;
+    /* Aurora Green */
+    --success-foreground: 220 16% 16%;
+
+    --warning: 40 71% 73%;
+    /* Aurora Yellow */
+    --warning-foreground: 220 16% 16%;
+
+    --correct: 92 28% 65%;
+    --correct-foreground: 220 16% 16%;
+
+    --incorrect: 354 42% 56%;
+    --incorrect-foreground: 218 27% 88%;
+
+    --flagged: 40 71% 73%;
+    --flagged-foreground: 220 16% 16%;
+
+    --info: 193 43% 67%;
+    --info-foreground: 220 16% 16%;
+
+    /* Performance tier colors (nordic aurora variants) */
+    --tier-excellent: 92 28% 65%;
+    --tier-excellent-foreground: 220 16% 16%;
+    --tier-great: 193 43% 67%;
+    --tier-great-foreground: 220 16% 16%;
+    --tier-good: 179 25% 65%;
+    --tier-good-foreground: 220 16% 16%;
+    --tier-passing: 40 71% 73%;
+    --tier-passing-foreground: 220 16% 16%;
+    --tier-failing: 354 42% 56%;
+    --tier-failing-foreground: 218 27% 88%;
+  }
+
+  /* HOLIDAY THEME (Festive Red & Green) */
+  [data-theme="holiday"] {
+    --background: 0 0% 98%;
+    /* Snow White */
+    --foreground: 150 30% 15%;
+    /* Pine Green */
+
+    --radius: 0.75rem;
+    /* Friendly "Festive" comers */
+
+    --card: 0 0% 100%;
+    --card-foreground: 150 30% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 150 30% 15%;
+
+    --primary: 0 75% 50%;
+    /* Christmas Red */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 150 40% 92%;
+    /* Light Pine */
+    --secondary-foreground: 150 30% 15%;
+
+    --muted: 150 30% 92%;
+    --muted-foreground: 150 20% 40%;
+
+    --accent: 45 100% 50%;
+    /* Gold - distinct from Red/Green */
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 75% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 150 20% 85%;
+    --input: 150 40% 95%;
+    --ring: 0 75% 50%;
+
+    --success: 150 60% 35%;
+    /* Evergreen */
+    --success-foreground: 0 0% 100%;
+
+    --warning: 45 100% 50%;
+    /* Gold Star */
+    --warning-foreground: 150 30% 15%;
+
+    --correct: 150 60% 35%;
+    --correct-foreground: 0 0% 100%;
+
+    --incorrect: 0 75% 50%;
+    --incorrect-foreground: 0 0% 100%;
+
+    --flagged: 45 100% 50%;
+    --flagged-foreground: 150 30% 15%;
+
+    --info: 200 70% 50%;
+    /* Icy Blue */
+    --info-foreground: 0 0% 100%;
+
+    /* Performance tier colors (festive variants) */
+    --tier-excellent: 150 60% 35%;
+    --tier-excellent-foreground: 0 0% 100%;
+    --tier-great: 200 70% 50%;
+    --tier-great-foreground: 0 0% 100%;
+    --tier-good: 180 50% 45%;
+    --tier-good-foreground: 0 0% 100%;
+    --tier-passing: 45 100% 50%;
+    --tier-passing-foreground: 150 30% 15%;
+    --tier-failing: 0 75% 50%;
+    --tier-failing-foreground: 0 0% 100%;
+  }
+
+  /* VAPOR THEME (Synthwave/Retrowave) */
+  [data-theme="vapor"] {
+    --background: 270 40% 8%;
+    /* Deep Purple Night */
+    --foreground: 300 100% 95%;
+    /* Hot Pink White */
+
+    --radius: 0px;
+    /* Sharp "Digital" comers */
+
+    --card: 270 40% 12%;
+    --card-foreground: 300 100% 95%;
+
+    --popover: 270 40% 14%;
+    --popover-foreground: 300 100% 95%;
+
+    --primary: 320 100% 60%;
+    /* Hot Pink */
+    --primary-foreground: 270 40% 8%;
+
+    --secondary: 270 35% 18%;
+    --secondary-foreground: 300 100% 95%;
+
+    --muted: 270 35% 16%;
+    --muted-foreground: 280 40% 60%;
+
+    --accent: 190 100% 50%;
+    /* Electric Cyan */
+    --accent-foreground: 270 40% 8%;
+
+    --destructive: 350 100% 60%;
+    --destructive-foreground: 270 40% 8%;
+
+    --border: 270 35% 22%;
+    --input: 270 35% 16%;
+    --ring: 320 100% 60%;
+
+    --success: 160 100% 45%;
+    /* Neon Teal */
+    --success-foreground: 270 40% 8%;
+
+    --warning: 45 100% 55%;
+    /* Neon Yellow */
+    --warning-foreground: 270 40% 8%;
+
+    --correct: 160 100% 45%;
+    --correct-foreground: 270 40% 8%;
+
+    --incorrect: 350 100% 60%;
+    --incorrect-foreground: 270 40% 8%;
+
+    --flagged: 45 100% 55%;
+    --flagged-foreground: 270 40% 8%;
+
+    --info: 190 100% 50%;
+    /* Electric Cyan */
+    --info-foreground: 270 40% 8%;
+
+    /* Performance tier colors (synthwave variants) */
+    --tier-excellent: 160 100% 45%;
+    --tier-excellent-foreground: 270 40% 8%;
+    --tier-great: 190 100% 50%;
+    --tier-great-foreground: 270 40% 8%;
+    --tier-good: 200 100% 50%;
+    --tier-good-foreground: 270 40% 8%;
+    --tier-passing: 45 100% 55%;
+    --tier-passing-foreground: 270 40% 8%;
+    --tier-failing: 350 100% 60%;
+    --tier-failing-foreground: 270 40% 8%;
   }
 }
 
@@ -326,26 +845,26 @@
 
   /**
    * Legend color dots for charts (AnalyticsOverview)
-   * Maps to Tailwind color palette for CSP compliance
+   * Uses tier CSS variables for theme consistency
    */
-  .legend-dot-green {
-    background-color: #22c55e;
+  .legend-dot-excellent {
+    background-color: hsl(var(--tier-excellent));
   }
 
-  .legend-dot-blue {
-    background-color: #3b82f6;
+  .legend-dot-great {
+    background-color: hsl(var(--tier-great));
   }
 
-  .legend-dot-cyan {
-    background-color: #06b6d4;
+  .legend-dot-good {
+    background-color: hsl(var(--tier-good));
   }
 
-  .legend-dot-amber {
-    background-color: #f59e0b;
+  .legend-dot-passing {
+    background-color: hsl(var(--tier-passing));
   }
 
-  .legend-dot-red {
-    background-color: #ef4444;
+  .legend-dot-failing {
+    background-color: hsl(var(--tier-failing));
   }
 }
 

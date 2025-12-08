@@ -52,23 +52,23 @@ const typeStyles: Record<
 > = {
   success: {
     icon: (
-      <CheckCircle2 className="h-5 w-5 text-green-600" aria-hidden="true" />
+      <CheckCircle2 className="h-5 w-5 text-success" aria-hidden="true" />
     ),
-    classes: "border-green-200 bg-green-50 text-green-900",
+    classes: "border-success/30 bg-success/10 text-success",
   },
   error: {
-    icon: <XCircle className="h-5 w-5 text-red-600" aria-hidden="true" />,
-    classes: "border-red-200 bg-red-50 text-red-900",
+    icon: <XCircle className="h-5 w-5 text-destructive" aria-hidden="true" />,
+    classes: "border-destructive/30 bg-destructive/10 text-destructive",
   },
   warning: {
     icon: (
-      <AlertTriangle className="h-5 w-5 text-orange-600" aria-hidden="true" />
+      <AlertTriangle className="h-5 w-5 text-warning" aria-hidden="true" />
     ),
-    classes: "border-orange-200 bg-orange-50 text-orange-900",
+    classes: "border-warning/30 bg-warning/10 text-warning",
   },
   info: {
-    icon: <Info className="h-5 w-5 text-blue-600" aria-hidden="true" />,
-    classes: "border-blue-200 bg-blue-50 text-blue-900",
+    icon: <Info className="h-5 w-5 text-info" aria-hidden="true" />,
+    classes: "border-info/30 bg-info/10 text-info",
   },
 };
 

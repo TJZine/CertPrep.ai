@@ -107,7 +107,7 @@ export function ImportModal({
         if (result.success && result.data) {
           const originalTitle = parsed.title || "";
           const originalDesc = parsed.description || "";
-          
+
           if (originalTitle.length > 100) {
             newWarnings.push("Title was truncated to 100 characters.");
           }
@@ -292,13 +292,13 @@ export function ImportModal({
     if (parseError) {
       return (
         <div
-          className="mt-4 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-500/50 dark:bg-red-950 dark:text-red-100"
+          className="mt-4 flex items-start gap-3 rounded-lg border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive"
           role="alert"
         >
-          <XCircle className="h-5 w-5 text-red-600" aria-hidden="true" />
+          <XCircle className="h-5 w-5 text-destructive" aria-hidden="true" />
           <div>
             <p className="font-semibold">Invalid JSON</p>
-            <p className="mt-1 whitespace-pre-wrap text-red-700 dark:text-red-200">
+            <p className="mt-1 whitespace-pre-wrap">
               {parseError}
             </p>
           </div>
@@ -308,16 +308,16 @@ export function ImportModal({
 
     if (validationResult?.success && validationResult.data) {
       return (
-        <div className="mt-4 rounded-lg border border-green-200 bg-green-50 px-3 py-3 dark:border-green-500/40 dark:bg-green-950">
-          <div className="mb-2 flex items-center gap-2 text-green-800 dark:text-green-100">
+        <div className="mt-4 rounded-lg border border-success/50 bg-success/10 px-3 py-3">
+          <div className="mb-2 flex items-center gap-2 text-success">
             <CheckCircle className="h-5 w-5" aria-hidden="true" />
             <span className="text-sm font-semibold">Validation passed</span>
           </div>
-          <ul className="space-y-1 text-sm text-green-900 dark:text-green-100">
+          <ul className="space-y-1 text-sm text-success">
             {validationStatuses.map((status) => (
               <li key={status.label} className="flex items-center gap-2">
                 <CheckCircle
-                  className="h-4 w-4 text-green-600 dark:text-green-300"
+                  className="h-4 w-4"
                   aria-hidden="true"
                 />
                 {status.label}
@@ -335,21 +335,21 @@ export function ImportModal({
     ) {
       return (
         <div
-          className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-3 dark:border-red-500/50 dark:bg-red-950"
+          className="mt-4 rounded-lg border border-destructive/50 bg-destructive/10 px-3 py-3"
           role="alert"
         >
-          <div className="mb-2 flex items-center gap-2 text-red-800 dark:text-red-100">
+          <div className="mb-2 flex items-center gap-2 text-destructive">
             <AlertCircle className="h-5 w-5" aria-hidden="true" />
             <span className="text-sm font-semibold">Validation errors</span>
           </div>
-          <ul className="space-y-1 text-sm text-red-800 dark:text-red-100">
+          <ul className="space-y-1 text-sm text-destructive">
             {validationResult.errors.map((error) => (
               <li
                 key={`${error.path.join(".")}-${error.message}`}
                 className="flex items-start gap-2"
               >
                 <XCircle
-                  className="mt-0.5 h-4 w-4 text-red-600 dark:text-red-300"
+                  className="mt-0.5 h-4 w-4"
                   aria-hidden="true"
                 />
                 <span>
@@ -378,17 +378,17 @@ export function ImportModal({
 
     return (
       <div
-        className="mt-4 rounded-lg border border-yellow-200 bg-yellow-50 px-3 py-3 dark:border-yellow-500/40 dark:bg-yellow-950"
+        className="mt-4 rounded-lg border border-warning/50 bg-warning/10 px-3 py-3"
         role="alert"
       >
-        <div className="mb-2 flex items-center gap-2 text-yellow-800 dark:text-yellow-100">
+        <div className="mb-2 flex items-center gap-2 text-warning">
           <AlertCircle className="h-5 w-5" aria-hidden="true" />
           <span className="text-sm font-semibold">Notices</span>
         </div>
-        <ul className="space-y-1 text-sm text-yellow-900 dark:text-yellow-100">
+        <ul className="space-y-1 text-sm text-warning">
           {warnings.map((warning, index) => (
             <li key={index} className="flex items-center gap-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-yellow-500 dark:bg-yellow-400" />
+              <span className="h-1.5 w-1.5 rounded-full bg-warning" />
               {warning}
             </li>
           ))}
@@ -409,7 +409,7 @@ export function ImportModal({
       <div className="space-y-4">
         <div
           ref={tabListRef}
-          className="flex border-b border-slate-200 dark:border-slate-800"
+          className="flex border-b border-border"
           role="tablist"
           aria-label="Import method"
           onKeyDown={handleTabKeyNavigation}
@@ -425,10 +425,10 @@ export function ImportModal({
                 data-tab-id={tab}
                 aria-selected={isActive}
                 className={cn(
-                  "px-4 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900",
+                  "px-4 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                   isActive
-                    ? "border-b-2 border-blue-600 text-blue-700 dark:border-blue-400 dark:text-blue-200"
-                    : "text-slate-500 hover:text-slate-700 dark:text-slate-300 dark:hover:text-slate-100",
+                    ? "border-b-2 border-primary text-primary"
+                    : "text-muted-foreground hover:text-foreground",
                 )}
                 onClick={() => setActiveTab(tab as "paste" | "upload")}
               >
@@ -468,9 +468,9 @@ export function ImportModal({
               }
             }}
             className={cn(
-              "flex min-h-[220px] cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 text-center transition dark:border-slate-700 dark:bg-slate-800",
+              "flex min-h-[220px] cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-border bg-muted/50 text-center transition",
               isDragOver &&
-                "border-blue-500 bg-blue-50 dark:border-blue-400 dark:bg-blue-900/30",
+              "border-primary bg-primary/5",
             )}
           >
             <input
@@ -487,17 +487,17 @@ export function ImportModal({
             />
             <div className="flex flex-col items-center gap-2">
               <FileJson
-                className="h-10 w-10 text-blue-600 dark:text-blue-300"
+                className="h-10 w-10 text-primary"
                 aria-hidden="true"
               />
-              <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+              <p className="text-sm font-semibold text-foreground">
                 Drag and drop your JSON file
               </p>
-              <p className="text-xs text-slate-600 dark:text-slate-300">
+              <p className="text-xs text-muted-foreground">
                 or click to browse .json files
               </p>
               {fileName ? (
-                <p className="mt-2 text-sm text-blue-700 dark:text-blue-300">
+                <p className="mt-2 text-sm text-primary">
                   Selected: {fileName}
                 </p>
               ) : null}
@@ -507,7 +507,7 @@ export function ImportModal({
 
         <div aria-live="polite">
           {isValidating ? (
-            <p className="text-sm text-slate-500 dark:text-slate-300">
+            <p className="text-sm text-muted-foreground">
               Validating...
             </p>
           ) : null}

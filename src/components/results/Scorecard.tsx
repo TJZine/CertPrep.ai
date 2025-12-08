@@ -49,48 +49,43 @@ function getPerformanceTier(score: number): PerformanceTier {
   if (score >= 90) {
     return {
       label: "Excellent",
-      color: "text-green-700 dark:text-green-200",
-      bgColor:
-        "bg-green-50 border-green-200 dark:bg-green-900/30 dark:border-green-800/70",
-      icon: <Trophy className="h-12 w-12 text-green-500" aria-hidden="true" />,
+      color: "text-tier-excellent",
+      bgColor: "bg-tier-excellent/10 border-tier-excellent/30",
+      icon: <Trophy className="h-12 w-12 text-tier-excellent" aria-hidden="true" />,
     };
   }
   if (score >= 80) {
     return {
       label: "Great",
-      color: "text-blue-700 dark:text-blue-200",
-      bgColor:
-        "bg-blue-50 border-blue-200 dark:bg-blue-900/30 dark:border-blue-800/70",
-      icon: <Award className="h-12 w-12 text-blue-500" aria-hidden="true" />,
+      color: "text-tier-great",
+      bgColor: "bg-tier-great/10 border-tier-great/30",
+      icon: <Award className="h-12 w-12 text-tier-great" aria-hidden="true" />,
     };
   }
   if (score >= 70) {
     return {
       label: "Good",
-      color: "text-cyan-700 dark:text-cyan-200",
-      bgColor:
-        "bg-cyan-50 border-cyan-200 dark:bg-cyan-900/30 dark:border-cyan-800/70",
+      color: "text-tier-good",
+      bgColor: "bg-tier-good/10 border-tier-good/30",
       icon: (
-        <CheckCircle className="h-12 w-12 text-cyan-500" aria-hidden="true" />
+        <CheckCircle className="h-12 w-12 text-tier-good" aria-hidden="true" />
       ),
     };
   }
   if (score >= 60) {
     return {
       label: "Passing",
-      color: "text-amber-700 dark:text-amber-200",
-      bgColor:
-        "bg-amber-50 border-amber-200 dark:bg-amber-900/30 dark:border-amber-800/70",
-      icon: <Target className="h-12 w-12 text-amber-500" aria-hidden="true" />,
+      color: "text-tier-passing",
+      bgColor: "bg-tier-passing/10 border-tier-passing/30",
+      icon: <Target className="h-12 w-12 text-tier-passing" aria-hidden="true" />,
     };
   }
   return {
     label: "Needs Work",
-    color: "text-red-700 dark:text-red-200",
-    bgColor:
-      "bg-red-50 border-red-200 dark:bg-red-900/30 dark:border-red-800/70",
+    color: "text-tier-failing",
+    bgColor: "bg-tier-failing/10 border-tier-failing/30",
     icon: (
-      <AlertTriangle className="h-12 w-12 text-red-500" aria-hidden="true" />
+      <AlertTriangle className="h-12 w-12 text-tier-failing" aria-hidden="true" />
     ),
   };
 }
@@ -110,14 +105,14 @@ function getTrendIndicator(
     return {
       icon: <TrendingUp className="h-4 w-4" aria-hidden="true" />,
       text: `+${diff}% from last attempt`,
-      color: "text-green-600",
+      color: "text-success",
     };
   }
   if (diff < 0) {
     return {
       icon: <TrendingDown className="h-4 w-4" aria-hidden="true" />,
       text: `${diff}% from last attempt`,
-      color: "text-red-600",
+      color: "text-destructive",
     };
   }
   return {
@@ -167,11 +162,11 @@ export function Scorecard({
           </Badge>
 
           <p className="mb-2 text-lg text-muted-foreground">
-            <span className="font-semibold text-green-600 dark:text-green-200">
+            <span className="font-semibold text-success">
               {correctCount}
             </span>
             {" correct, "}
-            <span className="font-semibold text-red-600 dark:text-red-200">
+            <span className="font-semibold text-destructive">
               {incorrectCount}
             </span>
             {" incorrect out of "}
@@ -185,15 +180,19 @@ export function Scorecard({
             <div className="flex h-4 w-full overflow-hidden rounded-full bg-secondary">
               <div
                 className={cn(
-                  "bg-green-500 transition-all duration-500",
-                  `w-[${Math.round((correctCount / totalCount) * 100)}%]`,
+                  "bg-success transition-all duration-500",
+                  totalCount
+                    ? `w-[${Math.round((correctCount / totalCount) * 100)}%]`
+                    : "w-0",
                 )}
                 aria-label={`${correctCount} correct`}
               />
               <div
                 className={cn(
-                  "bg-red-400 transition-all duration-500",
-                  `w-[${Math.round((incorrectCount / totalCount) * 100)}%]`,
+                  "bg-destructive/70 transition-all duration-500",
+                  totalCount
+                    ? `w-[${Math.round((incorrectCount / totalCount) * 100)}%]`
+                    : "w-0",
                 )}
                 aria-label={`${incorrectCount} incorrect`}
               />

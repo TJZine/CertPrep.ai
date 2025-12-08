@@ -106,7 +106,7 @@ export default function ResetPasswordForm(): React.ReactElement {
         if (!result.success && !cancelled) {
           setExchangeError(
             result.error ??
-              "This recovery link is invalid or has expired. Please request a new password reset email.",
+            "This recovery link is invalid or has expired. Please request a new password reset email.",
           );
         }
       } finally {
@@ -184,7 +184,7 @@ export default function ResetPasswordForm(): React.ReactElement {
     <div className="space-y-6">
       <div className="space-y-2 text-center">
         <h1 className="text-3xl font-bold">Reset Password</h1>
-        <p className="text-gray-500 dark:text-gray-400">
+        <p className="text-muted-foreground">
           Enter your new password below
         </p>
       </div>
@@ -225,15 +225,15 @@ export default function ResetPasswordForm(): React.ReactElement {
         </div>
 
         {error && (
-          <div className="text-sm text-red-500 font-medium">{error}</div>
+          <div className="text-sm text-destructive font-medium">{error}</div>
         )}
         {isExchanging && (
-          <div className="text-sm text-slate-500 font-medium">
+          <div className="text-sm text-muted-foreground font-medium">
             Validating your recovery link...
           </div>
         )}
         {exchangeError && !error && (
-          <div className="text-sm text-red-500 font-medium">
+          <div className="text-sm text-destructive font-medium">
             {exchangeError}
           </div>
         )}

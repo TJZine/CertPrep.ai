@@ -27,7 +27,7 @@ export function SmartRoundBanner({
   return (
     <div
       className={cn(
-        "rounded-lg border border-purple-200 bg-gradient-to-r from-purple-50 to-indigo-50 p-4 dark:border-purple-800 dark:from-purple-950 dark:to-indigo-950",
+        "rounded-lg border border-accent/30 bg-gradient-to-r from-accent/10 to-accent/5 p-4",
         className,
       )}
       role="status"
@@ -35,17 +35,17 @@ export function SmartRoundBanner({
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900/50">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent/20">
             <Sparkles
-              className="h-5 w-5 text-purple-600 dark:text-purple-300"
+              className="h-5 w-5 text-accent"
               aria-hidden="true"
             />
           </div>
           <div>
-            <h2 className="font-semibold text-purple-900 dark:text-purple-100">
+            <h2 className="font-semibold text-accent">
               Smart Round
             </h2>
-            <p className="text-sm text-purple-700 dark:text-purple-300">
+            <p className="text-sm text-accent/80">
               Focused practice on {totalQuestions} questions you need to review
             </p>
           </div>
@@ -54,11 +54,11 @@ export function SmartRoundBanner({
         <div className="flex items-center gap-4">
           {/* Stats */}
           <div className="hidden items-center gap-4 sm:flex">
-            <div className="flex items-center gap-1.5 text-sm text-purple-700 dark:text-purple-300">
+            <div className="flex items-center gap-1.5 text-sm text-accent/80">
               <Target className="h-4 w-4" aria-hidden="true" />
               <span>{missedCount} missed</span>
             </div>
-            <div className="flex items-center gap-1.5 text-sm text-purple-700 dark:text-purple-300">
+            <div className="flex items-center gap-1.5 text-sm text-accent/80">
               <Flag className="h-4 w-4" aria-hidden="true" />
               <span>{flaggedCount} flagged</span>
             </div>
@@ -69,7 +69,7 @@ export function SmartRoundBanner({
             variant="ghost"
             size="sm"
             onClick={onExit}
-            className="text-purple-700 hover:bg-purple-100 hover:text-purple-900 dark:text-purple-300 dark:hover:bg-purple-900/50 dark:hover:text-purple-100"
+            className="text-accent hover:bg-accent/20 hover:text-accent"
             aria-label="Exit Smart Round"
           >
             <X className="h-4 w-4" aria-hidden="true" />

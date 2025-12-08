@@ -165,7 +165,7 @@ export function Header(): React.ReactElement {
                 onClick={handleSignOut}
                 isLoading={isSigningOut}
                 disabled={isSigningOut}
-                className="text-slate-600 hover:text-red-600 hover:bg-red-50 dark:text-slate-400 dark:hover:text-red-400 dark:hover:bg-red-900/20"
+                className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
               >
                 Sign Out
               </Button>
@@ -269,7 +269,7 @@ export function Header(): React.ReactElement {
                 </div>
                 <Button
                   variant="ghost"
-                  className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                  className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
                   onClick={handleSignOut}
                   isLoading={isSigningOut}
                   disabled={isSigningOut}

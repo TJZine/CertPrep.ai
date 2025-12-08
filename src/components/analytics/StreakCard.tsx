@@ -51,12 +51,12 @@ function ActivityHeatmap({
                             className={cn(
                                 "h-8 w-8 rounded-md transition-colors",
                                 active
-                                    ? "bg-green-500 dark:bg-green-400"
-                                    : "bg-slate-200 dark:bg-slate-700",
+                                    ? "bg-success"
+                                    : "bg-muted",
                             )}
                             title={`${getDayLabel(daysAgo)}: ${active ? "Active" : "No activity"}`}
                         />
-                        <span className="text-xs text-slate-500 dark:text-slate-400">
+                        <span className="text-xs text-muted-foreground">
                             {getDayLabel(daysAgo)}
                         </span>
                     </div>
@@ -82,15 +82,15 @@ function StatItem({
 }): React.ReactElement {
     return (
         <div className="flex items-center gap-3">
-            <div className="rounded-full bg-amber-100 p-2 dark:bg-amber-900/30">
+            <div className="rounded-full bg-warning/10 p-2">
                 <Icon
-                    className="h-5 w-5 text-amber-600 dark:text-amber-400"
+                    className="h-5 w-5 text-warning"
                     aria-hidden="true"
                 />
             </div>
             <div>
                 <p className={cn("text-2xl font-bold", valueColor)}>{value}</p>
-                <p className="text-sm text-slate-500 dark:text-slate-400">{label}</p>
+                <p className="text-sm text-muted-foreground">{label}</p>
             </div>
         </div>
     );
@@ -113,12 +113,12 @@ export function StreakCard({
             <Card className={className}>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                        <Flame className="h-5 w-5 text-amber-500" aria-hidden="true" />
+                        <Flame className="h-5 w-5 text-warning" aria-hidden="true" />
                         Study Streak
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <p className="text-center text-slate-500 dark:text-slate-400">
+                    <p className="text-center text-muted-foreground">
                         Complete a quiz today to start your streak! 🔥
                     </p>
                 </CardContent>
@@ -130,7 +130,7 @@ export function StreakCard({
         <Card className={className}>
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                    <Flame className="h-5 w-5 text-amber-500" aria-hidden="true" />
+                    <Flame className="h-5 w-5 text-warning" aria-hidden="true" />
                     Study Streak
                 </CardTitle>
                 <CardDescription>
@@ -146,8 +146,8 @@ export function StreakCard({
                             value={`${currentStreak} day${currentStreak !== 1 ? "s" : ""}`}
                             valueColor={
                                 currentStreak > 0
-                                    ? "text-amber-600 dark:text-amber-400"
-                                    : "text-slate-600 dark:text-slate-300"
+                                    ? "text-warning"
+                                    : "text-muted-foreground"
                             }
                         />
 
@@ -155,7 +155,7 @@ export function StreakCard({
                             icon={Trophy}
                             label="Longest Streak"
                             value={`${longestStreak} day${longestStreak !== 1 ? "s" : ""}`}
-                            valueColor="text-slate-900 dark:text-slate-100"
+                            valueColor="text-foreground"
                         />
 
                         <StatItem
@@ -164,14 +164,14 @@ export function StreakCard({
                             value={`${consistencyScore}%`}
                             valueColor={
                                 consistencyScore >= 50
-                                    ? "text-green-600 dark:text-green-400"
-                                    : "text-slate-600 dark:text-slate-300"
+                                    ? "text-success"
+                                    : "text-muted-foreground"
                             }
                         />
                     </div>
 
                     <div className="flex flex-col justify-center">
-                        <h4 className="mb-3 text-sm font-medium text-slate-700 dark:text-slate-300">
+                        <h4 className="mb-3 text-sm font-medium text-muted-foreground">
                             Last 7 Days
                         </h4>
                         <ActivityHeatmap activity={last7DaysActivity} />

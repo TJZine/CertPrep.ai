@@ -27,7 +27,7 @@ export function QuestionNav({
       >
         Previous
       </Button>
-      <div className="text-sm text-slate-700">
+      <div className="text-sm text-foreground">
         Question {currentIndex + 1} of {total}
       </div>
       <Button

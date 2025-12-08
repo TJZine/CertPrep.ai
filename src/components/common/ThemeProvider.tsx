@@ -2,7 +2,7 @@
 
 import * as React from "react";
 
-export type Theme = "light" | "dark" | "midnight" | "focus" | "forest" | "retro";
+export type Theme = "light" | "dark" | "midnight" | "focus" | "forest" | "retro" | "ocean" | "nord" | "holiday" | "vapor";
 
 interface ThemeContextValue {
   theme: Theme;
@@ -32,7 +32,11 @@ export function ThemeProvider({
       stored === "midnight" ||
       stored === "focus" ||
       stored === "forest" ||
-      stored === "retro"
+      stored === "retro" ||
+      stored === "ocean" ||
+      stored === "nord" ||
+      stored === "holiday" ||
+      stored === "vapor"
     ) {
       return stored as Theme;
     }
@@ -58,7 +62,7 @@ export function ThemeProvider({
     root.setAttribute("data-theme", theme);
 
     // Add 'dark' class for Tailwind dark mode utilities if the theme is dark-ish
-    if (theme === "dark" || theme === "midnight" || theme === "forest") {
+    if (theme === "dark" || theme === "midnight" || theme === "forest" || theme === "ocean" || theme === "nord" || theme === "vapor") {
       root.classList.add("dark");
     }
 

@@ -47,8 +47,8 @@ export function ProctorOptionsList({
             className={cn(
               "relative flex w-full items-start gap-3 rounded-lg border-2 p-4 text-left transition-all",
               isSelected
-                ? "border-blue-500 bg-blue-50 ring-2 ring-blue-500 ring-offset-1 dark:border-blue-400 dark:bg-blue-900/30 dark:ring-offset-slate-900"
-                : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-slate-600 dark:hover:bg-slate-800",
+                ? "border-primary bg-primary/10 ring-2 ring-primary ring-offset-1 ring-offset-background"
+                : "border-border bg-card hover:border-muted-foreground/50 hover:bg-muted",
               disabled && "cursor-not-allowed opacity-60",
             )}
             role="radio"
@@ -59,23 +59,23 @@ export function ProctorOptionsList({
               className={cn(
                 "flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full font-semibold transition-colors",
                 isSelected
-                  ? "bg-blue-500 text-white dark:bg-blue-400"
-                  : "bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-100",
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground",
               )}
             >
               {key}
             </span>
 
             <span
-              className="flex-1 pt-1 text-base text-slate-700 break-words dark:text-slate-100"
+              className="flex-1 pt-1 text-base text-foreground break-words"
               dangerouslySetInnerHTML={{ __html: sanitizedText }}
             />
 
             {isSelected && (
               <span className="flex-shrink-0 pt-1">
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-500">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary">
                   <svg
-                    className="h-3 w-3 text-white"
+                    className="h-3 w-3 text-primary-foreground"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -96,21 +96,21 @@ export function ProctorOptionsList({
       })}
 
       {!disabled && (
-        <p className="mt-2 text-center text-xs text-slate-400 dark:text-slate-300">
+        <p className="mt-2 text-center text-xs text-muted-foreground">
           Press{" "}
-          <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono dark:bg-slate-800 dark:text-slate-100">
+          <kbd className="rounded bg-muted px-1 py-0.5 font-mono text-foreground">
             A
           </kbd>
           ,{" "}
-          <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono dark:bg-slate-800 dark:text-slate-100">
+          <kbd className="rounded bg-muted px-1 py-0.5 font-mono text-foreground">
             B
           </kbd>
           ,{" "}
-          <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono dark:bg-slate-800 dark:text-slate-100">
+          <kbd className="rounded bg-muted px-1 py-0.5 font-mono text-foreground">
             C
           </kbd>
           , or{" "}
-          <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono dark:bg-slate-800 dark:text-slate-100">
+          <kbd className="rounded bg-muted px-1 py-0.5 font-mono text-foreground">
             D
           </kbd>{" "}
           to select

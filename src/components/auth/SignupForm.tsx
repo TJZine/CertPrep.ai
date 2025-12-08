@@ -101,7 +101,7 @@ export default function SignupForm(): React.ReactElement {
     <div className="space-y-6">
       <div className="space-y-2 text-center">
         <h1 className="text-3xl font-bold">Create an Account</h1>
-        <p className="text-gray-500 dark:text-gray-400">
+        <p className="text-muted-foreground">
           Enter your email below to create your account
         </p>
       </div>
@@ -188,7 +188,7 @@ export default function SignupForm(): React.ReactElement {
             />
           ) : (
             <p
-              className="text-sm text-red-500 font-medium text-center"
+              className="text-sm text-destructive font-medium text-center"
               role="alert"
               aria-live="polite"
             >
@@ -200,7 +200,7 @@ export default function SignupForm(): React.ReactElement {
 
         {error && (
           <div
-            className="text-sm text-red-500 font-medium"
+            className="text-sm text-destructive font-medium"
             role="alert"
             aria-live="polite"
           >

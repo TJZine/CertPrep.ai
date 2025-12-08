@@ -65,11 +65,11 @@ export default function ForgotPasswordForm(): React.ReactElement {
     return (
       <div className="space-y-6 text-center">
         <h1 className="text-3xl font-bold">Check Your Email</h1>
-        <p className="text-gray-500 dark:text-gray-400">
+        <p className="text-muted-foreground">
           We&apos;ve sent a password reset link to{" "}
           <span className="font-medium text-foreground">{email}</span>.
         </p>
-        <p className="text-sm text-gray-500 dark:text-gray-400">
+        <p className="text-sm text-muted-foreground">
           Click the link in the email to set a new password.
         </p>
         <Link
@@ -86,7 +86,7 @@ export default function ForgotPasswordForm(): React.ReactElement {
     <div className="space-y-6">
       <div className="space-y-2 text-center">
         <h1 className="text-3xl font-bold">Forgot Password</h1>
-        <p className="text-gray-500 dark:text-gray-400">
+        <p className="text-muted-foreground">
           Enter your email to receive a reset link
         </p>
       </div>
@@ -120,7 +120,7 @@ export default function ForgotPasswordForm(): React.ReactElement {
               onExpire={() => setCaptchaToken(null)}
             />
           ) : (
-            <div className="text-sm text-gray-500 italic dark:text-gray-400">
+            <div className="text-sm text-muted-foreground italic">
               (Captcha disabled in development)
             </div>
           )}
@@ -130,7 +130,7 @@ export default function ForgotPasswordForm(): React.ReactElement {
           <div
             role="alert"
             id="email-error"
-            className="text-sm text-red-500 font-medium"
+            className="text-sm text-destructive font-medium"
           >
             {error}
           </div>

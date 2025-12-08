@@ -292,7 +292,7 @@ export function ProctorQuizContainer({
         mode="proctor"
       >
         <div className="py-12 text-center">
-          <p className="text-slate-500">Loading question...</p>
+          <p className="text-muted-foreground">Loading question...</p>
         </div>
       </QuizLayout>
     );
