@@ -1,6 +1,6 @@
 # Theme Customization Guide
 
-CertPrep.ai uses a semantic token system that allows complete theme customization through CSS variables. All UI components, quiz feedback, and charts automatically respect these tokens.
+CertPrep.ai uses a semantic token system that allows complete theme customization through CSS variables. All UI components, charts, and visualizations automatically respect these tokens.
 
 ---
 
@@ -9,19 +9,26 @@ CertPrep.ai uses a semantic token system that allows complete theme customizatio
 1. **Edit CSS variables** in `src/app/globals.css`
 2. **All components update automatically** — no JavaScript changes needed
 3. **HSL format** is used: `hue saturation% lightness%` (space-separated, no commas)
+4. **Radius customization**: Control border roundness via the `--radius` variable
 
 ---
 
 ## Available Themes
 
-| Theme    | Selector                  | Description                              |
-| -------- | ------------------------- | ---------------------------------------- |
-| Light    | `:root`                   | Default warm slate theme                 |
-| Dark     | `.dark`                   | Dark slate for night mode                |
-| Midnight | `[data-theme="midnight"]` | Cyber neon with electric cyan            |
-| Focus    | `[data-theme="focus"]`    | Warm sepia for distraction-free studying |
-| Forest   | `[data-theme="forest"]`   | Deep pine with autumn accents            |
-| Retro    | `[data-theme="retro"]`    | 8-bit NES style with blocky UI           |
+| Theme    | Selector                  | Description                              | Radius  |
+| -------- | ------------------------- | ---------------------------------------- | ------- |
+| Light    | `:root`                   | Default warm slate theme                 | 0.5rem  |
+| Dark     | `.dark`                   | Dark slate for night mode                | 0.5rem  |
+| Midnight | `[data-theme="midnight"]` | Cyber neon with electric cyan            | 0.25rem |
+| Focus    | `[data-theme="focus"]`    | Warm sepia for distraction-free studying | 0.75rem |
+| Forest   | `[data-theme="forest"]`   | Deep pine with autumn accents            | 0.5rem  |
+| Retro    | `[data-theme="retro"]`    | 8-bit NES style with blocky UI           | 0px     |
+| Ocean    | `[data-theme="ocean"]`    | Deep sea navy with coral accents         | 0.75rem |
+| Nord     | `[data-theme="nord"]`     | Arctic blue-grey palette                 | 0.5rem  |
+| Holiday  | `[data-theme="holiday"]`  | Festive Red/Green with Gold accents      | 0.75rem |
+| Vapor    | `[data-theme="vapor"]`    | Synthwave neon pink & cyan               | 0px     |
+| Blossom  | `[data-theme="blossom"]`  | Pastel pink with periwinkle accents      | 1rem    |
+| Mint     | `[data-theme="mint"]`     | Fresh sage with river blue accents       | 0.75rem |
 
 ---
 
@@ -50,119 +57,93 @@ CertPrep.ai uses a semantic token system that allows complete theme customizatio
 | `--border`                 | Borders, dividers, chart grid lines         |
 | `--input`                  | Input field backgrounds                     |
 | `--ring`                   | Focus ring color                            |
+| `--radius`                 | Border radius (e.g., `0.5rem`, `0px`)       |
 
-### Quiz Status Tokens
+### Semantic & Status Tokens
 
-| Token                    | Usage                                      |
-| ------------------------ | ------------------------------------------ |
-| `--correct`              | Correct answer indicators, positive trends |
-| `--correct-foreground`   | Text on correct backgrounds                |
-| `--incorrect`            | Wrong answer indicators, negative trends   |
-| `--incorrect-foreground` | Text on incorrect backgrounds              |
-| `--flagged`              | Flagged questions, warnings                |
-| `--flagged-foreground`   | Text on flagged backgrounds                |
-| `--success`              | Success buttons, positive feedback         |
-| `--success-foreground`   | Text on success elements                   |
-| `--warning`              | Warning buttons, caution states            |
-| `--warning-foreground`   | Text on warning elements                   |
-| `--info`                 | Informational highlights                   |
-| `--info-foreground`      | Text on info elements                      |
+| Token                    | Usage                                                    |
+| ------------------------ | -------------------------------------------------------- |
+| `--correct`              | Correct answer indicators, positive trends               |
+| `--correct-foreground`   | Text on correct backgrounds                              |
+| `--incorrect`            | Wrong answer indicators, negative trends                 |
+| `--incorrect-foreground` | Text on incorrect backgrounds                            |
+| `--flagged`              | Flagged questions                                        |
+| `--flagged-foreground`   | Text on flagged backgrounds                              |
+| `--warning`              | Generic warnings (charts/alerts)                         |
+| `--warning-foreground`   | Text on warning elements                                 |
+| `--info`                 | Informational highlights (e.g., new features)            |
+| `--info-foreground`      | Text on info elements                                    |
+| `--success`              | Success buttons, task completion (often same as correct) |
+| `--success-foreground`   | Text on success elements                                 |
+
+### Performance Tier Tokens
+
+Used in charts (donut/bar) to denote performance levels.
+
+| Token              | Usage                                 |
+| ------------------ | ------------------------------------- |
+| `--tier-excellent` | 90%+ scores (often matches success)   |
+| `--tier-great`     | 80-89% scores                         |
+| `--tier-good`      | 70-79% scores                         |
+| `--tier-passing`   | 60-69% scores (often matches warning) |
+| `--tier-failing`   | <60% scores (often matches incorrect) |
 
 ---
 
 ## How to Create a New Theme
 
-1. **Add a new data-theme block** in `globals.css`:
+1. **Add a new data-theme block** in `src/app/globals.css`:
 
 ```css
 [data-theme="ocean"] {
   --background: 200 50% 10%; /* Deep ocean blue */
   --foreground: 180 30% 95%; /* Light seafoam */
 
-  --card: 200 50% 14%;
-  --card-foreground: 180 30% 95%;
+  --radius: 0.75rem; /* Custom roundness */
 
-  --primary: 175 80% 45%; /* Teal wave */
-  --primary-foreground: 200 50% 10%;
-
-  /* ... define all tokens ... */
+  /* ... define all CSS variables listed above ... */
 }
 ```
 
-2. **Register the theme** in `src/stores/settingsStore.ts`:
+2. **Register the theme** in `src/components/common/ThemeProvider.tsx`:
 
-```ts
-export type Theme =
-  | "light"
-  | "dark"
-  | "midnight"
-  | "focus"
-  | "forest"
-  | "retro"
-  | "ocean";
+```tsx
+export type Theme = "light" | "dark" | ... | "ocean";
+
+// Update validation logic
+if (stored === "ocean" || ...) return stored as Theme;
 ```
 
-3. **Add to the theme selector** in `src/components/common/ThemeProvider.tsx`
+3. **Add to Settings UI** in `src/components/settings/ThemeSettings.tsx`:
 
----
-
-## Customization Examples
-
-### Change Chart Colors for All Themes
-
-Charts use these tokens (via `useChartColors` hook):
-
-- **Lines/bars**: `--primary`
-- **Grid lines**: `--border`
-- **Axis labels**: `--muted-foreground`
-
-To make charts purple in Midnight theme:
-
-```css
-[data-theme="midnight"] {
-  --primary: 270 80% 60%; /* Purple instead of cyan */
-}
-```
-
-### Make Quiz Feedback Less Saturated
-
-For a calmer Focus theme:
-
-```css
-[data-theme="focus"] {
-  --correct: 145 40% 42%; /* Muted sage */
-  --incorrect: 0 40% 50%; /* Muted brick */
-}
-```
-
-### Create High-Contrast Mode
-
-```css
-[data-theme="high-contrast"] {
-  --background: 0 0% 0%; /* Pure black */
-  --foreground: 0 0% 100%; /* Pure white */
-  --primary: 60 100% 50%; /* Bright yellow */
-  --border: 0 0% 100%; /* White borders */
-}
+```tsx
+{
+    id: "ocean",
+    name: "Ocean",
+    description: "Deep sea navy with coral accents",
+    icon: Waves,
+    preview: { bg: "bg-slate-900", accent: "bg-cyan-500", text: "text-cyan-50" },
+},
 ```
 
 ---
 
-## Tips
+## Charts
 
-1. **Maintain contrast ratios** — Keep a 4.5:1 ratio between foreground and background for accessibility
-2. **Test quiz feedback** — Ensure `--correct`/`--incorrect` are distinguishable from `--primary`
-3. **Check charts** — The `useChartColors` hook reads tokens at runtime, so chart colors update instantly
-4. **Test all components** — Use the dashboard, quiz flow, and analytics to verify your theme
+Charts use the `useChartColors` hook to dynamically read these CSS variables at runtime. This ensures:
+
+1. Chart colors match the theme instantly.
+2. No hardcoded hex values in JavaScript.
+3. Support for custom user themes in the future.
 
 ---
 
 ## File Locations
 
-| File                                      | Purpose                               |
-| ----------------------------------------- | ------------------------------------- |
-| `src/app/globals.css`                     | All theme definitions (CSS variables) |
-| `tailwind.config.ts`                      | Tailwind token mappings               |
-| `src/hooks/useChartColors.ts`             | Chart color reading hook              |
-| `src/stores/settingsStore.ts`             | Theme type definitions                |
-| `src/components/common/ThemeProvider.tsx` | Theme application logic               |
+| File                                        | Purpose                               |
+| ------------------------------------------- | ------------------------------------- |
+| `src/app/globals.css`                       | All theme definitions (CSS variables) |
+| `tailwind.config.ts`                        | Tailwind token mappings               |
+| `src/components/common/ThemeProvider.tsx`   | Theme type definition & state logic   |
+| `src/components/settings/ThemeSettings.tsx` | Theme selection UI & preview config   |
+| `src/hooks/useChartColors.ts`               | Chart color reading hook              |
