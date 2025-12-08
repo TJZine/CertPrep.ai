@@ -1,0 +1,33 @@
+name: Sync Main to Staging
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  sync-branch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Sync Staging with Main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git checkout staging || git checkout -b staging
+          
+          # Try fast-forward merge first
+          if git merge origin/main --ff-only; then
+            echo "Fast-forward merge successful"
+            git push origin staging
+          else
+            echo "Fast-forward failed. Forcing staging to match main."
+            git reset --hard origin/main
+            git push --force origin staging
+          fi
