@@ -69,11 +69,12 @@ export function useExamSubmission({
 
     // Helper to convert Map to Record
     const buildAnswersRecord = React.useCallback((): Record<string, string> => {
-        const answersRecord: Record<string, string> = {};
-        answers.forEach((record, questionId) => {
-            answersRecord[questionId] = record.selectedAnswer;
-        });
-        return answersRecord;
+        return Object.fromEntries(
+            Array.from(answers.entries()).map(([id, record]) => [
+                id,
+                record.selectedAnswer,
+            ]),
+        );
     }, [answers]);
 
     const handleSubmitExam = React.useCallback(async (): Promise<void> => {
@@ -190,13 +191,16 @@ export function useExamSubmission({
     ]);
 
     const handleTimeUpConfirm = React.useCallback(async (): Promise<void> => {
-        setIsSubmitting(true);
         try {
             const resultId = autoResultId;
             if (resultId) {
+                setIsSubmitting(true);
                 router.push(`/results/${resultId}`);
             } else {
-                const finalResultId = autoResultId ?? (await handleAutoSubmit());
+                // Determine effective result ID *before* setting submitting state
+                // to avoid blocking the fallback auto-submit call
+                const finalResultId = await handleAutoSubmit();
+                setIsSubmitting(true);
                 if (finalResultId) {
                     router.push(`/results/${finalResultId}`);
                 }
@@ -205,9 +209,6 @@ export function useExamSubmission({
             console.error("Failed to save results:", error);
             if (isMountedRef.current) {
                 addToast("error", "Failed to save results. Please try again.");
-            }
-        } finally {
-            if (isMountedRef.current) {
                 setIsSubmitting(false);
             }
         }

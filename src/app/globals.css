@@ -1097,33 +1097,33 @@
 
   /* Question display styles */
   .question-text {
-    @apply text-lg font-semibold leading-relaxed text-slate-900 sm:text-xl;
+    @apply text-lg font-semibold leading-relaxed text-foreground sm:text-xl;
   }
 
   /* Option button states */
   .option-base {
-    @apply flex w-full items-center justify-between rounded-lg border bg-white px-4 py-3 text-left text-slate-900 transition;
+    @apply flex w-full items-center justify-between rounded-lg border bg-card px-4 py-3 text-left text-foreground transition;
   }
 
   .option-default {
-    @apply border-slate-200 hover:border-blue-200 hover:bg-blue-50/60;
+    @apply border-border hover:border-primary/50 hover:bg-primary/5;
   }
 
   .option-selected {
-    @apply border-blue-500 bg-blue-50 text-blue-900 hover:border-blue-600;
+    @apply border-primary bg-primary/10 text-primary hover:border-primary;
   }
 
   .option-correct {
-    @apply border-green-500 bg-green-50 text-green-900;
+    @apply border-success bg-success/10 text-success;
   }
 
   .option-incorrect {
-    @apply border-red-500 bg-red-50 text-red-900;
+    @apply border-destructive bg-destructive/10 text-destructive;
   }
 
   /* Card variants */
   .card {
-    @apply rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900;
+    @apply rounded-xl border border-border bg-card shadow-sm;
   }
 
   .card-hover {
@@ -1280,197 +1280,198 @@
     border-color: hsl(var(--border)) !important;
     /* Only force width if absolutely necessary for the 'style', 
        but user reported "strange borders on some boxes". 
-       Let's REDUCE the aggressiveness. */
+    /* Let's REDUCE the aggressiveness. */
+  }
 
-    [data-theme="holiday"] ::-webkit-scrollbar-thumb {
-      background: repeating-linear-gradient(45deg,
-          #d32f2f,
-          #d32f2f 10px,
-          #ffffff 10px,
-          #ffffff 20px);
-      border: 3px solid transparent;
-      background-clip: content-box;
-      border-radius: 1rem;
-      box-shadow: 0 0 0 1px rgba(211, 47, 47, 0.5);
-    }
+  [data-theme="holiday"] ::-webkit-scrollbar-thumb {
+    background: repeating-linear-gradient(45deg,
+        #d32f2f,
+        #d32f2f 10px,
+        #ffffff 10px,
+        #ffffff 20px);
+    border: 3px solid transparent;
+    background-clip: content-box;
+    border-radius: 1rem;
+    box-shadow: 0 0 0 1px rgba(211, 47, 47, 0.5);
+  }
 
-    [data-theme="holiday"] ::-webkit-scrollbar-track {
-      background: rgba(255, 255, 255, 0.5);
-    }
+  [data-theme="holiday"] ::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.5);
+  }
 
-    [data-theme="retro-dark"] .shadow-sm,
-    [data-theme="retro-dark"] .shadow-md,
-    [data-theme="retro-dark"] .shadow-lg,
-    [data-theme="retro-dark"] .glass {
-      box-shadow: none !important;
-      background: var(--card);
-    }
+  [data-theme="retro-dark"] .shadow-sm,
+  [data-theme="retro-dark"] .shadow-md,
+  [data-theme="retro-dark"] .shadow-lg,
+  [data-theme="retro-dark"] .glass {
+    box-shadow: none !important;
+    background: var(--card);
+  }
 
-    /* Force sharp comers on everything in Retro/Retro-Dark */
-    [data-theme="retro"] [class*="rounded-"],
-    [data-theme="retro-dark"] [class*="rounded-"] {
-      border-radius: 0px !important;
-    }
+  /* Force sharp comers on everything in Retro/Retro-Dark */
+  [data-theme="retro"] [class*="rounded-"],
+  [data-theme="retro-dark"] [class*="rounded-"] {
+    border-radius: 0px !important;
+  }
 
-    /* -------------------------------------------------------------------------- */
-    /* TYPOGRAPHY & TEXTURE OVERRIDES */
-    /* -------------------------------------------------------------------------- */
+  /* -------------------------------------------------------------------------- */
+  /* TYPOGRAPHY & TEXTURE OVERRIDES */
+  /* -------------------------------------------------------------------------- */
 
-    /* RETRO FONT SCALE CORRECTIONS */
-    [data-theme="retro"],
-    [data-theme="retro-dark"] {
-      /* Pixel fonts need to be slightly larger to be readable */
-      font-size: 14px;
-    }
+  /* RETRO FONT SCALE CORRECTIONS */
+  [data-theme="retro"],
+  [data-theme="retro-dark"] {
+    /* Pixel fonts need to be slightly larger to be readable */
+    font-size: 14px;
+  }
 
-    /* Improve Focus Visibility for A11y in High Contrast Themes */
-    [data-theme="retro"] *:focus-visible,
-    [data-theme="retro-dark"] *:focus-visible,
-    [data-theme="midnight"] *:focus-visible {
-      outline: 2px solid var(--primary);
-      outline-offset: 2px;
-    }
+  /* Improve Focus Visibility for A11y in High Contrast Themes */
+  [data-theme="retro"] *:focus-visible,
+  [data-theme="retro-dark"] *:focus-visible,
+  [data-theme="midnight"] *:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
 
-    /* CUSTOM SCROLLBARS (For themes that need it) */
-    /* Retro / Retro-Dark / Midnight - Blocky or Neon Scrollbars */
-    [data-theme="retro"] ::-webkit-scrollbar,
-    [data-theme="retro-dark"] ::-webkit-scrollbar,
-    [data-theme="midnight"] ::-webkit-scrollbar {
-      width: 12px;
-      height: 12px;
-    }
+  /* CUSTOM SCROLLBARS (For themes that need it) */
+  /* Retro / Retro-Dark / Midnight - Blocky or Neon Scrollbars */
+  [data-theme="retro"] ::-webkit-scrollbar,
+  [data-theme="retro-dark"] ::-webkit-scrollbar,
+  [data-theme="midnight"] ::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
 
-    [data-theme="retro"] ::-webkit-scrollbar-thumb,
-    [data-theme="retro-dark"] ::-webkit-scrollbar-thumb,
-    [data-theme="midnight"] ::-webkit-scrollbar-thumb {
-      background: var(--primary);
-      border: 2px solid var(--background);
-    }
+  [data-theme="retro"] ::-webkit-scrollbar-thumb,
+  [data-theme="retro-dark"] ::-webkit-scrollbar-thumb,
+  [data-theme="midnight"] ::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border: 2px solid var(--background);
+  }
 
-    [data-theme="retro"] ::-webkit-scrollbar-track,
-    [data-theme="retro-dark"] ::-webkit-scrollbar-track,
-    [data-theme="midnight"] ::-webkit-scrollbar-track {
-      background: var(--secondary);
-    }
+  [data-theme="retro"] ::-webkit-scrollbar-track,
+  [data-theme="retro-dark"] ::-webkit-scrollbar-track,
+  [data-theme="midnight"] ::-webkit-scrollbar-track {
+    background: var(--secondary);
+  }
 
-    /* GLOBAL RESET for Specific Themes */
-    [data-theme="retro"] *,
-    [data-theme="retro-dark"] * {
-      /* Ensure clean rendering for pixel fonts */
-      -webkit-font-smoothing: none;
-      -moz-osx-font-smoothing: grayscale;
-      text-rendering: optimizeSpeed;
-    }
+  /* GLOBAL RESET for Specific Themes */
+  [data-theme="retro"] *,
+  [data-theme="retro-dark"] * {
+    /* Ensure clean rendering for pixel fonts */
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeSpeed;
+  }
 
-    /* BLOSSOM FROSTED OVERRIDE */
-    [data-theme="blossom"] .glass,
-    [data-theme="blossom"] .card,
-    [data-theme="blossom"] .popover {
-      backdrop-filter: blur(12px) saturate(140%) !important;
-    }
+  /* BLOSSOM FROSTED OVERRIDE */
+  [data-theme="blossom"] .glass,
+  [data-theme="blossom"] .card,
+  [data-theme="blossom"] .popover {
+    backdrop-filter: blur(12px) saturate(140%) !important;
+  }
 
-    /* RETRO PIXELATION */
-    [data-theme="retro"] *,
-    [data-theme="retro-dark"] * {
-      image-rendering: pixelated;
-    }
+  /* RETRO PIXELATION */
+  [data-theme="retro"] *,
+  [data-theme="retro-dark"] * {
+    image-rendering: pixelated;
+  }
 
-    /* GLOBAL SHADOWS with Variable Color Support */
-    .shadow-sm {
-      box-shadow: 0 1px 2px 0 hsl(var(--shadow-color, 220 40% 2%) / 0.05);
-    }
+  /* GLOBAL SHADOWS with Variable Color Support */
+  .shadow-sm {
+    box-shadow: 0 1px 2px 0 hsl(var(--shadow-color, 220 40% 2%) / 0.05);
+  }
 
-    .shadow {
-      box-shadow: 0 1px 3px 0 hsl(var(--shadow-color, 220 40% 2%) / 0.1), 0 1px 2px -1px hsl(var(--shadow-color, 220 40% 2%) / 0.1);
-    }
+  .shadow {
+    box-shadow: 0 1px 3px 0 hsl(var(--shadow-color, 220 40% 2%) / 0.1), 0 1px 2px -1px hsl(var(--shadow-color, 220 40% 2%) / 0.1);
+  }
 
-    .shadow-md {
-      box-shadow: 0 4px 6px -1px hsl(var(--shadow-color, 220 40% 2%) / 0.1), 0 2px 4px -2px hsl(var(--shadow-color, 220 40% 2%) / 0.1);
-    }
+  .shadow-md {
+    box-shadow: 0 4px 6px -1px hsl(var(--shadow-color, 220 40% 2%) / 0.1), 0 2px 4px -2px hsl(var(--shadow-color, 220 40% 2%) / 0.1);
+  }
 
-    .shadow-lg {
-      box-shadow: 0 10px 15px -3px hsl(var(--shadow-color, 220 40% 2%) / 0.1), 0 4px 6px -4px hsl(var(--shadow-color, 220 40% 2%) / 0.1);
-    }
+  .shadow-lg {
+    box-shadow: 0 10px 15px -3px hsl(var(--shadow-color, 220 40% 2%) / 0.1), 0 4px 6px -4px hsl(var(--shadow-color, 220 40% 2%) / 0.1);
+  }
 
-    .shadow-xl {
-      box-shadow: 0 20px 25px -5px hsl(var(--shadow-color, 220 40% 2%) / 0.1), 0 8px 10px -6px hsl(var(--shadow-color, 220 40% 2%) / 0.1);
-    }
+  .shadow-xl {
+    box-shadow: 0 20px 25px -5px hsl(var(--shadow-color, 220 40% 2%) / 0.1), 0 8px 10px -6px hsl(var(--shadow-color, 220 40% 2%) / 0.1);
+  }
 
-    .shadow-2xl {
-      box-shadow: 0 25px 50px -12px hsl(var(--shadow-color, 220 40% 2%) / 0.25);
-    }
+  .shadow-2xl {
+    box-shadow: 0 25px 50px -12px hsl(var(--shadow-color, 220 40% 2%) / 0.25);
+  }
 
-    .shadow-inner {
-      box-shadow: inset 0 2px 4px 0 hsl(var(--shadow-color, 220 40% 2%) / 0.05);
-    }
+  .shadow-inner {
+    box-shadow: inset 0 2px 4px 0 hsl(var(--shadow-color, 220 40% 2%) / 0.05);
+  }
 
-    /* MESH GRADIENT BACKGROUND */
-    .bg-mesh {
-      background-image:
-        radial-gradient(at 0% 0%, hsla(var(--primary) / 0.15) 0px, transparent 50%),
-        radial-gradient(at 100% 0%, hsla(var(--secondary) / 0.15) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, hsla(var(--accent) / 0.15) 0px, transparent 50%),
-        radial-gradient(at 0% 100%, hsla(var(--primary) / 0.05) 0px, transparent 50%);
-    }
+  /* MESH GRADIENT BACKGROUND */
+  .bg-mesh {
+    background-image:
+      radial-gradient(at 0% 0%, hsla(var(--primary) / 0.15) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, hsla(var(--secondary) / 0.15) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, hsla(var(--accent) / 0.15) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, hsla(var(--primary) / 0.05) 0px, transparent 50%);
+  }
 
-    /* RETRO CRT SCANLINE */
-    [data-theme="retro"] body::after,
-    [data-theme="forest"] body::after {
-      content: " ";
-      display: block;
-      position: fixed;
-      top: 0;
-      left: 0;
-      bottom: 0;
-      right: 0;
-      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
-      z-index: 9999;
-      background-size: 100% 2px, 3px 100%;
-      pointer-events: none;
-    }
+  /* RETRO CRT SCANLINE */
+  [data-theme="retro"] body::after,
+  [data-theme="forest"] body::after {
+    content: " ";
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+    z-index: 9999;
+    background-size: 100% 2px, 3px 100%;
+    pointer-events: none;
+  }
 
-    /**
+  /**
    * Legend color dots for charts (AnalyticsOverview)
    * Uses tier CSS variables for theme consistency
    */
-    .legend-dot-excellent {
-      background-color: hsl(var(--tier-excellent));
-    }
-
-    .legend-dot-great {
-      background-color: hsl(var(--tier-great));
-    }
-
-    .legend-dot-good {
-      background-color: hsl(var(--tier-good));
-    }
-
-    .legend-dot-passing {
-      background-color: hsl(var(--tier-passing));
-    }
-
-    .legend-dot-failing {
-      background-color: hsl(var(--tier-failing));
-    }
+  .legend-dot-excellent {
+    background-color: hsl(var(--tier-excellent));
   }
 
-  @media print {
-    body {
-      background: white;
-      color: #0f172a;
-    }
-
-    .no-print {
-      display: none !important;
-    }
-
-    .print-break {
-      page-break-before: always;
-    }
-
-    .card,
-    .card-hover {
-      box-shadow: none !important;
-      border-color: #cbd5e1 !important;
-    }
+  .legend-dot-great {
+    background-color: hsl(var(--tier-great));
   }
+
+  .legend-dot-good {
+    background-color: hsl(var(--tier-good));
+  }
+
+  .legend-dot-passing {
+    background-color: hsl(var(--tier-passing));
+  }
+
+  .legend-dot-failing {
+    background-color: hsl(var(--tier-failing));
+  }
+}
+
+@media print {
+  body {
+    background: white;
+    color: #0f172a;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .print-break {
+    page-break-before: always;
+  }
+
+  .card,
+  .card-hover {
+    box-shadow: none !important;
+    border-color: #cbd5e1 !important;
+  }
+}

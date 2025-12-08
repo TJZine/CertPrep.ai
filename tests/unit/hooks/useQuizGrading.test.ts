@@ -39,7 +39,7 @@ describe("useQuizGrading Hook", () => {
         updated_at: Date.now(),
     };
 
-    it("should return null grading initially", () => {
+    it("should start in loading state", () => {
         const { result } = renderHook(() => useQuizGrading(mockQuiz, {}));
         expect(result.current.grading).toBeNull();
         // Hook initializes isLoading to false, but the useEffect runs immediately in this test environment,
