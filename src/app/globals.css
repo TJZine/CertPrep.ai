@@ -1139,9 +1139,22 @@
     border-radius: 0px !important;
   }
 
-  /* MINT BORDER THICKNESS OVERRIDE */
-  [data-theme="mint"] * {
-    border-width: 2px;
+  /* MINT "FIELD GUIDE" TARGETED BORDERS */
+  [data-theme="mint"] .card,
+  [data-theme="mint"] .btn,
+  [data-theme="mint"] input,
+  [data-theme="mint"] textarea,
+  [data-theme="mint"] .popover {
+    border-width: 2px !important;
+  }
+
+  /* MINT "HARD PASTEL" SHADOWS */
+  [data-theme="mint"] .shadow-sm,
+  [data-theme="mint"] .shadow-md,
+  [data-theme="mint"] .shadow-lg {
+    box-shadow: 5px 5px 0px 0px hsl(var(--primary) / 0.4) !important;
+    opacity: 1 !important;
+    /* Ensure opacity is reset if overridden elsewhere */
   }
 
   /* HOLIDAY GOLD BORDER OVERRIDE */
