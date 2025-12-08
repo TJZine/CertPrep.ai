@@ -45,7 +45,7 @@ function StatBar({
             </div>
             <div className="h-3 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
                 <div
-                    className={cn("h-full transition-all duration-500", color.replace("text-", "bg-"))}
+                    className={cn("h-full transition-all duration-500", color.replaceAll("text-", "bg-"))}
                     style={{ width: `${percentage}%` }}
                 />
             </div>

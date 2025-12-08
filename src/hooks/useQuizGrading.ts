@@ -46,8 +46,9 @@ export function useQuizGrading(
         let unanswered = 0;
 
         // If questionIds provided (Smart Round/Review Missed), only grade those questions
-        const questionsToGrade = questionIds
-          ? quiz.questions.filter((q) => questionIds.includes(q.id))
+        const questionIdsSet = questionIds ? new Set(questionIds) : null;
+        const questionsToGrade = questionIdsSet
+          ? quiz.questions.filter((q) => questionIdsSet.has(q.id))
           : quiz.questions;
 
         // Collect results in a local array to avoid race conditions on shared counters

@@ -12,7 +12,7 @@ export interface CategoryStat {
 
 export interface AnalyticsStats {
   categoryPerformance: CategoryStat[];
-  weakAreas: { category: string; avgScore: number; totalQuestions: number }[];
+  weakAreas: { category: string; avgScore: number; totalQuestions: number; recentTrend?: "improving" | "declining" | "stable" }[];
   dailyStudyTime: { date: string; minutes: number }[];
   isLoading: boolean;
 }
@@ -102,8 +102,16 @@ export function useAnalyticsStats(
             const quiz = quizMap.get(result.quiz_id);
             if (!quiz) return [];
 
+            // Filter to only questions served in this session (Smart Round, Review Missed)
+            const idSet = result.question_ids
+              ? new Set(result.question_ids)
+              : null;
+            const sessionQuestions = idSet
+              ? quiz.questions.filter((q) => idSet.has(String(q.id)))
+              : quiz.questions;
+
             return Promise.all(
-              quiz.questions.map(async (question) => {
+              sessionQuestions.map(async (question) => {
                 const category = question.category || "Uncategorized";
                 const userAnswer = result.answers[String(question.id)];
                 let isCorrect = false;

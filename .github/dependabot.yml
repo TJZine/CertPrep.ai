@@ -8,10 +8,19 @@ updates:
       day: "monday"
     open-pull-requests-limit: 10
     groups:
-      # Group ALL updates (major, minor, patch) into one PR to reduce noise
-      all-dependencies:
+      # Major updates often have breaking changes - review separately
+      major-updates:
         patterns:
           - "*"
+        update-types:
+          - "major"
+      # Minor/patch updates are usually safe to batch together
+      routine-updates:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
 
   # Maintain dependencies for GitHub Actions
   - package-ecosystem: "github-actions"

@@ -32,10 +32,14 @@ export interface AdvancedAnalytics {
 
 /**
  * Normalizes a timestamp to the start of day in local timezone.
+ * Returns ISO-style YYYY-MM-DD format for proper sorting.
  */
 function getDateKey(timestamp: number): string {
     const date = new Date(timestamp);
-    return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
 }
 
 /**
@@ -144,7 +148,7 @@ function calculateStreaks(
     const sortedDays = Array.from(daySet)
         .map((key) => {
             const [year, month, day] = key.split("-").map(Number);
-            return new Date(year!, month!, day!).getTime();
+            return new Date(year!, month! - 1, day!).getTime();
         })
         .sort((a, b) => a - b);
 

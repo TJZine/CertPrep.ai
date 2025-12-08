@@ -135,8 +135,8 @@ export function WeakAreasCard({
                     className={cn(
                       "h-full transition-all",
                       getProgressColor(area.avgScore),
-                      `w-[${Math.round(area.avgScore)}%]`,
                     )}
+                    style={{ width: `${Math.round(area.avgScore)}%` }}
                   />
                 </div>
               </div>

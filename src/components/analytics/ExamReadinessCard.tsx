@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useMemo } from "react";
 import {
     Card,
     CardContent,
@@ -137,7 +138,14 @@ function CategoryBar({
                     {score}%
                 </span>
             </div>
-            <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
+            <div
+                className="h-2 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700"
+                role="progressbar"
+                aria-valuenow={score}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label={`${category} readiness: ${score}%`}
+            >
                 <div
                     className={cn(
                         "h-full transition-all duration-500",
@@ -160,9 +168,13 @@ export function ExamReadinessCard({
     passingThreshold = PASSING_THRESHOLD,
     className,
 }: ExamReadinessCardProps): React.ReactElement {
-    const categories = Array.from(categoryReadiness.entries())
-        .sort((a, b) => a[1] - b[1]) // Sort by score ascending (weakest first)
-        .slice(0, 6); // Show top 6 categories
+    const categories = useMemo(
+        () =>
+            Array.from(categoryReadiness.entries())
+                .sort((a, b) => a[1] - b[1]) // Sort by score ascending (weakest first)
+                .slice(0, 6), // Show top 6 categories
+        [categoryReadiness],
+    );
 
     const isPassing = readinessScore >= passingThreshold;
 
@@ -233,18 +245,14 @@ export function ExamReadinessCard({
                         <h4 className="font-semibold text-slate-900 dark:text-slate-100">
                             Category Breakdown
                         </h4>
-                        {categories.length > 0 ? (
-                            categories.map(([category, score]) => (
-                                <CategoryBar
-                                    key={category}
-                                    category={category}
-                                    score={score}
-                                    threshold={passingThreshold}
-                                />
-                            ))
-                        ) : (
-                            <p className="text-sm text-slate-500">No category data yet</p>
-                        )}
+                        {categories.map(([category, score]) => (
+                            <CategoryBar
+                                key={category}
+                                category={category}
+                                score={score}
+                                threshold={passingThreshold}
+                            />
+                        ))}
                     </div>
                 </div>
             </CardContent>
