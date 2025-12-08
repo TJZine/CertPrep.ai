@@ -33,9 +33,8 @@ export interface AdvancedAnalytics {
 /**
  * Normalizes a timestamp to the start of day in local timezone.
  * Returns ISO-style YYYY-MM-DD format for proper sorting.
- * @public - Exported for testing purposes
  */
-export function getDateKey(timestamp: number): string {
+function getDateKey(timestamp: number): string {
     const date = new Date(timestamp);
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -45,9 +44,8 @@ export function getDateKey(timestamp: number): string {
 
 /**
  * Calculates exam readiness based on category performance.
- * @public - Exported for testing purposes
  */
-export function calculateReadiness(
+function calculateReadiness(
     results: Result[],
     quizzes: Quiz[],
 ): { score: number; confidence: ConfidenceLevel; categoryReadiness: Map<string, number> } {
@@ -98,9 +96,8 @@ export function calculateReadiness(
 
 /**
  * Calculates study streaks from result timestamps.
- * @public - Exported for testing purposes
  */
-export function calculateStreaks(
+function calculateStreaks(
     results: Result[],
 ): { current: number; longest: number; consistency: number; last7Days: boolean[] } {
     if (results.length === 0) {
@@ -190,9 +187,8 @@ export function calculateStreaks(
 
 /**
  * Calculates category trends by comparing recent vs prior performance.
- * @public - Exported for testing purposes
  */
-export function calculateCategoryTrends(
+function calculateCategoryTrends(
     results: Result[],
 ): Map<string, TrendDirection> {
     const trends = new Map<string, TrendDirection>();
@@ -244,9 +240,8 @@ export function calculateCategoryTrends(
 
 /**
  * Calculates first attempt vs retry comparison.
- * @public - Exported for testing purposes
  */
-export function calculateRetryComparison(
+function calculateRetryComparison(
     results: Result[],
 ): { firstAttemptAvg: number | null; retryAvg: number | null; avgImprovement: number | null } {
     if (results.length === 0) {
@@ -305,11 +300,17 @@ export function useAdvancedAnalytics(
     results: Result[],
     quizzes: Quiz[],
 ): AdvancedAnalytics {
-    // Create stable dependency keys
+    // Create stable dependency keys (includes all fields used by calculations)
     const resultsKey = useMemo(
         () =>
             results
-                .map((r) => `${r.id}:${r.score}:${r.timestamp}`)
+                .map((r) => {
+                    const categoryHash = Object.entries(r.category_breakdown || {})
+                        .sort(([a], [b]) => a.localeCompare(b))
+                        .map(([k, v]) => `${k}=${v}`)
+                        .join(",");
+                    return `${r.id}:${r.quiz_id}:${r.score}:${r.timestamp}:${categoryHash}`;
+                })
                 .sort()
                 .join("|"),
         [results],
@@ -360,10 +361,10 @@ export function useAdvancedAnalytics(
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [resultsKey, quizzesKey]);
 
-    return {
+    return useMemo(() => ({
         ...analytics,
         isLoading: false,
-    };
+    }), [analytics]);
 }
 
 export default useAdvancedAnalytics;

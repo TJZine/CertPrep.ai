@@ -29,6 +29,8 @@ jobs:
         run: npm ci
       - name: Run lint
         run: npm run lint
+      - name: Run typecheck
+        run: npm run typecheck
 
   test:
     runs-on: ubuntu-latest
