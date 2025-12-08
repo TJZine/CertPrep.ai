@@ -31,7 +31,7 @@ export interface ToastContextValue {
    *
    * @param type - The style of toast (success, error, warning, info).
    * @param message - The text content.
-   * @param duration - Duration in ms (optional, default 5000).
+   * @param duration - Duration in ms (optional, default 5000). Use 0 to disable auto-dismiss.
    */
   addToast: (type: ToastType, message: string, duration?: number) => void;
   /**

@@ -81,7 +81,10 @@ export function useAnalyticsStats(
     const calculate = async (): Promise<void> => {
       // Safety timeout to ensure we don't hang forever
       const safetyTimeout = setTimeout(() => {
-        if (isMounted) setIsLoading(false);
+        if (isMounted) {
+          console.warn("Analytics calculation timed out after 5s");
+          setIsLoading(false);
+        }
       }, 5000);
 
       try {

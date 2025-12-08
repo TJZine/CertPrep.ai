@@ -178,11 +178,7 @@ export async function getAllQuizzes(userId: string): Promise<Quiz[]> {
     .and((quiz) => quiz.deleted_at === null || quiz.deleted_at === undefined)
     .toArray();
 
-  return quizzes.sort((a, b) => {
-    const timeDiff = b.created_at - a.created_at;
-    if (timeDiff !== 0) return timeDiff;
-    return a.title.localeCompare(b.title);
-  });
+  return sortQuizzesByNewest(quizzes);
 }
 
 /**
@@ -266,9 +262,16 @@ export async function updateQuiz(
 
       // If we are just updating questions, we probably have the full question object.
       // Let's try to map existing hashes to the raw questions if they are missing.
-      const enrichedQuestions = rawQuestions.map(q => {
-        const existingQ = existing.questions.find(eq => eq.id === q.id);
-        if (!q.correct_answer_hash && existingQ?.correct_answer_hash) {
+      const enrichedQuestions = rawQuestions.map((q) => {
+        const existingQ = existing.questions.find((eq) => eq.id === q.id);
+        // Only backfill the hash when the caller hasn't supplied either
+        // `correct_answer` or `correct_answer_hash`. If a new answer is
+        // provided, let `sanitizeQuestions` compute a fresh hash.
+        if (
+          !q.correct_answer_hash &&
+          !q.correct_answer &&
+          existingQ?.correct_answer_hash
+        ) {
           return { ...q, correct_answer_hash: existingQ.correct_answer_hash };
         }
         return q;

@@ -30,7 +30,12 @@ const sanitizeForSentry = (args: unknown[]): string => {
     .replace(
       /\b(Bearer|Token|token|key|password|pwd|secret)\s*[:=]\s*\S+/gi,
       "$1=[REDACTED]",
-    );
+    )
+    .replace(
+      /\b(ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9_]{36,}\b/g,
+      "[GH_TOKEN_REDACTED]",
+    )
+    .replace(/\bsk_(live|test)_[A-Za-z0-9]{24,}\b/g, "[STRIPE_KEY_REDACTED]");
 };
 
 export const logger = {
@@ -106,7 +111,7 @@ export const logger = {
    *
    * @remarks
    * - **Development**: Prints to `console.info`.
-   * - **Production**: No-op (currently).
+   * - **Production**: Adds a breadcrumb to Sentry (level: "info") without printing to console.
    *
    * @param args - The message(s) to log.
    */
@@ -115,7 +120,7 @@ export const logger = {
       console.info(...args);
     } else {
       Sentry.addBreadcrumb({
-        category: "log",
+        category: "info",
         message: sanitizeForSentry(args),
         level: "info",
       });
