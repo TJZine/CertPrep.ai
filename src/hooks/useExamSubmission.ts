@@ -97,7 +97,7 @@ export function useExamSubmission({
                 mode: "proctor",
                 answers: buildAnswersRecord(),
                 flaggedQuestions: Array.from(flaggedQuestions),
-                timeTakenSeconds: durationMinutes * 60 - timeRemaining,
+                timeTakenSeconds: Math.max(0, durationMinutes * 60 - timeRemaining),
             });
             hasSavedResultRef.current = true;
             const syncResult = await sync();

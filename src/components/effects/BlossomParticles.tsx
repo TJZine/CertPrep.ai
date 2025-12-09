@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import Particles, { initParticlesEngine } from '@tsparticles/react';
 import { loadSlim } from '@tsparticles/slim';
+import { loadEmittersPlugin } from '@tsparticles/plugin-emitters';
 
 /**
  * BlossomParticles - Premium sakura petal particle effect for Blossom theme
@@ -18,10 +19,11 @@ import { loadSlim } from '@tsparticles/slim';
 export default function BlossomParticles(): React.ReactElement | null {
     const [init, setInit] = useState(false);
 
-    // Initialize tsparticles engine once
+    // Initialize tsparticles engine once (slim + emitters for sparkle effects)
     useEffect(() => {
         initParticlesEngine(async (engine) => {
             await loadSlim(engine);
+            await loadEmittersPlugin(engine);
         }).then(() => {
             setInit(true);
         });
@@ -29,7 +31,7 @@ export default function BlossomParticles(): React.ReactElement | null {
 
     // Callback when particles container is loaded
     const particlesLoaded = useCallback(async (): Promise<void> => {
-        // Particles loaded successfully
+        // Particles loaded successfully (hook for logging or metrics if needed)
     }, []);
 
     if (!init) {

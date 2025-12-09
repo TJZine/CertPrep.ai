@@ -84,7 +84,9 @@
 
     --radius: 0.5rem;
 
-    /* Font Variables Initialized */
+    /* Font Variables
+       These reference CSS custom properties injected at runtime by next/font (see layout.tsx).
+       The --font-* variables are generated automatically when fonts are loaded. */
     --font-heading: var(--font-inter);
     --font-sans: var(--font-inter);
     --font-mono: monospace;

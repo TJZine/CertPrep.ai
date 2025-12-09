@@ -32,9 +32,9 @@ const MidnightParticles = dynamic(
  * - Midnight: Twinkling stars
  */
 export function ThemeEffects(): React.ReactElement | null {
-    const { theme } = useTheme();
+    const { resolvedTheme } = useTheme();
 
-    switch (theme) {
+    switch (resolvedTheme) {
         case 'blossom':
             return <BlossomParticles />;
         case 'holiday':
