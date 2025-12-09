@@ -43,6 +43,7 @@ export const THEME_CONFIG: Record<
     swatch: string;
     preview: { bg: string; accent: string; text: string };
     hidden?: boolean;
+    isPremium?: boolean; // Premium themes have special particle effects
   }
 > = {
   system: {
@@ -72,11 +73,12 @@ export const THEME_CONFIG: Record<
   },
   midnight: {
     isDark: true,
-    label: "Midnight",
-    description: "Cyber neon with electric cyan accents",
+    label: "Midnight ✨",
+    description: "Cyber neon with twinkling stars",
     icon: Sparkles,
     swatch: "#0ea5e9",
     preview: { bg: "bg-[#0d1117]", accent: "bg-cyan-400", text: "text-cyan-100" },
+    isPremium: true,
   },
   focus: {
     isDark: false,
@@ -120,11 +122,12 @@ export const THEME_CONFIG: Record<
   },
   holiday: {
     isDark: false,
-    label: "Holiday",
-    description: "Festive red & green for the season",
+    label: "Holiday ✨",
+    description: "Festive with falling snowflakes",
     icon: Gift,
     swatch: "#e11d48",
     preview: { bg: "bg-white", accent: "bg-red-500", text: "text-green-800" },
+    isPremium: true,
   },
   vapor: {
     isDark: true,
@@ -136,11 +139,12 @@ export const THEME_CONFIG: Record<
   },
   blossom: {
     isDark: false,
-    label: "Blossom",
-    description: "Pastel pink for a soft aesthetic",
+    label: "Blossom ✨",
+    description: "Romantic pink with falling sakura petals",
     icon: Flower2,
     swatch: "#f472b6",
     preview: { bg: "bg-[#FFF0F5]", accent: "bg-[#E599A8]", text: "text-[#4A4A4A]" },
+    isPremium: true,
   },
   mint: {
     isDark: false,

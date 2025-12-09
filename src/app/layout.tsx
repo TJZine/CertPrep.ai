@@ -7,7 +7,7 @@ import { Footer } from "@/components/layout/Footer";
 import { SkipLink } from "@/components/common/SkipLink";
 import { AppProviders } from "@/components/providers/AppProviders";
 import { PageTransition } from "@/components/layout/PageTransition";
-import { SakuraPetals } from "@/components/effects/SakuraPetals";
+import { ThemeEffects } from "@/components/effects/ThemeEffects";
 import { APP_NAME } from "@/lib/constants";
 import "./globals.css";
 
@@ -141,7 +141,7 @@ export default async function RootLayout({
         <SkipLink />
         <AppProviders>
           <Header />
-          <SakuraPetals />
+          <ThemeEffects />
           <div id="main-content" className="flex-1 flex flex-col" tabIndex={-1}>
             <PageTransition>{children}</PageTransition>
           </div>
