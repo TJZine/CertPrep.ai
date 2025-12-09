@@ -15,6 +15,16 @@ export function PageTransition({
     const pathname = usePathname();
     const { theme } = useTheme();
 
+    // Track hydration to prevent SSR mismatch with Framer Motion
+    // On first render, skip initial animation; subsequent navigations animate
+    const hasHydratedRef = React.useRef(false);
+    const [isHydrated, setIsHydrated] = React.useState(false);
+
+    React.useEffect(() => {
+        hasHydratedRef.current = true;
+        setIsHydrated(true);
+    }, []);
+
     // Determine animation variant based on theme
     const getVariants = (): TransitionStyles => {
         switch (theme) {
@@ -69,7 +79,9 @@ export function PageTransition({
         <AnimatePresence mode="wait">
             <motion.div
                 key={pathname}
-                initial={variants.initial}
+                // Use `initial={false}` on first render to prevent hydration mismatch
+                // Framer Motion would otherwise apply initial styles before React hydrates
+                initial={isHydrated ? variants.initial : false}
                 animate={variants.animate}
                 exit={variants.exit}
                 transition={variants.transition}
@@ -80,3 +92,4 @@ export function PageTransition({
         </AnimatePresence>
     );
 }
+

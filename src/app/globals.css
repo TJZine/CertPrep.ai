@@ -632,9 +632,6 @@
     --font-sans: var(--font-press-start), monospace;
     --font-mono: var(--font-press-start), monospace;
 
-    /* Base Sizing (match Retro) */
-    font-size: 13px;
-
     --background: 0 0% 5%;
     /* Deep Black */
     --foreground: 120 100% 60%;
@@ -1184,56 +1181,90 @@
     /* Ensure opacity is reset if overridden elsewhere */
   }
 
-  /* BLOSSOM "SAKURA" ENHANCEMENTS - V5 (REAL PETAL IMAGE) */
-  /* Using actual sakura petal PNG for realistic falling effect */
+  /* BLOSSOM "SAKURA" ENHANCEMENTS - V6 (ORGANIC PARTICLE SYSTEM) */
+  /* Uses multiple radial-gradient "petals" with varied sizes and positions */
+  /* for a natural, organic falling effect instead of rigid grid tiling */
+
   [data-theme="blossom"] body::before {
     content: "";
     position: fixed;
-    top: 0;
-    left: 0;
+    inset: 0;
     width: 100%;
-    height: 200%;
-    /* Double height for seamless loop */
+    height: 200vh;
+    /* Tall canvas for seamless vertical loop */
     pointer-events: none;
     z-index: 50;
-    background-image: url('/images/sakura-petal.png');
-    background-size: 40px 40px;
-    /* Small petals, spaced apart */
-    background-repeat: space;
-    /* Evenly distribute with gaps */
-    animation: blossom-fall-vertical 18s linear infinite;
-    opacity: 0.6;
+
+    /* Layer 1: Large foreground petals (sparse) */
+    background-image:
+      /* Pink petals - varying sizes and positions */
+      radial-gradient(ellipse 12px 8px at 5% 15%, #f9a8c9 60%, transparent 100%),
+      radial-gradient(ellipse 10px 6px at 18% 35%, #fbb6ce 60%, transparent 100%),
+      radial-gradient(ellipse 14px 9px at 32% 8%, #f9a8c9 60%, transparent 100%),
+      radial-gradient(ellipse 11px 7px at 48% 42%, #fcd5e5 60%, transparent 100%),
+      radial-gradient(ellipse 13px 8px at 65% 22%, #f9a8c9 60%, transparent 100%),
+      radial-gradient(ellipse 9px 6px at 78% 55%, #fbb6ce 60%, transparent 100%),
+      radial-gradient(ellipse 15px 10px at 92% 12%, #f9a8c9 60%, transparent 100%),
+      /* White-pink petals for variety */
+      radial-gradient(ellipse 10px 7px at 12% 68%, #fff0f5 60%, transparent 100%),
+      radial-gradient(ellipse 12px 8px at 38% 75%, #fce4ec 60%, transparent 100%),
+      radial-gradient(ellipse 11px 7px at 55% 85%, #fff0f5 60%, transparent 100%),
+      radial-gradient(ellipse 14px 9px at 72% 78%, #fce4ec 60%, transparent 100%),
+      radial-gradient(ellipse 10px 6px at 88% 90%, #fff0f5 60%, transparent 100%);
+
+    background-size: 100% 100%;
+    opacity: 0.75;
+    animation: sakura-fall-drift 16s ease-in-out infinite;
   }
 
-  /* Second layer for parallax depth (smaller, slower) */
+  /* Layer 2: Smaller background petals (parallax depth) */
   [data-theme="blossom"] body::after {
     content: "";
     position: fixed;
-    top: 0;
-    left: 50px;
-    /* Offset to avoid alignment with first layer */
+    inset: 0;
     width: 100%;
-    height: 200%;
+    height: 200vh;
     pointer-events: none;
     z-index: 49;
-    background-image: url('/images/sakura-petal.png');
-    background-size: 25px 25px;
-    /* Smaller for depth */
-    background-repeat: space;
-    animation: blossom-fall-vertical 25s linear infinite;
-    /* Slower */
-    animation-delay: -8s;
-    /* Offset timing */
-    opacity: 0.4;
+
+    /* Smaller, lighter petals for depth */
+    background-image:
+      radial-gradient(ellipse 7px 5px at 8% 25%, #fcd5e580 60%, transparent 100%),
+      radial-gradient(ellipse 6px 4px at 22% 48%, #fbb6ce70 60%, transparent 100%),
+      radial-gradient(ellipse 8px 5px at 35% 18%, #fcd5e580 60%, transparent 100%),
+      radial-gradient(ellipse 5px 3px at 45% 62%, #fff0f570 60%, transparent 100%),
+      radial-gradient(ellipse 7px 4px at 58% 38%, #fcd5e580 60%, transparent 100%),
+      radial-gradient(ellipse 6px 4px at 70% 72%, #fbb6ce70 60%, transparent 100%),
+      radial-gradient(ellipse 8px 5px at 82% 28%, #fcd5e580 60%, transparent 100%),
+      radial-gradient(ellipse 5px 3px at 95% 58%, #fff0f570 60%, transparent 100%);
+
+    background-size: 100% 100%;
+    opacity: 0.5;
+    animation: sakura-fall-drift 24s ease-in-out infinite;
+    animation-delay: -6s;
+    /* Offset for organic layering */
   }
 
-  @keyframes blossom-fall-vertical {
+  /* Keyframe: Vertical fall with gentle horizontal sway */
+  @keyframes sakura-fall-drift {
     0% {
-      transform: translateY(-50%);
+      transform: translateY(-100vh) translateX(0);
+    }
+
+    25% {
+      transform: translateY(-50vh) translateX(15px);
+    }
+
+    50% {
+      transform: translateY(0) translateX(-10px);
+    }
+
+    75% {
+      transform: translateY(50vh) translateX(20px);
     }
 
     100% {
-      transform: translateY(0%);
+      transform: translateY(100vh) translateX(0);
     }
   }
 
