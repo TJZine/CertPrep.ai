@@ -5,12 +5,13 @@ import Particles, { initParticlesEngine } from '@tsparticles/react';
 import { loadSlim } from '@tsparticles/slim';
 
 /**
- * HolidayParticles - Snowfall effect for Holiday theme
+ * HolidayParticles - Subtle snowfall effect for Holiday theme
  * 
- * Features gentle falling snowflakes with:
- * - Varied sizes for depth perception
- * - Subtle horizontal drift
- * - Natural opacity variation
+ * Features gentle, natural-looking snow:
+ * - White/light blue snowflakes only
+ * - Subtle size and opacity variation
+ * - Natural drift and wobble
+ * - Low particle count for ambient feel
  */
 export default function HolidayParticles(): React.ReactElement | null {
     const [init, setInit] = useState(false);
@@ -43,29 +44,30 @@ export default function HolidayParticles(): React.ReactElement | null {
                 fpsLimit: 60,
                 particles: {
                     number: {
-                        value: 50, // Dense snowfall
+                        value: 35, // Subtle, not overwhelming
                         density: {
                             enable: true,
                             width: 1920,
                             height: 1080,
                         },
                     },
+                    // White/light blue snow only
                     color: {
-                        value: ['#ffffff', '#e8f4fc', '#d4e9f7'],
+                        value: ['#ffffff', '#f0f8ff', '#e8f4fc'],
                     },
                     shape: {
-                        type: 'circle',
+                        type: 'circle', // Simple circles, not stars
                     },
                     opacity: {
-                        value: { min: 0.3, max: 0.8 },
+                        value: { min: 0.3, max: 0.7 },
                     },
                     size: {
-                        value: { min: 2, max: 6 },
+                        value: { min: 2, max: 5 },
                     },
                     move: {
                         enable: true,
                         direction: 'bottom',
-                        speed: { min: 0.5, max: 2 },
+                        speed: { min: 0.3, max: 1.5 },
                         straight: false,
                         outModes: {
                             default: 'out',
@@ -73,17 +75,17 @@ export default function HolidayParticles(): React.ReactElement | null {
                         },
                         gravity: {
                             enable: true,
-                            acceleration: 0.1,
+                            acceleration: 0.05,
                         },
                         drift: {
-                            min: -0.5,
-                            max: 0.5,
+                            min: -0.3,
+                            max: 0.3,
                         },
                     },
                     wobble: {
                         enable: true,
-                        distance: 10,
-                        speed: 5,
+                        distance: 8,
+                        speed: 4,
                     },
                 },
                 detectRetina: true,
@@ -101,3 +103,5 @@ export default function HolidayParticles(): React.ReactElement | null {
         />
     );
 }
+
+

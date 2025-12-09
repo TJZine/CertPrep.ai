@@ -16,12 +16,10 @@ export function PageTransition({
     const { theme } = useTheme();
 
     // Track hydration to prevent SSR mismatch with Framer Motion
-    // On first render, skip initial animation; subsequent navigations animate
-    const hasHydratedRef = React.useRef(false);
+    // During SSR and initial hydration, render without animation wrapper
     const [isHydrated, setIsHydrated] = React.useState(false);
 
     React.useEffect(() => {
-        hasHydratedRef.current = true;
         setIsHydrated(true);
     }, []);
 
@@ -75,13 +73,17 @@ export function PageTransition({
 
     const variants = getVariants();
 
+    // During SSR and initial hydration, render children without animation
+    // This prevents the motion.div style mismatch between server and client
+    if (!isHydrated) {
+        return <div className="flex-1 w-full">{children}</div>;
+    }
+
     return (
         <AnimatePresence mode="wait">
             <motion.div
                 key={pathname}
-                // Use `initial={false}` on first render to prevent hydration mismatch
-                // Framer Motion would otherwise apply initial styles before React hydrates
-                initial={isHydrated ? variants.initial : false}
+                initial={variants.initial}
                 animate={variants.animate}
                 exit={variants.exit}
                 transition={variants.transition}

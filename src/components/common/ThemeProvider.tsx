@@ -121,12 +121,12 @@ export const THEME_CONFIG: Record<
     preview: { bg: "bg-[#2e3440]", accent: "bg-sky-300", text: "text-slate-200" },
   },
   holiday: {
-    isDark: false,
+    isDark: true,
     label: "Holiday ✨",
-    description: "Festive with falling snowflakes",
+    description: "Cozy dark Christmas with snowflakes",
     icon: Gift,
     swatch: "#e11d48",
-    preview: { bg: "bg-white", accent: "bg-red-500", text: "text-green-800" },
+    preview: { bg: "bg-[#1f3d2e]", accent: "bg-red-500", text: "text-amber-100" },
     isPremium: true,
   },
   vapor: {
@@ -230,8 +230,12 @@ export function ThemeProvider({
     // Set data attribute
     root.setAttribute("data-theme", resolvedTheme);
 
-    // Add 'dark' class if needed
-    if (THEME_CONFIG[resolvedTheme]?.isDark) {
+    // Add 'dark' class only for generic dark theme
+    // Themed dark modes (holiday, midnight, vapor, retro-dark) have their own complete palettes
+    // and don't need the .dark fallback which can cause style conflicts
+    const themedDarkModes: Theme[] = ['holiday', 'midnight', 'vapor', 'retro-dark'];
+    const needsDarkClass = THEME_CONFIG[resolvedTheme]?.isDark && !themedDarkModes.includes(resolvedTheme);
+    if (needsDarkClass) {
       root.classList.add("dark");
     }
 

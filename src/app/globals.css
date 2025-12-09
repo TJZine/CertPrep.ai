@@ -93,7 +93,9 @@
     --shadow-color: 220 40% 2%;
   }
 
-  .dark {
+
+  /* Generic dark mode - excluded for themes with their own dark palettes */
+  .dark:not([data-theme="holiday"]):not([data-theme="midnight"]):not([data-theme="vapor"]):not([data-theme="retro-dark"]) {
     /* SEMANTIC TOKENS (Default Dark Mode / Slate) */
     --background: 222 47% 11%;
     /* Slate-900 */
@@ -625,7 +627,70 @@
     --shadow-color: 193 43% 67%;
   }
 
+  /* NORD THEME - AURORA BOREALIS + FROSTED GLASS */
+  [data-theme="nord"] body {
+    background-color: hsl(220, 16%, 16%);
+    background-image:
+      /* Aurora gradient - moves across the top */
+      linear-gradient(120deg,
+        hsla(92, 28%, 65%, 0) 0%,
+        hsla(92, 28%, 65%, 0.15) 20%,
+        hsla(193, 43%, 67%, 0.2) 40%,
+        hsla(179, 25%, 65%, 0.15) 60%,
+        hsla(40, 71%, 73%, 0.1) 80%,
+        hsla(354, 42%, 56%, 0) 100%),
+      /* Subtle stars */
+      radial-gradient(1px 1px at 15% 10%, rgba(255, 255, 255, 0.3), transparent),
+      radial-gradient(1px 1px at 45% 15%, rgba(255, 255, 255, 0.2), transparent),
+      radial-gradient(1px 1px at 75% 8%, rgba(255, 255, 255, 0.3), transparent),
+      radial-gradient(1px 1px at 85% 25%, rgba(255, 255, 255, 0.2), transparent);
+    background-size: 200% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+    background-position: 0% 0%, 0 0, 0 0, 0 0, 0 0;
+    animation: nord-aurora 15s ease-in-out infinite;
+  }
+
+  @keyframes nord-aurora {
+
+    0%,
+    100% {
+      background-position: 0% 0%, 0 0, 0 0, 0 0, 0 0;
+    }
+
+    50% {
+      background-position: 100% 0%, 0 0, 0 0, 0 0, 0 0;
+    }
+  }
+
+  /* NORD CARDS - Frosted glass with frost glow */
+  [data-theme="nord"] .card,
+  [data-theme="nord"] .popover {
+    backdrop-filter: blur(12px) saturate(120%);
+    background: hsla(220, 16%, 20%, 0.85) !important;
+    border: 1px solid hsla(193, 43%, 67%, 0.3) !important;
+    box-shadow:
+      0 4px 16px hsla(220, 16%, 5%, 0.3),
+      inset 0 1px 0 hsla(193, 43%, 67%, 0.1) !important;
+    transition: all 0.3s ease;
+  }
+
+  [data-theme="nord"] .card:hover {
+    border-color: hsla(193, 43%, 67%, 0.5) !important;
+    box-shadow:
+      0 8px 24px hsla(220, 16%, 5%, 0.4),
+      0 0 20px hsla(193, 43%, 67%, 0.15),
+      inset 0 1px 0 hsla(193, 43%, 67%, 0.2) !important;
+  }
+
+  /* NORD BUTTONS - Frost glow on hover */
+  [data-theme="nord"] button[class*="bg-primary"]:hover,
+  [data-theme="nord"] a[class*="bg-primary"]:hover {
+    box-shadow:
+      0 0 15px hsla(193, 43%, 67%, 0.4),
+      0 4px 12px hsla(193, 43%, 67%, 0.2);
+  }
+
   /* RETRO DARK THEME */
+
   [data-theme="retro-dark"] {
     /* Use Pixel Font */
     --font-heading: var(--font-press-start), monospace;
@@ -703,106 +768,114 @@
     /* Hard black shadow */
   }
 
-  /* HOLIDAY THEME (The Festive Hearth / Cozy Cottage) */
+  /* HOLIDAY THEME (Cozy Dark Christmas / Cabin by the Fire) */
   [data-theme="holiday"] {
-    /* Typography: Storybook Serif */
+    /* Typography: Elegant Serif for festive storybook feel */
     --font-heading: var(--font-playfair), Georgia, serif;
     --font-sans: var(--font-playfair), Georgia, serif;
 
-    --background: 35 50% 98%;
-    /* Warm Vanilla / Eggnog */
-    --foreground: 351 86% 20%;
-    /* Deep Santa Red (Darker, richer) */
+    /* Deep Forest Green background - like evergreen trees at night */
+    --background: 150 25% 10%;
+    /* Warm cream/parchment text */
+    --foreground: 35 40% 92%;
 
-    --card: 35 30% 96%;
-    /* Parchment */
-    --card-foreground: 140 50% 20%;
+    /* Warm cream-tinted cards (cozy parchment feel) */
+    --card: 140 15% 15%;
+    --card-foreground: 35 40% 92%;
 
-    --popover: 35 30% 96%;
-    --popover-foreground: 140 50% 20%;
+    --popover: 140 15% 17%;
+    --popover-foreground: 35 40% 92%;
 
-    /* Deep Gold Accent */
-    --accent-foreground: 140 60% 20%;
+    /* PRIMARY: Santa Red - for main actions (Christmas balance) */
+    --primary: 350 75% 50%;
+    --primary-foreground: 0 0% 100%;
 
-    --destructive: 350 80% 55%;
-    --destructive-foreground: 0 0% 98%;
+    /* SECONDARY: Holly Green - for secondary actions */
+    --secondary: 140 55% 40%;
+    --secondary-foreground: 0 0% 100%;
 
-    --border: 350 80% 55%;
-    /* Santa Red Borders for structure */
-    --input: 35 20% 92%;
-    --ring: 140 60% 30%;
-    /* Pine Ring */
+    /* Muted - warm forest tones */
+    --muted: 145 15% 18%;
+    --muted-foreground: 140 15% 55%;
+
+    /* Gold Ornament Accent */
+    --accent: 42 90% 55%;
+    --accent-foreground: 150 25% 10%;
+
+    --destructive: 0 70% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Red/Gold Borders for festive structure */
+    --border: 350 50% 40%;
+    --input: 145 15% 20%;
+    /* Gold focus ring for warmth */
+    --ring: 42 90% 55%;
 
     --radius: 1rem;
-    /* Soft/Friendly Roundness */
 
-    --success: 140 60% 40%;
-    /* Holly Green */
-    --success-foreground: 35 50% 98%;
+    /* Holly Green for success */
+    --success: 140 60% 45%;
+    --success-foreground: 0 0% 100%;
 
-    --warning: 45 90% 50%;
     /* Gold Warning */
-    --warning-foreground: 140 50% 20%;
+    --warning: 42 90% 55%;
+    --warning-foreground: 150 25% 10%;
 
-    --correct: 140 60% 40%;
-    --correct-foreground: 35 50% 98%;
+    --correct: 140 60% 45%;
+    --correct-foreground: 0 0% 100%;
 
-    --incorrect: 350 80% 55%;
-    --incorrect-foreground: 35 50% 98%;
+    --incorrect: 350 75% 50%;
+    --incorrect-foreground: 0 0% 100%;
 
-    --flagged: 45 90% 50%;
-    --flagged-foreground: 140 50% 20%;
+    --flagged: 42 90% 55%;
+    --flagged-foreground: 150 25% 10%;
 
-    --info: 200 60% 40%;
-    /* Icy Blue for contrast */
-    --info-foreground: 35 50% 98%;
+    /* Ice Blue for info */
+    --info: 195 70% 55%;
+    --info-foreground: 0 0% 100%;
 
-    /* Performance tier colors */
-    --tier-excellent: 140 60% 40%;
-    --tier-great: 45 90% 60%;
-    --tier-good: 35 50% 60%;
-    --tier-passing: 350 60% 60%;
-    --tier-failing: 350 80% 55%;
+    /* Performance tier colors (festive palette) */
+    --tier-excellent: 140 60% 45%;
+    --tier-excellent-foreground: 0 0% 100%;
+    --tier-great: 160 55% 45%;
+    --tier-great-foreground: 0 0% 100%;
+    --tier-good: 42 90% 55%;
+    --tier-good-foreground: 150 25% 10%;
+    --tier-passing: 25 80% 55%;
+    --tier-passing-foreground: 0 0% 100%;
+    --tier-failing: 350 75% 50%;
+    --tier-failing-foreground: 0 0% 100%;
 
-    /* Unique: Golden Candlelight Glow */
-    /* Unique: Golden Candlelight Glow */
-    --shadow-color: 45 90% 60%;
+    /* Warm candlelight glow for shadows */
+    --shadow-color: 35 80% 50%;
   }
 
-  /* HOLIDAY THEME - SNOWFALL ANIMATION & BORDER FIXES */
-  [data-theme="holiday"] body::before {
-    content: "";
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    z-index: 50;
-    background-image:
-      radial-gradient(4px 4px at 10% 10%, #fff, transparent),
-      radial-gradient(4px 4px at 20% 30%, #fff, transparent),
-      radial-gradient(4px 4px at 30% 10%, #fff, transparent),
-      radial-gradient(4px 4px at 40% 40%, #fff, transparent),
-      radial-gradient(4px 4px at 50% 20%, #fff, transparent),
-      radial-gradient(4px 4px at 60% 30%, #fff, transparent),
-      radial-gradient(4px 4px at 70% 10%, #fff, transparent),
-      radial-gradient(4px 4px at 80% 40%, #fff, transparent),
-      radial-gradient(4px 4px at 90% 20%, #fff, transparent);
-    background-size: 500px 500px;
-    opacity: 0.6;
-    animation: snowfall 20s linear infinite;
+
+  /* HIGH SPECIFICITY OVERRIDE: Ensure Holiday dark theme colors beat generic .dark */
+  .dark[data-theme="holiday"] {
+    --background: 150 25% 10%;
+    --foreground: 35 40% 92%;
+    --card: 140 15% 15%;
+    --card-foreground: 35 40% 92%;
+    --popover: 140 15% 17%;
+    --popover-foreground: 35 40% 92%;
+    --primary: 350 75% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 140 55% 40%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 145 15% 18%;
+    --muted-foreground: 140 15% 55%;
+    --accent: 42 90% 55%;
+    --accent-foreground: 150 25% 10%;
+    --destructive: 0 70% 55%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 350 50% 40%;
+    --input: 145 15% 20%;
+    --ring: 42 90% 55%;
   }
 
-  @keyframes snowfall {
-    0% {
-      transform: translateY(-500px);
-    }
+  /* Note: Holiday snowfall is handled by HolidayParticles.tsx (tsparticles) */
 
-    100% {
-      transform: translateY(500px);
-    }
-  }
 
   /* VAPOR THEME (Synthwave/Retrowave) */
   [data-theme="vapor"] {
@@ -876,6 +949,70 @@
 
     /* Unique: Hot Pink Glow */
     --shadow-color: 320 100% 60%;
+  }
+
+  /* VAPOR THEME - SYNTHWAVE GRID + NEON GRADIENT */
+  [data-theme="vapor"] body {
+    background-color: hsl(270, 40%, 8%);
+    background-image:
+      /* Animated gradient overlay */
+      linear-gradient(135deg,
+        hsla(320, 100%, 50%, 0.15) 0%,
+        hsla(270, 40%, 8%, 0) 50%,
+        hsla(190, 100%, 50%, 0.15) 100%),
+      /* Synthwave grid */
+      linear-gradient(rgba(255, 0, 128, 0.1) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 0, 128, 0.1) 1px, transparent 1px),
+      /* Horizon glow */
+      radial-gradient(ellipse 100% 40% at 50% 100%, hsla(320, 100%, 50%, 0.2) 0%, transparent 70%);
+    background-size: 400% 400%, 40px 40px, 40px 40px, 100% 100%;
+    background-position: 0% 0%, 0 0, 0 0, center bottom;
+    animation: vapor-gradient-shift 8s ease infinite;
+  }
+
+  @keyframes vapor-gradient-shift {
+
+    0%,
+    100% {
+      background-position: 0% 50%, 0 0, 0 0, center bottom;
+    }
+
+    50% {
+      background-position: 100% 50%, 0 0, 0 0, center bottom;
+    }
+  }
+
+  /* VAPOR CARDS - Glowing neon borders */
+  [data-theme="vapor"] .card,
+  [data-theme="vapor"] .popover {
+    border: 1px solid hsla(320, 100%, 60%, 0.4) !important;
+    box-shadow:
+      0 0 15px hsla(320, 100%, 60%, 0.2),
+      0 0 30px hsla(190, 100%, 50%, 0.1),
+      inset 0 1px 0 hsla(320, 100%, 70%, 0.1) !important;
+    transition: all 0.3s ease;
+  }
+
+  [data-theme="vapor"] .card:hover {
+    border-color: hsla(320, 100%, 60%, 0.7) !important;
+    box-shadow:
+      0 0 20px hsla(320, 100%, 60%, 0.4),
+      0 0 40px hsla(190, 100%, 50%, 0.2),
+      inset 0 1px 0 hsla(320, 100%, 70%, 0.2) !important;
+  }
+
+  /* VAPOR BUTTONS - Neon glow on hover */
+  [data-theme="vapor"] button[class*="bg-primary"],
+  [data-theme="vapor"] a[class*="bg-primary"] {
+    text-shadow: 0 0 10px currentColor;
+    transition: all 0.3s ease;
+  }
+
+  [data-theme="vapor"] button[class*="bg-primary"]:hover,
+  [data-theme="vapor"] a[class*="bg-primary"]:hover {
+    box-shadow:
+      0 0 20px hsla(320, 100%, 60%, 0.6),
+      0 0 40px hsla(320, 100%, 60%, 0.3);
   }
 
   /* BLOSSOM THEME (Sakura Season / Hanami) - Premium Romantic Edition 💕 */
@@ -1210,64 +1347,147 @@
   /* Styles are now inline in SakuraPetals.tsx React component */
   /* Keyframe animation defined globally above @layer utilities */
 
-  /* HOLIDAY SNOWFALL OVERRIDE */
-  [data-theme="holiday"] body::before {
-    content: "";
-    position: fixed;
+  /* ========================================================================== */
+  /* HOLIDAY THEME - COMPREHENSIVE FESTIVE ENHANCEMENTS                         */
+  /* ========================================================================== */
+  /* Note: Snowfall is now handled by HolidayParticles.tsx (tsparticles) */
+
+  /* HOLIDAY TYPOGRAPHY - Elegant & Warm */
+  [data-theme="holiday"] h1,
+  [data-theme="holiday"] h2 {
+    text-shadow: 0 2px 8px hsla(35, 80%, 50%, 0.15);
+    letter-spacing: 0.02em;
+  }
+
+  [data-theme="holiday"] h1 {
+    font-weight: 700;
+  }
+
+  /* HOLIDAY CARDS - Red left accent + Candy-cane top */
+  [data-theme="holiday"] .card {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid hsl(var(--border)) !important;
+    border-left: 4px solid hsl(350, 75%, 50%) !important;
+    transition: all 0.3s ease;
+    background: linear-gradient(135deg,
+        hsl(140, 15%, 15%) 0%,
+        hsl(140, 12%, 13%) 100%);
+  }
+
+  [data-theme="holiday"] .card::before {
+    content: '';
+    position: absolute;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    z-index: 50;
-    background-image:
-      radial-gradient(3px 3px at 20% 30%, rgba(200, 200, 255, 0.6) 50%, transparent),
-      radial-gradient(3px 3px at 40% 70%, rgba(200, 200, 255, 0.6) 50%, transparent),
-      radial-gradient(3px 3px at 60% 40%, rgba(200, 200, 255, 0.6) 50%, transparent),
-      radial-gradient(3px 3px at 80% 80%, rgba(200, 200, 255, 0.6) 50%, transparent);
-    background-size: 200px 200px;
-    animation: snow-drift 10s linear infinite;
+    right: 0;
+    height: 3px;
+    background: repeating-linear-gradient(90deg,
+        #c62828 0px,
+        #c62828 8px,
+        #ffd54f 8px,
+        #ffd54f 16px,
+        #2e7d32 16px,
+        #2e7d32 24px);
+    z-index: 1;
   }
 
-  @keyframes snow-drift {
-    0% {
-      transform: translateY(0);
-    }
-
-    100% {
-      transform: translateY(200px);
-    }
+  [data-theme="holiday"] .card:hover {
+    box-shadow:
+      0 8px 32px hsla(42, 90%, 55%, 0.2),
+      0 4px 16px hsla(350, 80%, 50%, 0.15),
+      inset 0 0 30px hsla(42, 90%, 55%, 0.03) !important;
+    transform: translateY(-3px);
+    border-left-color: hsl(42, 90%, 55%) !important;
   }
 
-  /* HOLIDAY GOLD BORDER OVERRIDE */
-  [data-theme="holiday"] .border,
-  [data-theme="holiday"] .border-t,
-  [data-theme="holiday"] .border-b,
-  [data-theme="holiday"] .border-l,
-  [data-theme="holiday"] .border-r {
-    /* Using a fixed color here to ensure the "Gold" override works even on input borders if needed, 
-       but primarily we rely on the --border variable. 
-       Let's remove the forceful width override that might be breaking layouts. */
-    border-color: hsl(var(--border)) !important;
-    /* Only force width if absolutely necessary for the 'style', 
-       but user reported "strange borders on some boxes". 
-    /* Let's REDUCE the aggressiveness. */
+  /* HOLIDAY BUTTONS - Red with Gold glow */
+  [data-theme="holiday"] button[class*="bg-primary"],
+  [data-theme="holiday"] a[class*="bg-primary"] {
+    background: linear-gradient(135deg, hsl(350, 75%, 50%) 0%, hsl(350, 70%, 45%) 100%);
+    transition: all 0.3s ease;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
   }
 
+  [data-theme="holiday"] button[class*="bg-primary"]:hover,
+  [data-theme="holiday"] a[class*="bg-primary"]:hover {
+    background: linear-gradient(135deg, hsl(350, 80%, 55%) 0%, hsl(350, 75%, 50%) 100%);
+    box-shadow:
+      0 0 20px hsla(42, 90%, 55%, 0.4),
+      0 4px 15px hsla(350, 80%, 50%, 0.3);
+    transform: translateY(-1px);
+  }
+
+  /* HOLIDAY SECONDARY BUTTONS - Green accent */
+  [data-theme="holiday"] button[class*="bg-secondary"],
+  [data-theme="holiday"] a[class*="bg-secondary"] {
+    background: linear-gradient(135deg, hsl(140, 55%, 40%) 0%, hsl(140, 50%, 35%) 100%);
+  }
+
+  [data-theme="holiday"] button[class*="bg-secondary"]:hover,
+  [data-theme="holiday"] a[class*="bg-secondary"]:hover {
+    box-shadow: 0 0 15px hsla(140, 60%, 45%, 0.4);
+  }
+
+  /* HOLIDAY LINKS - Gold underline on hover */
+  [data-theme="holiday"] a:not([class*="bg-"]):hover {
+    color: hsl(42, 90%, 60%);
+    text-decoration-color: hsl(42, 90%, 55%);
+  }
+
+  /* HOLIDAY INPUTS - Gold focus glow */
+  [data-theme="holiday"] input:focus,
+  [data-theme="holiday"] textarea:focus,
+  [data-theme="holiday"] select:focus {
+    box-shadow: 0 0 0 3px hsla(42, 90%, 55%, 0.25);
+  }
+
+  /* HOLIDAY HEADER - Festive red accent line */
+  [data-theme="holiday"] header {
+    border-bottom: 2px solid hsl(350, 75%, 50%);
+    background: linear-gradient(180deg,
+        hsl(150, 25%, 12%) 0%,
+        hsl(150, 25%, 10%) 100%);
+  }
+
+  /* HOLIDAY FOOTER - Warm glow accent */
+  [data-theme="holiday"] footer {
+    border-top: 2px solid hsl(350, 50%, 40%);
+    box-shadow: 0 -4px 20px hsla(42, 80%, 50%, 0.08);
+  }
+
+  /* HOLIDAY BADGES - Festive variants */
+  [data-theme="holiday"] .badge,
+  [data-theme="holiday"] [class*="rounded-full"][class*="bg-"] {
+    border: 1px solid hsla(42, 90%, 55%, 0.3);
+  }
+
+  /* HOLIDAY STAT CARDS (top bar) */
+  [data-theme="holiday"] .card[class*="rounded-xl"] {
+    border-left-width: 3px;
+  }
+
+  /* HOLIDAY SCROLLBAR - Candy-cane stripes */
   [data-theme="holiday"] ::-webkit-scrollbar-thumb {
     background: repeating-linear-gradient(45deg,
-        #d32f2f,
-        #d32f2f 10px,
-        #ffffff 10px,
-        #ffffff 20px);
-    border: 3px solid transparent;
+        #c62828 0px,
+        #c62828 8px,
+        #fafafa 8px,
+        #fafafa 16px,
+        #2e7d32 16px,
+        #2e7d32 24px);
+    border: 2px solid transparent;
     background-clip: content-box;
     border-radius: 1rem;
-    box-shadow: 0 0 0 1px rgba(211, 47, 47, 0.5);
   }
 
   [data-theme="holiday"] ::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.5);
+    background: hsla(150, 25%, 8%, 0.5);
+  }
+
+  [data-theme="holiday"] ::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
   }
 
   [data-theme="retro-dark"] .shadow-sm,
@@ -1285,8 +1505,33 @@
   /* RETRO FONT SCALE CORRECTIONS */
   [data-theme="retro"],
   [data-theme="retro-dark"] {
-    /* Pixel fonts are wide; scaling down to match visual density of other themes */
-    font-size: 12px;
+    /* Pixel fonts are VERY wide; aggressive scaling for proper density */
+    /* Using clamp for responsive sizing: min 6px, preferred 0.5vw, max 9px */
+    font-size: clamp(6px, 0.5vw + 5px, 9px);
+  }
+
+  /* Specific element overrides for retro themes */
+  [data-theme="retro"] h1,
+  [data-theme="retro-dark"] h1 {
+    font-size: clamp(14px, 2vw, 20px) !important;
+  }
+
+  [data-theme="retro"] h2,
+  [data-theme="retro-dark"] h2 {
+    font-size: clamp(12px, 1.5vw, 16px) !important;
+  }
+
+  [data-theme="retro"] h3,
+  [data-theme="retro-dark"] h3 {
+    font-size: clamp(10px, 1.2vw, 14px) !important;
+  }
+
+  /* Buttons and interactive elements need readable size */
+  [data-theme="retro"] button,
+  [data-theme="retro"] a,
+  [data-theme="retro-dark"] button,
+  [data-theme="retro-dark"] a {
+    font-size: clamp(7px, 0.6vw + 5px, 10px) !important;
   }
 
   /* Improve Focus Visibility for A11y in High Contrast Themes */
@@ -1524,7 +1769,7 @@
       radial-gradient(at 0% 100%, hsla(var(--primary) / 0.05) 0px, transparent 50%);
   }
 
-  /* RETRO CRT SCANLINE */
+  /* RETRO CRT SCANLINE + FLICKER */
   [data-theme="retro"] body::after,
   [data-theme="retro-dark"] body::after {
     content: " ";
@@ -1538,6 +1783,33 @@
     z-index: 9999;
     background-size: 100% 2px, 3px 100%;
     pointer-events: none;
+    animation: crt-flicker 0.15s infinite;
+  }
+
+  @keyframes crt-flicker {
+    0% {
+      opacity: 0.97;
+    }
+
+    50% {
+      opacity: 1;
+    }
+
+    100% {
+      opacity: 0.98;
+    }
+  }
+
+  /* RETRO CARD HOVER - Hard pixel shadow */
+  [data-theme="retro"] .card,
+  [data-theme="retro-dark"] .card {
+    transition: transform 0.1s ease, box-shadow 0.1s ease !important;
+  }
+
+  [data-theme="retro"] .card:hover,
+  [data-theme="retro-dark"] .card:hover {
+    transform: translate(-2px, -2px) !important;
+    box-shadow: 6px 6px 0px 0px currentColor !important;
   }
 
   /**
