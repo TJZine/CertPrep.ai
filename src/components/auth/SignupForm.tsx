@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import Link from "next/link";
@@ -25,6 +26,9 @@ export default function SignupForm(): React.ReactElement {
   const router = useRouter();
   const supabase = createClient();
   const { addToast } = useToast();
+
+  // Redirect to dashboard if already logged in
+  useAuthRedirect();
   const hcaptchaConfigured = !!process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY;
 
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
