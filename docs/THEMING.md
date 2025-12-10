@@ -23,7 +23,7 @@ CertPrep.ai uses a semantic token system that allows complete theme customizatio
 | Focus        | `[data-theme="focus"]`      | Warm sepia for distraction-free studying | 0.75rem |
 | Retro (Dark) | `[data-theme="retro-dark"]` | High contrast terminal green on black    | 0px     |
 | Retro        | `[data-theme="retro"]`      | 8-bit NES style with blocky UI           | 0px     |
-| Nord         | `[data-theme="nord"]`       | Arctic blue-grey with aurora accents     | 0.5rem  |
+| Brutalist    | `[data-theme="brutalist"]`  | Bold neo-brutalism with hard shadows     | 0.25rem |
 | Holiday ✨   | `[data-theme="holiday"]`    | Cozy dark Christmas with snowfall        | 0.75rem |
 | Vapor ✨     | `[data-theme="vapor"]`      | Synthwave neon pink & cyan               | 0px     |
 | Blossom ✨   | `[data-theme="blossom"]`    | Pastel pink with sakura petals           | 1.5rem  |

@@ -442,203 +442,248 @@
     --tier-failing-foreground: 0 0% 100%;
   }
 
-  /* NORD THEME (Arctic Scandinavian) */
-  [data-theme="nord"] {
-    --background: 220 16% 16%;
-    /* Polar Night */
-    --foreground: 218 27% 88%;
-    /* Snow Storm */
+  /* BRUTALIST THEME (Neo-Brutalism / Gumroad-inspired) */
+  [data-theme="brutalist"] {
+    /* Typography: Quirky Bold Sans */
+    --font-heading: var(--font-space), system-ui, sans-serif;
+    --font-sans: var(--font-space), system-ui, sans-serif;
 
-    --card: 220 16% 24%;
-    --card-foreground: 218 27% 92%;
+    /* Warm Paper Cream Background */
+    --background: 50 100% 97%;
+    /* Absolute Black Text */
+    --foreground: 0 0% 0%;
 
-    --popover: 220 16% 26%;
-    --popover-foreground: 218 27% 88%;
+    /* Zero or Minimal Radius for Blocky Look */
+    --radius: 0.25rem;
 
-    --primary: 193 43% 67%;
-    /* Frost Blue */
-    --primary-foreground: 220 16% 16%;
+    /* White cards with black borders */
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 0%;
 
-    --secondary: 220 16% 24%;
-    --secondary-foreground: 218 27% 88%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 0%;
 
-    --muted: 220 16% 22%;
-    --muted-foreground: 219 28% 65%;
+    /* Bright Yellow Primary (Gumroad signature) */
+    --primary: 50 100% 50%;
+    --primary-foreground: 0 0% 0%;
 
-    --accent: 179 25% 65%;
-    /* Aurora Teal */
-    --accent-foreground: 220 16% 16%;
+    /* Off-white Secondary */
+    --secondary: 50 30% 92%;
+    --secondary-foreground: 0 0% 0%;
 
-    --destructive: 354 42% 56%;
-    /* Aurora Red */
-    --destructive-foreground: 218 27% 88%;
+    --muted: 50 20% 90%;
+    --muted-foreground: 0 0% 40%;
 
-    --border: 193 43% 67%;
-    /* Unique: Icy Borders (Primary color/lighter) */
-    --input: 220 16% 22%;
-    --ring: 193 43% 67%;
+    /* Hot Pink Accent */
+    --accent: 330 100% 60%;
+    --accent-foreground: 0 0% 100%;
 
-    --success: 92 28% 65%;
-    /* Aurora Green */
-    --success-foreground: 220 16% 16%;
+    /* Bright Destructive Red */
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 0 0% 100%;
 
-    --warning: 40 71% 73%;
-    /* Aurora Yellow */
-    --warning-foreground: 220 16% 16%;
+    /* BLACK borders - defining neo-brutalist look */
+    --border: 0 0% 0%;
+    --input: 0 0% 100%;
+    --ring: 50 100% 50%;
 
-    --correct: 92 28% 65%;
-    --correct-foreground: 220 16% 16%;
+    /* Bright Success Green */
+    --success: 140 100% 40%;
+    --success-foreground: 0 0% 0%;
 
-    --incorrect: 354 42% 56%;
-    --incorrect-foreground: 218 27% 88%;
+    /* Amber Warning */
+    --warning: 45 100% 50%;
+    --warning-foreground: 0 0% 0%;
 
-    --flagged: 40 71% 73%;
-    --flagged-foreground: 220 16% 16%;
+    --correct: 140 100% 40%;
+    --correct-foreground: 0 0% 0%;
 
-    --info: 193 43% 67%;
-    --info-foreground: 220 16% 16%;
+    --incorrect: 0 100% 50%;
+    --incorrect-foreground: 0 0% 100%;
 
-    /* Performance tier colors (nordic aurora variants) */
-    --tier-excellent: 92 28% 65%;
-    --tier-excellent-foreground: 220 16% 16%;
-    --tier-great: 193 43% 67%;
-    --tier-great-foreground: 220 16% 16%;
-    --tier-good: 179 25% 65%;
-    --tier-good-foreground: 220 16% 16%;
-    --tier-passing: 40 71% 73%;
-    --tier-passing-foreground: 220 16% 16%;
-    --tier-failing: 354 42% 56%;
-    --tier-failing-foreground: 218 27% 88%;
+    --flagged: 45 100% 50%;
+    --flagged-foreground: 0 0% 0%;
 
-    /* Unique: Frosty Shadows */
-    --shadow-color: 193 43% 67%;
+    /* Bright Blue Info */
+    --info: 210 100% 50%;
+    --info-foreground: 0 0% 100%;
+
+    /* Performance tier colors (bright, punchy variants) */
+    --tier-excellent: 140 100% 40%;
+    --tier-excellent-foreground: 0 0% 0%;
+    --tier-great: 210 100% 50%;
+    --tier-great-foreground: 0 0% 100%;
+    --tier-good: 180 100% 40%;
+    --tier-good-foreground: 0 0% 0%;
+    --tier-passing: 45 100% 50%;
+    --tier-passing-foreground: 0 0% 0%;
+    --tier-failing: 0 100% 50%;
+    --tier-failing-foreground: 0 0% 100%;
+
+    /* Hard black shadow for offset effect */
+    --shadow-color: 0 0% 0%;
   }
 
-  /* NORD THEME - AURORA BOREALIS + FROSTED GLASS */
-  [data-theme="nord"] body {
-    background-color: hsl(220, 16%, 16%);
+  /* BRUTALIST THEME - BODY STYLING */
+  [data-theme="brutalist"] body {
+    background-color: hsl(50, 100%, 97%);
+    /* Subtle paper texture pattern */
     background-image:
-      /* Aurora gradient - moves across the top */
-      linear-gradient(120deg,
-        hsla(92, 28%, 65%, 0) 0%,
-        hsla(92, 28%, 65%, 0.15) 20%,
-        hsla(193, 43%, 67%, 0.2) 40%,
-        hsla(179, 25%, 65%, 0.15) 60%,
-        hsla(40, 71%, 73%, 0.1) 80%,
-        hsla(354, 42%, 56%, 0) 100%),
-      /* Subtle stars */
-      radial-gradient(1px 1px at 15% 10%, rgba(255, 255, 255, 0.3), transparent),
-      radial-gradient(1px 1px at 45% 15%, rgba(255, 255, 255, 0.2), transparent),
-      radial-gradient(1px 1px at 75% 8%, rgba(255, 255, 255, 0.3), transparent),
-      radial-gradient(1px 1px at 85% 25%, rgba(255, 255, 255, 0.2), transparent);
-    background-size: 200% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
-    background-position: 0% 0%, 0 0, 0 0, 0 0, 0 0;
-    animation: nord-aurora 15s ease-in-out infinite;
+      radial-gradient(circle at 25% 25%, hsla(50, 50%, 90%, 0.3) 1px, transparent 1px),
+      radial-gradient(circle at 75% 75%, hsla(50, 50%, 88%, 0.3) 1px, transparent 1px);
+    background-size: 20px 20px;
   }
 
-  @keyframes nord-aurora {
-
-    0%,
-    100% {
-      background-position: 0% 0%, 0 0, 0 0, 0 0, 0 0;
-    }
-
-    50% {
-      background-position: 100% 0%, 0 0, 0 0, 0 0, 0 0;
-    }
+  /* BRUTALIST CARDS - Hard offset shadows + thick borders */
+  [data-theme="brutalist"] .card,
+  [data-theme="brutalist"] .popover {
+    border: 2px solid black !important;
+    border-radius: 0.25rem !important;
+    box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1) !important;
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
   }
 
-  /* NORD CARDS - Frosted glass with aurora glow */
-  [data-theme="nord"] .card,
-  [data-theme="nord"] .popover {
-    backdrop-filter: blur(12px) saturate(120%);
-    background: linear-gradient(135deg,
-        hsla(220, 16%, 24%, 0.95) 0%,
-        hsla(220, 16%, 22%, 0.9) 50%,
-        hsla(220, 18%, 24%, 0.95) 100%) !important;
-    border: 1px solid hsla(193, 43%, 67%, 0.4) !important;
-    box-shadow:
-      0 4px 20px hsla(220, 16%, 5%, 0.4),
-      inset 0 1px 0 hsla(193, 43%, 67%, 0.15),
-      inset 0 -1px 0 hsla(220, 16%, 10%, 0.3) !important;
-    transition: all 0.3s ease;
+  [data-theme="brutalist"] .card:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px 0px rgba(0, 0, 0, 1) !important;
   }
 
-  [data-theme="nord"] .card:hover {
-    border-color: hsla(193, 43%, 67%, 0.5) !important;
-    box-shadow:
-      0 8px 24px hsla(220, 16%, 5%, 0.4),
-      0 0 20px hsla(193, 43%, 67%, 0.15),
-      inset 0 1px 0 hsla(193, 43%, 67%, 0.2) !important;
+  /* BRUTALIST BUTTONS - Press effect */
+  [data-theme="brutalist"] button[class*="bg-primary"],
+  [data-theme="brutalist"] a[class*="bg-primary"] {
+    border: 2px solid black !important;
+    box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
   }
 
-  /* NORD BUTTONS - Frost glow on hover */
-  [data-theme="nord"] button[class*="bg-primary"]:hover,
-  [data-theme="nord"] a[class*="bg-primary"]:hover {
-    box-shadow:
-      0 0 15px hsla(193, 43%, 67%, 0.4),
-      0 4px 12px hsla(193, 43%, 67%, 0.2);
-    transform: translateY(-1px);
+  [data-theme="brutalist"] button[class*="bg-primary"]:hover,
+  [data-theme="brutalist"] a[class*="bg-primary"]:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px 0px rgba(0, 0, 0, 1);
   }
 
-  /* NORD TYPOGRAPHY - Frost Shimmer */
-  [data-theme="nord"] h1,
-  [data-theme="nord"] h2 {
-    text-shadow: 0 1px 8px hsla(193, 43%, 67%, 0.2);
-    letter-spacing: 0.02em;
+  [data-theme="brutalist"] button[class*="bg-primary"]:active,
+  [data-theme="brutalist"] a[class*="bg-primary"]:active {
+    transform: translate(4px, 4px);
+    box-shadow: none;
   }
 
-  [data-theme="nord"] h3 {
-    text-shadow: 0 1px 4px hsla(193, 43%, 67%, 0.15);
+  /* Secondary buttons also get the treatment */
+  [data-theme="brutalist"] button[class*="bg-secondary"],
+  [data-theme="brutalist"] a[class*="bg-secondary"] {
+    border: 2px solid black !important;
+    box-shadow: 3px 3px 0px 0px rgba(0, 0, 0, 1);
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
   }
 
-  /* NORD INPUTS - Icy Focus Ring */
-  [data-theme="nord"] input:focus,
-  [data-theme="nord"] textarea:focus,
-  [data-theme="nord"] select:focus {
-    box-shadow:
-      0 0 0 2px hsla(193, 43%, 67%, 0.3),
-      0 0 15px hsla(193, 43%, 67%, 0.15);
-    border-color: hsl(193, 43%, 67%) !important;
+  [data-theme="brutalist"] button[class*="bg-secondary"]:active,
+  [data-theme="brutalist"] a[class*="bg-secondary"]:active {
+    transform: translate(3px, 3px);
+    box-shadow: none;
   }
 
-  /* NORD HEADER - Aurora Accent */
-  [data-theme="nord"] header {
-    border-bottom: 1px solid hsla(193, 43%, 67%, 0.3);
-    background: linear-gradient(180deg,
-        hsla(220, 16%, 18%, 0.95) 0%,
-        hsla(220, 16%, 16%, 0.98) 100%);
-    backdrop-filter: blur(8px);
+  /* BRUTALIST TYPOGRAPHY - Bold & Uppercase */
+  [data-theme="brutalist"] h1,
+  [data-theme="brutalist"] h2 {
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
   }
 
-  /* NORD FOOTER - Frost Accent */
-  [data-theme="nord"] footer {
-    border-top: 1px solid hsla(193, 43%, 67%, 0.2);
+  [data-theme="brutalist"] h3 {
+    font-weight: 700;
+    letter-spacing: -0.01em;
   }
 
-  /* NORD LINKS - Frost Hover */
-  [data-theme="nord"] a:not([class*="bg-"]):hover {
-    color: hsl(193, 43%, 75%);
-    text-shadow: 0 0 6px hsla(193, 43%, 67%, 0.4);
+  /* BRUTALIST INPUTS - Thick black borders */
+  [data-theme="brutalist"] input,
+  [data-theme="brutalist"] textarea,
+  [data-theme="brutalist"] select {
+    border: 2px solid black !important;
+    border-radius: 0.25rem !important;
+    box-shadow: 3px 3px 0px 0px rgba(0, 0, 0, 1);
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
   }
 
-  /* NORD SCROLLBAR - Frost Style */
-  [data-theme="nord"] ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+  [data-theme="brutalist"] input:focus,
+  [data-theme="brutalist"] textarea:focus,
+  [data-theme="brutalist"] select:focus {
+    outline: none;
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+    border-color: hsl(50, 100%, 50%) !important;
   }
 
-  [data-theme="nord"] ::-webkit-scrollbar-track {
-    background: hsl(220, 16%, 16%);
+  /* BRUTALIST HEADER - Bold black bottom border */
+  [data-theme="brutalist"] header {
+    border-bottom: 3px solid black;
+    background: hsl(50, 100%, 97%);
   }
 
-  [data-theme="nord"] ::-webkit-scrollbar-thumb {
-    background: hsla(193, 43%, 67%, 0.4);
-    border-radius: 4px;
+  /* BRUTALIST FOOTER - Bold black top border */
+  [data-theme="brutalist"] footer {
+    border-top: 3px solid black;
+    background: hsl(50, 100%, 97%);
   }
 
-  [data-theme="nord"] ::-webkit-scrollbar-thumb:hover {
-    background: hsla(193, 43%, 67%, 0.6);
+  /* BRUTALIST LINKS - Thick underline on hover */
+  [data-theme="brutalist"] a:not([class*="bg-"]) {
+    text-decoration: none;
+    position: relative;
+  }
+
+  [data-theme="brutalist"] a:not([class*="bg-"]):hover {
+    color: hsl(330, 100%, 50%);
+  }
+
+  [data-theme="brutalist"] a:not([class*="bg-"])::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 3px;
+    background: black;
+    transition: width 0.2s ease;
+  }
+
+  [data-theme="brutalist"] a:not([class*="bg-"]):hover::after {
+    width: 100%;
+  }
+
+  /* BRUTALIST SCROLLBAR - Chunky black style */
+  [data-theme="brutalist"] ::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
+
+  [data-theme="brutalist"] ::-webkit-scrollbar-track {
+    background: hsl(50, 30%, 92%);
+    border: 2px solid black;
+  }
+
+  [data-theme="brutalist"] ::-webkit-scrollbar-thumb {
+    background: hsl(50, 100%, 50%);
+    border: 2px solid black;
+    border-radius: 0;
+  }
+
+  [data-theme="brutalist"] ::-webkit-scrollbar-thumb:hover {
+    background: hsl(330, 100%, 60%);
+  }
+
+  /* BRUTALIST BADGES - Hard shadow boxes */
+  [data-theme="brutalist"] [class*="badge"],
+  [data-theme="brutalist"] [class*="Badge"] {
+    border: 2px solid black !important;
+    border-radius: 0 !important;
+    box-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 1);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
   }
 
   /* RETRO DARK THEME */

@@ -9,7 +9,7 @@ import {
   BookOpen,
   Trees,
   Gamepad2,
-  Snowflake,
+  Zap as ZapIcon,
   Gift,
   Zap,
   Flower2,
@@ -25,7 +25,7 @@ export type Theme =
   | "focus"
   | "retro-dark"
   | "retro"
-  | "nord"
+  | "brutalist"
   | "holiday"
   | "vapor"
   | "blossom"
@@ -102,13 +102,13 @@ export const THEME_CONFIG: Record<
     swatch: "#eab308",
     preview: { bg: "bg-gray-300", accent: "bg-pink-500", text: "text-gray-900" },
   },
-  nord: {
-    isDark: true,
-    label: "Nord",
-    description: "Arctic Scandinavian with aurora accents",
-    icon: Snowflake,
-    swatch: "#818cf8",
-    preview: { bg: "bg-[#2e3440]", accent: "bg-sky-300", text: "text-slate-200" },
+  brutalist: {
+    isDark: false,
+    label: "Brutalist",
+    description: "Bold, playful neo-brutalism with hard shadows",
+    icon: ZapIcon,
+    swatch: "#FFE566",
+    preview: { bg: "bg-[#FFFEF0]", accent: "bg-[#FFE566]", text: "text-black" },
   },
   holiday: {
     isDark: true,
@@ -224,7 +224,7 @@ export function ThemeProvider({
     // Add 'dark' class only for generic dark theme
     // Themed dark modes (holiday, midnight, vapor, retro-dark) have their own complete palettes
     // and don't need the .dark fallback which can cause style conflicts
-    const themedDarkModes: Theme[] = ['holiday', 'midnight', 'vapor', 'retro-dark', 'nord'];
+    const themedDarkModes: Theme[] = ['holiday', 'midnight', 'vapor', 'retro-dark'];
     const needsDarkClass = THEME_CONFIG[resolvedTheme]?.isDark && !themedDarkModes.includes(resolvedTheme);
     if (needsDarkClass) {
       root.classList.add("dark");
