@@ -191,7 +191,7 @@ export function SmartActions({
       <Card className={className}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-amber-500" aria-hidden="true" />
+            <Sparkles className="h-5 w-5 text-warning" aria-hidden="true" />
             Smart Actions
           </CardTitle>
           <CardDescription>

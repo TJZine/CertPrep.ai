@@ -23,11 +23,11 @@ export default function DashboardPage(): React.ReactElement {
   const { quizzes, isLoading: quizzesLoading } = useQuizzes(
     effectiveUserId ?? undefined,
   );
-  
-  const { 
-    quizStats, 
-    overallStats, 
-    isLoading: statsLoading 
+
+  const {
+    quizStats,
+    overallStats,
+    isLoading: statsLoading
   } = useDashboardStats(effectiveUserId ?? undefined);
 
   const [isImportModalOpen, setIsImportModalOpen] = React.useState(false);
@@ -84,12 +84,12 @@ export default function DashboardPage(): React.ReactElement {
   if (dbError) {
     return (
       <div className="mx-auto max-w-7xl px-4 py-8">
-        <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center">
-          <h2 className="text-lg font-semibold text-red-800">
+        <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
+          <h2 className="text-lg font-semibold text-destructive">
             Failed to initialize database
           </h2>
-          <p className="mt-2 text-red-600">{dbError.message}</p>
-          <p className="mt-4 text-sm text-red-500">
+          <p className="mt-2 text-destructive">{dbError.message}</p>
+          <p className="mt-4 text-sm text-destructive">
             Please ensure your browser supports IndexedDB and try refreshing the
             page.
           </p>

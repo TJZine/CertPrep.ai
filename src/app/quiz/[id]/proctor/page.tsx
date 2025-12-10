@@ -30,13 +30,13 @@ export default function ProctorModePage(): React.ReactElement {
 
   if (dbError) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4 dark:bg-slate-950">
-        <div className="max-w-md rounded-lg border border-red-200 bg-white p-6 text-center shadow-sm dark:border-red-500/60 dark:bg-slate-900">
-          <AlertCircle className="mx-auto h-12 w-12 text-red-500" />
-          <h1 className="mt-4 text-xl font-semibold text-slate-900 dark:text-slate-100">
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
+        <div className="max-w-md rounded-lg border border-destructive/50 bg-card p-6 text-center shadow-sm">
+          <AlertCircle className="mx-auto h-12 w-12 text-destructive" />
+          <h1 className="mt-4 text-xl font-semibold text-foreground">
             Database Error
           </h1>
-          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+          <p className="mt-2 text-sm text-muted-foreground">
             {dbError.message}
           </p>
           <Button
@@ -53,7 +53,7 @@ export default function ProctorModePage(): React.ReactElement {
 
   if (!isInitialized || !effectiveUserId || (isLoading && !quiz)) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <LoadingSpinner size="lg" text="Preparing your exam..." />
       </div>
     );
@@ -61,13 +61,13 @@ export default function ProctorModePage(): React.ReactElement {
 
   if (!quiz) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4 dark:bg-slate-950">
-        <div className="max-w-md rounded-lg border border-slate-200 bg-white p-6 text-center shadow-sm dark:border-slate-700 dark:bg-slate-900">
-          <AlertCircle className="mx-auto h-12 w-12 text-amber-500" />
-          <h1 className="mt-4 text-xl font-semibold text-slate-900 dark:text-slate-100">
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
+        <div className="max-w-md rounded-lg border border-border bg-card p-6 text-center shadow-sm">
+          <AlertCircle className="mx-auto h-12 w-12 text-warning" />
+          <h1 className="mt-4 text-xl font-semibold text-foreground">
             Quiz Not Found
           </h1>
-          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+          <p className="mt-2 text-sm text-muted-foreground">
             The quiz you&apos;re looking for doesn&apos;t exist or may have been
             deleted.
           </p>
@@ -85,13 +85,13 @@ export default function ProctorModePage(): React.ReactElement {
 
   if (quiz.questions.length === 0) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4 dark:bg-slate-950">
-        <div className="max-w-md rounded-lg border border-slate-200 bg-white p-6 text-center shadow-sm dark:border-slate-700 dark:bg-slate-900">
-          <AlertCircle className="mx-auto h-12 w-12 text-amber-500" />
-          <h1 className="mt-4 text-xl font-semibold text-slate-900 dark:text-slate-100">
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
+        <div className="max-w-md rounded-lg border border-border bg-card p-6 text-center shadow-sm">
+          <AlertCircle className="mx-auto h-12 w-12 text-warning" />
+          <h1 className="mt-4 text-xl font-semibold text-foreground">
             No Questions
           </h1>
-          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+          <p className="mt-2 text-sm text-muted-foreground">
             This quiz doesn&apos;t have any questions yet.
           </p>
           <Button
@@ -114,13 +114,13 @@ export default function ProctorModePage(): React.ReactElement {
   return (
     <ErrorBoundary
       fallback={
-        <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4 dark:bg-slate-950">
-          <div className="max-w-md rounded-lg border border-red-200 bg-white p-6 text-center shadow-sm dark:border-red-500/60 dark:bg-slate-900">
-            <AlertCircle className="mx-auto h-12 w-12 text-red-500" />
-            <h1 className="mt-4 text-xl font-semibold text-slate-900 dark:text-slate-100">
+        <div className="flex min-h-screen items-center justify-center bg-background p-4">
+          <div className="max-w-md rounded-lg border border-destructive/50 bg-card p-6 text-center shadow-sm">
+            <AlertCircle className="mx-auto h-12 w-12 text-destructive" />
+            <h1 className="mt-4 text-xl font-semibold text-foreground">
               Something Went Wrong
             </h1>
-            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+            <p className="mt-2 text-sm text-muted-foreground">
               An error occurred during the exam. Your progress may not be saved.
             </p>
             <Button

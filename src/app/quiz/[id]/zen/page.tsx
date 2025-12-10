@@ -82,7 +82,7 @@ export default function ZenModePage(): React.ReactElement {
               questionIds,
               missedCount: storedMissedCount
                 ? Number.parseInt(storedMissedCount, 10) ||
-                  orderedFiltered.length
+                orderedFiltered.length
                 : orderedFiltered.length,
               flaggedCount: storedFlaggedCount
                 ? Number.parseInt(storedFlaggedCount, 10) || 0
@@ -108,7 +108,7 @@ export default function ZenModePage(): React.ReactElement {
 
   if (!isInitialized || !effectiveUserId || isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <LoadingSpinner size="lg" text="Loading quiz..." />
       </div>
     );
@@ -116,7 +116,7 @@ export default function ZenModePage(): React.ReactElement {
 
   if (isSmartRound && !filteredQuestions) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <LoadingSpinner size="lg" text="Preparing Smart Round..." />
       </div>
     );
@@ -124,13 +124,13 @@ export default function ZenModePage(): React.ReactElement {
 
   if (dbError) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4 dark:bg-slate-950">
-        <div className="max-w-md rounded-lg border border-red-200 bg-white p-6 text-center shadow-sm dark:border-red-500/50 dark:bg-slate-900">
-          <AlertCircle className="mx-auto h-12 w-12 text-red-500" />
-          <h1 className="mt-4 text-xl font-semibold text-slate-900 dark:text-slate-100">
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
+        <div className="max-w-md rounded-lg border border-destructive/50 bg-card p-6 text-center shadow-sm">
+          <AlertCircle className="mx-auto h-12 w-12 text-destructive" />
+          <h1 className="mt-4 text-xl font-semibold text-foreground">
             Database Error
           </h1>
-          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+          <p className="mt-2 text-sm text-muted-foreground">
             {dbError.message}
           </p>
           <Button
@@ -147,13 +147,13 @@ export default function ZenModePage(): React.ReactElement {
 
   if (!quiz) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4 dark:bg-slate-950">
-        <div className="max-w-md rounded-lg border border-slate-200 bg-white p-6 text-center shadow-sm dark:border-slate-700 dark:bg-slate-900">
-          <AlertCircle className="mx-auto h-12 w-12 text-amber-500" />
-          <h1 className="mt-4 text-xl font-semibold text-slate-900 dark:text-slate-100">
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
+        <div className="max-w-md rounded-lg border border-border bg-card p-6 text-center shadow-sm">
+          <AlertCircle className="mx-auto h-12 w-12 text-warning" />
+          <h1 className="mt-4 text-xl font-semibold text-foreground">
             Quiz Not Found
           </h1>
-          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+          <p className="mt-2 text-sm text-muted-foreground">
             The quiz you&apos;re looking for doesn&apos;t exist or may have been
             deleted.
           </p>
@@ -174,13 +174,13 @@ export default function ZenModePage(): React.ReactElement {
 
   if (questionsToUse.length === 0) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4 dark:bg-slate-950">
-        <div className="max-w-md rounded-lg border border-slate-200 bg-white p-6 text-center shadow-sm dark:border-slate-700 dark:bg-slate-900">
-          <AlertCircle className="mx-auto h-12 w-12 text-amber-500" />
-          <h1 className="mt-4 text-xl font-semibold text-slate-900 dark:text-slate-100">
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
+        <div className="max-w-md rounded-lg border border-border bg-card p-6 text-center shadow-sm">
+          <AlertCircle className="mx-auto h-12 w-12 text-warning" />
+          <h1 className="mt-4 text-xl font-semibold text-foreground">
             No Questions
           </h1>
-          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+          <p className="mt-2 text-sm text-muted-foreground">
             {isSmartRound
               ? "No questions available for Smart Round."
               : "This quiz doesn't have any questions yet."}
@@ -205,13 +205,13 @@ export default function ZenModePage(): React.ReactElement {
   return (
     <ErrorBoundary
       fallback={
-        <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4 dark:bg-slate-950">
-          <div className="max-w-md rounded-lg border border-red-200 bg-white p-6 text-center shadow-sm dark:border-red-500/60 dark:bg-slate-900">
-            <AlertCircle className="mx-auto h-12 w-12 text-red-500" />
-            <h1 className="mt-4 text-xl font-semibold text-slate-900 dark:text-slate-100">
+        <div className="flex min-h-screen items-center justify-center bg-background p-4">
+          <div className="max-w-md rounded-lg border border-destructive/50 bg-card p-6 text-center shadow-sm">
+            <AlertCircle className="mx-auto h-12 w-12 text-destructive" />
+            <h1 className="mt-4 text-xl font-semibold text-foreground">
               Something Went Wrong
             </h1>
-            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+            <p className="mt-2 text-sm text-muted-foreground">
               An error occurred while loading the quiz. Please try again.
             </p>
             <Button
@@ -226,7 +226,7 @@ export default function ZenModePage(): React.ReactElement {
       }
     >
       {isSmartRound && smartRoundData && (
-        <div className="bg-slate-50 px-4 pt-4 dark:bg-slate-950">
+        <div className="bg-background px-4 pt-4">
           <div className="mx-auto max-w-3xl">
             <SmartRoundBanner
               totalQuestions={smartRoundData.questionIds.length}

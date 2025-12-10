@@ -9,7 +9,6 @@ import {
   BookOpen,
   Trees,
   Gamepad2,
-  Waves,
   Snowflake,
   Gift,
   Zap,
@@ -26,7 +25,6 @@ export type Theme =
   | "focus"
   | "retro-dark"
   | "retro"
-  | "ocean"
   | "nord"
   | "holiday"
   | "vapor"
@@ -104,14 +102,6 @@ export const THEME_CONFIG: Record<
     swatch: "#eab308",
     preview: { bg: "bg-gray-300", accent: "bg-pink-500", text: "text-gray-900" },
   },
-  ocean: {
-    isDark: true,
-    label: "Ocean",
-    description: "Deep sea calm with teal waves",
-    icon: Waves,
-    swatch: "#0ea5e9",
-    preview: { bg: "bg-[#0d1a24]", accent: "bg-teal-400", text: "text-teal-100" },
-  },
   nord: {
     isDark: true,
     label: "Nord",
@@ -131,11 +121,12 @@ export const THEME_CONFIG: Record<
   },
   vapor: {
     isDark: true,
-    label: "Vapor",
-    description: "Synthwave neon pink & cyan",
+    label: "Vapor ✨",
+    description: "Synthwave neon pink & cyan with digital rain",
     icon: Zap,
     swatch: "#d946ef",
     preview: { bg: "bg-[#1a0d24]", accent: "bg-pink-500", text: "text-pink-100" },
+    isPremium: true,
   },
   blossom: {
     isDark: false,

@@ -120,16 +120,16 @@ export default function ResultsPage(): React.ReactElement {
 
   if (dbError) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4 dark:bg-slate-950">
-        <div className="max-w-md rounded-lg border border-red-200 bg-white p-6 text-center shadow-sm dark:border-red-500/60 dark:bg-red-950">
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
+        <div className="max-w-md rounded-lg border border-destructive/50 bg-card p-6 text-center shadow-sm">
           <AlertCircle
-            className="mx-auto h-12 w-12 text-red-500 dark:text-red-200"
+            className="mx-auto h-12 w-12 text-destructive"
             aria-hidden="true"
           />
-          <h1 className="mt-4 text-xl font-semibold text-slate-900 dark:text-slate-50">
+          <h1 className="mt-4 text-xl font-semibold text-foreground">
             Database Error
           </h1>
-          <p className="mt-2 text-sm text-slate-600 dark:text-slate-200">
+          <p className="mt-2 text-sm text-muted-foreground">
             {dbError.message}
           </p>
           <Button
@@ -147,7 +147,7 @@ export default function ResultsPage(): React.ReactElement {
   // Show loading while DB initializes, user is determined, or result is being fetched
   if (!isInitialized || !effectiveUserId || resultLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <LoadingSpinner size="lg" text="Loading your results..." />
       </div>
     );
@@ -157,7 +157,7 @@ export default function ResultsPage(): React.ReactElement {
   // This handles the case where user opens a result URL on a new browser
   if (!result && !hasInitialSyncCompleted) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <LoadingSpinner
           size="lg"
           text={isSyncing ? "Syncing your data..." : "Loading your results..."}
@@ -168,16 +168,16 @@ export default function ResultsPage(): React.ReactElement {
 
   if (!result) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4 dark:bg-slate-950">
-        <div className="max-w-md rounded-lg border border-slate-200 bg-white p-6 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
+        <div className="max-w-md rounded-lg border border-border bg-card p-6 text-center shadow-sm">
           <AlertCircle
-            className="mx-auto h-12 w-12 text-amber-500"
+            className="mx-auto h-12 w-12 text-warning"
             aria-hidden="true"
           />
-          <h1 className="mt-4 text-xl font-semibold text-slate-900 dark:text-slate-50">
+          <h1 className="mt-4 text-xl font-semibold text-foreground">
             Result Not Found
           </h1>
-          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+          <p className="mt-2 text-sm text-muted-foreground">
             This result doesn&apos;t exist or may have been deleted.
           </p>
           <Button
@@ -195,7 +195,7 @@ export default function ResultsPage(): React.ReactElement {
   // Only check quiz loading when we have a result (and thus a quiz_id)
   if (quizLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <LoadingSpinner size="lg" text="Loading quiz details..." />
       </div>
     );
@@ -204,10 +204,10 @@ export default function ResultsPage(): React.ReactElement {
   if (!quiz) {
     if (isRestoringQuiz) {
       return (
-        <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4 dark:bg-slate-950">
-          <div className="flex flex-col items-center gap-3 rounded-lg border border-slate-200 bg-white p-6 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="flex min-h-screen items-center justify-center bg-background p-4">
+          <div className="flex flex-col items-center gap-3 rounded-lg border border-border bg-card p-6 text-center shadow-sm">
             <LoadingSpinner size="lg" text="Restoring quiz..." />
-            <p className="text-sm text-slate-600 dark:text-slate-300">
+            <p className="text-sm text-muted-foreground">
               We&apos;re attempting to restore the quiz linked to this result.
             </p>
           </div>
@@ -216,23 +216,23 @@ export default function ResultsPage(): React.ReactElement {
     }
 
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4 dark:bg-slate-950">
-        <div className="max-w-md rounded-lg border border-slate-200 bg-white p-6 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
+        <div className="max-w-md rounded-lg border border-border bg-card p-6 text-center shadow-sm">
           <AlertCircle
-            className="mx-auto h-12 w-12 text-amber-500"
+            className="mx-auto h-12 w-12 text-warning"
             aria-hidden="true"
           />
-          <h1 className="mt-4 text-xl font-semibold text-slate-900 dark:text-slate-50">
+          <h1 className="mt-4 text-xl font-semibold text-foreground">
             Quiz Not Found
           </h1>
-          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+          <p className="mt-2 text-sm text-muted-foreground">
             The quiz linked to this result isn&apos;t available right now. Your
             score is preserved below.
           </p>
-          <div className="mt-2 rounded-lg bg-slate-50 p-3 dark:bg-slate-800">
-            <p className="text-sm text-slate-600 dark:text-slate-200">
+          <div className="mt-2 rounded-lg bg-muted p-3">
+            <p className="text-sm text-muted-foreground">
               Your score was:{" "}
-              <span className="font-bold text-slate-900 dark:text-slate-50">
+              <span className="font-bold text-foreground">
                 {result.score}%
               </span>
             </p>
@@ -261,16 +261,16 @@ export default function ResultsPage(): React.ReactElement {
   return (
     <ErrorBoundary
       fallback={
-        <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4 dark:bg-slate-950">
-          <div className="max-w-md rounded-lg border border-red-200 bg-white p-6 text-center shadow-sm dark:border-red-500/60 dark:bg-red-950">
+        <div className="flex min-h-screen items-center justify-center bg-background p-4">
+          <div className="max-w-md rounded-lg border border-destructive/50 bg-card p-6 text-center shadow-sm">
             <AlertCircle
-              className="mx-auto h-12 w-12 text-red-500 dark:text-red-200"
+              className="mx-auto h-12 w-12 text-destructive"
               aria-hidden="true"
             />
-            <h1 className="mt-4 text-xl font-semibold text-slate-900 dark:text-slate-50">
+            <h1 className="mt-4 text-xl font-semibold text-foreground">
               Something Went Wrong
             </h1>
-            <p className="mt-2 text-sm text-slate-600 dark:text-slate-200">
+            <p className="mt-2 text-sm text-muted-foreground">
               An error occurred while displaying your results.
             </p>
             <Button

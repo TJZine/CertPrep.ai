@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import * as React from "react";
 import { headers } from "next/headers";
-import { Inter, Press_Start_2P, Nunito, Roboto_Slab, Space_Grotesk, Playfair_Display } from "next/font/google";
+import { Inter, Press_Start_2P, Nunito, Roboto_Slab, Space_Grotesk, Playfair_Display, JetBrains_Mono } from "next/font/google";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { SkipLink } from "@/components/common/SkipLink";
@@ -52,6 +52,13 @@ const playfairDisplay = Playfair_Display({
   display: "swap",
   variable: "--font-playfair",
   fallback: ["serif"],
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-jetbrains",
+  fallback: ["monospace"],
 });
 
 export const metadata: Metadata = {
@@ -119,7 +126,7 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${pressStart2P.variable} ${nunito.variable} ${robotoSlab.variable} ${spaceGrotesk.variable} ${playfairDisplay.variable}`}
+      className={`${inter.variable} ${pressStart2P.variable} ${nunito.variable} ${robotoSlab.variable} ${spaceGrotesk.variable} ${playfairDisplay.variable} ${jetbrainsMono.variable}`}
       suppressHydrationWarning
     >
       <head>

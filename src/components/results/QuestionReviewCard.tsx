@@ -195,7 +195,7 @@ export function QuestionReviewCard({
       {isExpanded && (
         <CardContent className="border-t border-border pt-4">
           <div
-            className="prose prose-sm prose-slate mb-4 max-w-none dark:prose-invert"
+            className="prose prose-sm max-w-none text-foreground"
             dangerouslySetInnerHTML={{ __html: sanitizedQuestion }}
           />
 
@@ -298,7 +298,7 @@ export function QuestionReviewCard({
               </span>
             </div>
             <div
-              className="prose prose-sm prose-slate max-w-none dark:prose-invert"
+              className="prose prose-sm max-w-none text-foreground"
               dangerouslySetInnerHTML={{ __html: sanitizedExplanation }}
             />
           </div>

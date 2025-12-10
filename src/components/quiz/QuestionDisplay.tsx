@@ -79,7 +79,7 @@ export function QuestionDisplay({
       </div>
 
       <div
-        className="question-text prose max-w-none break-words dark:prose-invert text-foreground"
+        className="question-text prose max-w-none break-words text-foreground"
         dangerouslySetInnerHTML={{ __html: sanitizedQuestion }}
         aria-label="Question text"
       />

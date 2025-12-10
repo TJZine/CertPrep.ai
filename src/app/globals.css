@@ -360,9 +360,10 @@
 
   /* RETRO THEME (8-Bit / NES Style) */
   [data-theme="retro"] {
+    /* HYBRID FONT: Pixel for headings, monospace for body (better readability) */
     --font-heading: var(--font-press-start), monospace;
-    --font-sans: var(--font-press-start), monospace;
-    --font-mono: var(--font-press-start), monospace;
+    --font-sans: var(--font-jetbrains), "Courier New", monospace;
+    --font-mono: var(--font-jetbrains), monospace;
 
     /* 0px Radius for Blocky Look */
     --radius: 0px;
@@ -441,122 +442,6 @@
     --tier-failing-foreground: 0 0% 100%;
   }
 
-  /* OCEAN THEME (Deep Sea Calm) */
-  [data-theme="ocean"] {
-    --background: 200 50% 8%;
-    /* Deep Ocean */
-    --foreground: 180 40% 95%;
-    /* Seafoam White */
-
-    --radius: 0.75rem;
-    /* Softer "Wave" comers */
-
-    /* Mist Blue Card Background (Glassy) */
-    --card: 200 30% 15% / 0.8;
-    --card-foreground: 180 40% 95%;
-
-    --popover: 200 30% 15% / 0.9;
-    --popover-foreground: 180 40% 95%;
-
-    --primary: 175 70% 45%;
-    /* Teal Wave */
-    --primary-foreground: 200 50% 8%;
-
-    --secondary: 200 40% 18%;
-    --secondary-foreground: 180 40% 95%;
-
-    --muted: 200 40% 16%;
-    --muted-foreground: 180 25% 55%;
-
-    --accent: 30 80% 55%;
-    /* Coral accent */
-    --accent-foreground: 200 50% 8%;
-
-    --destructive: 0 70% 55%;
-    --destructive-foreground: 180 40% 95%;
-
-    --border: 200 40% 20%;
-    --input: 200 40% 16%;
-    --ring: 175 70% 45%;
-
-    --success: 160 60% 45%;
-    /* Sea Green */
-    --success-foreground: 200 50% 8%;
-
-    --warning: 35 90% 55%;
-    /* Sandy Orange */
-    --warning-foreground: 200 50% 8%;
-
-    --correct: 160 60% 45%;
-    --correct-foreground: 200 50% 8%;
-
-    --incorrect: 0 70% 55%;
-    --incorrect-foreground: 180 40% 95%;
-
-    --flagged: 35 90% 55%;
-    --flagged-foreground: 200 50% 8%;
-
-    --info: 195 90% 60%;
-    /* Bright Aqua */
-    --info-foreground: 200 50% 8%;
-
-    /* Performance tier colors (ocean variants) */
-    --tier-excellent: 160 60% 45%;
-    --tier-excellent-foreground: 200 50% 8%;
-    --tier-great: 190 80% 50%;
-    --tier-great-foreground: 200 50% 8%;
-    --tier-good: 180 70% 50%;
-    --tier-good-foreground: 200 50% 8%;
-    --tier-passing: 35 90% 55%;
-    --tier-passing-foreground: 200 50% 8%;
-    --tier-failing: 0 70% 55%;
-    --tier-failing-foreground: 180 40% 95%;
-
-    /* Unique: Hot Pink Glow */
-    --shadow-color: 175 70% 45%;
-  }
-
-  /* OCEAN THEME - DEEP SEA WAVES */
-  [data-theme="ocean"] body::before {
-    content: "";
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 200%;
-    height: 15%;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 88.7'%3E%3Cpath d='M800 56.9c-155.5 0-204.9-50-405.5-49.9-200 0-250 49.9-394.5 49.9v31.8h800v-.2-31.6z' fill='%23004a5e' opacity='0.3'/%3E%3C/svg%3E");
-    background-position: 0 bottom;
-    background-repeat: repeat-x;
-    animation: wave-slide 20s linear infinite;
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  [data-theme="ocean"] body::after {
-    content: "";
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 200%;
-    height: 10%;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 88.7'%3E%3Cpath d='M800 56.9c-155.5 0-204.9-50-405.5-49.9-200 0-250 49.9-394.5 49.9v31.8h800v-.2-31.6z' fill='%230ea5e9' opacity='0.2'/%3E%3C/svg%3E");
-    background-position: 0 bottom;
-    background-repeat: repeat-x;
-    animation: wave-slide 15s linear infinite reverse;
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  @keyframes wave-slide {
-    0% {
-      transform: translateX(0);
-    }
-
-    100% {
-      transform: translateX(-50%);
-    }
-  }
-
   /* NORD THEME (Arctic Scandinavian) */
   [data-theme="nord"] {
     --background: 220 16% 16%;
@@ -564,10 +449,10 @@
     --foreground: 218 27% 88%;
     /* Snow Storm */
 
-    --card: 220 16% 20%;
-    --card-foreground: 218 27% 88%;
+    --card: 220 16% 24%;
+    --card-foreground: 218 27% 92%;
 
-    --popover: 220 16% 22%;
+    --popover: 220 16% 26%;
     --popover-foreground: 218 27% 88%;
 
     --primary: 193 43% 67%;
@@ -663,15 +548,19 @@
     }
   }
 
-  /* NORD CARDS - Frosted glass with frost glow */
+  /* NORD CARDS - Frosted glass with aurora glow */
   [data-theme="nord"] .card,
   [data-theme="nord"] .popover {
     backdrop-filter: blur(12px) saturate(120%);
-    background: hsla(220, 16%, 20%, 0.85) !important;
-    border: 1px solid hsla(193, 43%, 67%, 0.3) !important;
+    background: linear-gradient(135deg,
+        hsla(220, 16%, 24%, 0.95) 0%,
+        hsla(220, 16%, 22%, 0.9) 50%,
+        hsla(220, 18%, 24%, 0.95) 100%) !important;
+    border: 1px solid hsla(193, 43%, 67%, 0.4) !important;
     box-shadow:
-      0 4px 16px hsla(220, 16%, 5%, 0.3),
-      inset 0 1px 0 hsla(193, 43%, 67%, 0.1) !important;
+      0 4px 20px hsla(220, 16%, 5%, 0.4),
+      inset 0 1px 0 hsla(193, 43%, 67%, 0.15),
+      inset 0 -1px 0 hsla(220, 16%, 10%, 0.3) !important;
     transition: all 0.3s ease;
   }
 
@@ -689,15 +578,76 @@
     box-shadow:
       0 0 15px hsla(193, 43%, 67%, 0.4),
       0 4px 12px hsla(193, 43%, 67%, 0.2);
+    transform: translateY(-1px);
+  }
+
+  /* NORD TYPOGRAPHY - Frost Shimmer */
+  [data-theme="nord"] h1,
+  [data-theme="nord"] h2 {
+    text-shadow: 0 1px 8px hsla(193, 43%, 67%, 0.2);
+    letter-spacing: 0.02em;
+  }
+
+  [data-theme="nord"] h3 {
+    text-shadow: 0 1px 4px hsla(193, 43%, 67%, 0.15);
+  }
+
+  /* NORD INPUTS - Icy Focus Ring */
+  [data-theme="nord"] input:focus,
+  [data-theme="nord"] textarea:focus,
+  [data-theme="nord"] select:focus {
+    box-shadow:
+      0 0 0 2px hsla(193, 43%, 67%, 0.3),
+      0 0 15px hsla(193, 43%, 67%, 0.15);
+    border-color: hsl(193, 43%, 67%) !important;
+  }
+
+  /* NORD HEADER - Aurora Accent */
+  [data-theme="nord"] header {
+    border-bottom: 1px solid hsla(193, 43%, 67%, 0.3);
+    background: linear-gradient(180deg,
+        hsla(220, 16%, 18%, 0.95) 0%,
+        hsla(220, 16%, 16%, 0.98) 100%);
+    backdrop-filter: blur(8px);
+  }
+
+  /* NORD FOOTER - Frost Accent */
+  [data-theme="nord"] footer {
+    border-top: 1px solid hsla(193, 43%, 67%, 0.2);
+  }
+
+  /* NORD LINKS - Frost Hover */
+  [data-theme="nord"] a:not([class*="bg-"]):hover {
+    color: hsl(193, 43%, 75%);
+    text-shadow: 0 0 6px hsla(193, 43%, 67%, 0.4);
+  }
+
+  /* NORD SCROLLBAR - Frost Style */
+  [data-theme="nord"] ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  [data-theme="nord"] ::-webkit-scrollbar-track {
+    background: hsl(220, 16%, 16%);
+  }
+
+  [data-theme="nord"] ::-webkit-scrollbar-thumb {
+    background: hsla(193, 43%, 67%, 0.4);
+    border-radius: 4px;
+  }
+
+  [data-theme="nord"] ::-webkit-scrollbar-thumb:hover {
+    background: hsla(193, 43%, 67%, 0.6);
   }
 
   /* RETRO DARK THEME */
 
   [data-theme="retro-dark"] {
-    /* Use Pixel Font */
+    /* HYBRID FONT: Pixel for headings, monospace for body (better readability) */
     --font-heading: var(--font-press-start), monospace;
-    --font-sans: var(--font-press-start), monospace;
-    --font-mono: var(--font-press-start), monospace;
+    --font-sans: var(--font-jetbrains), "Courier New", monospace;
+    --font-mono: var(--font-jetbrains), monospace;
 
     --background: 0 0% 5%;
     /* Deep Black */
@@ -1015,6 +965,85 @@
     box-shadow:
       0 0 20px hsla(320, 100%, 60%, 0.6),
       0 0 40px hsla(320, 100%, 60%, 0.3);
+    transform: translateY(-1px);
+  }
+
+  /* VAPOR TYPOGRAPHY - Neon Text Glow */
+  [data-theme="vapor"] h1,
+  [data-theme="vapor"] h2 {
+    text-shadow:
+      0 0 10px hsla(320, 100%, 60%, 0.8),
+      0 0 30px hsla(320, 100%, 60%, 0.4),
+      0 0 60px hsla(190, 100%, 50%, 0.2);
+    letter-spacing: 0.05em;
+  }
+
+  [data-theme="vapor"] h3 {
+    text-shadow:
+      0 0 8px hsla(320, 100%, 60%, 0.6),
+      0 0 20px hsla(190, 100%, 50%, 0.2);
+  }
+
+  /* VAPOR INPUTS - Pink Neon Focus */
+  [data-theme="vapor"] input:focus,
+  [data-theme="vapor"] textarea:focus,
+  [data-theme="vapor"] select:focus {
+    box-shadow:
+      0 0 0 2px hsla(320, 100%, 60%, 0.4),
+      0 0 20px hsla(320, 100%, 60%, 0.3),
+      0 0 40px hsla(190, 100%, 50%, 0.15);
+    border-color: hsl(320, 100%, 60%) !important;
+  }
+
+  /* VAPOR HEADER - Neon Gradient Accent Line */
+  [data-theme="vapor"] header {
+    border-bottom: 2px solid transparent;
+    border-image: linear-gradient(90deg,
+        hsl(320, 100%, 60%) 0%,
+        hsl(190, 100%, 50%) 50%,
+        hsl(320, 100%, 60%) 100%) 1;
+    background: linear-gradient(180deg,
+        hsl(270, 40%, 10%) 0%,
+        hsl(270, 40%, 8%) 100%);
+  }
+
+  /* VAPOR FOOTER - Neon Gradient Accent */
+  [data-theme="vapor"] footer {
+    border-top: 2px solid transparent;
+    border-image: linear-gradient(90deg,
+        hsl(190, 100%, 50%) 0%,
+        hsl(320, 100%, 60%) 50%,
+        hsl(190, 100%, 50%) 100%) 1;
+  }
+
+  /* VAPOR LINKS - Neon Cyan Hover */
+  [data-theme="vapor"] a:not([class*="bg-"]):hover {
+    color: hsl(190, 100%, 60%);
+    text-shadow: 0 0 8px hsla(190, 100%, 50%, 0.6);
+  }
+
+  /* VAPOR SCROLLBAR - Neon Pink/Cyan Gradient */
+  [data-theme="vapor"] ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  [data-theme="vapor"] ::-webkit-scrollbar-track {
+    background: hsl(270, 40%, 10%);
+  }
+
+  [data-theme="vapor"] ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg,
+        hsl(320, 100%, 60%) 0%,
+        hsl(190, 100%, 50%) 100%);
+    border-radius: 0;
+    border: 2px solid hsl(270, 40%, 10%);
+  }
+
+  [data-theme="vapor"] ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg,
+        hsl(320, 100%, 70%) 0%,
+        hsl(190, 100%, 60%) 100%);
   }
 
   /* BLOSSOM THEME (Sakura Season / Hanami) - Premium Romantic Edition 💕 */
@@ -1492,10 +1521,10 @@
     height: 12px;
   }
 
-  [data-theme="retro-dark"] .shadow-sm,
-  [data-theme="retro-dark"] .shadow-md,
-  [data-theme="retro-dark"] .shadow-lg,
-  [data-theme="retro-dark"] .glass {
+  [data-theme="retro-dark"] .shadow-sm:not(button),
+  [data-theme="retro-dark"] .shadow-md:not(button),
+  [data-theme="retro-dark"] .shadow-lg:not(button),
+  [data-theme="retro-dark"] .glass:not(button) {
     box-shadow: none !important;
     background: var(--card);
   }
@@ -1504,36 +1533,56 @@
   /* TYPOGRAPHY & TEXTURE OVERRIDES */
   /* -------------------------------------------------------------------------- */
 
-  /* RETRO FONT SCALE CORRECTIONS */
+  /* RETRO FONT SCALE CORRECTIONS - HYBRID APPROACH */
+  /* Headings use pixel font (Press Start 2P) with tight scaling */
+  /* Body uses JetBrains Mono at normal sizes for readability */
+
   [data-theme="retro"],
   [data-theme="retro-dark"] {
-    /* Pixel fonts are VERY wide; aggressive scaling for proper density */
-    /* Using clamp for responsive sizing: min 6px, preferred 0.5vw, max 9px */
-    font-size: clamp(6px, 0.5vw + 5px, 9px);
+    /* Base font is now readable JetBrains Mono - use normal sizing */
+    font-size: 14px;
+    line-height: 1.6;
   }
 
-  /* Specific element overrides for retro themes */
+  /* Headings still use pixel font - need careful scaling */
   [data-theme="retro"] h1,
   [data-theme="retro-dark"] h1 {
-    font-size: clamp(14px, 2vw, 20px) !important;
+    font-family: var(--font-press-start), monospace;
+    font-size: clamp(16px, 2.5vw, 24px) !important;
+    line-height: 1.4 !important;
+    letter-spacing: 0.05em;
   }
 
   [data-theme="retro"] h2,
   [data-theme="retro-dark"] h2 {
-    font-size: clamp(12px, 1.5vw, 16px) !important;
+    font-family: var(--font-press-start), monospace;
+    font-size: clamp(13px, 2vw, 18px) !important;
+    line-height: 1.4 !important;
+    letter-spacing: 0.03em;
   }
 
   [data-theme="retro"] h3,
   [data-theme="retro-dark"] h3 {
-    font-size: clamp(10px, 1.2vw, 14px) !important;
+    font-family: var(--font-press-start), monospace;
+    font-size: clamp(11px, 1.5vw, 15px) !important;
+    line-height: 1.4 !important;
+    letter-spacing: 0.02em;
   }
 
-  /* Buttons and interactive elements need readable size */
+  /* Buttons use pixel font for retro feel, but readable sizes */
   [data-theme="retro"] button,
-  [data-theme="retro"] a,
-  [data-theme="retro-dark"] button,
-  [data-theme="retro-dark"] a {
-    font-size: clamp(7px, 0.6vw + 5px, 10px) !important;
+  [data-theme="retro-dark"] button {
+    font-family: var(--font-press-start), monospace;
+    font-size: clamp(9px, 1vw, 12px) !important;
+    line-height: 1.5 !important;
+    letter-spacing: 0.02em;
+  }
+
+  /* Nav links also get pixel font */
+  [data-theme="retro"] nav a,
+  [data-theme="retro-dark"] nav a {
+    font-family: var(--font-press-start), monospace;
+    font-size: clamp(8px, 0.9vw, 11px) !important;
   }
 
   /* Improve Focus Visibility for A11y in High Contrast Themes */

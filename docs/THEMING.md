@@ -15,18 +15,21 @@ CertPrep.ai uses a semantic token system that allows complete theme customizatio
 
 ## Available Themes
 
-| Light | `:root` | Default warm slate theme | 0.5rem |
-| Dark | `.dark` | Dark slate for night mode | 0.5rem |
-| Midnight | `[data-theme="midnight"]` | Cyber neon with electric cyan | 0.25rem |
-| Focus | `[data-theme="focus"]` | Warm sepia for distraction-free studying | 0.75rem |
-| Retro (Dark) | `[data-theme="retro-dark"]` | High contrast terminal green on black | 0px |
-| Retro | `[data-theme="retro"]` | 8-bit NES style with blocky UI | 0px |
-| Ocean | `[data-theme="ocean"]` | Deep sea navy with coral accents | 0.75rem |
-| Nord | `[data-theme="nord"]` | Arctic blue-grey palette | 0.5rem |
-| Holiday | `[data-theme="holiday"]` | Festive Red/Green with Gold accents | 0.75rem |
-| Vapor | `[data-theme="vapor"]` | Synthwave neon pink & cyan | 0px |
-| Blossom | `[data-theme="blossom"]` | Pastel pink with periwinkle accents | 1rem |
-| Mint | `[data-theme="mint"]` | Fresh sage with river blue accents | 0.75rem |
+| Theme        | Selector                    | Description                              | Radius  |
+| ------------ | --------------------------- | ---------------------------------------- | ------- |
+| Light        | `:root`                     | Default warm slate theme                 | 0.5rem  |
+| Dark         | `.dark`                     | Dark slate for night mode                | 0.5rem  |
+| Midnight ✨  | `[data-theme="midnight"]`   | Cyber neon with electric cyan            | 0.25rem |
+| Focus        | `[data-theme="focus"]`      | Warm sepia for distraction-free studying | 0.75rem |
+| Retro (Dark) | `[data-theme="retro-dark"]` | High contrast terminal green on black    | 0px     |
+| Retro        | `[data-theme="retro"]`      | 8-bit NES style with blocky UI           | 0px     |
+| Nord         | `[data-theme="nord"]`       | Arctic blue-grey with aurora accents     | 0.5rem  |
+| Holiday ✨   | `[data-theme="holiday"]`    | Cozy dark Christmas with snowfall        | 0.75rem |
+| Vapor ✨     | `[data-theme="vapor"]`      | Synthwave neon pink & cyan               | 0px     |
+| Blossom ✨   | `[data-theme="blossom"]`    | Pastel pink with sakura petals           | 1.5rem  |
+| Mint         | `[data-theme="mint"]`       | Fresh sage with graph paper overlay      | 0.75rem |
+
+> **Note:** Themes marked with ✨ include premium visual effects (particles, animations).
 
 ---
 
@@ -85,6 +88,43 @@ Used in charts (donut/bar) to denote performance levels.
 | `--tier-good`      | 70-79% scores                         |
 | `--tier-passing`   | 60-69% scores (often matches warning) |
 | `--tier-failing`   | <60% scores (often matches incorrect) |
+
+---
+
+## Color Usage Guidelines
+
+> [!IMPORTANT]
+> Components must use semantic tokens exclusively. This ensures all 12+ themes render correctly without component-level changes.
+
+### ✅ Always Use Semantic Tokens
+
+| I need...               | Use this                             |
+| ----------------------- | ------------------------------------ |
+| Primary heading text    | `text-foreground`                    |
+| Subtle/secondary text   | `text-muted-foreground`              |
+| Page background         | `bg-background`                      |
+| Card background         | `bg-card`                            |
+| Subtle/muted background | `bg-muted`                           |
+| Any border              | `border-border`                      |
+| Error text/icon         | `text-destructive`                   |
+| Warning text/icon       | `text-warning`                       |
+| Success text/icon       | `text-success`                       |
+| Info text/icon          | `text-info`                          |
+| Primary action button   | `bg-primary text-primary-foreground` |
+| Focus ring              | `ring-ring`                          |
+
+### ❌ Never Use in Components
+
+- `text-slate-*`, `text-gray-*`, `text-zinc-*`, `text-neutral-*`
+- `bg-slate-*`, `bg-gray-*`, `bg-zinc-*`
+- `text-red-*`, `text-green-*`, `text-blue-*`, `text-amber-*`
+- `dark:` variants on semantic tokens (they already adapt per-theme)
+
+### ⚠️ Exceptions
+
+- **Theme picker swatches** in `ThemeProvider.tsx` — Must show actual colors
+- **Theme-specific CSS** in `globals.css` — e.g., Vapor gradients, Holiday borders
+- **Brand assets** — Logo colors are fixed
 
 ---
 

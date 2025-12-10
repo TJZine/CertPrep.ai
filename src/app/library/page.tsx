@@ -28,11 +28,11 @@ export default function LibraryPage(): React.ReactElement {
   if (dbError) {
     return (
       <div className="mx-auto max-w-4xl px-4 py-10">
-        <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center dark:border-red-500/50 dark:bg-red-950">
-          <h1 className="text-xl font-semibold text-red-800 dark:text-red-100">
+        <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
+          <h1 className="text-xl font-semibold text-destructive">
             Database Error
           </h1>
-          <p className="mt-2 text-sm text-red-700 dark:text-red-200">
+          <p className="mt-2 text-sm text-destructive">
             {dbError.message ||
               "An unexpected error occurred. Please refresh and try again."}
           </p>
@@ -56,11 +56,11 @@ export default function LibraryPage(): React.ReactElement {
     <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="mb-8 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="flex items-center gap-2 text-3xl font-bold text-slate-900 dark:text-slate-50">
+          <h1 className="flex items-center gap-2 text-3xl font-bold text-foreground">
             <BookOpen className="h-7 w-7" aria-hidden="true" />
             Test Library
           </h1>
-          <p className="mt-1 text-slate-500 dark:text-slate-300">
+          <p className="mt-1 text-muted-foreground">
             Browse curated practice tests and import them into your personal
             library.
           </p>

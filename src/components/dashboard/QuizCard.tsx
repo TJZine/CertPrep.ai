@@ -158,7 +158,7 @@ export function QuizCard({
               <span>Best: {bestScore !== null ? `${bestScore}%` : "—"}</span>
             </li>
             <li className="flex items-center gap-2">
-              <Trophy className="h-3.5 w-3.5 text-amber-500" aria-hidden="true" />
+              <Trophy className="h-3.5 w-3.5 text-warning" aria-hidden="true" />
               <span>Avg: {averageScore !== null ? `${averageScore}%` : "—"}</span>
             </li>
             <li className="flex items-center gap-2">

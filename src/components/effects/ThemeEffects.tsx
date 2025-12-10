@@ -19,6 +19,11 @@ const MidnightParticles = dynamic(
     { ssr: false, loading: () => null }
 );
 
+const VaporParticles = dynamic(
+    () => import('@/components/effects/VaporParticles'),
+    { ssr: false, loading: () => null }
+);
+
 /**
  * ThemeEffects - Conditionally loads premium visual effects based on active theme
  * 
@@ -30,6 +35,7 @@ const MidnightParticles = dynamic(
  * - Blossom: Sakura petal particles
  * - Holiday: Snowfall particles
  * - Midnight: Twinkling stars
+ * - Vapor: Digital rain (neon pink/cyan)
  */
 export function ThemeEffects(): React.ReactElement | null {
     const { resolvedTheme } = useTheme();
@@ -41,6 +47,8 @@ export function ThemeEffects(): React.ReactElement | null {
             return <HolidayParticles />;
         case 'midnight':
             return <MidnightParticles />;
+        case 'vapor':
+            return <VaporParticles />;
         default:
             return null;
     }

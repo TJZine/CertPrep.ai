@@ -139,11 +139,11 @@ export function AccessibilityChecker(): React.ReactElement | null {
 
           {lastChecked ? (
             <div className="mb-4 flex gap-4 text-sm">
-              <div className="flex items-center gap-1 text-red-600">
+              <div className="flex items-center gap-1 text-destructive">
                 <XCircle className="h-4 w-4" />
                 {errorCount} errors
               </div>
-              <div className="flex items-center gap-1 text-amber-600">
+              <div className="flex items-center gap-1 text-warning">
                 <AlertTriangle className="h-4 w-4" />
                 {warningCount} warnings
               </div>
@@ -155,28 +155,27 @@ export function AccessibilityChecker(): React.ReactElement | null {
               {issues.map((issue, index) => (
                 <div
                   key={`${issue.message}-${index}`}
-                  className={`rounded-lg border p-2 text-xs ${
-                    issue.type === "error"
-                      ? "border-red-200 bg-red-50"
+                  className={`rounded-lg border p-2 text-xs ${issue.type === "error"
+                      ? "border-destructive/50 bg-destructive/10"
                       : issue.type === "warning"
-                        ? "border-amber-200 bg-amber-50"
-                        : "border-blue-200 bg-blue-50"
-                  }`}
+                        ? "border-warning/50 bg-warning/10"
+                        : "border-info/50 bg-info/10"
+                    }`}
                 >
                   <div className="flex items-start gap-2">
                     {issue.type === "error" && (
-                      <XCircle className="h-4 w-4 flex-shrink-0 text-red-600" />
+                      <XCircle className="h-4 w-4 flex-shrink-0 text-destructive" />
                     )}
                     {issue.type === "warning" && (
-                      <AlertTriangle className="h-4 w-4 flex-shrink-0 text-amber-600" />
+                      <AlertTriangle className="h-4 w-4 flex-shrink-0 text-warning" />
                     )}
                     {issue.type === "info" && (
-                      <Info className="h-4 w-4 flex-shrink-0 text-blue-600" />
+                      <Info className="h-4 w-4 flex-shrink-0 text-info" />
                     )}
                     <div>
                       <p className="font-medium">{issue.message}</p>
                       {issue.fix ? (
-                        <p className="mt-1 text-slate-600">Fix: {issue.fix}</p>
+                        <p className="mt-1 text-muted-foreground">Fix: {issue.fix}</p>
                       ) : null}
                     </div>
                   </div>

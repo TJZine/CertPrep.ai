@@ -52,14 +52,6 @@ export function PageTransition({
                     exit: { opacity: 0, filter: "blur(4px)" },
                     transition: { duration: 0.2 },
                 };
-            case "ocean":
-                // Slow gentle fade
-                return {
-                    initial: { opacity: 0 },
-                    animate: { opacity: 1 },
-                    exit: { opacity: 0 },
-                    transition: { duration: 0.6, ease: "easeOut" as const },
-                };
             default:
                 // Default standard fade (subtle)
                 return {

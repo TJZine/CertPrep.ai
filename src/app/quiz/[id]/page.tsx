@@ -37,7 +37,7 @@ export default function QuizLobbyPage(): React.ReactElement {
         <EmptyState
           title="Quiz Not Found"
           description="The quiz you are looking for does not exist or has been deleted."
-          icon={<Brain className="h-12 w-12 text-slate-400" />}
+          icon={<Brain className="h-12 w-12 text-muted-foreground" />}
           action={
             <Button
               onClick={() => router.push("/")}
@@ -59,18 +59,18 @@ export default function QuizLobbyPage(): React.ReactElement {
           variant="ghost"
           size="sm"
           onClick={() => router.push("/")}
-          className="mb-4 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
+          className="mb-4 text-muted-foreground hover:text-foreground"
           leftIcon={<ArrowLeft className="h-4 w-4" />}
         >
           Back to Library
         </Button>
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-50">
+            <h1 className="text-3xl font-bold text-foreground">
               {quiz.title}
             </h1>
             {quiz.description && (
-              <p className="mt-2 text-lg text-slate-600 dark:text-slate-300">
+              <p className="mt-2 text-lg text-muted-foreground">
                 {quiz.description}
               </p>
             )}
@@ -93,14 +93,14 @@ export default function QuizLobbyPage(): React.ReactElement {
         <div className="mb-8 grid gap-4 sm:grid-cols-3">
           <Card>
             <CardContent className="flex items-center gap-4 p-6">
-              <div className="rounded-full bg-blue-100 p-3 dark:bg-blue-900/30">
-                <History className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              <div className="rounded-full bg-info/10 p-3">
+                <History className="h-6 w-6 text-info" />
               </div>
               <div>
-                <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                <p className="text-sm font-medium text-muted-foreground">
                   Attempts
                 </p>
-                <p className="text-2xl font-bold text-slate-900 dark:text-slate-50">
+                <p className="text-2xl font-bold text-foreground">
                   {stats.attemptCount}
                 </p>
               </div>
@@ -108,14 +108,14 @@ export default function QuizLobbyPage(): React.ReactElement {
           </Card>
           <Card>
             <CardContent className="flex items-center gap-4 p-6">
-              <div className="rounded-full bg-green-100 p-3 dark:bg-green-900/30">
-                <Trophy className="h-6 w-6 text-green-600 dark:text-green-400" />
+              <div className="rounded-full bg-success/10 p-3">
+                <Trophy className="h-6 w-6 text-success" />
               </div>
               <div>
-                <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                <p className="text-sm font-medium text-muted-foreground">
                   Best Score
                 </p>
-                <p className="text-2xl font-bold text-slate-900 dark:text-slate-50">
+                <p className="text-2xl font-bold text-foreground">
                   {stats.bestScore ?? 0}%
                 </p>
               </div>
@@ -123,14 +123,14 @@ export default function QuizLobbyPage(): React.ReactElement {
           </Card>
           <Card>
             <CardContent className="flex items-center gap-4 p-6">
-              <div className="rounded-full bg-purple-100 p-3 dark:bg-purple-900/30">
-                <Clock className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+              <div className="rounded-full bg-accent/10 p-3">
+                <Clock className="h-6 w-6 text-accent" />
               </div>
               <div>
-                <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                <p className="text-sm font-medium text-muted-foreground">
                   Last Attempt
                 </p>
-                <p className="text-sm font-bold text-slate-900 dark:text-slate-50">
+                <p className="text-sm font-bold text-foreground">
                   {stats.lastAttemptDate
                     ? new Date(stats.lastAttemptDate).toLocaleDateString()
                     : "N/A"}
@@ -144,29 +144,29 @@ export default function QuizLobbyPage(): React.ReactElement {
       {/* Mode Selection */}
       <div className="grid gap-6 md:grid-cols-2">
         {/* Zen Mode */}
-        <Card className="group relative overflow-hidden transition-all hover:border-blue-500 hover:shadow-md dark:hover:border-blue-400">
+        <Card className="group relative overflow-hidden transition-all hover:border-primary hover:shadow-md">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-2xl">
-              <Brain className="h-6 w-6 text-blue-500" />
+              <Brain className="h-6 w-6 text-primary" />
               Zen Mode
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="mb-6 text-slate-600 dark:text-slate-300">
+            <p className="mb-6 text-muted-foreground">
               Practice at your own pace with immediate feedback. Perfect for
               learning new material.
             </p>
-            <ul className="mb-8 space-y-2 text-sm text-slate-500 dark:text-slate-400">
+            <ul className="mb-8 space-y-2 text-sm text-muted-foreground">
               <li className="flex items-center gap-2">
-                <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+                <div className="h-1.5 w-1.5 rounded-full bg-primary" />
                 Untimed environment
               </li>
               <li className="flex items-center gap-2">
-                <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+                <div className="h-1.5 w-1.5 rounded-full bg-primary" />
                 Instant answer explanations
               </li>
               <li className="flex items-center gap-2">
-                <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+                <div className="h-1.5 w-1.5 rounded-full bg-primary" />
                 AI Tutor assistance
               </li>
             </ul>
@@ -182,29 +182,29 @@ export default function QuizLobbyPage(): React.ReactElement {
         </Card>
 
         {/* Proctor Mode */}
-        <Card className="group relative overflow-hidden transition-all hover:border-amber-500 hover:shadow-md dark:hover:border-amber-400">
+        <Card className="group relative overflow-hidden transition-all hover:border-warning hover:shadow-md">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-2xl">
-              <Clock className="h-6 w-6 text-amber-500" />
+              <Clock className="h-6 w-6 text-warning" />
               Proctor Mode
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="mb-6 text-slate-600 dark:text-slate-300">
+            <p className="mb-6 text-muted-foreground">
               Simulate real exam conditions. Timed, no hints, and results only
               at the end.
             </p>
-            <ul className="mb-8 space-y-2 text-sm text-slate-500 dark:text-slate-400">
+            <ul className="mb-8 space-y-2 text-sm text-muted-foreground">
               <li className="flex items-center gap-2">
-                <div className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                <div className="h-1.5 w-1.5 rounded-full bg-warning" />
                 Strict time limits
               </li>
               <li className="flex items-center gap-2">
-                <div className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                <div className="h-1.5 w-1.5 rounded-full bg-warning" />
                 No immediate feedback
               </li>
               <li className="flex items-center gap-2">
-                <div className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                <div className="h-1.5 w-1.5 rounded-full bg-warning" />
                 Final score report
               </li>
             </ul>
