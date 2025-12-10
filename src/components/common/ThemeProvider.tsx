@@ -15,6 +15,7 @@ import {
   Flower2,
   Leaf,
   Monitor,
+  Grid3X3,
 } from "lucide-react";
 
 export type Theme =
@@ -26,6 +27,7 @@ export type Theme =
   | "retro-dark"
   | "retro"
   | "brutalist"
+  | "swiss"
   | "holiday"
   | "vapor"
   | "blossom"
@@ -109,6 +111,14 @@ export const THEME_CONFIG: Record<
     icon: ZapIcon,
     swatch: "#FFE566",
     preview: { bg: "bg-[#FFFEF0]", accent: "bg-[#FFE566]", text: "text-black" },
+  },
+  swiss: {
+    isDark: true,
+    label: "Swiss",
+    description: "Stark minimalism with grid lines and orange accent",
+    icon: Grid3X3,
+    swatch: "#FF4F00",
+    preview: { bg: "bg-black", accent: "bg-[#FF4F00]", text: "text-white" },
   },
   holiday: {
     isDark: true,
@@ -224,7 +234,7 @@ export function ThemeProvider({
     // Add 'dark' class only for generic dark theme
     // Themed dark modes (holiday, midnight, vapor, retro-dark) have their own complete palettes
     // and don't need the .dark fallback which can cause style conflicts
-    const themedDarkModes: Theme[] = ['holiday', 'midnight', 'vapor', 'retro-dark'];
+    const themedDarkModes: Theme[] = ['holiday', 'midnight', 'vapor', 'retro-dark', 'swiss'];
     const needsDarkClass = THEME_CONFIG[resolvedTheme]?.isDark && !themedDarkModes.includes(resolvedTheme);
     if (needsDarkClass) {
       root.classList.add("dark");

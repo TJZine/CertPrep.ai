@@ -686,7 +686,243 @@
     letter-spacing: 0.05em;
   }
 
+  /* SWISS THEME (International Typographic Style / Museum) */
+  [data-theme="swiss"] {
+    /* Typography: Clean sans-serif, tight tracking */
+    --font-heading: var(--font-inter), system-ui, sans-serif;
+    --font-sans: var(--font-inter), system-ui, sans-serif;
+
+    /* Stark Black Background */
+    --background: 0 0% 0%;
+    /* Pure White Text */
+    --foreground: 0 0% 100%;
+
+    /* Zero Radius - sharp corners only */
+    --radius: 0px;
+
+    /* Transparent cards with white border */
+    --card: 0 0% 0%;
+    --card-foreground: 0 0% 100%;
+
+    --popover: 0 0% 5%;
+    --popover-foreground: 0 0% 100%;
+
+    /* International Orange Primary */
+    --primary: 18 100% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Dark grey secondary */
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 0 0% 10%;
+    --muted-foreground: 0 0% 60%;
+
+    /* Orange Accent */
+    --accent: 18 100% 50%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Bright Red Destructive */
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* White borders for grid effect */
+    --border: 0 0% 100%;
+    --input: 0 0% 10%;
+    --ring: 18 100% 50%;
+
+    /* Status Colors - stark and simple */
+    --success: 120 100% 40%;
+    --success-foreground: 0 0% 0%;
+
+    --warning: 18 100% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    --correct: 120 100% 40%;
+    --correct-foreground: 0 0% 0%;
+
+    --incorrect: 0 100% 50%;
+    --incorrect-foreground: 0 0% 100%;
+
+    --flagged: 18 100% 50%;
+    --flagged-foreground: 0 0% 100%;
+
+    --info: 18 100% 50%;
+    --info-foreground: 0 0% 100%;
+
+    /* Performance tier colors (stark variants) */
+    --tier-excellent: 120 100% 40%;
+    --tier-excellent-foreground: 0 0% 0%;
+    --tier-great: 18 100% 50%;
+    --tier-great-foreground: 0 0% 100%;
+    --tier-good: 45 100% 50%;
+    --tier-good-foreground: 0 0% 0%;
+    --tier-passing: 30 100% 50%;
+    --tier-passing-foreground: 0 0% 0%;
+    --tier-failing: 0 100% 50%;
+    --tier-failing-foreground: 0 0% 100%;
+
+    /* No decorative shadows */
+    --shadow-color: 0 0% 0%;
+  }
+
+  /* SWISS THEME - GRID BACKGROUND */
+  [data-theme="swiss"] body {
+    background-color: black;
+    /* Visible grid pattern */
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  /* SWISS CARDS - Transparent with white border, no shadows */
+  [data-theme="swiss"] .card,
+  [data-theme="swiss"] .popover {
+    background: transparent !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  [data-theme="swiss"] .card:hover {
+    border-color: rgba(255, 255, 255, 0.6) !important;
+  }
+
+  /* SWISS BUTTONS - Flat, no shadows, border only */
+  [data-theme="swiss"] button[class*="bg-primary"],
+  [data-theme="swiss"] a[class*="bg-primary"] {
+    border: 1px solid currentColor !important;
+    box-shadow: none !important;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  [data-theme="swiss"] button[class*="bg-primary"]:hover,
+  [data-theme="swiss"] a[class*="bg-primary"]:hover {
+    opacity: 0.85;
+  }
+
+  /* Outlined/secondary buttons */
+  [data-theme="swiss"] button[class*="bg-secondary"],
+  [data-theme="swiss"] a[class*="bg-secondary"] {
+    border: 1px solid rgba(255, 255, 255, 0.5) !important;
+    box-shadow: none !important;
+  }
+
+  /* SWISS TYPOGRAPHY - Massive headings, tight tracking */
+  [data-theme="swiss"] h1 {
+    font-size: 3rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+
+  [data-theme="swiss"] h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    text-transform: uppercase;
+  }
+
+  [data-theme="swiss"] h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
+  }
+
+  /* SWISS INPUTS - Minimal, just a bottom border */
+  [data-theme="swiss"] input,
+  [data-theme="swiss"] textarea,
+  [data-theme="swiss"] select {
+    background: transparent !important;
+    border: none !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.5) !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  [data-theme="swiss"] input:focus,
+  [data-theme="swiss"] textarea:focus,
+  [data-theme="swiss"] select:focus {
+    outline: none;
+    border-bottom-color: hsl(18, 100%, 50%) !important;
+  }
+
+  /* SWISS HEADER - Bold divider */
+  [data-theme="swiss"] header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    background: black;
+  }
+
+  /* SWISS FOOTER - Bold divider */
+  [data-theme="swiss"] footer {
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    background: black;
+  }
+
+  /* SWISS LINKS - Orange on hover, no decoration */
+  [data-theme="swiss"] a:not([class*="bg-"]) {
+    text-decoration: none;
+  }
+
+  [data-theme="swiss"] a:not([class*="bg-"]):hover {
+    color: hsl(18, 100%, 50%);
+  }
+
+  /* SWISS SCROLLBAR - Minimal */
+  [data-theme="swiss"] ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  [data-theme="swiss"] ::-webkit-scrollbar-track {
+    background: black;
+  }
+
+  [data-theme="swiss"] ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 0;
+  }
+
+  [data-theme="swiss"] ::-webkit-scrollbar-thumb:hover {
+    background: hsl(18, 100%, 50%);
+  }
+
+  /* SWISS TABLES - Grid dividers */
+  [data-theme="swiss"] table {
+    border-collapse: collapse;
+  }
+
+  [data-theme="swiss"] th,
+  [data-theme="swiss"] td {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 0.75rem 1rem;
+  }
+
+  [data-theme="swiss"] th {
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 600;
+  }
+
+  /* SWISS BADGES - Minimal, no decoration */
+  [data-theme="swiss"] [class*="badge"],
+  [data-theme="swiss"] [class*="Badge"] {
+    border: 1px solid currentColor !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 600;
+  }
+
   /* RETRO DARK THEME */
+
 
   [data-theme="retro-dark"] {
     /* HYBRID FONT: Pixel for headings, monospace for body (better readability) */
