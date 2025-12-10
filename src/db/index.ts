@@ -5,6 +5,7 @@ import type { Result } from "@/types/result";
 
 import type { SyncState } from "@/types/sync";
 
+import { logger } from "@/lib/logger";
 import { NIL_UUID } from "@/lib/constants";
 
 // PRIVACY: Data is stored locally in IndexedDB via Dexie (Local-First).
@@ -78,7 +79,7 @@ export class CertPrepDatabase extends Dexie {
                     questions: quiz.questions,
                   });
                 } catch (error) {
-                  console.warn(
+                  logger.warn(
                     `[DB Upgrade v6] Failed to compute hash for quiz ${quiz.id}, using fallback.`,
                     error,
                   );
@@ -164,10 +165,10 @@ export async function initializeDatabase(): Promise<void> {
   try {
     if (!db.isOpen()) {
       await db.open();
-      console.warn("[CertPrep.ai] Database initialized");
+      logger.info("[CertPrep.ai] Database initialized");
     }
   } catch (error) {
-    console.error("[CertPrep.ai] Failed to initialize database", error);
+    logger.error("[CertPrep.ai] Failed to initialize database", error);
     throw new Error("Unable to initialize CertPrep.ai database.");
   }
 }
@@ -191,7 +192,7 @@ export async function clearDatabase(): Promise<void> {
       },
     );
   } catch (error) {
-    console.error("[CertPrep.ai] Failed to clear database", error);
+    logger.error("[CertPrep.ai] Failed to clear database", error);
     throw new Error("Unable to clear CertPrep.ai database.");
   }
 }

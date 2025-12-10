@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { logger } from "@/lib/logger";
 
 const PROTECTED_ROUTES = ["/settings"];
 const AUTH_ROUTES = ["/login", "/signup", "/forgot-password"];
@@ -69,7 +70,7 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   if (!supabaseUrlEnv || !supabaseKey) {
     const errorMsg =
       "Missing Supabase environment variables (NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY). Application cannot function safely.";
-    console.error(errorMsg);
+    logger.error(errorMsg);
     throw new Error(errorMsg);
   }
 
@@ -104,7 +105,7 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
     const { data } = await supabase.auth.getUser();
     user = data.user;
   } catch (error) {
-    console.error(
+    logger.error(
       "Middleware auth check failed:",
       error instanceof Error ? error.message : "Unknown error",
     );

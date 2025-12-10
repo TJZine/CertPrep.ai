@@ -11,6 +11,7 @@ import React, {
 import { useAuth } from "@/components/providers/AuthProvider";
 import { syncResults } from "@/lib/sync/syncManager";
 import { syncQuizzes } from "@/lib/sync/quizSyncManager";
+import { logger } from "@/lib/logger";
 
 interface SyncContextType {
   sync: () => Promise<{ success: boolean; error?: unknown }>;
@@ -105,12 +106,12 @@ export function SyncProvider({
             result.error instanceof Error
               ? result.error
               : new Error(
-                  result.error ? String(result.error) : "Initial sync failed",
-                );
+                result.error ? String(result.error) : "Initial sync failed",
+              );
           setInitialSyncError(err);
         }
       } catch (error) {
-        console.error("Initial sync failed:", error);
+        logger.error("Initial sync failed:", error);
         if (isMounted) {
           setInitialSyncError(
             error instanceof Error ? error : new Error("Initial sync failed"),

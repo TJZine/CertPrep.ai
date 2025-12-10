@@ -173,8 +173,8 @@
   /* MIDNIGHT THEME (Cyber/Tech Neon) */
   [data-theme="midnight"] {
     /* Tech/Space Font */
-    --font-heading: var(--font-space), sans-serif;
-    --font-sans: var(--font-space), sans-serif;
+    --font-heading: var(--font-space), system-ui, sans-serif;
+    --font-sans: var(--font-space), system-ui, sans-serif;
 
     --background: 230 25% 7%;
     /* Deep Space Black */
@@ -1021,7 +1021,7 @@
   [data-theme="blossom"] {
     /* Typography: Romantic serif headings + soft rounded body */
     --font-heading: var(--font-playfair), Georgia, serif;
-    --font-sans: Nunito, system-ui, sans-serif;
+    --font-sans: var(--font-nunito), system-ui, sans-serif;
 
     --background: 340 100% 97%;
     /* Soft Pink Gradient Base */
