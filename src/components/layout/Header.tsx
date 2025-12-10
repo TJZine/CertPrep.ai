@@ -19,6 +19,7 @@ import { ThemePalette } from "@/components/common/ThemePalette";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { Button, buttonVariants } from "@/components/ui/Button";
 import { Logo } from "@/components/common/Logo";
+import { SyncStatusIndicator } from "@/components/common/SyncStatusIndicator";
 import { useToast } from "@/components/ui/Toast";
 
 import { logger } from "@/lib/logger";
@@ -155,6 +156,7 @@ export function Header(): React.ReactElement {
 
           {user ? (
             <div className="flex items-center gap-4 pl-4 border-l border-border">
+              <SyncStatusIndicator />
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <UserIcon className="h-4 w-4" />
                 <span className="max-w-[150px] truncate">{user.email}</span>

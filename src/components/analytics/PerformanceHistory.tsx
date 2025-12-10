@@ -27,6 +27,7 @@ import { ScorecardCompact } from "@/components/results/Scorecard";
 import { cn } from "@/lib/utils";
 import type { Result } from "@/types/result";
 import { useChartColors } from "@/hooks/useChartColors";
+import { useChartDimensions } from "@/hooks/useChartDimensions";
 
 interface PerformanceHistoryProps {
   results: Result[];
@@ -85,6 +86,7 @@ export function PerformanceHistory({
 }: PerformanceHistoryProps): React.ReactElement {
   const router = useRouter();
   const { colors } = useChartColors();
+  const { containerRef, isReady } = useChartDimensions();
 
   const sortedResults = React.useMemo(
     () => [...results].sort((a, b) => b.timestamp - a.timestamp),
@@ -184,49 +186,55 @@ export function PerformanceHistory({
         </div>
       </CardHeader>
       <CardContent>
-        <div className="h-[250px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart
-              data={chartData}
-              margin={{ top: 10, right: 10, bottom: 10, left: 10 }}
-            >
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke={colors.grid}
-              />
-              <XAxis
-                dataKey="date"
-                tick={{ fill: colors.muted, fontSize: 12 }}
-                tickLine={false}
-              />
-              <YAxis
-                domain={[0, 100]}
-                tick={{ fill: colors.muted, fontSize: 12 }}
-                tickLine={false}
-                axisLine={false}
-              />
-              <Tooltip content={<PerformanceHistoryTooltip />} />
-              <ReferenceLine
-                y={averageScore}
-                stroke={colors.muted}
-                strokeDasharray="5 5"
-                label={{
-                  value: `Avg: ${averageScore}%`,
-                  position: "right",
-                  fill: colors.muted,
-                  fontSize: 12,
-                }}
-              />
-              <Line
-                type="monotone"
-                dataKey="score"
-                stroke={colors.primary}
-                strokeWidth={2}
-                dot={{ fill: colors.primary, strokeWidth: 2, r: 4 }}
-                activeDot={{ fill: colors.primary, strokeWidth: 2, r: 6 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
+        <div ref={containerRef} className="h-[250px]">
+          {isReady ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart
+                data={chartData}
+                margin={{ top: 10, right: 10, bottom: 10, left: 10 }}
+              >
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke={colors.grid}
+                />
+                <XAxis
+                  dataKey="date"
+                  tick={{ fill: colors.muted, fontSize: 12 }}
+                  tickLine={false}
+                />
+                <YAxis
+                  domain={[0, 100]}
+                  tick={{ fill: colors.muted, fontSize: 12 }}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <Tooltip content={<PerformanceHistoryTooltip />} />
+                <ReferenceLine
+                  y={averageScore}
+                  stroke={colors.muted}
+                  strokeDasharray="5 5"
+                  label={{
+                    value: `Avg: ${averageScore}%`,
+                    position: "right",
+                    fill: colors.muted,
+                    fontSize: 12,
+                  }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="score"
+                  stroke={colors.primary}
+                  strokeWidth={2}
+                  dot={{ fill: colors.primary, strokeWidth: 2, r: 4 }}
+                  activeDot={{ fill: colors.primary, strokeWidth: 2, r: 6 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex h-full items-center justify-center">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+            </div>
+          )}
         </div>
 
         <div className="mt-6 border-t border-border pt-6">

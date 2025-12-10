@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/utils";
 import { TrendingUp, TrendingDown, Target } from "lucide-react";
 import { useChartColors } from "@/hooks/useChartColors";
+import { useChartDimensions } from "@/hooks/useChartDimensions";
 
 interface CategoryScore {
   category: string;
@@ -75,6 +76,7 @@ export function TopicRadar({
   className,
 }: TopicRadarProps): React.ReactElement {
   const { colors } = useChartColors();
+  const { containerRef, isReady } = useChartDimensions();
 
   const chartData = React.useMemo(() => {
     return categories.map((cat) => ({
@@ -167,42 +169,48 @@ export function TopicRadar({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="h-[300px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <RadarChart
-              data={chartData}
-              margin={{ top: 20, right: 30, bottom: 20, left: 30 }}
-            >
-              <PolarGrid stroke={colors.grid} />
-              <PolarAngleAxis
-                dataKey="subject"
-                tick={{ fill: colors.muted, fontSize: 12 }}
-                tickLine={false}
-              />
-              <PolarRadiusAxis
-                angle={90}
-                domain={[0, 100]}
-                tick={{ fill: colors.muted, fontSize: 10 }}
-                tickCount={5}
-              />
-              <Radar
-                name="Score"
-                dataKey="score"
-                stroke={colors.primary}
-                fill={colors.primary}
-                fillOpacity={0.3}
-                strokeWidth={2}
-              />
-              <Tooltip content={<TopicRadarTooltip />} />
-              <Legend
-                formatter={(value: string) => (
-                  <span className="font-medium text-muted-foreground">
-                    {value}
-                  </span>
-                )}
-              />
-            </RadarChart>
-          </ResponsiveContainer>
+        <div ref={containerRef} className="h-[300px] w-full">
+          {isReady ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <RadarChart
+                data={chartData}
+                margin={{ top: 20, right: 30, bottom: 20, left: 30 }}
+              >
+                <PolarGrid stroke={colors.grid} />
+                <PolarAngleAxis
+                  dataKey="subject"
+                  tick={{ fill: colors.muted, fontSize: 12 }}
+                  tickLine={false}
+                />
+                <PolarRadiusAxis
+                  angle={90}
+                  domain={[0, 100]}
+                  tick={{ fill: colors.muted, fontSize: 10 }}
+                  tickCount={5}
+                />
+                <Radar
+                  name="Score"
+                  dataKey="score"
+                  stroke={colors.primary}
+                  fill={colors.primary}
+                  fillOpacity={0.3}
+                  strokeWidth={2}
+                />
+                <Tooltip content={<TopicRadarTooltip />} />
+                <Legend
+                  formatter={(value: string) => (
+                    <span className="font-medium text-muted-foreground">
+                      {value}
+                    </span>
+                  )}
+                />
+              </RadarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex h-full items-center justify-center">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+            </div>
+          )}
         </div>
 
         <div className="mt-4 grid grid-cols-3 gap-4 border-t border-border pt-4">

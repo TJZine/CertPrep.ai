@@ -1,31 +1,78 @@
 import { db } from "./index";
 import { NIL_UUID } from "@/lib/constants";
+import { logger } from "@/lib/logger";
 
 export interface SyncCursor {
   timestamp: string;
   lastId: string;
 }
 
+// Constants for cursor healing
+const EPOCH_TIMESTAMP = "1970-01-01T00:00:00.000Z";
+const ONE_HOUR_MS = 60 * 60 * 1000;
+
+interface HealResult {
+  timestamp: string;
+  healed: boolean;
+}
+
+/**
+ * Detects if a timestamp is corrupted (set to the future) and heals it.
+ * This can happen if a device clock was temporarily set to the future during a sync.
+ *
+ * @param timestamp - The stored timestamp to validate
+ * @param context - Logging context (userId, table)
+ * @returns Object with healed timestamp and flag indicating if healing occurred
+ */
+function healFutureCursor(
+  timestamp: string,
+  context: { userId: string; table: string },
+): HealResult {
+  const storedTime = Date.parse(timestamp);
+  if (Number.isNaN(storedTime)) {
+    return { timestamp, healed: false }; // Let the caller handle invalid formats
+  }
+
+  const now = Date.now();
+  if (storedTime > now + ONE_HOUR_MS) {
+    logger.warn("Detected future sync cursor, resetting to epoch", {
+      ...context,
+      storedTimestamp: timestamp,
+      currentTime: new Date(now).toISOString(),
+      skewMs: storedTime - now,
+    });
+    return { timestamp: EPOCH_TIMESTAMP, healed: true };
+  }
+
+  return { timestamp, healed: false };
+}
+
 export async function getSyncCursor(userId: string): Promise<SyncCursor> {
-  if (!userId)
-    return { timestamp: "1970-01-01T00:00:00.000Z", lastId: NIL_UUID };
+  if (!userId) return { timestamp: EPOCH_TIMESTAMP, lastId: NIL_UUID };
 
   const key = `results:${userId}`;
   // Fallback to legacy key if present
   const state =
     (await db.syncState.get(key)) ?? (await db.syncState.get("results"));
 
-  let timestamp = "1970-01-01T00:00:00.000Z";
+  let timestamp = EPOCH_TIMESTAMP;
+  let healed = false;
   if (state?.lastSyncedAt) {
-    timestamp =
+    const rawTimestamp =
       typeof state.lastSyncedAt === "string"
         ? state.lastSyncedAt
         : new Date(state.lastSyncedAt).toISOString();
+
+    // Heal future-corrupted cursors
+    const healResult = healFutureCursor(rawTimestamp, { userId, table: "results" });
+    timestamp = healResult.timestamp;
+    healed = healResult.healed;
   }
 
   return {
     timestamp,
-    lastId: state?.lastId || NIL_UUID,
+    // Clear lastId when healing to avoid keyset pagination skipping records
+    lastId: healed ? NIL_UUID : (state?.lastId || NIL_UUID),
   };
 }
 
@@ -35,34 +82,47 @@ export async function setSyncCursor(
   lastId?: string,
 ): Promise<void> {
   if (Number.isNaN(Date.parse(timestamp))) throw new Error("Invalid timestamp");
+
+  // Defense-in-depth: Don't persist future timestamps
+  const { timestamp: safeTimestamp } = healFutureCursor(timestamp, {
+    userId,
+    table: "results-write",
+  });
+
   const key = `results:${userId}`;
   // Store the timestamp as a string to preserve microsecond precision from Postgres
   await db.syncState.put({
     table: key,
-    lastSyncedAt: timestamp,
+    lastSyncedAt: safeTimestamp,
     synced: 1,
     lastId: lastId || NIL_UUID,
   });
 }
 
 export async function getQuizSyncCursor(userId: string): Promise<SyncCursor> {
-  if (!userId)
-    return { timestamp: "1970-01-01T00:00:00.000Z", lastId: NIL_UUID };
+  if (!userId) return { timestamp: EPOCH_TIMESTAMP, lastId: NIL_UUID };
 
   const key = `quizzes:${userId}`;
   const state = await db.syncState.get(key);
 
-  let timestamp = "1970-01-01T00:00:00.000Z";
+  let timestamp = EPOCH_TIMESTAMP;
+  let healed = false;
   if (state?.lastSyncedAt) {
-    timestamp =
+    const rawTimestamp =
       typeof state.lastSyncedAt === "string"
         ? state.lastSyncedAt
         : new Date(state.lastSyncedAt).toISOString();
+
+    // Heal future-corrupted cursors
+    const healResult = healFutureCursor(rawTimestamp, { userId, table: "quizzes" });
+    timestamp = healResult.timestamp;
+    healed = healResult.healed;
   }
 
   return {
     timestamp,
-    lastId: state?.lastId || NIL_UUID,
+    // Clear lastId when healing to avoid keyset pagination skipping records
+    lastId: healed ? NIL_UUID : (state?.lastId || NIL_UUID),
   };
 }
 
@@ -72,10 +132,17 @@ export async function setQuizSyncCursor(
   lastId?: string,
 ): Promise<void> {
   if (Number.isNaN(Date.parse(timestamp))) throw new Error("Invalid timestamp");
+
+  // Defense-in-depth: Don't persist future timestamps
+  const { timestamp: safeTimestamp } = healFutureCursor(timestamp, {
+    userId,
+    table: "quizzes-write",
+  });
+
   const key = `quizzes:${userId}`;
   await db.syncState.put({
     table: key,
-    lastSyncedAt: timestamp, // Store as string for precision
+    lastSyncedAt: safeTimestamp,
     synced: 1,
     lastId: lastId || NIL_UUID,
   });

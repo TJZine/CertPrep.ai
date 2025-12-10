@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/Card";
 import { cn, formatTime } from "@/lib/utils";
 import { useChartColors } from "@/hooks/useChartColors";
+import { useChartDimensions } from "@/hooks/useChartDimensions";
 import type { OverallStats } from "@/db/results";
 
 type TooltipEntry = { name?: string; value?: number; payload?: unknown };
@@ -154,6 +155,7 @@ export function ScoreDistribution({
   className,
 }: ScoreDistributionProps): React.ReactElement {
   const { colors } = useChartColors();
+  const { containerRef, isReady } = useChartDimensions();
   const validResults = React.useMemo(
     () =>
       results.filter(
@@ -236,27 +238,33 @@ export function ScoreDistribution({
         <CardDescription>Performance breakdown by score range</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="h-[250px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={distribution}
-                cx="50%"
-                cy="50%"
-                innerRadius={60}
-                outerRadius={100}
-                paddingAngle={2}
-                dataKey="value"
-                label={({ name, value }) => `${name}: ${value}`}
-                labelLine={false}
-              >
-                {distribution.map((entry) => (
-                  <Cell key={entry.name} fill={colors[entry.colorKey]} />
-                ))}
-              </Pie>
-              <Tooltip content={<PieTooltip />} />
-            </PieChart>
-          </ResponsiveContainer>
+        <div ref={containerRef} className="h-[250px]">
+          {isReady ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={distribution}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={100}
+                  paddingAngle={2}
+                  dataKey="value"
+                  label={({ name, value }) => `${name}: ${value}`}
+                  labelLine={false}
+                >
+                  {distribution.map((entry) => (
+                    <Cell key={entry.name} fill={colors[entry.colorKey]} />
+                  ))}
+                </Pie>
+                <Tooltip content={<PieTooltip />} />
+              </PieChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex h-full items-center justify-center">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+            </div>
+          )}
         </div>
 
         <div className="mt-4 flex flex-wrap justify-center gap-4">
@@ -287,6 +295,7 @@ export function StudyTimeChart({
   className,
 }: StudyTimeChartProps): React.ReactElement {
   const { colors } = useChartColors();
+  const { containerRef, isReady } = useChartDimensions();
 
   if (dailyData.length === 0) {
     return (
@@ -312,24 +321,30 @@ export function StudyTimeChart({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="h-[250px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={dailyData}>
-              <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} />
-              <XAxis
-                dataKey="date"
-                tick={{ fill: colors.muted, fontSize: 12 }}
-                tickLine={false}
-              />
-              <YAxis
-                tick={{ fill: colors.muted, fontSize: 12 }}
-                tickLine={false}
-                axisLine={false}
-              />
-              <Tooltip content={<BarTooltip />} />
-              <Bar dataKey="minutes" fill={colors.primary} radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+        <div ref={containerRef} className="h-[250px]">
+          {isReady ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={dailyData}>
+                <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} />
+                <XAxis
+                  dataKey="date"
+                  tick={{ fill: colors.muted, fontSize: 12 }}
+                  tickLine={false}
+                />
+                <YAxis
+                  tick={{ fill: colors.muted, fontSize: 12 }}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <Tooltip content={<BarTooltip />} />
+                <Bar dataKey="minutes" fill={colors.primary} radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex h-full items-center justify-center">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
