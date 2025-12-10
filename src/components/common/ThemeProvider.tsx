@@ -224,7 +224,7 @@ export function ThemeProvider({
     // Add 'dark' class only for generic dark theme
     // Themed dark modes (holiday, midnight, vapor, retro-dark) have their own complete palettes
     // and don't need the .dark fallback which can cause style conflicts
-    const themedDarkModes: Theme[] = ['holiday', 'midnight', 'vapor', 'retro-dark'];
+    const themedDarkModes: Theme[] = ['holiday', 'midnight', 'vapor', 'retro-dark', 'nord'];
     const needsDarkClass = THEME_CONFIG[resolvedTheme]?.isDark && !themedDarkModes.includes(resolvedTheme);
     if (needsDarkClass) {
       root.classList.add("dark");

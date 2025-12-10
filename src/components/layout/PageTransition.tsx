@@ -13,7 +13,7 @@ export function PageTransition({
     children: React.ReactNode;
 }): React.ReactElement {
     const pathname = usePathname();
-    const { theme } = useTheme();
+    const { resolvedTheme } = useTheme();
 
     // Track hydration to prevent SSR mismatch with Framer Motion
     // During SSR and initial hydration, render without animation wrapper
@@ -23,9 +23,9 @@ export function PageTransition({
         setIsHydrated(true);
     }, []);
 
-    // Determine animation variant based on theme
+    // Determine animation variant based on resolved theme (not raw theme which could be "system")
     const getVariants = (): TransitionStyles => {
-        switch (theme) {
+        switch (resolvedTheme) {
             case "retro":
             case "retro-dark":
                 // Slide / Swipe effect

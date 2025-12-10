@@ -78,15 +78,17 @@ export default function ZenModePage(): React.ReactElement {
 
           if (orderedFiltered.length > 0) {
             setFilteredQuestions(orderedFiltered);
+            // Parse counts with proper handling for 0 (which is falsy but valid)
+            const parsedMissed = storedMissedCount !== null
+              ? Number.parseInt(storedMissedCount, 10)
+              : NaN;
+            const parsedFlagged = storedFlaggedCount !== null
+              ? Number.parseInt(storedFlaggedCount, 10)
+              : NaN;
             setSmartRoundData({
               questionIds,
-              missedCount: storedMissedCount
-                ? Number.parseInt(storedMissedCount, 10) ||
-                orderedFiltered.length
-                : orderedFiltered.length,
-              flaggedCount: storedFlaggedCount
-                ? Number.parseInt(storedFlaggedCount, 10) || 0
-                : 0,
+              missedCount: Number.isNaN(parsedMissed) ? orderedFiltered.length : parsedMissed,
+              flaggedCount: Number.isNaN(parsedFlagged) ? 0 : parsedFlagged,
             });
           } else {
             router.replace(`/quiz/${quizId}/zen`);
