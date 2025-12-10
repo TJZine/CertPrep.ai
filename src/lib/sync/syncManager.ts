@@ -409,7 +409,32 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
     performance.measure("syncResults", "syncResults-start", "syncResults-end");
     const duration = Date.now() - startTime;
     if (duration > 300) {
-      logger.warn("Slow sync detected", { duration, pushed, pulled });
+      // Check connection quality to avoid noisy warnings on slow mobile networks
+      let effectiveType: string | undefined;
+      if (typeof navigator !== "undefined") {
+        const connection = (
+          navigator as Navigator & {
+            connection?: { effectiveType?: string; downlink?: number };
+          }
+        ).connection;
+        effectiveType = connection?.effectiveType;
+      }
+
+      if (effectiveType && ["slow-2g", "2g", "3g"].includes(effectiveType)) {
+        logger.debug("Sync slower than threshold on mobile connection", {
+          duration,
+          pushed,
+          pulled,
+          effectiveType,
+        });
+      } else {
+        logger.warn("Slow sync detected", {
+          duration,
+          pushed,
+          pulled,
+          effectiveType: effectiveType ?? "unknown",
+        });
+      }
     }
   }
 
