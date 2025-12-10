@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { logger } from "@/lib/logger";
 
 /**
  * Hook to redirect authenticated users away from auth pages (login/signup).
@@ -21,6 +22,7 @@ export function useAuthRedirect(destination: string = "/"): {
     useEffect(() => {
         const checkSession = async (): Promise<void> => {
             // Allow developers to bypass redirect for testing UI states
+            // Usage: Append ?debug_auth=true to the URL
             if (searchParams?.get("debug_auth") === "true") {
                 setIsLoading(false);
                 return;
@@ -43,7 +45,7 @@ export function useAuthRedirect(destination: string = "/"): {
                     setIsLoading(false);
                 }
             } catch (error) {
-                console.error("Auth check failed:", error);
+                logger.error("Auth redirect check failed:", error);
                 setIsLoading(false);
             }
         };

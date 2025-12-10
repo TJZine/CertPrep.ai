@@ -148,10 +148,21 @@ Used in charts (donut/bar) to denote performance levels.
 2. **Register the theme** in `src/components/common/ThemeProvider.tsx`:
 
 ```tsx
+// 1. Add to Theme union type
 export type Theme = "light" | "dark" | ... | "ocean";
 
-// Update validation logic
-if (stored === "ocean" || ...) return stored as Theme;
+// 2. Add to THEME_CONFIG with metadata
+export const THEME_CONFIG: Record<Theme, { isDark: boolean; label: string; ... }> = {
+  // ... existing themes ...
+  ocean: {
+    isDark: true,
+    label: "Ocean",
+    description: "Deep sea navy with coral accents",
+    icon: Waves,
+    swatch: "#1e3a8a",
+    preview: { bg: "bg-blue-950", accent: "bg-cyan-500", text: "text-cyan-50" }
+  },
+};
 ```
 
 3. **Add to Settings UI** in `src/components/settings/ThemeSettings.tsx`:

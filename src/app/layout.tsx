@@ -157,9 +157,9 @@ export default async function RootLayout({
         <AppProviders>
           <Header />
           <ThemeEffects />
-          <div id="main-content" className="flex-1 flex flex-col" tabIndex={-1}>
+          <main id="main-content" className="flex-1 flex flex-col" tabIndex={-1}>
             <PageTransition>{children}</PageTransition>
-          </div>
+          </main>
           <Footer />
         </AppProviders>
       </body>

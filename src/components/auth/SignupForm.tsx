@@ -28,8 +28,16 @@ export default function SignupForm(): React.ReactElement {
   const { addToast } = useToast();
 
   // Redirect to dashboard if already logged in
-  useAuthRedirect();
+  const { isLoading: isCheckingAuth, isRedirecting } = useAuthRedirect();
   const hcaptchaConfigured = !!process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY;
+
+  if (isCheckingAuth || isRedirecting) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
