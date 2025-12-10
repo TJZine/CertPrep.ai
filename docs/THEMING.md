@@ -15,20 +15,21 @@ CertPrep.ai uses a semantic token system that allows complete theme customizatio
 
 ## Available Themes
 
-| Theme        | Selector                    | Description                              | Radius  |
-| ------------ | --------------------------- | ---------------------------------------- | ------- |
-| Light        | `:root`                     | Default warm slate theme                 | 0.5rem  |
-| Dark         | `.dark`                     | Dark slate for night mode                | 0.5rem  |
-| Midnight ✨  | `[data-theme="midnight"]`   | Cyber neon with electric cyan            | 0.25rem |
-| Focus        | `[data-theme="focus"]`      | Warm sepia for distraction-free studying | 0.75rem |
-| Retro (Dark) | `[data-theme="retro-dark"]` | High contrast terminal green on black    | 0px     |
-| Retro        | `[data-theme="retro"]`      | 8-bit NES style with blocky UI           | 0px     |
-| Brutalist    | `[data-theme="brutalist"]`  | Bold neo-brutalism with hard shadows     | 0.25rem |
-| Swiss        | `[data-theme="swiss"]`      | Stark minimalism with grid lines         | 0px     |
-| Holiday ✨   | `[data-theme="holiday"]`    | Cozy dark Christmas with snowfall        | 0.75rem |
-| Vapor ✨     | `[data-theme="vapor"]`      | Synthwave neon pink & cyan               | 0px     |
-| Blossom ✨   | `[data-theme="blossom"]`    | Pastel pink with sakura petals           | 1.5rem  |
-| Mint         | `[data-theme="mint"]`       | Fresh sage with graph paper overlay      | 0.75rem |
+| Theme        | Selector                    | Description                              | Radius   |
+| ------------ | --------------------------- | ---------------------------------------- | -------- |
+| Light        | `:root`                     | Default warm slate theme                 | 0.5rem   |
+| Dark         | `.dark`                     | Dark slate for night mode                | 0.5rem   |
+| Midnight ✨  | `[data-theme="midnight"]`   | Cyber neon with electric cyan            | 0.25rem  |
+| Focus        | `[data-theme="focus"]`      | Warm sepia for distraction-free studying | 0.75rem  |
+| Retro (Dark) | `[data-theme="retro-dark"]` | High contrast terminal green on black    | 0px      |
+| Retro        | `[data-theme="retro"]`      | 8-bit NES style with blocky UI           | 0px      |
+| Brutalist    | `[data-theme="brutalist"]`  | Bold neo-brutalism with hard shadows     | 0.25rem  |
+| Swiss        | `[data-theme="swiss"]`      | Stark minimalism with grid lines         | 0px      |
+| Riso         | `[data-theme="riso"]`       | Zine-style with ink colors & paper       | 0.125rem |
+| Holiday ✨   | `[data-theme="holiday"]`    | Cozy dark Christmas with snowfall        | 0.75rem  |
+| Vapor ✨     | `[data-theme="vapor"]`      | Synthwave neon pink & cyan               | 0px      |
+| Blossom ✨   | `[data-theme="blossom"]`    | Pastel pink with sakura petals           | 1.5rem   |
+| Mint         | `[data-theme="mint"]`       | Fresh sage with graph paper overlay      | 0.75rem  |
 
 > **Note:** Themes marked with ✨ include premium visual effects (particles, animations).
 

@@ -1655,6 +1655,292 @@
     /* Ensure opacity is reset if overridden elsewhere */
   }
 
+  /* ========================================================================== */
+  /* RISO-PRINT (ZINE) THEME - Risograph-inspired ink & paper aesthetic         */
+  /* ========================================================================== */
+
+  [data-theme="riso"] {
+    /* Typewriter monospace font */
+    --font-heading: var(--font-courier), "Courier New", monospace;
+    --font-sans: var(--font-courier), "Courier New", monospace;
+
+    /* Warm cream paper background */
+    --background: 45 25% 93%;
+    /* Dark ink text */
+    --foreground: 0 0% 12%;
+
+    /* Slightly imperfect corners */
+    --radius: 0.125rem;
+
+    /* Paper-colored cards */
+    --card: 45 30% 96%;
+    --card-foreground: 0 0% 12%;
+
+    --popover: 45 30% 96%;
+    --popover-foreground: 0 0% 12%;
+
+    /* Fluorescent Pink Primary */
+    --primary: 322 100% 52%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Sunflower Yellow Secondary */
+    --secondary: 43 100% 54%;
+    --secondary-foreground: 0 0% 12%;
+
+    --muted: 45 20% 88%;
+    --muted-foreground: 0 0% 40%;
+
+    /* Teal Accent */
+    --accent: 174 100% 32%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Red Destructive */
+    --destructive: 0 85% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Subtle borders */
+    --border: 0 0% 70%;
+    --input: 45 30% 96%;
+    --ring: 322 100% 52%;
+
+    /* Status Colors - Bright ink style */
+    --success: 174 100% 32%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 43 100% 54%;
+    --warning-foreground: 0 0% 12%;
+
+    --correct: 174 100% 32%;
+    --correct-foreground: 0 0% 100%;
+
+    --incorrect: 0 85% 50%;
+    --incorrect-foreground: 0 0% 100%;
+
+    --flagged: 43 100% 54%;
+    --flagged-foreground: 0 0% 12%;
+
+    --info: 322 100% 52%;
+    --info-foreground: 0 0% 100%;
+
+    /* Performance tier colors (ink variants) */
+    --tier-excellent: 174 100% 32%;
+    --tier-excellent-foreground: 0 0% 100%;
+    --tier-great: 322 100% 52%;
+    --tier-great-foreground: 0 0% 100%;
+    --tier-good: 200 80% 45%;
+    --tier-good-foreground: 0 0% 100%;
+    --tier-passing: 43 100% 54%;
+    --tier-passing-foreground: 0 0% 12%;
+    --tier-failing: 0 85% 50%;
+    --tier-failing-foreground: 0 0% 100%;
+
+    /* Soft shadows */
+    --shadow-color: 0 0% 50%;
+  }
+
+  /* RISO THEME - HEAVY PAPER TEXTURE BACKGROUND */
+  [data-theme="riso"] body {
+    background-color: hsl(45, 30%, 91%);
+    /* Heavy noise/grain texture - 15% opacity for authentic riso feel */
+    background-image:
+      url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.15'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+  }
+
+  /* RISO CARDS - Per-card unique ink washes with blend modes */
+  [data-theme="riso"] .card {
+    position: relative;
+    background: hsl(45, 30%, 94%) !important;
+    border: 2px dashed hsla(0, 0%, 40%, 0.4) !important;
+    border-radius: 0 !important;
+    box-shadow: 3px 3px 0 hsla(0, 0%, 0%, 0.1) !important;
+    transform: rotate(-1deg);
+    transition: transform 0.15s ease;
+    overflow: hidden;
+  }
+
+  /* Ink wash overlay - different color per card position */
+  [data-theme="riso"] .card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg,
+        hsla(322, 100%, 55%, 0.25) 0%,
+        hsla(322, 100%, 55%, 0.1) 50%,
+        transparent 100%);
+    mix-blend-mode: multiply;
+    pointer-events: none;
+  }
+
+  /* 2nd card - Yellow ink wash */
+  [data-theme="riso"] .card:nth-child(2)::before,
+  [data-theme="riso"] .card:nth-child(5)::before,
+  [data-theme="riso"] .card:nth-child(8)::before {
+    background: linear-gradient(135deg,
+        hsla(43, 100%, 55%, 0.3) 0%,
+        hsla(43, 100%, 55%, 0.1) 50%,
+        transparent 100%);
+  }
+
+  /* 3rd card - Teal ink wash */
+  [data-theme="riso"] .card:nth-child(3)::before,
+  [data-theme="riso"] .card:nth-child(6)::before,
+  [data-theme="riso"] .card:nth-child(9)::before {
+    background: linear-gradient(135deg,
+        hsla(174, 100%, 35%, 0.25) 0%,
+        hsla(174, 100%, 35%, 0.1) 50%,
+        transparent 100%);
+  }
+
+  /* 4th card - Multi-color ink bleeding effect */
+  [data-theme="riso"] .card:nth-child(4)::before,
+  [data-theme="riso"] .card:nth-child(7)::before,
+  [data-theme="riso"] .card:nth-child(10)::before {
+    background: linear-gradient(120deg,
+        hsla(322, 100%, 55%, 0.2) 0%,
+        hsla(43, 100%, 55%, 0.25) 50%,
+        hsla(174, 100%, 35%, 0.2) 100%);
+  }
+
+  /* Varying rotations for hand-placed feel */
+  [data-theme="riso"] .card:nth-child(even) {
+    transform: rotate(1.2deg);
+  }
+
+  [data-theme="riso"] .card:nth-child(3n) {
+    transform: rotate(-0.8deg);
+  }
+
+  [data-theme="riso"] .card:nth-child(4n) {
+    transform: rotate(1.5deg);
+  }
+
+  [data-theme="riso"] .card:hover {
+    transform: rotate(0deg) translateY(-3px);
+    box-shadow: 4px 4px 0 hsla(0, 0%, 0%, 0.15) !important;
+  }
+
+  /* RISO BUTTONS - Solid ink colors with slight rotation */
+  [data-theme="riso"] button[class*="bg-primary"],
+  [data-theme="riso"] a[class*="bg-primary"] {
+    border: none !important;
+    border-radius: 2px !important;
+    box-shadow: 2px 2px 0 hsla(0, 0%, 0%, 0.15);
+    transform: rotate(0.5deg);
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+  }
+
+  [data-theme="riso"] button[class*="bg-primary"]:hover,
+  [data-theme="riso"] a[class*="bg-primary"]:hover {
+    transform: rotate(0deg) translateY(-1px);
+    box-shadow: 3px 3px 0 hsla(0, 0%, 0%, 0.2);
+  }
+
+  /* RISO TYPOGRAPHY - Typewriter with wavy underlines */
+  [data-theme="riso"] h1,
+  [data-theme="riso"] h2 {
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    text-decoration: underline;
+    text-decoration-style: wavy;
+    text-decoration-color: hsl(174, 100%, 32%);
+    text-underline-offset: 6px;
+    text-decoration-thickness: 2px;
+  }
+
+  [data-theme="riso"] h3 {
+    font-weight: 700;
+    border-bottom: 2px solid hsl(322, 100%, 52%);
+    display: inline-block;
+    padding-bottom: 2px;
+  }
+
+  /* RISO INPUTS - Paper style with subtle border */
+  [data-theme="riso"] input,
+  [data-theme="riso"] textarea,
+  [data-theme="riso"] select {
+    background: hsl(45, 30%, 96%) !important;
+    border: 1px solid hsla(0, 0%, 50%, 0.4) !important;
+    border-radius: 2px !important;
+    box-shadow: inset 1px 1px 2px hsla(0, 0%, 0%, 0.05);
+  }
+
+  [data-theme="riso"] input:focus,
+  [data-theme="riso"] textarea:focus,
+  [data-theme="riso"] select:focus {
+    outline: none;
+    border-color: hsl(322, 100%, 52%) !important;
+    box-shadow: 0 0 0 2px hsla(322, 100%, 52%, 0.2);
+  }
+
+  /* RISO HEADER - Teal underline */
+  [data-theme="riso"] header {
+    border-bottom: 3px solid hsl(174, 100%, 32%);
+    background: hsl(45, 25%, 93%);
+  }
+
+  /* RISO FOOTER - Pink top border */
+  [data-theme="riso"] footer {
+    border-top: 3px solid hsl(322, 100%, 52%);
+    background: hsl(45, 25%, 93%);
+  }
+
+  /* RISO LINKS - Pink highlight */
+  [data-theme="riso"] a:not([class*="bg-"]) {
+    color: hsl(322, 100%, 45%);
+    text-decoration: underline;
+    text-decoration-style: dotted;
+    text-underline-offset: 3px;
+  }
+
+  [data-theme="riso"] a:not([class*="bg-"]):hover {
+    color: hsl(174, 100%, 32%);
+    text-decoration-style: solid;
+  }
+
+  /* RISO SCROLLBAR - Ink style */
+  [data-theme="riso"] ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  [data-theme="riso"] ::-webkit-scrollbar-track {
+    background: hsl(45, 25%, 90%);
+  }
+
+  [data-theme="riso"] ::-webkit-scrollbar-thumb {
+    background: hsl(322, 100%, 52%);
+    border-radius: 0;
+  }
+
+  [data-theme="riso"] ::-webkit-scrollbar-thumb:hover {
+    background: hsl(174, 100%, 32%);
+  }
+
+  /* RISO BADGES - Per-color ink variants with tilt */
+  [data-theme="riso"] [class*="badge"],
+  [data-theme="riso"] [class*="Badge"] {
+    border-radius: 0 !important;
+    border: 2px solid currentColor !important;
+    font-weight: 700;
+    transform: rotate(-2deg);
+    box-shadow: 2px 2px 0 hsla(0, 0%, 0%, 0.15);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  [data-theme="riso"] [class*="badge"]:nth-child(even),
+  [data-theme="riso"] [class*="Badge"]:nth-child(even) {
+    transform: rotate(1.5deg);
+  }
+
+  [data-theme="riso"] [class*="badge"]:nth-child(3n),
+  [data-theme="riso"] [class*="Badge"]:nth-child(3n) {
+    transform: rotate(-1deg);
+  }
+
   /* BLOSSOM "SAKURA" ENHANCEMENTS - V7 (DOM-BASED PARTICLE SYSTEM) */
   /* Styles are now inline in SakuraPetals.tsx React component */
   /* Keyframe animation defined globally above @layer utilities */

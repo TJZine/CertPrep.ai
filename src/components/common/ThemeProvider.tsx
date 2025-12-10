@@ -16,6 +16,7 @@ import {
   Leaf,
   Monitor,
   Grid3X3,
+  Newspaper,
 } from "lucide-react";
 
 export type Theme =
@@ -28,6 +29,7 @@ export type Theme =
   | "retro"
   | "brutalist"
   | "swiss"
+  | "riso"
   | "holiday"
   | "vapor"
   | "blossom"
@@ -108,6 +110,14 @@ export const THEME_CONFIG: Record<
     icon: Leaf,
     swatch: "#86efac",
     preview: { bg: "bg-[#F1F8E9]", accent: "bg-[#81C784]", text: "text-[#37474F]" },
+  },
+  riso: {
+    isDark: false,
+    label: "☀️ Riso",
+    description: "Zine-style with ink colors and paper texture",
+    icon: Newspaper,
+    swatch: "#FF48B0",
+    preview: { bg: "bg-[#F5F3E7]", accent: "bg-[#FF48B0]", text: "text-[#1a1a1a]" },
   },
 
   // ═══════════════════════════════════════════════════════════════════════════
