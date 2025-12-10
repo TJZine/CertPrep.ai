@@ -46,6 +46,7 @@ export const THEME_CONFIG: Record<
     isPremium?: boolean; // Premium themes have special particle effects
   }
 > = {
+  // System - hidden, just for internal use
   system: {
     isDark: false,
     label: "System",
@@ -55,92 +56,45 @@ export const THEME_CONFIG: Record<
     preview: { bg: "bg-slate-200", accent: "bg-slate-600", text: "text-slate-900" },
     hidden: true,
   },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // LIGHT THEMES ☀️
+  // ═══════════════════════════════════════════════════════════════════════════
   light: {
     isDark: false,
-    label: "Light",
+    label: "☀️ Light",
     description: "Clean and bright, easy on the eyes",
     icon: Sun,
     swatch: "#ffffff",
     preview: { bg: "bg-slate-50", accent: "bg-blue-500", text: "text-slate-900" },
   },
-  dark: {
-    isDark: true,
-    label: "Dark",
-    description: "Classic dark mode for night sessions",
-    icon: Moon,
-    swatch: "#0f172a",
-    preview: { bg: "bg-slate-900", accent: "bg-blue-500", text: "text-slate-50" },
-  },
-  midnight: {
-    isDark: true,
-    label: "Midnight ✨",
-    description: "Cyber neon with twinkling stars",
-    icon: Sparkles,
-    swatch: "#0ea5e9",
-    preview: { bg: "bg-[#0d1117]", accent: "bg-cyan-400", text: "text-cyan-100" },
-    isPremium: true,
-  },
   focus: {
     isDark: false,
-    label: "Focus",
+    label: "☀️ Focus",
     description: "Warm sepia for distraction-free studying",
     icon: BookOpen,
     swatch: "#f5f5f4",
     preview: { bg: "bg-amber-50", accent: "bg-orange-600", text: "text-amber-900" },
   },
-  "retro-dark": {
-    isDark: true,
-    label: "Retro (Dark)",
-    description: "High contrast terminal green on black",
-    icon: Trees,
-    swatch: "#22c55e",
-    preview: { bg: "bg-[#141f1a]", accent: "bg-green-500", text: "text-green-100" },
-  },
-  retro: {
-    isDark: false,
-    label: "Retro",
-    description: "8-bit NES style with blocky aesthetics",
-    icon: Gamepad2,
-    swatch: "#eab308",
-    preview: { bg: "bg-gray-300", accent: "bg-pink-500", text: "text-gray-900" },
-  },
   brutalist: {
     isDark: false,
-    label: "Brutalist",
+    label: "☀️ Brutalist",
     description: "Bold, playful neo-brutalism with hard shadows",
     icon: ZapIcon,
     swatch: "#FFE566",
     preview: { bg: "bg-[#FFFEF0]", accent: "bg-[#FFE566]", text: "text-black" },
   },
-  swiss: {
-    isDark: true,
-    label: "Swiss",
-    description: "Stark minimalism with grid lines and orange accent",
-    icon: Grid3X3,
-    swatch: "#FF4F00",
-    preview: { bg: "bg-black", accent: "bg-[#FF4F00]", text: "text-white" },
-  },
-  holiday: {
-    isDark: true,
-    label: "Holiday ✨",
-    description: "Cozy dark Christmas with snowflakes",
-    icon: Gift,
-    swatch: "#e11d48",
-    preview: { bg: "bg-[#1f3d2e]", accent: "bg-red-500", text: "text-amber-100" },
-    isPremium: true,
-  },
-  vapor: {
-    isDark: true,
-    label: "Vapor ✨",
-    description: "Synthwave neon pink & cyan with digital rain",
-    icon: Zap,
-    swatch: "#d946ef",
-    preview: { bg: "bg-[#1a0d24]", accent: "bg-pink-500", text: "text-pink-100" },
-    isPremium: true,
+  retro: {
+    isDark: false,
+    label: "☀️ Retro",
+    description: "8-bit NES style with blocky aesthetics",
+    icon: Gamepad2,
+    swatch: "#eab308",
+    preview: { bg: "bg-gray-300", accent: "bg-pink-500", text: "text-gray-900" },
   },
   blossom: {
     isDark: false,
-    label: "Blossom ✨",
+    label: "☀️ Blossom ✨",
     description: "Romantic pink with falling sakura petals",
     icon: Flower2,
     swatch: "#f472b6",
@@ -149,11 +103,66 @@ export const THEME_CONFIG: Record<
   },
   mint: {
     isDark: false,
-    label: "Mint",
+    label: "☀️ Mint",
     description: "Fresh sage for earthy vibes",
     icon: Leaf,
     swatch: "#86efac",
     preview: { bg: "bg-[#F1F8E9]", accent: "bg-[#81C784]", text: "text-[#37474F]" },
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // DARK THEMES 🌙
+  // ═══════════════════════════════════════════════════════════════════════════
+  dark: {
+    isDark: true,
+    label: "🌙 Dark",
+    description: "Classic dark mode for night sessions",
+    icon: Moon,
+    swatch: "#0f172a",
+    preview: { bg: "bg-slate-900", accent: "bg-blue-500", text: "text-slate-50" },
+  },
+  midnight: {
+    isDark: true,
+    label: "🌙 Midnight ✨",
+    description: "Cyber neon with twinkling stars",
+    icon: Sparkles,
+    swatch: "#0ea5e9",
+    preview: { bg: "bg-[#0d1117]", accent: "bg-cyan-400", text: "text-cyan-100" },
+    isPremium: true,
+  },
+  swiss: {
+    isDark: true,
+    label: "🌙 Swiss",
+    description: "Stark minimalism with grid lines and orange accent",
+    icon: Grid3X3,
+    swatch: "#FF4F00",
+    preview: { bg: "bg-black", accent: "bg-[#FF4F00]", text: "text-white" },
+  },
+  "retro-dark": {
+    isDark: true,
+    label: "🌙 Retro (Dark)",
+    description: "High contrast terminal green on black",
+    icon: Trees,
+    swatch: "#22c55e",
+    preview: { bg: "bg-[#141f1a]", accent: "bg-green-500", text: "text-green-100" },
+  },
+  holiday: {
+    isDark: true,
+    label: "🌙 Holiday ✨",
+    description: "Cozy dark Christmas with snowflakes",
+    icon: Gift,
+    swatch: "#e11d48",
+    preview: { bg: "bg-[#1f3d2e]", accent: "bg-red-500", text: "text-amber-100" },
+    isPremium: true,
+  },
+  vapor: {
+    isDark: true,
+    label: "🌙 Vapor ✨",
+    description: "Synthwave neon pink & cyan with digital rain",
+    icon: Zap,
+    swatch: "#d946ef",
+    preview: { bg: "bg-[#1a0d24]", accent: "bg-pink-500", text: "text-pink-100" },
+    isPremium: true,
   },
 };
 
