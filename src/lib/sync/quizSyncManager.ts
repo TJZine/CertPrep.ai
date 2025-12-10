@@ -15,6 +15,7 @@ import {
   toLocalQuiz,
   toRemoteQuiz,
 } from "./quizDomain";
+import { logNetworkAwareSlowSync } from "@/lib/sync/syncLogging";
 import { fetchUserQuizzes, upsertQuizzes } from "./quizRemote";
 import type { Quiz } from "@/types/quiz";
 import { QuestionSchema } from "@/validators/quizSchema";
@@ -153,32 +154,11 @@ async function performQuizSync(
     performance.measure("quizSync", "quizSync-start", "quizSync-end");
     const duration = Date.now() - startTime;
     if (duration > 300) {
-      // Check connection quality to avoid noisy warnings on slow mobile networks
-      let effectiveType: string | undefined;
-      if (typeof navigator !== "undefined") {
-        const connection = (
-          navigator as Navigator & {
-            connection?: { effectiveType?: string; downlink?: number };
-          }
-        ).connection;
-        effectiveType = connection?.effectiveType;
-      }
-
-      if (effectiveType && ["slow-2g", "2g", "3g"].includes(effectiveType)) {
-        logger.debug("Quiz sync slower than threshold on mobile connection", {
-          duration,
-          pushed: stats.pushed,
-          pulled: stats.pulled,
-          effectiveType,
-        });
-      } else {
-        logger.warn("Slow quiz sync detected", {
-          duration,
-          pushed: stats.pushed,
-          pulled: stats.pulled,
-          effectiveType: effectiveType ?? "unknown",
-        });
-      }
+      logNetworkAwareSlowSync("Quiz sync", {
+        duration,
+        pushed: stats.pushed,
+        pulled: stats.pulled,
+      });
     }
   }
 }
