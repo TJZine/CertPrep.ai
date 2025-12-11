@@ -2119,30 +2119,6 @@
   }
 }
 
-/* SAKURA PETAL ANIMATION - Must be outside @layer for reliability */
-/* Used by SakuraPetals.tsx React component */
-@keyframes sakura-fall {
-  0% {
-    transform: translateY(-10vh) translateX(0);
-  }
-
-  25% {
-    transform: translateY(25vh) translateX(var(--sway-amount, 25px));
-  }
-
-  50% {
-    transform: translateY(55vh) translateX(calc(var(--sway-amount, 25px) * -0.6));
-  }
-
-  75% {
-    transform: translateY(80vh) translateX(var(--sway-amount, 25px));
-  }
-
-  100% {
-    transform: translateY(115vh) translateX(0);
-  }
-}
-
 @layer utilities {
 
   /* Custom scrollbar for sidebars */
@@ -2511,9 +2487,6 @@
     transform: rotate(-1deg);
   }
 
-  /* BLOSSOM "SAKURA" ENHANCEMENTS - V7 (DOM-BASED PARTICLE SYSTEM) */
-  /* Styles are now inline in SakuraPetals.tsx React component */
-  /* Keyframe animation defined globally above @layer utilities */
 
   /* ========================================================================== */
   /* HOLIDAY THEME - COMPREHENSIVE FESTIVE ENHANCEMENTS                         */
@@ -3097,6 +3070,20 @@
     backdrop-filter: blur(20px);
   }
 
+  /* BLOSSOM SR-ONLY FIX - Prevent link styles from breaking screen-reader-only elements */
+  [data-theme="blossom"] a.sr-only,
+  [data-theme="blossom"] .sr-only {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border-width: 0 !important;
+  }
+
   /* BLOSSOM BADGES - "Hanko" Stamp Style */
   [data-theme="blossom"] .badge {
     border: 2px solid hsla(340, 60%, 75%, 0.6) !important;
@@ -3223,12 +3210,12 @@
   }
 
   /* 8. LINK UNDERLINE ANIMATION - Elegant sliding underline on hover */
-  [data-theme="blossom"] a:not([class*="button"]):not([class*="btn"]):not(.card) {
+  [data-theme="blossom"] a:not([class*="button"]):not([class*="btn"]):not(.card):not([class~="sr-only"]) {
     position: relative;
     text-decoration: none;
   }
 
-  [data-theme="blossom"] a:not([class*="button"]):not([class*="btn"]):not(.card)::after {
+  [data-theme="blossom"] a:not([class*="button"]):not([class*="btn"]):not(.card):not([class~="sr-only"])::after {
     content: '';
     position: absolute;
     bottom: -2px;
@@ -3242,7 +3229,7 @@
     transition: width 0.3s ease;
   }
 
-  [data-theme="blossom"] a:not([class*="button"]):not([class*="btn"]):not(.card):hover::after {
+  [data-theme="blossom"] a:not([class*="button"]):not([class*="btn"]):not(.card):not([class~="sr-only"]):hover::after {
     width: 100%;
   }
 
