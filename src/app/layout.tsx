@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import * as React from "react";
 import { headers } from "next/headers";
-import { Inter, Press_Start_2P, Nunito, Roboto_Slab, Space_Grotesk, Playfair_Display, JetBrains_Mono, Courier_Prime } from "next/font/google";
+import { Inter, Press_Start_2P, Nunito, Roboto_Slab, Space_Grotesk, Playfair_Display, JetBrains_Mono, Courier_Prime, Cormorant_Garamond } from "next/font/google";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { SkipLink } from "@/components/common/SkipLink";
@@ -69,6 +69,15 @@ const courierPrime = Courier_Prime({
   fallback: ["Courier New", "monospace"],
 });
 
+const cormorantGaramond = Cormorant_Garamond({
+  weight: ["300", "400", "500", "600", "700"],
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-cormorant",
+  fallback: ["serif"],
+});
+
+
 export const metadata: Metadata = {
   title: {
     default: APP_NAME,
@@ -134,7 +143,7 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${pressStart2P.variable} ${nunito.variable} ${robotoSlab.variable} ${spaceGrotesk.variable} ${playfairDisplay.variable} ${jetbrainsMono.variable} ${courierPrime.variable}`}
+      className={`${inter.variable} ${pressStart2P.variable} ${nunito.variable} ${robotoSlab.variable} ${spaceGrotesk.variable} ${playfairDisplay.variable} ${jetbrainsMono.variable} ${courierPrime.variable} ${cormorantGaramond.variable}`}
       suppressHydrationWarning
     >
       <head>
