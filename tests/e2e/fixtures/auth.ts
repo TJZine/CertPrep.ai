@@ -127,17 +127,25 @@ export async function injectAuthState(page: Page): Promise<void> {
   await page.goto("/");
 
   await page.evaluate(
-    ({ userId, guestKey }) => {
+    ({ userId, guestKey, session, authTokenKey }) => {
       // Set the guest user ID that useEffectiveUserId will use
       localStorage.setItem(guestKey, userId);
 
       // Also set app-specific user tracking for sync
       localStorage.setItem("cp_last_user_id", userId);
 
-      // Note: We don't need to set the Supabase token here because
-      // Playwright's storageState handles it.
+      // Inject the mock Supabase session so getSession() works
+      localStorage.setItem(authTokenKey, JSON.stringify(session));
     },
-    { userId: MOCK_USER.id, guestKey: GUEST_USER_KEY },
+    {
+      userId: MOCK_USER.id,
+      guestKey: GUEST_USER_KEY,
+      session: createMockSession(),
+      authTokenKey: `sb-${process.env.NEXT_PUBLIC_SUPABASE_URL?.match(
+        /https:\/\/([^.]+)\.supabase\.co/,
+      )?.[1] || "e2e-test-project"
+        }-auth-token`,
+    },
   );
 
   // Debug: Check cookies

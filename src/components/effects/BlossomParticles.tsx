@@ -81,21 +81,21 @@ export default function BlossomParticles(): React.ReactElement | null {
                         value: { min: 0.4, max: 0.8 },
                     },
                     size: {
-                        value: { min: 15, max: 35 },
+                        value: { min: 12, max: 24 }, // Smaller, more delicate
                     },
                     rotate: {
                         value: { min: 0, max: 360 },
                         direction: 'random',
                         animation: {
                             enable: true,
-                            speed: 3,
+                            speed: 2,
                             sync: false,
                         },
                     },
                     move: {
                         enable: true,
                         direction: 'bottom',
-                        speed: { min: 0.5, max: 1.8 }, // Slower, more graceful
+                        speed: { min: 0.5, max: 1.0 }, // Slow constant speed
                         straight: false,
                         outModes: {
                             default: 'out',
@@ -103,17 +103,14 @@ export default function BlossomParticles(): React.ReactElement | null {
                         },
                         gravity: {
                             enable: true,
-                            acceleration: 0.15, // Gentler gravity
+                            acceleration: 0,
                         },
-                        drift: {
-                            min: -1,
-                            max: 1,
-                        },
+                        drift: 0, // No random drift
                     },
                     wobble: {
-                        enable: true,
-                        distance: 20,
-                        speed: 10,
+                        enable: false, // Disable horizontal wobble
+                        distance: 0,
+                        speed: 0,
                     },
                     tilt: {
                         enable: true,

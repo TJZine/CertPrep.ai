@@ -56,7 +56,7 @@ export function ThemePalette(): React.ReactElement {
                         animate={{ opacity: 1, scale: 1, y: 5 }}
                         exit={{ opacity: 0, scale: 0.95, y: -5 }}
                         transition={{ duration: 0.15, ease: "easeOut" }}
-                        className="absolute right-0 top-full z-50 w-72 rounded-xl border border-border bg-popover/95 p-2 shadow-lg backdrop-blur-md"
+                        className="absolute right-0 top-full z-[10000] w-72 rounded-xl border border-border bg-popover/95 p-2 shadow-lg backdrop-blur-md"
                     >
                         <div className="mb-2 px-2 py-1.5">
                             <span className="text-sm font-semibold text-foreground">Theme</span>

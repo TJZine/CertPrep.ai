@@ -96,10 +96,9 @@ export function useQuizSubmission({
         });
 
         // Attempt background sync
-        const syncResult = await sync();
-        if (!syncResult.success) {
-          console.warn("[QuizSubmission] Background sync failed:", syncResult.error);
-        }
+        await sync();
+        // Silent failure on sync is acceptable here as the user has already saved locally
+
 
         if (!isMountedRef.current) return;
 

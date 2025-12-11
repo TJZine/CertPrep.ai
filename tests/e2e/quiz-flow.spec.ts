@@ -210,7 +210,7 @@ test.describe("Quiz Flow Tests", () => {
 
             // 9. Verify redirected to results page
             await expect(page).toHaveURL(new RegExp(`/results`));
-            await expect(page.getByText("100%")).toBeVisible();
+            await expect(page.getByText("100%").first()).toBeVisible();
         });
 
         test("can navigate between questions freely", async ({

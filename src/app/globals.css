@@ -174,8 +174,20 @@
   /* LIGHT THEME - SUBTLE ENHANCEMENTS                                          */
   /* ========================================================================== */
 
+
   /* LIGHT CARDS - Subtle hover lift */
+  [data-theme="light"] body {
+    /* "CERAMIC" UPGRADE: Subtle noise texture + slight warmth */
+    background-color: hsl(210, 40%, 98%);
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.025'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+  }
+
   :root .card {
+    /* "CERAMIC" UPGRADE: Deeper, softer shadows */
+    box-shadow:
+      0 1px 2px hsla(220, 40%, 20%, 0.03),
+      0 4px 16px hsla(220, 40%, 20%, 0.04);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
   }
 
@@ -1238,26 +1250,26 @@
     --font-sans: var(--font-jetbrains), "Courier New", monospace;
     --font-mono: var(--font-jetbrains), monospace;
 
-    --background: 0 0% 5%;
-    /* Deep Black */
-    --foreground: 120 100% 60%;
-    /* Terminal Green */
+    --background: 140 20% 4%;
+    /* Deep Abyss Green (Matches hardware CRT black level) */
+    --foreground: 120 60% 70%;
+    /* Soft Terminal Green (Less harsh than 100% sat) */
 
     --radius: 0px;
     /* Strict Retro */
 
-    --card: 0 0% 10%;
-    --card-foreground: 120 100% 60%;
+    --card: 140 20% 12%;
+    --card-foreground: 120 60% 70%;
 
-    --popover: 0 0% 12%;
-    --popover-foreground: 120 100% 60%;
+    --popover: 140 20% 14%;
+    --popover-foreground: 120 60% 70%;
 
-    --primary: 120 100% 50%;
-    /* Bright Terminal Green */
-    --primary-foreground: 0 0% 5%;
+    --primary: 120 70% 50%;
+    /* Balanced Green */
+    --primary-foreground: 140 20% 5%;
 
-    --secondary: 0 0% 20%;
-    --secondary-foreground: 120 100% 60%;
+    --secondary: 140 20% 20%;
+    --secondary-foreground: 120 60% 70%;
 
     --muted: 0 0% 15%;
     --muted-foreground: 120 60% 50%;
@@ -1307,6 +1319,30 @@
     /* Unique: Retro Dark Shadows (Green Tinted or Hard Black) */
     --shadow-color: 0 0% 0%;
     /* Hard black shadow */
+  }
+
+  /* RETRO DARK POPOVER OVERRIDE (Fix transparency) */
+  [data-theme="retro-dark"] .popover,
+  [data-theme="retro-dark"] [role="dialog"],
+  [data-theme="retro-dark"] [class*="bg-popover"] {
+    background-color: hsl(140, 20%, 4%) !important;
+    /* Force opaque match to bg */
+    border: 2px solid var(--primary) !important;
+    backdrop-filter: none !important;
+  }
+
+  /* FLAGGED: Fix header button visibility in Retro Dark */
+  [data-theme="retro-dark"] header button,
+  [data-theme="retro-dark"] header a {
+    color: var(--primary);
+    font-weight: 700;
+  }
+
+  /* FLAGGED: Boost Header Z-Index to escape CRT Stacking Context */
+  [data-theme="retro-dark"] header {
+    z-index: 10001 !important;
+    background-color: hsl(140, 20%, 4%);
+    /* Ensure header bg matches theme */
   }
 
   /* HOLIDAY THEME (Festive Forest / Christmas Eve) */
@@ -1889,6 +1925,8 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
+    /* GLOBAL MOTION POLISH: Smooth theme transitions */
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 
   /* CRITICAL: Focus visible styles for accessibility */
@@ -2795,6 +2833,35 @@
     scrollbar-color: hsl(340, 70%, 75%) hsla(340, 40%, 95%, 0.5);
   }
 
+  /* ORIGINAL BLOSSOM GRADIENT - Dark TL -> Light BR (Animated Breath) */
+  [data-theme="blossom"] body {
+    /* Gradient: Deep Sakura Pink (TL) -> Soft Pink -> Pure White (BR) */
+    background: linear-gradient(135deg, #ffcfe2 0%, #fff0f6 40%, #ffffff 100%);
+    background-size: 150% 150%;
+    /* Breathing animation: shifts the pink corner slightly */
+    animation: sakura-breathe 8s ease-in-out infinite alternate;
+  }
+
+  @keyframes sakura-breathe {
+    0% {
+      background-position: 0% 0%;
+    }
+
+    /* Pink corner prominent */
+    100% {
+      background-position: 20% 20%;
+    }
+
+    /* Pink corner recedes slightly */
+  }
+
+  [data-theme="blossom"] h1,
+  [data-theme="blossom"] h2,
+  [data-theme="blossom"] h3 {
+    letter-spacing: 0.02em;
+    /* Editorial spacing */
+  }
+
   /* BLOSSOM HEADER - Soft pink gradient */
   [data-theme="blossom"] header {
     border-bottom: 1px solid hsla(340, 60%, 80%, 0.4);
@@ -2821,8 +2888,13 @@
   /* BLOSSOM MICRO-INTERACTIONS - Make it feel alive 💫                         */
   /* ========================================================================== */
 
-  /* 5. CARD HOVER FLOAT - Cards gently lift with pink glow on hover */
+  /* 5. FROSTED PETAL GLASS - Semi-transparent cards with blur */
   [data-theme="blossom"] .card {
+    background-color: hsla(340, 40%, 98%, 0.6) !important;
+    /* 60% opacity */
+    backdrop-filter: blur(12px);
+    border: 1px solid hsla(0, 0%, 100%, 0.4);
+    box-shadow: 0 4px 12px hsla(340, 30%, 80%, 0.1);
     transition: transform 0.3s ease, box-shadow 0.3s ease !important;
   }
 
@@ -2834,12 +2906,15 @@
       inset 0 1px 0 hsla(0, 0%, 100%, 0.7) !important;
   }
 
-  /* 6. BUTTON GLOW - Subtle pulsing glow on primary buttons */
+  /* 6. WATERCOLOR BUTTONS - Soft gradients & Organic press */
   [data-theme="blossom"] button[class*="bg-primary"],
   [data-theme="blossom"] a[class*="bg-primary"] {
     position: relative;
-    transition: all 0.3s ease;
-    box-shadow: 0 0 0 0 hsla(340, 80%, 65%, 0);
+    transition: all 0.3s ease, transform 0.1s ease;
+    background-image: linear-gradient(135deg, var(--primary), #ff9eb5);
+    background-size: 100%;
+    border: none;
+    box-shadow: 0 2px 8px hsla(340, 80%, 65%, 0.2);
   }
 
   [data-theme="blossom"] button[class*="bg-primary"]:hover,
@@ -2852,8 +2927,9 @@
 
   [data-theme="blossom"] button[class*="bg-primary"]:active,
   [data-theme="blossom"] a[class*="bg-primary"]:active {
-    transform: translateY(0);
-    box-shadow: 0 0 10px 1px hsla(340, 80%, 65%, 0.3);
+    transform: scale(0.98) translateY(0);
+    /* Organic press */
+    box-shadow: 0 1px 4px hsla(340, 80%, 65%, 0.1);
   }
 
   /* 7. INPUT FOCUS BLOOM - Soft pink glow when focusing form inputs */
@@ -2938,7 +3014,22 @@
   }
 
   /* RETRO CRT SCANLINE + FLICKER */
-  [data-theme="retro"] body::after,
+  [data-theme="retro"] body::after {
+    content: " ";
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    /* Original Black Scanlines for Light Mode */
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+    z-index: 9999;
+    background-size: 100% 2px, 3px 100%;
+    pointer-events: none;
+    animation: crt-flicker 0.15s infinite;
+  }
+
   [data-theme="retro-dark"] body::after {
     content: " ";
     display: block;
@@ -2947,12 +3038,28 @@
     left: 0;
     bottom: 0;
     right: 0;
-    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+    /* FIX: White/Green Scanlines + Vignette for Dark Mode */
+    background:
+      radial-gradient(circle at center, transparent 50%, rgba(0, 0, 0, 0.6) 100%),
+      linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(200, 255, 200, 0.1) 50%),
+      linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
     z-index: 9999;
-    background-size: 100% 2px, 3px 100%;
+    background-size: 100% 100%, 100% 4px, 3px 100%;
     pointer-events: none;
-    animation: crt-flicker 0.15s infinite;
+    animation: crt-flicker 0.15s infinite, crt-roll 15s linear infinite;
   }
+
+  @keyframes crt-roll {
+    0% {
+      background-position: center center, 0 0, 0 0;
+    }
+
+    100% {
+      background-position: center center, 0 100%, 0 0;
+    }
+  }
+
+
 
   @keyframes crt-flicker {
     0% {
@@ -2966,6 +3073,54 @@
     100% {
       opacity: 0.98;
     }
+  }
+
+  /* RETRO DARK ENHANCEMENTS */
+
+  /* 1. Phosphor Glow */
+  [data-theme="retro-dark"] h1,
+  [data-theme="retro-dark"] h2,
+  [data-theme="retro-dark"] h3 {
+    text-shadow:
+      0 0 2px currentColor,
+      0 0 10px currentColor,
+      0 0 20px var(--primary);
+  }
+
+  /* 2. Blinking Block Cursor */
+  [data-theme="retro-dark"] input,
+  [data-theme="retro-dark"] textarea {
+    caret-color: transparent;
+    /* Hide default caret */
+    position: relative;
+    /* Simulate block caret with background */
+  }
+
+  [data-theme="retro-dark"] input:focus,
+  [data-theme="retro-dark"] textarea:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--primary);
+    caret-color: var(--primary);
+    caret-shape: block;
+    /* Firefox only currently */
+  }
+
+  /* 3. Inverse Video Badges */
+  [data-theme="retro-dark"] .badge {
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+    border: none !important;
+    text-shadow: none;
+    box-shadow: 0 0 4px var(--primary);
+  }
+
+  /* 4. Chromatic Aberration (Magnetic Interference) */
+  [data-theme="retro-dark"] button:hover,
+  [data-theme="retro-dark"] a:hover,
+  [data-theme="retro-dark"] .card:hover {
+    text-shadow:
+      2px 0 1px rgba(255, 0, 0, 0.5),
+      -2px 0 1px rgba(0, 0, 255, 0.5);
   }
 
   /* RETRO CARD HOVER - Hard pixel shadow */

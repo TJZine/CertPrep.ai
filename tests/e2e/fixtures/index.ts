@@ -183,8 +183,29 @@ export const test = base.extend<TestFixtures>({
    */
   seedTestQuiz: async ({ authenticatedPage }, use) => {
     const seeder = async (quizData: Omit<Quiz, "user_id">): Promise<Quiz> => {
+      // Compute hashes for questions that are missing them
+      // This is required for useQuizGrading to work correctly on the client side
+      const questionsWithHashes = quizData.questions.map((q) => {
+        if (!q.correct_answer_hash && q.correct_answer) {
+          // Use dynamic import or global crypto if available.
+          // Since this runs in Node, we can use require('node:crypto').
+          const crypto = require("node:crypto");
+          const hash = crypto
+            .createHash("sha256")
+            .update(q.correct_answer)
+            .digest("hex");
+
+          return {
+            ...q,
+            correct_answer_hash: hash,
+          };
+        }
+        return q;
+      });
+
       const quiz: Quiz = {
         ...quizData,
+        questions: questionsWithHashes,
         user_id: MOCK_USER.id,
       };
 
