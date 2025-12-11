@@ -53,7 +53,7 @@ function PerformanceHistoryTooltip({
   const currentPayload = payload?.[0];
   if (!active || !currentPayload) return null;
 
-  const data = currentPayload.payload as PerformancePoint;
+  const data = currentPayload.payload;
 
   return (
     <div className="rounded-lg border border-border bg-popover p-3 shadow-lg">

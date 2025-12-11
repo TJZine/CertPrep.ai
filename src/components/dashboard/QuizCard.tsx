@@ -11,6 +11,8 @@ import {
   Target,
   Link as LinkIcon,
   BarChart3,
+  History,
+  TrendingUp,
 } from "lucide-react";
 import {
   Card,
@@ -307,16 +309,6 @@ export function QuizCard({
         <CardContent className="flex-1 space-y-4 pt-0">
           <div className="grid grid-cols-2 gap-2 text-center text-sm sm:grid-cols-3">
             <StatItem
-              icon={<Target className="h-4 w-4" aria-hidden="true" />}
-              label="Questions"
-              value={quiz.questions.length}
-            />
-            <StatItem
-              icon={<Clock className="h-4 w-4" aria-hidden="true" />}
-              label="Attempts"
-              value={attemptCount}
-            />
-            <StatItem
               icon={<Trophy className="h-4 w-4" aria-hidden="true" />}
               label="Last Score"
               value={lastScore !== null ? `${lastScore}%` : "-"}
@@ -327,7 +319,12 @@ export function QuizCard({
               value={bestScore !== null ? `${bestScore}%` : "-"}
             />
             <StatItem
-              icon={<Trophy className="h-4 w-4" aria-hidden="true" />}
+              icon={<History className="h-4 w-4" aria-hidden="true" />}
+              label="Attempts"
+              value={attemptCount}
+            />
+            <StatItem
+              icon={<TrendingUp className="h-4 w-4" aria-hidden="true" />}
               label="Average"
               value={averageScore !== null ? `${averageScore}%` : "-"}
             />
@@ -335,6 +332,11 @@ export function QuizCard({
               icon={<Clock className="h-4 w-4" aria-hidden="true" />}
               label="Study Time"
               value={formatStudyTime(totalStudyTime)}
+            />
+            <StatItem
+              icon={<Target className="h-4 w-4" aria-hidden="true" />}
+              label="Questions"
+              value={quiz.questions.length}
             />
           </div>
 
