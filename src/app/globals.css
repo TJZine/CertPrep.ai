@@ -4,6 +4,9 @@
 
 @layer base {
   :root {
+    /* GLOBAL POLISH: Stable scrollbar to prevent layout shifts */
+    scrollbar-gutter: stable;
+
     /* SEMANTIC TOKENS (Default Light Mode / Slate) */
     --background: 210 40% 98%;
     /* Slate-50-ish */
@@ -643,6 +646,8 @@
   [data-theme="focus"] .badge {
     border: 1px solid hsla(25, 20%, 60%, 0.4) !important;
     box-shadow: 0 1px 3px hsla(25, 30%, 30%, 0.1);
+    border-radius: 6px !important;
+    /* Soften the badge specifically */
   }
 
   /* FOCUS SCROLLBAR - Warm sepia */
@@ -799,6 +804,36 @@
     --success: 140 100% 40%;
     --success-foreground: 0 0% 0%;
 
+    --warning: 32 100% 50%;
+    --warning-foreground: 0 0% 0%;
+
+    --correct: 140 100% 40%;
+    --correct-foreground: 0 0% 0%;
+
+    --incorrect: 0 100% 50%;
+    --incorrect-foreground: 0 0% 100%;
+
+    --flagged: 32 100% 50%;
+    --flagged-foreground: 0 0% 0%;
+
+    --info: 260 100% 60%;
+    /* Bright Purple */
+    --info-foreground: 0 0% 100%;
+
+    /* Performance tier colors (brutalist variants) */
+    --tier-excellent: 140 100% 40%;
+    --tier-excellent-foreground: 0 0% 0%;
+    --tier-great: 260 100% 60%;
+    --tier-great-foreground: 0 0% 100%;
+    --tier-good: 180 100% 40%;
+    --tier-good-foreground: 0 0% 100%;
+    --tier-passing: 32 100% 50%;
+    --tier-passing-foreground: 0 0% 0%;
+    --tier-failing: 0 100% 50%;
+    --tier-failing-foreground: 0 0% 100%;
+
+    --shadow-color: 0 0% 0%;
+
     /* Amber Warning */
     --warning: 45 100% 50%;
     --warning-foreground: 0 0% 0%;
@@ -937,30 +972,37 @@
     background: hsl(50, 100%, 97%);
   }
 
-  /* BRUTALIST LINKS - Thick underline on hover */
+  /* BRUTALIST LINKS - High Contrast & Thick Underline */
   [data-theme="brutalist"] a:not([class*="bg-"]) {
     text-decoration: none;
     position: relative;
+    color: #000 !important;
+    /* Force black for readability against cream */
+    font-weight: 700;
+    border-bottom: 3px solid hsl(var(--primary));
+    /* Thick yellow underline */
   }
 
   [data-theme="brutalist"] a:not([class*="bg-"]):hover {
-    color: hsl(330, 100%, 50%);
+    background-color: hsl(var(--primary));
+    color: #000 !important;
+    box-shadow: 2px 2px 0px 0px #000;
+    border-bottom: 3px solid transparent;
+    /* Hide border when background takes over */
+    transform: translate(-1px, -1px);
   }
 
-  [data-theme="brutalist"] a:not([class*="bg-"])::after {
-    content: '';
-    position: absolute;
-    bottom: -2px;
-    left: 0;
-    width: 0;
-    height: 3px;
-    background: black;
-    transition: width 0.2s ease;
+  /* Remove abstract ::after if it conflicts, or just use the border-bottom approach above which is cleaner for text flow */
+
+
+  /* BRUTALIST BADGES - Hard borders & shadows */
+  [data-theme="brutalist"] .badge {
+    border: 2px solid #000 !important;
+    border-radius: 0.25rem !important;
+    box-shadow: 2px 2px 0 #000 !important;
+    font-weight: 800;
   }
 
-  [data-theme="brutalist"] a:not([class*="bg-"]):hover::after {
-    width: 100%;
-  }
 
   /* BRUTALIST SCROLLBAR - Chunky black style */
   [data-theme="brutalist"] ::-webkit-scrollbar {
@@ -1171,6 +1213,16 @@
   [data-theme="swiss"] select:focus {
     outline: none;
     border-bottom-color: hsl(18, 100%, 50%) !important;
+  }
+
+  /* SWISS BADGES - Square and minimal */
+  [data-theme="swiss"] .badge {
+    border-radius: 0 !important;
+    border: 1px solid currentColor !important;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 2px 8px;
   }
 
   /* SWISS HEADER - Bold divider */
@@ -1454,6 +1506,8 @@
   /* Note: Holiday snowfall is handled by HolidayParticles.tsx (tsparticles) */
 
 
+
+
   /* VAPOR THEME (Synthwave/Retrowave) */
   [data-theme="vapor"] {
     --background: 270 40% 8%;
@@ -1583,6 +1637,10 @@
   [data-theme="vapor"] a[class*="bg-primary"] {
     text-shadow: 0 0 10px currentColor;
     transition: all 0.3s ease;
+    font-style: italic;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 800;
   }
 
   [data-theme="vapor"] button[class*="bg-primary"]:hover,
@@ -1590,26 +1648,41 @@
     box-shadow:
       0 0 20px hsla(320, 100%, 60%, 0.6),
       0 0 40px hsla(320, 100%, 60%, 0.3);
-    transform: translateY(-1px);
+    transform: translateY(-1px) skewX(-10deg);
   }
 
   [data-theme="vapor"] button[class*="bg-primary"]:active,
   [data-theme="vapor"] a[class*="bg-primary"]:active {
-    transform: translateY(0);
+    transform: translateY(0) skewX(-10deg);
     box-shadow: 0 0 15px hsla(320, 100%, 60%, 0.5);
   }
 
-  /* VAPOR TYPOGRAPHY - Neon Text Glow */
+  /* VAPOR TYPOGRAPHY - Neon Text Glow + Sunset Gradient */
   [data-theme="vapor"] h1,
   [data-theme="vapor"] h2 {
-    text-shadow:
-      0 0 10px hsla(320, 100%, 60%, 0.8),
-      0 0 30px hsla(320, 100%, 60%, 0.4),
-      0 0 60px hsla(190, 100%, 50%, 0.2);
+    background: linear-gradient(180deg,
+        hsl(320, 100%, 60%) 20%,
+        hsl(190, 100%, 50%) 80%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: none;
+    /* Clear shadow to let gradient show, usually better without conflicting shadows */
+    filter: drop-shadow(0 0 15px hsla(320, 100%, 60%, 0.5));
+    /* Use drop-shadow for gradient text */
+
+    font-style: italic;
+    text-transform: uppercase;
     letter-spacing: 0.05em;
+    line-height: 1.1;
   }
 
-  [data-theme="vapor"] h3 {
+  [data-theme="vapor"] h3,
+  [data-theme="vapor"] h4 {
+    color: hsl(190, 100%, 50%);
+    font-style: italic;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
     text-shadow:
       0 0 8px hsla(320, 100%, 60%, 0.6),
       0 0 20px hsla(190, 100%, 50%, 0.2);
@@ -1912,6 +1985,63 @@
     background: hsl(122, 43%, 55%);
   }
 
+  /* MINT LINKS - Forest Green for contrast (Wes Anderson vibez) */
+  [data-theme="mint"] a:not([class*="bg-"]) {
+    color: hsl(122, 43%, 39%) !important;
+    text-decoration-color: hsl(122, 39%, 70%);
+    text-decoration-thickness: 2px;
+  }
+
+  [data-theme="mint"] a:not([class*="bg-"]):hover {
+    text-decoration-color: hsl(122, 43%, 39%);
+  }
+
+
+
+  /* MINT TYPOGRAPHY - "Title Card" Style */
+  [data-theme="mint"] h1,
+  [data-theme="mint"] h2,
+  [data-theme="mint"] h3 {
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: hsl(122, 43%, 39%);
+    /* Forest Green headers */
+  }
+
+  /* MINT CARD TITLES - Center Aligned (Symmetry) */
+  [data-theme="mint"] .card h3,
+  [data-theme="mint"] .card h4 {
+    text-align: center;
+    border-bottom: 2px solid hsl(122, 20%, 80%);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  /* MINT INPUTS - "Scout Log" Styling */
+  [data-theme="mint"] input,
+  [data-theme="mint"] textarea,
+  [data-theme="mint"] select {
+    background-color: hsl(45, 20%, 98%) !important;
+    /* Slightly warmer input bg */
+    border: 2px solid hsl(122, 20%, 70%) !important;
+    box-shadow: 3px 3px 0 hsla(122, 39%, 64%, 0.2) !important;
+  }
+
+  [data-theme="mint"] input:focus,
+  [data-theme="mint"] textarea:focus,
+  [data-theme="mint"] select:focus {
+    box-shadow: 4px 4px 0 hsla(122, 39%, 64%, 0.3) !important;
+    border-color: hsl(122, 43%, 39%) !important;
+  }
+
+  /* MINT BUTTONS - "Merit Badge" Dashed Hover */
+  [data-theme="mint"] button[class*="bg-primary"]:hover,
+  [data-theme="mint"] a[class*="bg-primary"]:hover {
+    border: 2px dashed hsl(122, 43%, 39%) !important;
+    background-image: none !important;
+    /* Ensure solid color for badge look */
+  }
+
   /* MINT BUTTONS - :active state */
   [data-theme="mint"] button[class*="bg-primary"]:active,
   [data-theme="mint"] a[class*="bg-primary"]:active {
@@ -1935,6 +2065,19 @@
   /* CRITICAL: Focus visible styles for accessibility */
   *:focus-visible {
     @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  /* FLUID TYPOGRAPHY: Scale headings smoothly with viewport */
+  h1 {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    /* Min 32px, Max 56px */
+    line-height: 1.1;
+  }
+
+  /* GLOBAL SELECTION: Theme-aware highlight color */
+  ::selection {
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
   }
 }
 
@@ -2048,12 +2191,17 @@
   }
 
   /* MINT "FIELD GUIDE" TARGETED BORDERS */
-  [data-theme="mint"] .card,
   [data-theme="mint"] .btn:not(.border-0),
   [data-theme="mint"] input:not(.border-0),
-  [data-theme="mint"] textarea:not(.border-0),
-  [data-theme="mint"] .popover {
+  [data-theme="mint"] textarea:not(.border-0) {
     border-width: 2px !important;
+  }
+
+  /* MINT "STATIONERY" DOUBLE BORDERS */
+  [data-theme="mint"] .card,
+  [data-theme="mint"] .popover {
+    border-style: double !important;
+    border-width: 4px !important;
   }
 
   /* MINT "HARD PASTEL" SHADOWS */
@@ -2291,10 +2439,16 @@
     box-shadow: 0 0 0 2px hsla(322, 100%, 52%, 0.2);
   }
 
-  /* RISO HEADER - Teal underline */
+  /* RISO HEADER - Teal underline & Spacing Fix */
   [data-theme="riso"] header {
     border-bottom: 3px solid hsl(174, 100%, 32%);
     background: hsl(45, 25%, 93%);
+  }
+
+  /* Fix for bunched header links due to wide Courier font */
+  [data-theme="riso"] header nav {
+    margin-left: 4rem;
+    gap: 3rem !important;
   }
 
   /* RISO FOOTER - Pink top border */
@@ -2719,6 +2873,29 @@
   [data-theme="retro-dark"] nav a {
     font-family: var(--font-press-start), monospace;
     font-size: clamp(8px, 0.9vw, 11px) !important;
+  }
+
+  /* RETRO INPUTS - Inset Shadow "Slot" Look */
+  [data-theme="retro"] input,
+  [data-theme="retro"] textarea,
+  [data-theme="retro"] select,
+  [data-theme="retro-dark"] input,
+  [data-theme="retro-dark"] textarea,
+  [data-theme="retro-dark"] select {
+    box-shadow: inset 3px 3px 0px 0px rgba(0, 0, 0, 0.15) !important;
+    border-radius: 0 !important;
+    border: 2px solid currentColor !important;
+  }
+
+  [data-theme="retro"] input:focus,
+  [data-theme="retro"] textarea:focus,
+  [data-theme="retro"] select:focus,
+  [data-theme="retro-dark"] input:focus,
+  [data-theme="retro-dark"] textarea:focus,
+  [data-theme="retro-dark"] select:focus {
+    box-shadow: inset 4px 4px 0px 0px rgba(0, 0, 0, 0.25) !important;
+    outline: none;
+    border-color: var(--primary) !important;
   }
 
   /* Improve Focus Visibility for A11y in High Contrast Themes */
