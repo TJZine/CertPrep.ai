@@ -154,8 +154,9 @@ export function ScoreDistribution({
   results,
   className,
 }: ScoreDistributionProps): React.ReactElement {
-  const { colors } = useChartColors();
-  const { containerRef, isReady } = useChartDimensions();
+  const { colors, isReady: colorsReady } = useChartColors();
+  const { containerRef, isReady: dimensionsReady } = useChartDimensions();
+  const isReady = colorsReady && dimensionsReady;
   const validResults = React.useMemo(
     () =>
       results.filter(
@@ -294,8 +295,9 @@ export function StudyTimeChart({
   dailyData,
   className,
 }: StudyTimeChartProps): React.ReactElement {
-  const { colors } = useChartColors();
-  const { containerRef, isReady } = useChartDimensions();
+  const { colors, isReady: colorsReady } = useChartColors();
+  const { containerRef, isReady: dimensionsReady } = useChartDimensions();
+  const isReady = colorsReady && dimensionsReady;
 
   if (dailyData.length === 0) {
     return (

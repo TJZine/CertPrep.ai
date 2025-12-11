@@ -95,9 +95,12 @@ export function useQuizSubmission({
           activeQuestionIds: questions.map((q) => q.id), // Pass active questions for accurate scoring (e.g. Smart Round)
         });
 
-        // Attempt background sync
-        await sync();
-        // Silent failure on sync is acceptable here as the user has already saved locally
+        // Attempt background sync - failures here shouldn't invalidate the local save
+        try {
+          await sync();
+        } catch (syncErr) {
+          console.warn("Background sync failed after local save:", syncErr);
+        }
 
 
         if (!isMountedRef.current) return;

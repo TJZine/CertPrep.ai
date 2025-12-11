@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import Particles, { initParticlesEngine } from '@tsparticles/react';
 import { loadSlim } from '@tsparticles/slim';
 
@@ -17,15 +17,21 @@ export default function HolidayParticles(): React.ReactElement | null {
     const [init, setInit] = useState(false);
 
     useEffect(() => {
+        let mounted = true;
+
         initParticlesEngine(async (engine) => {
             await loadSlim(engine);
-        }).then(() => {
-            setInit(true);
-        });
-    }, []);
+        })
+            .then(() => {
+                if (mounted) setInit(true);
+            })
+            .catch((err) => {
+                console.error('[HolidayParticles] Failed to initialize:', err);
+            });
 
-    const particlesLoaded = useCallback(async (): Promise<void> => {
-        // Snowflakes loaded
+        return (): void => {
+            mounted = false;
+        };
     }, []);
 
     if (!init) {
@@ -35,7 +41,6 @@ export default function HolidayParticles(): React.ReactElement | null {
     return (
         <Particles
             id="holiday-particles"
-            particlesLoaded={particlesLoaded}
             options={{
                 fullScreen: {
                     enable: true,
@@ -87,8 +92,8 @@ export default function HolidayParticles(): React.ReactElement | null {
                     },
                 },
                 detectRetina: true,
-                pauseOnBlur: false, // Keep snowing even when tab not focused
-                pauseOnOutsideViewport: false,
+                pauseOnBlur: true, // Pause animation when tab loses focus to save resources
+                pauseOnOutsideViewport: true,
             }}
             style={{
                 position: 'fixed',

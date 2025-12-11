@@ -5,6 +5,7 @@ import {
   type Page,
   type BrowserContext,
 } from "@playwright/test";
+import crypto from "node:crypto";
 import { injectAuthState, MOCK_USER } from "./auth";
 import { clearDatabase, seedQuiz, waitForDatabase } from "../helpers/db";
 import type { Quiz } from "../../../src/types/quiz";
@@ -186,10 +187,12 @@ export const test = base.extend<TestFixtures>({
       // Compute hashes for questions that are missing them
       // This is required for useQuizGrading to work correctly on the client side
       const questionsWithHashes = quizData.questions.map((q) => {
-        if (!q.correct_answer_hash && q.correct_answer) {
-          // Use dynamic import or global crypto if available.
-          // Since this runs in Node, we can use require('node:crypto').
-          const crypto = require("node:crypto");
+        // Only compute hash if missing and correct_answer is a valid non-empty string
+        if (
+          !q.correct_answer_hash &&
+          typeof q.correct_answer === "string" &&
+          q.correct_answer.trim().length > 0
+        ) {
           const hash = crypto
             .createHash("sha256")
             .update(q.correct_answer)

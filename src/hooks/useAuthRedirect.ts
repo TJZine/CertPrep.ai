@@ -17,7 +17,6 @@ export function useAuthRedirect(destination: string = "/"): {
     const [isRedirecting, setIsRedirecting] = useState(false);
     const router = useRouter();
     const searchParams = useSearchParams();
-    const supabase = createClient();
 
     useEffect(() => {
         const checkSession = async (): Promise<void> => {
@@ -27,6 +26,8 @@ export function useAuthRedirect(destination: string = "/"): {
                 setIsLoading(false);
                 return;
             }
+
+            const supabase = createClient();
 
             if (!supabase) {
                 setIsLoading(false);
@@ -50,8 +51,8 @@ export function useAuthRedirect(destination: string = "/"): {
             }
         };
 
-        checkSession();
-    }, [supabase, router, destination, searchParams]);
+        void checkSession();
+    }, [router, destination, searchParams]);
 
     return { isLoading, isRedirecting };
 }

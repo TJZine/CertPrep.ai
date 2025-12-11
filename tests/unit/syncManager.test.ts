@@ -39,6 +39,12 @@ vi.mock("@/db/syncState", () => ({
 
 const { mockSupabase } = vi.hoisted(() => {
   const mock = {
+    auth: {
+      getSession: vi.fn().mockResolvedValue({
+        data: { session: { user: { id: 'user-123' } } },
+        error: null,
+      }),
+    },
     from: vi.fn(),
     select: vi.fn(),
     eq: vi.fn(),

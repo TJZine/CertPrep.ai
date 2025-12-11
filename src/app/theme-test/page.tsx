@@ -125,7 +125,7 @@ export default function ThemeTestPage(): React.ReactElement {
                     <h3 className="text-2xl font-semibold tracking-tight">Heading 3</h3>
                     <h4 className="text-xl font-semibold tracking-tight">Heading 4</h4>
                     <p className="leading-7 [&:not(:first-child)]:mt-6">
-                        The quick brown fox jumps over the lazy dog. Puncziation should be clear and readable.
+                        The quick brown fox jumps over the lazy dog. Punctuation should be clear and readable.
                         <a href="#" className="font-medium text-primary underline underline-offset-4 hover:text-primary/80 ml-1">
                             This is an inline link
                         </a>.

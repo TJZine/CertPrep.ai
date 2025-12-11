@@ -85,8 +85,9 @@ export function PerformanceHistory({
   className,
 }: PerformanceHistoryProps): React.ReactElement {
   const router = useRouter();
-  const { colors } = useChartColors();
-  const { containerRef, isReady } = useChartDimensions();
+  const { colors, isReady: colorsReady } = useChartColors();
+  const { containerRef, isReady: dimensionsReady } = useChartDimensions();
+  const isReady = colorsReady && dimensionsReady;
 
   const sortedResults = React.useMemo(
     () => [...results].sort((a, b) => b.timestamp - a.timestamp),

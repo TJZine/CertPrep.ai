@@ -74,10 +74,18 @@ export function ResultsContainer({
     try {
       const syncResult = await sync();
       if (syncResult.success) {
-        // Directly update this result's synced status in Dexie
-        // This ensures the useLiveQuery updates even if bulk sync had issues
-        await db.results.update(result.id, { synced: 1 });
-        addToast("success", "Result synced successfully!");
+        // syncManager already marks items as synced in Dexie on success
+        // useLiveQuery will automatically pick up the change
+        addToast("success", "Sync complete! Checking result status...");
+
+        // Verify this specific result was synced by re-checking its status
+        const updatedResult = await db.results.get(result.id);
+        if (updatedResult?.synced === 1) {
+          addToast("success", "Result synced successfully!");
+        } else {
+          // Result wasn't synced in this batch (edge case)
+          addToast("info", "Sync completed but this result may need another sync.");
+        }
       } else {
         addToast("error", "Sync failed. Please check your connection.");
       }
