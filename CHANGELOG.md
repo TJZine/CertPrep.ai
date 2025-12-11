@@ -9,15 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Sync Resilience**: Implemented `hardFailureNoRetry` pattern to prevent data loss on schema drift.
-- **Sync Blocking**: Added throttle/lockout mechanism (default 6h) to prevent retry-hammering after hard failures.
-- **Architecture**: Documented intentional schema design decisions (FK omission, NIL_UUID).
-- **Testing**: Comprehensive integration and unit tests for sync edge cases.
+- **Theming System**: Comprehensive engine with semantic variables and dynamic `ThemePalette` switcher.
+- **New Themes**: Implemented "Blossom" (sakura particles), "Swiss", "Brutalist", "Retro (Dark)", "Mint", and "Riso".
+- **Visual Effects**: Integrated `framer-motion` for page transitions and `tsparticles` for background effects.
+- **UI Components**: Global sync status indicator, chart loading skeletons, and accessible loading spinners.
+- **Accessibility**: Enhanced focus management (Escape to close menu) and semantic HTML structure.
+
+### Changed
+
+- **Auth Flow**: Centralized redirection logic (`useAuthRedirect`) with improved loading states.
+- **Logging**: Unified logging via `logger` utility; silenced noisy network warnings during slow syncs.
+- **Quiz Submission**: Batch-processed result saving to prevent concurrency issues; improved error handling.
 
 ### Fixed
 
-- **Sync**: Fixed critical issue where cursor would advance even when all records failed validation.
-- **Sync State**: Fixed bug in `getSyncBlockState` key lookup.
+- **Sync**: Resolved auth failure edge cases and negative submission time bugs.
+- **Styling**: Fixed persistent dark mode overrides and specific theme rendering glitches.
+- **Tests**: Expanded unit/hook test coverage for auth, sync, and grading logic.
 
 ## [1.1.0] - 2025-11-28
 
