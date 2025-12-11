@@ -41,17 +41,17 @@ CertPrep.ai is a modern, offline-first quiz application designed to help users p
 <table>
   <tr>
     <td align="center" width="33%">
-      <img src="https://img.icons8.com/fluency/48/000000/authentication.png" width="40" alt="Authentication icon"><br>
+      <img src="https://img.icons8.com/fluency/48/000000/security-checked.png" width="40" alt="Authentication icon"><br>
       <strong>Secure Authentication</strong><br>
       <sub>Email/password auth with Supabase, session management, and secure cookies</sub>
     </td>
     <td align="center" width="33%">
-      <img src="https://img.icons8.com/fluency/48/000000/sync.png" width="40" alt="Sync icon"><br>
+      <img src="https://img.icons8.com/fluency/48/000000/synchronize.png" width="40" alt="Sync icon"><br>
       <strong>Offline-First Sync</strong><br>
       <sub>Local IndexedDB storage with automatic cloud synchronization</sub>
     </td>
     <td align="center" width="33%">
-      <img src="https://img.icons8.com/fluency/48/000000/quiz.png" width="40" alt="Quiz modes icon"><br>
+      <img src="https://img.icons8.com/fluency/48/000000/test.png" width="40" alt="Quiz modes icon"><br>
       <strong>Quiz Modes</strong><br>
       <sub>Proctor and Zen modes for different learning experiences</sub>
     </td>
@@ -98,6 +98,7 @@ CertPrep.ai is a modern, offline-first quiz application designed to help users p
 - [Security](#security)
 - [License](#license)
 - [Acknowledgments](#acknowledgments)
+
 </details>
 
 ---
