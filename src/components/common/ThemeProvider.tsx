@@ -251,9 +251,11 @@ export function ThemeProvider({
     root.setAttribute("data-theme", resolvedTheme);
 
     // Add 'dark' class only for generic dark theme
-    // Themed dark modes (holiday, midnight, vapor, retro-dark) have their own complete palettes
-    // and don't need the .dark fallback which can cause style conflicts
-    const themedDarkModes: Theme[] = ['holiday', 'midnight', 'vapor', 'retro-dark', 'swiss'];
+    // Themed dark modes have complete custom palettes and don't need the generic .dark class
+    // Derive from config to avoid drift when adding new themes
+    const themedDarkModes = (Object.entries(THEME_CONFIG) as [Theme, typeof THEME_CONFIG[Theme]][])
+      .filter(([key, config]) => config.isDark && key !== 'dark' && key !== 'system')
+      .map(([key]) => key);
     const needsDarkClass = THEME_CONFIG[resolvedTheme]?.isDark && !themedDarkModes.includes(resolvedTheme);
     if (needsDarkClass) {
       root.classList.add("dark");

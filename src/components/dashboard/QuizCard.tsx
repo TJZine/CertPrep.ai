@@ -242,7 +242,7 @@ export function QuizCard({
                     +{extraTagCount}
                   </button>
                   {showTagsPopover ? (
-                    <div className="absolute z-10 mt-2 w-48 rounded-lg border border-border bg-popover p-2 text-left shadow-lg">
+                    <div className="absolute right-0 z-10 mt-2 w-48 rounded-lg border border-border bg-popover p-2 text-left shadow-lg">
                       <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                         More tags
                       </p>

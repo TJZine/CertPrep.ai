@@ -51,8 +51,26 @@ export type SyncResultsOutcome = {
 function toErrorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
   if (typeof error === "string") return error;
+
+  // Handle Supabase PostgrestError objects (properties may not serialize with JSON.stringify)
+  if (typeof error === "object" && error !== null) {
+    const e = error as Record<string, unknown>;
+    // PostgrestError has: code, message, details, hint
+    if (e.message || e.code) {
+      const parts: string[] = [];
+      if (e.code) parts.push(`[${e.code}]`);
+      if (e.message) parts.push(String(e.message));
+      if (e.details) parts.push(`Details: ${e.details}`);
+      if (e.hint) parts.push(`Hint: ${e.hint}`);
+      if (parts.length > 0) return parts.join(" ");
+    }
+  }
+
   try {
-    return JSON.stringify(error);
+    const serialized = JSON.stringify(error);
+    // If JSON.stringify returns "{}", the object has no enumerable properties
+    if (serialized === "{}") return "Unknown error (empty error object)";
+    return serialized;
   } catch {
     return "Unknown error";
   }
@@ -147,12 +165,26 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
     return { incomplete: true, error: "Supabase client unavailable" };
   }
 
+  // Validate auth session matches the userId we're syncing for
+  // Use getSession() instead of getUser() - it reads from local storage without a network call
+  const { data: { session }, error: authError } = await client.auth.getSession();
+  if (authError || !session?.user) {
+    logger.warn("Sync skipped: No valid auth session", { authError: authError?.message });
+    return { incomplete: true, error: "Not authenticated", status: "skipped" };
+  }
+  if (session.user.id !== userId) {
+    logger.error("Sync aborted: Auth user ID mismatch", { authUserId: session.user.id, syncUserId: userId });
+    return { incomplete: true, error: "User ID mismatch - please re-login", status: "failed" };
+  }
+
   try {
     // 1. PUSH: Upload unsynced local results to Supabase
     const unsyncedResults = await db.results
       .where("[user_id+synced]")
       .equals([userId, 0])
       .toArray();
+
+    logger.debug("[Sync] Found unsynced results:", { count: unsyncedResults.length, userId });
 
     if (unsyncedResults.length > 0) {
       // Chunk the upload to avoid hitting payload limits
@@ -224,9 +256,10 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
           );
 
           if (error) {
-            logger.error("Failed to push results batch to Supabase:", error);
+            const errorMsg = toErrorMessage(error);
+            logger.error("Failed to push results batch to Supabase:", errorMsg, { code: error.code, status: (error as unknown as { status?: number }).status });
             incomplete = true;
-            lastError = toErrorMessage(error);
+            lastError = errorMsg;
 
             // Circuit Breaker: Stop syncing if we hit critical errors
             const code = error.code;
@@ -249,9 +282,12 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
             // Continue to next batch instead of failing completely for non-critical errors
           } else {
             // Mark as synced locally
+            const updateKeys = toUpsert.map((r) => r.id);
+            logger.debug("[Sync] Marking results as synced:", { ids: updateKeys });
             await db.results.bulkUpdate(
               toUpsert.map((r) => ({ key: r.id, changes: { synced: 1 } })),
             );
+            logger.debug("[Sync] Successfully updated synced status for:", { count: toUpsert.length });
             pushed += toUpsert.length;
           }
         }

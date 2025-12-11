@@ -44,7 +44,7 @@ export default function HolidayParticles(): React.ReactElement | null {
                 fpsLimit: 60,
                 particles: {
                     number: {
-                        value: 35, // Subtle, not overwhelming
+                        value: 120, // Constant target count
                         density: {
                             enable: true,
                             width: 1920,
@@ -53,44 +53,42 @@ export default function HolidayParticles(): React.ReactElement | null {
                     },
                     // White/light blue snow only
                     color: {
-                        value: ['#ffffff', '#f0f8ff', '#e8f4fc'],
+                        value: ['#ffffff', '#f0f8ff', '#e8f4fc', '#dbeafe'],
                     },
                     shape: {
-                        type: 'circle', // Simple circles, not stars
+                        type: 'circle',
                     },
                     opacity: {
-                        value: { min: 0.3, max: 0.7 },
+                        value: { min: 0.5, max: 0.9 },
                     },
                     size: {
-                        value: { min: 2, max: 5 },
+                        value: { min: 0.5, max: 2 }, // Small, subtle dots
                     },
                     move: {
                         enable: true,
                         direction: 'bottom',
-                        speed: { min: 0.3, max: 1.5 },
+                        speed: { min: 0.4, max: 1.0 }, // Slower, gentler fall
                         straight: false,
                         outModes: {
                             default: 'out',
-                            top: 'none',
                         },
                         gravity: {
-                            enable: true,
-                            acceleration: 0.05,
+                            enable: false,
                         },
                         drift: {
-                            min: -0.3,
-                            max: 0.3,
+                            min: 0,
+                            max: 0, // No horizontal drift at all
                         },
                     },
                     wobble: {
                         enable: true,
-                        distance: 8,
-                        speed: 4,
+                        distance: 1, // Very minimal wobble
+                        speed: 0.5, // Slow wobble
                     },
                 },
                 detectRetina: true,
-                pauseOnBlur: true,
-                pauseOnOutsideViewport: true,
+                pauseOnBlur: false, // Keep snowing even when tab not focused
+                pauseOnOutsideViewport: false,
             }}
             style={{
                 position: 'fixed',

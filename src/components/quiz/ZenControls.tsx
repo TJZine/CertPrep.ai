@@ -34,15 +34,14 @@ export function ZenControls({
           variant="outline"
           onClick={onAgain}
           className={cn(
-            "flex-1 border-destructive/50 text-destructive hover:bg-destructive/10 hover:text-destructive",
+            "flex-1 justify-center border-destructive/50 text-destructive hover:bg-destructive/10 hover:text-destructive",
             "sm:flex-initial sm:min-w-[120px]",
           )}
           aria-label="Again - show this question again soon"
         >
-          <RotateCcw className="mr-2 h-4 w-4" aria-hidden="true" />
-          Again
-          <span className="ml-2 hidden text-xs text-destructive/70 sm:inline">
-            (1)
+          <span className="flex items-center gap-2">
+            <RotateCcw className="h-4 w-4" aria-hidden="true" />
+            Again
           </span>
         </Button>
 
@@ -50,15 +49,14 @@ export function ZenControls({
           variant="outline"
           onClick={onHard}
           className={cn(
-            "flex-1 border-warning/50 text-warning hover:bg-warning/10 hover:text-warning",
+            "flex-1 justify-center border-warning/50 text-warning hover:bg-warning/10 hover:text-warning",
             "sm:flex-initial sm:min-w-[120px]",
           )}
           aria-label="Hard - add to review list"
         >
-          <AlertTriangle className="mr-2 h-4 w-4" aria-hidden="true" />
-          Hard
-          <span className="ml-2 hidden text-xs text-warning/70 sm:inline">
-            (2)
+          <span className="flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4" aria-hidden="true" />
+            Hard
           </span>
         </Button>
 
@@ -66,7 +64,7 @@ export function ZenControls({
           variant="outline"
           onClick={onGood}
           className={cn(
-            "flex-1 border-success/50 text-success hover:bg-success/10 hover:text-success",
+            "flex-1 justify-center border-success/50 text-success hover:bg-success/10 hover:text-success",
             "sm:flex-initial sm:min-w-[120px]",
           )}
           aria-label={
@@ -75,19 +73,9 @@ export function ZenControls({
               : "Good - continue to next question"
           }
         >
-          {isLastQuestion ? (
-            <>
-              <ThumbsUp className="mr-2 h-4 w-4" aria-hidden="true" />
-              Finish
-            </>
-          ) : (
-            <>
-              <ThumbsUp className="mr-2 h-4 w-4" aria-hidden="true" />
-              Good
-            </>
-          )}
-          <span className="ml-2 hidden text-xs text-success/70 sm:inline">
-            (3)
+          <span className="flex items-center gap-2">
+            <ThumbsUp className="h-4 w-4" aria-hidden="true" />
+            {isLastQuestion ? "Finish" : "Good"}
           </span>
         </Button>
       </div>

@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
+import { useLiveQuery } from "dexie-react-hooks";
 import {
   ArrowLeft,
   CloudOff,
@@ -19,6 +20,7 @@ import { SmartActions } from "./SmartActions";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
+import { db } from "@/db";
 import { deleteResult } from "@/db/results";
 import { celebratePerfectScore } from "@/lib/confetti";
 import { updateStudyStreak } from "@/lib/streaks";
@@ -56,14 +58,26 @@ export function ResultsContainer({
   const { sync } = useSync();
   const [isSyncing, setIsSyncing] = React.useState(false);
 
+  // Live query for synced status - updates automatically when Dexie changes
+  const liveSynced = useLiveQuery(
+    async () => {
+      const r = await db.results.get(result.id);
+      return r?.synced ?? result.synced;
+    },
+    [result.id],
+    result.synced // Default value while loading
+  );
+
   const handleManualSync = async (): Promise<void> => {
     if (isSyncing) return;
     setIsSyncing(true);
     try {
-      const result = await sync();
-      if (result.success) {
+      const syncResult = await sync();
+      if (syncResult.success) {
+        // Directly update this result's synced status in Dexie
+        // This ensures the useLiveQuery updates even if bulk sync had issues
+        await db.results.update(result.id, { synced: 1 });
         addToast("success", "Result synced successfully!");
-        router.refresh(); // Refresh to update derived UI state if needed
       } else {
         addToast("error", "Sync failed. Please check your connection.");
       }
@@ -325,7 +339,7 @@ export function ResultsContainer({
                     <p className="text-xs text-muted-foreground">
                       Results
                     </p>
-                    {result.synced === 0 && (
+                    {liveSynced === 0 && (
                       <Button
                         variant="ghost"
                         size="sm"
