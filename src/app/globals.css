@@ -2845,24 +2845,23 @@
 
   /* ORIGINAL BLOSSOM GRADIENT - Dark TL -> Light BR (Animated Breath) */
   [data-theme="blossom"] body {
-    /* Gradient: Deep Sakura Pink (TL) -> Soft Pink -> Pure White (BR) */
-    background: linear-gradient(135deg, #ffcfe2 0%, #fff0f6 40%, #ffffff 100%);
-    background-size: 150% 150%;
-    /* Breathing animation: shifts the pink corner slightly */
-    animation: sakura-breathe 5s ease-in-out infinite alternate;
+    /* Radial Gradient: Starts at Top-Left Corner. Fades to white by 40% of screen */
+    background: radial-gradient(circle at 0% 0%, #ffb7c5 0%, transparent 40%), #ffffff;
+    background-repeat: no-repeat;
+    /* Animation: Pulse the size of the radial gradient */
+    animation: sakura-breathe 4s ease-in-out infinite alternate;
   }
 
   @keyframes sakura-breathe {
     0% {
-      background-position: 0% 0%;
+      /* Small, concentrated corner */
+      background-size: 100% 100%;
     }
 
-    /* Pink corner prominent */
     100% {
-      background-position: 20% 20%;
+      /* Grows outward to cover page */
+      background-size: 300% 300%;
     }
-
-    /* Pink corner recedes slightly */
   }
 
   [data-theme="blossom"] h1,
@@ -2908,7 +2907,7 @@
   /* BLOSSOM HEADER - Cloud Glass (Blurrier & more transparent) */
   [data-theme="blossom"] header {
     border-bottom: 1px solid hsla(340, 60%, 80%, 0.2);
-    background: hsla(340, 100%, 99%, 0.7);
+    background: hsla(340, 100%, 98%, 0.6);
     /* More transparent */
     backdrop-filter: blur(20px);
     /* Cloud effect */
@@ -2949,8 +2948,9 @@
   [data-theme="blossom"] .card:hover {
     transform: translateY(-4px) !important;
     box-shadow:
-      0 12px 32px -8px hsla(340, 70%, 65%, 0.25),
-      0 4px 12px hsla(340, 60%, 70%, 0.15),
+      0 12px 32px -8px hsla(340, 80%, 75%, 0.4),
+      /* Warmer/Pinker shadow */
+      0 4px 12px hsla(340, 60%, 80%, 0.2),
       inset 0 1px 0 hsla(0, 0%, 100%, 0.7) !important;
   }
 
