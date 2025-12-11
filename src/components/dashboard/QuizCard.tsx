@@ -182,6 +182,11 @@ export function QuizCard({
         setFocusedMenuIndex(itemCount - 1);
         menuItems[itemCount - 1]?.focus();
         break;
+      case "Escape":
+        event.preventDefault();
+        setShowMenu(false);
+        menuButtonRef.current?.focus();
+        break;
       case "Tab":
         // Close menu on tab out
         setShowMenu(false);

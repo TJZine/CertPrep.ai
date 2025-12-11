@@ -95,20 +95,20 @@ export default function ThemeTestPage(): React.ReactElement {
                 <h2 className="text-2xl font-bold border-b pb-2">4. Inputs & Forms</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl">
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Text Input</label>
-                        <Input placeholder="Placeholder text..." />
+                        <label htmlFor="text-input" className="text-sm font-medium">Text Input</label>
+                        <Input id="text-input" placeholder="Placeholder text..." />
                     </div>
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Disabled Input</label>
-                        <Input disabled placeholder="Disabled..." />
+                        <label htmlFor="disabled-input" className="text-sm font-medium">Disabled Input</label>
+                        <Input id="disabled-input" disabled placeholder="Disabled..." />
                     </div>
                     <div className="space-y-2 md:col-span-2">
-                        <label className="text-sm font-medium">Textarea</label>
-                        <Textarea placeholder="Type something..." />
+                        <label htmlFor="demo-textarea" className="text-sm font-medium">Textarea</label>
+                        <Textarea id="demo-textarea" placeholder="Type something..." />
                     </div>
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Native Select</label>
-                        <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+                        <label htmlFor="native-select" className="text-sm font-medium">Native Select</label>
+                        <select id="native-select" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
                             <option>Option 1</option>
                             <option>Option 2</option>
                             <option>Option 3</option>
@@ -126,14 +126,14 @@ export default function ThemeTestPage(): React.ReactElement {
                     <h4 className="text-xl font-semibold tracking-tight">Heading 4</h4>
                     <p className="leading-7 [&:not(:first-child)]:mt-6">
                         The quick brown fox jumps over the lazy dog. Punctuation should be clear and readable.
-                        <a href="#" className="font-medium text-primary underline underline-offset-4 hover:text-primary/80 ml-1">
+                        <a href="#demo" onClick={(e) => e.preventDefault()} className="font-medium text-primary underline underline-offset-4 hover:text-primary/80 ml-1">
                             This is an inline link
                         </a>.
                     </p>
                     <ul className="my-6 ml-6 list-disc [&>li]:mt-2">
                         <li>1st level of puns: 5 gold coins</li>
                         <li>2nd level of jokes: 10 gold coins</li>
-                        <li>3rd level of one-liners : 20 gold coins</li>
+                        <li>3rd level of one-liners: 20 gold coins</li>
                     </ul>
                 </div>
             </section>

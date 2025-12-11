@@ -232,8 +232,8 @@ export function PerformanceHistory({
               </LineChart>
             </ResponsiveContainer>
           ) : (
-            <div className="flex h-full items-center justify-center">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+            <div className="flex h-full items-center justify-center" role="status" aria-label="Loading chart">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" aria-hidden="true" />
             </div>
           )}
         </div>

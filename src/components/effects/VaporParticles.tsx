@@ -40,6 +40,7 @@ export default function VaporParticles(): React.ReactElement | null {
         };
     }, []);
 
+    // Note: async is required by tsparticles API even though we don't await anything
     const particlesLoaded = useCallback(async (container?: Container): Promise<void> => {
         // Store container reference for cleanup
         if (container) {
