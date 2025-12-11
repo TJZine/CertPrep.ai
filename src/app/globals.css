@@ -4,66 +4,2114 @@
 
 @layer base {
   :root {
-    /* Define CSS custom properties for theming */
-    --background: 248 250 252;
-    --foreground: 15 23 42;
-    --primary: 37 99 235;
-    --primary-foreground: 255 255 255;
-    --muted: 100 116 139;
-    --muted-foreground: 71 85 105;
-    --border: 203 213 225;
-    --input: 226 232 240;
-    --ring: 37 99 235;
+    /* GLOBAL POLISH: Stable scrollbar to prevent layout shifts */
+    scrollbar-gutter: stable;
+
+    /* SEMANTIC TOKENS (Default Light Mode / Slate) */
+    --background: 210 40% 98%;
+    /* Slate-50-ish */
+    --foreground: 222 47% 11%;
+    /* Slate-900 */
+
+    --card: 0 0% 100%;
+    /* White */
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    --primary: 221 83% 53%;
+    /* Blue-600 */
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    /* Slate-100 */
+    --secondary-foreground: 222 47% 11%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215 16% 47%;
+    /* Slate-500 */
+
+    --accent: 262 83% 58%;
+    /* Violet-500 - Feature highlights */
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    /* Slate-200 */
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221 83% 53%;
+
+    --success: 142 76% 36%;
+    /* Green-600 */
+    --success-foreground: 0 0% 100%;
+
+    --warning: 25 95% 53%;
+    /* Orange-500 */
+    --warning-foreground: 0 0% 100%;
+
+    --correct: 142 76% 36%;
+    /* Green-600 - quiz correct answers */
+    --correct-foreground: 0 0% 100%;
+
+    --incorrect: 0 84% 60%;
+    /* Red-500 - quiz incorrect answers */
+    --incorrect-foreground: 0 0% 100%;
+
+    --flagged: 25 95% 53%;
+    /* Orange-500 - flagged questions */
+    --flagged-foreground: 0 0% 100%;
+
+    --info: 221 83% 53%;
+    /* Blue-600 - informational highlights */
+    --info-foreground: 0 0% 100%;
+
+    /* Performance tier colors */
+    --tier-excellent: 142 76% 36%;
+    /* Green-600 - 90%+ */
+    --tier-excellent-foreground: 0 0% 100%;
+    --tier-great: 221 83% 53%;
+    /* Blue-600 - 80-89% */
+    --tier-great-foreground: 0 0% 100%;
+    --tier-good: 186 94% 41%;
+    /* Cyan-600 - 70-79% */
+    --tier-good-foreground: 0 0% 100%;
+    --tier-passing: 38 92% 50%;
+    /* Amber-500 - 60-69% */
+    --tier-passing-foreground: 0 0% 0%;
+    --tier-failing: 0 84% 60%;
+    /* Red-500 - <60% */
+    --tier-failing-foreground: 0 0% 100%;
+
     --radius: 0.5rem;
+
+    /* Font Variables
+       These reference CSS custom properties injected at runtime by next/font (see layout.tsx).
+       The --font-* variables are generated automatically when fonts are loaded. */
+    --font-heading: var(--font-inter);
+    --font-sans: var(--font-inter);
+    --font-mono: monospace;
+
+    /* Default Shadow */
+    --shadow-color: 220 40% 2%;
   }
 
+
+  /* Generic dark mode - excluded for themes with their own dark palettes */
+  .dark:not([data-theme="holiday"]):not([data-theme="midnight"]):not([data-theme="vapor"]):not([data-theme="retro-dark"]) {
+    /* SEMANTIC TOKENS (Default Dark Mode / Slate) */
+    --background: 222 47% 11%;
+    /* Slate-900 */
+    --foreground: 210 40% 98%;
+    /* Slate-50 */
+
+    --card: 222 47% 11%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222 47% 11%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 217.2 91.2% 59.8%;
+    /* Blue-500 */
+    --primary-foreground: 222 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    /* Slate-800 */
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    /* Slate-400 */
+
+    --accent: 262 83% 58%;
+    /* Violet-500 - Feature highlights */
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 48%;
+
+    --success: 142 70% 45%;
+    /* Green-500 */
+    --success-foreground: 222 47% 11%;
+
+    --warning: 25 95% 53%;
+    /* Orange-500 */
+    --warning-foreground: 222 47% 11%;
+
+    --correct: 142 70% 45%;
+    /* Green-500 */
+    --correct-foreground: 222 47% 11%;
+
+    --incorrect: 0 84% 60%;
+    /* Red-500 */
+    --incorrect-foreground: 210 40% 98%;
+
+    --flagged: 25 95% 53%;
+    /* Orange-500 */
+    --flagged-foreground: 222 47% 11%;
+
+    --info: 217 91% 60%;
+    /* Blue-500 */
+    --info-foreground: 222 47% 11%;
+
+    /* Performance tier colors (dark variants) */
+    --tier-excellent: 142 70% 45%;
+    --tier-excellent-foreground: 222 47% 11%;
+    --tier-great: 217 91% 60%;
+    --tier-great-foreground: 222 47% 11%;
+    --tier-good: 186 94% 50%;
+    --tier-good-foreground: 222 47% 11%;
+    --tier-passing: 38 92% 50%;
+    --tier-passing-foreground: 222 47% 11%;
+    --tier-failing: 0 84% 60%;
+    --tier-failing-foreground: 210 40% 98%;
+  }
+
+  /* ========================================================================== */
+  /* LIGHT THEME - SUBTLE ENHANCEMENTS                                          */
+  /* ========================================================================== */
+
+
+  /* LIGHT CARDS - Subtle hover lift */
+  [data-theme="light"] body {
+    /* "CERAMIC" UPGRADE: Subtle noise texture + slight warmth */
+    background-color: hsl(210, 40%, 98%);
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.025'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+  }
+
+  :root .card {
+    /* "CERAMIC" UPGRADE: Deeper, softer shadows */
+    box-shadow:
+      0 1px 2px hsla(220, 40%, 20%, 0.03),
+      0 4px 16px hsla(220, 40%, 20%, 0.04);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  :root .card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px hsla(220, 40%, 20%, 0.08);
+  }
+
+  /* LIGHT BUTTONS - Subtle press feedback */
+  :root button[class*="bg-primary"]:active,
+  :root a[class*="bg-primary"]:active {
+    transform: translateY(1px);
+    box-shadow: inset 0 2px 4px hsla(220, 40%, 20%, 0.1);
+  }
+
+  /* LIGHT SCROLLBAR - Refined subtle style */
+  :root ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  :root ::-webkit-scrollbar-track {
+    background: hsl(210, 40%, 96%);
+  }
+
+  :root ::-webkit-scrollbar-thumb {
+    background: hsl(215, 16%, 75%);
+    border-radius: 5px;
+    border: 2px solid hsl(210, 40%, 96%);
+  }
+
+  :root ::-webkit-scrollbar-thumb:hover {
+    background: hsl(215, 20%, 65%);
+  }
+
+  /* ========================================================================== */
+  /* DARK THEME - ENHANCED DEPTH & VISUAL SEPARATION                            */
+  /* ========================================================================== */
+
+  /* DARK CARDS - Elevated with visible shadows and subtle border */
+  .dark:not([data-theme]) .card,
+  .dark[data-theme="dark"] .card {
+    background: hsl(222, 47%, 13%) !important;
+    border: 1px solid hsla(217, 33%, 35%, 0.4) !important;
+    box-shadow:
+      0 2px 8px hsla(222, 60%, 5%, 0.4),
+      0 4px 16px hsla(222, 60%, 5%, 0.2),
+      inset 0 1px 0 hsla(217, 40%, 40%, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+
+  .dark:not([data-theme]) .card:hover,
+  .dark[data-theme="dark"] .card:hover {
+    transform: translateY(-2px);
+    border-color: hsla(217, 40%, 45%, 0.5) !important;
+    box-shadow:
+      0 4px 12px hsla(222, 60%, 5%, 0.5),
+      0 8px 24px hsla(222, 60%, 5%, 0.3),
+      inset 0 1px 0 hsla(217, 40%, 45%, 0.15);
+  }
+
+  /* DARK BUTTONS - Subtle press feedback */
+  .dark:not([data-theme]) button[class*="bg-primary"]:active,
+  .dark:not([data-theme]) a[class*="bg-primary"]:active,
+  .dark[data-theme="dark"] button[class*="bg-primary"]:active,
+  .dark[data-theme="dark"] a[class*="bg-primary"]:active {
+    transform: translateY(1px);
+    box-shadow: inset 0 2px 4px hsla(220, 60%, 5%, 0.3);
+  }
+
+  /* DARK HEADER - Subtle definition */
+  .dark:not([data-theme]) header,
+  .dark[data-theme="dark"] header {
+    background: hsl(222, 47%, 12%);
+    border-bottom: 1px solid hsla(217, 33%, 30%, 0.5);
+    box-shadow: 0 2px 8px hsla(222, 60%, 5%, 0.3);
+  }
+
+  /* DARK SCROLLBAR - Refined dark style */
+  .dark:not([data-theme]) ::-webkit-scrollbar,
+  .dark[data-theme="dark"] ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  .dark:not([data-theme]) ::-webkit-scrollbar-track,
+  .dark[data-theme="dark"] ::-webkit-scrollbar-track {
+    background: hsl(222, 47%, 13%);
+  }
+
+  .dark:not([data-theme]) ::-webkit-scrollbar-thumb,
+  .dark[data-theme="dark"] ::-webkit-scrollbar-thumb {
+    background: hsl(217, 33%, 30%);
+    border-radius: 5px;
+    border: 2px solid hsl(222, 47%, 13%);
+  }
+
+  .dark:not([data-theme]) ::-webkit-scrollbar-thumb:hover,
+  .dark[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+    background: hsl(217, 40%, 40%);
+  }
+
+  /* MIDNIGHT THEME (Cyber/Tech Neon) */
+  [data-theme="midnight"] {
+    /* Tech/Space Font */
+    --font-heading: var(--font-space), system-ui, sans-serif;
+    --font-sans: var(--font-space), system-ui, sans-serif;
+
+    --background: 230 25% 7%;
+    /* Deep Space Black */
+    --foreground: 200 60% 95%;
+    /* Cool White */
+
+    --radius: 0.25rem;
+    /* Sharper "Tech" comers */
+
+    --card: 230 25% 10%;
+    --card-foreground: 200 60% 95%;
+
+    --popover: 230 25% 12%;
+    --popover-foreground: 200 60% 95%;
+
+    --primary: 186 100% 50%;
+    /* Electric Cyan */
+    --primary-foreground: 230 25% 7%;
+
+    --secondary: 230 25% 15%;
+    --secondary-foreground: 200 60% 95%;
+
+    --muted: 230 25% 14%;
+    --muted-foreground: 200 20% 60%;
+
+    --accent: 270 80% 60%;
+    /* Neon Purple accent */
+    --accent-foreground: 200 60% 95%;
+
+    --destructive: 350 100% 60%;
+    /* Hot Pink/Red */
+    --destructive-foreground: 230 25% 7%;
+
+    --border: 230 25% 18%;
+    --input: 230 25% 15%;
+    --ring: 186 100% 50%;
+
+    --success: 160 100% 40%;
+    /* Electric Teal */
+    --success-foreground: 230 25% 7%;
+
+    --warning: 45 100% 55%;
+    /* Neon Yellow */
+    --warning-foreground: 230 25% 7%;
+
+    --correct: 160 100% 40%;
+    /* Electric Teal */
+    --correct-foreground: 230 25% 7%;
+
+    --incorrect: 350 100% 60%;
+    /* Hot Pink/Red */
+    --incorrect-foreground: 230 25% 7%;
+
+    --flagged: 45 100% 55%;
+    /* Neon Yellow */
+    --flagged-foreground: 230 25% 7%;
+
+    --info: 186 100% 50%;
+    /* Electric Cyan */
+    --info-foreground: 230 25% 7%;
+
+    /* Performance tier colors (neon variants) */
+    --tier-excellent: 160 100% 40%;
+    --tier-excellent-foreground: 230 25% 7%;
+    --tier-great: 186 100% 50%;
+    --tier-great-foreground: 230 25% 7%;
+    --tier-good: 200 100% 50%;
+    --tier-good-foreground: 230 25% 7%;
+    --tier-passing: 45 100% 55%;
+    --tier-passing-foreground: 230 25% 7%;
+    --tier-failing: 350 100% 60%;
+    --tier-failing-foreground: 230 25% 7%;
+
+    /* Unique: Neon Cyan Glows */
+    --shadow-color: 186 100% 50%;
+  }
+
+  /* MIDNIGHT THEME - STARFIELD */
+  [data-theme="midnight"] body {
+    background-color: hsl(230, 25%, 7%);
+    background-image:
+      radial-gradient(2px 2px at 20px 30px, #eee, rgba(0, 0, 0, 0)),
+      radial-gradient(2px 2px at 40px 70px, #fff, rgba(0, 0, 0, 0)),
+      radial-gradient(2px 2px at 50px 160px, #ddd, rgba(0, 0, 0, 0)),
+      radial-gradient(2px 2px at 90px 40px, #fff, rgba(0, 0, 0, 0)),
+      radial-gradient(2px 2px at 130px 80px, #fff, rgba(0, 0, 0, 0));
+    background-size: 200px 200px;
+    animation: twinkle 10s infinite linear;
+  }
+
+  @keyframes twinkle {
+    0% {
+      background-position: 0 0;
+    }
+
+    100% {
+      background-position: -200px -200px;
+    }
+  }
+
+  /* MIDNIGHT CARDS - Neon cyan glow borders */
+  [data-theme="midnight"] .card,
+  [data-theme="midnight"] .popover {
+    border: 1px solid hsla(186, 100%, 50%, 0.3) !important;
+    box-shadow:
+      0 0 20px hsla(186, 100%, 50%, 0.15),
+      0 0 40px hsla(270, 80%, 60%, 0.08),
+      inset 0 1px 0 hsla(186, 100%, 70%, 0.1) !important;
+    transition: all 0.3s ease;
+  }
+
+  [data-theme="midnight"] .card:hover {
+    border-color: hsla(186, 100%, 50%, 0.6) !important;
+    box-shadow:
+      0 0 30px hsla(186, 100%, 50%, 0.25),
+      0 0 60px hsla(270, 80%, 60%, 0.12),
+      inset 0 1px 0 hsla(186, 100%, 70%, 0.15) !important;
+    transform: translateY(-2px);
+  }
+
+  /* MIDNIGHT BUTTONS - Neon glow on hover */
+  [data-theme="midnight"] button[class*="bg-primary"],
+  [data-theme="midnight"] a[class*="bg-primary"] {
+    text-shadow: 0 0 8px currentColor;
+    transition: all 0.3s ease;
+  }
+
+  [data-theme="midnight"] button[class*="bg-primary"]:hover,
+  [data-theme="midnight"] a[class*="bg-primary"]:hover {
+    box-shadow:
+      0 0 20px hsla(186, 100%, 50%, 0.5),
+      0 0 40px hsla(186, 100%, 50%, 0.25);
+    transform: translateY(-1px);
+  }
+
+  [data-theme="midnight"] button[class*="bg-primary"]:active,
+  [data-theme="midnight"] a[class*="bg-primary"]:active {
+    transform: translateY(0);
+    box-shadow: 0 0 15px hsla(186, 100%, 50%, 0.4);
+  }
+
+  /* MIDNIGHT TYPOGRAPHY - Neon text glow */
+  [data-theme="midnight"] h1,
+  [data-theme="midnight"] h2 {
+    text-shadow:
+      0 0 10px hsla(186, 100%, 50%, 0.6),
+      0 0 30px hsla(186, 100%, 50%, 0.3),
+      0 0 60px hsla(270, 80%, 60%, 0.15);
+    letter-spacing: 0.03em;
+  }
+
+  [data-theme="midnight"] h3 {
+    text-shadow:
+      0 0 8px hsla(186, 100%, 50%, 0.4),
+      0 0 20px hsla(270, 80%, 60%, 0.15);
+  }
+
+  /* MIDNIGHT HEADER - Neon cyan accent line */
+  [data-theme="midnight"] header {
+    border-bottom: 1px solid hsla(186, 100%, 50%, 0.3);
+    background: linear-gradient(180deg,
+        hsl(230, 25%, 9%) 0%,
+        hsl(230, 25%, 7%) 100%);
+    box-shadow: 0 4px 20px hsla(186, 100%, 50%, 0.1);
+  }
+
+  /* MIDNIGHT FOOTER - Neon purple accent */
+  [data-theme="midnight"] footer {
+    border-top: 1px solid hsla(270, 80%, 60%, 0.3);
+    box-shadow: 0 -4px 20px hsla(270, 80%, 60%, 0.08);
+  }
+
+  /* MIDNIGHT INPUTS - Neon focus glow */
+  [data-theme="midnight"] input:focus,
+  [data-theme="midnight"] textarea:focus,
+  [data-theme="midnight"] select:focus {
+    box-shadow:
+      0 0 0 2px hsla(186, 100%, 50%, 0.3),
+      0 0 20px hsla(186, 100%, 50%, 0.2),
+      0 0 40px hsla(270, 80%, 60%, 0.1);
+    border-color: hsl(186, 100%, 50%) !important;
+  }
+
+  /* MIDNIGHT BADGES - Neon glow */
+  [data-theme="midnight"] .badge {
+    border: 1px solid hsla(186, 100%, 50%, 0.4) !important;
+    box-shadow: 0 0 8px hsla(186, 100%, 50%, 0.2);
+    text-shadow: 0 0 4px currentColor;
+  }
+
+  /* MIDNIGHT LINKS - Cyan glow on hover */
+  [data-theme="midnight"] a:not([class*="bg-"]):hover {
+    color: hsl(186, 100%, 60%);
+    text-shadow: 0 0 8px hsla(186, 100%, 50%, 0.5);
+  }
+
+  /* FOCUS THEME (Warm Sepia / Distraction-Free) */
+  [data-theme="focus"] {
+    /* Unique: Serif Font for "Writer" Feel */
+    --font-sans: "Georgia", "Cambria", "Times New Roman", serif;
+    --font-heading: "Georgia", "Cambria", "Times New Roman", serif;
+
+    --background: 35 30% 94%;
+    /* Darker Cream for contrast */
+    /* Warm Cream Paper */
+    --foreground: 25 20% 18%;
+    /* Rich Espresso */
+
+    --radius: 0.25rem;
+    /* Sharper/Notebook paper comers */
+
+    --card: 35 30% 97%;
+    /* Slightly lighter than bg */
+    --card-foreground: 25 20% 18%;
+
+    --popover: 35 30% 97%;
+    --popover-foreground: 25 20% 18%;
+
+    --primary: 22 78% 45%;
+    /* Burnt Sienna */
+    --primary-foreground: 35 30% 96%;
+
+    --secondary: 35 25% 88%;
+    --secondary-foreground: 25 20% 18%;
+
+    --muted: 35 20% 86%;
+    --muted-foreground: 25 15% 50%;
+
+    --accent: 30 40% 82%;
+    /* Warm Sand */
+    --accent-foreground: 25 20% 18%;
+
+    --destructive: 0 65% 50%;
+    /* Muted Terracotta Red */
+    --destructive-foreground: 35 30% 96%;
+
+    --border: 35 20% 80%;
+    --input: 35 35% 88%;
+    --ring: 22 78% 45%;
+
+    --success: 145 55% 40%;
+    /* Sage Green */
+    --success-foreground: 35 30% 96%;
+
+    --warning: 35 90% 50%;
+    /* Warm Orange */
+    --warning-foreground: 25 20% 18%;
+
+    --correct: 145 55% 40%;
+    /* Sage Green */
+    --correct-foreground: 35 30% 96%;
+
+    --incorrect: 0 55% 52%;
+    /* Muted Brick Red */
+    --incorrect-foreground: 35 30% 96%;
+
+    --flagged: 35 90% 50%;
+    /* Warm Orange */
+    --flagged-foreground: 25 20% 18%;
+
+    --info: 210 40% 50%;
+    /* Muted Ink Blue */
+    --info-foreground: 35 30% 96%;
+
+    /* Performance tier colors (warm/muted variants) */
+    --tier-excellent: 145 55% 40%;
+    --tier-excellent-foreground: 35 30% 96%;
+    --tier-great: 200 50% 45%;
+    --tier-great-foreground: 35 30% 96%;
+    --tier-good: 180 40% 45%;
+    --tier-good-foreground: 35 30% 96%;
+    --tier-passing: 35 90% 50%;
+    --tier-passing-foreground: 25 20% 18%;
+    --tier-failing: 0 55% 52%;
+    --tier-failing-foreground: 35 30% 96%;
+  }
+
+  /* FOCUS THEME - WARM PAPER TEXTURE */
+  [data-theme="focus"] body {
+    background-color: hsl(35, 30%, 94%);
+    /* Subtle paper grain texture */
+    background-image:
+      url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+  }
+
+  /* FOCUS CARDS - Warm soft shadows */
+  [data-theme="focus"] .card,
+  [data-theme="focus"] .popover {
+    box-shadow:
+      0 2px 8px hsla(25, 30%, 30%, 0.08),
+      0 4px 16px hsla(25, 30%, 30%, 0.04) !important;
+    border-color: hsl(35, 20%, 82%) !important;
+    transition: all 0.3s ease;
+  }
+
+  [data-theme="focus"] .card:hover {
+    box-shadow:
+      0 4px 12px hsla(25, 30%, 30%, 0.12),
+      0 8px 24px hsla(25, 30%, 30%, 0.06) !important;
+    transform: translateY(-2px);
+  }
+
+  /* FOCUS BUTTONS - Warm press effect */
+  [data-theme="focus"] button[class*="bg-primary"],
+  [data-theme="focus"] a[class*="bg-primary"] {
+    box-shadow: 0 2px 6px hsla(22, 78%, 45%, 0.25);
+    transition: all 0.2s ease;
+  }
+
+  [data-theme="focus"] button[class*="bg-primary"]:hover,
+  [data-theme="focus"] a[class*="bg-primary"]:hover {
+    box-shadow: 0 4px 12px hsla(22, 78%, 45%, 0.35);
+    transform: translateY(-1px);
+  }
+
+  [data-theme="focus"] button[class*="bg-primary"]:active,
+  [data-theme="focus"] a[class*="bg-primary"]:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 4px hsla(22, 78%, 45%, 0.2);
+  }
+
+  /* FOCUS HEADER - Warm sepia accent */
+  [data-theme="focus"] header {
+    border-bottom: 2px solid hsl(35, 20%, 80%);
+    background: linear-gradient(180deg,
+        hsl(35, 30%, 96%) 0%,
+        hsl(35, 30%, 94%) 100%);
+  }
+
+  /* FOCUS FOOTER - Warm bottom accent */
+  [data-theme="focus"] footer {
+    border-top: 2px solid hsl(35, 20%, 80%);
+    background: hsl(35, 30%, 95%);
+  }
+
+  /* FOCUS INPUTS - Warm focus glow */
+  [data-theme="focus"] input:focus,
+  [data-theme="focus"] textarea:focus,
+  [data-theme="focus"] select:focus {
+    box-shadow: 0 0 0 3px hsla(22, 78%, 45%, 0.15);
+    border-color: hsl(22, 78%, 55%) !important;
+  }
+
+  /* FOCUS BADGES - Soft warm styling */
+  [data-theme="focus"] .badge {
+    border: 1px solid hsla(25, 20%, 60%, 0.4) !important;
+    box-shadow: 0 1px 3px hsla(25, 30%, 30%, 0.1);
+    border-radius: 6px !important;
+    /* Soften the badge specifically */
+  }
+
+  /* FOCUS SCROLLBAR - Warm sepia */
+  [data-theme="focus"] ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  [data-theme="focus"] ::-webkit-scrollbar-track {
+    background: hsl(35, 20%, 90%);
+  }
+
+  [data-theme="focus"] ::-webkit-scrollbar-thumb {
+    background: hsl(22, 50%, 65%);
+    border-radius: 5px;
+    border: 2px solid hsl(35, 20%, 90%);
+  }
+
+  [data-theme="focus"] ::-webkit-scrollbar-thumb:hover {
+    background: hsl(22, 60%, 55%);
+  }
+
+
+  /* RETRO THEME (8-Bit / NES Style) */
+  [data-theme="retro"] {
+    /* HYBRID FONT: Pixel for headings, monospace for body (better readability) */
+    --font-heading: var(--font-press-start), monospace;
+    --font-sans: var(--font-jetbrains), "Courier New", monospace;
+    --font-mono: var(--font-jetbrains), monospace;
+
+    /* 0px Radius for Blocky Look */
+    --radius: 0px;
+
+    /* Hard Shadows Token */
+    --shadow-color: 0 0% 0%;
+
+    /* High Contrast Palette */
+    --background: 210 20% 90%;
+    /* Light Grey */
+    --foreground: 0 0% 10%;
+    /* Near Black */
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
+
+    --primary: 340 75% 55%;
+    /* Retro Pink/Red */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 210 20% 80%;
+    /* Darker Grey */
+    --secondary-foreground: 0 0% 10%;
+
+    --muted: 210 20% 80%;
+    --muted-foreground: 0 0% 40%;
+
+    --accent: 340 75% 55%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 0%;
+    /* Pitch Black Borders */
+    --input: 0 0% 100%;
+    --ring: 340 75% 55%;
+
+    --success: 120 100% 35%;
+    /* NES Green */
+    --success-foreground: 0 0% 100%;
+
+    --warning: 45 100% 50%;
+    /* NES Yellow */
+    --warning-foreground: 0 0% 0%;
+
+    --correct: 120 100% 35%;
+    /* NES Green */
+    --correct-foreground: 0 0% 100%;
+
+    --incorrect: 0 100% 50%;
+    /* NES Red */
+    --incorrect-foreground: 0 0% 100%;
+
+    --flagged: 45 100% 50%;
+    /* NES Yellow */
+    --flagged-foreground: 0 0% 0%;
+
+    --info: 240 100% 50%;
+    /* NES Blue */
+    --info-foreground: 0 0% 100%;
+
+    /* Performance tier colors (8-bit variants) */
+    --tier-excellent: 120 100% 35%;
+    --tier-excellent-foreground: 0 0% 100%;
+    --tier-great: 240 100% 50%;
+    --tier-great-foreground: 0 0% 100%;
+    --tier-good: 180 100% 40%;
+    --tier-good-foreground: 0 0% 0%;
+    --tier-passing: 45 100% 50%;
+    --tier-passing-foreground: 0 0% 0%;
+    --tier-failing: 0 100% 50%;
+    --tier-failing-foreground: 0 0% 100%;
+  }
+
+  /* BRUTALIST THEME (Neo-Brutalism / Gumroad-inspired) */
+  [data-theme="brutalist"] {
+    /* Typography: Quirky Bold Sans */
+    --font-heading: var(--font-space), system-ui, sans-serif;
+    --font-sans: var(--font-space), system-ui, sans-serif;
+
+    /* Warm Paper Cream Background */
+    --background: 50 100% 97%;
+    /* Absolute Black Text */
+    --foreground: 0 0% 0%;
+
+    /* Zero or Minimal Radius for Blocky Look */
+    --radius: 0.25rem;
+
+    /* White cards with black borders */
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 0%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 0%;
+
+    /* Bright Yellow Primary (Gumroad signature) */
+    --primary: 50 100% 50%;
+    --primary-foreground: 0 0% 0%;
+
+    /* Off-white Secondary */
+    --secondary: 50 30% 92%;
+    --secondary-foreground: 0 0% 0%;
+
+    --muted: 50 20% 90%;
+    --muted-foreground: 0 0% 40%;
+
+    /* Hot Pink Accent */
+    --accent: 330 100% 60%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Bright Destructive Red */
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* BLACK borders - defining neo-brutalist look */
+    --border: 0 0% 0%;
+    --input: 0 0% 100%;
+    --ring: 50 100% 50%;
+
+    /* Bright Success Green */
+    --success: 140 100% 40%;
+    --success-foreground: 0 0% 0%;
+
+    --warning: 32 100% 50%;
+    --warning-foreground: 0 0% 0%;
+
+    --correct: 140 100% 40%;
+    --correct-foreground: 0 0% 0%;
+
+    --incorrect: 0 100% 50%;
+    --incorrect-foreground: 0 0% 100%;
+
+    --flagged: 32 100% 50%;
+    --flagged-foreground: 0 0% 0%;
+
+    --info: 260 100% 60%;
+    /* Bright Purple */
+    --info-foreground: 0 0% 100%;
+
+    /* Performance tier colors (brutalist variants) */
+    --tier-excellent: 140 100% 40%;
+    --tier-excellent-foreground: 0 0% 0%;
+    --tier-great: 260 100% 60%;
+    --tier-great-foreground: 0 0% 100%;
+    --tier-good: 180 100% 40%;
+    --tier-good-foreground: 0 0% 100%;
+    --tier-passing: 32 100% 50%;
+    --tier-passing-foreground: 0 0% 0%;
+    --tier-failing: 0 100% 50%;
+    --tier-failing-foreground: 0 0% 100%;
+
+    --shadow-color: 0 0% 0%;
+
+    /* Amber Warning */
+    --warning: 45 100% 50%;
+    --warning-foreground: 0 0% 0%;
+
+    --correct: 140 100% 40%;
+    --correct-foreground: 0 0% 0%;
+
+    --incorrect: 0 100% 50%;
+    --incorrect-foreground: 0 0% 100%;
+
+    --flagged: 45 100% 50%;
+    --flagged-foreground: 0 0% 0%;
+
+    /* Bright Blue Info */
+    --info: 210 100% 50%;
+    --info-foreground: 0 0% 100%;
+
+    /* Performance tier colors (bright, punchy variants) */
+    --tier-excellent: 140 100% 40%;
+    --tier-excellent-foreground: 0 0% 0%;
+    --tier-great: 210 100% 50%;
+    --tier-great-foreground: 0 0% 100%;
+    --tier-good: 180 100% 40%;
+    --tier-good-foreground: 0 0% 0%;
+    --tier-passing: 45 100% 50%;
+    --tier-passing-foreground: 0 0% 0%;
+    --tier-failing: 0 100% 50%;
+    --tier-failing-foreground: 0 0% 100%;
+
+    /* Hard black shadow for offset effect */
+    --shadow-color: 0 0% 0%;
+  }
+
+  /* BRUTALIST THEME - BODY STYLING */
+  [data-theme="brutalist"] body {
+    background-color: hsl(50, 100%, 97%);
+    /* Subtle paper texture pattern */
+    background-image:
+      radial-gradient(circle at 25% 25%, hsla(50, 50%, 90%, 0.3) 1px, transparent 1px),
+      radial-gradient(circle at 75% 75%, hsla(50, 50%, 88%, 0.3) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
+  /* BRUTALIST CARDS - Hard offset shadows + thick borders */
+  [data-theme="brutalist"] .card,
+  [data-theme="brutalist"] .popover {
+    border: 2px solid black !important;
+    border-radius: 0.25rem !important;
+    box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1) !important;
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+  }
+
+  [data-theme="brutalist"] .card:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px 0px rgba(0, 0, 0, 1) !important;
+  }
+
+  /* BRUTALIST BUTTONS - Press effect */
+  [data-theme="brutalist"] button[class*="bg-primary"],
+  [data-theme="brutalist"] a[class*="bg-primary"] {
+    border: 2px solid black !important;
+    box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  [data-theme="brutalist"] button[class*="bg-primary"]:hover,
+  [data-theme="brutalist"] a[class*="bg-primary"]:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px 0px rgba(0, 0, 0, 1);
+  }
+
+  [data-theme="brutalist"] button[class*="bg-primary"]:active,
+  [data-theme="brutalist"] a[class*="bg-primary"]:active {
+    transform: translate(4px, 4px);
+    box-shadow: none;
+  }
+
+  /* Secondary buttons also get the treatment */
+  [data-theme="brutalist"] button[class*="bg-secondary"],
+  [data-theme="brutalist"] a[class*="bg-secondary"] {
+    border: 2px solid black !important;
+    box-shadow: 3px 3px 0px 0px rgba(0, 0, 0, 1);
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+  }
+
+  [data-theme="brutalist"] button[class*="bg-secondary"]:active,
+  [data-theme="brutalist"] a[class*="bg-secondary"]:active {
+    transform: translate(3px, 3px);
+    box-shadow: none;
+  }
+
+  /* BRUTALIST TYPOGRAPHY - Bold & Uppercase */
+  [data-theme="brutalist"] h1,
+  [data-theme="brutalist"] h2 {
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+  }
+
+  [data-theme="brutalist"] h3 {
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  /* BRUTALIST INPUTS - Thick black borders */
+  [data-theme="brutalist"] input,
+  [data-theme="brutalist"] textarea,
+  [data-theme="brutalist"] select {
+    border: 2px solid black !important;
+    border-radius: 0.25rem !important;
+    box-shadow: 3px 3px 0px 0px rgba(0, 0, 0, 1);
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+  }
+
+  [data-theme="brutalist"] input:focus,
+  [data-theme="brutalist"] textarea:focus,
+  [data-theme="brutalist"] select:focus {
+    outline: none;
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+    border-color: hsl(50, 100%, 50%) !important;
+  }
+
+  /* BRUTALIST HEADER - Bold black bottom border */
+  [data-theme="brutalist"] header {
+    border-bottom: 3px solid black;
+    background: hsl(50, 100%, 97%);
+  }
+
+  /* BRUTALIST FOOTER - Bold black top border */
+  [data-theme="brutalist"] footer {
+    border-top: 3px solid black;
+    background: hsl(50, 100%, 97%);
+  }
+
+  /* BRUTALIST LINKS - High Contrast & Thick Underline */
+  [data-theme="brutalist"] a:not([class*="bg-"]) {
+    text-decoration: none;
+    position: relative;
+    color: #000 !important;
+    /* Force black for readability against cream */
+    font-weight: 700;
+    border-bottom: 3px solid hsl(var(--primary));
+    /* Thick yellow underline */
+  }
+
+  [data-theme="brutalist"] a:not([class*="bg-"]):hover {
+    background-color: hsl(var(--primary));
+    color: #000 !important;
+    box-shadow: 2px 2px 0px 0px #000;
+    border-bottom: 3px solid transparent;
+    /* Hide border when background takes over */
+    transform: translate(-1px, -1px);
+  }
+
+  /* Remove abstract ::after if it conflicts, or just use the border-bottom approach above which is cleaner for text flow */
+
+
+  /* BRUTALIST BADGES - Hard borders & shadows */
+  [data-theme="brutalist"] .badge {
+    border: 2px solid #000 !important;
+    border-radius: 0.25rem !important;
+    box-shadow: 2px 2px 0 #000 !important;
+    font-weight: 800;
+  }
+
+
+  /* BRUTALIST SCROLLBAR - Chunky black style */
+  [data-theme="brutalist"] ::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
+
+  [data-theme="brutalist"] ::-webkit-scrollbar-track {
+    background: hsl(50, 30%, 92%);
+    border: 2px solid black;
+  }
+
+  [data-theme="brutalist"] ::-webkit-scrollbar-thumb {
+    background: hsl(50, 100%, 50%);
+    border: 2px solid black;
+    border-radius: 0;
+  }
+
+  [data-theme="brutalist"] ::-webkit-scrollbar-thumb:hover {
+    background: hsl(330, 100%, 60%);
+  }
+
+  /* BRUTALIST BADGES - Hard shadow boxes */
+  [data-theme="brutalist"] [class*="badge"],
+  [data-theme="brutalist"] [class*="Badge"] {
+    border: 2px solid black !important;
+    border-radius: 0 !important;
+    box-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 1);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* SWISS THEME (International Typographic Style / Museum) */
+  [data-theme="swiss"] {
+    /* Typography: Clean sans-serif, tight tracking */
+    --font-heading: var(--font-inter), system-ui, sans-serif;
+    --font-sans: var(--font-inter), system-ui, sans-serif;
+
+    /* Stark Black Background */
+    --background: 0 0% 0%;
+    /* Pure White Text */
+    --foreground: 0 0% 100%;
+
+    /* Zero Radius - sharp corners only */
+    --radius: 0px;
+
+    /* Transparent cards with white border */
+    --card: 0 0% 0%;
+    --card-foreground: 0 0% 100%;
+
+    --popover: 0 0% 5%;
+    --popover-foreground: 0 0% 100%;
+
+    /* International Orange Primary */
+    --primary: 18 100% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Dark grey secondary */
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 0 0% 10%;
+    --muted-foreground: 0 0% 60%;
+
+    /* Orange Accent */
+    --accent: 18 100% 50%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Bright Red Destructive */
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* White borders for grid effect */
+    --border: 0 0% 100%;
+    --input: 0 0% 10%;
+    --ring: 18 100% 50%;
+
+    /* Status Colors - stark and simple */
+    --success: 120 100% 40%;
+    --success-foreground: 0 0% 0%;
+
+    --warning: 18 100% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    --correct: 120 100% 40%;
+    --correct-foreground: 0 0% 0%;
+
+    --incorrect: 0 100% 50%;
+    --incorrect-foreground: 0 0% 100%;
+
+    --flagged: 18 100% 50%;
+    --flagged-foreground: 0 0% 100%;
+
+    --info: 18 100% 50%;
+    --info-foreground: 0 0% 100%;
+
+    /* Performance tier colors (stark variants) */
+    --tier-excellent: 120 100% 40%;
+    --tier-excellent-foreground: 0 0% 0%;
+    --tier-great: 18 100% 50%;
+    --tier-great-foreground: 0 0% 100%;
+    --tier-good: 45 100% 50%;
+    --tier-good-foreground: 0 0% 0%;
+    --tier-passing: 30 100% 50%;
+    --tier-passing-foreground: 0 0% 0%;
+    --tier-failing: 0 100% 50%;
+    --tier-failing-foreground: 0 0% 100%;
+
+    /* No decorative shadows */
+    --shadow-color: 0 0% 0%;
+  }
+
+  /* SWISS THEME - GRID BACKGROUND */
+  [data-theme="swiss"] body {
+    background-color: black;
+    /* Visible grid pattern */
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  /* SWISS CARDS - Transparent with white border, no shadows */
+  [data-theme="swiss"] .card,
+  [data-theme="swiss"] .popover {
+    background: transparent !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  [data-theme="swiss"] .card:hover {
+    border-color: rgba(255, 255, 255, 0.6) !important;
+  }
+
+  /* SWISS BUTTONS - Flat, no shadows, border only */
+  [data-theme="swiss"] button[class*="bg-primary"],
+  [data-theme="swiss"] a[class*="bg-primary"] {
+    border: 1px solid currentColor !important;
+    box-shadow: none !important;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  [data-theme="swiss"] button[class*="bg-primary"]:hover,
+  [data-theme="swiss"] a[class*="bg-primary"]:hover {
+    opacity: 0.85;
+  }
+
+  [data-theme="swiss"] button[class*="bg-primary"]:active,
+  [data-theme="swiss"] a[class*="bg-primary"]:active {
+    opacity: 0.7;
+    transform: scale(0.98);
+  }
+
+  /* Outlined/secondary buttons */
+  [data-theme="swiss"] button[class*="bg-secondary"],
+  [data-theme="swiss"] a[class*="bg-secondary"] {
+    border: 1px solid rgba(255, 255, 255, 0.5) !important;
+    box-shadow: none !important;
+  }
+
+  [data-theme="swiss"] button[class*="bg-secondary"]:active,
+  [data-theme="swiss"] a[class*="bg-secondary"]:active {
+    opacity: 0.7;
+    transform: scale(0.98);
+  }
+
+  /* SWISS TYPOGRAPHY - Massive headings, tight tracking */
+  [data-theme="swiss"] h1 {
+    font-size: 3rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+
+  [data-theme="swiss"] h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    text-transform: uppercase;
+  }
+
+  [data-theme="swiss"] h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
+  }
+
+  /* SWISS INPUTS - Minimal, just a bottom border */
+  [data-theme="swiss"] input,
+  [data-theme="swiss"] textarea,
+  [data-theme="swiss"] select {
+    background: transparent !important;
+    border: none !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.5) !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  [data-theme="swiss"] input:focus,
+  [data-theme="swiss"] textarea:focus,
+  [data-theme="swiss"] select:focus {
+    outline: none;
+    border-bottom-color: hsl(18, 100%, 50%) !important;
+  }
+
+  /* SWISS BADGES - Square and minimal */
+  [data-theme="swiss"] .badge {
+    border-radius: 0 !important;
+    border: 1px solid currentColor !important;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 2px 8px;
+  }
+
+  /* SWISS HEADER - Bold divider */
+  [data-theme="swiss"] header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    background: black;
+  }
+
+  /* SWISS FOOTER - Bold divider */
+  [data-theme="swiss"] footer {
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    background: black;
+  }
+
+  /* SWISS LINKS - Orange on hover, no decoration */
+  [data-theme="swiss"] a:not([class*="bg-"]) {
+    text-decoration: none;
+  }
+
+  [data-theme="swiss"] a:not([class*="bg-"]):hover {
+    color: hsl(18, 100%, 50%);
+  }
+
+  /* SWISS SCROLLBAR - Minimal */
+  [data-theme="swiss"] ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  [data-theme="swiss"] ::-webkit-scrollbar-track {
+    background: black;
+  }
+
+  [data-theme="swiss"] ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 0;
+  }
+
+  [data-theme="swiss"] ::-webkit-scrollbar-thumb:hover {
+    background: hsl(18, 100%, 50%);
+  }
+
+  /* SWISS TABLES - Grid dividers */
+  [data-theme="swiss"] table {
+    border-collapse: collapse;
+  }
+
+  [data-theme="swiss"] th,
+  [data-theme="swiss"] td {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 0.75rem 1rem;
+  }
+
+  [data-theme="swiss"] th {
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 600;
+  }
+
+  /* SWISS BADGES - Minimal, no decoration */
+  [data-theme="swiss"] [class*="badge"],
+  [data-theme="swiss"] [class*="Badge"] {
+    border: 1px solid currentColor !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 600;
+  }
+
+  /* RETRO DARK THEME */
+
+
+  [data-theme="retro-dark"] {
+    /* HYBRID FONT: Pixel for headings, monospace for body (better readability) */
+    --font-heading: var(--font-press-start), monospace;
+    --font-sans: var(--font-jetbrains), "Courier New", monospace;
+    --font-mono: var(--font-jetbrains), monospace;
+
+    --background: 140 20% 4%;
+    /* Deep Abyss Green (Matches hardware CRT black level) */
+    --foreground: 120 60% 70%;
+    /* Soft Terminal Green (Less harsh than 100% sat) */
+
+    --radius: 0px;
+    /* Strict Retro */
+
+    --card: 140 20% 12%;
+    --card-foreground: 120 60% 70%;
+
+    --popover: 140 20% 14%;
+    --popover-foreground: 120 60% 70%;
+
+    --primary: 120 70% 50%;
+    /* Balanced Green */
+    --primary-foreground: 140 20% 5%;
+
+    --secondary: 140 20% 20%;
+    --secondary-foreground: 120 60% 70%;
+
+    --muted: 0 0% 15%;
+    --muted-foreground: 120 60% 50%;
+
+    --accent: 40 100% 50%;
+    /* Retro Orange Accent */
+    --accent-foreground: 0 0% 5%;
+
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 0 0% 5%;
+
+    --border: 120 100% 25%;
+    /* Dark Green definition */
+    --input: 120 100% 20%;
+    --ring: 120 100% 50%;
+
+    --success: 120 100% 50%;
+    --success-foreground: 0 0% 5%;
+
+    --warning: 40 100% 50%;
+    --warning-foreground: 0 0% 5%;
+
+    --correct: 120 100% 50%;
+    --correct-foreground: 0 0% 5%;
+
+    --incorrect: 0 100% 50%;
+    --incorrect-foreground: 0 0% 5%;
+
+    --flagged: 40 100% 50%;
+    --flagged-foreground: 0 0% 5%;
+
+    --info: 210 100% 50%;
+    --info-foreground: 0 0% 5%;
+
+    /* Performance tier colors (Terminal variants) */
+    --tier-excellent: 120 100% 50%;
+    --tier-excellent-foreground: 0 0% 5%;
+    --tier-great: 210 100% 50%;
+    --tier-great-foreground: 0 0% 5%;
+    --tier-good: 40 100% 50%;
+    --tier-good-foreground: 0 0% 5%;
+    --tier-passing: 300 100% 50%;
+    --tier-passing-foreground: 0 0% 5%;
+    --tier-failing: 0 100% 50%;
+    --tier-failing-foreground: 0 0% 5%;
+
+    /* Unique: Retro Dark Shadows (Green Tinted or Hard Black) */
+    --shadow-color: 0 0% 0%;
+    /* Hard black shadow */
+  }
+
+  /* RETRO DARK POPOVER OVERRIDE (Fix transparency) */
+  [data-theme="retro-dark"] .popover,
+  [data-theme="retro-dark"] [role="dialog"],
+  [data-theme="retro-dark"] [class*="bg-popover"] {
+    background-color: hsl(140, 20%, 4%) !important;
+    /* Force opaque match to bg */
+    border: 2px solid var(--primary) !important;
+    backdrop-filter: none !important;
+  }
+
+  /* FLAGGED: Fix header button visibility in Retro Dark */
+  [data-theme="retro-dark"] header button,
+  [data-theme="retro-dark"] header a {
+    color: var(--primary);
+    font-weight: 700;
+  }
+
+  /* FLAGGED: Boost Header Z-Index to escape CRT Stacking Context */
+  [data-theme="retro-dark"] header {
+    z-index: 10001 !important;
+    background-color: hsl(140, 20%, 4%);
+    /* Ensure header bg matches theme */
+  }
+
+  /* HOLIDAY THEME (Festive Forest / Christmas Eve) */
+  [data-theme="holiday"] {
+    /* Typography: Elegant Serif for festive storybook feel */
+    --font-heading: var(--font-playfair), Georgia, serif;
+    --font-sans: var(--font-playfair), Georgia, serif;
+
+    /* Deep Forest Green background - like pine trees at night */
+    --background: 150 30% 8%;
+    /* Warm cream/snow white text for high contrast */
+    --foreground: 40 30% 95%;
+
+    /* Lighter forest green cards - more visible separation */
+    --card: 150 25% 14%;
+    --card-foreground: 40 30% 95%;
+
+    --popover: 150 25% 16%;
+    --popover-foreground: 40 30% 95%;
+
+    /* PRIMARY: Deep Christmas Red - darker for text contrast */
+    --primary: 350 80% 45%;
+    --primary-foreground: 0 0% 100%;
+
+    /* SECONDARY: Evergreen - for badges and tags */
+    --secondary: 140 50% 40%;
+    --secondary-foreground: 0 0% 100%;
+
+    /* Muted - darker forest for contrast */
+    --muted: 150 20% 12%;
+    --muted-foreground: 150 15% 60%;
+
+    /* Silver/Ice Accent */
+    --accent: 200 20% 75%;
+    --accent-foreground: 150 30% 8%;
+
+    --destructive: 0 75% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Subtle forest borders */
+    --border: 150 20% 22%;
+    --input: 150 20% 15%;
+    /* Silver focus ring */
+    --ring: 200 20% 75%;
+
+    --radius: 1rem;
+
+    /* Evergreen for success - brightened for text visibility */
+    --success: 140 55% 55%;
+    --success-foreground: 0 0% 100%;
+
+    /* Amber warning - brightened for dark background */
+    --warning: 40 90% 65%;
+    --warning-foreground: 150 30% 8%;
+
+    --correct: 140 55% 55%;
+    --correct-foreground: 0 0% 100%;
+
+    --incorrect: 350 80% 55%;
+    --incorrect-foreground: 0 0% 100%;
+
+    --flagged: 35 80% 60%;
+    --flagged-foreground: 150 30% 8%;
+
+    /* Ice Blue for info */
+    --info: 195 65% 55%;
+    --info-foreground: 0 0% 100%;
+
+    /* Performance tier colors (Christmas palette) */
+    --tier-excellent: 140 55% 45%;
+    --tier-excellent-foreground: 0 0% 100%;
+    --tier-great: 195 65% 55%;
+    --tier-great-foreground: 0 0% 100%;
+    --tier-good: 200 25% 70%;
+    --tier-good-foreground: 150 30% 8%;
+    --tier-passing: 35 75% 55%;
+    --tier-passing-foreground: 150 30% 8%;
+    --tier-failing: 350 80% 45%;
+    --tier-failing-foreground: 0 0% 100%;
+
+    /* Deep forest shadow */
+    --shadow-color: 150 40% 5%;
+  }
+
+
+  /* HIGH SPECIFICITY OVERRIDE: Ensure Holiday dark theme colors beat generic .dark */
+  .dark[data-theme="holiday"] {
+    --background: 150 30% 8%;
+    --foreground: 40 30% 95%;
+    --card: 150 25% 14%;
+    --card-foreground: 40 30% 95%;
+    --popover: 150 25% 16%;
+    --popover-foreground: 40 30% 95%;
+    --primary: 350 80% 45%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 140 50% 40%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 150 20% 12%;
+    --muted-foreground: 150 15% 60%;
+    --accent: 200 20% 75%;
+    --accent-foreground: 150 30% 8%;
+    --destructive: 0 75% 55%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 150 20% 22%;
+    --input: 150 20% 15%;
+    --ring: 200 20% 75%;
+  }
+
+  /* Note: Holiday snowfall is handled by HolidayParticles.tsx (tsparticles) */
+
+
+
+
+  /* VAPOR THEME (Synthwave/Retrowave) */
+  [data-theme="vapor"] {
+    --background: 270 40% 8%;
+    /* Deep Purple Night */
+    --foreground: 300 100% 95%;
+    /* Hot Pink White */
+
+    --radius: 0px;
+    /* Sharp "Digital" comers */
+
+    --card: 270 40% 12%;
+    --card-foreground: 300 100% 95%;
+
+    --popover: 270 40% 14%;
+    --popover-foreground: 300 100% 95%;
+
+    --primary: 320 100% 60%;
+    /* Hot Pink */
+    --primary-foreground: 270 40% 8%;
+
+    --secondary: 270 35% 18%;
+    --secondary-foreground: 300 100% 95%;
+
+    --muted: 270 35% 16%;
+    --muted-foreground: 280 40% 60%;
+
+    --accent: 190 100% 50%;
+    /* Electric Cyan */
+    --accent-foreground: 270 40% 8%;
+
+    --destructive: 350 100% 60%;
+    --destructive-foreground: 270 40% 8%;
+
+    --border: 270 35% 22%;
+    --input: 270 35% 16%;
+    --ring: 320 100% 60%;
+
+    --success: 160 100% 45%;
+    /* Neon Teal */
+    --success-foreground: 270 40% 8%;
+
+    --warning: 45 100% 55%;
+    /* Neon Yellow */
+    --warning-foreground: 270 40% 8%;
+
+    --correct: 160 100% 45%;
+    --correct-foreground: 270 40% 8%;
+
+    --incorrect: 350 100% 60%;
+    --incorrect-foreground: 270 40% 8%;
+
+    --flagged: 45 100% 55%;
+    --flagged-foreground: 270 40% 8%;
+
+    --info: 190 100% 50%;
+    /* Electric Cyan */
+    --info-foreground: 270 40% 8%;
+
+    /* Performance tier colors (synthwave variants) */
+    --tier-excellent: 160 100% 45%;
+    --tier-excellent-foreground: 270 40% 8%;
+    --tier-great: 190 100% 50%;
+    --tier-great-foreground: 270 40% 8%;
+    --tier-good: 200 100% 50%;
+    --tier-good-foreground: 270 40% 8%;
+    --tier-passing: 45 100% 55%;
+    --tier-passing-foreground: 270 40% 8%;
+    --tier-failing: 350 100% 60%;
+    --tier-failing-foreground: 270 40% 8%;
+
+    /* Unique: Hot Pink Glow */
+    --shadow-color: 320 100% 60%;
+  }
+
+  /* VAPOR THEME - SYNTHWAVE GRID + NEON GRADIENT */
+  [data-theme="vapor"] body {
+    background-color: hsl(270, 40%, 8%);
+    background-image:
+      /* Animated gradient overlay */
+      linear-gradient(135deg,
+        hsla(320, 100%, 50%, 0.15) 0%,
+        hsla(270, 40%, 8%, 0) 50%,
+        hsla(190, 100%, 50%, 0.15) 100%),
+      /* Synthwave grid */
+      linear-gradient(rgba(255, 0, 128, 0.1) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 0, 128, 0.1) 1px, transparent 1px),
+      /* Horizon glow */
+      radial-gradient(ellipse 100% 40% at 50% 100%, hsla(320, 100%, 50%, 0.2) 0%, transparent 70%);
+    background-size: 400% 400%, 40px 40px, 40px 40px, 100% 100%;
+    background-position: 0% 0%, 0 0, 0 0, center bottom;
+    animation: vapor-gradient-shift 8s ease infinite;
+  }
+
+  @keyframes vapor-gradient-shift {
+
+    0%,
+    100% {
+      background-position: 0% 50%, 0 0, 0 0, center bottom;
+    }
+
+    50% {
+      background-position: 100% 50%, 0 0, 0 0, center bottom;
+    }
+  }
+
+  /* VAPOR CARDS - Glowing neon borders */
+  [data-theme="vapor"] .card,
+  [data-theme="vapor"] .popover {
+    border: 1px solid hsla(320, 100%, 60%, 0.4) !important;
+    box-shadow:
+      0 0 15px hsla(320, 100%, 60%, 0.2),
+      0 0 30px hsla(190, 100%, 50%, 0.1),
+      inset 0 1px 0 hsla(320, 100%, 70%, 0.1) !important;
+    transition: all 0.3s ease;
+  }
+
+  [data-theme="vapor"] .card:hover {
+    border-color: hsla(320, 100%, 60%, 0.7) !important;
+    box-shadow:
+      0 0 20px hsla(320, 100%, 60%, 0.4),
+      0 0 40px hsla(190, 100%, 50%, 0.2),
+      inset 0 1px 0 hsla(320, 100%, 70%, 0.2) !important;
+  }
+
+  /* VAPOR BUTTONS - Neon glow on hover */
+  [data-theme="vapor"] button[class*="bg-primary"],
+  [data-theme="vapor"] a[class*="bg-primary"] {
+    text-shadow: 0 0 10px currentColor;
+    transition: all 0.3s ease;
+    font-style: italic;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 800;
+  }
+
+  [data-theme="vapor"] button[class*="bg-primary"]:hover,
+  [data-theme="vapor"] a[class*="bg-primary"]:hover {
+    box-shadow:
+      0 0 20px hsla(320, 100%, 60%, 0.6),
+      0 0 40px hsla(320, 100%, 60%, 0.3);
+    transform: translateY(-1px) skewX(-10deg);
+  }
+
+  [data-theme="vapor"] button[class*="bg-primary"]:active,
+  [data-theme="vapor"] a[class*="bg-primary"]:active {
+    transform: translateY(0) skewX(-10deg);
+    box-shadow: 0 0 15px hsla(320, 100%, 60%, 0.5);
+  }
+
+  /* VAPOR TYPOGRAPHY - Neon Text Glow + Sunset Gradient */
+  [data-theme="vapor"] h1,
+  [data-theme="vapor"] h2 {
+    background: linear-gradient(180deg,
+        hsl(320, 100%, 60%) 20%,
+        hsl(190, 100%, 50%) 80%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: none;
+    /* Clear shadow to let gradient show, usually better without conflicting shadows */
+    filter: drop-shadow(0 0 15px hsla(320, 100%, 60%, 0.5));
+    /* Use drop-shadow for gradient text */
+
+    font-style: italic;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    line-height: 1.1;
+  }
+
+  [data-theme="vapor"] h3,
+  [data-theme="vapor"] h4 {
+    color: hsl(190, 100%, 50%);
+    font-style: italic;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    text-shadow:
+      0 0 8px hsla(320, 100%, 60%, 0.6),
+      0 0 20px hsla(190, 100%, 50%, 0.2);
+  }
+
+  /* VAPOR INPUTS - Pink Neon Focus */
+  [data-theme="vapor"] input:focus,
+  [data-theme="vapor"] textarea:focus,
+  [data-theme="vapor"] select:focus {
+    box-shadow:
+      0 0 0 2px hsla(320, 100%, 60%, 0.4),
+      0 0 20px hsla(320, 100%, 60%, 0.3),
+      0 0 40px hsla(190, 100%, 50%, 0.15);
+    border-color: hsl(320, 100%, 60%) !important;
+  }
+
+  /* VAPOR HEADER - Neon Gradient Accent Line */
+  [data-theme="vapor"] header {
+    border-bottom: 2px solid transparent;
+    border-image: linear-gradient(90deg,
+        hsl(320, 100%, 60%) 0%,
+        hsl(190, 100%, 50%) 50%,
+        hsl(320, 100%, 60%) 100%) 1;
+    background: linear-gradient(180deg,
+        hsl(270, 40%, 10%) 0%,
+        hsl(270, 40%, 8%) 100%);
+  }
+
+  /* VAPOR FOOTER - Neon Gradient Accent */
+  [data-theme="vapor"] footer {
+    border-top: 2px solid transparent;
+    border-image: linear-gradient(90deg,
+        hsl(190, 100%, 50%) 0%,
+        hsl(320, 100%, 60%) 50%,
+        hsl(190, 100%, 50%) 100%) 1;
+  }
+
+  /* VAPOR LINKS - Neon Cyan Hover */
+  [data-theme="vapor"] a:not([class*="bg-"]):hover {
+    color: hsl(190, 100%, 60%);
+    text-shadow: 0 0 8px hsla(190, 100%, 50%, 0.6);
+  }
+
+  /* VAPOR SCROLLBAR - Neon Pink/Cyan Gradient */
+  [data-theme="vapor"] ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  [data-theme="vapor"] ::-webkit-scrollbar-track {
+    background: hsl(270, 40%, 10%);
+  }
+
+  [data-theme="vapor"] ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg,
+        hsl(320, 100%, 60%) 0%,
+        hsl(190, 100%, 50%) 100%);
+    border-radius: 0;
+    border: 2px solid hsl(270, 40%, 10%);
+  }
+
+  [data-theme="vapor"] ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg,
+        hsl(320, 100%, 70%) 0%,
+        hsl(190, 100%, 60%) 100%);
+  }
+
+  /* VAPOR BADGES - Neon glow */
+  [data-theme="vapor"] .badge {
+    border: 1px solid hsla(320, 100%, 60%, 0.5) !important;
+    box-shadow: 0 0 8px hsla(320, 100%, 60%, 0.3);
+    text-shadow: 0 0 4px currentColor;
+  }
+
+  /* BLOSSOM THEME (Sakura Season / Hanami) - Premium Romantic Edition 💕 */
+  [data-theme="blossom"] {
+    /* Typography: Romantic serif headings + soft rounded body */
+    --font-heading: var(--font-playfair), Georgia, serif;
+    --font-sans: var(--font-nunito), system-ui, sans-serif;
+
+    --background: 340 100% 97%;
+    /* Soft Pink Gradient Base */
+    --foreground: 340 60% 25%;
+    /* Deep Cherry Wood */
+
+    --card: 340 100% 98%;
+    /* Frosted Petal */
+    --card-foreground: 340 60% 25%;
+
+    --popover: 340 100% 98%;
+    --popover-foreground: 340 60% 25%;
+
+    --primary: 340 80% 65%;
+    /* Vibrant Cherry Blossom */
+    --primary-foreground: 340 60% 25%;
+    /* Switched to Ink for contrast */
+
+    --secondary: 340 40% 90%;
+    /* Pale Bud */
+    --secondary-foreground: 340 60% 25%;
+
+    --muted: 340 30% 92%;
+    --muted-foreground: 340 40% 40%;
+
+    --accent: 340 80% 65%;
+    /* Pink Accent */
+    --accent-foreground: 340 60% 25%;
+    /* Switched to Ink for contrast */
+
+    --destructive: 350 80% 55%;
+    --destructive-foreground: 340 60% 25%;
+    /* Switched to Ink for contrast */
+
+    --border: 340 40% 85%;
+    --input: 340 30% 92%;
+    --ring: 340 80% 65%;
+
+    --radius: 1.5rem;
+    /* Super Round / Soft / Cloud */
+
+    --success: 95 28% 70%;
+    /* Muted Sage */
+    --success-foreground: 0 0% 29%;
+
+    --warning: 35 80% 70%;
+    /* Soft Gold */
+    --warning-foreground: 0 0% 29%;
+
+    --correct: 95 28% 70%;
+    /* Muted Sage */
+    --correct-foreground: 0 0% 29%;
+
+    --incorrect: 0 60% 70%;
+    /* Soft Red */
+    --incorrect-foreground: 0 0% 29%;
+
+    --flagged: 35 80% 70%;
+    /* Soft Gold */
+    --flagged-foreground: 0 0% 29%;
+
+    --info: 240 60% 75%;
+    /* Soft Periwinkle - floral vibe */
+    --info-foreground: 0 0% 29%;
+
+    /* Performance tier colors (pastel variants) */
+    --tier-excellent: 95 28% 60%;
+    /* Slightly darker sage for text/icons */
+    --tier-excellent-foreground: 0 0% 29%;
+    --tier-great: 240 60% 75%;
+    /* Soft Periwinkle */
+    --tier-great-foreground: 0 0% 29%;
+    --tier-good: 180 50% 60%;
+    /* Soft Teal */
+    --tier-good-foreground: 0 0% 29%;
+    --tier-passing: 35 80% 60%;
+    /* Soft Gold */
+    --tier-passing-foreground: 0 0% 29%;
+    --tier-failing: 0 60% 65%;
+    /* Soft Red */
+    --tier-failing-foreground: 0 0% 29%;
+
+    /* Unique: Soft Pink Diffuse Shadows */
+    --shadow-color: 351 77% 88%;
+  }
+
+  /* MINT THEME (Fresh Sage / Earthy) */
+  [data-theme="mint"] {
+    /* Unique: Slab Serif for Field Guide Feel */
+    --font-heading: var(--font-roboto-slab), serif;
+    --font-sans: var(--font-roboto-slab), serif;
+
+    --background: 96 44% 95%;
+    /* Off-White Mint */
+    --foreground: 200 18% 26%;
+    /* Blue Grey */
+
+    --radius: 0.75rem;
+    /* Soft rounded comers */
+
+    --card: 96 40% 97%;
+    --card-foreground: 200 18% 26%;
+
+    --popover: 96 40% 97%;
+    --popover-foreground: 200 18% 26%;
+
+    --primary: 122 39% 84%;
+    /* Pastel Sage */
+    --primary-foreground: 200 18% 26%;
+
+    --secondary: 120 20% 90%;
+    --secondary-foreground: 200 18% 26%;
+
+    --muted: 120 20% 88%;
+    --muted-foreground: 200 15% 55%;
+
+    --accent: 122 39% 64%;
+    /* Fresh Green */
+    --accent-foreground: 200 18% 26%;
+
+    --destructive: 0 50% 65%;
+    /* Muted Rose */
+    --destructive-foreground: 96 44% 95%;
+
+    --border: 122 20% 70%;
+    /* Darker Sage for definition */
+    --input: 120 20% 88%;
+    --ring: 122 39% 64%;
+
+    --success: 122 43% 39%;
+    /* Forest Green */
+    --success-foreground: 96 44% 95%;
+    /* Light text on dark success */
+
+    --warning: 40 60% 60%;
+    /* Earthy Gold */
+    --warning-foreground: 200 18% 26%;
+
+    --correct: 122 43% 39%;
+    /* Forest Green */
+    --correct-foreground: 96 44% 95%;
+
+    --incorrect: 0 50% 60%;
+    /* Muted Rose */
+    --incorrect-foreground: 96 44% 95%;
+
+    --flagged: 40 60% 60%;
+    --flagged-foreground: 200 18% 26%;
+
+    --info: 200 40% 50%;
+    /* River Blue - fresh water */
+    --info-foreground: 200 18% 26%;
+
+    /* Performance tier colors (earthy mint variants) */
+    --tier-excellent: 122 43% 39%;
+    /* Forest Green */
+    --tier-excellent-foreground: 96 44% 95%;
+    --tier-great: 200 40% 50%;
+    /* River Blue */
+    --tier-great-foreground: 96 44% 95%;
+    --tier-good: 160 30% 50%;
+    /* Muted Teal */
+    --tier-good-foreground: 96 44% 95%;
+    --tier-passing: 40 60% 55%;
+    /* Earthy Gold */
+    --tier-passing-foreground: 200 18% 26%;
+    --tier-failing: 0 50% 60%;
+    /* Muted Rose */
+    --tier-failing-foreground: 96 44% 95%;
+  }
+
+  /* MINT THEME - GRAPH PAPER & GRAIN */
+  [data-theme="mint"] body {
+    /* Graph Paper Grid */
+    background-color: hsl(96, 44%, 95%);
+    background-image:
+      linear-gradient(rgba(55, 71, 79, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(55, 71, 79, 0.05) 1px, transparent 1px);
+    background-size: 20px 20px;
+    /* We could add 'grain' via a pseudo-element if needed, but this grid is clean */
+  }
+
+  /* MINT HEADER - Fresh green accent */
+  [data-theme="mint"] header {
+    border-bottom: 2px solid hsl(122, 20%, 70%);
+    background: linear-gradient(180deg,
+        hsl(96, 40%, 97%) 0%,
+        hsl(96, 44%, 95%) 100%);
+  }
+
+  /* MINT FOOTER - Subtle sage accent */
+  [data-theme="mint"] footer {
+    border-top: 2px solid hsl(122, 20%, 70%);
+    background: hsl(96, 40%, 96%);
+  }
+
+  /* MINT BADGES - Field guide style */
+  [data-theme="mint"] .badge {
+    border: 2px solid currentColor !important;
+    box-shadow: 2px 2px 0 hsla(122, 39%, 64%, 0.3);
+    font-weight: 700;
+  }
+
+  /* MINT SCROLLBAR - Sage green */
+  [data-theme="mint"] ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  [data-theme="mint"] ::-webkit-scrollbar-track {
+    background: hsl(96, 40%, 92%);
+  }
+
+  [data-theme="mint"] ::-webkit-scrollbar-thumb {
+    background: hsl(122, 39%, 70%);
+    border-radius: 5px;
+    border: 2px solid hsl(96, 40%, 92%);
+  }
+
+  [data-theme="mint"] ::-webkit-scrollbar-thumb:hover {
+    background: hsl(122, 43%, 55%);
+  }
+
+  /* MINT LINKS - Forest Green for contrast (Wes Anderson vibez) */
+  [data-theme="mint"] a:not([class*="bg-"]) {
+    color: hsl(122, 43%, 39%) !important;
+    text-decoration-color: hsl(122, 39%, 70%);
+    text-decoration-thickness: 2px;
+  }
+
+  [data-theme="mint"] a:not([class*="bg-"]):hover {
+    text-decoration-color: hsl(122, 43%, 39%);
+  }
+
+
+
+  /* MINT TYPOGRAPHY - "Title Card" Style */
+  [data-theme="mint"] h1,
+  [data-theme="mint"] h2,
+  [data-theme="mint"] h3 {
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: hsl(122, 43%, 39%);
+    /* Forest Green headers */
+  }
+
+  /* MINT CARD TITLES - Center Aligned (Symmetry) */
+  [data-theme="mint"] .card h3,
+  [data-theme="mint"] .card h4 {
+    text-align: center;
+    border-bottom: 2px solid hsl(122, 20%, 80%);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  /* MINT INPUTS - "Scout Log" Styling */
+  [data-theme="mint"] input,
+  [data-theme="mint"] textarea,
+  [data-theme="mint"] select {
+    background-color: hsl(45, 20%, 98%) !important;
+    /* Slightly warmer input bg */
+    border: 2px solid hsl(122, 20%, 70%) !important;
+    box-shadow: 3px 3px 0 hsla(122, 39%, 64%, 0.2) !important;
+  }
+
+  [data-theme="mint"] input:focus,
+  [data-theme="mint"] textarea:focus,
+  [data-theme="mint"] select:focus {
+    box-shadow: 4px 4px 0 hsla(122, 39%, 64%, 0.3) !important;
+    border-color: hsl(122, 43%, 39%) !important;
+  }
+
+  /* MINT BUTTONS - "Merit Badge" Dashed Hover */
+  [data-theme="mint"] button[class*="bg-primary"]:hover,
+  [data-theme="mint"] a[class*="bg-primary"]:hover {
+    border: 2px dashed hsl(122, 43%, 39%) !important;
+    background-image: none !important;
+    /* Ensure solid color for badge look */
+  }
+
+  /* MINT BUTTONS - :active state */
+  [data-theme="mint"] button[class*="bg-primary"]:active,
+  [data-theme="mint"] a[class*="bg-primary"]:active {
+    transform: translateY(1px);
+    box-shadow: 2px 2px 0 hsla(122, 39%, 64%, 0.2) !important;
+  }
+}
+
+@layer base {
   * {
-    @apply border-slate-200;
+    @apply border-border;
   }
 
   body {
-    @apply bg-slate-50 text-slate-900 antialiased;
-    font-feature-settings:
-      "rlig" 1,
-      "calt" 1;
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    /* GLOBAL MOTION POLISH: Smooth theme transitions */
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 
   /* CRITICAL: Focus visible styles for accessibility */
   *:focus-visible {
-    @apply outline-none ring-2 ring-blue-600 ring-offset-2;
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  /* FLUID TYPOGRAPHY: Scale headings smoothly with viewport */
+  h1 {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    /* Min 32px, Max 56px */
+    line-height: 1.1;
+  }
+
+  /* GLOBAL SELECTION: Theme-aware highlight color */
+  ::selection {
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
   }
 }
 
 @layer components {
+
   /* Question display styles */
   .question-text {
-    @apply text-lg font-semibold leading-relaxed text-slate-900 sm:text-xl;
+    @apply text-lg font-semibold leading-relaxed text-foreground sm:text-xl;
   }
 
   /* Option button states */
   .option-base {
-    @apply flex w-full items-center justify-between rounded-lg border bg-white px-4 py-3 text-left text-slate-900 transition;
+    @apply flex w-full items-center justify-between rounded-lg border bg-card px-4 py-3 text-left text-foreground transition;
   }
 
   .option-default {
-    @apply border-slate-200 hover:border-blue-200 hover:bg-blue-50/60;
+    @apply border-border hover:border-primary/50 hover:bg-primary/5;
   }
 
   .option-selected {
-    @apply border-blue-500 bg-blue-50 text-blue-900 hover:border-blue-600;
+    @apply border-primary bg-primary/10 text-primary hover:border-primary;
   }
 
   .option-correct {
-    @apply border-green-500 bg-green-50 text-green-900;
+    @apply border-success bg-success/10 text-success;
   }
 
   .option-incorrect {
-    @apply border-red-500 bg-red-50 text-red-900;
+    @apply border-destructive bg-destructive/10 text-destructive;
   }
 
   /* Card variants */
   .card {
-    @apply rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900;
+    @apply rounded-xl border border-border bg-card shadow-sm;
   }
 
   .card-hover {
@@ -72,6 +2120,7 @@
 }
 
 @layer utilities {
+
   /* Custom scrollbar for sidebars */
   .scrollbar-thin {
     scrollbar-width: thin;
@@ -92,24 +2141,1286 @@
     border-radius: 9999px;
   }
 
+  /* GLASSMORPHISM */
+  .glass {
+    @apply bg-background/70 backdrop-blur-lg border-b border-white/10 shadow-sm supports-[backdrop-filter]:bg-background/60;
+  }
+
+  /* RETRO SHADOWS OVERRIDE (Includes Forest for Retro Dark) */
+  [data-theme="retro"] .shadow-sm,
+  [data-theme="retro"] .shadow-md,
+  [data-theme="retro"] .shadow-lg,
+  [data-theme="retro"] .glass,
+  [data-theme="retro-dark"] .shadow-sm,
+  [data-theme="retro-dark"] .shadow-md,
+  [data-theme="retro-dark"] .shadow-lg,
+  [data-theme="retro-dark"] .glass {
+    box-shadow: 4px 4px 0px 0px currentColor !important;
+    backdrop-filter: none !important;
+    border: 2px solid currentColor !important;
+  }
+
+  /* RETRO RADIUS OVERRIDE (Nuclear Option) */
+  [data-theme="retro"] [class*="rounded-"],
+  [data-theme="retro-dark"] [class*="rounded-"] {
+    border-radius: 0px !important;
+  }
+
+  /* MINT "FIELD GUIDE" TARGETED BORDERS */
+  [data-theme="mint"] .btn:not(.border-0),
+  [data-theme="mint"] input:not(.border-0),
+  [data-theme="mint"] textarea:not(.border-0) {
+    border-width: 2px !important;
+  }
+
+  /* MINT "STATIONERY" DOUBLE BORDERS */
+  [data-theme="mint"] .card,
+  [data-theme="mint"] .popover {
+    border-style: double !important;
+    border-width: 4px !important;
+  }
+
+  /* MINT "HARD PASTEL" SHADOWS */
+  [data-theme="mint"] .shadow-sm,
+  [data-theme="mint"] .shadow-md,
+  [data-theme="mint"] .shadow-lg {
+    box-shadow: 5px 5px 0px 0px hsl(var(--primary) / 0.4) !important;
+    opacity: 1 !important;
+    /* Ensure opacity is reset if overridden elsewhere */
+  }
+
+  /* ========================================================================== */
+  /* RISO-PRINT (ZINE) THEME - Risograph-inspired ink & paper aesthetic         */
+  /* ========================================================================== */
+
+  [data-theme="riso"] {
+    /* Typewriter monospace font */
+    --font-heading: var(--font-courier), "Courier New", monospace;
+    --font-sans: var(--font-courier), "Courier New", monospace;
+
+    /* Warm cream paper background */
+    --background: 45 25% 93%;
+    /* Dark ink text */
+    --foreground: 0 0% 12%;
+
+    /* Slightly imperfect corners */
+    --radius: 0.125rem;
+
+    /* Paper-colored cards */
+    --card: 45 30% 96%;
+    --card-foreground: 0 0% 12%;
+
+    --popover: 45 30% 96%;
+    --popover-foreground: 0 0% 12%;
+
+    /* Fluorescent Pink Primary */
+    --primary: 322 100% 52%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Sunflower Yellow Secondary */
+    --secondary: 43 100% 54%;
+    --secondary-foreground: 0 0% 12%;
+
+    --muted: 45 20% 88%;
+    --muted-foreground: 0 0% 40%;
+
+    /* Teal Accent */
+    --accent: 174 100% 32%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Red Destructive */
+    --destructive: 0 85% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Subtle borders */
+    --border: 0 0% 70%;
+    --input: 45 30% 96%;
+    --ring: 322 100% 52%;
+
+    /* Status Colors - Bright ink style */
+    --success: 174 100% 32%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 43 100% 54%;
+    --warning-foreground: 0 0% 12%;
+
+    --correct: 174 100% 32%;
+    --correct-foreground: 0 0% 100%;
+
+    --incorrect: 0 85% 50%;
+    --incorrect-foreground: 0 0% 100%;
+
+    --flagged: 43 100% 54%;
+    --flagged-foreground: 0 0% 12%;
+
+    --info: 322 100% 52%;
+    --info-foreground: 0 0% 100%;
+
+    /* Performance tier colors (ink variants) */
+    --tier-excellent: 174 100% 32%;
+    --tier-excellent-foreground: 0 0% 100%;
+    --tier-great: 322 100% 52%;
+    --tier-great-foreground: 0 0% 100%;
+    --tier-good: 200 80% 45%;
+    --tier-good-foreground: 0 0% 100%;
+    --tier-passing: 43 100% 54%;
+    --tier-passing-foreground: 0 0% 12%;
+    --tier-failing: 0 85% 50%;
+    --tier-failing-foreground: 0 0% 100%;
+
+    /* Soft shadows */
+    --shadow-color: 0 0% 50%;
+  }
+
+  /* RISO THEME - HEAVY PAPER TEXTURE BACKGROUND */
+  [data-theme="riso"] body {
+    background-color: hsl(45, 30%, 91%);
+    /* Heavy noise/grain texture - 15% opacity for authentic riso feel */
+    background-image:
+      url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.15'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+  }
+
+  /* RISO CARDS - Per-card unique ink washes with blend modes */
+  [data-theme="riso"] .card {
+    position: relative;
+    background: hsl(45, 30%, 94%) !important;
+    border: 2px dashed hsla(0, 0%, 40%, 0.4) !important;
+    border-radius: 0 !important;
+    box-shadow: 3px 3px 0 hsla(0, 0%, 0%, 0.1) !important;
+    transform: rotate(-1deg);
+    transition: transform 0.15s ease;
+    overflow: hidden;
+  }
+
+  /* Ink wash overlay - different color per card position */
+  [data-theme="riso"] .card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg,
+        hsla(322, 100%, 55%, 0.25) 0%,
+        hsla(322, 100%, 55%, 0.1) 50%,
+        transparent 100%);
+    mix-blend-mode: multiply;
+    pointer-events: none;
+  }
+
+  /* 2nd card - Yellow ink wash */
+  [data-theme="riso"] .card:nth-child(2)::before,
+  [data-theme="riso"] .card:nth-child(5)::before,
+  [data-theme="riso"] .card:nth-child(8)::before {
+    background: linear-gradient(135deg,
+        hsla(43, 100%, 55%, 0.3) 0%,
+        hsla(43, 100%, 55%, 0.1) 50%,
+        transparent 100%);
+  }
+
+  /* 3rd card - Teal ink wash */
+  [data-theme="riso"] .card:nth-child(3)::before,
+  [data-theme="riso"] .card:nth-child(6)::before,
+  [data-theme="riso"] .card:nth-child(9)::before {
+    background: linear-gradient(135deg,
+        hsla(174, 100%, 35%, 0.25) 0%,
+        hsla(174, 100%, 35%, 0.1) 50%,
+        transparent 100%);
+  }
+
+  /* 4th card - Multi-color ink bleeding effect */
+  [data-theme="riso"] .card:nth-child(4)::before,
+  [data-theme="riso"] .card:nth-child(7)::before,
+  [data-theme="riso"] .card:nth-child(10)::before {
+    background: linear-gradient(120deg,
+        hsla(322, 100%, 55%, 0.2) 0%,
+        hsla(43, 100%, 55%, 0.25) 50%,
+        hsla(174, 100%, 35%, 0.2) 100%);
+  }
+
+  /* Varying rotations for hand-placed feel */
+  [data-theme="riso"] .card:nth-child(even) {
+    transform: rotate(1.2deg);
+  }
+
+  [data-theme="riso"] .card:nth-child(3n) {
+    transform: rotate(-0.8deg);
+  }
+
+  [data-theme="riso"] .card:nth-child(4n) {
+    transform: rotate(1.5deg);
+  }
+
+  [data-theme="riso"] .card:hover {
+    transform: rotate(0deg) translateY(-3px);
+    box-shadow: 4px 4px 0 hsla(0, 0%, 0%, 0.15) !important;
+  }
+
+  /* RISO BUTTONS - Solid ink colors with slight rotation */
+  [data-theme="riso"] button[class*="bg-primary"],
+  [data-theme="riso"] a[class*="bg-primary"] {
+    border: none !important;
+    border-radius: 2px !important;
+    box-shadow: 2px 2px 0 hsla(0, 0%, 0%, 0.15);
+    transform: rotate(0.5deg);
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+  }
+
+  [data-theme="riso"] button[class*="bg-primary"]:hover,
+  [data-theme="riso"] a[class*="bg-primary"]:hover {
+    transform: rotate(0deg) translateY(-1px);
+    box-shadow: 3px 3px 0 hsla(0, 0%, 0%, 0.2);
+  }
+
+  [data-theme="riso"] button[class*="bg-primary"]:active,
+  [data-theme="riso"] a[class*="bg-primary"]:active {
+    transform: rotate(-0.5deg) translateY(1px);
+    box-shadow: 1px 1px 0 hsla(0, 0%, 0%, 0.1);
+  }
+
+  /* RISO TYPOGRAPHY - Typewriter with wavy underlines */
+  [data-theme="riso"] h1,
+  [data-theme="riso"] h2 {
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    text-decoration: underline;
+    text-decoration-style: wavy;
+    text-decoration-color: hsl(174, 100%, 32%);
+    text-underline-offset: 6px;
+    text-decoration-thickness: 2px;
+  }
+
+  [data-theme="riso"] h3 {
+    font-weight: 700;
+    border-bottom: 2px solid hsl(322, 100%, 52%);
+    display: inline-block;
+    padding-bottom: 2px;
+  }
+
+  /* RISO INPUTS - Paper style with subtle border */
+  [data-theme="riso"] input,
+  [data-theme="riso"] textarea,
+  [data-theme="riso"] select {
+    background: hsl(45, 30%, 96%) !important;
+    border: 1px solid hsla(0, 0%, 50%, 0.4) !important;
+    border-radius: 2px !important;
+    box-shadow: inset 1px 1px 2px hsla(0, 0%, 0%, 0.05);
+  }
+
+  [data-theme="riso"] input:focus,
+  [data-theme="riso"] textarea:focus,
+  [data-theme="riso"] select:focus {
+    outline: none;
+    border-color: hsl(322, 100%, 52%) !important;
+    box-shadow: 0 0 0 2px hsla(322, 100%, 52%, 0.2);
+  }
+
+  /* RISO HEADER - Teal underline & Spacing Fix */
+  [data-theme="riso"] header {
+    border-bottom: 3px solid hsl(174, 100%, 32%);
+    background: hsl(45, 25%, 93%);
+  }
+
+  /* Fix for bunched header links due to wide Courier font */
+  [data-theme="riso"] header nav {
+    margin-left: 4rem;
+    gap: 3rem !important;
+  }
+
+  /* RISO FOOTER - Pink top border */
+  [data-theme="riso"] footer {
+    border-top: 3px solid hsl(322, 100%, 52%);
+    background: hsl(45, 25%, 93%);
+  }
+
+  /* RISO LINKS - Pink highlight */
+  [data-theme="riso"] a:not([class*="bg-"]) {
+    color: hsl(322, 100%, 45%);
+    text-decoration: underline;
+    text-decoration-style: dotted;
+    text-underline-offset: 3px;
+  }
+
+  [data-theme="riso"] a:not([class*="bg-"]):hover {
+    color: hsl(174, 100%, 32%);
+    text-decoration-style: solid;
+  }
+
+  /* RISO SCROLLBAR - Ink style */
+  [data-theme="riso"] ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  [data-theme="riso"] ::-webkit-scrollbar-track {
+    background: hsl(45, 25%, 90%);
+  }
+
+  [data-theme="riso"] ::-webkit-scrollbar-thumb {
+    background: hsl(322, 100%, 52%);
+    border-radius: 0;
+  }
+
+  [data-theme="riso"] ::-webkit-scrollbar-thumb:hover {
+    background: hsl(174, 100%, 32%);
+  }
+
+  /* RISO BADGES - Per-color ink variants with tilt */
+  [data-theme="riso"] [class*="badge"],
+  [data-theme="riso"] [class*="Badge"] {
+    border-radius: 0 !important;
+    border: 2px solid currentColor !important;
+    font-weight: 700;
+    transform: rotate(-2deg);
+    box-shadow: 2px 2px 0 hsla(0, 0%, 0%, 0.15);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  [data-theme="riso"] [class*="badge"]:nth-child(even),
+  [data-theme="riso"] [class*="Badge"]:nth-child(even) {
+    transform: rotate(1.5deg);
+  }
+
+  [data-theme="riso"] [class*="badge"]:nth-child(3n),
+  [data-theme="riso"] [class*="Badge"]:nth-child(3n) {
+    transform: rotate(-1deg);
+  }
+
+
+  /* ========================================================================== */
+  /* HOLIDAY THEME - COMPREHENSIVE FESTIVE ENHANCEMENTS                         */
+  /* ========================================================================== */
+  /* Note: Snowfall is now handled by HolidayParticles.tsx (tsparticles) */
+
+  /* HOLIDAY BACKGROUND - Subtle pine texture for depth */
+  [data-theme="holiday"] body {
+    background-color: hsl(150, 30%, 8%);
+    /* Subtle noise texture for organic feel */
+    background-image:
+      url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.06'/%3E%3C/svg%3E"),
+      radial-gradient(ellipse 80% 50% at 50% 0%, hsla(150, 35%, 15%, 0.4) 0%, transparent 60%);
+    background-repeat: repeat, no-repeat;
+    background-attachment: fixed;
+  }
+
+  /* HOLIDAY TYPOGRAPHY - Elegant and clean */
+  [data-theme="holiday"] h1,
+  [data-theme="holiday"] h2 {
+    /* No text-shadow for clean readability */
+    letter-spacing: 0.02em;
+  }
+
+  [data-theme="holiday"] h1 {
+    font-weight: 700;
+  }
+
+  /* HOLIDAY CARDS - Red accent + Classic red/white candy-cane top + depth */
+  [data-theme="holiday"] .card {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid hsla(150, 20%, 30%, 0.6) !important;
+    border-left: 4px solid hsl(350, 80%, 45%) !important;
+    transition: all 0.3s ease;
+    background: linear-gradient(135deg,
+        hsl(150, 25%, 14%) 0%,
+        hsl(150, 22%, 12%) 100%);
+    box-shadow:
+      0 2px 8px hsla(150, 40%, 5%, 0.5),
+      0 4px 16px hsla(150, 40%, 5%, 0.3),
+      inset 0 1px 0 hsla(150, 30%, 25%, 0.3);
+  }
+
+  [data-theme="holiday"] .card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    /* Classic red and white candy cane */
+    background: repeating-linear-gradient(90deg,
+        #dc2626 0px,
+        #dc2626 10px,
+        #fafafa 10px,
+        #fafafa 20px);
+    z-index: 1;
+  }
+
+  [data-theme="holiday"] .card:hover {
+    box-shadow:
+      0 8px 32px hsla(200, 25%, 75%, 0.12),
+      0 4px 16px hsla(350, 80%, 45%, 0.2),
+      inset 0 1px 0 hsla(150, 30%, 30%, 0.4) !important;
+    transform: translateY(-3px);
+    border-color: hsla(150, 25%, 35%, 0.8) !important;
+    border-left-color: hsl(200, 25%, 75%) !important;
+  }
+
+  /* HOLIDAY BUTTONS - Red with clean text (no shadow for readability) */
+  [data-theme="holiday"] button[class*="bg-primary"],
+  [data-theme="holiday"] a[class*="bg-primary"] {
+    background: linear-gradient(135deg, hsl(350, 80%, 45%) 0%, hsl(350, 75%, 38%) 100%);
+    transition: all 0.3s ease;
+    /* No text-shadow for better readability */
+    color: white !important;
+  }
+
+  [data-theme="holiday"] button[class*="bg-primary"]:hover,
+  [data-theme="holiday"] a[class*="bg-primary"]:hover {
+    background: linear-gradient(135deg, hsl(350, 85%, 50%) 0%, hsl(350, 80%, 42%) 100%);
+    box-shadow:
+      0 0 20px hsla(200, 30%, 70%, 0.3),
+      0 4px 15px hsla(350, 80%, 50%, 0.4);
+    transform: translateY(-1px);
+  }
+
+  [data-theme="holiday"] button[class*="bg-primary"]:active,
+  [data-theme="holiday"] a[class*="bg-primary"]:active {
+    transform: translateY(0);
+    box-shadow: 0 0 15px hsla(200, 30%, 70%, 0.25);
+  }
+
+  /* HOLIDAY SECONDARY BUTTONS - Green accent */
+  [data-theme="holiday"] button[class*="bg-secondary"],
+  [data-theme="holiday"] a[class*="bg-secondary"] {
+    background: linear-gradient(135deg, hsl(140, 55%, 40%) 0%, hsl(140, 50%, 35%) 100%);
+  }
+
+  [data-theme="holiday"] button[class*="bg-secondary"]:hover,
+  [data-theme="holiday"] a[class*="bg-secondary"]:hover {
+    box-shadow: 0 0 15px hsla(140, 60%, 45%, 0.4);
+  }
+
+  [data-theme="holiday"] button[class*="bg-secondary"]:active,
+  [data-theme="holiday"] a[class*="bg-secondary"]:active {
+    transform: translateY(1px);
+    box-shadow: 0 0 10px hsla(140, 60%, 45%, 0.3);
+  }
+
+  /* HOLIDAY RATING BUTTONS (Again/Hard/Good) - Enhanced styling */
+  [data-theme="holiday"] button[class*="border-destructive"],
+  [data-theme="holiday"] button[class*="border-warning"],
+  [data-theme="holiday"] button[class*="border-success"] {
+    background: hsla(150, 20%, 12%, 0.8) !important;
+    border-width: 2px !important;
+    justify-content: center !important;
+    font-weight: 600;
+  }
+
+  /* Again button - red accent */
+  [data-theme="holiday"] button[class*="border-destructive"] {
+    border-color: hsl(350, 80%, 55%) !important;
+    color: hsl(350, 80%, 65%) !important;
+  }
+
+  [data-theme="holiday"] button[class*="border-destructive"]:hover {
+    background: hsla(350, 80%, 50%, 0.15) !important;
+    box-shadow: 0 0 12px hsla(350, 80%, 55%, 0.3);
+  }
+
+  /* Hard button - amber accent */
+  [data-theme="holiday"] button[class*="border-warning"] {
+    border-color: hsl(40, 90%, 55%) !important;
+    color: hsl(40, 95%, 60%) !important;
+  }
+
+  [data-theme="holiday"] button[class*="border-warning"]:hover {
+    background: hsla(40, 90%, 50%, 0.15) !important;
+    box-shadow: 0 0 12px hsla(40, 90%, 55%, 0.3);
+  }
+
+  /* Good button - green accent */
+  [data-theme="holiday"] button[class*="border-success"] {
+    border-color: hsl(140, 60%, 50%) !important;
+    color: hsl(140, 65%, 60%) !important;
+  }
+
+  [data-theme="holiday"] button[class*="border-success"]:hover {
+    background: hsla(140, 60%, 45%, 0.15) !important;
+    box-shadow: 0 0 12px hsla(140, 60%, 50%, 0.3);
+  }
+
+  [data-theme="holiday"] a:not([class*="bg-"]):hover {
+    color: hsl(200, 40%, 75%);
+    text-decoration-color: hsl(200, 30%, 70%);
+  }
+
+  /* HOLIDAY INPUTS - Silver focus glow */
+  [data-theme="holiday"] input:focus,
+  [data-theme="holiday"] textarea:focus,
+  [data-theme="holiday"] select:focus {
+    box-shadow: 0 0 0 3px hsla(200, 30%, 70%, 0.25);
+  }
+
+  /* HOLIDAY HEADER - Red accent on forest green with subtle gradient */
+  [data-theme="holiday"] header {
+    border-bottom: 2px solid hsl(350, 80%, 45%);
+    background: linear-gradient(180deg,
+        hsl(150, 30%, 12%) 0%,
+        hsl(150, 30%, 8%) 100%);
+    box-shadow: 0 2px 12px hsla(150, 40%, 5%, 0.4);
+  }
+
+  /* HOLIDAY FOOTER - Subtle forest accent */
+  [data-theme="holiday"] footer {
+    border-top: 2px solid hsl(350, 60%, 45%);
+    background: hsl(150, 30%, 10%);
+    box-shadow: 0 -4px 20px hsla(150, 40%, 5%, 0.3);
+  }
+
+  /* HOLIDAY BADGES - Festive variants with explicit contrast */
+  [data-theme="holiday"] .badge,
+  [data-theme="holiday"] [class*="rounded-full"][class*="bg-"] {
+    border: 1px solid hsla(200, 30%, 70%, 0.3);
+  }
+
+  /* Warning badges need dark text for contrast on amber */
+  [data-theme="holiday"] .badge[class*="bg-warning"],
+  [data-theme="holiday"] [class*="bg-warning"] {
+    color: hsl(20, 30%, 15%) !important;
+  }
+
+  [data-theme="holiday"] [class*="bg-primary"],
+  [data-theme="holiday"] [class*="bg-destructive"] {
+    color: white !important;
+  }
+
+  /* HOLIDAY QUIZ ANSWER OPTIONS - Selected state needs solid background for readability */
+  /* Target buttons in radiogroup with primary ring (selected quiz answers) */
+  [data-theme="holiday"] [role="radiogroup"] button[class*="ring-primary"] {
+    background-color: hsl(350, 80%, 45%) !important;
+    border-color: hsl(350, 80%, 40%) !important;
+  }
+
+  /* Text and badge inside selected quiz option should be white */
+  [data-theme="holiday"] [role="radiogroup"] button[class*="ring-primary"] span {
+    color: white !important;
+    background-color: hsla(0, 0%, 100%, 0.2) !important;
+  }
+
+  /* Main text (not the letter badge) should just be white, no bg */
+  [data-theme="holiday"] [role="radiogroup"] button[class*="ring-primary"] span.flex-1 {
+    background-color: transparent !important;
+  }
+
+  /* HOLIDAY STAT CARDS (top bar) */
+  [data-theme="holiday"] .card[class*="rounded-xl"] {
+    border-left-width: 3px;
+  }
+
+  /* HOLIDAY SCROLLBAR - Red/white candy-cane stripes */
+  [data-theme="holiday"] ::-webkit-scrollbar-thumb {
+    background: repeating-linear-gradient(45deg,
+        #c62828 0px,
+        #c62828 8px,
+        #fafafa 8px,
+        #fafafa 16px);
+    border: 2px solid transparent;
+    background-clip: content-box;
+    border-radius: 1rem;
+  }
+
+  [data-theme="holiday"] ::-webkit-scrollbar-track {
+    background: hsla(150, 25%, 8%, 0.5);
+  }
+
+  [data-theme="holiday"] ::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
+
+  /* HOLIDAY MODAL/DIALOG - Ensure dark theme applies */
+  [data-theme="holiday"] [role="dialog"],
+  [data-theme="holiday"] [role="presentation"]>div {
+    background-color: hsl(150, 25%, 14%) !important;
+    border-color: hsl(150, 20%, 22%) !important;
+  }
+
+  /* HOLIDAY MODE SELECT CARDS - Target only the rounded-xl cards in modals */
+  [data-theme="holiday"] [role="dialog"] button.rounded-xl[aria-pressed="false"] {
+    background-color: hsl(150, 22%, 12%) !important;
+    border-color: hsl(150, 20%, 25%) !important;
+  }
+
+  /* Selected mode card - solid primary background with white text */
+  [data-theme="holiday"] [role="dialog"] button.rounded-xl[aria-pressed="true"] {
+    background-color: hsl(350, 80%, 45%) !important;
+    border-color: hsl(350, 80%, 40%) !important;
+  }
+
+  /* All text inside selected mode card should be white */
+  [data-theme="holiday"] [role="dialog"] button.rounded-xl[aria-pressed="true"] h3,
+  [data-theme="holiday"] [role="dialog"] button.rounded-xl[aria-pressed="true"] p,
+  [data-theme="holiday"] [role="dialog"] button.rounded-xl[aria-pressed="true"] li,
+  [data-theme="holiday"] [role="dialog"] button.rounded-xl[aria-pressed="true"] span {
+    color: white !important;
+  }
+
+  /* Icon container in selected mode card - subtle white background */
+  [data-theme="holiday"] [role="dialog"] button.rounded-xl[aria-pressed="true"]>div:first-child {
+    background-color: hsla(0, 0%, 100%, 0.15) !important;
+    color: white !important;
+  }
+
+  [data-theme="retro-dark"] .shadow-sm:not(button),
+  [data-theme="retro-dark"] .shadow-md:not(button),
+  [data-theme="retro-dark"] .shadow-lg:not(button),
+  [data-theme="retro-dark"] .glass:not(button) {
+    box-shadow: none !important;
+    background: var(--card);
+  }
+
+  /* -------------------------------------------------------------------------- */
+  /* TYPOGRAPHY & TEXTURE OVERRIDES */
+  /* -------------------------------------------------------------------------- */
+
+  /* RETRO FONT SCALE CORRECTIONS - HYBRID APPROACH */
+  /* Headings use pixel font (Press Start 2P) with tight scaling */
+  /* Body uses JetBrains Mono at normal sizes for readability */
+
+  [data-theme="retro"],
+  [data-theme="retro-dark"] {
+    /* Base font is now readable JetBrains Mono - use normal sizing */
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* Headings still use pixel font - need careful scaling */
+  [data-theme="retro"] h1,
+  [data-theme="retro-dark"] h1 {
+    font-family: var(--font-press-start), monospace;
+    font-size: clamp(16px, 2.5vw, 24px) !important;
+    line-height: 1.4 !important;
+    letter-spacing: 0.05em;
+  }
+
+  [data-theme="retro"] h2,
+  [data-theme="retro-dark"] h2 {
+    font-family: var(--font-press-start), monospace;
+    font-size: clamp(13px, 2vw, 18px) !important;
+    line-height: 1.4 !important;
+    letter-spacing: 0.03em;
+  }
+
+  [data-theme="retro"] h3,
+  [data-theme="retro-dark"] h3 {
+    font-family: var(--font-press-start), monospace;
+    font-size: clamp(11px, 1.5vw, 15px) !important;
+    line-height: 1.4 !important;
+    letter-spacing: 0.02em;
+  }
+
+  /* Buttons use pixel font for retro feel, but readable sizes */
+  [data-theme="retro"] button,
+  [data-theme="retro-dark"] button {
+    font-family: var(--font-press-start), monospace;
+    font-size: clamp(9px, 1vw, 12px) !important;
+    line-height: 1.5 !important;
+    letter-spacing: 0.02em;
+  }
+
+  /* RETRO BUTTONS - Pixel press effect */
+  [data-theme="retro"] button[class*="bg-primary"]:active,
+  [data-theme="retro"] a[class*="bg-primary"]:active,
+  [data-theme="retro-dark"] button[class*="bg-primary"]:active,
+  [data-theme="retro-dark"] a[class*="bg-primary"]:active {
+    transform: translate(2px, 2px) !important;
+    box-shadow: 2px 2px 0px 0px currentColor !important;
+  }
+
+  /* RETRO BADGES - Pixel blocky style */
+  [data-theme="retro"] .badge,
+  [data-theme="retro-dark"] .badge {
+    border: 2px solid currentColor !important;
+    border-radius: 0 !important;
+    box-shadow: 2px 2px 0px 0px currentColor;
+    font-family: var(--font-press-start), monospace;
+    font-size: clamp(6px, 0.8vw, 9px) !important;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* Nav links also get pixel font */
+  [data-theme="retro"] nav a,
+  [data-theme="retro-dark"] nav a {
+    font-family: var(--font-press-start), monospace;
+    font-size: clamp(8px, 0.9vw, 11px) !important;
+  }
+
+  /* RETRO INPUTS - Inset Shadow "Slot" Look */
+  [data-theme="retro"] input,
+  [data-theme="retro"] textarea,
+  [data-theme="retro"] select,
+  [data-theme="retro-dark"] input,
+  [data-theme="retro-dark"] textarea,
+  [data-theme="retro-dark"] select {
+    box-shadow: inset 3px 3px 0px 0px rgba(0, 0, 0, 0.15) !important;
+    border-radius: 0 !important;
+    border: 2px solid currentColor !important;
+  }
+
+  [data-theme="retro"] input:focus,
+  [data-theme="retro"] textarea:focus,
+  [data-theme="retro"] select:focus,
+  [data-theme="retro-dark"] input:focus,
+  [data-theme="retro-dark"] textarea:focus,
+  [data-theme="retro-dark"] select:focus {
+    box-shadow: inset 4px 4px 0px 0px rgba(0, 0, 0, 0.25) !important;
+    outline: none;
+    border-color: var(--primary) !important;
+  }
+
+  /* Improve Focus Visibility for A11y in High Contrast Themes */
+  [data-theme="retro"] *:focus-visible,
+  [data-theme="retro-dark"] *:focus-visible,
+  [data-theme="midnight"] *:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+
+  /* CUSTOM SCROLLBARS (For themes that need it) */
+  /* Retro / Retro-Dark / Midnight - Blocky or Neon Scrollbars */
+  [data-theme="retro"] ::-webkit-scrollbar,
+  [data-theme="retro-dark"] ::-webkit-scrollbar,
+  [data-theme="midnight"] ::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
+
+  [data-theme="retro"] ::-webkit-scrollbar-thumb,
+  [data-theme="retro-dark"] ::-webkit-scrollbar-thumb,
+  [data-theme="midnight"] ::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border: 2px solid var(--background);
+  }
+
+  [data-theme="retro"] ::-webkit-scrollbar-track,
+  [data-theme="retro-dark"] ::-webkit-scrollbar-track,
+  [data-theme="midnight"] ::-webkit-scrollbar-track {
+    background: var(--secondary);
+  }
+
+  /* GLOBAL RESET for Specific Themes */
+  [data-theme="retro"] *,
+  [data-theme="retro-dark"] * {
+    /* Ensure clean rendering for pixel fonts */
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeSpeed;
+  }
+
+  /* ========================================================================== */
+  /* BLOSSOM PREMIUM EDITION - Visual Polish for a Romantic Experience 💕       */
+  /* ========================================================================== */
+
+  /* 1. MESH GRADIENT BACKGROUND - Soft ambient pink glow */
+  [data-theme="blossom"] body {
+    background-color: hsl(340, 100%, 97%);
+    background-image:
+      radial-gradient(ellipse 80% 50% at 20% 20%, hsla(340, 80%, 85%, 0.4) 0%, transparent 50%),
+      radial-gradient(ellipse 60% 40% at 80% 30%, hsla(280, 60%, 88%, 0.3) 0%, transparent 50%),
+      radial-gradient(ellipse 50% 50% at 50% 80%, hsla(340, 70%, 90%, 0.35) 0%, transparent 50%),
+      radial-gradient(ellipse 70% 60% at 10% 70%, hsla(320, 50%, 92%, 0.25) 0%, transparent 50%);
+    background-attachment: fixed;
+  }
+
+  /* 2. ENHANCED GLASSMORPHISM - Frosted glass with pink tint */
+  /* Note: z-index layering is handled in layout.tsx (main-content has z-10) */
+  [data-theme="blossom"] .glass,
+  [data-theme="blossom"] .card,
+  [data-theme="blossom"] .popover {
+    backdrop-filter: blur(16px) saturate(160%) !important;
+    background: linear-gradient(135deg,
+        hsla(340, 100%, 98%, 0.85) 0%,
+        hsla(340, 80%, 96%, 0.75) 100%) !important;
+    border: 1px solid hsla(340, 60%, 80%, 0.4) !important;
+    box-shadow:
+      0 4px 24px -4px hsla(340, 70%, 70%, 0.15),
+      0 1px 3px hsla(340, 60%, 60%, 0.08),
+      inset 0 1px 0 hsla(0, 0%, 100%, 0.6) !important;
+  }
+
+  /* 3. PINK TEXT SELECTION - Elegant highlight when selecting */
+  [data-theme="blossom"] ::selection {
+    background-color: hsla(340, 80%, 75%, 0.4);
+    color: hsl(340, 60%, 20%);
+  }
+
+  [data-theme="blossom"] ::-moz-selection {
+    background-color: hsla(340, 80%, 75%, 0.4);
+    color: hsl(340, 60%, 20%);
+  }
+
+  /* 4. SAKURA SCROLLBAR - Beautiful pink gradient scrollbar */
+  [data-theme="blossom"] ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  [data-theme="blossom"] ::-webkit-scrollbar-track {
+    background: hsla(340, 40%, 95%, 0.5);
+    border-radius: 10px;
+  }
+
+  [data-theme="blossom"] ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg,
+        hsl(340, 80%, 80%) 0%,
+        hsl(340, 70%, 70%) 50%,
+        hsl(340, 80%, 80%) 100%);
+    border-radius: 10px;
+    border: 2px solid hsla(340, 40%, 95%, 0.8);
+    box-shadow: inset 0 1px 2px hsla(0, 0%, 100%, 0.5);
+  }
+
+  [data-theme="blossom"] ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg,
+        hsl(340, 85%, 75%) 0%,
+        hsl(340, 75%, 65%) 50%,
+        hsl(340, 85%, 75%) 100%);
+  }
+
+  /* Firefox scrollbar */
+  [data-theme="blossom"] * {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(340, 70%, 75%) hsla(340, 40%, 95%, 0.5);
+  }
+
+  /* HIGHLIGHTER SELECTION */
+  [data-theme="blossom"] *::selection {
+    background-color: #ffb7c5;
+    /* Sakura Pink */
+    color: #fff;
+  }
+
+  /* ORIGINAL BLOSSOM GRADIENT - Dark TL -> Light BR (Animated Breath) */
+  [data-theme="blossom"] body {
+    /* Radial Gradient: Starts at Top-Left Corner. Fades to white by 40% of screen */
+    background: radial-gradient(circle at 0% 0%, #ffb7c5 0%, transparent 40%), #ffffff;
+    background-repeat: no-repeat;
+    /* Animation: Pulse the size of the radial gradient */
+    animation: sakura-breathe 4s ease-in-out infinite alternate;
+  }
+
+  @keyframes sakura-breathe {
+    0% {
+      /* Small, concentrated corner */
+      background-size: 100% 100%;
+    }
+
+    100% {
+      /* Grows outward to cover page */
+      background-size: 300% 300%;
+    }
+  }
+
+  [data-theme="blossom"] h1,
+  [data-theme="blossom"] h2,
+  [data-theme="blossom"] h3 {
+    font-family: var(--font-cormorant), serif !important;
+    letter-spacing: 0.02em;
+    font-weight: 500;
+  }
+
+  /* BLOSSOM BIG NUMBERS - Soft & Readable (Nunito) */
+  [data-theme="blossom"] .text-2xl,
+  [data-theme="blossom"] .text-3xl,
+  [data-theme="blossom"] .text-4xl,
+  [data-theme="blossom"] .text-5xl {
+    font-family: var(--font-nunito), sans-serif;
+    font-weight: 700;
+    /* Nice and round */
+  }
+
+
+  /* BLOSSOM SCROLLBAR - Watercolor Brush */
+  [data-theme="blossom"] ::-webkit-scrollbar {
+    width: 14px;
+  }
+
+  [data-theme="blossom"] ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  [data-theme="blossom"] ::-webkit-scrollbar-thumb {
+    background-color: hsla(340, 80%, 75%, 0.4);
+    border-radius: 20px;
+    border: 4px solid transparent;
+    background-clip: content-box;
+    /* Floating effect */
+  }
+
+  [data-theme="blossom"] ::-webkit-scrollbar-thumb:hover {
+    background-color: hsla(340, 80%, 75%, 0.6);
+  }
+
+  /* BLOSSOM HEADER - Cloud Glass (Blurrier & more transparent) */
+  [data-theme="blossom"] header {
+    border-bottom: 1px solid hsla(340, 60%, 80%, 0.2);
+    background: hsla(340, 100%, 98%, 0.6);
+    /* More transparent */
+    backdrop-filter: blur(20px);
+    /* Cloud effect */
+  }
+
+  /* BLOSSOM FOOTER - Subtle pink accent */
+  [data-theme="blossom"] footer {
+    border-top: 1px solid hsla(340, 60%, 80%, 0.2);
+    background: hsla(340, 100%, 99%, 0.7);
+    backdrop-filter: blur(20px);
+  }
+
+  /* BLOSSOM SR-ONLY FIX - Prevent link styles from breaking screen-reader-only elements */
+  [data-theme="blossom"] a.sr-only,
+  [data-theme="blossom"] .sr-only {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border-width: 0 !important;
+  }
+
+  /* BLOSSOM BADGES - "Hanko" Stamp Style */
+  [data-theme="blossom"] .badge {
+    border: 2px solid hsla(340, 60%, 75%, 0.6) !important;
+    border-radius: 6px !important;
+    /* Squircle stamp shape */
+    background-color: hsla(340, 100%, 95%, 0.5) !important;
+    box-shadow: none !important;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+
+  /* ========================================================================== */
+  /* BLOSSOM MICRO-INTERACTIONS - Make it feel alive 💫                         */
+  /* ========================================================================== */
+
+  /* 5. FROSTED PETAL GLASS - Semi-transparent cards with blur */
+  [data-theme="blossom"] .card {
+    background-color: hsla(340, 40%, 98%, 0.6) !important;
+    /* 60% opacity */
+    backdrop-filter: blur(12px);
+    border: 1px solid hsla(0, 0%, 100%, 0.4);
+    box-shadow: 0 4px 12px hsla(340, 30%, 80%, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+  }
+
+  [data-theme="blossom"] .card:hover {
+    transform: translateY(-4px) !important;
+    box-shadow:
+      0 12px 32px -8px hsla(340, 80%, 75%, 0.4),
+      /* Warmer/Pinker shadow */
+      0 4px 12px hsla(340, 60%, 80%, 0.2),
+      inset 0 1px 0 hsla(0, 0%, 100%, 0.7) !important;
+  }
+
+  /* 6. WATERCOLOR BUTTONS - Soft gradients & Organic press */
+  [data-theme="blossom"] button[class*="bg-primary"],
+  [data-theme="blossom"] a[class*="bg-primary"] {
+    position: relative;
+    transition: all 0.3s ease, transform 0.1s ease;
+    background-image: linear-gradient(135deg, var(--primary), #ff9eb5);
+    background-size: 100%;
+    border: none;
+    box-shadow: 0 2px 8px hsla(340, 80%, 65%, 0.2);
+    /* SAKURA PULSE - Gentle Heartbeat */
+    animation: sakura-pulse 4s infinite ease-in-out;
+  }
+
+  @keyframes sakura-pulse {
+    0% {
+      transform: scale(1);
+      box-shadow: 0 0 0 0 hsla(340, 80%, 75%, 0.4);
+    }
+
+    70% {
+      transform: scale(1.02);
+      box-shadow: 0 0 0 6px hsla(340, 80%, 75%, 0);
+    }
+
+    100% {
+      transform: scale(1);
+      box-shadow: 0 0 0 0 hsla(340, 80%, 75%, 0);
+    }
+  }
+
+  [data-theme="blossom"] button[class*="bg-primary"]:hover,
+  [data-theme="blossom"] a[class*="bg-primary"]:hover {
+    box-shadow:
+      0 0 20px 2px hsla(340, 80%, 65%, 0.4),
+      0 4px 12px hsla(340, 70%, 60%, 0.3);
+    transform: translateY(-1px);
+  }
+
+  [data-theme="blossom"] button[class*="bg-primary"]:active,
+  [data-theme="blossom"] a[class*="bg-primary"]:active {
+    transform: scale(0.98) translateY(0);
+    /* Organic press */
+    box-shadow: 0 1px 4px hsla(340, 80%, 65%, 0.1);
+  }
+
+  /* 7. CALLIGRAPHY INPUTS - Writing on the line */
+  [data-theme="blossom"] input:not([type="checkbox"]):not([type="radio"]),
+  [data-theme="blossom"] textarea,
+  [data-theme="blossom"] select {
+    border-width: 0 0 2px 0 !important;
+    border-radius: 0 !important;
+    border-color: hsla(340, 20%, 80%, 0.5) !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    padding-left: 0 !important;
+    /* Start text at the edge */
+  }
+
+  [data-theme="blossom"] input:focus,
+  [data-theme="blossom"] textarea:focus,
+  [data-theme="blossom"] select:focus {
+    outline: none !important;
+    border-bottom-color: var(--primary) !important;
+    box-shadow: 0 4px 12px -4px hsla(340, 80%, 75%, 0.4) !important;
+    transition: all 0.3s ease;
+  }
+
+  /* 9. ORIGAMI TOASTS - Paper Slips */
+  [data-theme="blossom"] [role="alert"],
+  [data-theme="blossom"] .toast {
+    background-color: hsla(0, 0%, 100%, 0.98) !important;
+    border: none !important;
+    border-left: 4px solid var(--primary) !important;
+    border-radius: 2px !important;
+    box-shadow: 0 8px 20px hsla(340, 40%, 40%, 0.1) !important;
+    color: hsl(340, 40%, 20%) !important;
+    padding-left: 1rem !important;
+  }
+
+  [data-theme="blossom"] [role="alert"] svg,
+  [data-theme="blossom"] .toast svg {
+    color: var(--primary) !important;
+  }
+
+  /* 10. BRUSH SPINNER */
+  [data-theme="blossom"] .animate-spin {
+    border-color: transparent !important;
+    border-top-color: #ffb7c5 !important;
+    border-right-color: #ffb7c5 !important;
+  }
+
+  /* 8. LINK UNDERLINE ANIMATION - Elegant sliding underline on hover */
+  [data-theme="blossom"] a:not([class*="button"]):not([class*="btn"]):not(.card):not([class~="sr-only"]) {
+    position: relative;
+    text-decoration: none;
+  }
+
+  [data-theme="blossom"] a:not([class*="button"]):not([class*="btn"]):not(.card):not([class~="sr-only"])::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(90deg,
+        hsl(340, 80%, 70%) 0%,
+        hsl(320, 70%, 75%) 100%);
+    border-radius: 1px;
+    transition: width 0.3s ease;
+  }
+
+  [data-theme="blossom"] a:not([class*="button"]):not([class*="btn"]):not(.card):not([class~="sr-only"]):hover::after {
+    width: 100%;
+  }
+
+  /* RETRO PIXELATION */
+  [data-theme="retro"] *,
+  [data-theme="retro-dark"] * {
+    image-rendering: pixelated;
+  }
+
+  /* GLOBAL SHADOWS with Variable Color Support */
+  .shadow-sm {
+    box-shadow: 0 1px 2px 0 hsl(var(--shadow-color, 220 40% 2%) / 0.05);
+  }
+
+  .shadow {
+    box-shadow: 0 1px 3px 0 hsl(var(--shadow-color, 220 40% 2%) / 0.1), 0 1px 2px -1px hsl(var(--shadow-color, 220 40% 2%) / 0.1);
+  }
+
+  .shadow-md {
+    box-shadow: 0 4px 6px -1px hsl(var(--shadow-color, 220 40% 2%) / 0.1), 0 2px 4px -2px hsl(var(--shadow-color, 220 40% 2%) / 0.1);
+  }
+
+  .shadow-lg {
+    box-shadow: 0 10px 15px -3px hsl(var(--shadow-color, 220 40% 2%) / 0.1), 0 4px 6px -4px hsl(var(--shadow-color, 220 40% 2%) / 0.1);
+  }
+
+  .shadow-xl {
+    box-shadow: 0 20px 25px -5px hsl(var(--shadow-color, 220 40% 2%) / 0.1), 0 8px 10px -6px hsl(var(--shadow-color, 220 40% 2%) / 0.1);
+  }
+
+  .shadow-2xl {
+    box-shadow: 0 25px 50px -12px hsl(var(--shadow-color, 220 40% 2%) / 0.25);
+  }
+
+  .shadow-inner {
+    box-shadow: inset 0 2px 4px 0 hsl(var(--shadow-color, 220 40% 2%) / 0.05);
+  }
+
+  /* MESH GRADIENT BACKGROUND */
+  .bg-mesh {
+    background-image:
+      radial-gradient(at 0% 0%, hsla(var(--primary) / 0.15) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, hsla(var(--secondary) / 0.15) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, hsla(var(--accent) / 0.15) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, hsla(var(--primary) / 0.05) 0px, transparent 50%);
+  }
+
+  /* RETRO CRT SCANLINE + FLICKER */
+  [data-theme="retro"] body::after {
+    content: " ";
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    /* Original Black Scanlines for Light Mode */
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+    z-index: 9999;
+    background-size: 100% 2px, 3px 100%;
+    pointer-events: none;
+    animation: crt-flicker 0.15s infinite;
+  }
+
+  [data-theme="retro-dark"] body::after {
+    content: " ";
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    /* FIX: White/Green Scanlines + Vignette for Dark Mode */
+    background:
+      radial-gradient(circle at center, transparent 50%, rgba(0, 0, 0, 0.6) 100%),
+      linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(200, 255, 200, 0.1) 50%),
+      linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+    z-index: 9999;
+    background-size: 100% 100%, 100% 4px, 3px 100%;
+    pointer-events: none;
+    animation: crt-flicker 0.15s infinite, crt-roll 15s linear infinite;
+  }
+
+  @keyframes crt-roll {
+    0% {
+      background-position: center center, 0 0, 0 0;
+    }
+
+    100% {
+      background-position: center center, 0 100%, 0 0;
+    }
+  }
+
+
+
+  @keyframes crt-flicker {
+    0% {
+      opacity: 0.97;
+    }
+
+    50% {
+      opacity: 1;
+    }
+
+    100% {
+      opacity: 0.98;
+    }
+  }
+
+  /* RETRO DARK ENHANCEMENTS */
+
+  /* 1. Phosphor Glow */
+  [data-theme="retro-dark"] h1,
+  [data-theme="retro-dark"] h2,
+  [data-theme="retro-dark"] h3 {
+    text-shadow:
+      0 0 2px currentColor,
+      0 0 10px currentColor,
+      0 0 20px var(--primary);
+  }
+
+  /* 2. Blinking Block Cursor */
+  [data-theme="retro-dark"] input,
+  [data-theme="retro-dark"] textarea {
+    caret-color: transparent;
+    /* Hide default caret */
+    position: relative;
+    /* Simulate block caret with background */
+  }
+
+  [data-theme="retro-dark"] input:focus,
+  [data-theme="retro-dark"] textarea:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--primary);
+    caret-color: var(--primary);
+    caret-shape: block;
+    /* Firefox only currently */
+  }
+
+  /* 3. Inverse Video Badges */
+  [data-theme="retro-dark"] .badge {
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+    border: none !important;
+    text-shadow: none;
+    box-shadow: 0 0 4px var(--primary);
+  }
+
+  /* 4. Chromatic Aberration (Magnetic Interference) */
+  [data-theme="retro-dark"] button:hover,
+  [data-theme="retro-dark"] a:hover,
+  [data-theme="retro-dark"] .card:hover {
+    text-shadow:
+      2px 0 1px rgba(255, 0, 0, 0.5),
+      -2px 0 1px rgba(0, 0, 255, 0.5);
+  }
+
+  /* RETRO CARD HOVER - Hard pixel shadow */
+  [data-theme="retro"] .card,
+  [data-theme="retro-dark"] .card {
+    transition: transform 0.1s ease, box-shadow 0.1s ease !important;
+  }
+
+  [data-theme="retro"] .card:hover,
+  [data-theme="retro-dark"] .card:hover {
+    transform: translate(-2px, -2px) !important;
+    box-shadow: 6px 6px 0px 0px currentColor !important;
+  }
+
   /**
    * Legend color dots for charts (AnalyticsOverview)
-   * Maps to Tailwind color palette for CSP compliance
+   * Uses tier CSS variables for theme consistency
    */
-  .legend-dot-green {
-    background-color: #22c55e;
+  .legend-dot-excellent {
+    background-color: hsl(var(--tier-excellent));
   }
-  .legend-dot-blue {
-    background-color: #3b82f6;
+
+  .legend-dot-great {
+    background-color: hsl(var(--tier-great));
   }
-  .legend-dot-cyan {
-    background-color: #06b6d4;
+
+  .legend-dot-good {
+    background-color: hsl(var(--tier-good));
   }
-  .legend-dot-amber {
-    background-color: #f59e0b;
+
+  .legend-dot-passing {
+    background-color: hsl(var(--tier-passing));
   }
-  .legend-dot-red {
-    background-color: #ef4444;
+
+  .legend-dot-failing {
+    background-color: hsl(var(--tier-failing));
   }
 }
 

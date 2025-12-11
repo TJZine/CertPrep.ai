@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useRef, useMemo, useEffect } from "react";
+import React, { useState, useRef, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
+import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import { Input } from "@/components/ui/Input";
 import { getAuthErrorMessage } from "@/lib/auth-utils";
 import Link from "next/link";
@@ -13,7 +14,12 @@ import HCaptcha from "@hcaptcha/react-hcaptcha";
 const HCAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY;
 
 export default function LoginForm(): React.ReactElement {
+  // Use shared hook for auth direction.
+  // This replaces the inline check to ensure consistency and allow debug bypass.
+  useAuthRedirect();
+
   const supabase = useMemo(() => createClient(), []);
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
@@ -22,20 +28,6 @@ export default function LoginForm(): React.ReactElement {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const { addToast } = useToast();
-
-  useEffect(() => {
-    const checkSession = async (): Promise<void> => {
-      if (!supabase) return;
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (session) {
-        router.push("/");
-      }
-    };
-
-    checkSession();
-  }, [router, supabase]);
 
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
@@ -89,7 +81,7 @@ export default function LoginForm(): React.ReactElement {
     <div className="space-y-6">
       <div className="space-y-2 text-center">
         <h1 className="text-3xl font-bold">Welcome Back</h1>
-        <p className="text-gray-500 dark:text-gray-400">
+        <p className="text-muted-foreground">
           Enter your credentials to access your account
         </p>
       </div>
@@ -137,14 +129,14 @@ export default function LoginForm(): React.ReactElement {
               onExpire={() => setCaptchaToken(null)}
             />
           ) : (
-            <div className="text-sm text-gray-500 italic dark:text-gray-400">
+            <div className="text-sm text-muted-foreground italic">
               (Captcha disabled in development)
             </div>
           )}
         </div>
 
         {error && (
-          <div className="text-sm text-red-500 font-medium">{error}</div>
+          <div className="text-sm text-destructive font-medium">{error}</div>
         )}
         <Button type="submit" className="w-full" disabled={loading}>
           {loading ? "Signing in..." : "Sign In"}

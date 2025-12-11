@@ -19,12 +19,11 @@ import {
 import { useKeyboardNav } from "@/hooks/useKeyboardNav";
 import { useTimer } from "@/hooks/useTimer";
 import { useBeforeUnload } from "@/hooks/useBeforeUnload";
-import { createResult } from "@/db/results";
 import { TIMER } from "@/lib/constants";
 import type { Quiz } from "@/types/quiz";
-import { useSync } from "@/hooks/useSync";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
+import { useExamSubmission } from "@/hooks/useExamSubmission";
 
 interface ProctorQuizContainerProps {
   quiz: Quiz;
@@ -40,11 +39,10 @@ export function ProctorQuizContainer({
 }: ProctorQuizContainerProps): React.ReactElement {
   const router = useRouter();
   const { addToast } = useToast();
-  const { sync } = useSync();
   const { user } = useAuth();
   const effectiveUserId = useEffectiveUserId(user?.id);
 
-  const hasSavedResultRef = React.useRef(false);
+  // Removed unused ref definition
 
   const {
     initializeProctorSession,
@@ -54,8 +52,6 @@ export function ProctorQuizContainer({
     goToPreviousQuestion,
     toggleFlag,
     updateTimeRemaining,
-    submitExam,
-    autoSubmitExam,
     resetSession,
     currentIndex,
     selectedAnswer,
@@ -70,12 +66,7 @@ export function ProctorQuizContainer({
   const proctorStatus = useProctorStatus();
   const questionStatuses = useQuestionStatuses();
 
-  const [showSubmitModal, setShowSubmitModal] = React.useState(false);
-  const [showTimeUpModal, setShowTimeUpModal] = React.useState(false);
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [autoResultId, setAutoResultId] = React.useState<string | null>(null);
-  const autoSubmitRef = React.useRef<() => Promise<string | null> | null>(null);
-
+  // Timer must be declared before submission hook
   const {
     seconds: timeRemaining,
     formattedTime,
@@ -89,6 +80,31 @@ export function ProctorQuizContainer({
       void autoSubmitRef.current?.();
     },
   });
+
+  const {
+    isSubmitting,
+    showSubmitModal,
+    setShowSubmitModal,
+    showTimeUpModal,
+    handleSubmitExam,
+    handleAutoSubmit,
+    handleTimeUpConfirm,
+  } = useExamSubmission({
+    quiz,
+    effectiveUserId,
+    durationMinutes,
+    timeRemaining,
+    pauseTimer,
+    answers,
+    flaggedQuestions,
+  });
+
+  const autoSubmitRef = React.useRef<(() => Promise<string | null>) | null>(null);
+
+  React.useEffect(() => {
+    autoSubmitRef.current = handleAutoSubmit;
+  }, [handleAutoSubmit]);
+
   useBeforeUnload(
     !isComplete,
     "Your quiz progress will be lost. Are you sure?",
@@ -108,11 +124,9 @@ export function ProctorQuizContainer({
   React.useEffect((): (() => void) => {
     initializeProctorSession(quiz.id, quiz.questions, durationMinutes);
     startTimer();
-    hasSavedResultRef.current = false;
     return () => {
       pauseTimer();
       resetSession();
-      hasSavedResultRef.current = false;
     };
   }, [
     quiz.id,
@@ -140,125 +154,6 @@ export function ProctorQuizContainer({
     enabled: !isComplete && !showSubmitModal && !showTimeUpModal,
     optionKeys: currentQuestion ? Object.keys(currentQuestion.options) : [],
   });
-
-  const buildAnswersRecord = React.useCallback((): Record<string, string> => {
-    const answersRecord: Record<string, string> = {};
-    answers.forEach((record, questionId) => {
-      answersRecord[questionId] = record.selectedAnswer;
-    });
-    return answersRecord;
-  }, [answers]);
-
-  const handleSubmitExam = async (): Promise<void> => {
-    if (isSubmitting || hasSavedResultRef.current) return;
-    setIsSubmitting(true);
-    setShowSubmitModal(false);
-    try {
-      if (!effectiveUserId) {
-        addToast("error", "Unable to save results: no user context available.");
-        setIsSubmitting(false);
-        return;
-      }
-      pauseTimer();
-      submitExam();
-
-      const result = await createResult({
-        quizId: quiz.id,
-        userId: effectiveUserId,
-        mode: "proctor",
-        answers: buildAnswersRecord(),
-        flaggedQuestions: Array.from(flaggedQuestions),
-        timeTakenSeconds: durationMinutes * 60 - timeRemaining,
-      });
-      hasSavedResultRef.current = true;
-      const syncResult = await sync();
-      if (!syncResult.success) {
-        console.error("Failed to sync results after submit:", syncResult.error);
-      }
-      addToast("success", "Exam submitted successfully!");
-      router.push(`/results/${result.id}`);
-    } catch (error) {
-      console.error("Failed to submit exam:", error);
-      addToast("error", "Failed to submit exam. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleAutoSubmit = React.useCallback(async (): Promise<
-    string | null
-  > => {
-    if (isSubmitting || hasSavedResultRef.current) {
-      return autoResultId;
-    }
-    if (!effectiveUserId) {
-      addToast("error", "Unable to save results: no user context available.");
-      return null;
-    }
-    setIsSubmitting(true);
-    pauseTimer();
-    autoSubmitExam();
-    try {
-
-      const result = await createResult({
-        quizId: quiz.id,
-        userId: effectiveUserId,
-        mode: "proctor",
-        answers: buildAnswersRecord(),
-        flaggedQuestions: Array.from(flaggedQuestions),
-        timeTakenSeconds: durationMinutes * 60,
-      });
-      hasSavedResultRef.current = true;
-      setAutoResultId(result.id);
-      const syncResult = await sync();
-      if (!syncResult.success) {
-        console.error(
-          "Failed to sync results after auto-submit:",
-          syncResult.error,
-        );
-      }
-      setShowTimeUpModal(true);
-      return result.id;
-    } catch (error) {
-      console.error("Failed to auto-submit exam:", error);
-      addToast("error", "Auto-submit failed. Please submit manually.");
-      setShowSubmitModal(true);
-      return null;
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, [
-    addToast,
-    autoResultId,
-    autoSubmitExam,
-    buildAnswersRecord,
-    durationMinutes,
-    effectiveUserId,
-    flaggedQuestions,
-    isSubmitting,
-    pauseTimer,
-    quiz.id,
-    sync,
-  ]);
-
-  React.useEffect(() => {
-    autoSubmitRef.current = handleAutoSubmit;
-  }, [handleAutoSubmit]);
-
-  const handleTimeUpConfirm = async (): Promise<void> => {
-    setIsSubmitting(true);
-    try {
-      const resultId = autoResultId ?? (await handleAutoSubmit());
-      if (resultId) {
-        router.push(`/results/${resultId}`);
-      }
-    } catch (error) {
-      console.error("Failed to save results:", error);
-      addToast("error", "Failed to save results. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   const handleExit = (): void => {
     pauseTimer();
@@ -292,7 +187,7 @@ export function ProctorQuizContainer({
         mode="proctor"
       >
         <div className="py-12 text-center">
-          <p className="text-slate-500">Loading question...</p>
+          <p className="text-muted-foreground">Loading question...</p>
         </div>
       </QuizLayout>
     );

@@ -8,12 +8,12 @@ import { Button } from "@/components/ui/Button";
 export default function NotFound(): React.ReactElement {
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 text-center">
-      <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-slate-100">
-        <FileQuestion className="h-12 w-12 text-slate-400" aria-hidden="true" />
+      <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-muted">
+        <FileQuestion className="h-12 w-12 text-muted-foreground" aria-hidden="true" />
       </div>
 
-      <h1 className="mb-2 text-3xl font-bold text-slate-900">Page Not Found</h1>
-      <p className="mb-8 max-w-md text-slate-600">
+      <h1 className="mb-2 text-3xl font-bold text-foreground">Page Not Found</h1>
+      <p className="mb-8 max-w-md text-muted-foreground">
         The page you&apos;re looking for doesn&apos;t exist or has been moved.
       </p>
 

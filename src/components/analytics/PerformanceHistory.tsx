@@ -26,7 +26,8 @@ import { Button } from "@/components/ui/Button";
 import { ScorecardCompact } from "@/components/results/Scorecard";
 import { cn } from "@/lib/utils";
 import type { Result } from "@/types/result";
-import { useIsDarkMode } from "@/hooks/useIsDarkMode";
+import { useChartColors } from "@/hooks/useChartColors";
+import { useChartDimensions } from "@/hooks/useChartDimensions";
 
 interface PerformanceHistoryProps {
   results: Result[];
@@ -52,17 +53,17 @@ function PerformanceHistoryTooltip({
   const currentPayload = payload?.[0];
   if (!active || !currentPayload) return null;
 
-  const data = currentPayload.payload as PerformancePoint;
+  const data = currentPayload.payload;
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-lg dark:border-slate-700 dark:bg-slate-900">
-      <p className="font-semibold text-slate-900 dark:text-slate-50">
+    <div className="rounded-lg border border-border bg-popover p-3 shadow-lg">
+      <p className="font-semibold text-popover-foreground">
         {data.quizTitle}
       </p>
-      <p className="text-sm text-slate-600 dark:text-slate-200">
+      <p className="text-sm text-muted-foreground">
         Score: <span className="font-semibold">{data.score}%</span>
       </p>
-      <p className="text-sm text-slate-600 dark:text-slate-200">
+      <p className="text-sm text-muted-foreground">
         Date: {data.date}
       </p>
       <Badge
@@ -84,7 +85,9 @@ export function PerformanceHistory({
   className,
 }: PerformanceHistoryProps): React.ReactElement {
   const router = useRouter();
-  const isDark = useIsDarkMode();
+  const { colors, isReady: colorsReady } = useChartColors();
+  const { containerRef, isReady: dimensionsReady } = useChartDimensions();
+  const isReady = colorsReady && dimensionsReady;
 
   const sortedResults = React.useMemo(
     () => [...results].sort((a, b) => b.timestamp - a.timestamp),
@@ -140,7 +143,7 @@ export function PerformanceHistory({
           <CardTitle>Performance History</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-center text-slate-500">
+          <p className="text-center text-muted-foreground">
             Complete some quizzes to see your performance history.
           </p>
         </CardContent>
@@ -162,10 +165,10 @@ export function PerformanceHistory({
               className={cn(
                 "flex items-center gap-1 rounded-full px-3 py-1",
                 trend.direction === "up"
-                  ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-200"
+                  ? "bg-correct/10 text-correct"
                   : trend.direction === "down"
-                    ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-200"
-                    : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-100",
+                    ? "bg-incorrect/10 text-incorrect"
+                    : "bg-muted text-muted-foreground",
               )}
             >
               {trend.direction === "up" && (
@@ -184,53 +187,59 @@ export function PerformanceHistory({
         </div>
       </CardHeader>
       <CardContent>
-        <div className="h-[250px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart
-              data={chartData}
-              margin={{ top: 10, right: 10, bottom: 10, left: 10 }}
-            >
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke={isDark ? "#1f2937" : "#e2e8f0"}
-              />
-              <XAxis
-                dataKey="date"
-                tick={{ fill: isDark ? "#cbd5e1" : "#64748b", fontSize: 12 }}
-                tickLine={false}
-              />
-              <YAxis
-                domain={[0, 100]}
-                tick={{ fill: isDark ? "#cbd5e1" : "#64748b", fontSize: 12 }}
-                tickLine={false}
-                axisLine={false}
-              />
-              <Tooltip content={<PerformanceHistoryTooltip />} />
-              <ReferenceLine
-                y={averageScore}
-                stroke="#94a3b8"
-                strokeDasharray="5 5"
-                label={{
-                  value: `Avg: ${averageScore}%`,
-                  position: "right",
-                  fill: isDark ? "#cbd5e1" : "#64748b",
-                  fontSize: 12,
-                }}
-              />
-              <Line
-                type="monotone"
-                dataKey="score"
-                stroke="#3b82f6"
-                strokeWidth={2}
-                dot={{ fill: "#3b82f6", strokeWidth: 2, r: 4 }}
-                activeDot={{ fill: "#2563eb", strokeWidth: 2, r: 6 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
+        <div ref={containerRef} className="h-[250px]">
+          {isReady ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart
+                data={chartData}
+                margin={{ top: 10, right: 10, bottom: 10, left: 10 }}
+              >
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke={colors.grid}
+                />
+                <XAxis
+                  dataKey="date"
+                  tick={{ fill: colors.muted, fontSize: 12 }}
+                  tickLine={false}
+                />
+                <YAxis
+                  domain={[0, 100]}
+                  tick={{ fill: colors.muted, fontSize: 12 }}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <Tooltip content={<PerformanceHistoryTooltip />} />
+                <ReferenceLine
+                  y={averageScore}
+                  stroke={colors.muted}
+                  strokeDasharray="5 5"
+                  label={{
+                    value: `Avg: ${averageScore}%`,
+                    position: "right",
+                    fill: colors.muted,
+                    fontSize: 12,
+                  }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="score"
+                  stroke={colors.primary}
+                  strokeWidth={2}
+                  dot={{ fill: colors.primary, strokeWidth: 2, r: 4 }}
+                  activeDot={{ fill: colors.primary, strokeWidth: 2, r: 6 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex h-full items-center justify-center" role="status" aria-label="Loading chart">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" aria-hidden="true" />
+            </div>
+          )}
         </div>
 
-        <div className="mt-6 border-t border-slate-200 pt-6">
-          <h4 className="mb-4 font-semibold text-slate-900">Recent Results</h4>
+        <div className="mt-6 border-t border-border pt-6">
+          <h4 className="mb-4 font-semibold text-foreground">Recent Results</h4>
           <div className="space-y-2">
             {(showAllResults ? sortedResults : sortedResults.slice(0, 5)).map(
               (result) => (

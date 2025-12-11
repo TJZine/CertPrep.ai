@@ -1,11 +1,13 @@
 import type { Metadata, Viewport } from "next";
 import * as React from "react";
 import { headers } from "next/headers";
-import { Inter } from "next/font/google";
+import { Inter, Press_Start_2P, Nunito, Roboto_Slab, Space_Grotesk, Playfair_Display, JetBrains_Mono, Courier_Prime, Cormorant_Garamond } from "next/font/google";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { SkipLink } from "@/components/common/SkipLink";
 import { AppProviders } from "@/components/providers/AppProviders";
+import { PageTransition } from "@/components/layout/PageTransition";
+import { ThemeEffects } from "@/components/effects/ThemeEffects";
 import { APP_NAME } from "@/lib/constants";
 import "./globals.css";
 
@@ -15,6 +17,66 @@ const inter = Inter({
   variable: "--font-inter",
   fallback: ["system-ui", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
 });
+
+const pressStart2P = Press_Start_2P({
+  weight: "400",
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-press-start",
+  fallback: ["monospace"],
+});
+
+const nunito = Nunito({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-nunito",
+  fallback: ["system-ui", "sans-serif"],
+});
+
+const robotoSlab = Roboto_Slab({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-roboto-slab",
+  fallback: ["serif"],
+});
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-space",
+  fallback: ["sans-serif"],
+});
+
+const playfairDisplay = Playfair_Display({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-playfair",
+  fallback: ["serif"],
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-jetbrains",
+  fallback: ["monospace"],
+});
+
+const courierPrime = Courier_Prime({
+  weight: ["400", "700"],
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-courier",
+  fallback: ["Courier New", "monospace"],
+});
+
+const cormorantGaramond = Cormorant_Garamond({
+  weight: ["300", "400", "500", "600", "700"],
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-cormorant",
+  fallback: ["serif"],
+});
+
 
 export const metadata: Metadata = {
   title: {
@@ -79,7 +141,11 @@ export default async function RootLayout({
   const nonce = headersList.get("x-nonce") || undefined;
 
   return (
-    <html lang="en" className={inter.variable} suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${inter.variable} ${pressStart2P.variable} ${nunito.variable} ${robotoSlab.variable} ${spaceGrotesk.variable} ${playfairDisplay.variable} ${jetbrainsMono.variable} ${courierPrime.variable} ${cormorantGaramond.variable}`}
+      suppressHydrationWarning
+    >
       <head>
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="icon" href="/icon.svg" type="image/svg+xml" />
@@ -95,13 +161,14 @@ export default async function RootLayout({
           }}
         />
       </head>
-      <body className="flex min-h-screen flex-col bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-50">
+      <body className="flex min-h-screen flex-col bg-background text-foreground antialiased">
         <SkipLink />
         <AppProviders>
           <Header />
-          <div id="main-content" className="flex-1" tabIndex={-1}>
-            {children}
-          </div>
+          <ThemeEffects />
+          <main id="main-content" className="flex-1 flex flex-col" tabIndex={-1}>
+            <PageTransition>{children}</PageTransition>
+          </main>
           <Footer />
         </AppProviders>
       </body>

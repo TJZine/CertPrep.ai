@@ -191,10 +191,10 @@ export function SmartActions({
       <Card className={className}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-amber-500" aria-hidden="true" />
+            <Sparkles className="h-5 w-5 text-warning" aria-hidden="true" />
             Smart Actions
           </CardTitle>
-          <CardDescription className="dark:text-slate-300">
+          <CardDescription>
             AI-powered tools to improve your weak areas
           </CardDescription>
         </CardHeader>
@@ -207,20 +207,20 @@ export function SmartActions({
               className={cn(
                 "flex flex-col items-center rounded-lg border-2 border-dashed p-6 text-center transition-colors",
                 hasMissedQuestions
-                  ? "border-slate-300 hover:border-blue-400 hover:bg-blue-50 dark:border-slate-600 dark:hover:border-blue-500 dark:hover:bg-blue-900/20"
-                  : "border-slate-200 bg-slate-50 opacity-60 cursor-not-allowed dark:border-slate-700 dark:bg-slate-900",
+                  ? "border-border hover:border-primary hover:bg-primary/5"
+                  : "border-border bg-muted opacity-60 cursor-not-allowed",
               )}
             >
-              <div className="mb-3 rounded-full bg-red-100 p-3 dark:bg-red-900/40">
+              <div className="mb-3 rounded-full bg-destructive/10 p-3">
                 <Target
-                  className="h-6 w-6 text-red-600 dark:text-red-200"
+                  className="h-6 w-6 text-destructive"
                   aria-hidden="true"
                 />
               </div>
-              <h3 className="font-semibold text-slate-900 dark:text-slate-100">
+              <h3 className="font-semibold text-foreground">
                 Review Missed
               </h3>
-              <p className="mt-1 text-sm text-slate-500 dark:text-slate-300">
+              <p className="mt-1 text-sm text-muted-foreground">
                 {hasMissedQuestions
                   ? `${missedQuestions.length} questions to review`
                   : "No missed questions!"}
@@ -234,27 +234,27 @@ export function SmartActions({
               className={cn(
                 "flex flex-col items-center rounded-lg border-2 border-dashed p-6 text-center transition-colors",
                 hasMissedQuestions
-                  ? "border-slate-300 hover:border-purple-400 hover:bg-purple-50 dark:border-slate-600 dark:hover:border-purple-500 dark:hover:bg-purple-900/20"
-                  : "border-slate-200 bg-slate-50 opacity-60 cursor-not-allowed dark:border-slate-700 dark:bg-slate-900",
+                  ? "border-border hover:border-accent hover:bg-accent/5"
+                  : "border-border bg-muted opacity-60 cursor-not-allowed",
               )}
             >
-              <div className="mb-3 rounded-full bg-purple-100 p-3 dark:bg-purple-900/40">
+              <div className="mb-3 rounded-full bg-accent/10 p-3">
                 {copied ? (
                   <Check
-                    className="h-6 w-6 text-purple-600 dark:text-purple-200"
+                    className="h-6 w-6 text-accent"
                     aria-hidden="true"
                   />
                 ) : (
                   <Brain
-                    className="h-6 w-6 text-purple-600 dark:text-purple-200"
+                    className="h-6 w-6 text-accent"
                     aria-hidden="true"
                   />
                 )}
               </div>
-              <h3 className="font-semibold text-slate-900 dark:text-slate-100">
+              <h3 className="font-semibold text-foreground">
                 {copied ? "Copied!" : "AI Study Plan"}
               </h3>
-              <p className="mt-1 text-sm text-slate-500 dark:text-slate-300">
+              <p className="mt-1 text-sm text-muted-foreground">
                 {hasMissedQuestions
                   ? "Generate prompt for AI tutor"
                   : "No areas need improvement!"}
@@ -268,20 +268,20 @@ export function SmartActions({
               className={cn(
                 "flex flex-col items-center rounded-lg border-2 border-dashed p-6 text-center transition-colors",
                 smartRoundQuestionIds.length > 0
-                  ? "border-slate-300 hover:border-green-400 hover:bg-green-50 dark:border-slate-600 dark:hover:border-green-500 dark:hover:bg-green-900/20"
-                  : "border-slate-200 bg-slate-50 opacity-60 cursor-not-allowed dark:border-slate-700 dark:bg-slate-900",
+                  ? "border-border hover:border-success hover:bg-success/5"
+                  : "border-border bg-muted opacity-60 cursor-not-allowed",
               )}
             >
-              <div className="mb-3 rounded-full bg-green-100 p-3 dark:bg-green-900/40">
+              <div className="mb-3 rounded-full bg-success/10 p-3">
                 <RotateCcw
-                  className="h-6 w-6 text-green-600 dark:text-green-200"
+                  className="h-6 w-6 text-success"
                   aria-hidden="true"
                 />
               </div>
-              <h3 className="font-semibold text-slate-900 dark:text-slate-100">
+              <h3 className="font-semibold text-foreground">
                 Smart Round
               </h3>
-              <p className="mt-1 text-sm text-slate-500 dark:text-slate-300">
+              <p className="mt-1 text-sm text-muted-foreground">
                 {smartRoundQuestionIds.length > 0
                   ? `Practice ${smartRoundQuestionIds.length} questions`
                   : "No questions to retry!"}
@@ -290,11 +290,11 @@ export function SmartActions({
           </div>
 
           {!hasMissedQuestions && !hasFlaggedQuestions && (
-            <div className="mt-6 rounded-lg border border-green-200 bg-green-50 p-4 text-center dark:border-green-800/70 dark:bg-green-900/20">
-              <p className="font-medium text-green-800 dark:text-green-100">
+            <div className="mt-6 rounded-lg border border-success/50 bg-success/10 p-4 text-center">
+              <p className="font-medium text-success">
                 🎉 Perfect score! No areas need improvement.
               </p>
-              <p className="mt-1 text-sm text-green-600 dark:text-green-200">
+              <p className="mt-1 text-sm text-success/80">
                 Try a harder quiz or take another attempt to test your
                 consistency.
               </p>
@@ -327,31 +327,31 @@ export function SmartActions({
         }
       >
         <div className="space-y-4">
-          <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900/50">
-            <h4 className="font-medium text-slate-900 dark:text-slate-100">
+          <div className="rounded-lg border border-border bg-muted/50 p-4">
+            <h4 className="font-medium text-foreground">
               Questions Included:
             </h4>
-            <ul className="mt-2 space-y-1 text-sm text-slate-600 dark:text-slate-300">
+            <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
               <li className="flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-red-400" />
+                <span className="h-2 w-2 rounded-full bg-destructive" />
                 {missedQuestions.length} missed questions
               </li>
               <li className="flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-orange-400" />
+                <span className="h-2 w-2 rounded-full bg-flagged" />
                 {flaggedQuestionIds.length} flagged questions
               </li>
               {flaggedAndMissed.length > 0 && (
-                <li className="text-xs text-slate-400 dark:text-slate-500">
+                <li className="text-xs text-muted-foreground/70">
                   ({flaggedAndMissed.length} overlap - counted once)
                 </li>
               )}
             </ul>
-            <p className="mt-3 font-semibold text-slate-900 dark:text-slate-100">
+            <p className="mt-3 font-semibold text-foreground">
               Total: {smartRoundQuestionIds.length} questions
             </p>
           </div>
 
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+          <p className="text-sm text-muted-foreground">
             This will start a new Zen study session with only the questions you
             need to practice. Perfect for focused review!
           </p>

@@ -185,27 +185,32 @@ export async function getCategoryPerformance(
   const results = await getResultsByQuizId(quizId, userId); // Uses filtered getter
   const totals: Record<string, { correct: number; total: number }> = {};
 
-  const allResultsData = await Promise.all(
-    results.map(async (result) => {
-      return Promise.all(
-        quiz.questions.map(async (question) => {
-          const userAnswer = result.answers[String(question.id)];
-          return evaluateAnswer(question, userAnswer);
-        }),
-      );
-    }),
-  );
+  // Process results in batches to avoid unbounded concurrency (consistent with getOverallStats)
+  const BATCH_SIZE = 50;
+  for (let i = 0; i < results.length; i += BATCH_SIZE) {
+    const batch = results.slice(i, i + BATCH_SIZE);
+    const batchData = await Promise.all(
+      batch.map(async (result) => {
+        return Promise.all(
+          quiz.questions.map(async (question) => {
+            const userAnswer = result.answers[String(question.id)];
+            return evaluateAnswer(question, userAnswer);
+          }),
+        );
+      }),
+    );
 
-  allResultsData.flat().forEach(({ category, isCorrect }) => {
-    if (!totals[category]) {
-      totals[category] = { correct: 0, total: 0 };
-    }
+    batchData.flat().forEach(({ category, isCorrect }) => {
+      if (!totals[category]) {
+        totals[category] = { correct: 0, total: 0 };
+      }
 
-    totals[category].total += 1;
-    if (isCorrect) {
-      totals[category].correct += 1;
-    }
-  });
+      totals[category].total += 1;
+      if (isCorrect) {
+        totals[category].correct += 1;
+      }
+    });
+  }
 
   return Object.entries(totals)
     .map(([category, { correct, total }]) => ({

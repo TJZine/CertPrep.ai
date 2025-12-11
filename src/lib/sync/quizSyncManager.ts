@@ -15,6 +15,7 @@ import {
   toLocalQuiz,
   toRemoteQuiz,
 } from "./quizDomain";
+import { logNetworkAwareSlowSync } from "@/lib/sync/syncLogging";
 import { fetchUserQuizzes, upsertQuizzes } from "./quizRemote";
 import type { Quiz } from "@/types/quiz";
 import { QuestionSchema } from "@/validators/quizSchema";
@@ -153,7 +154,7 @@ async function performQuizSync(
     performance.measure("quizSync", "quizSync-start", "quizSync-end");
     const duration = Date.now() - startTime;
     if (duration > 300) {
-      logger.warn("Slow quiz sync detected", {
+      logNetworkAwareSlowSync("Quiz sync", {
         duration,
         pushed: stats.pushed,
         pulled: stats.pulled,

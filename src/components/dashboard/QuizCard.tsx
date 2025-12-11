@@ -1,5 +1,6 @@
 "use client";
 
+import { motion, useReducedMotion } from "framer-motion";
 import * as React from "react";
 import {
   MoreVertical,
@@ -10,6 +11,8 @@ import {
   Target,
   Link as LinkIcon,
   BarChart3,
+  History,
+  TrendingUp,
 } from "lucide-react";
 import {
   Card,
@@ -76,9 +79,13 @@ export function QuizCard({
 }: QuizCardProps): React.ReactElement {
   const [showMenu, setShowMenu] = React.useState(false);
   const [showTagsPopover, setShowTagsPopover] = React.useState(false);
+  const [focusedMenuIndex, setFocusedMenuIndex] = React.useState(0);
   const menuRef = React.useRef<HTMLDivElement>(null);
   const tagsPopoverRef = React.useRef<HTMLDivElement>(null);
+  const menuItemRefs = React.useRef<(HTMLButtonElement | null)[]>([]);
+  const menuButtonRef = React.useRef<HTMLButtonElement>(null);
   const { addToast } = useToast();
+  const shouldReduceMotion = useReducedMotion();
 
   useClickOutside(menuRef, showMenu, () => setShowMenu(false));
   useClickOutside(tagsPopoverRef, showTagsPopover, () =>
@@ -134,171 +141,223 @@ export function QuizCard({
     return `${minutes}m`;
   };
 
+  // Focus first menu item when menu opens
+  React.useEffect(() => {
+    if (showMenu) {
+      setFocusedMenuIndex(0);
+      // Small delay to ensure DOM is ready
+      requestAnimationFrame(() => {
+        menuItemRefs.current[0]?.focus();
+      });
+    }
+  }, [showMenu]);
+
+  // Keyboard navigation for dropdown menu
+  const handleMenuKeyDown = (event: React.KeyboardEvent): void => {
+    const menuItems = menuItemRefs.current.filter(Boolean);
+    const itemCount = menuItems.length;
+
+    switch (event.key) {
+      case "ArrowDown":
+        event.preventDefault();
+        setFocusedMenuIndex((prev) => {
+          const next = (prev + 1) % itemCount;
+          menuItems[next]?.focus();
+          return next;
+        });
+        break;
+      case "ArrowUp":
+        event.preventDefault();
+        setFocusedMenuIndex((prev) => {
+          const next = (prev - 1 + itemCount) % itemCount;
+          menuItems[next]?.focus();
+          return next;
+        });
+        break;
+      case "Home":
+        event.preventDefault();
+        setFocusedMenuIndex(0);
+        menuItems[0]?.focus();
+        break;
+      case "End":
+        event.preventDefault();
+        setFocusedMenuIndex(itemCount - 1);
+        menuItems[itemCount - 1]?.focus();
+        break;
+      case "Escape":
+        event.preventDefault();
+        setShowMenu(false);
+        menuButtonRef.current?.focus();
+        break;
+      case "Tab":
+        // Close menu on tab out
+        setShowMenu(false);
+        break;
+    }
+  };
+
   return (
-    <Card className="group relative flex h-full flex-col overflow-hidden border border-slate-200 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-slate-800">
-      <div
-        className="pointer-events-none absolute right-4 top-4 hidden max-w-[220px] rounded-lg border border-slate-200 bg-white/95 px-3 py-2 text-left text-xs text-slate-700 shadow-lg backdrop-blur group-focus-within:block group-hover:block dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200"
-        role="presentation"
-      >
-        <p className="mb-1 font-semibold text-slate-900 dark:text-slate-100">
-          Quick stats
-        </p>
-        <ul className="space-y-1">
-          <li className="flex items-center gap-2">
-            <BarChart3
-              className="h-3.5 w-3.5 text-blue-600 dark:text-blue-300"
-              aria-hidden="true"
-            />
-            <span>Best: {bestScore !== null ? `${bestScore}%` : "—"}</span>
-          </li>
-          <li className="flex items-center gap-2">
-            <Trophy className="h-3.5 w-3.5 text-amber-500" aria-hidden="true" />
-            <span>Avg: {averageScore !== null ? `${averageScore}%` : "—"}</span>
-          </li>
-          <li className="flex items-center gap-2">
-            <Clock
-              className="h-3.5 w-3.5 text-slate-500 dark:text-slate-300"
-              aria-hidden="true"
-            />
-            <span>Study time: {formatStudyTime(totalStudyTime)}</span>
-          </li>
-        </ul>
-      </div>
-      <CardHeader className="pb-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 space-y-1">
-            <CardTitle className="line-clamp-2 text-lg">{quiz.title}</CardTitle>
-            <p className="text-sm text-slate-600 dark:text-slate-300">
-              {quiz.description?.trim()
-                ? quiz.description
-                : `${quiz.questions.length} questions`}
-            </p>
-          </div>
-          <div className="relative" ref={menuRef}>
-            <button
-              type="button"
-              className={cn(
-                "rounded-full p-2 text-slate-500 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 dark:text-slate-400 dark:hover:bg-slate-700",
-                showMenu &&
-                  "bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-100",
-              )}
-              aria-label="Quiz options"
-              aria-expanded={showMenu}
-              aria-haspopup="menu"
-              onClick={() => setShowMenu((open) => !open)}
-            >
-              <MoreVertical className="h-5 w-5" aria-hidden="true" />
-            </button>
-            {showMenu ? (
-              <div
-                className="absolute right-0 z-10 mt-2 w-40 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900"
-                role="menu"
+    <motion.div
+      whileHover={shouldReduceMotion ? {} : { y: -5, scale: 1.02 }}
+      transition={shouldReduceMotion ? {} : { type: "spring", stiffness: 300, damping: 20 }}
+      className="h-full"
+    >
+      <Card className="group relative flex h-full flex-col overflow-hidden border border-border shadow-sm transition-colors hover:shadow-md">
+        {/* Stats are displayed in the always-visible grid below for accessibility */}
+        <CardHeader className="pb-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 space-y-1">
+              <CardTitle className="line-clamp-2 text-lg">{quiz.title}</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                {quiz.description?.trim()
+                  ? quiz.description
+                  : `${quiz.questions.length} questions`}
+              </p>
+            </div>
+            <div className="relative" ref={menuRef}>
+              <button
+                ref={menuButtonRef}
+                type="button"
+                className={cn(
+                  "rounded-full p-2 text-muted-foreground transition hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                  showMenu &&
+                  "bg-accent text-accent-foreground",
+                )}
+                aria-label="Quiz options"
+                aria-expanded={showMenu}
+                aria-haspopup="menu"
+                onClick={() => setShowMenu((open) => !open)}
               >
-                <button
-                  type="button"
-                  onClick={handleCopyLink}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 dark:text-slate-200 dark:hover:bg-slate-800"
-                  role="menuitem"
+                <MoreVertical className="h-5 w-5" aria-hidden="true" />
+              </button>
+              {showMenu ? (
+                <div
+                  className="absolute right-0 z-10 mt-2 w-40 overflow-hidden rounded-lg border border-border bg-popover shadow-lg"
+                  role="menu"
+                  aria-orientation="vertical"
+                  onKeyDown={handleMenuKeyDown}
                 >
-                  <LinkIcon className="h-4 w-4" aria-hidden="true" />
-                  Copy link
-                </button>
-                <button
-                  type="button"
-                  onClick={handleDelete}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-600 transition hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 dark:text-red-400 dark:hover:bg-red-950/30"
-                  role="menuitem"
-                >
-                  <Trash2 className="h-4 w-4" aria-hidden="true" />
-                  Delete
-                </button>
-              </div>
-            ) : null}
+                  <button
+                    ref={(el) => { menuItemRefs.current[0] = el; }}
+                    type="button"
+                    onClick={handleCopyLink}
+                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-foreground transition hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+                    role="menuitem"
+                    tabIndex={focusedMenuIndex === 0 ? 0 : -1}
+                  >
+                    <LinkIcon className="h-4 w-4" aria-hidden="true" />
+                    Copy link
+                  </button>
+                  <button
+                    ref={(el) => { menuItemRefs.current[1] = el; }}
+                    type="button"
+                    onClick={handleDelete}
+                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-destructive transition hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+                    role="menuitem"
+                    tabIndex={focusedMenuIndex === 1 ? 0 : -1}
+                  >
+                    <Trash2 className="h-4 w-4" aria-hidden="true" />
+                    Delete
+                  </button>
+                </div>
+              ) : null}
+            </div>
           </div>
-        </div>
-        {quiz.tags.length > 0 ? (
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            {visibleTags.map((tag) => (
-              <Badge
-                key={tag}
-                variant="secondary"
-                className="dark:bg-slate-800 dark:text-slate-100"
-              >
-                {tag}
-              </Badge>
-            ))}
-            {extraTagCount > 0 ? (
-              <div className="relative" ref={tagsPopoverRef}>
-                <button
-                  type="button"
-                  onClick={() => setShowTagsPopover((open) => !open)}
-                  className="inline-flex items-center gap-1 rounded-full border border-slate-300 bg-white px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-slate-800 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800 dark:focus-visible:ring-offset-slate-900"
-                  aria-expanded={showTagsPopover}
-                  aria-haspopup="true"
-                  aria-label={`Show ${extraTagCount} more tags`}
-                >
-                  +{extraTagCount}
-                </button>
-                {showTagsPopover ? (
-                  <div className="absolute z-10 mt-2 w-48 rounded-lg border border-slate-200 bg-white p-2 text-left shadow-lg dark:border-slate-700 dark:bg-slate-900">
-                    <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">
-                      More tags
-                    </p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {extraTags.map((tag) => (
-                        <Badge
-                          key={tag}
-                          variant="secondary"
-                          className="dark:bg-slate-800 dark:text-slate-100"
-                        >
-                          {tag}
-                        </Badge>
-                      ))}
+          {quiz.tags.length > 0 ? (
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              {visibleTags.map((tag) => (
+                <Badge key={tag} variant="secondary">
+                  {tag}
+                </Badge>
+              ))}
+              {extraTagCount > 0 ? (
+                <div className="relative" ref={tagsPopoverRef}>
+                  <button
+                    type="button"
+                    onClick={() => setShowTagsPopover((open) => !open)}
+                    className="inline-flex items-center gap-1 rounded-full border border-input bg-background px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    aria-expanded={showTagsPopover}
+                    aria-haspopup="true"
+                    aria-label={`Show ${extraTagCount} more tags`}
+                  >
+                    +{extraTagCount}
+                  </button>
+                  {showTagsPopover ? (
+                    <div
+                      className="absolute right-0 z-10 mt-2 w-48 rounded-lg border border-border bg-popover p-2 text-left shadow-lg"
+                      role="region"
+                      aria-label="Additional quiz tags"
+                    >
+                      <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        More tags
+                      </p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {extraTags.map((tag) => (
+                          <Badge key={tag} variant="secondary">
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                ) : null}
-              </div>
-            ) : null}
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+        </CardHeader>
+
+        <CardContent className="flex-1 space-y-4 pt-0">
+          <div className="grid grid-cols-2 gap-2 text-center text-sm sm:grid-cols-3">
+            <StatItem
+              icon={<Trophy className="h-4 w-4" aria-hidden="true" />}
+              label="Last Score"
+              value={lastScore !== null ? `${lastScore}%` : "-"}
+            />
+            <StatItem
+              icon={<BarChart3 className="h-4 w-4" aria-hidden="true" />}
+              label="Best"
+              value={bestScore !== null ? `${bestScore}%` : "-"}
+            />
+            <StatItem
+              icon={<History className="h-4 w-4" aria-hidden="true" />}
+              label="Attempts"
+              value={attemptCount}
+            />
+            <StatItem
+              icon={<TrendingUp className="h-4 w-4" aria-hidden="true" />}
+              label="Average"
+              value={averageScore !== null ? `${averageScore}%` : "-"}
+            />
+            <StatItem
+              icon={<Clock className="h-4 w-4" aria-hidden="true" />}
+              label="Study Time"
+              value={formatStudyTime(totalStudyTime)}
+            />
+            <StatItem
+              icon={<Target className="h-4 w-4" aria-hidden="true" />}
+              label="Questions"
+              value={quiz.questions.length}
+            />
           </div>
-        ) : null}
-      </CardHeader>
 
-      <CardContent className="flex-1 space-y-4 pt-0">
-        <div className="grid grid-cols-3 gap-2 text-center text-sm">
-          <StatItem
-            icon={<Target className="h-4 w-4" aria-hidden="true" />}
-            label="Questions"
-            value={quiz.questions.length}
-          />
-          <StatItem
-            icon={<Clock className="h-4 w-4" aria-hidden="true" />}
-            label="Attempts"
-            value={attemptCount}
-          />
-          <StatItem
-            icon={<Trophy className="h-4 w-4" aria-hidden="true" />}
-            label="Last Score"
-            value={lastScore !== null ? `${lastScore}%` : "-"}
-          />
-        </div>
+          {lastAttemptDate ? (
+            <div className="rounded-lg bg-muted/50 px-3 py-2 text-center text-xs text-muted-foreground">
+              Last attempt: {formatDate(lastAttemptDate)}
+            </div>
+          ) : null}
+        </CardContent>
 
-        {lastAttemptDate ? (
-          <div className="rounded-lg bg-slate-50 px-3 py-2 text-center text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-200">
-            Last attempt: {formatDate(lastAttemptDate)}
-          </div>
-        ) : null}
-      </CardContent>
-
-      <CardFooter className="pt-0">
-        <Button
-          className="w-full"
-          leftIcon={<Play className="h-4 w-4" aria-hidden="true" />}
-          onClick={() => onStart(quiz)}
-        >
-          Start Quiz
-        </Button>
-      </CardFooter>
-    </Card>
+        <CardFooter className="pt-0">
+          <Button
+            className="w-full"
+            leftIcon={<Play className="h-4 w-4" aria-hidden="true" />}
+            onClick={() => onStart(quiz)}
+          >
+            Start Quiz
+          </Button>
+        </CardFooter>
+      </Card>
+    </motion.div>
   );
 }
 
@@ -310,12 +369,12 @@ interface StatItemProps {
 
 function StatItem({ icon, value, label }: StatItemProps): React.ReactElement {
   return (
-    <div className="flex flex-col items-center gap-1 rounded-lg border border-slate-100 px-3 py-2 dark:border-slate-800 dark:bg-slate-800/80">
-      <div className="flex items-center gap-1 text-base font-semibold text-slate-900 dark:text-slate-100">
-        <span className="text-blue-600 dark:text-blue-300">{icon}</span>
+    <div className="flex flex-col items-center gap-1 rounded-lg border border-border px-3 py-2 bg-background/50">
+      <div className="flex items-center gap-1 text-base font-semibold text-foreground">
+        <span className="text-primary">{icon}</span>
         <span>{value}</span>
       </div>
-      <span className="text-[11px] uppercase tracking-wide text-slate-500 dark:text-slate-300">
+      <span className="text-[11px] uppercase tracking-wide text-muted-foreground">
         {label}
       </span>
     </div>

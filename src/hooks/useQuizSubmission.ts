@@ -95,11 +95,13 @@ export function useQuizSubmission({
           activeQuestionIds: questions.map((q) => q.id), // Pass active questions for accurate scoring (e.g. Smart Round)
         });
 
-        // Attempt background sync
-        const syncResult = await sync();
-        if (!syncResult.success) {
-          console.warn("Background sync failed:", syncResult.error);
+        // Attempt background sync - failures here shouldn't invalidate the local save
+        try {
+          await sync();
+        } catch (syncErr) {
+          console.warn("Background sync failed after local save:", syncErr);
         }
+
 
         if (!isMountedRef.current) return;
 

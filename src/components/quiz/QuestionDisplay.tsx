@@ -39,7 +39,7 @@ export function QuestionDisplay({
     <div className={cn("space-y-4", className)}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex min-w-0 flex-wrap items-center gap-2">
-          <span className="text-sm font-medium text-slate-500 dark:text-slate-300">
+          <span className="text-sm font-medium text-muted-foreground">
             Question {questionNumber} of {totalQuestions}
           </span>
           <Badge variant="secondary">{question.category}</Badge>
@@ -62,7 +62,7 @@ export function QuestionDisplay({
             variant="ghost"
             size="sm"
             onClick={onToggleFlag}
-            className={cn(isFlagged && "text-orange-500 hover:text-orange-600")}
+            className={cn(isFlagged && "text-flagged hover:text-flagged/80")}
             aria-label={isFlagged ? "Remove flag" : "Flag for review"}
             aria-pressed={isFlagged}
           >
@@ -79,17 +79,17 @@ export function QuestionDisplay({
       </div>
 
       <div
-        className="question-text prose prose-slate max-w-none break-words text-slate-900 dark:prose-invert dark:text-slate-100"
+        className="question-text prose max-w-none break-words text-foreground"
         dangerouslySetInnerHTML={{ __html: sanitizedQuestion }}
         aria-label="Question text"
       />
 
       {question.user_notes && (
-        <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-800/70 dark:bg-blue-900/20">
-          <p className="text-xs font-medium text-blue-700 dark:text-blue-200">
+        <div className="rounded-lg border border-info/30 bg-info/10 p-3">
+          <p className="text-xs font-medium text-info">
             Your Notes:
           </p>
-          <p className="mt-1 text-sm text-blue-800 dark:text-blue-100">
+          <p className="mt-1 text-sm text-foreground">
             {question.user_notes}
           </p>
         </div>

@@ -102,41 +102,41 @@ export function QuestionReviewCard({
   return (
     <Card
       className={cn(
-        "overflow-hidden transition-shadow dark:border-slate-800 dark:bg-slate-900",
-        isWrong && "border-l-4 border-l-red-400",
-        isCorrect && "border-l-4 border-l-green-400",
+        "overflow-hidden transition-shadow border-border bg-card",
+        isWrong && "border-l-4 border-l-incorrect",
+        isCorrect && "border-l-4 border-l-correct",
         className,
       )}
     >
       <button
         type="button"
         onClick={() => setIsExpanded((prev) => !prev)}
-        className="flex w-full items-start gap-4 p-4 text-left hover:bg-slate-50 dark:hover:bg-slate-800"
+        className="flex w-full items-start gap-4 p-4 text-left hover:bg-muted/50"
         aria-expanded={isExpanded}
       >
         <div
           className={cn(
             "flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full",
             isCorrect
-              ? "bg-green-100 dark:bg-green-900/40"
+              ? "bg-correct/10"
               : isWrong
-                ? "bg-red-100 dark:bg-red-900/40"
-                : "bg-slate-100 dark:bg-slate-700",
+                ? "bg-incorrect/10"
+                : "bg-muted",
           )}
         >
           {isCorrect ? (
             <CheckCircle
-              className="h-5 w-5 text-green-600 dark:text-green-200"
+              className="h-5 w-5 text-correct"
               aria-hidden="true"
             />
           ) : isWrong ? (
             <XCircle
-              className="h-5 w-5 text-red-600 dark:text-red-200"
+              className="h-5 w-5 text-incorrect"
               aria-hidden="true"
             />
           ) : (
             <HelpCircle
-              className="h-5 w-5 text-slate-500 dark:text-slate-400"
+              className="h-5 w-5 text-muted-foreground"
               aria-hidden="true"
             />
           )}
@@ -144,7 +144,7 @@ export function QuestionReviewCard({
 
         <div className="min-w-0 flex-1">
           <div className="mb-1 flex flex-wrap items-center gap-2">
-            <span className="font-medium text-slate-500 dark:text-slate-300">
+            <span className="font-medium text-muted-foreground">
               Q{questionNumber}
             </span>
             <Badge variant="secondary">{question.category}</Badge>
@@ -171,7 +171,7 @@ export function QuestionReviewCard({
 
           <p
             className={cn(
-              "text-slate-700 dark:text-slate-100",
+              "text-foreground",
               !isExpanded && "line-clamp-2",
             )}
           >
@@ -183,7 +183,7 @@ export function QuestionReviewCard({
           </p>
         </div>
 
-        <div className="flex-shrink-0 text-slate-400 dark:text-slate-300">
+        <div className="flex-shrink-0 text-muted-foreground">
           {isExpanded ? (
             <ChevronUp className="h-5 w-5" aria-hidden="true" />
           ) : (
@@ -193,14 +193,14 @@ export function QuestionReviewCard({
       </button>
 
       {isExpanded && (
-        <CardContent className="border-t border-slate-100 pt-4 dark:border-slate-800">
+        <CardContent className="border-t border-border pt-4">
           <div
-            className="prose prose-sm prose-slate mb-4 max-w-none dark:prose-invert"
+            className="prose prose-sm max-w-none text-foreground"
             dangerouslySetInnerHTML={{ __html: sanitizedQuestion }}
           />
 
           {showResolutionError && (
-            <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200">
+            <div className="mb-4 rounded-lg border border-warning/50 bg-warning/10 p-3 text-sm text-warning">
               Unable to determine the correct answer from stored quiz data.
             </div>
           )}
@@ -212,12 +212,12 @@ export function QuestionReviewCard({
               const sanitizedText = sanitizeHTML(text);
 
               let optionStyle =
-                "border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900";
+                "border-border bg-card";
               let badgeContent: React.ReactNode = null;
 
               if (isCorrectAnswer) {
                 optionStyle =
-                  "border-green-300 bg-green-50 dark:border-green-700 dark:bg-green-900/20";
+                  "border-correct/50 bg-correct/10";
                 badgeContent = (
                   <Badge variant="success" className="ml-2">
                     Correct
@@ -225,7 +225,7 @@ export function QuestionReviewCard({
                 );
               } else if (isUserAnswer && !isCorrect) {
                 optionStyle =
-                  "border-red-300 bg-red-50 dark:border-red-700 dark:bg-red-900/20";
+                  "border-incorrect/50 bg-incorrect/10";
                 badgeContent = (
                   <Badge variant="danger" className="ml-2">
                     Your Answer
@@ -245,16 +245,16 @@ export function QuestionReviewCard({
                     className={cn(
                       "flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-sm font-medium",
                       isCorrectAnswer
-                        ? "bg-green-200 text-green-800 dark:bg-green-800 dark:text-green-100"
+                        ? "bg-correct/20 text-correct"
                         : isUserAnswer && !isCorrect
-                          ? "bg-red-200 text-red-800 dark:bg-red-800 dark:text-red-100"
-                          : "bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-100",
+                          ? "bg-incorrect/20 text-incorrect"
+                          : "bg-muted text-muted-foreground",
                     )}
                   >
                     {key}
                   </span>
                   <span
-                    className="flex-1 text-sm text-slate-700 dark:text-slate-100"
+                    className="flex-1 text-sm text-foreground"
                     dangerouslySetInnerHTML={{ __html: sanitizedText }}
                   />
                   {badgeContent}
@@ -265,14 +265,14 @@ export function QuestionReviewCard({
 
           {/* Correct Answer (if wrong) */}
           {isWrong && correctAnswerDisplay && (
-            <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-900/30 rounded-md">
+            <div className="mt-3 p-3 bg-correct/10 border border-correct/30 rounded-md">
               <div className="flex items-start gap-2">
-                <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5 shrink-0" />
+                <CheckCircle2 className="w-5 h-5 text-correct mt-0.5 shrink-0" />
                 <div>
-                  <span className="font-medium text-green-900 dark:text-green-100 block mb-1">
+                  <span className="font-medium text-correct block mb-1">
                     Correct Answer:
                   </span>
-                  <span className="text-green-800 dark:text-green-200">
+                  <span className="text-correct">
                     {correctAnswerDisplay}
                   </span>
                 </div>
@@ -280,25 +280,25 @@ export function QuestionReviewCard({
             </div>
           )}
           {!hasUserAnswer && (
-            <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-700/70 dark:bg-amber-900/20">
-              <p className="text-sm text-amber-800 dark:text-amber-100">
+            <div className="mb-4 rounded-lg border border-warning/50 bg-warning/10 p-3">
+              <p className="text-sm text-warning">
                 You did not answer this question.
               </p>
             </div>
           )}
 
-          <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900">
+          <div className="rounded-lg border border-border bg-muted/50 p-4">
             <div className="mb-2 flex items-center gap-2">
               <Lightbulb
-                className="h-4 w-4 text-amber-500"
+                className="h-4 w-4 text-warning"
                 aria-hidden="true"
               />
-              <span className="font-medium text-slate-700 dark:text-slate-100">
+              <span className="font-medium text-foreground">
                 Explanation
               </span>
             </div>
             <div
-              className="prose prose-sm prose-slate max-w-none dark:prose-invert"
+              className="prose prose-sm max-w-none text-foreground"
               dangerouslySetInnerHTML={{ __html: sanitizedExplanation }}
             />
           </div>

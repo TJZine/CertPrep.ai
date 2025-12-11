@@ -29,14 +29,14 @@ export function LoadingSpinner({
   const spinner = (
     <div
       className={cn(
-        "flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300",
+        "flex items-center gap-2 text-sm font-medium text-muted-foreground",
         className,
       )}
       role="status"
       aria-live="polite"
     >
       <Loader2
-        className={cn("animate-spin text-blue-600", sizeMap[size])}
+        className={cn("animate-spin text-primary", sizeMap[size])}
         aria-hidden="true"
       />
       {text ? <span>{text}</span> : null}
@@ -46,7 +46,7 @@ export function LoadingSpinner({
 
   if (fullScreen) {
     return (
-      <div className="fixed inset-0 z-40 flex items-center justify-center bg-white/80 backdrop-blur dark:bg-slate-950/80">
+      <div className="fixed inset-0 z-40 flex items-center justify-center bg-background/80 backdrop-blur">
         {spinner}
       </div>
     );

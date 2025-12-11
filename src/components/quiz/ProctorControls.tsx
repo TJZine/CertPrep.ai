@@ -45,7 +45,11 @@ export function ProctorControls({
     <div className={cn("space-y-4", className)}>
       <div className="flex justify-center">
         {hasAnswer ? (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-700 dark:bg-blue-900/40 dark:text-blue-100">
+          <span
+            role="status"
+            aria-live="polite"
+            className="inline-flex items-center gap-1.5 rounded-full bg-info/10 px-3 py-1 text-sm font-medium text-info"
+          >
             <svg
               className="h-4 w-4"
               fill="none"
@@ -63,7 +67,11 @@ export function ProctorControls({
             Answer recorded
           </span>
         ) : (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-sm font-medium text-amber-700 dark:bg-amber-900/40 dark:text-amber-100">
+          <span
+            role="status"
+            aria-live="polite"
+            className="inline-flex items-center gap-1.5 rounded-full bg-warning/10 px-3 py-1 text-sm font-medium text-warning"
+          >
             <AlertTriangle className="h-4 w-4" />
             No answer selected
           </span>
@@ -118,7 +126,7 @@ export function ProctorControls({
         </Button>
       </div>
 
-      <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
+      <div className="border-t border-border pt-4">
         <Button
           variant="default"
           size="lg"
@@ -129,22 +137,22 @@ export function ProctorControls({
         >
           Submit Exam
         </Button>
-        <p className="mt-2 text-center text-xs text-slate-500 dark:text-slate-300">
+        <p className="mt-2 text-center text-xs text-muted-foreground">
           You can review and change answers before submitting
         </p>
       </div>
 
-      <div className="text-center text-xs text-slate-400 dark:text-slate-300">
+      <div className="text-center text-xs text-muted-foreground">
         <span className="hidden sm:inline">
           Use{" "}
-          <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono dark:bg-slate-800 dark:text-slate-100">
+          <kbd className="rounded bg-muted px-1 py-0.5 font-mono text-foreground">
             ←
           </kbd>{" "}
-          <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono dark:bg-slate-800 dark:text-slate-100">
+          <kbd className="rounded bg-muted px-1 py-0.5 font-mono text-foreground">
             →
           </kbd>{" "}
           to navigate,{" "}
-          <kbd className="rounded bg-slate-100 px-1 py-0.5 font-mono dark:bg-slate-800 dark:text-slate-100">
+          <kbd className="rounded bg-muted px-1 py-0.5 font-mono text-foreground">
             F
           </kbd>{" "}
           to flag
@@ -195,7 +203,7 @@ export function ProctorControlsCompact({
         variant="ghost"
         size="icon"
         onClick={onToggleFlag}
-        className={cn(isFlagged && "text-orange-500")}
+        className={cn(isFlagged && "text-flagged")}
         aria-label={isFlagged ? "Remove flag" : "Flag for review"}
       >
         {isFlagged ? (

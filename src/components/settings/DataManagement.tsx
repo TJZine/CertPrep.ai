@@ -214,39 +214,39 @@ export function DataManagement(): React.ReactElement {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-100">
+          <div className="rounded-lg border border-warning/50 bg-warning/10 p-3 text-sm text-warning">
             Local storage is not encrypted. Anyone with access to this browser
             profile could read quizzes and results. Clear data below if privacy
             is a concern on shared devices.
           </div>
 
           {stats ? (
-            <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-800">
-              <h4 className="mb-2 font-medium text-slate-900 dark:text-slate-100">
+            <div className="rounded-lg border border-border bg-muted p-4">
+              <h4 className="mb-2 font-medium text-foreground">
                 Storage Usage
               </h4>
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
-                  <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                  <p className="text-2xl font-bold text-foreground">
                     {stats.quizCount}
                   </p>
-                  <p className="text-sm text-slate-500 dark:text-slate-300">
+                  <p className="text-sm text-muted-foreground">
                     Quizzes
                   </p>
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                  <p className="text-2xl font-bold text-foreground">
                     {stats.resultCount}
                   </p>
-                  <p className="text-sm text-slate-500 dark:text-slate-300">
+                  <p className="text-sm text-muted-foreground">
                     Results
                   </p>
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                  <p className="text-2xl font-bold text-foreground">
                     {stats.estimatedSizeKB} KB
                   </p>
-                  <p className="text-sm text-slate-500 dark:text-slate-300">
+                  <p className="text-sm text-muted-foreground">
                     Est. Size
                   </p>
                 </div>
@@ -254,12 +254,12 @@ export function DataManagement(): React.ReactElement {
             </div>
           ) : null}
 
-          <div className="flex items-center justify-between rounded-lg border border-slate-200 p-4 dark:border-slate-800 dark:bg-slate-800">
+          <div className="flex items-center justify-between rounded-lg border border-border p-4">
             <div>
-              <h4 className="font-medium text-slate-900 dark:text-slate-100">
+              <h4 className="font-medium text-foreground">
                 Export Data
               </h4>
-              <p className="text-sm text-slate-500 dark:text-slate-300">
+              <p className="text-sm text-muted-foreground">
                 Download all your quizzes and results as a JSON file
               </p>
             </div>
@@ -272,12 +272,12 @@ export function DataManagement(): React.ReactElement {
             </Button>
           </div>
 
-          <div className="flex items-center justify-between rounded-lg border border-slate-200 p-4 dark:border-slate-800 dark:bg-slate-800">
+          <div className="flex items-center justify-between rounded-lg border border-border p-4">
             <div>
-              <h4 className="font-medium text-slate-900 dark:text-slate-100">
+              <h4 className="font-medium text-foreground">
                 Import Data
               </h4>
-              <p className="text-sm text-slate-500 dark:text-slate-300">
+              <p className="text-sm text-muted-foreground">
                 Restore from a previously exported backup file
               </p>
             </div>
@@ -300,12 +300,12 @@ export function DataManagement(): React.ReactElement {
             </div>
           </div>
 
-          <div className="flex items-center justify-between rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-500/60 dark:bg-red-950">
+          <div className="flex items-center justify-between rounded-lg border border-destructive/50 bg-destructive/10 p-4">
             <div>
-              <h4 className="font-medium text-red-900 dark:text-red-100">
+              <h4 className="font-medium text-destructive">
                 Reset All Data
               </h4>
-              <p className="text-sm text-red-700 dark:text-red-200">
+              <p className="text-sm text-destructive/80">
                 Permanently delete all quizzes, results, and settings
               </p>
             </div>
@@ -347,18 +347,18 @@ export function DataManagement(): React.ReactElement {
       >
         {importFile ? (
           <div className="space-y-4">
-            <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-800">
+            <div className="rounded-lg border border-border bg-muted p-4">
               <div className="flex items-center gap-3">
-                <FileJson className="h-8 w-8 text-blue-500 dark:text-blue-300" />
+                <FileJson className="h-8 w-8 text-info" />
                 <div>
-                  <p className="font-medium text-slate-900 dark:text-slate-100">
+                  <p className="font-medium text-foreground">
                     Backup File
                   </p>
-                  <p className="text-sm text-slate-500 dark:text-slate-300">
+                  <p className="text-sm text-muted-foreground">
                     {importFile.quizzes.length} quizzes,{" "}
                     {importFile.results.length} results
                   </p>
-                  <p className="text-xs text-slate-400 dark:text-slate-400">
+                  <p className="text-xs text-muted-foreground/70">
                     Exported:{" "}
                     {new Date(importFile.exportedAt).toLocaleDateString()}
                   </p>
@@ -367,7 +367,7 @@ export function DataManagement(): React.ReactElement {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200">
+              <label className="mb-2 block text-sm font-medium text-foreground">
                 Import Mode
               </label>
               <div className="space-y-2">
@@ -378,9 +378,9 @@ export function DataManagement(): React.ReactElement {
                     value="merge"
                     checked={importMode === "merge"}
                     onChange={() => setImportMode("merge")}
-                    className="h-4 w-4 accent-blue-600 dark:accent-blue-400"
+                    className="h-4 w-4 accent-primary"
                   />
-                  <span className="text-sm text-slate-700 dark:text-slate-200">
+                  <span className="text-sm text-foreground">
                     Merge (keep existing data, add new)
                   </span>
                 </label>
@@ -391,9 +391,9 @@ export function DataManagement(): React.ReactElement {
                     value="replace"
                     checked={importMode === "replace"}
                     onChange={() => setImportMode("replace")}
-                    className="h-4 w-4 accent-blue-600 dark:accent-blue-400"
+                    className="h-4 w-4 accent-primary"
                   />
-                  <span className="text-sm text-slate-700 dark:text-slate-200">
+                  <span className="text-sm text-foreground">
                     Replace (delete existing data first)
                   </span>
                 </label>
@@ -442,15 +442,15 @@ export function DataManagement(): React.ReactElement {
         }
       >
         <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/50">
-            <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-200" />
+          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-destructive/10">
+            <AlertTriangle className="h-5 w-5 text-destructive" />
           </div>
           <div className="w-full">
-            <p className="text-slate-700 dark:text-slate-200">
+            <p className="text-muted-foreground">
               Choose whether to clear local data only or delete your account and
               clear local data:
             </p>
-            <ul className="mt-2 list-inside list-disc text-sm text-slate-600 dark:text-slate-300">
+            <ul className="mt-2 list-inside list-disc text-sm text-muted-foreground">
               <li>
                 <strong>Clear Local Data Only:</strong> deletes
                 quizzes/results/settings stored on this browser.
@@ -460,14 +460,14 @@ export function DataManagement(): React.ReactElement {
                 account from the server, then clears local data.
               </li>
             </ul>
-            <p className="mt-4 font-medium text-red-700 dark:text-red-200">
+            <p className="mt-4 font-medium text-destructive">
               This action cannot be undone!
             </p>
 
             <div className="mt-4">
               <label
                 htmlFor="delete-confirm"
-                className="block text-sm font-medium text-slate-700 dark:text-slate-200"
+                className="block text-sm font-medium text-foreground"
               >
                 Type <strong>DELETE</strong> to confirm
               </label>
@@ -476,7 +476,7 @@ export function DataManagement(): React.ReactElement {
                 type="text"
                 value={deleteConfirmation}
                 onChange={(e) => setDeleteConfirmation(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm placeholder-slate-400 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                className="mt-1 block w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-destructive focus:outline-none focus:ring-1 focus:ring-destructive"
                 placeholder="DELETE"
                 autoComplete="off"
               />

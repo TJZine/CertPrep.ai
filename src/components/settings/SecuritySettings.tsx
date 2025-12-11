@@ -114,7 +114,7 @@ export function SecuritySettings(): React.ReactElement {
           </div>
 
           {error && (
-            <div className="text-sm text-red-500 font-medium">{error}</div>
+            <div className="text-sm text-destructive font-medium">{error}</div>
           )}
 
           <div className="flex justify-end">

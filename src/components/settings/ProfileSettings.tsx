@@ -103,7 +103,7 @@ export function ProfileSettings(): React.ReactElement {
                 <button
                   type="button"
                   onClick={() => setIsEditingEmail(true)}
-                  className="text-xs text-blue-600 hover:underline dark:text-blue-400"
+                  className="text-xs text-primary hover:underline"
                 >
                   Change Email
                 </button>
@@ -118,16 +118,16 @@ export function ProfileSettings(): React.ReactElement {
                 disabled={!isEditingEmail || isLoading}
                 className={
                   !isEditingEmail
-                    ? "bg-slate-100 dark:bg-slate-800 text-slate-500"
+                    ? "bg-muted text-muted-foreground"
                     : ""
                 }
               />
               {!isEditingEmail && (
-                <Mail className="absolute right-3 top-2.5 h-4 w-4 text-slate-400" />
+                <Mail className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground" />
               )}
             </div>
             {isEditingEmail && (
-              <div className="rounded-md bg-yellow-50 p-3 text-sm text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200">
+              <div className="rounded-md bg-warning/10 p-3 text-sm text-warning">
                 <div className="flex gap-2">
                   <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
                   <p>

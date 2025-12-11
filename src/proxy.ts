@@ -1,7 +1,9 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { logger } from "@/lib/logger";
 
 const PROTECTED_ROUTES = ["/settings"];
+// Retained to prevent open redirects; server-side redirect logic (lines 147+) temporarily disabled
 const AUTH_ROUTES = ["/login", "/signup", "/forgot-password"];
 
 export async function proxy(request: NextRequest): Promise<NextResponse> {
@@ -69,7 +71,7 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   if (!supabaseUrlEnv || !supabaseKey) {
     const errorMsg =
       "Missing Supabase environment variables (NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY). Application cannot function safely.";
-    console.error(errorMsg);
+    logger.error(errorMsg);
     throw new Error(errorMsg);
   }
 
@@ -104,7 +106,7 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
     const { data } = await supabase.auth.getUser();
     user = data.user;
   } catch (error) {
-    console.error(
+    logger.error(
       "Middleware auth check failed:",
       error instanceof Error ? error.message : "Unknown error",
     );
@@ -114,9 +116,7 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   const isProtectedRoute = PROTECTED_ROUTES.some((route) =>
     request.nextUrl.pathname.startsWith(route),
   );
-  const isAuthRoute = AUTH_ROUTES.some((route) =>
-    request.nextUrl.pathname.startsWith(route),
-  );
+
 
   // Unauthenticated users trying to access protected routes -> Redirect to Login
   if (isProtectedRoute && !user) {
@@ -145,6 +145,11 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   }
 
   // Authenticated users trying to access auth routes -> Redirect to Dashboard
+  // TODO: Re-enable server-side redirects once we verify robust client/server session sync.
+  // Current Issue: Server cookie may be valid while client state is stale, causing infinite loops.
+  // Requirement for Re-enabling: Ensure client's session state (AuthProvider) matches server cookie < 500ms.
+  // Tracked in Issue: #123 (Server-Side Redirect Optimization)
+  /*
   if (isAuthRoute && user) {
     const redirectUrl = new URL("/", request.url);
     const redirectResponse = NextResponse.redirect(redirectUrl);
@@ -157,6 +162,7 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
 
     return redirectResponse;
   }
+  */
 
   return response;
 }

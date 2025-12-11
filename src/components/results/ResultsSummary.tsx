@@ -46,29 +46,29 @@ export function ResultsSummary(props: ResultsSummaryProps): React.ReactElement {
       label: "Correct",
       value: correctCount,
       icon: CheckCircle,
-      color: "text-green-600 dark:text-green-200",
-      bgColor: "bg-green-100 dark:bg-green-900/30",
+      color: "text-success",
+      bgColor: "bg-success/10",
     },
     {
       label: "Incorrect",
       value: incorrectCount,
       icon: XCircle,
-      color: "text-red-600 dark:text-red-200",
-      bgColor: "bg-red-100 dark:bg-red-900/30",
+      color: "text-destructive",
+      bgColor: "bg-destructive/10",
     },
     {
       label: "Unanswered",
       value: unansweredCount,
       icon: Target,
-      color: "text-amber-600 dark:text-amber-200",
-      bgColor: "bg-amber-100 dark:bg-amber-900/30",
+      color: "text-warning",
+      bgColor: "bg-warning/10",
     },
     {
       label: "Flagged",
       value: flaggedCount,
       icon: Flag,
-      color: "text-orange-600 dark:text-orange-200",
-      bgColor: "bg-orange-100 dark:bg-orange-900/30",
+      color: "text-flagged",
+      bgColor: "bg-flagged/10",
     },
   ] as const;
 
@@ -85,7 +85,7 @@ export function ResultsSummary(props: ResultsSummaryProps): React.ReactElement {
           {stats.map((stat) => (
             <div
               key={stat.label}
-              className="flex flex-col items-center rounded-lg border border-slate-200 p-4 dark:border-slate-800 dark:bg-slate-900"
+              className="flex flex-col items-center rounded-lg border border-border bg-card p-4"
             >
               <div className={cn("rounded-full p-2", stat.bgColor)}>
                 <stat.icon
@@ -93,46 +93,46 @@ export function ResultsSummary(props: ResultsSummaryProps): React.ReactElement {
                   aria-hidden="true"
                 />
               </div>
-              <span className="mt-2 text-2xl font-bold text-slate-900 dark:text-slate-50">
+              <span className="mt-2 text-2xl font-bold text-foreground">
                 {stat.value}
               </span>
-              <span className="text-sm text-slate-500 dark:text-slate-300">
+              <span className="text-sm text-muted-foreground">
                 {stat.label}
               </span>
             </div>
           ))}
         </div>
 
-        <div className="mt-6 grid grid-cols-2 gap-4 border-t border-slate-200 pt-6 dark:border-slate-800">
+        <div className="mt-6 grid grid-cols-2 gap-4 border-t border-border pt-6">
           <div className="flex items-center gap-3">
-            <div className="rounded-full bg-slate-100 p-2 dark:bg-slate-800">
+            <div className="rounded-full bg-muted p-2">
               <Clock
-                className="h-5 w-5 text-slate-600 dark:text-slate-200"
+                className="h-5 w-5 text-muted-foreground"
                 aria-hidden="true"
               />
             </div>
             <div>
-              <p className="text-lg font-semibold text-slate-900 dark:text-slate-50">
+              <p className="text-lg font-semibold text-foreground">
                 {formatTime(timeTakenSeconds)}
               </p>
-              <p className="text-sm text-slate-500 dark:text-slate-300">
+              <p className="text-sm text-muted-foreground">
                 Total Time
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="rounded-full bg-slate-100 p-2 dark:bg-slate-800">
+            <div className="rounded-full bg-muted p-2">
               <Target
-                className="h-5 w-5 text-slate-600 dark:text-slate-200"
+                className="h-5 w-5 text-muted-foreground"
                 aria-hidden="true"
               />
             </div>
             <div>
-              <p className="text-lg font-semibold text-slate-900 dark:text-slate-50">
+              <p className="text-lg font-semibold text-foreground">
                 {formatTime(Math.round(averageTimePerQuestion))}
               </p>
-              <p className="text-sm text-slate-500 dark:text-slate-300">
+              <p className="text-sm text-muted-foreground">
                 Avg per Question
               </p>
             </div>

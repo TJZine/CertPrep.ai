@@ -107,29 +107,29 @@ export function InstallPrompt(): React.ReactElement | null {
     <div
       className={cn(
         "fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-md",
-        "rounded-xl border border-blue-200 bg-white p-4 shadow-xl",
+        "rounded-xl border border-border bg-card p-4 shadow-xl",
         "animate-in slide-in-from-bottom-4 duration-300",
       )}
       role="dialog"
       aria-labelledby="install-prompt-title"
     >
       <div className="flex items-start gap-4">
-        <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-100">
-          <Download className="h-6 w-6 text-blue-600" />
+        <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-primary/10">
+          <Download className="h-6 w-6 text-primary" />
         </div>
 
         <div className="flex-1">
           <h3
             id="install-prompt-title"
-            className="font-semibold text-slate-900"
+            className="font-semibold text-foreground"
           >
             Install CertPrep.ai
           </h3>
-          <p className="mt-1 text-sm text-slate-600">
+          <p className="mt-1 text-sm text-muted-foreground">
             Install for quick access and offline studying. Works on any device!
           </p>
 
-          <div className="mt-2 flex items-center gap-3 text-xs text-slate-500">
+          <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
             <span className="flex items-center gap-1">
               <Smartphone className="h-3 w-3" />
               Mobile
@@ -153,7 +153,7 @@ export function InstallPrompt(): React.ReactElement | null {
         <button
           type="button"
           onClick={handleDismiss}
-          className="flex-shrink-0 rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+          className="flex-shrink-0 rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
           aria-label="Dismiss install prompt"
         >
           <X className="h-5 w-5" />

@@ -75,37 +75,37 @@ export function SubmitExamModal({
     >
       <div className="space-y-4">
         {formattedTime && (
-          <div className="rounded-lg bg-slate-100 p-3 text-center dark:bg-slate-800">
-            <p className="text-sm text-slate-600 dark:text-slate-300">
+          <div className="rounded-lg bg-muted p-3 text-center">
+            <p className="text-sm text-muted-foreground">
               Time Remaining
             </p>
-            <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+            <p className="text-2xl font-bold text-foreground">
               {formattedTime}
             </p>
           </div>
         )}
 
         <div className="space-y-3">
-          <div className="flex items-center gap-3 rounded-lg border border-slate-200 p-3 dark:border-slate-700">
+          <div className="flex items-center gap-3 rounded-lg border border-border p-3">
             <div
               className={cn(
                 "flex h-10 w-10 items-center justify-center rounded-full",
                 allAnswered
-                  ? "bg-green-100 dark:bg-green-900/40"
-                  : "bg-amber-100 dark:bg-amber-900/40",
+                  ? "bg-success/10"
+                  : "bg-warning/10",
               )}
             >
               {allAnswered ? (
-                <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-200" />
+                <CheckCircle className="h-5 w-5 text-success" />
               ) : (
-                <HelpCircle className="h-5 w-5 text-amber-600 dark:text-amber-200" />
+                <HelpCircle className="h-5 w-5 text-warning" />
               )}
             </div>
             <div className="flex-1">
-              <p className="font-medium text-slate-900 dark:text-slate-100">
+              <p className="font-medium text-foreground">
                 {answeredCount} of {totalQuestions} Answered
               </p>
-              <p className="text-sm text-slate-500 dark:text-slate-300">
+              <p className="text-sm text-muted-foreground">
                 {allAnswered
                   ? "All questions have been answered"
                   : `${unansweredCount} question${unansweredCount !== 1 ? "s" : ""} unanswered`}
@@ -113,26 +113,26 @@ export function SubmitExamModal({
             </div>
           </div>
 
-          <div className="flex items-center gap-3 rounded-lg border border-slate-200 p-3 dark:border-slate-700">
+          <div className="flex items-center gap-3 rounded-lg border border-border p-3">
             <div
               className={cn(
                 "flex h-10 w-10 items-center justify-center rounded-full",
                 noFlagged
-                  ? "bg-green-100 dark:bg-green-900/40"
-                  : "bg-orange-100 dark:bg-orange-900/40",
+                  ? "bg-success/10"
+                  : "bg-flagged/10",
               )}
             >
               {noFlagged ? (
-                <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-200" />
+                <CheckCircle className="h-5 w-5 text-success" />
               ) : (
-                <Flag className="h-5 w-5 text-orange-600 dark:text-orange-200" />
+                <Flag className="h-5 w-5 text-flagged" />
               )}
             </div>
             <div className="flex-1">
-              <p className="font-medium text-slate-900 dark:text-slate-100">
+              <p className="font-medium text-foreground">
                 {flaggedCount} Flagged for Review
               </p>
-              <p className="text-sm text-slate-500 dark:text-slate-300">
+              <p className="text-sm text-muted-foreground">
                 {noFlagged
                   ? "No questions flagged"
                   : "You marked these to review later"}
@@ -142,13 +142,13 @@ export function SubmitExamModal({
         </div>
 
         {!isReady && (
-          <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-500/60 dark:bg-amber-950">
-            <AlertTriangle className="h-5 w-5 flex-shrink-0 text-amber-600 dark:text-amber-200" />
+          <div className="flex items-start gap-3 rounded-lg border border-warning/50 bg-warning/10 p-4">
+            <AlertTriangle className="h-5 w-5 flex-shrink-0 text-warning" />
             <div>
-              <p className="font-medium text-amber-800 dark:text-amber-200">
+              <p className="font-medium text-warning">
                 Are you sure you want to submit?
               </p>
-              <p className="mt-1 text-sm text-amber-700 dark:text-amber-200">
+              <p className="mt-1 text-sm text-warning/80">
                 {!allAnswered ? (
                   <>
                     You have {unansweredCount} unanswered question
@@ -167,20 +167,20 @@ export function SubmitExamModal({
         )}
 
         {isReady && (
-          <div className="flex items-start gap-3 rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-500/60 dark:bg-green-950">
-            <CheckCircle className="h-5 w-5 flex-shrink-0 text-green-600 dark:text-green-200" />
+          <div className="flex items-start gap-3 rounded-lg border border-success/50 bg-success/10 p-4">
+            <CheckCircle className="h-5 w-5 flex-shrink-0 text-success" />
             <div>
-              <p className="font-medium text-green-800 dark:text-green-200">
+              <p className="font-medium text-success">
                 You&apos;re ready to submit!
               </p>
-              <p className="mt-1 text-sm text-green-700 dark:text-green-200">
+              <p className="mt-1 text-sm text-success/80">
                 All questions have been answered and reviewed.
               </p>
             </div>
           </div>
         )}
 
-        <p className="text-center text-xs text-slate-500 dark:text-slate-300">
+        <p className="text-center text-xs text-muted-foreground">
           Once submitted, you cannot change your answers.
         </p>
       </div>
@@ -209,7 +209,7 @@ export function TimeUpModal({
   return (
     <Modal
       isOpen={isOpen}
-      onClose={() => {}}
+      onClose={() => { }}
       title="Time's Up!"
       size="sm"
       closeOnOverlayClick={false}
@@ -225,14 +225,17 @@ export function TimeUpModal({
       }
     >
       <div className="text-center">
-        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/40">
-          <AlertTriangle className="h-8 w-8 text-red-600 dark:text-red-200" />
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
+          <AlertTriangle className="h-8 w-8 text-destructive" />
         </div>
-        <p className="text-slate-600 dark:text-slate-200">
+        <p className="text-muted-foreground">
           Your exam time has expired. Your answers have been automatically
           submitted.
         </p>
-        <p className="mt-4 text-lg font-semibold text-slate-900 dark:text-slate-100">
+        <p className="mt-2 text-sm font-medium text-success">
+          Your result has been saved locally.
+        </p>
+        <p className="mt-4 text-lg font-semibold text-foreground">
           {answeredCount} of {totalQuestions} questions answered
         </p>
       </div>

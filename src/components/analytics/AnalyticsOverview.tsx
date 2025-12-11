@@ -23,7 +23,8 @@ import {
   CardDescription,
 } from "@/components/ui/Card";
 import { cn, formatTime } from "@/lib/utils";
-import { useIsDarkMode } from "@/hooks/useIsDarkMode";
+import { useChartColors } from "@/hooks/useChartColors";
+import { useChartDimensions } from "@/hooks/useChartDimensions";
 import type { OverallStats } from "@/db/results";
 
 type TooltipEntry = { name?: string; value?: number; payload?: unknown };
@@ -41,11 +42,11 @@ const PieTooltip = ({
   const data = payload?.[0];
   if (!active || !data) return null;
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-lg dark:border-slate-700 dark:bg-slate-900">
-      <p className="font-medium text-slate-900 dark:text-slate-50">
+    <div className="rounded-lg border border-border bg-popover p-3 shadow-lg">
+      <p className="font-medium text-popover-foreground">
         {data.name}
       </p>
-      <p className="text-sm text-slate-600 dark:text-slate-300">
+      <p className="text-sm text-muted-foreground">
         {data.value} attempts
       </p>
     </div>
@@ -61,9 +62,9 @@ const BarTooltip = ({
   if (!active || !data) return null;
   const minutes = typeof data.value === "number" ? data.value : 0;
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-lg dark:border-slate-700 dark:bg-slate-900">
-      <p className="font-medium text-slate-900 dark:text-slate-50">{label}</p>
-      <p className="text-sm text-slate-600 dark:text-slate-300">
+    <div className="rounded-lg border border-border bg-popover p-3 shadow-lg">
+      <p className="font-medium text-popover-foreground">{label}</p>
+      <p className="text-sm text-muted-foreground">
         Study Time: {formatTime(minutes * 60)}
       </p>
     </div>
@@ -87,29 +88,29 @@ export function AnalyticsOverview({
       label: "Total Quizzes",
       value: stats.totalQuizzes,
       icon: BookOpen,
-      color: "text-blue-600 dark:text-blue-200",
-      bgColor: "bg-blue-100 dark:bg-blue-900/30",
+      color: "text-info",
+      bgColor: "bg-info/10",
     },
     {
       label: "Total Attempts",
       value: stats.totalAttempts,
       icon: Target,
-      color: "text-green-600 dark:text-green-200",
-      bgColor: "bg-green-100 dark:bg-green-900/30",
+      color: "text-success",
+      bgColor: "bg-success/10",
     },
     {
       label: "Average Score",
       value: stats.totalAttempts > 0 ? `${stats.averageScore}%` : "-",
       icon: Award,
-      color: "text-amber-600 dark:text-amber-200",
-      bgColor: "bg-amber-100 dark:bg-amber-900/30",
+      color: "text-warning",
+      bgColor: "bg-warning/10",
     },
     {
       label: "Study Time",
       value: formatTime(stats.totalStudyTime),
       icon: Clock,
-      color: "text-purple-600 dark:text-purple-200",
-      bgColor: "bg-purple-100 dark:bg-purple-900/30",
+      color: "text-accent",
+      bgColor: "bg-accent/10",
     },
   ] as const;
 
@@ -126,10 +127,10 @@ export function AnalyticsOverview({
                 />
               </div>
               <div>
-                <p className="text-2xl font-bold text-slate-900 dark:text-slate-50">
+                <p className="text-2xl font-bold text-foreground">
                   {stat.value}
                 </p>
-                <p className="text-sm text-slate-500 dark:text-slate-300">
+                <p className="text-sm text-muted-foreground">
                   {stat.label}
                 </p>
               </div>
@@ -153,6 +154,9 @@ export function ScoreDistribution({
   results,
   className,
 }: ScoreDistributionProps): React.ReactElement {
+  const { colors, isReady: colorsReady } = useChartColors();
+  const { containerRef, isReady: dimensionsReady } = useChartDimensions();
+  const isReady = colorsReady && dimensionsReady;
   const validResults = React.useMemo(
     () =>
       results.filter(
@@ -168,36 +172,36 @@ export function ScoreDistribution({
         name: "90-100%",
         min: 90,
         max: 100,
-        color: "#22c55e",
-        colorClass: "legend-dot-green",
+        colorKey: "tierExcellent" as const,
+        colorClass: "legend-dot-excellent",
       },
       {
         name: "80-89%",
         min: 80,
         max: 89,
-        color: "#3b82f6",
-        colorClass: "legend-dot-blue",
+        colorKey: "tierGreat" as const,
+        colorClass: "legend-dot-great",
       },
       {
         name: "70-79%",
         min: 70,
         max: 79,
-        color: "#06b6d4",
-        colorClass: "legend-dot-cyan",
+        colorKey: "tierGood" as const,
+        colorClass: "legend-dot-good",
       },
       {
         name: "60-69%",
         min: 60,
         max: 69,
-        color: "#f59e0b",
-        colorClass: "legend-dot-amber",
+        colorKey: "tierPassing" as const,
+        colorClass: "legend-dot-passing",
       },
       {
         name: "Below 60%",
         min: 0,
         max: 59,
-        color: "#ef4444",
-        colorClass: "legend-dot-red",
+        colorKey: "tierFailing" as const,
+        colorClass: "legend-dot-failing",
       },
     ];
 
@@ -207,7 +211,7 @@ export function ScoreDistribution({
         value: validResults.filter(
           (r) => r.score >= range.min && r.score <= range.max,
         ).length,
-        color: range.color,
+        colorKey: range.colorKey,
         colorClass: range.colorClass,
       }))
       .filter((r) => r.value > 0);
@@ -220,8 +224,8 @@ export function ScoreDistribution({
           <CardTitle>Score Distribution</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-center text-slate-500 dark:text-slate-300">
-            No data yet
+          <p className="text-center text-muted-foreground">
+            Complete some quizzes to see your score distribution
           </p>
         </CardContent>
       </Card>
@@ -232,39 +236,43 @@ export function ScoreDistribution({
     <Card className={className}>
       <CardHeader>
         <CardTitle>Score Distribution</CardTitle>
-        <CardDescription>
-          Breakdown of your scores across all attempts
-        </CardDescription>
+        <CardDescription>Performance breakdown by score range</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="h-[250px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={distribution}
-                cx="50%"
-                cy="50%"
-                innerRadius={60}
-                outerRadius={100}
-                paddingAngle={2}
-                dataKey="value"
-                label={({ name, value }) => `${name}: ${value}`}
-                labelLine={false}
-              >
-                {distribution.map((entry) => (
-                  <Cell key={entry.name} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip content={<PieTooltip />} />
-            </PieChart>
-          </ResponsiveContainer>
+        <div ref={containerRef} className="h-[250px]">
+          {isReady ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={distribution}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={100}
+                  paddingAngle={2}
+                  dataKey="value"
+                  label={({ name, value }) => `${name}: ${value}`}
+                  labelLine={false}
+                >
+                  {distribution.map((entry) => (
+                    <Cell key={entry.name} fill={colors[entry.colorKey]} />
+                  ))}
+                </Pie>
+                <Tooltip content={<PieTooltip />} />
+              </PieChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex h-full items-center justify-center">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+            </div>
+          )}
         </div>
 
         <div className="mt-4 flex flex-wrap justify-center gap-4">
           {distribution.map((entry) => (
             <div key={entry.name} className="flex items-center gap-2">
               <span className={cn("h-3 w-3 rounded-full", entry.colorClass)} />
-              <span className="text-sm text-slate-600 dark:text-slate-200">
+              <span className="text-sm text-muted-foreground">
                 {entry.name}
               </span>
             </div>
@@ -287,9 +295,9 @@ export function StudyTimeChart({
   dailyData,
   className,
 }: StudyTimeChartProps): React.ReactElement {
-  const isDark = useIsDarkMode();
-  const tickColor = isDark ? "#cbd5e1" : "#64748b";
-  const gridColor = isDark ? "#1f2937" : "#e2e8f0";
+  const { colors, isReady: colorsReady } = useChartColors();
+  const { containerRef, isReady: dimensionsReady } = useChartDimensions();
+  const isReady = colorsReady && dimensionsReady;
 
   if (dailyData.length === 0) {
     return (
@@ -298,7 +306,7 @@ export function StudyTimeChart({
           <CardTitle>Study Activity</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-center text-slate-500 dark:text-slate-300">
+          <p className="text-center text-muted-foreground">
             No study data yet
           </p>
         </CardContent>
@@ -315,24 +323,30 @@ export function StudyTimeChart({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="h-[250px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={dailyData}>
-              <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
-              <XAxis
-                dataKey="date"
-                tick={{ fill: tickColor, fontSize: 12 }}
-                tickLine={false}
-              />
-              <YAxis
-                tick={{ fill: tickColor, fontSize: 12 }}
-                tickLine={false}
-                axisLine={false}
-              />
-              <Tooltip content={<BarTooltip />} />
-              <Bar dataKey="minutes" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+        <div ref={containerRef} className="h-[250px]">
+          {isReady ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={dailyData}>
+                <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} />
+                <XAxis
+                  dataKey="date"
+                  tick={{ fill: colors.muted, fontSize: 12 }}
+                  tickLine={false}
+                />
+                <YAxis
+                  tick={{ fill: colors.muted, fontSize: 12 }}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <Tooltip content={<BarTooltip />} />
+                <Bar dataKey="minutes" fill={colors.primary} radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex h-full items-center justify-center">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

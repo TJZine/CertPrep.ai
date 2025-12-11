@@ -53,7 +53,7 @@ export function ExplanationPanel({
           <Lightbulb
             className={cn(
               "h-4 w-4",
-              isCorrect ? "text-green-600" : "text-amber-500",
+              isCorrect ? "text-correct" : "text-warning",
             )}
             aria-hidden="true"
           />
@@ -74,8 +74,8 @@ export function ExplanationPanel({
         className={cn(
           "mt-2",
           isCorrect
-            ? "border-green-200 bg-green-50 dark:border-green-800/70 dark:bg-green-900/20"
-            : "border-amber-200 bg-amber-50 dark:border-amber-700/70 dark:bg-amber-900/20",
+            ? "border-correct/50 bg-correct/10"
+            : "border-warning/50 bg-warning/10",
         )}
       >
         <CardContent className="p-4">
@@ -85,32 +85,27 @@ export function ExplanationPanel({
                 className={cn(
                   "mb-2 flex items-center gap-2 font-semibold",
                   isCorrect
-                    ? "text-green-800 dark:text-green-100"
-                    : "text-amber-800 dark:text-amber-100",
+                    ? "text-correct"
+                    : "text-warning",
                 )}
               >
                 <Lightbulb className="h-4 w-4" aria-hidden="true" />
                 Explanation
               </h4>
               <div
-                className={cn(
-                  "prose prose-sm max-w-none",
-                  isCorrect
-                    ? "prose-green dark:prose-invert"
-                    : "prose-amber dark:prose-invert",
-                )}
+                className="prose prose-sm max-w-none text-foreground"
                 dangerouslySetInnerHTML={{ __html: sanitizedExplanation }}
               />
             </div>
 
             {!isCorrect && sanitizedDistractorLogic && (
-              <div className="border-t border-amber-200 pt-4 dark:border-amber-700/70">
-                <h4 className="mb-2 flex items-center gap-2 font-semibold text-amber-800 dark:text-amber-100">
+              <div className="border-t border-warning/30 pt-4">
+                <h4 className="mb-2 flex items-center gap-2 font-semibold text-warning">
                   <AlertCircle className="h-4 w-4" aria-hidden="true" />
                   Why Other Options Are Wrong
                 </h4>
                 <div
-                  className="prose prose-sm prose-amber max-w-none dark:prose-invert"
+                  className="prose prose-sm max-w-none text-foreground"
                   dangerouslySetInnerHTML={{
                     __html: sanitizedDistractorLogic,
                   }}
@@ -143,18 +138,13 @@ export function ExplanationCompact({
       className={cn(
         "rounded-lg border p-3",
         isCorrect
-          ? "border-green-200 bg-green-50 dark:border-green-800/70 dark:bg-green-900/20"
-          : "border-amber-200 bg-amber-50 dark:border-amber-700/70 dark:bg-amber-900/20",
+          ? "border-correct/50 bg-correct/10"
+          : "border-warning/50 bg-warning/10",
         className,
       )}
     >
       <div
-        className={cn(
-          "prose prose-sm max-w-none",
-          isCorrect
-            ? "prose-green dark:prose-invert"
-            : "prose-amber dark:prose-invert",
-        )}
+        className="prose prose-sm max-w-none text-foreground"
         dangerouslySetInnerHTML={{ __html: sanitizedExplanation }}
       />
     </div>

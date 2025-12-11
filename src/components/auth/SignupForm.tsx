@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import Link from "next/link";
@@ -25,7 +26,22 @@ export default function SignupForm(): React.ReactElement {
   const router = useRouter();
   const supabase = createClient();
   const { addToast } = useToast();
+
+  // Redirect to dashboard if already logged in
+  const { isLoading: isCheckingAuth, isRedirecting } = useAuthRedirect();
   const hcaptchaConfigured = !!process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY;
+
+  if (isCheckingAuth || isRedirecting) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div
+          className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"
+          role="status"
+          aria-label="Checking authentication"
+        />
+      </div>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
@@ -101,7 +117,7 @@ export default function SignupForm(): React.ReactElement {
     <div className="space-y-6">
       <div className="space-y-2 text-center">
         <h1 className="text-3xl font-bold">Create an Account</h1>
-        <p className="text-gray-500 dark:text-gray-400">
+        <p className="text-muted-foreground">
           Enter your email below to create your account
         </p>
       </div>
@@ -188,7 +204,7 @@ export default function SignupForm(): React.ReactElement {
             />
           ) : (
             <p
-              className="text-sm text-red-500 font-medium text-center"
+              className="text-sm text-destructive font-medium text-center"
               role="alert"
               aria-live="polite"
             >
@@ -200,7 +216,7 @@ export default function SignupForm(): React.ReactElement {
 
         {error && (
           <div
-            className="text-sm text-red-500 font-medium"
+            className="text-sm text-destructive font-medium"
             role="alert"
             aria-live="polite"
           >

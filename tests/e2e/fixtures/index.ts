@@ -5,6 +5,7 @@ import {
   type Page,
   type BrowserContext,
 } from "@playwright/test";
+import crypto from "node:crypto";
 import { injectAuthState, MOCK_USER } from "./auth";
 import { clearDatabase, seedQuiz, waitForDatabase } from "../helpers/db";
 import type { Quiz } from "../../../src/types/quiz";
@@ -183,8 +184,31 @@ export const test = base.extend<TestFixtures>({
    */
   seedTestQuiz: async ({ authenticatedPage }, use) => {
     const seeder = async (quizData: Omit<Quiz, "user_id">): Promise<Quiz> => {
+      // Compute hashes for questions that are missing them
+      // This is required for useQuizGrading to work correctly on the client side
+      const questionsWithHashes = quizData.questions.map((q) => {
+        // Only compute hash if missing and correct_answer is a valid non-empty string
+        if (
+          !q.correct_answer_hash &&
+          typeof q.correct_answer === "string" &&
+          q.correct_answer.trim().length > 0
+        ) {
+          const hash = crypto
+            .createHash("sha256")
+            .update(q.correct_answer)
+            .digest("hex");
+
+          return {
+            ...q,
+            correct_answer_hash: hash,
+          };
+        }
+        return q;
+      });
+
       const quiz: Quiz = {
         ...quizData,
+        questions: questionsWithHashes,
         user_id: MOCK_USER.id,
       };
 

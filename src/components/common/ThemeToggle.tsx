@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Moon, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useTheme } from "./ThemeProvider";
+import { useTheme, THEME_CONFIG } from "./ThemeProvider";
 
 interface ThemeToggleProps {
   className?: string;
@@ -12,17 +12,16 @@ interface ThemeToggleProps {
 export function ThemeToggle({
   className,
 }: ThemeToggleProps): React.ReactElement {
-  const { theme, toggleTheme } = useTheme();
-  const isDark = theme === "dark";
+  const { resolvedTheme, toggleTheme } = useTheme();
+  const isDark = THEME_CONFIG[resolvedTheme]?.isDark;
 
   return (
     <button
       type="button"
       onClick={toggleTheme}
       className={cn(
-        "inline-flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm",
-        "hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2",
-        "dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700",
+        "inline-flex items-center gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm font-medium text-foreground shadow-sm",
+        "hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
         className,
       )}
       aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}

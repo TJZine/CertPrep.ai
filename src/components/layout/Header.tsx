@@ -15,10 +15,11 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { lockBodyScroll, unlockBodyScroll } from "@/lib/bodyScrollLock";
-import { ThemeToggleButton } from "@/components/common/ThemeToggleButton";
+import { ThemePalette } from "@/components/common/ThemePalette";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { Button, buttonVariants } from "@/components/ui/Button";
 import { Logo } from "@/components/common/Logo";
+import { SyncStatusIndicator } from "@/components/common/SyncStatusIndicator";
 import { useToast } from "@/components/ui/Toast";
 
 import { logger } from "@/lib/logger";
@@ -112,10 +113,9 @@ export function Header(): React.ReactElement {
     <header
       className={cn(
         "sticky top-0 z-50 w-full transition-all duration-200",
-        "bg-white/80 dark:bg-slate-950/80 backdrop-blur-md",
-        "border-b",
+        "glass",
         scrolled
-          ? "border-slate-200/50 dark:border-slate-800/50 shadow-sm"
+          ? "border-border shadow-sm"
           : "border-transparent",
       )}
     >
@@ -139,8 +139,8 @@ export function Header(): React.ReactElement {
                 className={cn(
                   "text-sm font-medium transition-colors duration-200",
                   isActive
-                    ? "text-blue-600 dark:text-blue-400"
-                    : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100",
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-foreground",
                 )}
                 aria-current={isActive ? "page" : undefined}
               >
@@ -152,11 +152,12 @@ export function Header(): React.ReactElement {
 
         {/* Desktop Actions */}
         <div className="hidden md:flex items-center gap-4">
-          <ThemeToggleButton />
+          <ThemePalette />
 
           {user ? (
-            <div className="flex items-center gap-4 pl-4 border-l border-slate-200 dark:border-slate-800">
-              <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+            <div className="flex items-center gap-4 pl-4 border-l border-border">
+              <SyncStatusIndicator />
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <UserIcon className="h-4 w-4" />
                 <span className="max-w-[150px] truncate">{user.email}</span>
               </div>
@@ -166,7 +167,7 @@ export function Header(): React.ReactElement {
                 onClick={handleSignOut}
                 isLoading={isSigningOut}
                 disabled={isSigningOut}
-                className="text-slate-600 hover:text-red-600 hover:bg-red-50 dark:text-slate-400 dark:hover:text-red-400 dark:hover:bg-red-900/20"
+                className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
               >
                 Sign Out
               </Button>
@@ -197,10 +198,10 @@ export function Header(): React.ReactElement {
 
         {/* Mobile Menu Button */}
         <div className="flex items-center gap-4 md:hidden">
-          <ThemeToggleButton />
+          <ThemePalette />
           <button
             type="button"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-md text-slate-700 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 dark:text-slate-200 dark:hover:bg-slate-800"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-md text-foreground transition hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             onClick={(): void => setIsMenuOpen((prev) => !prev)}
             aria-expanded={isMenuOpen}
             aria-controls="mobile-nav"
@@ -219,7 +220,7 @@ export function Header(): React.ReactElement {
       <div
         inert={!isMenuOpen ? true : undefined}
         className={cn(
-          "fixed inset-x-0 top-16 z-40 bg-white dark:bg-slate-950 md:hidden transition-transform duration-300 ease-in-out h-[calc(100dvh-4rem)] min-h-[calc(100vh-4rem)]",
+          "fixed inset-x-0 top-16 z-40 bg-background md:hidden transition-transform duration-300 ease-in-out h-[calc(100dvh-4rem)] min-h-[calc(100vh-4rem)]",
           isMenuOpen ? "translate-x-0" : "translate-x-full",
         )}
         aria-hidden={!isMenuOpen}
@@ -241,8 +242,8 @@ export function Header(): React.ReactElement {
                   className={cn(
                     "flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium transition-colors",
                     isActive
-                      ? "bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300"
-                      : "text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800",
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:bg-accent hover:text-foreground",
                   )}
                 >
                   <Icon className="h-5 w-5" />
@@ -252,25 +253,25 @@ export function Header(): React.ReactElement {
             })}
           </nav>
 
-          <div className="border-t border-slate-200 dark:border-slate-800 pt-6 mt-auto">
+          <div className="border-t border-border pt-6 mt-auto">
             {user ? (
               <div className="space-y-4">
                 <div className="flex items-center gap-3 px-4 py-2">
-                  <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                     <UserIcon className="h-5 w-5" />
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                    <span className="text-sm font-medium text-foreground">
                       Account
                     </span>
-                    <span className="text-xs text-slate-500 dark:text-slate-400">
+                    <span className="text-xs text-muted-foreground">
                       {user.email}
                     </span>
                   </div>
                 </div>
                 <Button
                   variant="ghost"
-                  className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                  className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
                   onClick={handleSignOut}
                   isLoading={isSigningOut}
                   disabled={isSigningOut}

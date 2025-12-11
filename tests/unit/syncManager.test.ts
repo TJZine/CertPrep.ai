@@ -39,6 +39,12 @@ vi.mock("@/db/syncState", () => ({
 
 const { mockSupabase } = vi.hoisted(() => {
   const mock = {
+    auth: {
+      getSession: vi.fn().mockResolvedValue({
+        data: { session: { user: { id: 'user-123' } } },
+        error: null,
+      }),
+    },
     from: vi.fn(),
     select: vi.fn(),
     eq: vi.fn(),
@@ -263,5 +269,50 @@ describe("SyncManager", () => {
 
     expect(result.incomplete).toBe(true);
     expect(result.error).toContain("RLS denied");
+  });
+
+  describe("auth failure scenarios", () => {
+    it("should skip sync when no auth session exists", async () => {
+      mockSupabase.auth.getSession.mockResolvedValueOnce({
+        data: { session: null },
+        error: null,
+      });
+
+      const result = await syncResults("user-123");
+
+      expect(result.incomplete).toBe(true);
+      expect(result.error).toBe("Not authenticated");
+      expect(result.status).toBe("skipped");
+      // Verify no sync operations were attempted
+      expect(mockSupabase.from).not.toHaveBeenCalled();
+    });
+
+    it("should skip sync when getSession returns an error", async () => {
+      mockSupabase.auth.getSession.mockResolvedValueOnce({
+        data: { session: null },
+        error: { message: "Auth service unavailable" },
+      });
+
+      const result = await syncResults("user-123");
+
+      expect(result.incomplete).toBe(true);
+      expect(result.error).toBe("Not authenticated");
+      expect(result.status).toBe("skipped");
+      expect(mockSupabase.from).not.toHaveBeenCalled();
+    });
+
+    it("should fail sync when session user ID does not match requested userId", async () => {
+      mockSupabase.auth.getSession.mockResolvedValueOnce({
+        data: { session: { user: { id: "different-user-456" } } },
+        error: null,
+      });
+
+      const result = await syncResults("user-123");
+
+      expect(result.incomplete).toBe(true);
+      expect(result.error).toBe("User ID mismatch - please re-login");
+      expect(result.status).toBe("failed");
+      expect(mockSupabase.from).not.toHaveBeenCalled();
+    });
   });
 });

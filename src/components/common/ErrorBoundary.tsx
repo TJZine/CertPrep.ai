@@ -43,17 +43,17 @@ export class ErrorBoundary extends React.Component<
       return (
         <div
           role="alert"
-          className="rounded-lg border border-red-200 bg-red-50 p-6 text-red-900 shadow-sm dark:border-red-900 dark:bg-red-950/50 dark:text-red-200"
+          className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-destructive shadow-sm"
         >
           <div className="flex items-start gap-3">
             <AlertTriangle
-              className="mt-0.5 h-6 w-6 text-red-600 dark:text-red-400"
+              className="mt-0.5 h-6 w-6 text-destructive"
               aria-hidden="true"
             />
             <div className="flex-1">
               <h2 className="text-lg font-semibold">Something went wrong</h2>
               {this.state.error?.message ? (
-                <p className="mt-2 text-sm text-red-800 dark:text-red-300">
+                <p className="mt-2 text-sm text-destructive/80">
                   {this.state.error.message}
                 </p>
               ) : null}

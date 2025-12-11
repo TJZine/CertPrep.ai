@@ -8,6 +8,24 @@ import fs from "fs";
 import path from "path";
 
 /**
+ * Extracts the Supabase project reference from the URL.
+ */
+function getSupabaseProjectRef(): string {
+  return (
+    process.env.NEXT_PUBLIC_SUPABASE_URL?.match(
+      /https:\/\/([^.]+)\.supabase\.co/
+    )?.[1] || "e2e-test-project"
+  );
+}
+
+/**
+ * Returns the localStorage key for Supabase auth token.
+ */
+function getAuthTokenKey(): string {
+  return `sb-${getSupabaseProjectRef()}-auth-token`;
+}
+
+/**
  * Get the test user ID from the global setup output.
  */
 function getTestUserId(): string {
@@ -127,17 +145,22 @@ export async function injectAuthState(page: Page): Promise<void> {
   await page.goto("/");
 
   await page.evaluate(
-    ({ userId, guestKey }) => {
+    ({ userId, guestKey, session, authTokenKey }) => {
       // Set the guest user ID that useEffectiveUserId will use
       localStorage.setItem(guestKey, userId);
 
       // Also set app-specific user tracking for sync
       localStorage.setItem("cp_last_user_id", userId);
 
-      // Note: We don't need to set the Supabase token here because
-      // Playwright's storageState handles it.
+      // Inject the mock Supabase session so getSession() works
+      localStorage.setItem(authTokenKey, JSON.stringify(session));
     },
-    { userId: MOCK_USER.id, guestKey: GUEST_USER_KEY },
+    {
+      userId: MOCK_USER.id,
+      guestKey: GUEST_USER_KEY,
+      session: createMockSession(),
+      authTokenKey: getAuthTokenKey(),
+    },
   );
 
   // Debug: Check cookies
@@ -153,12 +176,7 @@ export async function injectAuthState(page: Page): Promise<void> {
  * @param page - Playwright page to clear auth state from
  */
 export async function clearAuthState(page: Page): Promise<void> {
-  // Derive project ref to construct the auth cookie/key name
-  const projectRef =
-    process.env.NEXT_PUBLIC_SUPABASE_URL?.match(
-      /https:\/\/([^.]+)\.supabase\.co/,
-    )?.[1] || "e2e-test-project";
-  const authTokenKey = `sb-${projectRef}-auth-token`;
+  const authTokenKey = getAuthTokenKey();
 
   await page.evaluate(
     ({ guestKey, authTokenKey }) => {

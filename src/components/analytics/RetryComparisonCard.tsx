@@ -27,25 +27,27 @@ function StatBar({
     value,
     maxValue = 100,
     color,
+    bgColor,
 }: {
     label: string;
     value: number;
     maxValue?: number;
     color: string;
+    bgColor: string;
 }): React.ReactElement {
     const percentage = Math.min(100, (value / maxValue) * 100);
 
     return (
         <div className="space-y-2">
             <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                <span className="text-sm font-medium text-muted-foreground">
                     {label}
                 </span>
                 <span className={cn("text-lg font-bold", color)}>{value}%</span>
             </div>
-            <div className="h-3 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
+            <div className="h-3 w-full overflow-hidden rounded-full bg-muted">
                 <div
-                    className={cn("h-full transition-all duration-500", color.replaceAll("text-", "bg-"))}
+                    className={cn("h-full transition-all duration-500", bgColor)}
                     style={{ width: `${percentage}%` }}
                 />
             </div>
@@ -69,12 +71,12 @@ export function RetryComparisonCard({
             <Card className={className}>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                        <RotateCcw className="h-5 w-5 text-blue-500" aria-hidden="true" />
+                        <RotateCcw className="h-5 w-5 text-info" aria-hidden="true" />
                         Retry Performance
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <p className="text-center text-slate-500 dark:text-slate-400">
+                    <p className="text-center text-muted-foreground">
                         Retake some quizzes to see how you improve on repeated attempts.
                     </p>
                 </CardContent>
@@ -115,7 +117,7 @@ export function RetryComparisonCard({
                 <div className="flex items-center justify-between">
                     <div>
                         <CardTitle className="flex items-center gap-2">
-                            <RotateCcw className="h-5 w-5 text-blue-500" aria-hidden="true" />
+                            <RotateCcw className="h-5 w-5 text-info" aria-hidden="true" />
                             Retry Performance
                         </CardTitle>
                         <CardDescription>
@@ -130,7 +132,8 @@ export function RetryComparisonCard({
                     <StatBar
                         label="First Attempt Average"
                         value={firstAttemptAvg}
-                        color="text-slate-600 dark:text-slate-400"
+                        color="text-muted-foreground"
+                        bgColor="bg-muted-foreground"
                     />
 
                     <StatBar
@@ -138,15 +141,20 @@ export function RetryComparisonCard({
                         value={retryAvg}
                         color={
                             retryAvg >= firstAttemptAvg
-                                ? "text-green-600 dark:text-green-400"
-                                : "text-amber-600 dark:text-amber-400"
+                                ? "text-correct"
+                                : "text-warning"
+                        }
+                        bgColor={
+                            retryAvg >= firstAttemptAvg
+                                ? "bg-correct"
+                                : "bg-warning"
                         }
                     />
                 </div>
 
                 {avgImprovement !== null && avgImprovement > 0 && (
-                    <div className="mt-4 rounded-lg bg-green-50 p-3 dark:bg-green-900/20">
-                        <p className="text-sm text-green-800 dark:text-green-200">
+                    <div className="mt-4 rounded-lg bg-correct/10 p-3">
+                        <p className="text-sm text-correct">
                             <strong>Great progress!</strong> Retaking quizzes is helping you
                             improve your scores by an average of {avgImprovement}%.
                         </p>
@@ -154,8 +162,8 @@ export function RetryComparisonCard({
                 )}
 
                 {avgImprovement !== null && avgImprovement <= 0 && (
-                    <div className="mt-4 rounded-lg bg-blue-50 p-3 dark:bg-blue-900/20">
-                        <p className="text-sm text-blue-800 dark:text-blue-200">
+                    <div className="mt-4 rounded-lg bg-info/10 p-3">
+                        <p className="text-sm text-info">
                             <strong>Tip:</strong> Review your missed questions before retaking
                             a quiz to maximize improvement.
                         </p>
