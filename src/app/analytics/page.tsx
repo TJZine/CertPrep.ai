@@ -2,16 +2,13 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import {
-  AnalyticsOverview,
-  ScoreDistribution,
-  StudyTimeChart,
-} from "@/components/analytics/AnalyticsOverview";
+import { AnalyticsOverview } from "@/components/analytics/AnalyticsOverview";
 import { PerformanceHistory } from "@/components/analytics/PerformanceHistory";
 import { WeakAreasCard } from "@/components/analytics/WeakAreasCard";
 import { ExamReadinessCard } from "@/components/analytics/ExamReadinessCard";
 import { StreakCard } from "@/components/analytics/StreakCard";
 import { RetryComparisonCard } from "@/components/analytics/RetryComparisonCard";
+import { TopicHeatmap } from "@/components/analytics/TopicHeatmap";
 import { CategoryBreakdown } from "@/components/results/TopicRadar";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { EmptyState } from "@/components/common/EmptyState";
@@ -199,24 +196,20 @@ export default function AnalyticsPage(): React.ReactElement {
         />
       </div>
 
-      {/* Streaks */}
+      {/* Streaks (includes 7-day study activity) */}
       <div className="mb-8">
         <StreakCard
           currentStreak={advancedAnalytics.currentStreak}
           longestStreak={advancedAnalytics.longestStreak}
           consistencyScore={advancedAnalytics.consistencyScore}
           last7DaysActivity={advancedAnalytics.last7DaysActivity}
+          dailyStudyTime={dailyStudyTime}
         />
       </div>
 
       {overallStats && (
         <AnalyticsOverview stats={overallStats} className="mb-8" />
       )}
-
-      <div className="mb-8 grid gap-8 lg:grid-cols-2">
-        <ScoreDistribution results={results} />
-        <StudyTimeChart dailyData={dailyStudyTime} />
-      </div>
 
       <div className="mb-8">
         <PerformanceHistory results={results} quizTitles={quizTitles} />
@@ -226,10 +219,13 @@ export default function AnalyticsPage(): React.ReactElement {
         <CategoryBreakdown categories={categoryPerformance} />
         <WeakAreasCard
           weakAreas={weakAreas}
-          onStudyArea={() => {
-            // Future enhancement: start a filtered practice session for this category.
-          }}
+          userId={effectiveUserId ?? undefined}
         />
+      </div>
+
+      {/* Topic Heatmap (for comparison with CategoryBreakdown) */}
+      <div className="mb-8">
+        <TopicHeatmap results={results} quizzes={quizzes} />
       </div>
 
       {/* Retry Comparison */}

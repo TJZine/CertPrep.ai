@@ -10,6 +10,8 @@ interface SmartRoundBannerProps {
   missedCount: number;
   flaggedCount: number;
   onExit: () => void;
+  /** Optional custom title (defaults to "Smart Round") */
+  title?: string;
   className?: string;
 }
 
@@ -22,6 +24,7 @@ export function SmartRoundBanner({
   missedCount,
   flaggedCount,
   onExit,
+  title = "Smart Round",
   className,
 }: SmartRoundBannerProps): React.ReactElement {
   return (
@@ -31,7 +34,7 @@ export function SmartRoundBanner({
         className,
       )}
       role="status"
-      aria-label="Smart Round session active"
+      aria-label={`${title} session active`}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -43,7 +46,7 @@ export function SmartRoundBanner({
           </div>
           <div>
             <h2 className="font-semibold text-accent">
-              Smart Round
+              {title}
             </h2>
             <p className="text-sm text-accent/80">
               Focused practice on {totalQuestions} questions you need to review

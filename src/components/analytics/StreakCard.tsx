@@ -130,8 +130,15 @@ function StudyActivityBars({
                                     title={`${getDayLabel(daysAgo)}: ${minutes > 0 ? formatMinutes(minutes) : "No activity"}`}
                                 />
                             </div>
-                            <span className="text-xs text-muted-foreground">
-                                {getDayLabel(daysAgo)}
+                            <span
+                                className={cn(
+                                    "text-xs",
+                                    daysAgo === 0
+                                        ? "font-semibold text-foreground"
+                                        : "text-muted-foreground",
+                                )}
+                            >
+                                {daysAgo === 0 ? "Today" : getDayLabel(daysAgo)}
                             </span>
                         </div>
                     );

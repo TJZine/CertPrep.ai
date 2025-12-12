@@ -333,3 +333,89 @@ export async function getOverallStats(userId: string): Promise<OverallStats> {
     weakestCategories,
   };
 }
+
+/**
+ * Data returned by getTopicStudyQuestions for Topic Study sessions.
+ */
+export interface TopicStudyData {
+  /** Deduplicated question IDs (missed OR flagged) */
+  questionIds: string[];
+  /** Source quiz IDs (for navigation reference) */
+  quizIds: string[];
+  /** Count of questions answered incorrectly */
+  missedCount: number;
+  /** Count of questions flagged for review */
+  flaggedCount: number;
+  /** Total unique questions after deduplication */
+  totalUniqueCount: number;
+}
+
+/**
+ * Collects all missed and flagged questions for a specific category
+ * across all of a user's quizzes.
+ *
+ * Used by the "Study This Topic" feature in Analytics.
+ */
+export async function getTopicStudyQuestions(
+  userId: string,
+  category: string,
+): Promise<TopicStudyData> {
+  const [allResults, allQuizzes] = await Promise.all([
+    getAllResults(userId),
+    db.quizzes.where("user_id").equals(userId).toArray(),
+  ]);
+
+  const quizzes = allQuizzes.filter((q) => !q.deleted_at);
+  const quizMap = new Map(quizzes.map((quiz) => [quiz.id, quiz]));
+
+  const missedIds = new Set<string>();
+  const flaggedIds = new Set<string>();
+  const sourceQuizIds = new Set<string>();
+
+  // Process results in batches to avoid blocking
+  const BATCH_SIZE = 50;
+  for (let i = 0; i < allResults.length; i += BATCH_SIZE) {
+    const batch = allResults.slice(i, i + BATCH_SIZE);
+
+    await Promise.all(
+      batch.map(async (result) => {
+        const quiz = quizMap.get(result.quiz_id);
+        if (!quiz) return;
+
+        // Get questions in this category
+        const categoryQuestions = quiz.questions.filter(
+          (q) => q.category === category,
+        );
+
+        for (const question of categoryQuestions) {
+          // Check if flagged
+          if (result.flagged_questions.includes(question.id)) {
+            flaggedIds.add(question.id);
+            sourceQuizIds.add(quiz.id);
+          }
+
+          // Check if answered incorrectly
+          const userAnswer = result.answers[question.id];
+          if (userAnswer) {
+            const { isCorrect } = await evaluateAnswer(question, userAnswer);
+            if (!isCorrect) {
+              missedIds.add(question.id);
+              sourceQuizIds.add(quiz.id);
+            }
+          }
+        }
+      }),
+    );
+  }
+
+  // Combine and deduplicate
+  const allIds = new Set([...missedIds, ...flaggedIds]);
+
+  return {
+    questionIds: Array.from(allIds),
+    quizIds: Array.from(sourceQuizIds),
+    missedCount: missedIds.size,
+    flaggedCount: flaggedIds.size,
+    totalUniqueCount: allIds.size,
+  };
+}
