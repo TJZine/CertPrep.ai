@@ -42,6 +42,7 @@ async function ensureQuizHash(
 const BATCH_SIZE = 50;
 const TIME_BUDGET_MS = 5000;
 
+// Using .passthrough() to preserve unknown fields from newer schema versions
 const RemoteQuizSchema = z.object({
   id: z.string(),
   user_id: z.string(),
@@ -55,7 +56,7 @@ const RemoteQuizSchema = z.object({
   created_at: z.string(),
   updated_at: z.string(),
   deleted_at: z.string().nullable(),
-});
+}).passthrough();
 
 const syncState = {
   isSyncing: false,

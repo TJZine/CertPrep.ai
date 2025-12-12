@@ -22,6 +22,7 @@ const BATCH_SIZE = 50;
 const TIME_BUDGET_MS = 5000;
 
 // Schema for validating remote result data structure
+// Using .passthrough() to preserve unknown fields from newer schema versions
 const RemoteResultSchema = z.object({
   id: z.string(),
   quiz_id: z.string(),
@@ -34,7 +35,7 @@ const RemoteResultSchema = z.object({
   category_breakdown: z.record(z.string(), z.number()),
   question_ids: z.array(z.string()).optional().nullable(),
   created_at: z.string(),
-});
+}).passthrough();
 
 const syncState = {
   isSyncing: false,
