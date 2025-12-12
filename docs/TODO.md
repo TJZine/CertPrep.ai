@@ -174,3 +174,65 @@ Enable users to launch a practice session containing _all_ questions for a speci
 - [ ] The session contains all Biology questions from the user's library.
 - [ ] The session works with existing Zen Mode features (scoring, explanations).
 - [ ] Generated quizzes do not permanently clutter the main "Library" view (or are marked clearly).
+
+---
+
+## Feature: SRS Supabase Sync (Cross-Device)
+
+**Priority**: Medium | **Effort**: 4-8 hours | **Category**: Data Sync
+
+### Context
+
+The Spaced Repetition System (SRS) was implemented with **local-only storage** (Dexie/IndexedDB) for initial MVP scope. This creates significant UX limitations.
+
+### Current Limitations
+
+| Issue                | Impact                                                |
+| -------------------- | ----------------------------------------------------- |
+| **Device-bound**     | SRS progress doesn't sync across devices/browsers     |
+| **Data loss risk**   | Clearing browser data wipes all SRS state (no backup) |
+| **Browser-specific** | Users studying on phone won't see progress on desktop |
+
+### Proposed Solution
+
+1. **Add Supabase table**: `srs_state` with RLS policies for user isolation
+2. **Sync integration**: Mirror `results` sync pattern in `src/lib/sync/`
+3. **Conflict resolution**: Last-write-wins based on `last_reviewed` timestamp
+
+### Schema Draft
+
+```sql
+CREATE TABLE srs_state (
+  question_id UUID NOT NULL,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  box SMALLINT CHECK (box BETWEEN 1 AND 5),
+  last_reviewed TIMESTAMPTZ NOT NULL,
+  next_review TIMESTAMPTZ NOT NULL,
+  consecutive_correct SMALLINT DEFAULT 0,
+  PRIMARY KEY (question_id, user_id)
+);
+
+-- RLS
+ALTER TABLE srs_state ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can only access their own SRS state"
+  ON srs_state FOR ALL USING (auth.uid() = user_id);
+```
+
+### Acceptance Criteria
+
+- [ ] SRS state syncs to Supabase after quiz completion
+- [ ] Opening app on new device pulls down SRS state
+- [ ] Conflict resolution handles same question answered on two devices
+- [ ] Offline functionality preserved (write to Dexie first, sync later)
+
+### Migration Considerations (Existing Users)
+
+When implementing sync, existing users will have **historical results without SRS state**. Options:
+
+| Approach                   | Pros                                       | Cons                                                |
+| -------------------------- | ------------------------------------------ | --------------------------------------------------- |
+| **Backfill on first sync** | Users get SRS state for all past questions | Complex logic, could create many box-1 entries      |
+| **SRS starts fresh**       | Simple, no migration                       | Users lose credit for previously mastered questions |
+| **Prompt-based backfill**  | User choice, transparent                   | Extra UX flow to implement                          |
+
+**Recommendation**: Start fresh (no backfill) with a clear "SRS tracks questions from now on" message. Backfill can be added later if users request it.
