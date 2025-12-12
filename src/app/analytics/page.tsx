@@ -9,6 +9,7 @@ import { ExamReadinessCard } from "@/components/analytics/ExamReadinessCard";
 import { StreakCard } from "@/components/analytics/StreakCard";
 import { RetryComparisonCard } from "@/components/analytics/RetryComparisonCard";
 import { TopicHeatmap } from "@/components/analytics/TopicHeatmap";
+import { CategoryTrendChart } from "@/components/analytics/CategoryTrendChart";
 import { CategoryBreakdown } from "@/components/results/TopicRadar";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { EmptyState } from "@/components/common/EmptyState";
@@ -20,11 +21,30 @@ import {
 } from "@/hooks/useDatabase";
 import { useAnalyticsStats } from "@/hooks/useAnalyticsStats";
 import { useAdvancedAnalytics } from "@/hooks/useAdvancedAnalytics";
+import { useCategoryTrends } from "@/hooks/useCategoryTrends";
 import { useSync } from "@/hooks/useSync";
 import { getOverallStats, type OverallStats } from "@/db/results";
 import { BarChart3, Plus, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
+import type { Result } from "@/types/result";
+
+/**
+ * Wrapper component for CategoryTrendChart that uses the trend hook.
+ */
+function CategoryTrendChartSection({
+  results,
+}: {
+  results: Result[];
+}): React.ReactElement {
+  const { trendData, categories } = useCategoryTrends(results);
+
+  return (
+    <div className="mb-8">
+      <CategoryTrendChart data={trendData} categories={categories} />
+    </div>
+  );
+}
 
 /**
  * Analytics dashboard aggregating results across quizzes.
@@ -227,6 +247,9 @@ export default function AnalyticsPage(): React.ReactElement {
       <div className="mb-8">
         <TopicHeatmap results={results} quizzes={quizzes} />
       </div>
+
+      {/* Category Trends Over Time */}
+      <CategoryTrendChartSection results={results} />
 
       {/* Retry Comparison */}
       <div className="mb-8">

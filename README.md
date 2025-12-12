@@ -107,11 +107,11 @@ CertPrep.ai is a modern, offline-first quiz application designed to help users p
 
 ## Demo
 
-> **Live Demo:** [https://certprep-ai.vercel.app](https://certprep-ai.vercel.app)
+> **Live Demo:** [https://cert-prep-ai.vercel.app](https://cert-prep-ai.vercel.app)
 
-## Demo Access
+## Access
 
-> _Please sign up for a new account to test the application._
+> _Please sign up for a new account to use the application._
 
 ---
 
