@@ -4,7 +4,7 @@ README.md - CertPrep.ai
 
 <!-- Header Section with Logo -->
 <div align="center">
-  <img src="./public/icon.svg" alt="CertPrep.ai Logo" width="120">
+  <img src="./public/full-icon.svg" alt="CertPrep.ai Logo" width="120">
 </div>
 
 # CertPrep.ai
