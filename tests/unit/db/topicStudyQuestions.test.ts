@@ -22,6 +22,11 @@ const { quizzesData, resultsData, dbMock } = vi.hoisted(() => {
         })),
     });
 
+    // Mock bulkGet for getTopicStudyQuestions
+    const quizzesBulkGet = vi.fn().mockImplementation(async (ids: string[]) =>
+        ids.map((id) => quizzesData.find((q) => q.id === id)),
+    );
+
     const resultsWhere = vi.fn().mockReturnValue({
         equals: vi.fn().mockImplementation((userId: string) => ({
             toArray: vi
@@ -43,6 +48,7 @@ const { quizzesData, resultsData, dbMock } = vi.hoisted(() => {
         dbMock: {
             quizzes: {
                 where: quizzesWhere,
+                bulkGet: quizzesBulkGet,
             },
             results: {
                 where: resultsWhere,

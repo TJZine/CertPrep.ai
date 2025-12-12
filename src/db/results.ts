@@ -360,12 +360,14 @@ export async function getTopicStudyQuestions(
   userId: string,
   category: string,
 ): Promise<TopicStudyData> {
-  const [allResults, allQuizzes] = await Promise.all([
-    getAllResults(userId),
-    db.quizzes.where("user_id").equals(userId).toArray(),
-  ]);
+  const allResults = await getAllResults(userId);
 
-  const quizzes = allQuizzes.filter((q) => !q.deleted_at);
+  // Get unique quiz IDs from results (includes system/public quizzes the user has taken)
+  const quizIdsFromResults = [...new Set(allResults.map((r) => r.quiz_id))];
+
+  // Fetch all referenced quizzes
+  const allQuizzes = await db.quizzes.bulkGet(quizIdsFromResults);
+  const quizzes = allQuizzes.filter((q): q is NonNullable<typeof q> => !!q && !q.deleted_at);
   const quizMap = new Map(quizzes.map((quiz) => [quiz.id, quiz]));
 
   const missedIds = new Set<string>();
