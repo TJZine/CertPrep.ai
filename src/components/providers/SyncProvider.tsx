@@ -11,13 +11,22 @@ import React, {
 import { useAuth } from "@/components/providers/AuthProvider";
 import { syncResults } from "@/lib/sync/syncManager";
 import { syncQuizzes } from "@/lib/sync/quizSyncManager";
+import { getSyncBlockState } from "@/db/syncState";
 import { logger } from "@/lib/logger";
+
+export interface SyncBlockedInfo {
+  reason: string;
+  blockedAt: number;
+  remainingMins: number;
+  tables: Array<"results" | "quizzes">;
+}
 
 interface SyncContextType {
   sync: () => Promise<{ success: boolean; error?: unknown }>;
   isSyncing: boolean;
   hasInitialSyncCompleted: boolean;
   initialSyncError: Error | null;
+  syncBlocked: SyncBlockedInfo | null;
 }
 
 const SyncContext = createContext<SyncContextType | undefined>(undefined);
@@ -32,6 +41,7 @@ export function SyncProvider({
   const [isSyncing, setIsSyncing] = useState(false);
   const [hasInitialSyncCompleted, setHasInitialSyncCompleted] = useState(false);
   const [initialSyncError, setInitialSyncError] = useState<Error | null>(null);
+  const [syncBlocked, setSyncBlocked] = useState<SyncBlockedInfo | null>(null);
   const initialSyncAttemptedRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -46,6 +56,50 @@ export function SyncProvider({
       localStorage.setItem("cp_last_user_id", userId);
     }
   }, [userId]);
+
+  // Compute SyncBlockedInfo from SyncBlockState
+  const computeBlockedInfo = useCallback(
+    async (): Promise<void> => {
+      if (!userId) {
+        setSyncBlocked(null);
+        return;
+      }
+      // Check both tables for blocks
+      const [resultsBlock, quizzesBlock] = await Promise.all([
+        getSyncBlockState(userId, "results"),
+        getSyncBlockState(userId, "quizzes"),
+      ]);
+
+      // Collect which tables are blocked
+      const tables: Array<"results" | "quizzes"> = [];
+      if (resultsBlock) tables.push("results");
+      if (quizzesBlock) tables.push("quizzes");
+
+      // Use first block found for timing info
+      const block = resultsBlock ?? quizzesBlock;
+      if (block && tables.length > 0) {
+        const remainingMs = Math.max(0, block.ttlMs - (Date.now() - block.blockedAt));
+        const remainingMins = Math.ceil(remainingMs / 60_000);
+        setSyncBlocked({
+          reason: block.reason,
+          blockedAt: block.blockedAt,
+          remainingMins,
+          tables,
+        });
+      } else {
+        setSyncBlocked(null);
+      }
+    },
+    [userId],
+  );
+
+  // Poll for block state changes
+  useEffect(() => {
+    if (!userId) return;
+    void computeBlockedInfo();
+    const interval = setInterval(() => void computeBlockedInfo(), 60_000);
+    return (): void => clearInterval(interval);
+  }, [userId, computeBlockedInfo]);
 
   const sync = useCallback(async (): Promise<{
     success: boolean;
@@ -133,7 +187,7 @@ export function SyncProvider({
 
   return (
     <SyncContext.Provider
-      value={{ sync, isSyncing, hasInitialSyncCompleted, initialSyncError }}
+      value={{ sync, isSyncing, hasInitialSyncCompleted, initialSyncError, syncBlocked }}
     >
       {children}
     </SyncContext.Provider>

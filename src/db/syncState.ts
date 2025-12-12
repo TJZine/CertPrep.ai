@@ -163,3 +163,91 @@ export async function setQuizBackfillDone(userId: string): Promise<void> {
     synced: 1,
   });
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Sync Block State (Throttle/Lockout for Schema Drift)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const SYNC_BLOCK_KEY = (userId: string, table: "results" | "quizzes"): string =>
+  `sync_blocked:${table}:${userId}`;
+
+// Default lockout duration: 6 hours
+const SYNC_BLOCK_TTL_MS = 6 * 60 * 60 * 1000;
+
+export interface SyncBlockState {
+  reason: string;
+  blockedAt: number;
+  ttlMs: number;
+}
+
+/**
+ * Check if sync is currently blocked due to schema drift or other hard failures.
+ * Returns the block state if blocked and TTL hasn't expired, null otherwise.
+ */
+export async function getSyncBlockState(
+  userId: string,
+  table: "results" | "quizzes",
+): Promise<SyncBlockState | null> {
+  const keyPrefix = SYNC_BLOCK_KEY(userId, table);
+  // The key stored is `${keyPrefix}:${reason}`, so we must search by prefix
+  const state = await db.syncState.where("table").startsWith(keyPrefix).first();
+
+  if (!state?.lastSyncedAt || state.synced !== 0) {
+    return null;
+  }
+
+  const blockedAt =
+    typeof state.lastSyncedAt === "number"
+      ? state.lastSyncedAt
+      : Date.parse(String(state.lastSyncedAt));
+
+  if (Number.isNaN(blockedAt)) {
+    return null;
+  }
+
+  const ttlMs = state.lastId ? parseInt(state.lastId, 10) : SYNC_BLOCK_TTL_MS;
+  const reason =
+    state.table?.replace(`${keyPrefix}:`, "") || "schema_drift";
+
+  // Check if TTL has expired
+  if (Date.now() - blockedAt > ttlMs) {
+    // Auto-clear expired block
+    await clearSyncBlockState(userId, table);
+    return null;
+  }
+
+  return { reason, blockedAt, ttlMs };
+}
+
+/**
+ * Set sync blocked state to prevent retry-hammering after hard failures.
+ */
+export async function setSyncBlockState(
+  userId: string,
+  table: "results" | "quizzes",
+  reason: string,
+  ttlMs: number = SYNC_BLOCK_TTL_MS,
+): Promise<void> {
+  // Clear any existing block for this user/table to ensure only one active block
+  await clearSyncBlockState(userId, table);
+
+  const key = SYNC_BLOCK_KEY(userId, table);
+  await db.syncState.put({
+    table: `${key}:${reason}`,
+    lastSyncedAt: Date.now(),
+    synced: 0, // synced: 0 indicates blocked state
+    lastId: String(ttlMs),
+  });
+  logger.warn(`Sync blocked for ${table}`, { userId, reason, ttlMs });
+}
+
+/**
+ * Clear sync blocked state (e.g., after app update or manual retry).
+ */
+export async function clearSyncBlockState(
+  userId: string,
+  table: "results" | "quizzes",
+): Promise<void> {
+  const key = SYNC_BLOCK_KEY(userId, table);
+  await db.syncState.where("table").startsWith(key).delete();
+}

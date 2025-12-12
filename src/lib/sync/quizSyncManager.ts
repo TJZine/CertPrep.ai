@@ -7,6 +7,8 @@ import {
   getQuizSyncCursor,
   setQuizBackfillDone,
   setQuizSyncCursor,
+  getSyncBlockState,
+  setSyncBlockState,
 } from "@/db/syncState";
 import { logger } from "@/lib/logger";
 import {
@@ -122,6 +124,19 @@ async function performQuizSync(
   let incomplete = false;
   const stats = { pushed: 0, pulled: 0 };
 
+  // Check if sync is blocked due to previous schema drift
+  const blockState = await getSyncBlockState(userId, "quizzes");
+  if (blockState) {
+    const remainingMs = blockState.ttlMs - (Date.now() - blockState.blockedAt);
+    const remainingMins = Math.ceil(remainingMs / 60000);
+    logger.debug("Quiz sync blocked due to previous failure", {
+      userId,
+      reason: blockState.reason,
+      remainingMins,
+    });
+    return { incomplete: true };
+  }
+
   try {
     const backfillComplete = await getQuizBackfillState(userId);
     if (!backfillComplete) {
@@ -139,15 +154,24 @@ async function performQuizSync(
       return { incomplete: true };
     }
 
-    incomplete =
-      (await pullRemoteChanges(userId, startTime, stats)) || incomplete;
+    const pullResult = await pullRemoteChanges(userId, startTime, stats);
+    incomplete = pullResult.incomplete || incomplete;
 
-    logger.info("Quiz sync complete", {
-      userId,
-      pushed: stats.pushed,
-      pulled: stats.pulled,
-      incomplete,
-    });
+    // If pull encountered a hard failure (schema drift), don't log as "complete"
+    if (pullResult.hardFailure) {
+      logger.warn("Quiz sync halted due to schema drift", {
+        userId,
+        pushed: stats.pushed,
+        pulled: stats.pulled,
+      });
+    } else {
+      logger.info("Quiz sync complete", {
+        userId,
+        pushed: stats.pushed,
+        pulled: stats.pulled,
+        incomplete,
+      });
+    }
     return { incomplete };
   } finally {
     performance.mark("quizSync-end");
@@ -275,8 +299,9 @@ async function pullRemoteChanges(
   userId: string,
   startTime: number,
   stats: { pulled: number },
-): Promise<boolean> {
+): Promise<{ incomplete: boolean; hardFailure: boolean }> {
   let incomplete = false;
+  let hardFailure = false;
   let hasMore = true;
 
   while (hasMore) {
@@ -434,21 +459,27 @@ async function pullRemoteChanges(
       stats.pulled += quizzesToSave.length;
     }
 
-    // If we only saw invalid items, advance past the last seen record to avoid getting stuck,
-    // but log so we can diagnose server/client schema drift.
+    // If we only saw invalid items, this indicates schema drift.
+    // HALT sync without advancing cursor and set block state.
     if (!sawValid && sawInvalid) {
       logger.error(
-        "All remote quizzes in batch failed validation; advancing cursor to avoid sync loop",
+        "All remote quizzes failed validation - schema drift detected. Halting sync.",
         {
           userId,
+          batchSize: remoteQuizzes.length,
           lastSeenTimestamp,
           lastSeenId,
         },
       );
-      lastCursorTimestamp = lastSeenTimestamp;
-      lastCursorId = lastSeenId;
-    } else if (sawValid && sawInvalid) {
-      // Some invalid items after valid ones; advance to last seen to avoid reprocessing the same invalid rows forever.
+      incomplete = true;
+      hardFailure = true;
+      // Set block state to prevent retry-hammering (6 hour default TTL)
+      await setSyncBlockState(userId, "quizzes", "schema_drift");
+      break; // Exit loop WITHOUT advancing cursor
+    }
+
+    // Mixed valid/invalid: advance cursor past last seen to avoid reprocessing
+    if (sawValid && sawInvalid) {
       logger.warn(
         "Mixed valid/invalid remote quizzes; advancing cursor past last seen item",
         {
@@ -468,5 +499,5 @@ async function pullRemoteChanges(
     }
   }
 
-  return incomplete;
+  return { incomplete, hardFailure };
 }

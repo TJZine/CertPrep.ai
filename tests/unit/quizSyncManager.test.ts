@@ -100,6 +100,8 @@ vi.mock("@/db/syncState", () => ({
   setQuizSyncCursor: vi.fn().mockResolvedValue(undefined),
   getQuizBackfillState: vi.fn().mockResolvedValue(true),
   setQuizBackfillDone: vi.fn().mockResolvedValue(undefined),
+  getSyncBlockState: vi.fn().mockResolvedValue(null), // Not blocked by default
+  setSyncBlockState: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock("@/lib/sync/quizRemote", () => ({
@@ -131,6 +133,9 @@ vi.mock("@/lib/sync/quizDomain", () => ({
 describe("quizSyncManager", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    fetchUserQuizzesMock.mockReset();
+    fetchUserQuizzesMock.mockResolvedValue({ data: [], error: null });
+
     quizzesData.length = 0;
     quizzesData.push(sampleQuiz);
     dbMock.quizzes.get.mockResolvedValue(undefined);
@@ -139,7 +144,6 @@ describe("quizSyncManager", () => {
       winner: "remote",
       merged: { ...sampleQuiz },
     });
-    fetchUserQuizzesMock.mockResolvedValue({ data: [], error: null });
     vi.useFakeTimers();
     vi.setSystemTime(FIXED_TIMESTAMP);
   });
@@ -373,4 +377,66 @@ describe("quizSyncManager", () => {
       ]),
     );
   });
+
+  it("should halt sync and set block state when all quizzes in a batch are invalid (schema drift)", async () => {
+    // Clear local quizzes to prevent push phase interference
+    quizzesData.length = 0;
+
+    // Mock 50 invalid quizzes (missing required fields like version, questions)
+    const invalidQuizzes = Array(50)
+      .fill(null)
+      .map((_, i) => ({
+        id: `invalid-${i}`,
+        user_id: "user-1",
+        title: `Invalid Quiz ${i}`,
+        // Missing: version, questions, tags, etc.
+        updated_at: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+      }));
+
+    fetchUserQuizzesMock.mockResolvedValueOnce({
+      data: invalidQuizzes,
+      error: null,
+    });
+
+    // Get the mocked functions
+    const syncStateMock = await import("@/db/syncState");
+
+    const result = await syncQuizzes("user-1");
+
+    // Should report incomplete
+    expect(result.incomplete).toBe(true);
+
+    // setQuizSyncCursor should NOT have been called (cursor should not advance)
+    expect(syncStateMock.setQuizSyncCursor).not.toHaveBeenCalled();
+
+    // setSyncBlockState should have been called to prevent retry-hammering
+    expect(syncStateMock.setSyncBlockState).toHaveBeenCalledWith(
+      "user-1",
+      "quizzes",
+      "schema_drift",
+    );
+  });
+
+  it("should skip sync when block state is set", async () => {
+    // Clear local quizzes to prevent push phase interference
+    quizzesData.length = 0;
+
+    // Mock a blocked state
+    const syncStateMock = await import("@/db/syncState");
+    vi.mocked(syncStateMock.getSyncBlockState).mockResolvedValueOnce({
+      reason: "schema_drift",
+      blockedAt: Date.now() - 1000, // 1 second ago
+      ttlMs: 6 * 60 * 60 * 1000, // 6 hours
+    });
+
+    const result = await syncQuizzes("user-1");
+
+    // Should report incomplete (blocked)
+    expect(result.incomplete).toBe(true);
+
+    // Should not have attempted to fetch
+    expect(fetchUserQuizzesMock).not.toHaveBeenCalled();
+  });
 });
+

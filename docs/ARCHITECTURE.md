@@ -193,6 +193,30 @@ create policy "quizzes_update_owner" on public.quizzes
 
 > Note: direct `delete` operations are typically not used; the app performs soft‑deletes by setting `deleted_at`.
 
+#### Intentional Schema Design Decisions
+
+##### No Foreign Key on `results.quiz_id`
+
+`results.quiz_id` intentionally lacks a foreign key constraint to `quizzes.id` because:
+
+1. **Soft-delete pattern**: Quizzes use `deleted_at` for soft-deletes. A traditional FK with `ON DELETE CASCADE` or `ON DELETE RESTRICT` would conflict with this pattern.
+2. **Offline-first sync**: In an offline-first architecture, a result may be created and synced before its associated quiz arrives on that device. A strict FK would cause insertion failures during sync.
+3. **Graceful degradation**: The UI handles orphaned results (where the quiz no longer exists) gracefully by showing "Unknown Quiz" rather than failing.
+
+##### NIL_UUID Pattern (`00000000-0000-0000-0000-000000000000`)
+
+The `NIL_UUID` constant is used locally in IndexedDB (Dexie) to represent **legacy or orphaned data** that predates per-user scoping:
+
+- **Database migrations** (v5-v7) backfill older records without `user_id` to `NIL_UUID` to prevent cross-account data leakage.
+- **Local access checks** allow users to read/modify quizzes with `user_id === NIL_UUID` for backward compatibility.
+- **Sync filtering** skips uploading `NIL_UUID` records to Supabase since they cannot be attributed to a real user.
+
+> **Important**: The RLS policies on Supabase only permit access to rows where `auth.uid() = user_id`. This means:
+>
+> - NIL_UUID rows in Supabase (if any exist) are **inaccessible** via the API.
+> - The `.in("user_id", [userId, NIL_UUID])` filter in `quizRemote.ts` is effectively a no-op for remote fetches—Supabase will never return NIL_UUID rows.
+> - This dead path remains for potential future global/template quiz features, but is currently non-functional.
+
 ### Infrastructure
 
 | Service                                 | Purpose              |

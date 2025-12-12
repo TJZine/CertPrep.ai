@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Flame, Trophy, Calendar } from "lucide-react";
+import { Flame, Trophy, Calendar, Clock } from "lucide-react";
 import {
     Card,
     CardContent,
@@ -11,11 +11,17 @@ import {
 } from "@/components/ui/Card";
 import { cn } from "@/lib/utils";
 
+interface DailyStudyData {
+    date: string;
+    minutes: number;
+}
+
 interface StreakCardProps {
     currentStreak: number;
     longestStreak: number;
     consistencyScore: number;
     last7DaysActivity: boolean[];
+    dailyStudyTime?: DailyStudyData[];
     className?: string;
 }
 
@@ -31,37 +37,124 @@ function getDayLabel(daysAgo: number): string {
 }
 
 /**
- * 7-day activity heatmap component.
+ * Get study minutes for a specific day (daysAgo from today).
  */
-function ActivityHeatmap({
-    activity,
+function getMinutesForDay(dailyData: DailyStudyData[], daysAgo: number): number {
+    const targetDate = new Date();
+    targetDate.setDate(targetDate.getDate() - daysAgo);
+    const targetDateStr = targetDate.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+    });
+
+    const match = dailyData.find((d) => d.date === targetDateStr);
+    return match?.minutes ?? 0;
+}
+
+/**
+ * Get color intensity based on study minutes.
+ */
+function getBarColor(minutes: number, maxMinutes: number): string {
+    if (minutes === 0) return "bg-muted";
+    if (maxMinutes === 0) return "bg-success/30";
+
+    const intensity = Math.min(minutes / maxMinutes, 1);
+
+    if (intensity >= 0.8) return "bg-success";
+    if (intensity >= 0.5) return "bg-success/70";
+    if (intensity >= 0.25) return "bg-success/50";
+    return "bg-success/30";
+}
+
+/**
+ * Format minutes to human readable string.
+ */
+function formatMinutes(totalMinutes: number): string {
+    if (totalMinutes < 60) {
+        return `${totalMinutes}m`;
+    }
+    const hours = Math.floor(totalMinutes / 60);
+    const mins = totalMinutes % 60;
+    return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+}
+
+/**
+ * 7-day study activity mini-bars with intensity-based colors.
+ */
+function StudyActivityBars({
+    last7DaysActivity,
+    dailyStudyTime = [],
 }: {
-    activity: boolean[];
+    last7DaysActivity: boolean[];
+    dailyStudyTime?: DailyStudyData[];
 }): React.ReactElement {
-    // Reverse to show oldest to newest (left to right)
-    const reversed = [...activity].reverse();
+    // Calculate data for last 7 days
+    const last7DaysData = React.useMemo(() => {
+        const data: Array<{ daysAgo: number; minutes: number; hasActivity: boolean }> = [];
+        for (let i = 6; i >= 0; i--) {
+            const minutes = getMinutesForDay(dailyStudyTime, i);
+            const hasActivity = last7DaysActivity[i] ?? false;
+            data.push({ daysAgo: i, minutes, hasActivity });
+        }
+        return data;
+    }, [last7DaysActivity, dailyStudyTime]);
+
+    const maxMinutes = Math.max(...last7DaysData.map((d) => d.minutes), 1);
+    const totalMinutes = last7DaysData.reduce((sum, d) => sum + d.minutes, 0);
+    const avgMinutes = Math.round(totalMinutes / 7);
 
     return (
-        <div className="flex items-end gap-1">
-            {reversed.map((active, index) => {
-                const daysAgo = 6 - index; // Convert back to days ago
-                return (
-                    <div key={daysAgo} className="flex flex-col items-center gap-1">
+        <div className="space-y-3">
+            <div className="flex items-end justify-between gap-1" style={{ height: "80px" }}>
+                {last7DaysData.map(({ daysAgo, minutes, hasActivity }) => {
+                    // Calculate bar height (min 8px, max 72px)
+                    const heightPercent = maxMinutes > 0 ? (minutes / maxMinutes) * 100 : 0;
+                    const minHeight = hasActivity || minutes > 0 ? 12 : 8;
+                    const barHeight = Math.max(minHeight, (heightPercent / 100) * 72);
+
+                    return (
                         <div
-                            className={cn(
-                                "h-8 w-8 rounded-md transition-colors",
-                                active
-                                    ? "bg-success"
-                                    : "bg-muted",
-                            )}
-                            title={`${getDayLabel(daysAgo)}: ${active ? "Active" : "No activity"}`}
-                        />
-                        <span className="text-xs text-muted-foreground">
-                            {getDayLabel(daysAgo)}
-                        </span>
-                    </div>
-                );
-            })}
+                            key={daysAgo}
+                            className="flex flex-1 flex-col items-center gap-1"
+                        >
+                            <div
+                                className="relative flex w-full items-end justify-center"
+                                style={{ height: "72px" }}
+                            >
+                                <div
+                                    className={cn(
+                                        "w-full max-w-[32px] rounded-t-md transition-all",
+                                        getBarColor(minutes, maxMinutes),
+                                    )}
+                                    style={{ height: `${barHeight}px` }}
+                                    title={`${getDayLabel(daysAgo)}: ${minutes > 0 ? formatMinutes(minutes) : "No activity"}`}
+                                />
+                            </div>
+                            <span className="text-xs text-muted-foreground">
+                                {getDayLabel(daysAgo)}
+                            </span>
+                        </div>
+                    );
+                })}
+            </div>
+
+            {/* Summary stats */}
+            <div className="flex items-center justify-center gap-4 border-t border-border pt-3">
+                <div className="flex items-center gap-1.5 text-sm">
+                    <Clock className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
+                    <span className="font-medium text-foreground">
+                        {formatMinutes(totalMinutes)}
+                    </span>
+                    <span className="text-muted-foreground">total</span>
+                </div>
+                <div className="h-4 w-px bg-border" />
+                <div className="flex items-center gap-1.5 text-sm">
+                    <span className="font-medium text-foreground">
+                        {formatMinutes(avgMinutes)}
+                    </span>
+                    <span className="text-muted-foreground">avg/day</span>
+                </div>
+            </div>
         </div>
     );
 }
@@ -97,13 +190,14 @@ function StatItem({
 }
 
 /**
- * Card displaying study streaks, consistency score, and 7-day activity heatmap.
+ * Card displaying study streaks, consistency score, and 7-day activity with study time.
  */
 export function StreakCard({
     currentStreak,
     longestStreak,
     consistencyScore,
     last7DaysActivity,
+    dailyStudyTime = [],
     className,
 }: StreakCardProps): React.ReactElement {
     const hasActivity = last7DaysActivity.some((day) => day);
@@ -174,7 +268,10 @@ export function StreakCard({
                         <h4 className="mb-3 text-sm font-medium text-muted-foreground">
                             Last 7 Days
                         </h4>
-                        <ActivityHeatmap activity={last7DaysActivity} />
+                        <StudyActivityBars
+                            last7DaysActivity={last7DaysActivity}
+                            dailyStudyTime={dailyStudyTime}
+                        />
                     </div>
                 </div>
             </CardContent>
