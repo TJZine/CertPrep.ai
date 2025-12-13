@@ -127,112 +127,118 @@ Automated GC requires complex logic to know "has every other device seen this de
 
 ---
 
-## Feature: Custom Study Sessions ("Areas to Improve")
+## ~~Feature: Custom Study Sessions ("Areas to Improve")~~ ✅ COMPLETED
 
-**Priority**: Medium | **Effort**: 1-2 days | **Category**: Analytics / Core Features
+**Status**: Implemented | **Category**: Analytics / Core Features
 
-### Context
+The "Study This Topic" button in the Weak Areas card is fully functional:
 
-In the Analytics dashboard, the "Values" card (Weak Areas) has a "Study This Topic" button. Currently, this button triggers an empty handler because the quiz runner (`ZenModePage`) requires a static Quiz ID, but "Weak Areas" aggregate questions across _multiple_ quizzes.
-
-### Proposed Solution (Option B: Generated Custom Quizzes)
-
-Enable users to launch a practice session containing _all_ questions for a specific category (e.g., "Biology") from their entire library.
-
-### Implementation Plan
-
-#### 1. Database & Types
-
-- Add `isGenerated?: boolean` (or `type: 'standard' | 'generated'`) to the `Quiz` interface (`src/types/quiz.ts`).
-- Implement `createGeneratedQuiz` in `src/db/quizzes.ts`:
-  - Accepts a title (e.g., "Biology Practice") and a list of Questions.
-  - Generates a UUID and saves to Dexie.
-  - Sets `created_at` timestamp.
-
-#### 2. Aggregation Logic (`src/lib/quiz-generator.ts`)
-
-- Create `generateCategoryQuiz(category: string, allQuizzes: Quiz[]): Quiz`.
-- Logic:
-  - Iterate through all available quizzes.
-  - Extract unique questions matching `category` (case-insensitive).
-  - Return a new `Quiz` object ready for persistence.
-
-#### 3. Frontend Integration (`src/app/analytics/page.tsx`)
-
-- Implement the `handleStudyTopic` function:
-  1. Call `generateCategoryQuiz` with the selected category.
-  2. Persist the result via `createGeneratedQuiz`.
-  3. Redirect to the filtered quiz: `router.push('/quiz/[new-id]/zen')`.
-
-#### 4. Maintenance / Cleanup
-
-- Since these are temporary sessions, add a cleanup routine (e.g., on app init) to delete `isGenerated: true` quizzes older than 24 hours to prevent database bloat.
-
-### Acceptance Criteria
-
-- [ ] Clicking "Study This Topic" on "Biology" creates a new quiz session.
-- [ ] The session contains all Biology questions from the user's library.
-- [ ] The session works with existing Zen Mode features (scoring, explanations).
-- [ ] Generated quizzes do not permanently clutter the main "Library" view (or are marked clearly).
+- `WeakAreasCard.tsx` → `handleStudyTopic()` loads missed/flagged questions via `getTopicStudyQuestions()`
+- Confirmation modal shows question counts and source quizzes
+- `handleStartStudying()` stores data in sessionStorage and navigates to `/quiz/[id]/zen?mode=topic`
+- Full loading states, error handling, and UI polish
 
 ---
 
-## Feature: SRS Supabase Sync (Cross-Device)
+## ~~Feature: SRS Supabase Sync (Cross-Device)~~ ✅ COMPLETED
 
-**Priority**: Medium | **Effort**: 4-8 hours | **Category**: Data Sync
+**Status**: Implemented 2025-12-13 | **Category**: Data Sync
+
+SRS sync is now fully implemented with:
+
+- Supabase `srs` table with RLS policies
+- Bidirectional sync in `src/lib/sync/srsSyncManager.ts`
+- Server-side LWW conflict resolution via `upsert_srs_lww_batch` RPC
+- Offline-first architecture (Dexie → Supabase)
+
+---
+
+## Infrastructure: Supabase Generated Types
+
+**Priority**: Low-Medium | **Effort**: 1-2 hours | **Category**: Developer Experience / Type Safety
 
 ### Context
 
-The Spaced Repetition System (SRS) was implemented with **local-only storage** (Dexie/IndexedDB) for initial MVP scope. This creates significant UX limitations.
+Supabase client calls currently use the untyped `SupabaseClient` type, meaning table names, column names, and RPC function signatures are **magic strings** validated only at runtime.
 
-### Current Limitations
+### Current State
 
-| Issue                | Impact                                                |
-| -------------------- | ----------------------------------------------------- |
-| **Device-bound**     | SRS progress doesn't sync across devices/browsers     |
-| **Data loss risk**   | Clearing browser data wipes all SRS state (no backup) |
-| **Browser-specific** | Users studying on phone won't see progress on desktop |
+**3 files with untyped Supabase data operations:**
+
+| File                | Tables    | Operations             |
+| ------------------- | --------- | ---------------------- |
+| `syncManager.ts`    | `results` | select, upsert, delete |
+| `quizRemote.ts`     | `quizzes` | select, upsert, update |
+| `srsSyncManager.ts` | `srs`     | **rpc**, select        |
+
+**8 additional files** use Supabase for auth-only (no data queries—no benefit from generated types).
+
+### Problem
+
+Without generated types:
+
+- Typos in column names (e.g., `quzi_id`) are not caught until runtime
+- RPC function names and signatures are magic strings
+- No IDE autocompletion for Supabase queries
+- Must maintain parallel Zod schemas for basic shape validation
 
 ### Proposed Solution
 
-1. **Add Supabase table**: `srs_state` with RLS policies for user isolation
-2. **Sync integration**: Mirror `results` sync pattern in `src/lib/sync/`
-3. **Conflict resolution**: Last-write-wins based on `last_reviewed` timestamp
+Generate TypeScript types from the Supabase schema:
 
-### Schema Draft
-
-```sql
-CREATE TABLE srs_state (
-  question_id UUID NOT NULL,
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  box SMALLINT CHECK (box BETWEEN 1 AND 5),
-  last_reviewed TIMESTAMPTZ NOT NULL,
-  next_review TIMESTAMPTZ NOT NULL,
-  consecutive_correct SMALLINT DEFAULT 0,
-  PRIMARY KEY (question_id, user_id)
-);
-
--- RLS
-ALTER TABLE srs_state ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Users can only access their own SRS state"
-  ON srs_state FOR ALL USING (auth.uid() = user_id);
+```bash
+# Add to package.json scripts
+"supabase:types": "supabase gen types typescript --linked > src/types/database.types.ts"
 ```
+
+Then type the client:
+
+```typescript
+// src/lib/supabase/client.ts
+import type { Database } from "@/types/database.types";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+
+export const createClient = () => createSupabaseClient<Database>(url, key);
+```
+
+### Benefits
+
+| Benefit                    | Impact                                     |
+| -------------------------- | ------------------------------------------ |
+| **Build-time errors**      | Catch typos in table/column names          |
+| **Typed RPC calls**        | `upsert_srs_lww_batch` signature validated |
+| **IDE autocompletion**     | Better DX for all Supabase queries         |
+| **Single source of truth** | Schema → Types, no duplicated shapes       |
+
+### Trade-offs
+
+| Consideration           | Notes                                                  |
+| ----------------------- | ------------------------------------------------------ |
+| **CI integration**      | Must regenerate types when schema changes              |
+| **Generated file size** | ~500-1000 LoC (negligible for bundle, dev-only import) |
+| **Migration effort**    | ~1-2 hours to set up and update 3 sync files           |
+
+### Implementation Steps
+
+1. [ ] Install/verify `supabase` CLI is available in dev dependencies
+2. [ ] Add `supabase:types` script to `package.json`
+3. [ ] Generate initial `src/types/database.types.ts`
+4. [ ] Update `createClient` in both `client.ts` and `server.ts` to use `Database` generic
+5. [ ] Update sync files to use typed client (IDE will flag any mismatches)
+6. [ ] Add CI step to regenerate types on schema changes (optional but recommended)
+7. [ ] Consider removing redundant Zod schemas where generated types suffice (keep Zod for coercion like `z.coerce.number()`)
 
 ### Acceptance Criteria
 
-- [ ] SRS state syncs to Supabase after quiz completion
-- [ ] Opening app on new device pulls down SRS state
-- [ ] Conflict resolution handles same question answered on two devices
-- [ ] Offline functionality preserved (write to Dexie first, sync later)
+- [ ] `npm run supabase:types` generates valid TypeScript
+- [ ] All `.rpc()`, `.from()`, `.select()`, `.upsert()` calls are typed
+- [ ] Build passes with strict TypeScript
+- [ ] IDE provides autocompletion for column names
 
-### Migration Considerations (Existing Users)
+### Decision
 
-When implementing sync, existing users will have **historical results without SRS state**. Options:
+**Deferred** — Current Zod-based runtime validation is sufficient. Prioritize when:
 
-| Approach                   | Pros                                       | Cons                                                |
-| -------------------------- | ------------------------------------------ | --------------------------------------------------- |
-| **Backfill on first sync** | Users get SRS state for all past questions | Complex logic, could create many box-1 entries      |
-| **SRS starts fresh**       | Simple, no migration                       | Users lose credit for previously mastered questions |
-| **Prompt-based backfill**  | User choice, transparent                   | Extra UX flow to implement                          |
-
-**Recommendation**: Start fresh (no backfill) with a clear "SRS tracks questions from now on" message. Backfill can be added later if users request it.
+- Adding more RPC functions
+- Onboarding new developers who would benefit from autocompletion
+- Schema changes become frequent (to catch drift early)

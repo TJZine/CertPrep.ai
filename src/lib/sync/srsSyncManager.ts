@@ -215,7 +215,7 @@ async function pushLocalChanges(
 
     const batch = unsyncedItems.slice(i, i + BATCH_SIZE);
 
-    // Prepare payload for Supabase
+    // Prepare payload for batch RPC with LWW conflict resolution
     const payload = batch.map((item) => ({
       question_id: item.question_id,
       user_id: userId,
@@ -223,20 +223,16 @@ async function pushLocalChanges(
       last_reviewed: item.last_reviewed,
       next_review: item.next_review,
       consecutive_correct: item.consecutive_correct,
-      // Supabase will handle created_at/updated_at automatically, 
-      // but we can pass updated_at to ensure server reflects local write time if needed.
-      // However, schema trigger overrides updated_at usually. 
-      // Let's relying on trigger for updated_at unless we want to preserve local time.
-      // Given LWW is based on last_reviewed, updated_at is mostly for cursor.
     }));
 
-    const { error } = await client.from("srs").upsert(payload, {
-      onConflict: "question_id,user_id",
+    // Use batch RPC with server-side LWW (only updates if local.last_reviewed > server.last_reviewed)
+    const { data, error } = await client.rpc("upsert_srs_lww_batch", {
+      items: payload,
     });
 
     if (error) {
       const errorMsg = toErrorMessage(error);
-      logger.error("Failed to push SRS items to Supabase", {
+      logger.error("Failed to push SRS items via batch RPC", {
         userId,
         error: errorMsg,
       });
@@ -259,16 +255,21 @@ async function pushLocalChanges(
       continue;
     }
 
-    // Mark as synced locally
+    // Log how many were actually updated (server had older data)
+    const updatedCount = Array.isArray(data)
+      ? data.filter((r: { updated?: boolean }) => r.updated).length
+      : 0;
+    if (updatedCount < batch.length) {
+      logger.debug("SRS batch push: some items skipped (server had newer data)", {
+        sent: batch.length,
+        updated: updatedCount,
+      });
+    }
+
+    // Mark as synced locally (regardless of whether server accepted the update)
+    // The sync flag indicates "we tried to sync", not "server accepted our value"
     await Promise.all(
       batch.map(async (item) => {
-        // We update synced=1. 
-        // We also update updated_at to now? Or keep local updated_at?
-        // Ideally we update updated_at to match what we think server has, or just now.
-        // But db.srs doesn't strictly require updated_at for logic, only for sync cursor.
-        // Wait, if we push, server updated_at becomes NOW.
-        // If we pull later, we might pull our own write if our cursor is old.
-        // That's fine, LWW will handle it (identical data).
         await db.srs.update([item.question_id, userId], {
           synced: 1,
         });
@@ -279,6 +280,7 @@ async function pushLocalChanges(
 
   return incomplete;
 }
+
 
 function toSafeCursorTimestamp(
   candidate: unknown,

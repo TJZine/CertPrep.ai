@@ -56,7 +56,7 @@ const {
 
   const supabase = {
     from: vi.fn().mockReturnThis(),
-    upsert: vi.fn().mockResolvedValue({ error: null }),
+    rpc: vi.fn().mockResolvedValue({ data: [], error: null }),
     select: vi.fn().mockReturnThis(),
     eq: vi.fn().mockReturnThis(),
     or: vi.fn().mockReturnThis(),
@@ -103,7 +103,7 @@ describe("srsSyncManager", () => {
 
     // Reset Supabase mock chain
     supabaseMock.from.mockReturnThis();
-    supabaseMock.upsert.mockResolvedValue({ error: null });
+    supabaseMock.rpc.mockResolvedValue({ data: [{ question_id: "q-1", updated: true }], error: null });
     supabaseMock.select.mockReturnThis();
     supabaseMock.eq.mockReturnThis();
     supabaseMock.or.mockReturnThis();
@@ -126,19 +126,20 @@ describe("srsSyncManager", () => {
     vi.unstubAllGlobals();
   });
 
-  it("pushes dirty SRS items", async () => {
+  it("pushes dirty SRS items via batch RPC", async () => {
     await syncSRS("user-1");
 
-    expect(supabaseMock.from).toHaveBeenCalledWith("srs");
-    expect(supabaseMock.upsert).toHaveBeenCalledWith(
-      expect.arrayContaining([
-        expect.objectContaining({
-          question_id: sampleSRS.question_id,
-          user_id: "user-1",
-          box: sampleSRS.box
-        })
-      ]),
-      expect.objectContaining({ onConflict: "question_id,user_id" })
+    expect(supabaseMock.rpc).toHaveBeenCalledWith(
+      "upsert_srs_lww_batch",
+      expect.objectContaining({
+        items: expect.arrayContaining([
+          expect.objectContaining({
+            question_id: sampleSRS.question_id,
+            user_id: "user-1",
+            box: sampleSRS.box
+          })
+        ])
+      })
     );
 
     // Should mark as synced locally
@@ -273,6 +274,30 @@ describe("srsSyncManager", () => {
 
     // But should still update cursor to prevent infinite loop
     expect(setSRSSyncCursor).toHaveBeenCalled();
+  });
+
+  it("logs when server rejects stale local data (server has newer last_reviewed)", async () => {
+    // RPC returns updated: false, indicating server had newer data
+    supabaseMock.rpc.mockResolvedValueOnce({
+      data: [{ question_id: "q-1", updated: false }],
+      error: null,
+    });
+
+    await syncSRS("user-1");
+
+    // Should still mark as synced locally (we attempted sync)
+    expect(dbMock.srs.update).toHaveBeenCalledWith(
+      [sampleSRS.question_id, "user-1"],
+      { synced: 1 }
+    );
+
+    // Verify RPC was called with correct structure
+    expect(supabaseMock.rpc).toHaveBeenCalledWith(
+      "upsert_srs_lww_batch",
+      expect.objectContaining({
+        items: expect.any(Array),
+      })
+    );
   });
 });
 
