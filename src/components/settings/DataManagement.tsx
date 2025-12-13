@@ -25,6 +25,8 @@ import {
   validateImportData,
   clearAllData,
   getStorageStats,
+  getDeletedItemsStats,
+  purgeDeletedItems,
   type ExportData,
 } from "@/lib/dataExport";
 import { useAuth } from "@/components/providers/AuthProvider";
@@ -52,6 +54,12 @@ export function DataManagement(): React.ReactElement {
     "merge",
   );
   const [deleteConfirmation, setDeleteConfirmation] = React.useState("");
+  const [deletedStats, setDeletedStats] = React.useState<{
+    deletedQuizCount: number;
+    deletedResultCount: number;
+  } | null>(null);
+  const [showPurgeModal, setShowPurgeModal] = React.useState(false);
+  const [isPurging, setIsPurging] = React.useState(false);
 
   React.useEffect((): void => {
     getStorageStats(effectiveUserId).then(setStats);
@@ -60,6 +68,35 @@ export function DataManagement(): React.ReactElement {
   const refreshStats = async (): Promise<void> => {
     const newStats = await getStorageStats(effectiveUserId);
     setStats(newStats);
+  };
+
+  const refreshDeletedStats = async (): Promise<void> => {
+    const newDeletedStats = await getDeletedItemsStats(effectiveUserId);
+    setDeletedStats(newDeletedStats);
+  };
+
+  React.useEffect((): void => {
+    getDeletedItemsStats(effectiveUserId).then(setDeletedStats);
+  }, [effectiveUserId]);
+
+  const handlePurge = async (): Promise<void> => {
+    if (!effectiveUserId || isPurging) return;
+    setIsPurging(true);
+    try {
+      const { quizzesPurged, resultsPurged } = await purgeDeletedItems(effectiveUserId);
+      addToast(
+        "success",
+        `Cleaned up ${quizzesPurged} deleted ${quizzesPurged === 1 ? "quiz" : "quizzes"} and ${resultsPurged} deleted ${resultsPurged === 1 ? "result" : "results"}.`,
+      );
+      setShowPurgeModal(false);
+      await refreshDeletedStats();
+      await refreshStats();
+    } catch (error) {
+      console.error("Purge failed:", error);
+      addToast("error", "Failed to clean up deleted data. Please try again.");
+    } finally {
+      setIsPurging(false);
+    }
   };
 
   const handleExport = async (): Promise<void> => {
@@ -300,6 +337,28 @@ export function DataManagement(): React.ReactElement {
             </div>
           </div>
 
+          {/* Deleted Items Section */}
+          <div className="flex items-center justify-between rounded-lg border border-border p-4">
+            <div>
+              <h4 className="font-medium text-foreground">
+                Deleted Items
+              </h4>
+              <p className="text-sm text-muted-foreground">
+                {deletedStats && (deletedStats.deletedQuizCount > 0 || deletedStats.deletedResultCount > 0)
+                  ? `${deletedStats.deletedQuizCount} deleted ${deletedStats.deletedQuizCount === 1 ? "quiz" : "quizzes"} and ${deletedStats.deletedResultCount} deleted ${deletedStats.deletedResultCount === 1 ? "result" : "results"} stored locally`
+                  : "No deleted items pending cleanup"}
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => setShowPurgeModal(true)}
+              disabled={!deletedStats || (deletedStats.deletedQuizCount === 0 && deletedStats.deletedResultCount === 0)}
+              leftIcon={<Trash2 className="h-4 w-4" />}
+            >
+              Clean Up
+            </Button>
+          </div>
+
           <div className="flex items-center justify-between rounded-lg border border-destructive/50 bg-destructive/10 p-4">
             <div>
               <h4 className="font-medium text-destructive">
@@ -319,6 +378,47 @@ export function DataManagement(): React.ReactElement {
           </div>
         </CardContent>
       </Card>
+
+      {/* Purge Confirmation Modal */}
+      <Modal
+        isOpen={showPurgeModal}
+        onClose={() => setShowPurgeModal(false)}
+        title="Clean Up Deleted Data"
+        size="sm"
+        footer={
+          <div className="flex justify-end gap-3">
+            <Button variant="outline" onClick={() => setShowPurgeModal(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handlePurge} isLoading={isPurging}>
+              Clean Up
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-4">
+          <p className="text-muted-foreground">
+            This will permanently remove{" "}
+            <strong className="text-foreground">
+              {deletedStats?.deletedQuizCount ?? 0} deleted{" "}
+              {deletedStats?.deletedQuizCount === 1 ? "quiz" : "quizzes"}
+            </strong>{" "}
+            and{" "}
+            <strong className="text-foreground">
+              {deletedStats?.deletedResultCount ?? 0} deleted{" "}
+              {deletedStats?.deletedResultCount === 1 ? "result" : "results"}
+            </strong>{" "}
+            from local storage.
+          </p>
+          <div className="rounded-lg border border-warning/50 bg-warning/10 p-3">
+            <p className="text-sm text-warning">
+              <strong>Sync Note:</strong> If you use this app on other devices,
+              make sure they have synced recently. Otherwise, deleted items may
+              reappear on those devices.
+            </p>
+          </div>
+        </div>
+      </Modal>
 
       <Modal
         isOpen={showImportModal}

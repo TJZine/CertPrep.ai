@@ -4,6 +4,8 @@ import { db } from "@/db";
 import {
   generateJSONExport,
   getStorageStats,
+  getDeletedItemsStats,
+  purgeDeletedItems,
   importData,
   type ExportData,
 } from "@/lib/dataExport";
@@ -207,5 +209,114 @@ describe("data export/import", () => {
     expect(storedQuiz?.user_id).toBe(TEST_USER_ID);
     expect(storedResults).toHaveLength(1);
     expect(storedResults[0]?.quiz_id).toBe(sharedQuizId);
+  });
+});
+
+describe("deleted items stats and purge", () => {
+  const sampleQuiz: Quiz = {
+    id: "11111111-1111-4111-8111-111111111111",
+    user_id: TEST_USER_ID,
+    title: "Sample Quiz",
+    description: "A quiz for purge tests.",
+    created_at: 1_700_000_000_000,
+    updated_at: 1_700_000_000_000,
+    questions: [
+      {
+        id: "q1",
+        category: "Test",
+        question: "Test question?",
+        options: { A: "Yes", B: "No" },
+        correct_answer: "A",
+        correct_answer_hash: "dummy-hash",
+        explanation: "Explanation.",
+      },
+    ],
+    tags: [],
+    version: 1,
+    deleted_at: null,
+    quiz_hash: null,
+    last_synced_at: null,
+    last_synced_version: null,
+  };
+
+  const sampleResult: Result = {
+    id: "22222222-2222-4222-8222-222222222222",
+    quiz_id: sampleQuiz.id,
+    user_id: TEST_USER_ID,
+    timestamp: 1_700_000_100_000,
+    mode: "zen",
+    score: 80,
+    time_taken_seconds: 120,
+    answers: { q1: "A" },
+    flagged_questions: [],
+    category_breakdown: { Test: 1 },
+  };
+
+  beforeEach(async () => {
+    await resetDatabase();
+  });
+
+  it("returns counts of soft-deleted quizzes and results", async () => {
+    // Add active and deleted items
+    await db.quizzes.put(sampleQuiz);
+    await db.quizzes.put({
+      ...sampleQuiz,
+      id: "deleted-quiz-1",
+      deleted_at: Date.now(),
+    });
+    await db.results.put(sampleResult);
+    await db.results.put({
+      ...sampleResult,
+      id: "deleted-result-1",
+      deleted_at: Date.now(),
+    });
+
+    const stats = await getDeletedItemsStats(TEST_USER_ID);
+
+    expect(stats.deletedQuizCount).toBe(1);
+    expect(stats.deletedResultCount).toBe(1);
+  });
+
+  it("purges tombstoned items but not active items", async () => {
+    // Add active and deleted items
+    await db.quizzes.put(sampleQuiz);
+    await db.quizzes.put({
+      ...sampleQuiz,
+      id: "deleted-quiz-1",
+      deleted_at: Date.now(),
+    });
+    await db.results.put(sampleResult);
+    await db.results.put({
+      ...sampleResult,
+      id: "deleted-result-1",
+      deleted_at: Date.now(),
+    });
+
+    const { quizzesPurged, resultsPurged } = await purgeDeletedItems(TEST_USER_ID);
+
+    expect(quizzesPurged).toBe(1);
+    expect(resultsPurged).toBe(1);
+
+    // Verify active items remain
+    const remainingQuizzes = await db.quizzes.where("user_id").equals(TEST_USER_ID).toArray();
+    const remainingResults = await db.results.where("user_id").equals(TEST_USER_ID).toArray();
+
+    expect(remainingQuizzes).toHaveLength(1);
+    expect(remainingQuizzes[0]?.id).toBe(sampleQuiz.id);
+    expect(remainingResults).toHaveLength(1);
+    expect(remainingResults[0]?.id).toBe(sampleResult.id);
+  });
+
+  it("returns zero counts when no tombstones exist", async () => {
+    await db.quizzes.put(sampleQuiz);
+    await db.results.put(sampleResult);
+
+    const stats = await getDeletedItemsStats(TEST_USER_ID);
+    const { quizzesPurged, resultsPurged } = await purgeDeletedItems(TEST_USER_ID);
+
+    expect(stats.deletedQuizCount).toBe(0);
+    expect(stats.deletedResultCount).toBe(0);
+    expect(quizzesPurged).toBe(0);
+    expect(resultsPurged).toBe(0);
   });
 });
