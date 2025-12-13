@@ -1,4 +1,5 @@
 import { useSyncContext } from "@/components/providers/SyncProvider";
+import type { SyncBlockedInfo } from "@/components/providers/SyncProvider";
 
 export interface UseSyncReturn {
   /** Manually trigger a sync */
@@ -9,6 +10,8 @@ export interface UseSyncReturn {
   hasInitialSyncCompleted: boolean;
   /** Error encountered during the initial sync attempt, if any */
   initialSyncError: Error | null;
+  /** Non-null when sync is blocked (e.g., schema drift) */
+  syncBlocked: SyncBlockedInfo | null;
 }
 
 export function useSync(): UseSyncReturn {

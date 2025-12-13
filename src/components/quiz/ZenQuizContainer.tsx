@@ -24,10 +24,16 @@ import type { Quiz } from "@/types/quiz";
 import { useCorrectAnswer } from "@/hooks/useCorrectAnswer";
 import { useQuizSubmission } from "@/hooks/useQuizSubmission";
 import { clearSmartRoundState } from "@/lib/smartRoundStorage";
+import { clearSRSReviewState } from "@/lib/srsReviewStorage";
+import { updateSRSState } from "@/db/srs";
+import { useAuth } from "@/components/providers/AuthProvider";
+import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 
 interface ZenQuizContainerProps {
   quiz: Quiz;
   isSmartRound?: boolean;
+  /** When true, SRS state is updated after each answer (promotes/demotes Leitner box). */
+  isSRSReview?: boolean;
 }
 
 /**
@@ -36,6 +42,7 @@ interface ZenQuizContainerProps {
 export function ZenQuizContainer({
   quiz,
   isSmartRound = false,
+  isSRSReview = false,
 }: ZenQuizContainerProps): React.ReactElement {
   const router = useRouter();
   const { addToast } = useToast();
@@ -51,6 +58,12 @@ export function ZenQuizContainer({
   const isMountedRef = React.useRef(false);
   const hasSavedResultRef = React.useRef(false);
   const completionTimeRef = React.useRef<number | null>(null);
+  // Track which question IDs have had SRS state updated to prevent duplicate updates
+  const srsUpdatedQuestionsRef = React.useRef<Set<string>>(new Set());
+
+  // Auth for SRS updates
+  const { user } = useAuth();
+  const effectiveUserId = useEffectiveUserId(user?.id);
 
   const {
     initializeSession,
@@ -104,9 +117,18 @@ export function ZenQuizContainer({
 
   const handleSessionComplete = React.useCallback(
     async (timeTakenSeconds: number): Promise<void> => {
+      // SRS review sessions don't save a formal result - the value is in
+      // per-question SRS state updates which happen during the session.
+      // The synthetic quiz ID doesn't exist in Dexie, so createResult would fail.
+      if (isSRSReview) {
+        clearSRSReviewState();
+        addToast("success", "SRS Review complete! Keep up the great work.");
+        router.push("/study-due");
+        return;
+      }
       await submitQuiz(timeTakenSeconds);
     },
-    [submitQuiz],
+    [isSRSReview, addToast, router, submitQuiz],
   );
 
   const retrySave = React.useCallback((): void => {
@@ -173,8 +195,13 @@ export function ZenQuizContainer({
     if (isSmartRound) {
       clearSmartRoundState();
     }
+    if (isSRSReview) {
+      clearSRSReviewState();
+      router.push("/study-due");
+      return;
+    }
     router.push("/");
-  }, [resetSession, isSmartRound, router]);
+  }, [resetSession, isSmartRound, isSRSReview, router]);
 
   const isCurrentAnswerCorrect = React.useMemo(() => {
     if (!currentQuestion || !hasSubmitted) return false;
@@ -199,6 +226,37 @@ export function ZenQuizContainer({
       addToast("success", "Correct! 🎉");
     }
   }, [hasSubmitted, isCurrentAnswerCorrect, addToast]);
+
+  // Update SRS state after each answer when in SRS review mode
+  React.useEffect(() => {
+    if (!isSRSReview || !hasSubmitted || !currentQuestion || !effectiveUserId) {
+      return;
+    }
+
+    // Prevent duplicate updates for the same question
+    if (srsUpdatedQuestionsRef.current.has(currentQuestion.id)) {
+      return;
+    }
+
+    const answerRecord = answers.get(currentQuestion.id);
+    if (!answerRecord) {
+      return;
+    }
+
+    // Mark as updated before async call to prevent race conditions
+    srsUpdatedQuestionsRef.current.add(currentQuestion.id);
+
+    // Fire-and-forget SRS update (don't block UI)
+    void updateSRSState(
+      currentQuestion.id,
+      effectiveUserId,
+      answerRecord.isCorrect,
+    ).catch((err) => {
+      console.warn("Failed to update SRS state:", err);
+      // Remove from set so retry is possible if user goes back
+      srsUpdatedQuestionsRef.current.delete(currentQuestion.id);
+    });
+  }, [isSRSReview, hasSubmitted, currentQuestion, effectiveUserId, answers]);
 
   const quizContent = (
     <div className="mx-auto max-w-3xl">

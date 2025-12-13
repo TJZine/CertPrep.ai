@@ -2,16 +2,14 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import {
-  AnalyticsOverview,
-  ScoreDistribution,
-  StudyTimeChart,
-} from "@/components/analytics/AnalyticsOverview";
+import { AnalyticsOverview } from "@/components/analytics/AnalyticsOverview";
 import { PerformanceHistory } from "@/components/analytics/PerformanceHistory";
 import { WeakAreasCard } from "@/components/analytics/WeakAreasCard";
 import { ExamReadinessCard } from "@/components/analytics/ExamReadinessCard";
 import { StreakCard } from "@/components/analytics/StreakCard";
 import { RetryComparisonCard } from "@/components/analytics/RetryComparisonCard";
+import { TopicHeatmap } from "@/components/analytics/TopicHeatmap";
+import { CategoryTrendChart } from "@/components/analytics/CategoryTrendChart";
 import { CategoryBreakdown } from "@/components/results/TopicRadar";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { EmptyState } from "@/components/common/EmptyState";
@@ -23,11 +21,41 @@ import {
 } from "@/hooks/useDatabase";
 import { useAnalyticsStats } from "@/hooks/useAnalyticsStats";
 import { useAdvancedAnalytics } from "@/hooks/useAdvancedAnalytics";
+import { useCategoryTrends } from "@/hooks/useCategoryTrends";
 import { useSync } from "@/hooks/useSync";
 import { getOverallStats, type OverallStats } from "@/db/results";
 import { BarChart3, Plus, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
+import type { Result } from "@/types/result";
+
+/**
+ * Wrapper component for CategoryTrendChart that uses the trend hook.
+ * Memoizes results input to prevent unnecessary recalculations when
+ * only referential identity changes (e.g., during sync operations).
+ */
+function CategoryTrendChartSection({
+  results,
+}: {
+  results: Result[];
+}): React.ReactElement {
+  // Stabilize results identity using length + timestamp of most recent result
+  // This prevents useCategoryTrends from recalculating when array identity
+  // changes but actual data hasn't (common during sync operations)
+  const stabilizedResults = React.useMemo(
+    () => results,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [results.length, results[results.length - 1]?.timestamp ?? 0]
+  );
+
+  const { trendData, categories } = useCategoryTrends(stabilizedResults);
+
+  return (
+    <div className="mb-8">
+      <CategoryTrendChart data={trendData} categories={categories} />
+    </div>
+  );
+}
 
 /**
  * Analytics dashboard aggregating results across quizzes.
@@ -82,7 +110,11 @@ export default function AnalyticsPage(): React.ReactElement {
       isMounted = false;
       clearTimeout(timeoutId);
     };
-  }, [effectiveUserId, isInitialized, results]);
+    // Use results.length to trigger reload when results change without causing
+    // infinite loops from referential identity changes during sync operations.
+  }, [effectiveUserId, isInitialized, results.length]);
+
+
 
   const quizTitles = React.useMemo(() => {
     const map = new Map<string, string>();
@@ -199,24 +231,20 @@ export default function AnalyticsPage(): React.ReactElement {
         />
       </div>
 
-      {/* Streaks */}
+      {/* Streaks (includes 7-day study activity) */}
       <div className="mb-8">
         <StreakCard
           currentStreak={advancedAnalytics.currentStreak}
           longestStreak={advancedAnalytics.longestStreak}
           consistencyScore={advancedAnalytics.consistencyScore}
           last7DaysActivity={advancedAnalytics.last7DaysActivity}
+          dailyStudyTime={dailyStudyTime}
         />
       </div>
 
       {overallStats && (
         <AnalyticsOverview stats={overallStats} className="mb-8" />
       )}
-
-      <div className="mb-8 grid gap-8 lg:grid-cols-2">
-        <ScoreDistribution results={results} />
-        <StudyTimeChart dailyData={dailyStudyTime} />
-      </div>
 
       <div className="mb-8">
         <PerformanceHistory results={results} quizTitles={quizTitles} />
@@ -226,11 +254,17 @@ export default function AnalyticsPage(): React.ReactElement {
         <CategoryBreakdown categories={categoryPerformance} />
         <WeakAreasCard
           weakAreas={weakAreas}
-          onStudyArea={() => {
-            // Future enhancement: start a filtered practice session for this category.
-          }}
+          userId={effectiveUserId ?? undefined}
         />
       </div>
+
+      {/* Topic Heatmap (for comparison with CategoryBreakdown) */}
+      <div className="mb-8">
+        <TopicHeatmap results={results} quizzes={quizzes} />
+      </div>
+
+      {/* Category Trends Over Time */}
+      <CategoryTrendChartSection results={results} />
 
       {/* Retry Comparison */}
       <div className="mb-8">

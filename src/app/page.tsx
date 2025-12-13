@@ -4,15 +4,18 @@ import * as React from "react";
 import { useQuizzes, useInitializeDatabase } from "@/hooks/useDatabase";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { deleteQuiz } from "@/db/quizzes";
+import { getDueCountsByBox } from "@/db/srs";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { StatsBar } from "@/components/dashboard/StatsBar";
 import { QuizGrid } from "@/components/dashboard/QuizGrid";
 import { ImportModal } from "@/components/dashboard/ImportModal";
 import { ModeSelectModal } from "@/components/dashboard/ModeSelectModal";
 import { DeleteConfirmModal } from "@/components/dashboard/DeleteConfirmModal";
+import { DueQuestionsCard } from "@/components/srs/DueQuestionsCard";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { useToast } from "@/components/ui/Toast";
 import type { Quiz } from "@/types/quiz";
+import type { LeitnerBox } from "@/types/srs";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 
@@ -37,6 +40,28 @@ export default function DashboardPage(): React.ReactElement {
     attemptCount: number;
   } | null>(null);
   const [isDeleting, setIsDeleting] = React.useState(false);
+
+  // SRS due questions state
+  const [dueCountsByBox, setDueCountsByBox] = React.useState<Record<LeitnerBox, number>>({
+    1: 0, 2: 0, 3: 0, 4: 0, 5: 0,
+  });
+  const totalDue = Object.values(dueCountsByBox).reduce((sum, count) => sum + count, 0);
+
+  // Fetch SRS due counts
+  React.useEffect(() => {
+    if (!effectiveUserId || !isInitialized) return;
+
+    const loadDueCounts = async (): Promise<void> => {
+      try {
+        const counts = await getDueCountsByBox(effectiveUserId);
+        setDueCountsByBox(counts);
+      } catch (err) {
+        console.warn("Failed to load SRS due counts:", err);
+      }
+    };
+
+    void loadDueCounts();
+  }, [effectiveUserId, isInitialized]);
 
   const { addToast } = useToast();
 
@@ -117,6 +142,17 @@ export default function DashboardPage(): React.ReactElement {
           />
         </div>
       ) : null}
+
+      {/* SRS Due Questions Card - only show when there are due questions */}
+      {totalDue > 0 && (
+        <div className="mt-8">
+          <DueQuestionsCard
+            dueCountsByBox={dueCountsByBox}
+            totalDue={totalDue}
+            className="mx-auto max-w-md"
+          />
+        </div>
+      )}
 
       <div className="mt-8">
         <QuizGrid

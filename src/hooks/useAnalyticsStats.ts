@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { calculateCategoryTrends, type TrendDirection } from "@/lib/analytics/trends";
+import { formatDateKey } from "@/lib/date";
 import { hashAnswer } from "@/lib/utils";
 import type { Quiz } from "@/types/quiz";
 import type { Result } from "@/types/result";
@@ -19,13 +20,6 @@ export interface AnalyticsStats {
 }
 
 const DAYS_TO_TRACK = 14;
-
-const formatDate = (timestamp: number | Date): string => {
-  return new Date(timestamp).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-  });
-};
 
 /**
  * Asynchronously calculates analytics stats from results and quizzes.
@@ -188,8 +182,8 @@ export function useAnalyticsStats(
         for (let i = DAYS_TO_TRACK - 1; i >= 0; i -= 1) {
           const date = new Date(now);
           date.setDate(date.getDate() - i);
-          const dateStr = formatDate(date.getTime());
-          days.set(dateStr, 0);
+          const dateKey = formatDateKey(date.getTime());
+          days.set(dateKey, 0);
         }
 
         results.forEach((result) => {
@@ -210,11 +204,11 @@ export function useAnalyticsStats(
           );
 
           if (daysDiff < DAYS_TO_TRACK) {
-            const dateStr = formatDate(resultDate);
-            if (days.has(dateStr)) {
+            const dateKey = formatDateKey(resultDate);
+            if (days.has(dateKey)) {
               days.set(
-                dateStr,
-                days.get(dateStr)! + Math.round(result.time_taken_seconds / 60),
+                dateKey,
+                days.get(dateKey)! + Math.round(result.time_taken_seconds / 60),
               );
             }
           }

@@ -177,7 +177,10 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
 
     if (error) {
       logger.error("Error deleting user via service role", error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json(
+        { error: "Failed to delete account. Please try again or contact support." },
+        { status: 500 },
+      );
     }
 
     const response = NextResponse.json({ success: true });

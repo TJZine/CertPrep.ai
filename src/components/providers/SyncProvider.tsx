@@ -11,13 +11,23 @@ import React, {
 import { useAuth } from "@/components/providers/AuthProvider";
 import { syncResults } from "@/lib/sync/syncManager";
 import { syncQuizzes } from "@/lib/sync/quizSyncManager";
+import { syncSRS } from "@/lib/sync/srsSyncManager";
+import { getSyncBlockState } from "@/db/syncState";
 import { logger } from "@/lib/logger";
+
+export interface SyncBlockedInfo {
+  reason: string;
+  blockedAt: number;
+  remainingMins: number;
+  tables: Array<"results" | "quizzes" | "srs">;
+}
 
 interface SyncContextType {
   sync: () => Promise<{ success: boolean; error?: unknown }>;
   isSyncing: boolean;
   hasInitialSyncCompleted: boolean;
   initialSyncError: Error | null;
+  syncBlocked: SyncBlockedInfo | null;
 }
 
 const SyncContext = createContext<SyncContextType | undefined>(undefined);
@@ -32,6 +42,7 @@ export function SyncProvider({
   const [isSyncing, setIsSyncing] = useState(false);
   const [hasInitialSyncCompleted, setHasInitialSyncCompleted] = useState(false);
   const [initialSyncError, setInitialSyncError] = useState<Error | null>(null);
+  const [syncBlocked, setSyncBlocked] = useState<SyncBlockedInfo | null>(null);
   const initialSyncAttemptedRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -47,6 +58,52 @@ export function SyncProvider({
     }
   }, [userId]);
 
+  // Compute SyncBlockedInfo from SyncBlockState
+  const computeBlockedInfo = useCallback(
+    async (): Promise<void> => {
+      if (!userId) {
+        setSyncBlocked(null);
+        return;
+      }
+      // Check all tables for blocks
+      const [resultsBlock, quizzesBlock, srsBlock] = await Promise.all([
+        getSyncBlockState(userId, "results"),
+        getSyncBlockState(userId, "quizzes"),
+        getSyncBlockState(userId, "srs"),
+      ]);
+
+      // Collect which tables are blocked
+      const tables: Array<"results" | "quizzes" | "srs"> = [];
+      if (resultsBlock) tables.push("results");
+      if (quizzesBlock) tables.push("quizzes");
+      if (srsBlock) tables.push("srs");
+
+      // Use first block found for timing info
+      const block = resultsBlock ?? quizzesBlock ?? srsBlock;
+      if (block && tables.length > 0) {
+        const remainingMs = Math.max(0, block.ttlMs - (Date.now() - block.blockedAt));
+        const remainingMins = Math.ceil(remainingMs / 60_000);
+        setSyncBlocked({
+          reason: block.reason,
+          blockedAt: block.blockedAt,
+          remainingMins,
+          tables,
+        });
+      } else {
+        setSyncBlocked(null);
+      }
+    },
+    [userId],
+  );
+
+  // Poll for block state changes
+  useEffect(() => {
+    if (!userId) return;
+    void computeBlockedInfo();
+    const interval = setInterval(() => void computeBlockedInfo(), 60_000);
+    return (): void => clearInterval(interval);
+  }, [userId, computeBlockedInfo]);
+
   const sync = useCallback(async (): Promise<{
     success: boolean;
     error?: unknown;
@@ -54,8 +111,13 @@ export function SyncProvider({
     if (userId) {
       setIsSyncing(true);
       try {
+        // Run syncs sequentially or parallel?
+        // Parallel is fine if they don't depend on each other.
+        // But better to catch errors individually or aggregate them.
+        // For now, sequential to avoid flooding network.
         await syncQuizzes(userId);
         await syncResults(userId);
+        await syncSRS(userId);
         return { success: true };
       } catch (error) {
         return { success: false, error };
@@ -133,7 +195,7 @@ export function SyncProvider({
 
   return (
     <SyncContext.Provider
-      value={{ sync, isSyncing, hasInitialSyncCompleted, initialSyncError }}
+      value={{ sync, isSyncing, hasInitialSyncCompleted, initialSyncError, syncBlocked }}
     >
       {children}
     </SyncContext.Provider>

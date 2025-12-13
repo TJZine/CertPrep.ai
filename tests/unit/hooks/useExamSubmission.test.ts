@@ -80,6 +80,7 @@ describe("useExamSubmission", () => {
             isSyncing: false,
             hasInitialSyncCompleted: true,
             initialSyncError: null,
+            syncBlocked: null,
         });
 
         vi.mocked(useRouter).mockReturnValue({

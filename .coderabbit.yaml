@@ -1,0 +1,117 @@
+# CodeRabbit Configuration for CertPrep.ai
+# Docs: https://docs.coderabbit.ai/configuration
+
+language: en-US
+tone_instructions: >
+  Be direct and technical. Focus on correctness, security, and maintainability.
+  Avoid excessive praise. Flag potential issues even if uncertain.
+
+early_access: true
+
+reviews:
+  # Summary settings
+  high_level_summary: true
+  high_level_summary_placeholder: "@coderabbit summary"
+  poem: false
+  
+  # Review behavior
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - main
+      - develop
+  
+  # What to review
+  review_status: true
+  collapse_walkthrough: false
+  sequence_diagrams: false
+  changed_files_summary: true
+  labeling_instructions: []
+  
+  # Path-specific instructions
+  path_instructions:
+    # Critical paths - extra scrutiny
+    - path: "src/db/**"
+      instructions: |
+        CRITICAL: Database layer. Check for:
+        - Schema version mismatches (verify Dexie version numbers are sequential)
+        - Missing indexes on queried fields
+        - Proper user_id scoping on all queries
+        - Soft-delete handling (deleted_at filtering)
+        
+    - path: "src/lib/sync/**"
+      instructions: |
+        CRITICAL: Sync layer. Check for:
+        - Offline-first compliance (Dexie → Supabase, never direct writes)
+        - Race conditions in concurrent sync
+        - Proper error handling for network failures
+        - Cursor/pagination correctness
+        - LWW conflict resolution logic
+        
+    - path: "src/proxy.ts"
+      instructions: |
+        HIGH RISK: Middleware. This file MUST remain named proxy.ts (not middleware.ts).
+        Check for:
+        - CSP header correctness and nonce propagation
+        - Auth redirect logic
+        - CORS configuration
+        
+    - path: "supabase/**"
+      instructions: |
+        HIGH RISK: Database migrations and RLS policies. Check for:
+        - Destructive operations (DROP, TRUNCATE)
+        - RLS policy completeness (SELECT, INSERT, UPDATE, DELETE)
+        - Index creation on foreign keys
+        - Proper user_id enforcement
+        
+    - path: "src/components/**"
+      instructions: |
+        UI components. Check for:
+        - Accessibility (ARIA labels, keyboard navigation, focus management)
+        - Theme token usage (no hardcoded colors)
+        - Proper loading/error states
+        - Event handler cleanup in useEffect
+        
+    - path: "src/hooks/**"
+      instructions: |
+        React hooks. Check for:
+        - Dependency array completeness
+        - Cleanup functions for subscriptions/timers
+        - Proper memoization (useMemo/useCallback where needed)
+        - No state updates after unmount
+        
+    - path: "src/types/**"
+      instructions: |
+        Type definitions. Verify:
+        - No use of 'any' type
+        - Proper optional vs required fields
+        - Consistency with database schema
+        
+    - path: "tests/**"
+      instructions: |
+        Tests. Check for:
+        - Meaningful assertions (not just "expect(true).toBe(true)")
+        - Proper cleanup between tests
+        - No hardcoded timeouts without justification
+
+  # Files to ignore entirely
+  path_filters:
+    - "!**/*.lock"
+    - "!**/package-lock.json"
+    - "!**/.env*"
+    - "!**/node_modules/**"
+    - "!**/.next/**"
+    - "!**/coverage/**"
+    - "!**/*.min.js"
+    - "!**/*.min.css"
+
+# Chat behavior
+chat:
+  auto_reply: true
+
+# Knowledge base (if using CodeRabbit's knowledge feature)
+knowledge_base:
+  opt_out: false
+  learnings:
+    scope: auto

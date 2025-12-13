@@ -5,25 +5,28 @@ import { Sparkles, X, Target, Flag } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 
-interface SmartRoundBannerProps {
+interface SessionBannerProps {
   totalQuestions: number;
   missedCount: number;
   flaggedCount: number;
   onExit: () => void;
+  /** Optional custom title (defaults to "Smart Round") */
+  title?: string;
   className?: string;
 }
 
 /**
- * Banner displayed at the top of Smart Round sessions
+ * Banner displayed at the top of study sessions (Smart Round, Topic Study, SRS Review)
  * to indicate this is a focused review session.
  */
-export function SmartRoundBanner({
+export function SessionBanner({
   totalQuestions,
   missedCount,
   flaggedCount,
   onExit,
+  title = "Smart Round",
   className,
-}: SmartRoundBannerProps): React.ReactElement {
+}: SessionBannerProps): React.ReactElement {
   return (
     <div
       className={cn(
@@ -31,7 +34,7 @@ export function SmartRoundBanner({
         className,
       )}
       role="status"
-      aria-label="Smart Round session active"
+      aria-label={`${title} session active`}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -43,7 +46,7 @@ export function SmartRoundBanner({
           </div>
           <div>
             <h2 className="font-semibold text-accent">
-              Smart Round
+              {title}
             </h2>
             <p className="text-sm text-accent/80">
               Focused practice on {totalQuestions} questions you need to review
@@ -70,7 +73,7 @@ export function SmartRoundBanner({
             size="sm"
             onClick={onExit}
             className="text-accent hover:bg-accent/20 hover:text-accent"
-            aria-label="Exit Smart Round"
+            aria-label={`Exit ${title}`}
           >
             <X className="h-4 w-4" aria-hidden="true" />
           </Button>
@@ -80,4 +83,4 @@ export function SmartRoundBanner({
   );
 }
 
-export default SmartRoundBanner;
+export default SessionBanner;

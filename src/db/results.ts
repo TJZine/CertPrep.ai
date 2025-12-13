@@ -1,6 +1,7 @@
 import { db } from "./index";
 import { NIL_UUID } from "@/lib/constants";
 import { calculatePercentage, generateUUID } from "@/lib/utils";
+import { logger } from "@/lib/logger";
 import type { CategoryPerformance, Result } from "@/types/result";
 import type { Quiz, QuizMode } from "@/types/quiz";
 import { evaluateAnswer } from "@/lib/grading";
@@ -331,5 +332,107 @@ export async function getOverallStats(userId: string): Promise<OverallStats> {
     averageScore,
     totalStudyTime,
     weakestCategories,
+  };
+}
+
+/**
+ * Data returned by getTopicStudyQuestions for Topic Study sessions.
+ */
+export interface TopicStudyData {
+  /** Deduplicated question IDs (missed OR flagged) */
+  questionIds: string[];
+  /** Source quiz IDs (for navigation reference) */
+  quizIds: string[];
+  /** Count of questions answered incorrectly */
+  missedCount: number;
+  /** Count of questions flagged for review */
+  flaggedCount: number;
+  /** Total unique questions after deduplication */
+  totalUniqueCount: number;
+}
+
+/**
+ * Collects all missed and flagged questions for a specific category
+ * across all of a user's quizzes.
+ *
+ * Used by the "Study This Topic" feature in Analytics.
+ */
+export async function getTopicStudyQuestions(
+  userId: string,
+  category: string,
+): Promise<TopicStudyData> {
+  const allResults = await getAllResults(userId);
+
+  // Get unique quiz IDs from results (includes system/public quizzes the user has taken)
+  const quizIdsFromResults = [...new Set(allResults.map((r) => r.quiz_id))];
+
+  // Fetch all referenced quizzes
+  const allQuizzes = await db.quizzes.bulkGet(quizIdsFromResults);
+  const quizzes = allQuizzes.filter((q): q is NonNullable<typeof q> => !!q && !q.deleted_at);
+  const quizMap = new Map(quizzes.map((quiz) => [quiz.id, quiz]));
+
+  const missedIds = new Set<string>();
+  const flaggedIds = new Set<string>();
+  const sourceQuizIds = new Set<string>();
+
+  // Process results in batches to avoid blocking
+  const BATCH_SIZE = 50;
+  for (let i = 0; i < allResults.length; i += BATCH_SIZE) {
+    const batch = allResults.slice(i, i + BATCH_SIZE);
+
+    await Promise.all(
+      batch.map(async (result) => {
+        const quiz = quizMap.get(result.quiz_id);
+        if (!quiz) return;
+
+        // Get questions in this category
+        const categoryQuestions = quiz.questions.filter(
+          (q) => q.category === category,
+        );
+
+        for (const question of categoryQuestions) {
+          try {
+            const isFlagged = result.flagged_questions.includes(question.id);
+            const userAnswer = result.answers[question.id];
+            let isMissed = false;
+
+            if (userAnswer) {
+              const { isCorrect } = await evaluateAnswer(question, userAnswer);
+              isMissed = !isCorrect;
+            }
+
+            if (isFlagged) {
+              flaggedIds.add(question.id);
+            }
+
+            if (isMissed) {
+              missedIds.add(question.id);
+            }
+
+            if (isFlagged || isMissed) {
+              sourceQuizIds.add(quiz.id);
+            }
+          } catch (error) {
+            logger.error("Failed to process topic study question", {
+              error,
+              quizId: quiz.id,
+              questionId: question.id,
+              category,
+            });
+          }
+        }
+      }),
+    );
+  }
+
+  // Combine and deduplicate
+  const allIds = new Set([...missedIds, ...flaggedIds]);
+
+  return {
+    questionIds: Array.from(allIds),
+    quizIds: Array.from(sourceQuizIds),
+    missedCount: missedIds.size,
+    flaggedCount: flaggedIds.size,
+    totalUniqueCount: allIds.size,
   };
 }

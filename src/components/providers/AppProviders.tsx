@@ -11,6 +11,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { UpdateBanner } from "@/components/common/UpdateBanner";
 import { OfflineIndicator } from "@/components/common/OfflineIndicator";
 import { InstallPrompt } from "@/components/common/InstallPrompt";
+import { SyncBlockedBanner } from "@/components/common/SyncBlockedBanner";
 
 export function AppProviders({
   children,
@@ -24,6 +25,7 @@ export function AppProviders({
           <AuthProvider>
             <SyncProvider>
               <UpdateBanner />
+              <SyncBlockedBanner />
               {children}
               <OfflineIndicator />
               <InstallPrompt />

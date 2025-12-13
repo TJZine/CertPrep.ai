@@ -127,50 +127,156 @@ Automated GC requires complex logic to know "has every other device seen this de
 
 ---
 
-## Feature: Custom Study Sessions ("Areas to Improve")
+## Maintenance: SRS Orphan Cleanup
 
-**Priority**: Medium | **Effort**: 1-2 days | **Category**: Analytics / Core Features
+**Priority**: Low | **Effort**: 1-2 hours | **Category**: Data Management
 
 ### Context
 
-In the Analytics dashboard, the "Values" card (Weak Areas) has a "Study This Topic" button. Currently, this button triggers an empty handler because the quiz runner (`ZenModePage`) requires a static Quiz ID, but "Weak Areas" aggregate questions across _multiple_ quizzes.
+SRS states reference `question_id`, but questions are stored as JSONB inside quiz records. If a quiz is edited and a question is removed, the SRS state for that question becomes orphaned.
 
-### Proposed Solution (Option B: Generated Custom Quizzes)
+### Impact
 
-Enable users to launch a practice session containing _all_ questions for a specific category (e.g., "Biology") from their entire library.
+**Low** — Orphan SRS records:
 
-### Implementation Plan
+- Are filtered out when loading (question not found → skipped)
+- Don't affect sync (they push/pull fine)
+- Only waste a few bytes of storage per record
 
-#### 1. Database & Types
+### Proposed Solution
 
-- Add `isGenerated?: boolean` (or `type: 'standard' | 'generated'`) to the `Quiz` interface (`src/types/quiz.ts`).
-- Implement `createGeneratedQuiz` in `src/db/quizzes.ts`:
-  - Accepts a title (e.g., "Biology Practice") and a list of Questions.
-  - Generates a UUID and saves to Dexie.
-  - Sets `created_at` timestamp.
+Create a periodic cleanup function that removes SRS records where the question no longer exists in any quiz.
 
-#### 2. Aggregation Logic (`src/lib/quiz-generator.ts`)
+```typescript
+// src/db/maintenance.ts
+export async function cleanOrphanedSRSStates(userId: string): Promise<number> {
+  const allQuestions = new Set<string>();
 
-- Create `generateCategoryQuiz(category: string, allQuizzes: Quiz[]): Quiz`.
-- Logic:
-  - Iterate through all available quizzes.
-  - Extract unique questions matching `category` (case-insensitive).
-  - Return a new `Quiz` object ready for persistence.
+  // Collect all valid question IDs from all quizzes
+  const quizzes = await db.quizzes.where("user_id").equals(userId).toArray();
+  for (const quiz of quizzes) {
+    if (!quiz.deleted_at) {
+      for (const q of quiz.questions) {
+        allQuestions.add(q.id);
+      }
+    }
+  }
 
-#### 3. Frontend Integration (`src/app/analytics/page.tsx`)
+  // Find and remove orphaned SRS states
+  const srsStates = await db.srs.where("user_id").equals(userId).toArray();
+  const orphanIds = srsStates
+    .filter((s) => !allQuestions.has(s.question_id))
+    .map((s) => [s.question_id, s.user_id] as [string, string]);
 
-- Implement the `handleStudyTopic` function:
-  1. Call `generateCategoryQuiz` with the selected category.
-  2. Persist the result via `createGeneratedQuiz`.
-  3. Redirect to the filtered quiz: `router.push('/quiz/[new-id]/zen')`.
+  await db.srs.bulkDelete(orphanIds);
+  return orphanIds.length;
+}
+```
 
-#### 4. Maintenance / Cleanup
+> [!NOTE]
+> **Sync Implications**: This deletes orphans locally without syncing the deletion. If the server still has these records, they could reappear on the next pull. Consider either (1) running cleanup only after successful sync, or (2) adding an RPC to delete server-side orphans in the same operation.
 
-- Since these are temporary sessions, add a cleanup routine (e.g., on app init) to delete `isGenerated: true` quizzes older than 24 hours to prevent database bloat.
+### Trigger Options
+
+1. **Manual**: Settings > Storage > "Clean Up SRS Data" button
+2. **Automatic**: Run after successful sync if > 30 days since last cleanup
+3. **On quiz delete**: Clean SRS states for that quiz's questions
 
 ### Acceptance Criteria
 
-- [ ] Clicking "Study This Topic" on "Biology" creates a new quiz session.
-- [ ] The session contains all Biology questions from the user's library.
-- [ ] The session works with existing Zen Mode features (scoring, explanations).
-- [ ] Generated quizzes do not permanently clutter the main "Library" view (or are marked clearly).
+- [ ] Implement `cleanOrphanedSRSStates()` function
+- [ ] Add unit tests verifying orphan detection and cleanup
+- [ ] Decide on trigger mechanism (manual preferred for safety)
+- [ ] Optional: Add UI indicator showing cleanup results
+
+---
+
+## Infrastructure: Supabase Generated Types
+
+**Priority**: Low-Medium | **Effort**: 1-2 hours | **Category**: Developer Experience / Type Safety
+
+### Context
+
+Supabase client calls currently use the untyped `SupabaseClient` type, meaning table names, column names, and RPC function signatures are **magic strings** validated only at runtime.
+
+### Current State
+
+**3 files with untyped Supabase data operations:**
+
+| File                | Tables    | Operations             |
+| ------------------- | --------- | ---------------------- |
+| `syncManager.ts`    | `results` | select, upsert, delete |
+| `quizRemote.ts`     | `quizzes` | select, upsert, update |
+| `srsSyncManager.ts` | `srs`     | **rpc**, select        |
+
+**8 additional files** use Supabase for auth-only (no data queries—no benefit from generated types).
+
+### Problem
+
+Without generated types:
+
+- Typos in column names (e.g., `quzi_id`) are not caught until runtime
+- RPC function names and signatures are magic strings
+- No IDE autocompletion for Supabase queries
+- Must maintain parallel Zod schemas for basic shape validation
+
+### Proposed Solution
+
+Generate TypeScript types from the Supabase schema:
+
+```bash
+# Add to package.json scripts
+"supabase:types": "supabase gen types typescript --linked > src/types/database.types.ts"
+```
+
+Then type the client:
+
+```typescript
+// src/lib/supabase/client.ts
+import type { Database } from "@/types/database.types";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+
+export const createClient = () => createSupabaseClient<Database>(url, key);
+```
+
+### Benefits
+
+| Benefit                    | Impact                                     |
+| -------------------------- | ------------------------------------------ |
+| **Build-time errors**      | Catch typos in table/column names          |
+| **Typed RPC calls**        | `upsert_srs_lww_batch` signature validated |
+| **IDE autocompletion**     | Better DX for all Supabase queries         |
+| **Single source of truth** | Schema → Types, no duplicated shapes       |
+
+### Trade-offs
+
+| Consideration           | Notes                                                  |
+| ----------------------- | ------------------------------------------------------ |
+| **CI integration**      | Must regenerate types when schema changes              |
+| **Generated file size** | ~500-1000 LoC (negligible for bundle, dev-only import) |
+| **Migration effort**    | ~1-2 hours to set up and update 3 sync files           |
+
+### Implementation Steps
+
+1. [ ] Install/verify `supabase` CLI is available in dev dependencies
+2. [ ] Add `supabase:types` script to `package.json`
+3. [ ] Generate initial `src/types/database.types.ts`
+4. [ ] Update `createClient` in both `client.ts` and `server.ts` to use `Database` generic
+5. [ ] Update sync files to use typed client (IDE will flag any mismatches)
+6. [ ] Add CI step to regenerate types on schema changes (optional but recommended)
+7. [ ] Consider removing redundant Zod schemas where generated types suffice (keep Zod for coercion like `z.coerce.number()`)
+
+### Acceptance Criteria
+
+- [ ] `npm run supabase:types` generates valid TypeScript
+- [ ] All `.rpc()`, `.from()`, `.select()`, `.upsert()` calls are typed
+- [ ] Build passes with strict TypeScript
+- [ ] IDE provides autocompletion for column names
+
+### Decision
+
+**Deferred** — Current Zod-based runtime validation is sufficient. Prioritize when:
+
+- Adding more RPC functions
+- Onboarding new developers who would benefit from autocompletion
+- Schema changes become frequent (to catch drift early)

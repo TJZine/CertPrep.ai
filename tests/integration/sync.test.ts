@@ -5,6 +5,23 @@ import { syncQuizzes } from "@/lib/sync/quizSyncManager";
 import { fetchUserQuizzes, upsertQuizzes } from "@/lib/sync/quizRemote";
 import type { Quiz } from "@/types/quiz";
 
+const { supabaseMock } = vi.hoisted(() => {
+  const supabase = {
+    auth: {
+      getSession: vi.fn().mockResolvedValue({
+        data: { session: { user: { id: "test-user-123" } } },
+        error: null,
+      }),
+    },
+  };
+
+  return { supabaseMock: supabase };
+});
+
+vi.mock("@/lib/supabase/client", () => ({
+  createClient: (): typeof supabaseMock => supabaseMock,
+}));
+
 // Mock the remote API layer
 vi.mock("@/lib/sync/quizRemote", () => ({
   fetchUserQuizzes: vi.fn(),
