@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Modal } from "@/components/ui/Modal";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/components/ui/Toast";
 import { getTopicStudyQuestions, type TopicStudyData } from "@/db/results";
 import {
   TOPIC_STUDY_QUESTIONS_KEY,
@@ -54,6 +55,7 @@ export function WeakAreasCard({
   className,
 }: WeakAreasCardProps): React.ReactElement {
   const router = useRouter();
+  const { addToast } = useToast();
   const { quizzes } = useQuizzes(userId);
   const [isLoading, setIsLoading] = React.useState(false);
   const [loadingCategory, setLoadingCategory] = React.useState<string | null>(null);
@@ -93,6 +95,7 @@ export function WeakAreasCard({
       if (data.totalUniqueCount === 0) {
         // No questions found - user has likely reviewed since analytics were computed
         logger.info(`No missed/flagged questions found for category: ${category}`);
+        addToast("info", `No active questions found to study for ${category}`);
         setIsLoading(false);
         setLoadingCategory(null);
         return;
@@ -112,6 +115,7 @@ export function WeakAreasCard({
       });
     } catch (error) {
       logger.error("Failed to load topic study questions", error);
+      addToast("error", "Failed to prepare study session");
     } finally {
       setIsLoading(false);
       setLoadingCategory(null);
@@ -145,6 +149,7 @@ export function WeakAreasCard({
       router.push(`/quiz/${firstQuizId}/zen?mode=topic`);
     } catch (error) {
       logger.error("Failed to store topic study state", error);
+      addToast("error", "Failed to start study session");
     }
   };
 

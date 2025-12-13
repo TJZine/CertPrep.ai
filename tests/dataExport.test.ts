@@ -262,13 +262,13 @@ describe("deleted items stats and purge", () => {
     await db.quizzes.put({
       ...sampleQuiz,
       id: "deleted-quiz-1",
-      deleted_at: Date.now(),
+      deleted_at: 1_700_000_200_000,
     });
     await db.results.put(sampleResult);
     await db.results.put({
       ...sampleResult,
       id: "deleted-result-1",
-      deleted_at: Date.now(),
+      deleted_at: 1_700_000_200_000,
     });
 
     const stats = await getDeletedItemsStats(TEST_USER_ID);
@@ -283,13 +283,13 @@ describe("deleted items stats and purge", () => {
     await db.quizzes.put({
       ...sampleQuiz,
       id: "deleted-quiz-1",
-      deleted_at: Date.now(),
+      deleted_at: 1_700_000_200_000,
     });
     await db.results.put(sampleResult);
     await db.results.put({
       ...sampleResult,
       id: "deleted-result-1",
-      deleted_at: Date.now(),
+      deleted_at: 1_700_000_200_000,
     });
 
     const { quizzesPurged, resultsPurged } = await purgeDeletedItems(TEST_USER_ID);

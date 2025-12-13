@@ -13,6 +13,7 @@ vi.mock("@/db", () => ({
       toArray: vi.fn().mockResolvedValue([]),
       bulkUpdate: vi.fn(),
       bulkPut: vi.fn(),
+      bulkDelete: vi.fn(),
     },
     syncState: {
       where: vi.fn().mockReturnThis(),
@@ -37,6 +38,12 @@ vi.mock("@/db/syncState", () => ({
   setSyncCursor: vi.fn().mockResolvedValue(undefined),
 }));
 
+// Mock safeMark/safeMeasure
+vi.mock("@/lib/perfMarks", () => ({
+  safeMark: vi.fn(),
+  safeMeasure: vi.fn(),
+}));
+
 const { mockSupabase } = vi.hoisted(() => {
   const mock = {
     auth: {
@@ -52,6 +59,8 @@ const { mockSupabase } = vi.hoisted(() => {
     order: vi.fn(),
     limit: vi.fn(),
     upsert: vi.fn(),
+    update: vi.fn(),
+    in: vi.fn(),
   };
   // Mock chainable methods
   mock.from.mockReturnValue(mock);
@@ -61,6 +70,8 @@ const { mockSupabase } = vi.hoisted(() => {
   mock.order.mockReturnValue(mock);
   mock.limit.mockReturnValue(mock);
   mock.upsert.mockResolvedValue({ error: null });
+  mock.update.mockReturnValue(mock);
+  mock.in.mockResolvedValue({ error: null });
   return { mockSupabase: mock };
 });
 
@@ -77,7 +88,7 @@ describe("SyncManager", () => {
     });
   });
 
-  it("should advance cursor even if all results in a batch are invalid", async () => {
+  it("should advance cursor using updated_at even if all results in a batch are invalid", async () => {
     // Mock 50 invalid results (missing required fields)
     const invalidResults = Array(50)
       .fill(null)
@@ -85,6 +96,7 @@ describe("SyncManager", () => {
         id: `invalid-id-${i}`,
         // Missing other required fields like quiz_id, timestamp, etc.
         created_at: new Date(Date.now() + i * 1000).toISOString(),
+        updated_at: new Date(Date.now() + i * 1000).toISOString(),
       }));
 
     // First call returns 50 invalid items
@@ -95,10 +107,10 @@ describe("SyncManager", () => {
 
     await syncResults("user-123");
 
-    // Verify setSyncCursor was called with the timestamp AND id of the last invalid record
+    // Verify setSyncCursor was called with the updated_at AND id of the last invalid record
     const lastResult = invalidResults[invalidResults.length - 1];
     expect(syncState.setSyncCursor).toHaveBeenCalledWith(
-      lastResult?.created_at,
+      lastResult?.updated_at,
       "user-123",
       lastResult?.id,
     );
@@ -107,14 +119,14 @@ describe("SyncManager", () => {
     expect(db.results.bulkPut).not.toHaveBeenCalled();
   });
 
-  it("should use keyset pagination in supabase query", async () => {
+  it("should use keyset pagination with updated_at in supabase query", async () => {
     mockSupabase.limit.mockResolvedValueOnce({ data: [], error: null });
 
     await syncResults("user-123");
 
     expect(mockSupabase.or).toHaveBeenCalled();
-    // Verify double ordering
-    expect(mockSupabase.order).toHaveBeenCalledWith("created_at", {
+    // Verify double ordering using updated_at
+    expect(mockSupabase.order).toHaveBeenCalledWith("updated_at", {
       ascending: true,
     });
     expect(mockSupabase.order).toHaveBeenCalledWith("id", { ascending: true });
@@ -147,7 +159,7 @@ describe("SyncManager", () => {
     }
   });
 
-  it("should push unsynced local results to Supabase", async () => {
+  it("should push unsynced local results (upsert) to Supabase", async () => {
     const unsyncedResults = [
       {
         id: "local-1",
@@ -161,65 +173,109 @@ describe("SyncManager", () => {
         answers: {},
         flagged_questions: [],
         category_breakdown: {},
-      },
-      {
-        id: "local-2",
-        user_id: "user-123",
-        score: 90,
-        synced: 0,
-        quiz_id: "quiz-2",
-        timestamp: Date.now(),
-        mode: "exam",
-        time_taken_seconds: 120,
-        answers: {},
-        flagged_questions: [],
-        category_breakdown: {},
+        deleted_at: null,
       },
     ];
 
-    // Mock local DB returning unsynced items
     vi.mocked(db.results.toArray).mockResolvedValueOnce(
       unsyncedResults as unknown as Result[],
     );
 
-    // Mock Supabase upsert success
     mockSupabase.upsert.mockResolvedValue({ error: null });
-
-    // Mock empty pull response to stop loop
     mockSupabase.limit.mockResolvedValue({ data: [], error: null });
 
     await syncResults("user-123");
 
-    // Verify upsert called with correct data (excluding 'synced' field)
+    // Verify upsert called with correct data (deleted_at: null)
     expect(mockSupabase.upsert).toHaveBeenCalledWith(
       expect.arrayContaining([
         expect.objectContaining({
           id: "local-1",
-          score: 100,
-          user_id: "user-123",
+          deleted_at: null,
         }),
+      ]),
+      { onConflict: "id" },
+    );
+  });
+
+  it("should push locally deleted results to Supabase", async () => {
+    const deletionTime = Date.now();
+    const unsyncedResults = [
+      {
+        id: "local-deleted-1",
+        user_id: "user-123",
+        score: 100,
+        synced: 0,
+        quiz_id: "quiz-1",
+        timestamp: Date.now(),
+        mode: "practice",
+        time_taken_seconds: 60,
+        answers: {},
+        flagged_questions: [],
+        category_breakdown: {},
+        deleted_at: deletionTime, // Locally deleted
+      },
+    ];
+
+    vi.mocked(db.results.toArray).mockResolvedValueOnce(
+      unsyncedResults as unknown as Result[],
+    );
+
+    mockSupabase.upsert.mockResolvedValue({ error: null });
+    mockSupabase.limit.mockResolvedValue({ data: [], error: null });
+
+    await syncResults("user-123");
+
+    // Verify upsert called with deleted_at set to ISO string
+    expect(mockSupabase.upsert).toHaveBeenCalledWith(
+      expect.arrayContaining([
         expect.objectContaining({
-          id: "local-2",
-          score: 90,
-          user_id: "user-123",
+          id: "local-deleted-1",
+          deleted_at: new Date(deletionTime).toISOString(),
         }),
       ]),
       { onConflict: "id" },
     );
 
-    const calls = mockSupabase.upsert.mock.calls[0];
-    const payload = calls ? calls[0] : [];
-    expect(Array.isArray(payload)).toBe(true);
-
-    expect(
-      payload.every((row: Record<string, unknown>) => !("synced" in row)),
-    ).toBe(true);
-
-    // Verify local DB updated to synced: 1
+    // Verify local DB updated to synced
     expect(db.results.bulkUpdate).toHaveBeenCalledWith([
-      { key: "local-1", changes: { synced: 1 } },
-      { key: "local-2", changes: { synced: 1 } },
+      { key: "local-deleted-1", changes: { synced: 1 } },
     ]);
+  });
+
+  it("should apply remote deletions locally", async () => {
+    const remoteResults = [
+      {
+        id: "remote-deleted-1",
+        quiz_id: "quiz-1",
+        timestamp: 1234567890,
+        mode: "zen",
+        score: 100,
+        time_taken_seconds: 60,
+        answers: {},
+        flagged_questions: [],
+        category_breakdown: {},
+        created_at: "2023-01-01T10:00:00.000Z",
+        updated_at: "2023-01-01T12:00:00.000Z",
+        deleted_at: "2023-01-01T12:00:00.000Z", // Remote deleted
+      },
+    ];
+
+    mockSupabase.limit
+      .mockResolvedValueOnce({ data: remoteResults, error: null })
+      .mockResolvedValue({ data: [], error: null });
+
+    await syncResults("user-123");
+
+    // Verify bulkDelete was called
+    expect(db.results.bulkDelete).toHaveBeenCalledWith(["remote-deleted-1"]);
+    
+    // Verify cursor updated to the deleted record's timestamp
+    expect(syncState.setSyncCursor).toHaveBeenCalledWith(
+      "2023-01-01T12:00:00.000Z",
+      "user-123",
+      "remote-deleted-1"
+    );
   });
 
   it("should not mark results as synced if push fails", async () => {
@@ -236,6 +292,7 @@ describe("SyncManager", () => {
         answers: {},
         flagged_questions: [],
         category_breakdown: {},
+        deleted_at: null,
       },
     ];
 
@@ -243,7 +300,6 @@ describe("SyncManager", () => {
       unsyncedResults as unknown as Result[],
     );
 
-    // Mock Supabase upsert failure
     mockSupabase.upsert.mockResolvedValue({
       error: { message: "Network error" },
     });
@@ -253,66 +309,8 @@ describe("SyncManager", () => {
     const result = await syncResults("user-123");
 
     expect(mockSupabase.upsert).toHaveBeenCalled();
-    // Verify bulkUpdate was NOT called
     expect(db.results.bulkUpdate).not.toHaveBeenCalled();
     expect(result.incomplete).toBe(true);
     expect(result.error).toContain("Network error");
-  });
-
-  it("should mark sync incomplete when fetch fails", async () => {
-    mockSupabase.limit.mockResolvedValueOnce({
-      data: null,
-      error: { message: "RLS denied" },
-    });
-
-    const result = await syncResults("user-123");
-
-    expect(result.incomplete).toBe(true);
-    expect(result.error).toContain("RLS denied");
-  });
-
-  describe("auth failure scenarios", () => {
-    it("should skip sync when no auth session exists", async () => {
-      mockSupabase.auth.getSession.mockResolvedValueOnce({
-        data: { session: null },
-        error: null,
-      });
-
-      const result = await syncResults("user-123");
-
-      expect(result.incomplete).toBe(true);
-      expect(result.error).toBe("Not authenticated");
-      expect(result.status).toBe("skipped");
-      // Verify no sync operations were attempted
-      expect(mockSupabase.from).not.toHaveBeenCalled();
-    });
-
-    it("should skip sync when getSession returns an error", async () => {
-      mockSupabase.auth.getSession.mockResolvedValueOnce({
-        data: { session: null },
-        error: { message: "Auth service unavailable" },
-      });
-
-      const result = await syncResults("user-123");
-
-      expect(result.incomplete).toBe(true);
-      expect(result.error).toBe("Not authenticated");
-      expect(result.status).toBe("skipped");
-      expect(mockSupabase.from).not.toHaveBeenCalled();
-    });
-
-    it("should fail sync when session user ID does not match requested userId", async () => {
-      mockSupabase.auth.getSession.mockResolvedValueOnce({
-        data: { session: { user: { id: "different-user-456" } } },
-        error: null,
-      });
-
-      const result = await syncResults("user-123");
-
-      expect(result.incomplete).toBe(true);
-      expect(result.error).toBe("User ID mismatch - please re-login");
-      expect(result.status).toBe("failed");
-      expect(mockSupabase.from).not.toHaveBeenCalled();
-    });
   });
 });

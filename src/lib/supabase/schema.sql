@@ -76,6 +76,7 @@ create table if not exists results (
   category_breakdown jsonb not null default '{}'::jsonb,
   question_ids jsonb default null, -- Optional: Subset of questions for Smart Round / Review Missed
   created_at timestamp with time zone default timezone('utc'::text, now()),
+  updated_at timestamp with time zone default timezone('utc'::text, now()),
   deleted_at timestamp with time zone default null -- Soft-delete for cross-device sync
 );
 
@@ -127,9 +128,9 @@ create trigger on_auth_user_created
   for each row execute procedure public.handle_new_user();
 
 -- OPTIMIZATION: Index for incremental sync
--- Supports the query: .eq('user_id', userId).or('created_at.gt...,and(...)').order('created_at', ...).order('id', ...)
-create index concurrently if not exists idx_results_sync_optimization
-  on results (user_id, created_at, id);
+-- Supports the query: .eq('user_id', userId).or('updated_at.gt...,and(...)').order('updated_at', ...).order('id', ...)
+create index concurrently if not exists idx_results_sync_updated_at
+  on results (user_id, updated_at, id);
 
 -- OPTIMIZATION: Index for quiz sync (keyset pagination by user + updated_at + id)
 create index concurrently if not exists idx_quizzes_sync_optimization
@@ -150,6 +151,11 @@ $$;
 drop trigger if exists quizzes_set_updated_at on quizzes;
 create trigger quizzes_set_updated_at
   before update on quizzes
+  for each row execute procedure public.set_updated_at();
+
+drop trigger if exists results_set_updated_at on results;
+create trigger results_set_updated_at
+  before update on results
   for each row execute procedure public.set_updated_at();
 
 -- TABLE: srs (Spaced Repetition State)

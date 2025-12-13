@@ -52,6 +52,9 @@ const {
       update,
       where,
     },
+    transaction: vi.fn(async (_mode, _tables, callback) => {
+      return callback();
+    }),
   };
 
   const supabase = {

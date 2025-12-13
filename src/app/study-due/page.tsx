@@ -44,11 +44,13 @@ export default function StudyDuePage(): React.ReactElement {
     });
     const [categoryGroups, setCategoryGroups] = useState<CategoryGroup[]>([]);
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(null);
 
     const loadDueQuestions = useCallback(async () => {
         if (!effectiveUserId) return;
 
         setIsLoading(true);
+        setError(null);
         try {
             const [counts, dueStates] = await Promise.all([
                 getDueCountsByBox(effectiveUserId),
@@ -80,8 +82,9 @@ export default function StudyDuePage(): React.ReactElement {
             setCategoryGroups(Array.from(groupMap.values()).sort((a, b) =>
                 a.category.localeCompare(b.category)
             ));
-        } catch (error) {
-            console.error("Failed to load due questions:", error);
+        } catch (err) {
+            console.error("Failed to load due questions:", err);
+            setError("Failed to load review queue. Please try again later.");
         } finally {
             setIsLoading(false);
         }
@@ -144,8 +147,18 @@ export default function StudyDuePage(): React.ReactElement {
                 </p>
             </div>
 
+            {error && (
+                <div className="mb-6 rounded-lg bg-destructive/10 p-4 text-destructive" role="alert">
+                    {error}
+                </div>
+            )}
+
             {isLoading ? (
-                <div className="flex items-center justify-center py-12">
+                <div
+                    className="flex items-center justify-center py-12"
+                    role="status"
+                    aria-label="Loading review queue"
+                >
                     <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
                 </div>
             ) : (

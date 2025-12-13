@@ -85,7 +85,7 @@ export async function seedAnalyticsData(
     const now = Date.now();
     const oneDay = 24 * 60 * 60 * 1000;
 
-    // Create results over the past 5 days for streak testing
+    // Create results over the past 4 days for streak testing
     const results: Result[] = [
         // Today - high score
         createTestResult({

@@ -65,7 +65,7 @@ The test suite covers three main areas:
 
 ### Accessibility Configuration
 
-**Critical Decision:** We strict contrast checks are **disabled** to allow the custom theme system (e.g., "Midnight", "Retro") to function without test interference. The tests focus on **structural accessibility** (ARIA roles, headings, labels).
+**Critical Decision:** We disable strict contrast checks to allow the custom theme system (e.g., "Midnight", "Retro") to function without test interference. The tests focus on **structural accessibility** (ARIA roles, headings, labels).
 
 ```typescript
 // In analytics.spec.ts

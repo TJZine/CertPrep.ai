@@ -256,7 +256,7 @@ export async function getSyncBlockState(
 
   const ttlMs = state.lastId ? parseInt(state.lastId, 10) : SYNC_BLOCK_TTL_MS;
   const reason =
-    state.table?.replace(`${keyPrefix}:`, "") || "schema_drift";
+    state.table?.slice(keyPrefix.length + 1) || "schema_drift";
 
   // Check if TTL has expired
   if (Date.now() - blockedAt > ttlMs) {

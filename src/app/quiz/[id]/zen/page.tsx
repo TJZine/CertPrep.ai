@@ -51,7 +51,12 @@ export default function ZenModePage(): React.ReactElement {
   const searchParams = useSearchParams();
   const quizId = params.id as string;
 
-  const mode = searchParams.get("mode") as StudyMode;
+  const rawMode = searchParams.get("mode");
+  const mode: StudyMode = 
+    rawMode === "smart" || rawMode === "topic" || rawMode === "srs-review" 
+      ? (rawMode as StudyMode) 
+      : null;
+
   const isSmartRound = mode === "smart";
   const isTopicStudy = mode === "topic";
   const isSRSReview = mode === "srs-review";
@@ -308,7 +313,7 @@ export default function ZenModePage(): React.ReactElement {
 
       <ZenQuizContainer
         quiz={quizForSession}
-        isSmartRound={isFilteredMode}
+        isSmartRound={isSmartRound}
         isSRSReview={isSRSReview}
       />
     </ErrorBoundary>

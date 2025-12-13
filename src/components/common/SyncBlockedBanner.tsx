@@ -24,11 +24,11 @@ export function SyncBlockedBanner(): React.ReactElement | null {
   }
 
   const affectedTables =
-    syncBlocked.tables.length === 2
-      ? "quizzes and results"
-      : syncBlocked.tables[0] === "results"
-        ? "results"
-        : "quizzes";
+    syncBlocked.tables.length === 1
+      ? syncBlocked.tables[0]
+      : syncBlocked.tables.length === 2
+        ? syncBlocked.tables.join(" and ")
+        : "your data";
 
   const primaryMessage =
     syncBlocked.reason === "schema_drift"

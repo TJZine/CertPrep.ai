@@ -5,10 +5,12 @@ import {
   getSRSSyncCursor,
   setSRSSyncCursor,
   getSyncBlockState,
+  setSyncBlockState,
 } from "@/db/syncState";
 import { logger } from "@/lib/logger";
 import { logNetworkAwareSlowSync } from "@/lib/sync/syncLogging";
 import { createClient } from "@/lib/supabase/client";
+import { safeMark, safeMeasure } from "@/lib/perfMarks";
 import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { SRSState } from "@/types/srs";
@@ -24,6 +26,7 @@ function getSupabaseClient(): SupabaseClient | undefined {
 
 const BATCH_SIZE = 50;
 const TIME_BUDGET_MS = 5000;
+const MAX_INVALID_BATCHES = 3;
 
 // Schema for validating remote SRS data structure
 // Using .passthrough() to preserve unknown fields from newer schema versions
@@ -100,7 +103,7 @@ export async function syncSRS(userId: string): Promise<{ incomplete: boolean }> 
 }
 
 async function performSRSSync(userId: string): Promise<{ incomplete: boolean }> {
-  performance.mark("srsSync-start");
+  safeMark("srsSync-start");
   const startTime = Date.now();
   let incomplete = false;
   const stats = { pushed: 0, pulled: 0 };
@@ -111,7 +114,6 @@ async function performSRSSync(userId: string): Promise<{ incomplete: boolean }> 
   }
 
   // Validate auth session matches the userId we're syncing for
-  // Use getSession() instead of getUser() - it reads from local storage without a network call
   const { data: { session }, error: authError } = await client.auth.getSession();
   if (authError || !session?.user) {
     logger.warn("SRS sync skipped: No valid auth session", { authError: authError?.message });
@@ -166,8 +168,8 @@ async function performSRSSync(userId: string): Promise<{ incomplete: boolean }> 
     }
     return { incomplete };
   } finally {
-    performance.mark("srsSync-end");
-    performance.measure("srsSync", "srsSync-start", "srsSync-end");
+    safeMark("srsSync-end");
+    safeMeasure("srsSync", "srsSync-start", "srsSync-end");
     const duration = Date.now() - startTime;
     if (duration > 300) {
       logNetworkAwareSlowSync("SRS sync", {
@@ -225,7 +227,6 @@ async function pushLocalChanges(
       consecutive_correct: item.consecutive_correct,
     }));
 
-    // Use batch RPC with server-side LWW (only updates if local.last_reviewed > server.last_reviewed)
     const { data, error } = await client.rpc("upsert_srs_lww_batch", {
       items: payload,
     });
@@ -250,6 +251,7 @@ async function pushLocalChanges(
         status === 503
       ) {
         logger.error(`Critical SRS sync error (${code || status}). Aborting push.`);
+        incomplete = true; // Mark as incomplete since we aborted
         break;
       }
       continue;
@@ -266,15 +268,16 @@ async function pushLocalChanges(
       });
     }
 
-    // Mark as synced locally (regardless of whether server accepted the update)
-    // The sync flag indicates "we tried to sync", not "server accepted our value"
-    await Promise.all(
-      batch.map(async (item) => {
-        await db.srs.update([item.question_id, userId], {
-          synced: 1,
-        });
-      })
-    );
+    // Mark as synced locally (atomic update)
+    await db.transaction("rw", db.srs, async () => {
+      await Promise.all(
+        batch.map((item) =>
+          db.srs.update([item.question_id, userId], {
+            synced: 1,
+          })
+        )
+      );
+    });
     stats.pushed += batch.length;
   }
 
@@ -314,6 +317,7 @@ async function pullRemoteChanges(
   let incomplete = false;
   let hardFailure = false;
   let hasMore = true;
+  let consecutiveInvalidBatches = 0;
 
   while (hasMore) {
     if (Date.now() - startTime > TIME_BUDGET_MS) {
@@ -433,8 +437,16 @@ async function pullRemoteChanges(
       );
       lastRecordId = lastItem.question_id;
 
-      // Check for hard failure condition (lots of consecutive failures?)
-      // For now, we just advance to avoid loop.
+      consecutiveInvalidBatches++;
+      if (consecutiveInvalidBatches >= MAX_INVALID_BATCHES) {
+        logger.error(`Hit MAX_INVALID_BATCHES (${MAX_INVALID_BATCHES}) in SRS sync. Blocking sync to prevent loop.`, { userId });
+        await setSyncBlockState(userId, "srs", "schema_drift");
+        hardFailure = true;
+        incomplete = true;
+        break;
+      }
+    } else {
+      consecutiveInvalidBatches = 0;
     }
 
     if (itemsToSave.length > 0) {

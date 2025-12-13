@@ -16,13 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { TrendingUp } from "lucide-react";
 import { useChartColors } from "@/hooks/useChartColors";
 import { useChartDimensions } from "@/hooks/useChartDimensions";
-
-export interface CategoryTrendPoint {
-    /** Week label (e.g., "Dec 2") */
-    week: string;
-    /** Dynamic keys for each category's score (0-100) */
-    [category: string]: number | string;
-}
+import type { CategoryTrendPoint } from "@/hooks/useCategoryTrends";
 
 interface CategoryTrendChartProps {
     /** Time-series data with weekly aggregated scores per category */

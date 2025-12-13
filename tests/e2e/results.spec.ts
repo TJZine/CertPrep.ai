@@ -94,7 +94,7 @@ test.describe("Results Page", () => {
             await retryButton.click();
 
             // Should navigate to quiz route
-            await expect(page).toHaveURL(new RegExp(`/quiz/${quiz.id}`));
+            await expect(page).toHaveURL(`/quiz/${quiz.id}`);
         });
     });
 
