@@ -27,8 +27,13 @@ import {
   TOPIC_STUDY_MISSED_COUNT_KEY,
   TOPIC_STUDY_FLAGGED_COUNT_KEY,
 } from "@/lib/topicStudyStorage";
+import {
+  clearSRSReviewState,
+  SRS_REVIEW_QUESTIONS_KEY,
+  SRS_REVIEW_QUIZ_ID_KEY,
+} from "@/lib/srsReviewStorage";
 
-type StudyMode = "smart" | "topic" | null;
+type StudyMode = "smart" | "topic" | "srs-review" | null;
 
 interface StudyModeData {
   questionIds: string[];
@@ -49,7 +54,8 @@ export default function ZenModePage(): React.ReactElement {
   const mode = searchParams.get("mode") as StudyMode;
   const isSmartRound = mode === "smart";
   const isTopicStudy = mode === "topic";
-  const isFilteredMode = isSmartRound || isTopicStudy;
+  const isSRSReview = mode === "srs-review";
+  const isFilteredMode = isSmartRound || isTopicStudy || isSRSReview;
 
   const { user } = useAuth();
   const effectiveUserId = useEffectiveUserId(user?.id);
@@ -70,24 +76,32 @@ export default function ZenModePage(): React.ReactElement {
     if (!isFilteredMode || !quiz) return;
 
     try {
-      // Determine which storage keys to use
-      const questionsKey = isSmartRound
-        ? SMART_ROUND_QUESTIONS_KEY
-        : TOPIC_STUDY_QUESTIONS_KEY;
-      const quizIdKey = isSmartRound
-        ? SMART_ROUND_QUIZ_ID_KEY
-        : TOPIC_STUDY_QUIZ_ID_KEY;
-      const missedKey = isSmartRound
-        ? SMART_ROUND_MISSED_COUNT_KEY
-        : TOPIC_STUDY_MISSED_COUNT_KEY;
-      const flaggedKey = isSmartRound
-        ? SMART_ROUND_FLAGGED_COUNT_KEY
-        : TOPIC_STUDY_FLAGGED_COUNT_KEY;
+      // Determine which storage keys to use based on mode
+      let questionsKey: string;
+      let quizIdKey: string;
+      let missedKey: string | null = null;
+      let flaggedKey: string | null = null;
+
+      if (isSmartRound) {
+        questionsKey = SMART_ROUND_QUESTIONS_KEY;
+        quizIdKey = SMART_ROUND_QUIZ_ID_KEY;
+        missedKey = SMART_ROUND_MISSED_COUNT_KEY;
+        flaggedKey = SMART_ROUND_FLAGGED_COUNT_KEY;
+      } else if (isTopicStudy) {
+        questionsKey = TOPIC_STUDY_QUESTIONS_KEY;
+        quizIdKey = TOPIC_STUDY_QUIZ_ID_KEY;
+        missedKey = TOPIC_STUDY_MISSED_COUNT_KEY;
+        flaggedKey = TOPIC_STUDY_FLAGGED_COUNT_KEY;
+      } else {
+        // SRS review mode
+        questionsKey = SRS_REVIEW_QUESTIONS_KEY;
+        quizIdKey = SRS_REVIEW_QUIZ_ID_KEY;
+      }
 
       const storedQuestionIds = sessionStorage.getItem(questionsKey);
       const storedQuizId = sessionStorage.getItem(quizIdKey);
-      const storedMissedCount = sessionStorage.getItem(missedKey);
-      const storedFlaggedCount = sessionStorage.getItem(flaggedKey);
+      const storedMissedCount = missedKey ? sessionStorage.getItem(missedKey) : null;
+      const storedFlaggedCount = flaggedKey ? sessionStorage.getItem(flaggedKey) : null;
       const storedCategory = isTopicStudy
         ? sessionStorage.getItem(TOPIC_STUDY_CATEGORY_KEY)
         : undefined;
@@ -127,15 +141,17 @@ export default function ZenModePage(): React.ReactElement {
       console.error(`Failed to load ${mode} mode data:`, error);
       router.replace(`/quiz/${quizId}/zen`);
     }
-  }, [isFilteredMode, isSmartRound, isTopicStudy, mode, quiz, quizId, router]);
+  }, [isFilteredMode, isSmartRound, isTopicStudy, isSRSReview, mode, quiz, quizId, router]);
 
   const handleModeExit = (): void => {
     if (isSmartRound) {
       clearSmartRoundState();
     } else if (isTopicStudy) {
       clearTopicStudyState();
+    } else if (isSRSReview) {
+      clearSRSReviewState();
     }
-    router.push("/");
+    router.push(isSRSReview ? "/study-due" : "/");
   };
 
   if (!isInitialized || !effectiveUserId || isLoading) {
@@ -147,9 +163,14 @@ export default function ZenModePage(): React.ReactElement {
   }
 
   if (isFilteredMode && !filteredQuestions) {
-    const loadingText = isSmartRound
-      ? "Preparing Smart Round..."
-      : "Preparing Topic Study...";
+    let loadingText = "Preparing questions...";
+    if (isSmartRound) {
+      loadingText = "Preparing Smart Round...";
+    } else if (isTopicStudy) {
+      loadingText = "Preparing Topic Study...";
+    } else if (isSRSReview) {
+      loadingText = "Preparing SRS Review...";
+    }
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <LoadingSpinner size="lg" text={loadingText} />
@@ -217,7 +238,7 @@ export default function ZenModePage(): React.ReactElement {
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
             {isFilteredMode
-              ? `No questions available for ${isSmartRound ? "Smart Round" : "Topic Study"}.`
+              ? `No questions available for ${isSmartRound ? "Smart Round" : isTopicStudy ? "Topic Study" : "SRS Review"}.`
               : "This quiz doesn't have any questions yet."}
           </p>
           <Button
@@ -239,6 +260,9 @@ export default function ZenModePage(): React.ReactElement {
 
   // Build banner title based on mode
   const getBannerTitle = (): string => {
+    if (isSRSReview) {
+      return "SRS Review";
+    }
     if (isTopicStudy && studyModeData?.category) {
       return `Topic Study: ${studyModeData.category}`;
     }
@@ -282,7 +306,11 @@ export default function ZenModePage(): React.ReactElement {
         </div>
       )}
 
-      <ZenQuizContainer quiz={quizForSession} isSmartRound={isFilteredMode} />
+      <ZenQuizContainer
+        quiz={quizForSession}
+        isSmartRound={isFilteredMode}
+        isSRSReview={isSRSReview}
+      />
     </ErrorBoundary>
   );
 }

@@ -21,6 +21,8 @@ interface DueQuestionsCardProps {
     totalDue: number;
     /** Optional class name for styling. */
     className?: string;
+    /** Optional callback to start review (if not provided, links to /study-due). */
+    onStartReview?: () => void;
 }
 
 /**
@@ -94,6 +96,7 @@ export function DueQuestionsCard({
     dueCountsByBox,
     totalDue,
     className,
+    onStartReview,
 }: DueQuestionsCardProps): React.ReactElement {
     const hasQuestionsDue = totalDue > 0;
 
@@ -152,11 +155,21 @@ export function DueQuestionsCard({
                 </div>
 
                 {/* Action Button */}
-                <Link href="/study-due" className="block">
-                    <Button className="w-full" rightIcon={<ArrowRight />}>
+                {onStartReview ? (
+                    <Button
+                        className="w-full"
+                        rightIcon={<ArrowRight />}
+                        onClick={onStartReview}
+                    >
                         Start Review
                     </Button>
-                </Link>
+                ) : (
+                    <Link href="/study-due" className="block">
+                        <Button className="w-full" rightIcon={<ArrowRight />}>
+                            Start Review
+                        </Button>
+                    </Link>
+                )}
             </CardContent>
         </Card>
     );

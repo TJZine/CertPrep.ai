@@ -14,6 +14,10 @@ import { db } from "@/db/index";
 import type { LeitnerBox, SRSState } from "@/types/srs";
 import type { Quiz, Question } from "@/types/quiz";
 import {
+    SRS_REVIEW_QUESTIONS_KEY,
+    SRS_REVIEW_QUIZ_ID_KEY,
+} from "@/lib/srsReviewStorage";
+import {
     Card,
     CardContent,
     CardHeader,
@@ -103,9 +107,9 @@ export default function StudyDuePage(): React.ReactElement {
         const quizId = questionsToReview[0]?.quiz.id;
 
         if (quizId) {
-            sessionStorage.setItem("srsReviewQuestions", JSON.stringify(questionIds));
-            sessionStorage.setItem("srsReviewQuizId", quizId);
-            router.push(`/quiz/${quizId}?mode=srs-review`);
+            sessionStorage.setItem(SRS_REVIEW_QUESTIONS_KEY, JSON.stringify(questionIds));
+            sessionStorage.setItem(SRS_REVIEW_QUIZ_ID_KEY, quizId);
+            router.push(`/quiz/${quizId}/zen?mode=srs-review`);
         }
     }, [categoryGroups, router]);
 
@@ -147,6 +151,7 @@ export default function StudyDuePage(): React.ReactElement {
                         <DueQuestionsCard
                             dueCountsByBox={dueCountsByBox}
                             totalDue={totalDue}
+                            onStartReview={() => handleStartReview()}
                         />
                     </div>
 
