@@ -16,7 +16,7 @@ interface SessionBannerProps {
 }
 
 /**
- * Banner displayed at the top of Smart Round sessions
+ * Banner displayed at the top of study sessions (Smart Round, Topic Study, SRS Review)
  * to indicate this is a focused review session.
  */
 export function SessionBanner({
@@ -73,7 +73,7 @@ export function SessionBanner({
             size="sm"
             onClick={onExit}
             className="text-accent hover:bg-accent/20 hover:text-accent"
-            aria-label="Exit Smart Round"
+            aria-label={`Exit ${title}`}
           >
             <X className="h-4 w-4" aria-hidden="true" />
           </Button>

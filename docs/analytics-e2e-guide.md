@@ -25,13 +25,14 @@ Create a managed fixture to seed complex analytics data (past results, streaks) 
 ```typescript
 // tests/e2e/fixtures/analyticsData.ts
 import { Page } from "@playwright/test";
-import { db } from "@/db/db"; // Import your Dexie instance
 
 export async function seedAnalyticsData(page: Page) {
   await page.evaluate(async () => {
-    // 1. Clear existing data
-    await window.db.results.clear();
-    await window.db.quizzes.clear();
+    // 1. Clear existing data (uses window.__certprepDb exposed in dev/test)
+    if (window.__certprepDb) {
+      await window.__certprepDb.results.clear();
+      await window.__certprepDb.quizzes.clear();
+    }
 
     // 2. Insert mock quizzes (Math, Science, History)
     // 3. Insert mock results (Varied scores, timestamps for streaks)

@@ -28,7 +28,7 @@ BEGIN
   WITH input_rows AS (
     SELECT 
       (unnest.question_id)::uuid AS question_id,
-      (unnest.user_id)::uuid AS user_id,
+      auth.uid() AS user_id,
       unnest.box,
       unnest.last_reviewed,
       unnest.next_review,

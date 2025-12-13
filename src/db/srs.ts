@@ -125,8 +125,8 @@ export async function initializeSRSForResult(
         ? quiz.questions.filter((q) => result.question_ids?.includes(q.id))
         : quiz.questions;
 
-    // Process each answered question
-    await Promise.all(
+    // Process each answered question with partial failure handling
+    const updateResults = await Promise.allSettled(
         questionsToProcess.map(async (question) => {
             const userAnswer = result.answers[question.id];
             if (!userAnswer) return; // Skip unanswered questions
@@ -135,6 +135,18 @@ export async function initializeSRSForResult(
             await updateSRSState(question.id, result.user_id, isCorrect, now);
         }),
     );
+
+    // Log any failed updates but don't throw (partial success is acceptable)
+    const failures = updateResults.filter(
+        (r): r is PromiseRejectedResult => r.status === "rejected",
+    );
+    if (failures.length > 0) {
+        const { logger } = await import("@/lib/logger");
+        logger.error(`[SRS] ${failures.length} question updates failed during initializeSRSForResult`, {
+            errors: failures.map((f) => String(f.reason)),
+        });
+    }
+
 }
 
 /**

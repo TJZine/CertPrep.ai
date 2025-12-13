@@ -196,6 +196,10 @@ create policy "Users can delete own SRS state"
 create index concurrently if not exists idx_srs_sync_optimization
   on srs (user_id, updated_at, question_id);
 
+-- OPTIMIZATION: Index for querying due SRS questions
+create index concurrently if not exists idx_srs_next_review
+  on srs (user_id, next_review);
+
 -- Trigger to auto-update updated_at on changes
 drop trigger if exists srs_set_updated_at on srs;
 create trigger srs_set_updated_at

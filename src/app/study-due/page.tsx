@@ -17,6 +17,7 @@ import {
     SRS_REVIEW_QUESTIONS_KEY,
     SRS_REVIEW_QUIZ_ID_KEY,
 } from "@/lib/srsReviewStorage";
+import { logger } from "@/lib/logger";
 import {
     Card,
     CardContent,
@@ -62,20 +63,29 @@ export default function StudyDuePage(): React.ReactElement {
             // Load question and quiz data for due questions
             const allQuizzes = await db.quizzes.toArray();
 
+            // Pre-build question lookup map to avoid O(n³) nested loops
+            const questionMap = new Map<string, { question: Question; quiz: Quiz }>();
+            for (const quiz of allQuizzes) {
+                for (const question of quiz.questions) {
+                    questionMap.set(question.id, { question, quiz });
+                }
+            }
+
             // Map question IDs to their quiz and question objects
             const groupMap = new Map<string, CategoryGroup>();
 
             for (const srsState of dueStates) {
-                for (const quiz of allQuizzes) {
-                    const question = quiz.questions.find((q) => q.id === srsState.question_id);
-                    if (question) {
-                        const category = question.category || "Uncategorized";
-                        if (!groupMap.has(category)) {
-                            groupMap.set(category, { category, questions: [] });
-                        }
-                        groupMap.get(category)!.questions.push({ srsState, question, quiz });
-                        break;
+                const found = questionMap.get(srsState.question_id);
+                if (found) {
+                    const category = found.question.category || "Uncategorized";
+                    if (!groupMap.has(category)) {
+                        groupMap.set(category, { category, questions: [] });
                     }
+                    groupMap.get(category)!.questions.push({
+                        srsState,
+                        question: found.question,
+                        quiz: found.quiz,
+                    });
                 }
             }
 
@@ -83,7 +93,7 @@ export default function StudyDuePage(): React.ReactElement {
                 a.category.localeCompare(b.category)
             ));
         } catch (err) {
-            console.error("Failed to load due questions:", err);
+            logger.error("Failed to load due questions", { error: err });
             setError("Failed to load review queue. Please try again later.");
         } finally {
             setIsLoading(false);
@@ -110,8 +120,13 @@ export default function StudyDuePage(): React.ReactElement {
         const quizId = questionsToReview[0]?.quiz.id;
 
         if (quizId) {
-            sessionStorage.setItem(SRS_REVIEW_QUESTIONS_KEY, JSON.stringify(questionIds));
-            sessionStorage.setItem(SRS_REVIEW_QUIZ_ID_KEY, quizId);
+            try {
+                sessionStorage.setItem(SRS_REVIEW_QUESTIONS_KEY, JSON.stringify(questionIds));
+                sessionStorage.setItem(SRS_REVIEW_QUIZ_ID_KEY, quizId);
+            } catch (err) {
+                logger.error("Failed to save SRS review state to sessionStorage", { error: err, quizId, questionCount: questionIds.length });
+                // Continue to navigation even if sessionStorage fails
+            }
             router.push(`/quiz/${quizId}/zen?mode=srs-review`);
         }
     }, [categoryGroups, router]);

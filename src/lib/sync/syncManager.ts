@@ -29,7 +29,7 @@ const RemoteResultSchema = z.object({
   quiz_id: z.string(),
   timestamp: z.coerce.number(), // Coerce string (from Postgres bigint) to number
   mode: z.enum(QUIZ_MODES).transform((val) => val as QuizMode),
-  score: z.coerce.number().min(0).max(100),
+  score: z.coerce.number().int().min(0),
   time_taken_seconds: z.coerce.number().min(0),
   answers: z.record(z.string(), z.string()),
   flagged_questions: z.array(z.string()).nullable().optional().transform(v => v ?? []),
@@ -194,7 +194,7 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
         }
 
         const batch = unsyncedResults.slice(i, i + BATCH_SIZE);
-        
+
         // Unified upsert payload handling both active and soft-deleted records
         const payload = batch.map((r) => ({
           id: r.id,
@@ -380,26 +380,8 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
       }
 
       if (resultsToDelete.length > 0) {
-        // Soft delete locally to match remote state
-        // We use bulkUpdate instead of bulkDelete to preserve the record as a tombstone if needed,
-        // but existing logic used bulkDelete. However, since we are syncing *from* remote, 
-        // if remote says "deleted_at X", we should set local deleted_at to X.
-        // But Dexie physical delete removes it.
-        // If we physically delete, future syncs won't see it (good).
-        // BUT if we want to preserve "when it was deleted" locally, we should soft delete.
-        // The existing `deleteResult` does soft delete.
-        // `db.results.bulkDelete` does PHYSICAL delete in Dexie.
-        // If we physical delete, we lose the record entirely.
-        // Is this desired?
-        // If we re-pull, we won't see it again (since we advance cursor).
-        // If we physically delete, it's gone.
-        // The previous code did `bulkDelete`.
-        // The instructions say "Result sync cursor created_at deleted_at".
-        // If we stick to physical delete for inbound deletions, it matches previous behavior.
-        // However, `deleteResult` does soft delete.
-        // If we physical delete, we might have issues if we ever need to re-sync or check history.
-        // But for now, I will stick to physical delete to avoid logic change unless necessary.
-        // Wait, if I physical delete, and then I PUSH, I won't push anything (good).
+        // Inbound deletions are applied as physical deletes to match prior behavior.
+        // TODO: Revisit if soft-delete history is required for audit/replay.
         await db.results.bulkDelete(resultsToDelete);
         logger.debug("Applied remote deletions locally", { count: resultsToDelete.length, userId });
       }

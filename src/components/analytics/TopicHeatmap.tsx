@@ -107,6 +107,16 @@ export function TopicHeatmap({
                 Map<string, { correct: number; total: number }>
             >();
 
+            // Cache for hash results to avoid redundant crypto operations
+            const hashCache = new Map<string, string>();
+            const getCachedHash = async (answer: string): Promise<string> => {
+                const cached = hashCache.get(answer);
+                if (cached) return cached;
+                const hash = await hashAnswer(answer);
+                hashCache.set(answer, hash);
+                return hash;
+            };
+
             // Process all results
             for (const result of results) {
                 const quiz = quizMap.get(result.quiz_id);
@@ -137,7 +147,7 @@ export function TopicHeatmap({
 
                     let isCorrect = false;
                     if (userAnswer) {
-                        const userHash = await hashAnswer(userAnswer);
+                        const userHash = await getCachedHash(userAnswer);
                         if (userHash === question.correct_answer_hash) {
                             isCorrect = true;
                         }

@@ -173,6 +173,9 @@ export async function cleanOrphanedSRSStates(userId: string): Promise<number> {
 }
 ```
 
+> [!NOTE]
+> **Sync Implications**: This deletes orphans locally without syncing the deletion. If the server still has these records, they could reappear on the next pull. Consider either (1) running cleanup only after successful sync, or (2) adding an RPC to delete server-side orphans in the same operation.
+
 ### Trigger Options
 
 1. **Manual**: Settings > Storage > "Clean Up SRS Data" button

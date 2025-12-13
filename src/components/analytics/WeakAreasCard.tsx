@@ -263,6 +263,8 @@ export function WeakAreasCard({
                     className="mt-3 w-full"
                     onClick={() => handleStudyTopic(area.category)}
                     disabled={isLoading}
+                    aria-busy={loadingCategory === area.category ? true : undefined}
+                    aria-disabled={isLoading && loadingCategory !== area.category ? true : undefined}
                     rightIcon={
                       loadingCategory === area.category ? (
                         <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
@@ -275,6 +277,7 @@ export function WeakAreasCard({
                     {loadingCategory === area.category ? "Loading..." : "Study This Topic"}
                   </Button>
                 )}
+
               </div>
             ))}
           </div>

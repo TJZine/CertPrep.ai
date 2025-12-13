@@ -120,6 +120,8 @@ function StudyActivityBars({
                                 style={{ height: "72px" }}
                             >
                                 <div
+                                    role="img"
+                                    aria-label={`${getDayLabel(daysAgo)}: ${minutes > 0 ? formatMinutes(minutes) : "No activity"}`}
                                     className={cn(
                                         "w-full max-w-[32px] rounded-t-md transition-all",
                                         getBarColor(minutes, maxMinutes),
