@@ -26,13 +26,19 @@ Create a managed fixture to seed complex analytics data (past results, streaks) 
 // tests/e2e/fixtures/analyticsData.ts
 import { Page } from "@playwright/test";
 
-export async function seedAnalyticsData(page: Page) {
+export async function seedAnalyticsData(page: Page): Promise<void> {
   await page.evaluate(async () => {
-    // 1. Clear existing data (uses window.__certprepDb exposed in dev/test)
-    if (window.__certprepDb) {
-      await window.__certprepDb.results.clear();
-      await window.__certprepDb.quizzes.clear();
+    // Fail fast if test DB hook is not available
+    if (!window.__certprepDb) {
+      throw new Error(
+        "Test DB hook (window.__certprepDb) not available. " +
+          "Ensure app is running with NEXT_PUBLIC_IS_E2E=true and NODE_ENV !== 'production'.",
+      );
     }
+
+    // 1. Clear existing data
+    await window.__certprepDb.results.clear();
+    await window.__certprepDb.quizzes.clear();
 
     // 2. Insert mock quizzes (Math, Science, History)
     // 3. Insert mock results (Varied scores, timestamps for streaks)

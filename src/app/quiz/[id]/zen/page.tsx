@@ -27,13 +27,8 @@ import {
   TOPIC_STUDY_MISSED_COUNT_KEY,
   TOPIC_STUDY_FLAGGED_COUNT_KEY,
 } from "@/lib/topicStudyStorage";
-import {
-  clearSRSReviewState,
-  SRS_REVIEW_QUESTIONS_KEY,
-  SRS_REVIEW_QUIZ_ID_KEY,
-} from "@/lib/srsReviewStorage";
 
-type StudyMode = "smart" | "topic" | "srs-review" | null;
+type StudyMode = "smart" | "topic" | null;
 
 interface StudyModeData {
   questionIds: string[];
@@ -53,14 +48,13 @@ export default function ZenModePage(): React.ReactElement {
 
   const rawMode = searchParams.get("mode");
   const mode: StudyMode =
-    rawMode === "smart" || rawMode === "topic" || rawMode === "srs-review"
+    rawMode === "smart" || rawMode === "topic"
       ? (rawMode as StudyMode)
       : null;
 
   const isSmartRound = mode === "smart";
   const isTopicStudy = mode === "topic";
-  const isSRSReview = mode === "srs-review";
-  const isFilteredMode = isSmartRound || isTopicStudy || isSRSReview;
+  const isFilteredMode = isSmartRound || isTopicStudy;
 
   const { user } = useAuth();
   const effectiveUserId = useEffectiveUserId(user?.id);
@@ -95,15 +89,12 @@ export default function ZenModePage(): React.ReactElement {
         quizIdKey = SMART_ROUND_QUIZ_ID_KEY;
         missedKey = SMART_ROUND_MISSED_COUNT_KEY;
         flaggedKey = SMART_ROUND_FLAGGED_COUNT_KEY;
-      } else if (isTopicStudy) {
+      } else {
+        // Topic study mode
         questionsKey = TOPIC_STUDY_QUESTIONS_KEY;
         quizIdKey = TOPIC_STUDY_QUIZ_ID_KEY;
         missedKey = TOPIC_STUDY_MISSED_COUNT_KEY;
         flaggedKey = TOPIC_STUDY_FLAGGED_COUNT_KEY;
-      } else {
-        // SRS review mode
-        questionsKey = SRS_REVIEW_QUESTIONS_KEY;
-        quizIdKey = SRS_REVIEW_QUIZ_ID_KEY;
       }
 
       const storedQuestionIds = sessionStorage.getItem(questionsKey);
@@ -150,17 +141,15 @@ export default function ZenModePage(): React.ReactElement {
       console.error(`Failed to load ${mode} mode data:`, error);
       router.replace(`/quiz/${quizId}/zen`);
     }
-  }, [isFilteredMode, isSmartRound, isTopicStudy, isSRSReview, mode, quiz, quizId, router]);
+  }, [isFilteredMode, isSmartRound, isTopicStudy, mode, quiz, quizId, router]);
 
   const handleModeExit = (): void => {
     if (isSmartRound) {
       clearSmartRoundState();
     } else if (isTopicStudy) {
       clearTopicStudyState();
-    } else if (isSRSReview) {
-      clearSRSReviewState();
     }
-    router.push(isSRSReview ? "/study-due" : "/");
+    router.push("/");
   };
 
   if (!isInitialized || !effectiveUserId || isLoading) {
@@ -177,8 +166,6 @@ export default function ZenModePage(): React.ReactElement {
       loadingText = "Preparing Smart Round...";
     } else if (isTopicStudy) {
       loadingText = "Preparing Topic Study...";
-    } else if (isSRSReview) {
-      loadingText = "Preparing SRS Review...";
     }
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -269,9 +256,6 @@ export default function ZenModePage(): React.ReactElement {
 
   // Build banner title based on mode
   const getBannerTitle = (): string => {
-    if (isSRSReview) {
-      return "SRS Review";
-    }
     if (isTopicStudy && studyModeData?.category) {
       return `Topic Study: ${studyModeData.category}`;
     }
@@ -318,7 +302,6 @@ export default function ZenModePage(): React.ReactElement {
       <ZenQuizContainer
         quiz={quizForSession}
         isSmartRound={isSmartRound}
-        isSRSReview={isSRSReview}
       />
     </ErrorBoundary>
   );

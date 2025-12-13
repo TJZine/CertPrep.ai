@@ -213,9 +213,9 @@ export function WeakAreasCard({
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <h4 className="font-medium text-foreground">
+                      <h3 className="font-medium text-foreground">
                         {area.category}
-                      </h4>
+                      </h3>
                       {area.recentTrend === "improving" && (
                         <Badge variant="success" className="gap-1">
                           <TrendingUp className="h-3 w-3" aria-hidden="true" />
@@ -284,8 +284,8 @@ export function WeakAreasCard({
 
           <div className="mt-4 rounded-lg bg-info/10 p-3">
             <p className="text-sm text-info">
-              <strong>Tip:</strong> Focus on your weakest areas first. Studies
-              show that targeted practice improves retention by up to 50%.
+              <strong>Tip:</strong> Focus on your weakest areas first. Targeted
+              practice can significantly improve retention.
             </p>
           </div>
         </CardContent>
@@ -302,7 +302,10 @@ export function WeakAreasCard({
             <Button variant="outline" onClick={handleCloseModal}>
               Cancel
             </Button>
-            <Button onClick={handleStartStudying}>
+            <Button
+              onClick={handleStartStudying}
+              disabled={!modalState.data || modalState.data.quizIds.length === 0}
+            >
               Start Studying
             </Button>
           </div>

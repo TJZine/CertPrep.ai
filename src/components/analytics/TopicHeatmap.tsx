@@ -223,8 +223,9 @@ export function TopicHeatmap({
                     <CardTitle>Topic Mastery Over Time</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="flex h-32 items-center justify-center">
-                        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+                    <div className="flex h-32 items-center justify-center" role="status" aria-label="Loading topic mastery data">
+                        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" aria-hidden="true" />
+                        <span className="sr-only">Loading</span>
                     </div>
                 </CardContent>
             </Card>
@@ -293,6 +294,7 @@ export function TopicHeatmap({
                                             : "text-foreground",
                                     )}
                                     title={`${catData.category} - ${weekData.weekLabel}: ${weekData.score !== null ? `${weekData.score}% (${weekData.correct}/${weekData.total})` : "No data"}`}
+                                    aria-label={`${catData.category}, week of ${weekData.weekLabel}: ${weekData.score !== null ? `${weekData.score}% (${weekData.correct} of ${weekData.total})` : "No data"}`}
                                 >
                                     {weekData.score !== null ? `${weekData.score}%` : "—"}
                                 </div>

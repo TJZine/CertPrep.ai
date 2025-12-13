@@ -24,6 +24,7 @@ import type { Quiz } from "@/types/quiz";
 import { useCorrectAnswer } from "@/hooks/useCorrectAnswer";
 import { useQuizSubmission } from "@/hooks/useQuizSubmission";
 import { clearSmartRoundState } from "@/lib/smartRoundStorage";
+import { clearSRSReviewState } from "@/lib/srsReviewStorage";
 import { updateSRSState } from "@/db/srs";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
@@ -116,9 +117,18 @@ export function ZenQuizContainer({
 
   const handleSessionComplete = React.useCallback(
     async (timeTakenSeconds: number): Promise<void> => {
+      // SRS review sessions don't save a formal result - the value is in
+      // per-question SRS state updates which happen during the session.
+      // The synthetic quiz ID doesn't exist in Dexie, so createResult would fail.
+      if (isSRSReview) {
+        clearSRSReviewState();
+        addToast("success", "SRS Review complete! Keep up the great work.");
+        router.push("/study-due");
+        return;
+      }
       await submitQuiz(timeTakenSeconds);
     },
-    [submitQuiz],
+    [isSRSReview, addToast, router, submitQuiz],
   );
 
   const retrySave = React.useCallback((): void => {
@@ -185,8 +195,13 @@ export function ZenQuizContainer({
     if (isSmartRound) {
       clearSmartRoundState();
     }
+    if (isSRSReview) {
+      clearSRSReviewState();
+      router.push("/study-due");
+      return;
+    }
     router.push("/");
-  }, [resetSession, isSmartRound, router]);
+  }, [resetSession, isSmartRound, isSRSReview, router]);
 
   const isCurrentAnswerCorrect = React.useMemo(() => {
     if (!currentQuestion || !hasSubmitted) return false;

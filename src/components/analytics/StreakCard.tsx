@@ -39,13 +39,22 @@ function getDayLabel(daysAgo: number): string {
 
 /**
  * Get study minutes for a specific day (daysAgo from today).
+ * Handles both Date objects and YYYY-MM-DD strings to avoid timezone shifts.
  */
 function getMinutesForDay(dailyData: DailyStudyData[], daysAgo: number): number {
     const targetDate = new Date();
     targetDate.setDate(targetDate.getDate() - daysAgo);
     const targetDateKey = formatDateKey(targetDate);
 
-    const match = dailyData.find((d) => formatDateKey(d.date) === targetDateKey);
+    const match = dailyData.find((d) => {
+        // If d.date is already a YYYY-MM-DD string, use it directly to avoid
+        // UTC midnight → local time shift (e.g., "2025-12-12" becoming Dec 11 in EST)
+        const dateKey =
+            typeof d.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(d.date)
+                ? d.date
+                : formatDateKey(d.date);
+        return dateKey === targetDateKey;
+    });
     return match?.minutes ?? 0;
 }
 
@@ -272,9 +281,9 @@ export function StreakCard({
                     </div>
 
                     <div className="flex flex-col justify-center">
-                        <h4 className="mb-3 text-sm font-medium text-muted-foreground">
+                        <h3 className="mb-3 text-sm font-medium text-muted-foreground">
                             Last 7 Days
-                        </h4>
+                        </h3>
                         <StudyActivityBars
                             last7DaysActivity={last7DaysActivity}
                             dailyStudyTime={dailyStudyTime}

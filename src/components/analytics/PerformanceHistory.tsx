@@ -239,7 +239,7 @@ export function PerformanceHistory({
         </div>
 
         <div className="mt-6 border-t border-border pt-6">
-          <h4 className="mb-4 font-semibold text-foreground">Recent Results</h4>
+          <h3 className="mb-4 font-semibold text-foreground">Recent Results</h3>
           <div className="space-y-2">
             {(showAllResults ? sortedResults : sortedResults.slice(0, 5)).map(
               (result) => (

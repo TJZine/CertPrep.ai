@@ -15,7 +15,6 @@ import type { LeitnerBox, SRSState } from "@/types/srs";
 import type { Quiz, Question } from "@/types/quiz";
 import {
     SRS_REVIEW_QUESTIONS_KEY,
-    SRS_REVIEW_QUIZ_ID_KEY,
 } from "@/lib/srsReviewStorage";
 import { logger } from "@/lib/logger";
 import {
@@ -107,28 +106,24 @@ export default function StudyDuePage(): React.ReactElement {
     const totalDue = Object.values(dueCountsByBox).reduce((sum, count) => sum + count, 0);
 
     const handleStartReview = useCallback((category?: string) => {
-        // For now, navigate to a placeholder - full implementation would launch a filtered quiz
-        // This could be integrated with SmartRound or a dedicated SRS quiz mode
         const questionsToReview = category
             ? categoryGroups.find((g) => g.category === category)?.questions ?? []
             : categoryGroups.flatMap((g) => g.questions);
 
         if (questionsToReview.length === 0) return;
 
-        // Store question IDs in sessionStorage for the quiz page to pick up
+        // Store question IDs in sessionStorage for the SRS review page to pick up
         const questionIds = questionsToReview.map((q) => q.question.id);
-        const quizId = questionsToReview[0]?.quiz.id;
 
-        if (quizId) {
-            try {
-                sessionStorage.setItem(SRS_REVIEW_QUESTIONS_KEY, JSON.stringify(questionIds));
-                sessionStorage.setItem(SRS_REVIEW_QUIZ_ID_KEY, quizId);
-            } catch (err) {
-                logger.error("Failed to save SRS review state to sessionStorage", { error: err, quizId, questionCount: questionIds.length });
-                // Continue to navigation even if sessionStorage fails
-            }
-            router.push(`/quiz/${quizId}/zen?mode=srs-review`);
+        try {
+            sessionStorage.setItem(SRS_REVIEW_QUESTIONS_KEY, JSON.stringify(questionIds));
+        } catch (err) {
+            logger.error("Failed to save SRS review state to sessionStorage", { error: err, questionCount: questionIds.length });
+            // Continue to navigation even if sessionStorage fails
         }
+
+        // Navigate to the dedicated SRS review route (supports multi-quiz questions)
+        router.push("/quiz/srs-review");
     }, [categoryGroups, router]);
 
     const toggleCategory = useCallback((category: string) => {
