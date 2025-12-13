@@ -31,13 +31,24 @@ import type { Result } from "@/types/result";
 
 /**
  * Wrapper component for CategoryTrendChart that uses the trend hook.
+ * Memoizes results input to prevent unnecessary recalculations when
+ * only referential identity changes (e.g., during sync operations).
  */
 function CategoryTrendChartSection({
   results,
 }: {
   results: Result[];
 }): React.ReactElement {
-  const { trendData, categories } = useCategoryTrends(results);
+  // Stabilize results identity using length + timestamp of most recent result
+  // This prevents useCategoryTrends from recalculating when array identity
+  // changes but actual data hasn't (common during sync operations)
+  const stabilizedResults = React.useMemo(
+    () => results,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [results.length, results[results.length - 1]?.timestamp ?? 0]
+  );
+
+  const { trendData, categories } = useCategoryTrends(stabilizedResults);
 
   return (
     <div className="mb-8">
@@ -99,7 +110,11 @@ export default function AnalyticsPage(): React.ReactElement {
       isMounted = false;
       clearTimeout(timeoutId);
     };
-  }, [effectiveUserId, isInitialized, results]);
+    // Use results.length to trigger reload when results change without causing
+    // infinite loops from referential identity changes during sync operations.
+  }, [effectiveUserId, isInitialized, results.length]);
+
+
 
   const quizTitles = React.useMemo(() => {
     const map = new Map<string, string>();

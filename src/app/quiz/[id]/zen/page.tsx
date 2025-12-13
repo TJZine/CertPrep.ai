@@ -4,7 +4,7 @@ import * as React from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, AlertCircle } from "lucide-react";
 import { ZenQuizContainer } from "@/components/quiz/ZenQuizContainer";
-import { SmartRoundBanner } from "@/components/quiz/SmartRoundBanner";
+import { SessionBanner } from "@/components/quiz/SessionBanner";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { Button } from "@/components/ui/Button";
@@ -52,9 +52,9 @@ export default function ZenModePage(): React.ReactElement {
   const quizId = params.id as string;
 
   const rawMode = searchParams.get("mode");
-  const mode: StudyMode = 
-    rawMode === "smart" || rawMode === "topic" || rawMode === "srs-review" 
-      ? (rawMode as StudyMode) 
+  const mode: StudyMode =
+    rawMode === "smart" || rawMode === "topic" || rawMode === "srs-review"
+      ? (rawMode as StudyMode)
       : null;
 
   const isSmartRound = mode === "smart";
@@ -79,6 +79,9 @@ export default function ZenModePage(): React.ReactElement {
 
   React.useEffect(() => {
     if (!isFilteredMode || !quiz) return;
+
+    // SSR guard: sessionStorage is only available in browser
+    if (typeof window === "undefined") return;
 
     try {
       // Determine which storage keys to use based on mode
@@ -110,6 +113,7 @@ export default function ZenModePage(): React.ReactElement {
       const storedCategory = isTopicStudy
         ? sessionStorage.getItem(TOPIC_STUDY_CATEGORY_KEY)
         : undefined;
+
 
       if (storedQuestionIds && storedQuizId === quizId) {
         const questionIds: string[] = JSON.parse(storedQuestionIds);
@@ -300,7 +304,7 @@ export default function ZenModePage(): React.ReactElement {
       {isFilteredMode && studyModeData && (
         <div className="bg-background px-4 pt-4">
           <div className="mx-auto max-w-3xl">
-            <SmartRoundBanner
+            <SessionBanner
               totalQuestions={studyModeData.questionIds.length}
               missedCount={studyModeData.missedCount}
               flaggedCount={studyModeData.flaggedCount}

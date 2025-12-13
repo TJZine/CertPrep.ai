@@ -26,7 +26,10 @@ interface CategoryTrendChartProps {
     className?: string;
 }
 
-// Distinct colors for up to 5 category lines
+// Distinct colors for up to 5 category lines.
+// INTENTIONAL: These are hardcoded rather than theme-derived to ensure
+// consistent, visually distinct category differentiation across all themes.
+// Theme-derived colors may produce too-similar shades that reduce chart legibility.
 const CATEGORY_COLORS = [
     "#3b82f6", // blue
     "#22c55e", // green
@@ -34,6 +37,7 @@ const CATEGORY_COLORS = [
     "#8b5cf6", // violet
     "#ec4899", // pink
 ];
+
 
 interface TrendPayloadEntry {
     name: string;

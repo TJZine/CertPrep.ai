@@ -1,7 +1,35 @@
 import { test, expect, TEST_QUIZ } from "./fixtures";
 import { seedAnalyticsData } from "./fixtures/analyticsData";
 import { waitForDatabase } from "./helpers/db";
+import type { Page } from "@playwright/test";
+import type { Quiz } from "@/types/quiz";
 
+/**
+ * Helper to setup analytics test data.
+ * Seeds quiz, reloads page, seeds analytics data, and navigates to /analytics.
+ * Encapsulates the repeated setup pattern for maintainability.
+ */
+async function setupAnalyticsWithData(
+    page: Page,
+    seedTestQuiz: (quiz: Omit<Quiz, "user_id">) => Promise<Quiz>,
+): Promise<Quiz> {
+    const quiz = await seedTestQuiz(TEST_QUIZ);
+    await page.reload();
+    await waitForDatabase(page);
+
+    await seedAnalyticsData(page, quiz.id);
+    await page.reload();
+    await waitForDatabase(page);
+
+    await page.goto("/analytics");
+
+    // Wait for loading to finish
+    await expect(
+        page.getByText(/loading analytics|syncing/i).first(),
+    ).not.toBeVisible({ timeout: 15000 });
+
+    return quiz;
+}
 
 test.describe("Analytics Page", () => {
     test.describe("Empty State", () => {
@@ -42,28 +70,13 @@ test.describe("Analytics Page", () => {
         });
     });
 
+
     test.describe("With Data", () => {
         test("shows readiness score based on results", async ({
             authenticatedPage: page,
             seedTestQuiz,
         }) => {
-            // Seed quiz first
-            const quiz = await seedTestQuiz(TEST_QUIZ);
-            await page.reload();
-            await waitForDatabase(page);
-
-            // Seed analytics data for this quiz
-            await seedAnalyticsData(page, quiz.id);
-            await page.reload();
-            await waitForDatabase(page);
-
-            // Navigate to analytics
-            await page.goto("/analytics");
-
-            // Wait for data to load
-            await expect(
-                page.getByText(/loading analytics|syncing/i).first(),
-            ).not.toBeVisible({ timeout: 15000 });
+            await setupAnalyticsWithData(page, seedTestQuiz);
 
             // Verify Analytics heading is visible (confirms page loaded)
             await expect(
@@ -79,20 +92,8 @@ test.describe("Analytics Page", () => {
             authenticatedPage: page,
             seedTestQuiz,
         }) => {
-            const quiz = await seedTestQuiz(TEST_QUIZ);
-            await page.reload();
-            await waitForDatabase(page);
-
             // Seed data with consecutive days (creates a 4-day streak)
-            await seedAnalyticsData(page, quiz.id);
-            await page.reload();
-            await waitForDatabase(page);
-
-            await page.goto("/analytics");
-
-            await expect(
-                page.getByText(/loading analytics/i).first(),
-            ).not.toBeVisible({ timeout: 15000 });
+            await setupAnalyticsWithData(page, seedTestQuiz);
 
             // Verify streak card is visible
             // The StreakCard shows current streak and study activity
@@ -103,20 +104,8 @@ test.describe("Analytics Page", () => {
             authenticatedPage: page,
             seedTestQuiz,
         }) => {
-            const quiz = await seedTestQuiz(TEST_QUIZ);
-            await page.reload();
-            await waitForDatabase(page);
-
             // Seed data with Security as a weak area (50% score)
-            await seedAnalyticsData(page, quiz.id);
-            await page.reload();
-            await waitForDatabase(page);
-
-            await page.goto("/analytics");
-
-            await expect(
-                page.getByText(/loading analytics/i).first(),
-            ).not.toBeVisible({ timeout: 15000 });
+            await setupAnalyticsWithData(page, seedTestQuiz);
 
             // Verify weak areas card is present
             // Using heading to avoid ambiguity with legend text
@@ -127,19 +116,7 @@ test.describe("Analytics Page", () => {
             authenticatedPage: page,
             seedTestQuiz,
         }) => {
-            const quiz = await seedTestQuiz(TEST_QUIZ);
-            await page.reload();
-            await waitForDatabase(page);
-
-            await seedAnalyticsData(page, quiz.id);
-            await page.reload();
-            await waitForDatabase(page);
-
-            await page.goto("/analytics");
-
-            await expect(
-                page.getByText(/loading analytics/i).first(),
-            ).not.toBeVisible({ timeout: 15000 });
+            await setupAnalyticsWithData(page, seedTestQuiz);
 
             // Find and click "Study This Topic" button if visible
             const studyButton = page.getByRole("button", { name: /study this topic/i });
@@ -159,4 +136,5 @@ test.describe("Analytics Page", () => {
             }
         });
     });
+
 });

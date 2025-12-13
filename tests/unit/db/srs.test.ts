@@ -33,6 +33,9 @@ describe("SRS Database Operations", () => {
             expect(state?.box).toBe(2); // First correct → box 2
             expect(state?.consecutive_correct).toBe(1);
             expect(state?.last_reviewed).toBe(now);
+            // Sync-facing fields that sync manager depends on
+            expect(state?.synced).toBe(0); // New records start unsynced
+            expect(state?.updated_at).toBe(now);
         });
 
         it("should create new state for first-time incorrect answer", async () => {
@@ -43,6 +46,9 @@ describe("SRS Database Operations", () => {
             expect(state).toBeDefined();
             expect(state?.box).toBe(1); // First incorrect → box 1
             expect(state?.consecutive_correct).toBe(0);
+            // Verify sync fields
+            expect(state?.synced).toBe(0);
+            expect(state?.updated_at).toBe(now);
         });
 
         it("should promote box on subsequent correct answer", async () => {
@@ -53,6 +59,9 @@ describe("SRS Database Operations", () => {
             const state = await getSRSState("q1", testUserId);
             expect(state?.box).toBe(3); // 2 → 3
             expect(state?.consecutive_correct).toBe(2);
+            // Verify updated_at reflects latest update
+            expect(state?.updated_at).toBe(now + 1000);
+            expect(state?.synced).toBe(0);
         });
 
         it("should demote box to 1 on incorrect answer", async () => {
@@ -66,8 +75,12 @@ describe("SRS Database Operations", () => {
             const state = await getSRSState("q1", testUserId);
             expect(state?.box).toBe(1);
             expect(state?.consecutive_correct).toBe(0);
+            // Verify sync fields after demotion
+            expect(state?.updated_at).toBe(now + 2000);
+            expect(state?.synced).toBe(0);
         });
     });
+
 
     describe("getDueQuestions", () => {
         it("should return questions where next_review <= now", async () => {

@@ -24,6 +24,11 @@ export async function seedResult(page: Page, result: Result): Promise<string> {
         return new Promise<string>((resolve, reject) => {
             const request = indexedDB.open("CertPrepDatabase");
             request.onerror = (): void => reject(request.error);
+            // Defensive: fail fast if DB hasn't been created by Dexie yet
+            request.onupgradeneeded = (): void => {
+                request.transaction?.abort();
+                reject(new Error("Database not initialized. Ensure the app has loaded before seeding data."));
+            };
             request.onsuccess = (): void => {
                 const db = request.result;
                 try {
@@ -47,6 +52,7 @@ export async function seedResult(page: Page, result: Result): Promise<string> {
         });
     }, result);
 }
+
 
 /**
  * Creates a result object with sensible defaults for testing.

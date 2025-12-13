@@ -5,7 +5,7 @@ import { Sparkles, X, Target, Flag } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 
-interface SmartRoundBannerProps {
+interface SessionBannerProps {
   totalQuestions: number;
   missedCount: number;
   flaggedCount: number;
@@ -19,14 +19,14 @@ interface SmartRoundBannerProps {
  * Banner displayed at the top of Smart Round sessions
  * to indicate this is a focused review session.
  */
-export function SmartRoundBanner({
+export function SessionBanner({
   totalQuestions,
   missedCount,
   flaggedCount,
   onExit,
   title = "Smart Round",
   className,
-}: SmartRoundBannerProps): React.ReactElement {
+}: SessionBannerProps): React.ReactElement {
   return (
     <div
       className={cn(
@@ -83,4 +83,4 @@ export function SmartRoundBanner({
   );
 }
 
-export default SmartRoundBanner;
+export default SessionBanner;

@@ -193,6 +193,71 @@ create policy "quizzes_update_owner" on public.quizzes
 
 > Note: direct `delete` operations are typically not used; the app performs soft‑deletes by setting `deleted_at`.
 
+#### `srs`
+
+Stores Spaced Repetition System (SRS) state for each question/user pair. Synchronized with server-side LWW conflict resolution.
+
+```sql
+create table if not exists public.srs (
+  question_id text not null,
+  user_id uuid not null,
+  box integer not null default 1,
+  last_reviewed bigint not null,
+  next_review bigint not null,
+  consecutive_correct integer not null default 0,
+  updated_at bigint not null,
+  primary key (question_id, user_id)
+);
+
+alter table public.srs enable row level security;
+```
+
+RLS policies (owner‑only access):
+
+```sql
+create policy "srs_select_owner" on public.srs
+  for select using (auth.uid() = user_id);
+
+create policy "srs_insert_owner" on public.srs
+  for insert with check (auth.uid() = user_id);
+
+create policy "srs_update_owner" on public.srs
+  for update using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+```
+
+Server-side LWW upsert RPC for batch sync:
+
+```sql
+create or replace function upsert_srs_lww_batch(states jsonb)
+returns void as $$
+declare
+  s jsonb;
+begin
+  for s in select * from jsonb_array_elements(states)
+  loop
+    insert into srs (question_id, user_id, box, last_reviewed, next_review, consecutive_correct, updated_at)
+    values (
+      s->>'question_id',
+      (s->>'user_id')::uuid,
+      (s->>'box')::int,
+      (s->>'last_reviewed')::bigint,
+      (s->>'next_review')::bigint,
+      (s->>'consecutive_correct')::int,
+      (s->>'updated_at')::bigint
+    )
+    on conflict (question_id, user_id) do update
+    set box = excluded.box,
+        last_reviewed = excluded.last_reviewed,
+        next_review = excluded.next_review,
+        consecutive_correct = excluded.consecutive_correct,
+        updated_at = excluded.updated_at
+    where srs.updated_at < excluded.updated_at;
+  end loop;
+end;
+$$ language plpgsql security definer;
+```
+
 #### Intentional Schema Design Decisions
 
 ##### No Foreign Key on `results.quiz_id`

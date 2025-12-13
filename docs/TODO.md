@@ -127,29 +127,64 @@ Automated GC requires complex logic to know "has every other device seen this de
 
 ---
 
-## ~~Feature: Custom Study Sessions ("Areas to Improve")~~ ✅ COMPLETED
+## Maintenance: SRS Orphan Cleanup
 
-**Status**: Implemented | **Category**: Analytics / Core Features
+**Priority**: Low | **Effort**: 1-2 hours | **Category**: Data Management
 
-The "Study This Topic" button in the Weak Areas card is fully functional:
+### Context
 
-- `WeakAreasCard.tsx` → `handleStudyTopic()` loads missed/flagged questions via `getTopicStudyQuestions()`
-- Confirmation modal shows question counts and source quizzes
-- `handleStartStudying()` stores data in sessionStorage and navigates to `/quiz/[id]/zen?mode=topic`
-- Full loading states, error handling, and UI polish
+SRS states reference `question_id`, but questions are stored as JSONB inside quiz records. If a quiz is edited and a question is removed, the SRS state for that question becomes orphaned.
 
----
+### Impact
 
-## ~~Feature: SRS Supabase Sync (Cross-Device)~~ ✅ COMPLETED
+**Low** — Orphan SRS records:
 
-**Status**: Implemented 2025-12-13 | **Category**: Data Sync
+- Are filtered out when loading (question not found → skipped)
+- Don't affect sync (they push/pull fine)
+- Only waste a few bytes of storage per record
 
-SRS sync is now fully implemented with:
+### Proposed Solution
 
-- Supabase `srs` table with RLS policies
-- Bidirectional sync in `src/lib/sync/srsSyncManager.ts`
-- Server-side LWW conflict resolution via `upsert_srs_lww_batch` RPC
-- Offline-first architecture (Dexie → Supabase)
+Create a periodic cleanup function that removes SRS records where the question no longer exists in any quiz.
+
+```typescript
+// src/db/maintenance.ts
+export async function cleanOrphanedSRSStates(userId: string): Promise<number> {
+  const allQuestions = new Set<string>();
+
+  // Collect all valid question IDs from all quizzes
+  const quizzes = await db.quizzes.where("user_id").equals(userId).toArray();
+  for (const quiz of quizzes) {
+    if (!quiz.deleted_at) {
+      for (const q of quiz.questions) {
+        allQuestions.add(q.id);
+      }
+    }
+  }
+
+  // Find and remove orphaned SRS states
+  const srsStates = await db.srs.where("user_id").equals(userId).toArray();
+  const orphanIds = srsStates
+    .filter((s) => !allQuestions.has(s.question_id))
+    .map((s) => [s.question_id, s.user_id] as [string, string]);
+
+  await db.srs.bulkDelete(orphanIds);
+  return orphanIds.length;
+}
+```
+
+### Trigger Options
+
+1. **Manual**: Settings > Storage > "Clean Up SRS Data" button
+2. **Automatic**: Run after successful sync if > 30 days since last cleanup
+3. **On quiz delete**: Clean SRS states for that quiz's questions
+
+### Acceptance Criteria
+
+- [ ] Implement `cleanOrphanedSRSStates()` function
+- [ ] Add unit tests verifying orphan detection and cleanup
+- [ ] Decide on trigger mechanism (manual preferred for safety)
+- [ ] Optional: Add UI indicator showing cleanup results
 
 ---
 
