@@ -231,4 +231,31 @@ describe("Integration: Quiz Sync Engine", () => {
     // Note: In a real scenario, we would also expect a PUSH to happen for v3
     expect(upsertQuizzes).toHaveBeenCalled();
   });
+
+  it("pushes SRS quiz to remote during sync", async () => {
+    // 1. Create SRS quiz using the helper
+    const { getOrCreateSRSQuiz } = await import("@/db/quizzes");
+    const srsQuiz = await getOrCreateSRSQuiz(userId);
+
+    // Verify it was created locally
+    expect(srsQuiz.id).toBe(`srs-${userId}`);
+    expect(srsQuiz.last_synced_version).toBeNull();
+
+    // 2. Run Sync
+    await syncQuizzes(userId);
+
+    // 3. Verify push occurred and included SRS quiz
+    expect(upsertQuizzes).toHaveBeenCalled();
+    const pushCalls = vi.mocked(upsertQuizzes).mock.calls;
+    const allPushedQuizzes = pushCalls.flatMap((call) => call[1] ?? []);
+    const pushedSRS = allPushedQuizzes.find((q) => q.id === srsQuiz.id);
+
+    expect(pushedSRS).toBeDefined();
+    expect(pushedSRS?.title).toBe("SRS Review Sessions");
+
+    // 4. Verify local state updated (metadata)
+    const updatedLocal = await db.quizzes.get(srsQuiz.id);
+    expect(updatedLocal?.last_synced_version).toBe(srsQuiz.version);
+    expect(updatedLocal?.last_synced_at).not.toBeNull();
+  });
 });

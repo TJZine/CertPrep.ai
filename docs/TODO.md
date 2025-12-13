@@ -280,3 +280,113 @@ export const createClient = () => createSupabaseClient<Database>(url, key);
 - Adding more RPC functions
 - Onboarding new developers who would benefit from autocompletion
 - Schema changes become frequent (to catch drift early)
+
+---
+
+## E2E Testing Opportunities
+
+**Priority**: Medium | **Effort**: 4-8 hours | **Category**: Test Coverage
+
+### Current E2E Coverage
+
+| Spec File              | Coverage Area                                  |
+| ---------------------- | ---------------------------------------------- |
+| `quiz-flow.spec.ts`    | Quiz taking, answer selection, results display |
+| `analytics.spec.ts`    | Analytics page, empty state, data display      |
+| `library.spec.ts`      | Quiz library, import, search                   |
+| `results.spec.ts`      | Results page display                           |
+| `offline-sync.spec.ts` | Offline mode, sync behavior                    |
+| `settings.spec.ts`     | Settings page                                  |
+
+### Gaps & Opportunities
+
+#### 1. **SRS Review Flow** (High Priority)
+
+No E2E coverage for spaced repetition features.
+
+```typescript
+// tests/e2e/srs-review.spec.ts
+test.describe("SRS Review", () => {
+  test("completes SRS review and saves result", async ({ page }) => {
+    // Seed quiz with SRS-eligible questions
+    // Navigate to SRS review card
+    // Complete review session
+    // Verify result is saved
+  });
+
+  test("shows SRS result on results page", async ({ page }) => {
+    // Complete SRS review
+    // Navigate to results by ID
+    // Verify special SRS result display
+  });
+
+  test("SRS result syncs across devices", async ({ page }) => {
+    // Complete SRS review (authenticated)
+    // Verify result appears in Supabase
+    // Simulate second device login
+    // Verify SRS stats appear
+  });
+});
+```
+
+#### 2. **Authentication Flows** (High Priority)
+
+Missing coverage for auth edge cases.
+
+```typescript
+// tests/e2e/auth.spec.ts
+test("password reset flow completes successfully");
+test("session recovery after token expiry");
+test("sign out clears local data");
+```
+
+#### 3. **Topic Study Mode** (Medium Priority)
+
+Weak area → Topic study navigation tested, but not the full flow.
+
+```typescript
+test("topic study loads relevant questions");
+test("topic study filters by category");
+```
+
+#### 4. **Smart Round Mode** (Medium Priority)
+
+Smart quiz prioritization not tested.
+
+```typescript
+test("smart round prioritizes weak categories");
+test("smart round excludes mastered questions");
+```
+
+#### 5. **Cross-Device Sync** (Medium Priority)
+
+`offline-sync.spec.ts` tests offline → online, but not multi-device.
+
+```typescript
+test("quiz created on device A appears on device B after sync");
+test("result created on device A updates analytics on device B");
+```
+
+#### 6. **Error States & Edge Cases** (Low Priority)
+
+Missing negative path testing.
+
+```typescript
+test("handles network failure during quiz submit gracefully");
+test("handles corrupt IndexedDB gracefully");
+test("displays error when quiz not found");
+```
+
+### Implementation Notes
+
+- Use `seedTestQuiz` fixture pattern from existing tests
+- Use `waitForDatabase()` helper for Dexie timing
+- Mock Supabase for cross-device tests (or use test accounts)
+- SRS tests need date mocking for `next_review` scheduling
+
+### Acceptance Criteria
+
+- [ ] Add `srs-review.spec.ts` with core SRS flow
+- [ ] Add auth edge case tests to existing or new spec
+- [ ] Verify all specs pass in CI
+- [ ] Document any new fixtures in `tests/e2e/README.md`

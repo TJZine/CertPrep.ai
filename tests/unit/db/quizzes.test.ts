@@ -1,6 +1,15 @@
 import { describe, expect, it, beforeEach } from "vitest";
 import { db, clearDatabase } from "@/db/index";
-import { createQuiz, updateQuiz, getQuizById, getAllQuizzes } from "@/db/quizzes";
+import {
+  createQuiz,
+  updateQuiz,
+  getQuizById,
+  getAllQuizzes,
+  getSRSQuizId,
+  isSRSQuiz,
+  getOrCreateSRSQuiz,
+  SRS_QUIZ_ID_PREFIX,
+} from "@/db/quizzes";
 import { hashAnswer } from "@/lib/utils";
 import type { QuizImportInput } from "@/validators/quizSchema";
 
@@ -118,5 +127,133 @@ describe("DB: quizzes", () => {
     expect(sorted[0]!.title).toBe("Newest"); // Most recent
     expect(sorted[1]!.title).toBe("AQuiz"); // Tie-breaker: A comes before Z
     expect(sorted[2]!.title).toBe("ZQuiz");
+  });
+});
+
+describe("SRS Quiz Utilities", () => {
+  const userId = "user-srs-test";
+
+  beforeEach(async () => {
+    await clearDatabase();
+  });
+
+  describe("getSRSQuizId", () => {
+    it("should return srs-prefixed id for user", () => {
+      const result = getSRSQuizId(userId);
+      expect(result).toBe(`${SRS_QUIZ_ID_PREFIX}${userId}`);
+    });
+
+    it("should generate deterministic IDs", () => {
+      const id1 = getSRSQuizId(userId);
+      const id2 = getSRSQuizId(userId);
+      expect(id1).toBe(id2);
+    });
+
+    it("should generate different IDs for different users", () => {
+      const id1 = getSRSQuizId("user-a");
+      const id2 = getSRSQuizId("user-b");
+      expect(id1).not.toBe(id2);
+    });
+  });
+
+  describe("isSRSQuiz", () => {
+    it("should return true for srs- prefix", () => {
+      expect(isSRSQuiz("srs-user-123")).toBe(true);
+      expect(isSRSQuiz("srs-")).toBe(true);
+      expect(isSRSQuiz("srs-abc-def")).toBe(true);
+    });
+
+    it("should return false for regular quiz ids", () => {
+      expect(isSRSQuiz("quiz-123")).toBe(false);
+      expect(isSRSQuiz("abcd-1234")).toBe(false);
+      expect(isSRSQuiz("")).toBe(false);
+    });
+
+    it("should return false for ids containing srs but not prefixed", () => {
+      expect(isSRSQuiz("my-srs-quiz")).toBe(false);
+      expect(isSRSQuiz("quiz-srs-123")).toBe(false);
+    });
+  });
+
+  describe("getOrCreateSRSQuiz", () => {
+    it("should create new quiz if none exists", async () => {
+      const quiz = await getOrCreateSRSQuiz(userId);
+
+      expect(quiz).toBeDefined();
+      expect(quiz.id).toBe(getSRSQuizId(userId));
+      expect(quiz.user_id).toBe(userId);
+      expect(quiz.title).toBe("SRS Review Sessions");
+      expect(quiz.questions).toHaveLength(0);
+      expect(quiz.tags).toContain("srs");
+      expect(quiz.tags).toContain("system");
+    });
+
+    it("should return existing quiz on second call", async () => {
+      const quiz1 = await getOrCreateSRSQuiz(userId);
+      const quiz2 = await getOrCreateSRSQuiz(userId);
+
+      expect(quiz1.id).toBe(quiz2.id);
+      expect(quiz1.created_at).toBe(quiz2.created_at);
+
+      // Verify only one quiz in DB
+      const allSRS = await db.quizzes
+        .where("id")
+        .startsWith(SRS_QUIZ_ID_PREFIX)
+        .toArray();
+      expect(allSRS).toHaveLength(1);
+    });
+
+    it("should create separate SRS quizzes for different users", async () => {
+      const quiz1 = await getOrCreateSRSQuiz("user-a");
+      const quiz2 = await getOrCreateSRSQuiz("user-b");
+
+      expect(quiz1.id).not.toBe(quiz2.id);
+      expect(quiz1.user_id).toBe("user-a");
+      expect(quiz2.user_id).toBe("user-b");
+    });
+  });
+
+  describe("SRS Quiz Filtering", () => {
+    it("getAllQuizzes includes SRS quiz (filtering is in useQuizzes hook)", async () => {
+      // NOTE: The DB function getAllQuizzes returns ALL quizzes including SRS.
+      // Filtering happens in the useQuizzes React hook (useDatabase.ts).
+      // This test verifies the DB layer behavior.
+
+      // Create a regular quiz
+      await db.quizzes.add({
+        id: "regular-quiz-1",
+        user_id: userId,
+        title: "Regular Quiz",
+        description: "",
+        questions: [],
+        tags: [],
+        version: 1,
+        created_at: Date.now(),
+        updated_at: Date.now(),
+        deleted_at: null,
+        quiz_hash: null,
+        last_synced_at: null,
+        last_synced_version: null,
+      });
+
+      // Create an SRS quiz
+      await getOrCreateSRSQuiz(userId);
+
+      // getAllQuizzes at DB level includes both
+      const quizzes = await getAllQuizzes(userId);
+
+      expect(quizzes).toHaveLength(2);
+      expect(quizzes.some((q) => q.id === "regular-quiz-1")).toBe(true);
+      expect(quizzes.some((q) => isSRSQuiz(q.id))).toBe(true);
+    });
+
+    it("should still be accessible via direct DB query", async () => {
+      const srsQuiz = await getOrCreateSRSQuiz(userId);
+
+      // Direct access should work
+      const retrieved = await db.quizzes.get(srsQuiz.id);
+      expect(retrieved).toBeDefined();
+      expect(retrieved?.id).toBe(srsQuiz.id);
+    });
   });
 });

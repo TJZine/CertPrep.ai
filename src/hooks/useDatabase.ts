@@ -7,7 +7,7 @@ import { NIL_UUID } from "@/lib/constants";
 import type { Quiz } from "@/types/quiz";
 import type { Result } from "@/types/result";
 import type { QuizStats } from "@/db/quizzes";
-import { getQuizStats, sortQuizzesByNewest } from "@/db/quizzes";
+import { getQuizStats, isSRSQuiz, sortQuizzesByNewest } from "@/db/quizzes";
 
 interface InitializationState {
   isInitialized: boolean;
@@ -90,7 +90,7 @@ export function useQuizzes(userId: string | undefined): UseQuizzesResponse {
     const results = await db.quizzes
       .where("user_id")
       .equals(userId)
-      .filter((quiz) => !quiz.deleted_at)
+      .filter((quiz) => !quiz.deleted_at && !isSRSQuiz(quiz.id))
       .toArray();
 
     // Stable sort: Newest created first -> Alphabetical by title

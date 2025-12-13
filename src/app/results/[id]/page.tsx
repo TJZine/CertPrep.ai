@@ -12,7 +12,7 @@ import {
   useQuizResults,
   useInitializeDatabase,
 } from "@/hooks/useDatabase";
-import { deleteResult } from "@/db/results";
+import { deleteResult, isSRSQuiz } from "@/db/results";
 import { useToast } from "@/components/ui/Toast";
 import { ArrowLeft, AlertCircle, Trash2 } from "lucide-react";
 import { useAuth } from "@/components/providers/AuthProvider";
@@ -215,34 +215,63 @@ export default function ResultsPage(): React.ReactElement {
       );
     }
 
+    // Special handling for SRS Review results
+    const isSRSReviewResult = isSRSQuiz(result.quiz_id);
+
     return (
       <div className="flex min-h-screen items-center justify-center bg-background p-4">
         <div className="max-w-md rounded-lg border border-border bg-card p-6 text-center shadow-sm">
-          <AlertCircle
-            className="mx-auto h-12 w-12 text-warning"
-            aria-hidden="true"
-          />
+          <div
+            className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full ${isSRSReviewResult ? "bg-success/20" : "bg-warning/20"
+              }`}
+          >
+            {isSRSReviewResult ? (
+              <span className="text-2xl">🎯</span>
+            ) : (
+              <AlertCircle
+                className="h-8 w-8 text-warning"
+                aria-hidden="true"
+              />
+            )}
+          </div>
           <h1 className="mt-4 text-xl font-semibold text-foreground">
-            Quiz Not Found
+            {isSRSReviewResult ? "SRS Review Complete" : "Quiz Not Found"}
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            The quiz linked to this result isn&apos;t available right now. Your
-            score is preserved below.
+            {isSRSReviewResult
+              ? "Great job reviewing your spaced repetition questions!"
+              : "The quiz linked to this result isn't available right now."}
           </p>
-          <div className="mt-2 rounded-lg bg-muted p-3">
+
+          {/* Score Display */}
+          <div className="mt-4 rounded-lg bg-muted p-4">
+            <p className="text-3xl font-bold text-foreground">
+              {result.score}%
+            </p>
             <p className="text-sm text-muted-foreground">
-              Your score was:{" "}
-              <span className="font-bold text-foreground">
-                {result.score}%
-              </span>
+              {isSRSReviewResult ? "Review Score" : "Your score"}
             </p>
           </div>
+
+          {/* Category Breakdown for SRS results */}
+          {isSRSReviewResult && result.category_breakdown && Object.keys(result.category_breakdown).length > 0 && (
+            <div className="mt-4 space-y-2 text-left">
+              <h2 className="text-sm font-medium text-foreground">Category Breakdown</h2>
+              {Object.entries(result.category_breakdown).map(([category, score]) => (
+                <div key={category} className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">{category}</span>
+                  <span className="font-medium text-foreground">{score}%</span>
+                </div>
+              ))}
+            </div>
+          )}
+
           <div className="mt-6 flex justify-center gap-4">
             <Button
-              onClick={() => router.push("/")}
+              onClick={() => router.push(isSRSReviewResult ? "/study-due" : "/")}
               leftIcon={<ArrowLeft className="h-4 w-4" aria-hidden="true" />}
             >
-              Back to Dashboard
+              {isSRSReviewResult ? "Continue Studying" : "Back to Dashboard"}
             </Button>
             <Button
               variant="danger"

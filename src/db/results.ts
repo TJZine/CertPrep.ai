@@ -1,10 +1,14 @@
 import { db } from "./index";
+import { isSRSQuiz } from "./quizzes";
 import { NIL_UUID } from "@/lib/constants";
 import { calculatePercentage, generateUUID } from "@/lib/utils";
 import { logger } from "@/lib/logger";
 import type { CategoryPerformance, Result } from "@/types/result";
 import type { Quiz, QuizMode } from "@/types/quiz";
 import { evaluateAnswer } from "@/lib/grading";
+
+// Re-export for backwards compatibility
+export { isSRSQuiz };
 
 export interface CreateResultInput {
   quizId: string;
@@ -108,6 +112,58 @@ export async function createResult(input: CreateResultInput): Promise<Result> {
     category_breakdown: categoryBreakdown,
     question_ids: input.activeQuestionIds, // Persist for accurate grading on results page
     synced: 0,
+  };
+
+  await db.results.add(result);
+  return result;
+}
+
+export interface CreateSRSReviewResultInput {
+  userId: string;
+  /** The per-user SRS quiz ID (from getOrCreateSRSQuiz) */
+  srsQuizId: string;
+  answers: Record<string, string>;
+  flaggedQuestions: string[];
+  timeTakenSeconds: number;
+  /** Question IDs that were part of this review session */
+  questionIds: string[];
+  /** Pre-calculated score (percentage) */
+  score: number;
+  /** Pre-calculated category breakdown */
+  categoryBreakdown: Record<string, number>;
+}
+
+/**
+ * Persists an SRS review result using the per-user SRS quiz.
+ *
+ * Unlike regular quiz results, SRS sessions aggregate questions from
+ * multiple quizzes. The srsQuizId links to a real quiz entity, allowing
+ * the result to sync to Supabase normally.
+ */
+export async function createSRSReviewResult(
+  input: CreateSRSReviewResultInput,
+): Promise<Result> {
+  if (!input.userId) {
+    throw new Error("Cannot create result without a user context.");
+  }
+
+  if (!input.srsQuizId) {
+    throw new Error("srsQuizId is required for SRS review results.");
+  }
+
+  const result: Result = {
+    id: generateUUID(),
+    quiz_id: input.srsQuizId, // Uses per-user SRS quiz for FK compliance
+    user_id: input.userId,
+    timestamp: Date.now(),
+    mode: "zen", // SRS reviews use zen mode
+    score: input.score,
+    time_taken_seconds: input.timeTakenSeconds,
+    answers: input.answers,
+    flagged_questions: input.flaggedQuestions,
+    category_breakdown: input.categoryBreakdown,
+    question_ids: input.questionIds,
+    synced: 0, // Will sync normally now
   };
 
   await db.results.add(result);

@@ -26,6 +26,9 @@ import { useQuizSubmission } from "@/hooks/useQuizSubmission";
 import { clearSmartRoundState } from "@/lib/smartRoundStorage";
 import { clearSRSReviewState } from "@/lib/srsReviewStorage";
 import { updateSRSState } from "@/db/srs";
+import { createSRSReviewResult } from "@/db/results";
+import { getOrCreateSRSQuiz } from "@/db/quizzes";
+import { calculatePercentage } from "@/lib/utils";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 
@@ -82,6 +85,7 @@ export function ZenQuizContainer({
     answers,
     flaggedQuestions,
     questionQueue,
+    questions,
     isComplete,
     error,
     clearError,
@@ -117,18 +121,67 @@ export function ZenQuizContainer({
 
   const handleSessionComplete = React.useCallback(
     async (timeTakenSeconds: number): Promise<void> => {
-      // SRS review sessions don't save a formal result - the value is in
-      // per-question SRS state updates which happen during the session.
-      // The synthetic quiz ID doesn't exist in Dexie, so createResult would fail.
-      if (isSRSReview) {
-        clearSRSReviewState();
-        addToast("success", "SRS Review complete! Keep up the great work.");
-        router.push("/study-due");
+      // SRS review sessions save results differently - no quiz lookup needed
+      if (isSRSReview && effectiveUserId) {
+        try {
+          // Ensure SRS quiz exists for this user (creates if needed)
+          const srsQuiz = await getOrCreateSRSQuiz(effectiveUserId);
+
+          // Calculate score and category breakdown from answers
+          let correctCount = 0;
+          const categoryTotals: Record<string, { correct: number; total: number }> = {};
+          const answersRecord: Record<string, string> = {};
+
+          answers.forEach((record, questionId) => {
+            answersRecord[questionId] = record.selectedAnswer;
+            const question = questions.find((q) => q.id === questionId);
+            if (!question) return;
+
+            const category = question.category || "Uncategorized";
+            if (!categoryTotals[category]) {
+              categoryTotals[category] = { correct: 0, total: 0 };
+            }
+            categoryTotals[category].total += 1;
+
+            if (record.isCorrect) {
+              correctCount += 1;
+              categoryTotals[category].correct += 1;
+            }
+          });
+
+          const score = calculatePercentage(correctCount, answers.size);
+          const categoryBreakdown = Object.fromEntries(
+            Object.entries(categoryTotals).map(([category, { correct, total }]) => [
+              category,
+              calculatePercentage(correct, total),
+            ]),
+          );
+
+          const result = await createSRSReviewResult({
+            userId: effectiveUserId,
+            srsQuizId: srsQuiz.id,
+            answers: answersRecord,
+            flaggedQuestions: Array.from(flaggedQuestions),
+            timeTakenSeconds,
+            questionIds: questions.map((q) => q.id),
+            score,
+            categoryBreakdown,
+          });
+
+          clearSRSReviewState();
+          addToast("success", "SRS Review complete! Keep up the great work.");
+          router.push(`/results/${result.id}`);
+        } catch (err) {
+          console.error("Failed to save SRS review result:", err);
+          addToast("error", "Failed to save result. You can still continue studying.");
+          clearSRSReviewState();
+          router.push("/study-due");
+        }
         return;
       }
       await submitQuiz(timeTakenSeconds);
     },
-    [isSRSReview, addToast, router, submitQuiz],
+    [isSRSReview, effectiveUserId, answers, questions, flaggedQuestions, addToast, router, submitQuiz],
   );
 
   const retrySave = React.useCallback((): void => {

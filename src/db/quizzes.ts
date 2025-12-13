@@ -13,6 +13,65 @@ import {
 } from "@/validators/quizSchema";
 import { z } from "zod";
 
+/**
+ * Prefix for per-user SRS quiz IDs.
+ * Full ID format: `srs-{userId}`
+ */
+export const SRS_QUIZ_ID_PREFIX = "srs-";
+
+/**
+ * Generates the deterministic SRS quiz ID for a user.
+ */
+export function getSRSQuizId(userId: string): string {
+  return `${SRS_QUIZ_ID_PREFIX}${userId}`;
+}
+
+/**
+ * Checks if a quiz ID is an SRS review quiz.
+ */
+export function isSRSQuiz(quizId: string): boolean {
+  return quizId.startsWith(SRS_QUIZ_ID_PREFIX);
+}
+
+/**
+ * Gets or creates the per-user SRS review quiz.
+ * This quiz is used as the parent for all SRS review results,
+ * allowing them to sync to Supabase (satisfying the FK constraint).
+ *
+ * @param userId - The user's ID
+ * @returns The SRS quiz (existing or newly created)
+ */
+export async function getOrCreateSRSQuiz(userId: string): Promise<Quiz> {
+  const srsQuizId = getSRSQuizId(userId);
+
+  // Check if already exists
+  const existing = await db.quizzes.get(srsQuizId);
+  if (existing) {
+    return existing;
+  }
+
+  // Create new SRS quiz
+  const now = Date.now();
+  const srsQuiz: Quiz = {
+    id: srsQuizId,
+    user_id: userId,
+    title: "SRS Review Sessions",
+    description: "Spaced repetition review sessions aggregated from your quizzes",
+    questions: [], // Empty - questions vary per session
+    tags: ["srs", "system"],
+    version: 1,
+    created_at: now,
+    updated_at: now,
+    deleted_at: null,
+    quiz_hash: null, // No hash needed for SRS quiz
+    last_synced_at: null,
+    last_synced_version: null,
+  };
+
+  await db.quizzes.add(srsQuiz);
+  return srsQuiz;
+}
+
 export interface CreateQuizInput {
   title: string;
   description?: string;
