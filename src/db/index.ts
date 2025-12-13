@@ -145,6 +145,11 @@ export class CertPrepDatabase extends Dexie {
       srs: "&[question_id+user_id], user_id, next_review, [user_id+synced]",
     });
 
+    // Version 11: Add compound index for SRS due queries
+    this.version(11).stores({
+      srs: "&[question_id+user_id], user_id, next_review, [user_id+synced], [user_id+next_review]",
+    });
+
     this.quizzes = this.table("quizzes");
     this.results = this.table("results");
     this.syncState = this.table("syncState");

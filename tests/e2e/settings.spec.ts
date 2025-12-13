@@ -13,7 +13,7 @@ test.describe("Settings Page", () => {
             ).toBeVisible();
 
             // Verify app version is displayed
-            await expect(page.getByText(/version \d+\.\d+/i)).toBeVisible();
+            await expect(page.getByText(/version \d+(\.\d+)+/i)).toBeVisible();
 
             // Verify "Privacy First" badge
             await expect(page.getByText("Privacy First")).toBeVisible();

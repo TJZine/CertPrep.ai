@@ -1,6 +1,7 @@
 import { db } from "./index";
 import { NIL_UUID } from "@/lib/constants";
 import { calculatePercentage, generateUUID } from "@/lib/utils";
+import { logger } from "@/lib/logger";
 import type { CategoryPerformance, Result } from "@/types/result";
 import type { Quiz, QuizMode } from "@/types/quiz";
 import { evaluateAnswer } from "@/lib/grading";
@@ -390,20 +391,34 @@ export async function getTopicStudyQuestions(
         );
 
         for (const question of categoryQuestions) {
-          // Check if flagged
-          if (result.flagged_questions.includes(question.id)) {
-            flaggedIds.add(question.id);
-            sourceQuizIds.add(quiz.id);
-          }
+          try {
+            const isFlagged = result.flagged_questions.includes(question.id);
+            const userAnswer = result.answers[question.id];
+            let isMissed = false;
 
-          // Check if answered incorrectly
-          const userAnswer = result.answers[question.id];
-          if (userAnswer) {
-            const { isCorrect } = await evaluateAnswer(question, userAnswer);
-            if (!isCorrect) {
+            if (userAnswer) {
+              const { isCorrect } = await evaluateAnswer(question, userAnswer);
+              isMissed = !isCorrect;
+            }
+
+            if (isFlagged) {
+              flaggedIds.add(question.id);
+            }
+
+            if (isMissed) {
               missedIds.add(question.id);
+            }
+
+            if (isFlagged || isMissed) {
               sourceQuizIds.add(quiz.id);
             }
+          } catch (error) {
+            logger.error("Failed to process topic study question", {
+              error,
+              quizId: quiz.id,
+              questionId: question.id,
+              category,
+            });
           }
         }
       }),

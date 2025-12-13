@@ -9,6 +9,7 @@ import {
     CardTitle,
     CardDescription,
 } from "@/components/ui/Card";
+import { formatDateKey } from "@/lib/date";
 import { cn } from "@/lib/utils";
 
 interface DailyStudyData {
@@ -42,12 +43,9 @@ function getDayLabel(daysAgo: number): string {
 function getMinutesForDay(dailyData: DailyStudyData[], daysAgo: number): number {
     const targetDate = new Date();
     targetDate.setDate(targetDate.getDate() - daysAgo);
-    const targetDateStr = targetDate.toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-    });
+    const targetDateKey = formatDateKey(targetDate);
 
-    const match = dailyData.find((d) => d.date === targetDateStr);
+    const match = dailyData.find((d) => formatDateKey(d.date) === targetDateKey);
     return match?.minutes ?? 0;
 }
 

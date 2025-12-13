@@ -115,7 +115,7 @@ describe("srsSyncManager", () => {
     });
 
     srsData.length = 0;
-    srsData.push(sampleSRS);
+    srsData.push(structuredClone(sampleSRS));
 
     vi.useFakeTimers();
     vi.setSystemTime(FIXED_TIMESTAMP);
@@ -197,6 +197,29 @@ describe("srsSyncManager", () => {
         })
       ])
     );
+  });
+
+  it("does not overwrite unsynced local state when timestamps tie", async () => {
+    srsData[0]!.synced = 0;
+
+    const remoteItem = {
+      question_id: "q-1",
+      user_id: "user-1",
+      box: 3,
+      last_reviewed: FIXED_TIMESTAMP,
+      next_review: FIXED_TIMESTAMP + 20000,
+      consecutive_correct: 2,
+      updated_at: new Date(FIXED_TIMESTAMP).toISOString()
+    };
+
+    supabaseMock.limit.mockResolvedValueOnce({
+      data: [remoteItem],
+      error: null
+    });
+
+    await syncSRS("user-1");
+
+    expect(dbMock.srs.bulkPut).not.toHaveBeenCalled();
   });
 
   it("ignores remote changes if local state is newer (Local Wins)", async () => {
@@ -300,4 +323,3 @@ describe("srsSyncManager", () => {
     );
   });
 });
-

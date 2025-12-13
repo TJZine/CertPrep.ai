@@ -373,15 +373,23 @@ async function pullRemoteChanges(
       } else {
         // Last-Write-Wins based on last_reviewed
         // If remote is newer (higher last_reviewed), it wins.
-        // If equal, we can assume convergent or arbitrary winner (remote matches server truth).
         if (remote.last_reviewed > local.last_reviewed) {
           shouldUpdate = true;
         } else if (remote.last_reviewed === local.last_reviewed) {
-          // Timestamps match.
-          // If local is unsynced, we might have pending changes? 
-          // But if last_reviewed is same, it's likely same review event.
-          // Safe to overwrite to ensure consistency.
-          shouldUpdate = true;
+          if (local.synced === 0) {
+            logger.debug("SRS sync tie at last_reviewed; keeping local unsynced record", {
+              userId,
+              questionId: remote.question_id,
+              localSynced: local.synced,
+            });
+          } else {
+            shouldUpdate = true;
+            logger.debug("SRS sync tie at last_reviewed; accepting remote because local is synced", {
+              userId,
+              questionId: remote.question_id,
+              localSynced: local.synced,
+            });
+          }
         }
       }
 

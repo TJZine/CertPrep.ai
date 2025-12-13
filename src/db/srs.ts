@@ -1,3 +1,4 @@
+import Dexie from "dexie";
 import { db } from "./index";
 import type { Quiz } from "@/types/quiz";
 import type { Result } from "@/types/result";
@@ -17,9 +18,8 @@ export async function getDueQuestions(
     now: number = Date.now(),
 ): Promise<SRSState[]> {
     return db.srs
-        .where("user_id")
-        .equals(userId)
-        .filter((state) => state.next_review <= now)
+        .where("[user_id+next_review]")
+        .between([userId, Dexie.minKey], [userId, now], true, true)
         .toArray();
 }
 

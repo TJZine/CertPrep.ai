@@ -8,6 +8,7 @@ import {
     CardTitle,
     CardDescription,
 } from "@/components/ui/Card";
+import { formatDateKey, formatMonthDayLabel } from "@/lib/date";
 import { cn } from "@/lib/utils";
 import type { Result } from "@/types/result";
 import type { Quiz } from "@/types/quiz";
@@ -20,6 +21,7 @@ interface TopicHeatmapProps {
 }
 
 interface WeekData {
+    weekKey: string;
     weekLabel: string;
     startDate: Date;
     endDate: Date;
@@ -27,7 +29,7 @@ interface WeekData {
 
 interface CategoryWeekScore {
     category: string;
-    weeks: Array<{ weekLabel: string; score: number | null; correct: number; total: number }>;
+    weeks: Array<{ weekKey: string; weekLabel: string; score: number | null; correct: number; total: number }>;
 }
 
 /**
@@ -51,12 +53,10 @@ function getLastNWeeks(n: number): WeekData[] {
         endDate.setDate(startDate.getDate() + 6);
         endDate.setHours(23, 59, 59, 999);
 
-        const weekLabel = startDate.toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-        });
+        const weekKey = formatDateKey(startDate);
+        const weekLabel = formatMonthDayLabel(startDate);
 
-        weeks.push({ weekLabel, startDate, endDate });
+        weeks.push({ weekKey, weekLabel, startDate, endDate });
     }
 
     return weeks;
@@ -120,7 +120,7 @@ export function TopicHeatmap({
                 );
                 if (weekIndex === -1) continue;
 
-                const weekLabel = weeks[weekIndex]!.weekLabel;
+                const { weekKey } = weeks[weekIndex]!;
 
                 // Filter to questions served in this session
                 const idSet = result.question_ids
@@ -150,11 +150,11 @@ export function TopicHeatmap({
                     const weekMap = categoryWeekData.get(category)!;
 
                     // Initialize week if not exists
-                    if (!weekMap.has(weekLabel)) {
-                        weekMap.set(weekLabel, { correct: 0, total: 0 });
+                    if (!weekMap.has(weekKey)) {
+                        weekMap.set(weekKey, { correct: 0, total: 0 });
                     }
 
-                    const weekStats = weekMap.get(weekLabel)!;
+                    const weekStats = weekMap.get(weekKey)!;
                     weekStats.total += 1;
                     if (isCorrect) {
                         weekStats.correct += 1;
@@ -168,8 +168,9 @@ export function TopicHeatmap({
             ).map(([category, weekMap]) => ({
                 category,
                 weeks: weeks.map((w) => {
-                    const stats = weekMap.get(w.weekLabel);
+                    const stats = weekMap.get(w.weekKey);
                     return {
+                        weekKey: w.weekKey,
                         weekLabel: w.weekLabel,
                         score:
                             stats && stats.total > 0
@@ -249,7 +250,7 @@ export function TopicHeatmap({
                     <div /> {/* Empty cell for category column */}
                     {weeks.map((w) => (
                         <div
-                            key={w.weekLabel}
+                            key={w.weekKey}
                             className="text-center text-xs font-medium text-muted-foreground"
                         >
                             {w.weekLabel}
@@ -273,7 +274,7 @@ export function TopicHeatmap({
                             </div>
                             {catData.weeks.map((weekData) => (
                                 <div
-                                    key={weekData.weekLabel}
+                                    key={weekData.weekKey}
                                     className={cn(
                                         "flex h-8 items-center justify-center rounded-md text-xs font-medium transition-colors",
                                         getMasteryColor(weekData.score),

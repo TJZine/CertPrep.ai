@@ -113,6 +113,10 @@ export default function StudyDuePage(): React.ReactElement {
         }
     }, [categoryGroups, router]);
 
+    const toggleCategory = useCallback((category: string) => {
+        setSelectedCategory((current) => (current === category ? null : category));
+    }, []);
+
     if (!effectiveUserId) {
         return (
             <main className="container mx-auto max-w-4xl px-4 py-8">
@@ -179,51 +183,60 @@ export default function StudyDuePage(): React.ReactElement {
                             </Card>
                         ) : (
                             <div className="space-y-3">
-                                {categoryGroups.map((group) => (
-                                    <Card
-                                        key={group.category}
-                                        className={cn(
-                                            "cursor-pointer transition-all hover:border-primary/50",
-                                            selectedCategory === group.category && "border-primary"
-                                        )}
-                                        onClick={() =>
-                                            setSelectedCategory(
-                                                selectedCategory === group.category
-                                                    ? null
-                                                    : group.category
-                                            )
-                                        }
-                                    >
-                                        <CardHeader className="pb-2">
-                                            <div className="flex items-center justify-between">
-                                                <CardTitle className="text-base">
-                                                    {group.category}
-                                                </CardTitle>
-                                                <span className="rounded-full bg-primary/10 px-2 py-1 text-sm font-medium text-primary">
-                                                    {group.questions.length}
-                                                </span>
-                                            </div>
-                                        </CardHeader>
-                                        {selectedCategory === group.category && (
-                                            <CardContent className="pt-0">
-                                                <div className="mb-3 text-sm text-muted-foreground">
-                                                    {group.questions.length} question{group.questions.length !== 1 ? "s" : ""} due
+                                {categoryGroups.map((group) => {
+                                    const panelId = `category-panel-${group.category.replace(/[^a-zA-Z0-9]+/g, "-").toLowerCase()}`;
+                                    const isExpanded = selectedCategory === group.category;
+                                    return (
+                                        <Card
+                                            key={group.category}
+                                            role="button"
+                                            tabIndex={0}
+                                            aria-expanded={isExpanded}
+                                            aria-controls={panelId}
+                                            className={cn(
+                                                "cursor-pointer transition-all hover:border-primary/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+                                                isExpanded && "border-primary"
+                                            )}
+                                            onClick={() => toggleCategory(group.category)}
+                                            onKeyDown={(event) => {
+                                                if (event.currentTarget !== event.target) return;
+                                                if (event.key === "Enter" || event.key === " ") {
+                                                    event.preventDefault();
+                                                    toggleCategory(group.category);
+                                                }
+                                            }}
+                                        >
+                                            <CardHeader className="pb-2">
+                                                <div className="flex items-center justify-between">
+                                                    <CardTitle className="text-base">
+                                                        {group.category}
+                                                    </CardTitle>
+                                                    <span className="rounded-full bg-primary/10 px-2 py-1 text-sm font-medium text-primary">
+                                                        {group.questions.length}
+                                                    </span>
                                                 </div>
-                                                <Button
-                                                    size="sm"
-                                                    variant="secondary"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleStartReview(group.category);
-                                                    }}
-                                                    leftIcon={<Filter />}
-                                                >
-                                                    Review This Category
-                                                </Button>
-                                            </CardContent>
-                                        )}
-                                    </Card>
-                                ))}
+                                            </CardHeader>
+                                            {isExpanded && (
+                                                <CardContent className="pt-0" id={panelId}>
+                                                    <div className="mb-3 text-sm text-muted-foreground">
+                                                        {group.questions.length} question{group.questions.length !== 1 ? "s" : ""} due
+                                                    </div>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="secondary"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleStartReview(group.category);
+                                                        }}
+                                                        leftIcon={<Filter />}
+                                                    >
+                                                        Review This Category
+                                                    </Button>
+                                                </CardContent>
+                                            )}
+                                        </Card>
+                                    );
+                                })}
                             </div>
                         )}
                     </div>

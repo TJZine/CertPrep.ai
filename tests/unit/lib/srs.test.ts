@@ -44,8 +44,8 @@ describe("SRS Leitner Algorithm", () => {
         const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
         it("should calculate correct next review for box 1 (correct answer)", () => {
-            // Correct from box 1 → box 2 → 3 days interval
-            const nextReview = calculateNextReview(1, true, fixedNow);
+            // Correct from box 1 → box 2 → pass updated box 2 → 3 days interval
+            const nextReview = calculateNextReview(2, true, fixedNow);
             expect(nextReview).toBe(fixedNow + 3 * MS_PER_DAY);
         });
 
@@ -62,8 +62,8 @@ describe("SRS Leitner Algorithm", () => {
         });
 
         it("should calculate correct next review for box 5 (incorrect answer)", () => {
-            // Incorrect from box 5 → goes to box 1 → 1 day interval
-            const nextReview = calculateNextReview(5, false, fixedNow);
+            // Incorrect from box 5 → goes to box 1 → pass updated box 1 → 1 day interval
+            const nextReview = calculateNextReview(1, false, fixedNow);
             expect(nextReview).toBe(fixedNow + 1 * MS_PER_DAY);
         });
     });

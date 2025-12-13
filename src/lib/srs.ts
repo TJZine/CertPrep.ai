@@ -20,7 +20,7 @@ export const BOX_INTERVALS: Record<LeitnerBox, number> = {
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 /**
- * Calculates the next review timestamp based on the current box and answer correctness.
+ * Calculates the next review timestamp based on the current (already-updated) box and answer correctness.
  *
  * @param box - Current Leitner box (1-5).
  * @param wasCorrect - Whether the question was answered correctly.
@@ -29,11 +29,10 @@ const MS_PER_DAY = 24 * 60 * 60 * 1000;
  */
 export function calculateNextReview(
     box: LeitnerBox,
-    wasCorrect: boolean,
+    _wasCorrect: boolean, // kept for signature compatibility; box should already reflect the updated state
     now: number = Date.now(),
 ): number {
-    const nextBox = promoteBox(box, wasCorrect);
-    const intervalDays = BOX_INTERVALS[nextBox];
+    const intervalDays = BOX_INTERVALS[box];
     return now + intervalDays * MS_PER_DAY;
 }
 
