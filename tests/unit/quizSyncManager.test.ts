@@ -5,6 +5,19 @@ import { setQuizSyncCursor } from "@/db/syncState";
 
 const FIXED_TIMESTAMP = 1704067200000; // 2024-01-01T00:00:00.000Z
 
+const { supabaseMock } = vi.hoisted(() => {
+  const supabase = {
+    auth: {
+      getSession: vi.fn().mockResolvedValue({
+        data: { session: { user: { id: "user-1" } } },
+        error: null,
+      }),
+    },
+  };
+
+  return { supabaseMock: supabase };
+});
+
 const sampleQuiz: Quiz = {
   id: "quiz-1",
   user_id: "user-1",
@@ -128,6 +141,10 @@ vi.mock("@/lib/sync/quizDomain", () => ({
     last_synced_version: null,
   })),
   toRemoteQuiz: toRemoteQuizMock,
+}));
+
+vi.mock("@/lib/supabase/client", () => ({
+  createClient: (): typeof supabaseMock => supabaseMock,
 }));
 
 describe("quizSyncManager", () => {
@@ -439,4 +456,3 @@ describe("quizSyncManager", () => {
     expect(fetchUserQuizzesMock).not.toHaveBeenCalled();
   });
 });
-
