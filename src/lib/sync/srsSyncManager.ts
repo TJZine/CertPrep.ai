@@ -1,0 +1,443 @@
+"use client";
+
+import { db } from "@/db";
+import {
+  getSRSSyncCursor,
+  setSRSSyncCursor,
+  getSyncBlockState,
+} from "@/db/syncState";
+import { logger } from "@/lib/logger";
+import { logNetworkAwareSlowSync } from "@/lib/sync/syncLogging";
+import { createClient } from "@/lib/supabase/client";
+import { z } from "zod";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { SRSState } from "@/types/srs";
+
+let supabaseInstance: SupabaseClient | undefined;
+
+function getSupabaseClient(): SupabaseClient | undefined {
+  if (!supabaseInstance) {
+    supabaseInstance = createClient();
+  }
+  return supabaseInstance;
+}
+
+const BATCH_SIZE = 50;
+const TIME_BUDGET_MS = 5000;
+
+// Schema for validating remote SRS data structure
+// Using .passthrough() to preserve unknown fields from newer schema versions
+const RemoteSRSSchema = z.object({
+  question_id: z.string(),
+  user_id: z.string(),
+  box: z.number().min(1).max(5),
+  last_reviewed: z.coerce.number(), // Coerce string (from Postgres bigint) to number
+  next_review: z.coerce.number(),
+  consecutive_correct: z.number().min(0),
+  updated_at: z.string(),
+}).passthrough();
+
+const syncState = {
+  isSyncing: false,
+  lastSyncAttempt: 0,
+};
+
+export async function syncSRS(userId: string): Promise<{ incomplete: boolean }> {
+  if (!userId) return { incomplete: false };
+
+  // Optimization: Don't attempt sync if browser is offline
+  if (typeof navigator !== "undefined") {
+    if (!navigator.onLine) {
+      return { incomplete: true };
+    }
+  }
+
+  if (typeof navigator !== "undefined" && "locks" in navigator) {
+    try {
+      return (
+        (await navigator.locks.request(
+          `sync-srs-${userId}`,
+          { ifAvailable: true },
+          async (lock) => {
+            if (!lock) {
+              logger.debug("SRS sync already in progress in another tab, skipping");
+              return { incomplete: false };
+            }
+            try {
+              return await performSRSSync(userId);
+            } catch (error) {
+              logger.error("SRS sync failed while holding lock", error);
+              return { incomplete: false };
+            }
+          },
+        )) || { incomplete: false }
+      );
+    } catch (error) {
+      logger.error("Failed to acquire SRS sync lock request", error);
+      return { incomplete: true };
+    }
+  }
+
+  if (syncState.isSyncing) {
+    if (Date.now() - syncState.lastSyncAttempt > 30000) {
+      logger.warn("SRS sync lock timed out, resetting");
+      syncState.isSyncing = false;
+    } else {
+      return { incomplete: false };
+    }
+  }
+
+  syncState.isSyncing = true;
+  syncState.lastSyncAttempt = Date.now();
+  try {
+    return await performSRSSync(userId);
+  } catch (error) {
+    logger.error("SRS sync failed (fallback path)", error);
+    return { incomplete: false };
+  } finally {
+    syncState.isSyncing = false;
+  }
+}
+
+async function performSRSSync(userId: string): Promise<{ incomplete: boolean }> {
+  performance.mark("srsSync-start");
+  const startTime = Date.now();
+  let incomplete = false;
+  const stats = { pushed: 0, pulled: 0 };
+
+  const client = getSupabaseClient();
+  if (!client) {
+    return { incomplete: true };
+  }
+
+  // Validate auth session matches the userId we're syncing for
+  // Use getSession() instead of getUser() - it reads from local storage without a network call
+  const { data: { session }, error: authError } = await client.auth.getSession();
+  if (authError || !session?.user) {
+    logger.warn("SRS sync skipped: No valid auth session", { authError: authError?.message });
+    return { incomplete: true };
+  }
+  if (session.user.id !== userId) {
+    logger.error("SRS sync aborted: Auth user ID mismatch", { authUserId: session.user.id, syncUserId: userId });
+    return { incomplete: true };
+  }
+
+  // Check if sync is blocked due to previous schema drift
+  const blockState = await getSyncBlockState(userId, "srs");
+  if (blockState) {
+    const remainingMs = blockState.ttlMs - (Date.now() - blockState.blockedAt);
+    const remainingMins = Math.ceil(remainingMs / 60000);
+    logger.debug("SRS sync blocked due to previous failure", {
+      userId,
+      reason: blockState.reason,
+      remainingMins,
+    });
+    return { incomplete: true };
+  }
+
+  try {
+    if (Date.now() - startTime > TIME_BUDGET_MS) {
+      return { incomplete: true };
+    }
+
+    incomplete =
+      (await pushLocalChanges(userId, startTime, stats, client)) || incomplete;
+
+    if (Date.now() - startTime > TIME_BUDGET_MS) {
+      return { incomplete: true };
+    }
+
+    const pullResult = await pullRemoteChanges(userId, startTime, stats, client);
+    incomplete = pullResult.incomplete || incomplete;
+
+    if (pullResult.hardFailure) {
+      logger.warn("SRS sync halted due to schema drift", {
+        userId,
+        pushed: stats.pushed,
+        pulled: stats.pulled,
+      });
+    } else {
+      logger.info("SRS sync complete", {
+        userId,
+        pushed: stats.pushed,
+        pulled: stats.pulled,
+        incomplete,
+      });
+    }
+    return { incomplete };
+  } finally {
+    performance.mark("srsSync-end");
+    performance.measure("srsSync", "srsSync-start", "srsSync-end");
+    const duration = Date.now() - startTime;
+    if (duration > 300) {
+      logNetworkAwareSlowSync("SRS sync", {
+        duration,
+        pushed: stats.pushed,
+        pulled: stats.pulled,
+      });
+    }
+  }
+}
+
+function toErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (typeof error === "string") return error;
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return "Unknown error";
+  }
+}
+
+async function pushLocalChanges(
+  userId: string,
+  startTime: number,
+  stats: { pushed: number },
+  client: SupabaseClient,
+): Promise<boolean> {
+  let incomplete = false;
+
+  // Find unsynced local SRS items
+  // Index: [user_id+synced]
+  const unsyncedItems = await db.srs
+    .where("[user_id+synced]")
+    .equals([userId, 0])
+    .toArray();
+
+  if (unsyncedItems.length === 0) return false;
+
+  for (let i = 0; i < unsyncedItems.length; i += BATCH_SIZE) {
+    if (Date.now() - startTime > TIME_BUDGET_MS) {
+      logger.warn("SRS sync time budget exceeded during push");
+      incomplete = true;
+      break;
+    }
+
+    const batch = unsyncedItems.slice(i, i + BATCH_SIZE);
+
+    // Prepare payload for Supabase
+    const payload = batch.map((item) => ({
+      question_id: item.question_id,
+      user_id: userId,
+      box: item.box,
+      last_reviewed: item.last_reviewed,
+      next_review: item.next_review,
+      consecutive_correct: item.consecutive_correct,
+      // Supabase will handle created_at/updated_at automatically, 
+      // but we can pass updated_at to ensure server reflects local write time if needed.
+      // However, schema trigger overrides updated_at usually. 
+      // Let's relying on trigger for updated_at unless we want to preserve local time.
+      // Given LWW is based on last_reviewed, updated_at is mostly for cursor.
+    }));
+
+    const { error } = await client.from("srs").upsert(payload, {
+      onConflict: "question_id,user_id",
+    });
+
+    if (error) {
+      const errorMsg = toErrorMessage(error);
+      logger.error("Failed to push SRS items to Supabase", {
+        userId,
+        error: errorMsg,
+      });
+
+      // Check for critical errors (circuit breaker)
+      const code = error.code;
+      const status = (error as unknown as { status?: number }).status;
+      if (
+        code === "PGRST301" ||
+        code === "429" ||
+        code === "401" ||
+        status === 429 ||
+        status === 401 ||
+        status === 500 ||
+        status === 503
+      ) {
+        logger.error(`Critical SRS sync error (${code || status}). Aborting push.`);
+        break;
+      }
+      continue;
+    }
+
+    // Mark as synced locally
+    await Promise.all(
+      batch.map(async (item) => {
+        // We update synced=1. 
+        // We also update updated_at to now? Or keep local updated_at?
+        // Ideally we update updated_at to match what we think server has, or just now.
+        // But db.srs doesn't strictly require updated_at for logic, only for sync cursor.
+        // Wait, if we push, server updated_at becomes NOW.
+        // If we pull later, we might pull our own write if our cursor is old.
+        // That's fine, LWW will handle it (identical data).
+        await db.srs.update([item.question_id, userId], {
+          synced: 1,
+        });
+      })
+    );
+    stats.pushed += batch.length;
+  }
+
+  return incomplete;
+}
+
+function toSafeCursorTimestamp(
+  candidate: unknown,
+  fallback: string,
+  context: Record<string, unknown>,
+): string {
+  if (typeof candidate === "string" && !Number.isNaN(Date.parse(candidate))) {
+    return new Date(candidate).toISOString();
+  }
+
+  if (!Number.isNaN(Date.parse(fallback))) {
+    logger.warn("Invalid cursor timestamp encountered in SRS sync, using fallback", {
+      ...context,
+      fallback,
+    });
+    return new Date(fallback).toISOString();
+  }
+
+  logger.error("Invalid cursor timestamp and fallback in SRS sync; defaulting to epoch", {
+    ...context,
+  });
+  return "1970-01-01T00:00:00.000Z";
+}
+
+async function pullRemoteChanges(
+  userId: string,
+  startTime: number,
+  stats: { pulled: number },
+  client: SupabaseClient,
+): Promise<{ incomplete: boolean; hardFailure: boolean }> {
+  let incomplete = false;
+  let hardFailure = false;
+  let hasMore = true;
+
+  while (hasMore) {
+    if (Date.now() - startTime > TIME_BUDGET_MS) {
+      logger.warn("SRS sync time budget exceeded during pull");
+      incomplete = true;
+      break;
+    }
+
+    const cursor = await getSRSSyncCursor(userId);
+    const timestamp = cursor.timestamp;
+
+    // Keyset pagination: (updated_at > ts) OR (updated_at = ts AND question_id > last_id)
+    const filter = `updated_at.gt.${timestamp},and(updated_at.eq.${timestamp},question_id.gt.${cursor.lastId})`;
+
+    const { data: remoteItems, error } = await client
+      .from("srs")
+      .select("*")
+      .eq("user_id", userId)
+      .or(filter)
+      .order("updated_at", { ascending: true })
+      .order("question_id", { ascending: true })
+      .limit(BATCH_SIZE);
+
+    if (error) {
+      logger.error("Failed to pull SRS items from Supabase", { userId, error });
+      break;
+    }
+
+    if (!remoteItems || remoteItems.length === 0) {
+      break;
+    }
+
+    const itemsToSave: SRSState[] = [];
+    let lastRecordUpdatedAt = cursor.timestamp;
+    let lastRecordId = cursor.lastId;
+    let validRecordsInBatch = 0;
+
+    for (const r of remoteItems) {
+      const validation = RemoteSRSSchema.safeParse(r);
+
+      if (!validation.success) {
+        logger.warn("Skipping invalid remote SRS record", {
+          id: r.question_id,
+          error: validation.error,
+        });
+        continue;
+      }
+
+      const remote = validation.data;
+
+      // Determine if we should update local
+      const local = await db.srs.get([remote.question_id, userId]);
+
+      let shouldUpdate = false;
+      if (!local) {
+        shouldUpdate = true;
+      } else {
+        // Last-Write-Wins based on last_reviewed
+        // If remote is newer (higher last_reviewed), it wins.
+        // If equal, we can assume convergent or arbitrary winner (remote matches server truth).
+        if (remote.last_reviewed > local.last_reviewed) {
+          shouldUpdate = true;
+        } else if (remote.last_reviewed === local.last_reviewed) {
+          // Timestamps match.
+          // If local is unsynced, we might have pending changes? 
+          // But if last_reviewed is same, it's likely same review event.
+          // Safe to overwrite to ensure consistency.
+          shouldUpdate = true;
+        }
+      }
+
+      if (shouldUpdate) {
+        itemsToSave.push({
+          question_id: remote.question_id,
+          user_id: userId,
+          box: remote.box as 1 | 2 | 3 | 4 | 5,
+          last_reviewed: remote.last_reviewed,
+          next_review: remote.next_review,
+          consecutive_correct: remote.consecutive_correct,
+          synced: 1,
+          updated_at: new Date(remote.updated_at).getTime(),
+        });
+      }
+
+      lastRecordUpdatedAt = toSafeCursorTimestamp(remote.updated_at, cursor.timestamp, {
+        userId,
+        itemId: remote.question_id,
+        path: "srs-sync-valid",
+      });
+      lastRecordId = remote.question_id;
+      validRecordsInBatch++;
+    }
+
+    // Force advance cursor if all invalid (schema drift prevention)
+    if (remoteItems.length > 0 && validRecordsInBatch === 0) {
+      const lastItem = remoteItems[remoteItems.length - 1];
+      logger.error(
+        "Batch of SRS records all failed validation. Force-advancing cursor.",
+        { lastId: lastItem.question_id }
+      );
+      lastRecordUpdatedAt = toSafeCursorTimestamp(
+        lastItem.updated_at,
+        cursor.timestamp,
+        {
+          userId,
+          itemId: lastItem.question_id,
+          path: "srs-sync-all-invalid",
+        }
+      );
+      lastRecordId = lastItem.question_id;
+
+      // Check for hard failure condition (lots of consecutive failures?)
+      // For now, we just advance to avoid loop.
+    }
+
+    if (itemsToSave.length > 0) {
+      await db.srs.bulkPut(itemsToSave);
+      stats.pulled += itemsToSave.length;
+    }
+
+    await setSRSSyncCursor(lastRecordUpdatedAt, userId, lastRecordId);
+
+    if (remoteItems.length < BATCH_SIZE) {
+      hasMore = false;
+    }
+  }
+
+  return { incomplete, hardFailure };
+}

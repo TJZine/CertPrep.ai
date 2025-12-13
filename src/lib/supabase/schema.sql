@@ -149,3 +149,47 @@ drop trigger if exists quizzes_set_updated_at on quizzes;
 create trigger quizzes_set_updated_at
   before update on quizzes
   for each row execute procedure public.set_updated_at();
+
+-- TABLE: srs (Spaced Repetition State)
+create table if not exists srs (
+  question_id uuid not null,
+  user_id uuid references auth.users(id) on delete cascade not null,
+  box smallint not null default 1 check (box >= 1 and box <= 5),
+  last_reviewed bigint not null,  -- Unix timestamp (ms) for LWW conflict resolution
+  next_review bigint not null,    -- Unix timestamp (ms)
+  consecutive_correct integer not null default 0,
+  created_at timestamp with time zone default timezone('utc'::text, now()),
+  updated_at timestamp with time zone default timezone('utc'::text, now()),
+  
+  -- Composite primary key (one SRS state per question per user)
+  primary key (question_id, user_id)
+);
+
+alter table srs enable row level security;
+
+-- RLS: Users can only access their own SRS data
+create policy "Users can view own SRS state"
+  on srs for select
+  using ( (SELECT auth.uid()) = user_id );
+
+create policy "Users can insert own SRS state"
+  on srs for insert
+  with check ( (SELECT auth.uid()) = user_id );
+
+create policy "Users can update own SRS state"
+  on srs for update
+  using ( (SELECT auth.uid()) = user_id );
+
+create policy "Users can delete own SRS state"
+  on srs for delete
+  using ( (SELECT auth.uid()) = user_id );
+
+-- OPTIMIZATION: Index for incremental sync (keyset pagination)
+create index concurrently if not exists idx_srs_sync_optimization
+  on srs (user_id, updated_at, question_id);
+
+-- Trigger to auto-update updated_at on changes
+drop trigger if exists srs_set_updated_at on srs;
+create trigger srs_set_updated_at
+  before update on srs
+  for each row execute procedure public.set_updated_at();

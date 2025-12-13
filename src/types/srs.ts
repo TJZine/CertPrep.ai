@@ -32,4 +32,6 @@ export interface SRSState {
     consecutive_correct: number;
     /** Sync status (0 = local only, 1 = synced). Reserved for future use. */
     synced?: SyncFlag;
+    /** Local timestamp for sync cursor tracking. */
+    updated_at?: number;
 }

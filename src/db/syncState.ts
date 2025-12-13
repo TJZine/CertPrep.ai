@@ -148,6 +148,55 @@ export async function setQuizSyncCursor(
   });
 }
 
+export async function getSRSSyncCursor(userId: string): Promise<SyncCursor> {
+  if (!userId) return { timestamp: EPOCH_TIMESTAMP, lastId: NIL_UUID };
+
+  const key = `srs:${userId}`;
+  const state = await db.syncState.get(key);
+
+  let timestamp = EPOCH_TIMESTAMP;
+  let healed = false;
+  if (state?.lastSyncedAt) {
+    const rawTimestamp =
+      typeof state.lastSyncedAt === "string"
+        ? state.lastSyncedAt
+        : new Date(state.lastSyncedAt).toISOString();
+
+    // Heal future-corrupted cursors
+    const healResult = healFutureCursor(rawTimestamp, { userId, table: "srs" });
+    timestamp = healResult.timestamp;
+    healed = healResult.healed;
+  }
+
+  return {
+    timestamp,
+    // Clear lastId when healing to avoid keyset pagination skipping records
+    lastId: healed ? NIL_UUID : (state?.lastId || NIL_UUID),
+  };
+}
+
+export async function setSRSSyncCursor(
+  timestamp: string,
+  userId: string,
+  lastId?: string,
+): Promise<void> {
+  if (Number.isNaN(Date.parse(timestamp))) throw new Error("Invalid timestamp");
+
+  // Defense-in-depth: Don't persist future timestamps
+  const { timestamp: safeTimestamp } = healFutureCursor(timestamp, {
+    userId,
+    table: "srs-write",
+  });
+
+  const key = `srs:${userId}`;
+  await db.syncState.put({
+    table: key,
+    lastSyncedAt: safeTimestamp,
+    synced: 1,
+    lastId: lastId || NIL_UUID,
+  });
+}
+
 const QUIZ_BACKFILL_KEY = (userId: string): string =>
   `quizzes:backfill:${userId}`;
 
@@ -168,7 +217,7 @@ export async function setQuizBackfillDone(userId: string): Promise<void> {
 // Sync Block State (Throttle/Lockout for Schema Drift)
 // ─────────────────────────────────────────────────────────────────────────────
 
-const SYNC_BLOCK_KEY = (userId: string, table: "results" | "quizzes"): string =>
+const SYNC_BLOCK_KEY = (userId: string, table: "results" | "quizzes" | "srs"): string =>
   `sync_blocked:${table}:${userId}`;
 
 // Default lockout duration: 6 hours
@@ -186,7 +235,7 @@ export interface SyncBlockState {
  */
 export async function getSyncBlockState(
   userId: string,
-  table: "results" | "quizzes",
+  table: "results" | "quizzes" | "srs",
 ): Promise<SyncBlockState | null> {
   const keyPrefix = SYNC_BLOCK_KEY(userId, table);
   // The key stored is `${keyPrefix}:${reason}`, so we must search by prefix
@@ -224,7 +273,7 @@ export async function getSyncBlockState(
  */
 export async function setSyncBlockState(
   userId: string,
-  table: "results" | "quizzes",
+  table: "results" | "quizzes" | "srs",
   reason: string,
   ttlMs: number = SYNC_BLOCK_TTL_MS,
 ): Promise<void> {
@@ -246,7 +295,7 @@ export async function setSyncBlockState(
  */
 export async function clearSyncBlockState(
   userId: string,
-  table: "results" | "quizzes",
+  table: "results" | "quizzes" | "srs",
 ): Promise<void> {
   const key = SYNC_BLOCK_KEY(userId, table);
   await db.syncState.where("table").startsWith(key).delete();

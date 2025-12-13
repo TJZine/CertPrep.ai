@@ -84,6 +84,8 @@ export async function updateSRSState(
             last_reviewed: now,
             next_review: nextReview,
             consecutive_correct: wasCorrect ? existing.consecutive_correct + 1 : 0,
+            synced: 0,
+            updated_at: now,
         });
     } else {
         // First time seeing this question - start at box 1 or 2 depending on correctness
@@ -97,6 +99,8 @@ export async function updateSRSState(
             last_reviewed: now,
             next_review: nextReview,
             consecutive_correct: wasCorrect ? 1 : 0,
+            synced: 0,
+            updated_at: now,
         };
 
         await db.srs.add(newState);

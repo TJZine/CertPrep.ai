@@ -140,6 +140,11 @@ export class CertPrepDatabase extends Dexie {
       srs: "&[question_id+user_id], user_id, next_review",
     });
 
+    // Version 10: Add compound index for SRS sync
+    this.version(10).stores({
+      srs: "&[question_id+user_id], user_id, next_review, [user_id+synced]",
+    });
+
     this.quizzes = this.table("quizzes");
     this.results = this.table("results");
     this.syncState = this.table("syncState");
@@ -192,11 +197,13 @@ export async function clearDatabase(): Promise<void> {
       db.quizzes,
       db.results,
       db.syncState,
+      db.srs,
       async () => {
         await Promise.all([
           db.quizzes.clear(),
           db.results.clear(),
           db.syncState.clear(),
+          db.srs.clear(),
         ]);
       },
     );
