@@ -35,6 +35,7 @@ const RemoteResultSchema = z.object({
   category_breakdown: z.record(z.string(), z.number()),
   question_ids: z.array(z.string()).optional().nullable(),
   created_at: z.string(),
+  deleted_at: z.string().nullable().optional(), // For cross-device deletion sync
 }).passthrough();
 
 const syncState = {
@@ -203,12 +204,12 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
         const toDelete = batch.filter((r) => r.deleted_at);
         const toUpsert = batch.filter((r) => !r.deleted_at);
 
-        // Handle Deletions
+        // Handle Deletions - use soft-delete for cross-device sync
         if (toDelete.length > 0) {
           const deleteIds = toDelete.map((r) => r.id);
           const { error: deleteError } = await client
             .from("results")
-            .delete()
+            .update({ deleted_at: new Date().toISOString() })
             .in("id", deleteIds);
 
           if (deleteError) {
@@ -231,8 +232,10 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
               break;
             }
           } else {
-            // Successful remote delete -> remove local tombstone
-            await db.results.bulkDelete(deleteIds);
+            // Mark local tombstones as synced (keep for local display filtering)
+            await db.results.bulkUpdate(
+              toDelete.map((r) => ({ key: r.id, changes: { synced: 1 } })),
+            );
             pushed += toDelete.length;
           }
         }
@@ -329,7 +332,7 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
       const { data: remoteResults, error: fetchError } = await client
         .from("results")
         .select(
-          "id, quiz_id, timestamp, mode, score, time_taken_seconds, answers, flagged_questions, category_breakdown, question_ids, created_at",
+          "id, quiz_id, timestamp, mode, score, time_taken_seconds, answers, flagged_questions, category_breakdown, question_ids, created_at, deleted_at",
         )
         .eq("user_id", userId)
         .or(filter)
@@ -351,6 +354,7 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
       }
 
       const resultsToSave: Result[] = [];
+      const resultsToDelete: string[] = []; // IDs of results deleted on remote
       let lastRecordCreatedAt = cursor.timestamp;
       let lastRecordId = cursor.lastId;
       let validRecordsInBatch = 0;
@@ -369,6 +373,20 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
         }
 
         const validResult = validation.data;
+
+        // Handle remote deletions - apply locally
+        if (validResult.deleted_at) {
+          resultsToDelete.push(validResult.id);
+          // Still advance cursor for deleted records
+          lastRecordCreatedAt = toSafeCursorTimestamp(r.created_at, cursor.timestamp, {
+            userId,
+            resultId: r.id,
+            path: "results-sync-deleted",
+          });
+          lastRecordId = r.id;
+          validRecordsInBatch++;
+          continue;
+        }
 
         resultsToSave.push({
           id: validResult.id,
@@ -426,6 +444,12 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
         pulled += resultsToSave.length;
       }
 
+      // Apply remote deletions locally
+      if (resultsToDelete.length > 0) {
+        await db.results.bulkDelete(resultsToDelete);
+        logger.debug("Applied remote deletions locally", { count: resultsToDelete.length, userId });
+      }
+
       // Update cursor to the last seen record's timestamp AND id
       const safeCursorTimestamp = toSafeCursorTimestamp(
         lastRecordCreatedAt,
@@ -451,13 +475,23 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
     }
   }
 
-  logger.info("Result sync complete", {
-    userId,
-    pushed,
-    pulled,
-    incomplete,
-    lastError,
-  });
+  if (incomplete) {
+    logger.info("Result sync finished incomplete", {
+      userId,
+      pushed,
+      pulled,
+      incomplete: true,
+      lastError,
+    });
+  } else {
+    logger.info("Result sync complete", {
+      userId,
+      pushed,
+      pulled,
+      incomplete: false,
+      lastError,
+    });
+  }
   return {
     incomplete,
     error: lastError,

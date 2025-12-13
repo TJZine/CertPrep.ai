@@ -35,7 +35,7 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
     object-src 'none';
     base-uri 'self';
     form-action 'self';
-    frame-ancestors 'self' https://hcaptcha.com https://*.hcaptcha.com;
+    frame-ancestors 'self';
     frame-src 'self' https://hcaptcha.com https://*.hcaptcha.com https://sentry.io https://browser.sentry-cdn.com;
     upgrade-insecure-requests;
     connect-src 'self' ${supabaseUrl} ${supabaseHostname ? `wss://${supabaseHostname}` : ""} *.sentry.io https://hcaptcha.com https://*.hcaptcha.com https://browser.sentry-cdn.com https://vitals.vercel-insights.com;

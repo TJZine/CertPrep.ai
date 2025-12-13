@@ -38,6 +38,7 @@ create table if not exists quizzes (
   version integer not null default 1,
   questions jsonb not null,
   quiz_hash text,
+  source_id text,  -- Optional: Reference to source quiz for imports
   created_at timestamp with time zone default timezone('utc'::text, now()),
   updated_at timestamp with time zone default timezone('utc'::text, now()),
   deleted_at timestamp with time zone
@@ -74,7 +75,8 @@ create table if not exists results (
   flagged_questions jsonb not null default '[]'::jsonb,
   category_breakdown jsonb not null default '{}'::jsonb,
   question_ids jsonb default null, -- Optional: Subset of questions for Smart Round / Review Missed
-  created_at timestamp with time zone default timezone('utc'::text, now())
+  created_at timestamp with time zone default timezone('utc'::text, now()),
+  deleted_at timestamp with time zone default null -- Soft-delete for cross-device sync
 );
 
 alter table results enable row level security;

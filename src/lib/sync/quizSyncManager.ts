@@ -22,6 +22,17 @@ import { fetchUserQuizzes, upsertQuizzes } from "./quizRemote";
 import type { Quiz } from "@/types/quiz";
 import { QuestionSchema } from "@/validators/quizSchema";
 import { z } from "zod";
+import { createClient } from "@/lib/supabase/client";
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+let supabaseInstance: SupabaseClient | undefined;
+
+function getSupabaseClient(): SupabaseClient | undefined {
+  if (!supabaseInstance) {
+    supabaseInstance = createClient();
+  }
+  return supabaseInstance;
+}
 
 async function ensureQuizHash(
   quiz: Quiz,
@@ -85,14 +96,14 @@ export async function syncQuizzes(
               return await performQuizSync(userId);
             } catch (error) {
               logger.error("Quiz sync failed while holding lock", error);
-              return { incomplete: false };
+              return { incomplete: true };
             }
           },
         )) || { incomplete: false }
       );
     } catch (error) {
       logger.error("Failed to acquire quiz sync lock request", error);
-      return { incomplete: false };
+      return { incomplete: true };
     }
   }
 
@@ -111,7 +122,7 @@ export async function syncQuizzes(
     return await performQuizSync(userId);
   } catch (error) {
     logger.error("Quiz sync failed (fallback path)", error);
-    return { incomplete: false };
+    return { incomplete: true };
   } finally {
     syncState.isSyncing = false;
   }
@@ -138,6 +149,23 @@ async function performQuizSync(
     return { incomplete: true };
   }
 
+  // Validate auth session matches the userId we're syncing for
+  const client = getSupabaseClient();
+  if (!client) {
+    logger.warn("Quiz sync skipped: Supabase client unavailable");
+    return { incomplete: true };
+  }
+
+  const { data: { session }, error: authError } = await client.auth.getSession();
+  if (authError || !session?.user) {
+    logger.warn("Quiz sync skipped: No valid auth session", { authError: authError?.message });
+    return { incomplete: true };
+  }
+  if (session.user.id !== userId) {
+    logger.error("Quiz sync aborted: Auth user ID mismatch", { authUserId: session.user.id, syncUserId: userId });
+    return { incomplete: true };
+  }
+
   try {
     const backfillComplete = await getQuizBackfillState(userId);
     if (!backfillComplete) {
@@ -158,19 +186,27 @@ async function performQuizSync(
     const pullResult = await pullRemoteChanges(userId, startTime, stats);
     incomplete = pullResult.incomplete || incomplete;
 
-    // If pull encountered a hard failure (schema drift), don't log as "complete"
     if (pullResult.hardFailure) {
+      // Schema drift is a hard failure that requires intervention, so we treat it differently.
       logger.warn("Quiz sync halted due to schema drift", {
         userId,
         pushed: stats.pushed,
         pulled: stats.pulled,
+        incomplete: true,
+      });
+    } else if (incomplete) {
+      logger.info("Quiz sync finished incomplete", {
+        userId,
+        pushed: stats.pushed,
+        pulled: stats.pulled,
+        incomplete: true,
       });
     } else {
       logger.info("Quiz sync complete", {
         userId,
         pushed: stats.pushed,
         pulled: stats.pulled,
-        incomplete,
+        incomplete: false,
       });
     }
     return { incomplete };
@@ -276,6 +312,7 @@ async function pushLocalChanges(
         userId,
         error,
       });
+      incomplete = true;
       continue;
     }
 
@@ -322,6 +359,7 @@ async function pullRemoteChanges(
 
     if (error) {
       logger.error("Failed to pull quizzes from Supabase", { userId, error });
+      incomplete = true;
       break;
     }
 
