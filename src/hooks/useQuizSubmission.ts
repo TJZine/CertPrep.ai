@@ -2,11 +2,14 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/Toast";
 import { createResult } from "@/db/results";
+import { initializeSRSForResult } from "@/db/srs";
+import { db } from "@/db/index";
 import { useSync } from "@/hooks/useSync";
 import { useQuizSessionStore } from "@/stores/quizSessionStore";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 import { clearSmartRoundState } from "@/lib/smartRoundStorage";
+import { logger } from "@/lib/logger";
 
 interface UseQuizSubmissionProps {
   quizId: string;
@@ -95,12 +98,18 @@ export function useQuizSubmission({
           activeQuestionIds: questions.map((q) => q.id), // Pass active questions for accurate scoring (e.g. Smart Round)
         });
 
-        // Attempt background sync - failures here shouldn't invalidate the local save
-        try {
-          await sync();
-        } catch (syncErr) {
-          console.warn("Background sync failed after local save:", syncErr);
+        // Initialize SRS state for answered questions (non-blocking)
+        const quiz = await db.quizzes.get(quizId);
+        if (quiz) {
+          void initializeSRSForResult(result, quiz).catch((srsErr) => {
+            logger.warn("Failed to initialize SRS state (background)", { error: srsErr });
+          });
         }
+
+        // Fire-and-forget background sync - failures shouldn't invalidate the local save.
+        void sync().catch((syncErr) => {
+          console.warn("Background sync failed after local save:", syncErr);
+        });
 
 
         if (!isMountedRef.current) return;

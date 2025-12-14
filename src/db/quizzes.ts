@@ -1,10 +1,12 @@
 import { Dexie } from "dexie";
-import { db } from "./index";
+import { db } from "@/db";
 import { NIL_UUID } from "@/lib/constants";
 import { sanitizeQuestionText } from "@/lib/sanitize";
 import { calculatePercentage, generateUUID, hashAnswer } from "@/lib/utils";
 import type { Question, Quiz } from "@/types/quiz";
 import { computeQuizHash } from "@/lib/sync/quizDomain";
+
+import { v5 as uuidv5 } from "uuid";
 import type { QuizImportInput } from "@/validators/quizSchema";
 import {
   formatValidationErrors,
@@ -12,6 +14,147 @@ import {
   QuestionSchema,
 } from "@/validators/quizSchema";
 import { z } from "zod";
+
+/**
+ * Legacy prefix for per-user SRS quiz IDs.
+ *
+ * NOTE: This legacy format (`srs-{userId}`) is NOT a valid UUID and therefore
+ * cannot sync to Supabase when `quizzes.id` is a UUID column.
+ * We keep it only for local migration/backwards compatibility.
+ */
+export const LEGACY_SRS_QUIZ_ID_PREFIX = "srs-";
+
+/**
+ * Generates the deterministic SRS quiz ID for a user.
+ *
+ * This MUST be a valid UUID to round-trip through Supabase's `uuid` columns.
+ */
+export function getSRSQuizId(userId: string): string {
+  return uuidv5(`certprep:srs:${userId}`, uuidv5.URL);
+}
+
+function getLegacySRSQuizId(userId: string): string {
+  return `${LEGACY_SRS_QUIZ_ID_PREFIX}${userId}`;
+}
+
+/**
+ * Checks if a quiz ID is an SRS review quiz.
+ */
+export function isSRSQuiz(
+  quizOrId: Pick<Quiz, "id" | "user_id"> | string,
+  userId?: string,
+): boolean {
+  if (typeof quizOrId === "string") {
+    if (quizOrId.startsWith(LEGACY_SRS_QUIZ_ID_PREFIX)) return true;
+    return Boolean(userId && quizOrId === getSRSQuizId(userId));
+  }
+
+  if (quizOrId.id.startsWith(LEGACY_SRS_QUIZ_ID_PREFIX)) return true;
+  // For quiz objects, we can derive the deterministic SRS ID from the quiz's owner.
+  // Avoid using tags/title to prevent misclassifying user-created quizzes.
+  return quizOrId.id === getSRSQuizId(quizOrId.user_id);
+}
+
+/**
+ * Migrates legacy SRS quiz IDs (`srs-{userId}`) to the deterministic UUID v5 format.
+ *
+ * This is required to sync successfully when Supabase expects UUID IDs for quizzes/results.
+ */
+export async function migrateLegacySRSQuizIfNeeded(
+  userId: string,
+): Promise<void> {
+  const srsQuizId = getSRSQuizId(userId);
+  const legacyId = getLegacySRSQuizId(userId);
+
+  const [legacyQuiz, existingNewQuiz, legacyResultCount] = await Promise.all([
+    db.quizzes.get(legacyId),
+    db.quizzes.get(srsQuizId),
+    db.results.where("[user_id+quiz_id]").equals([userId, legacyId]).count(),
+  ]);
+
+  if (!legacyQuiz && legacyResultCount === 0) return;
+
+  const now = Date.now();
+  const migratedQuiz: Quiz =
+    existingNewQuiz ??
+    ({
+      id: srsQuizId,
+      user_id: userId,
+      title: legacyQuiz?.title || "SRS Review Sessions",
+      description:
+        legacyQuiz?.description ||
+        "Spaced repetition review sessions aggregated from your quizzes",
+      questions: legacyQuiz?.questions ?? [],
+      tags: Array.from(new Set([...(legacyQuiz?.tags ?? []), "srs", "system"])),
+      version: legacyQuiz?.version ?? 1,
+      created_at: legacyQuiz?.created_at ?? now,
+      updated_at: now,
+      deleted_at: null,
+      quiz_hash: legacyQuiz?.quiz_hash ?? null,
+      last_synced_at: null,
+      last_synced_version: null,
+    } satisfies Quiz);
+
+  await db.transaction("rw", db.quizzes, db.results, async () => {
+    // Ensure the UUID-based quiz exists (dirty so quizSyncManager will push it).
+    await db.quizzes.put(migratedQuiz);
+
+    // Move any legacy results onto the UUID-based quiz and re-mark as unsynced.
+    if (legacyResultCount > 0) {
+      await db.results
+        .where("[user_id+quiz_id]")
+        .equals([userId, legacyId])
+        .modify({ quiz_id: srsQuizId, synced: 0 });
+    }
+
+    // Drop legacy quiz row if it exists; it cannot sync to Supabase.
+    await db.quizzes.delete(legacyId);
+  });
+
+}
+
+/**
+ * Gets or creates the per-user SRS review quiz.
+ * This quiz is used as the parent for all SRS review results,
+ * allowing them to sync to Supabase (satisfying the FK constraint).
+ *
+ * @param userId - The user's ID
+ * @returns The SRS quiz (existing or newly created)
+ */
+export async function getOrCreateSRSQuiz(userId: string): Promise<Quiz> {
+  await migrateLegacySRSQuizIfNeeded(userId);
+
+  const srsQuizId = getSRSQuizId(userId);
+
+  // Check if already exists
+  const existing = await db.quizzes.get(srsQuizId);
+  if (existing) {
+    return existing;
+  }
+
+  // Create new SRS quiz using put() for idempotent upsert.
+  // This handles race conditions where concurrent calls may both pass
+  // the existence check - put() will succeed for both without errors.
+  const now = Date.now();
+  const srsQuiz: Quiz = {
+    id: srsQuizId,
+    user_id: userId,
+    title: "SRS Review Sessions",
+    description: "Spaced repetition review sessions aggregated from your quizzes",
+    questions: [], // Empty - questions vary per session
+    tags: ["srs", "system"],
+    version: 1,
+    created_at: now,
+    updated_at: now,
+    deleted_at: null,
+    quiz_hash: null, // No hash needed for SRS quiz
+    last_synced_at: null,
+    last_synced_version: null,
+  };
+
+  await db.quizzes.put(srsQuiz);
+  return srsQuiz;
+}
 
 export interface CreateQuizInput {
   title: string;

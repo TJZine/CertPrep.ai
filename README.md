@@ -4,7 +4,7 @@ README.md - CertPrep.ai
 
 <!-- Header Section with Logo -->
 <div align="center">
-  <img src="./public/icon.svg" alt="CertPrep.ai Logo" width="120">
+  <img src="./public/full-icon.svg" alt="CertPrep.ai Logo" width="120">
 </div>
 
 # CertPrep.ai
@@ -53,14 +53,14 @@ CertPrep.ai is a modern, offline-first quiz application designed to help users p
     <td align="center" width="33%">
       <img src="https://img.icons8.com/fluency/48/000000/test.png" width="40" alt="Quiz modes icon"><br>
       <strong>Quiz Modes</strong><br>
-      <sub>Proctor and Zen modes for different learning experiences</sub>
+      <sub>Proctor, Zen, Topic Study, and Spaced Repetition modes</sub>
     </td>
   </tr>
   <tr>
     <td align="center" width="33%">
       <img src="https://img.icons8.com/fluency/48/000000/analytics.png" width="40" alt="Analytics dashboard icon"><br>
       <strong>Analytics Dashboard</strong><br>
-      <sub>Track progress, scores, and performance over time</sub>
+      <sub>Track progress, heatmaps, and trend charts</sub>
     </td>
     <td align="center" width="33%">
       <img src="https://img.icons8.com/fluency/48/000000/smartphone-tablet.png" width="40" alt="Responsive design icon"><br>
@@ -107,11 +107,11 @@ CertPrep.ai is a modern, offline-first quiz application designed to help users p
 
 ## Demo
 
-> **Live Demo:** [https://certprep-ai.vercel.app](https://certprep-ai.vercel.app)
+> **Live Demo:** [https://cert-prep-ai.vercel.app](https://cert-prep-ai.vercel.app)
 
-## Demo Access
+## Access
 
-> _Please sign up for a new account to test the application._
+> _Please sign up for a new account to use the application._
 
 ---
 
@@ -125,7 +125,7 @@ CertPrep.ai is a modern, offline-first quiz application designed to help users p
 
 | Requirement      | Version    | Installation                     |
 | ---------------- | ---------- | -------------------------------- |
-| Node.js          | `>=18.0.0` | [Download](https://nodejs.org/)  |
+| Node.js          | `>=20.9.0` | [Download](https://nodejs.org/)  |
 | npm/yarn/pnpm    | Latest     | Comes with Node.js               |
 | Supabase Account | -          | [Sign up](https://supabase.com/) |
 
@@ -214,10 +214,12 @@ For code-level examples (auth, quizzes, results, and sync), see the dedicated [A
 
 ### Quiz Modes
 
-| Mode           | Description                       | Best For           |
-| -------------- | --------------------------------- | ------------------ |
-| 🎯 **Proctor** | Timed, monitored quiz environment | Assessments, exams |
-| 🧘 **Zen**     | Relaxed, self-paced learning      | Practice, study    |
+| Mode           | Description                        | Best For            |
+| -------------- | ---------------------------------- | ------------------- |
+| 🎯 **Proctor** | Timed, monitored quiz environment  | Assessments, exams  |
+| 🧘 **Zen**     | Relaxed, self-paced learning       | Practice, study     |
+| 🧠 **SRS**     | Spaced repetition review (Leitner) | Long-term retention |
+| 📚 **Topic**   | Targeted category practice         | Weak area improv.   |
 
 <details>
 <summary>View mode comparison</summary>
@@ -227,6 +229,7 @@ graph TD
     A[Start Quiz] --> B{Select Mode}
     B -->|Proctor| C[Timer Enabled]
     B -->|Zen| D[No Timer]
+    B -->|SRS/Topic| D
     C --> E[Strict Navigation]
     D --> F[Free Navigation]
     E --> G[Submit on Complete]

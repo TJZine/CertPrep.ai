@@ -21,7 +21,7 @@ import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
 import { db } from "@/db";
-import { deleteResult } from "@/db/results";
+import { deleteResult, isSRSQuiz } from "@/db/results";
 import { celebratePerfectScore } from "@/lib/confetti";
 import { updateStudyStreak } from "@/lib/streaks";
 import { useQuizGrading } from "@/hooks/useQuizGrading";
@@ -73,7 +73,8 @@ export function ResultsContainer({
     setIsSyncing(true);
     try {
       const syncResult = await sync();
-      if (syncResult.success) {
+
+      if (syncResult.status === "success") {
         // syncManager already marks items as synced in Dexie on success
         // useLiveQuery will automatically pick up the change
         addToast("success", "Sync complete! Checking result status...");
@@ -86,6 +87,8 @@ export function ResultsContainer({
           // Result wasn't synced in this batch (edge case)
           addToast("info", "Sync completed but this result may need another sync.");
         }
+      } else if (syncResult.status === "partial") {
+        addToast("info", "Sync completed partially. Some items may still be pending.");
       } else {
         addToast("error", "Sync failed. Please check your connection.");
       }
@@ -117,8 +120,29 @@ export function ResultsContainer({
     return quiz.questions.filter((q) => idSet.has(q.id));
   }, [quiz.questions, result.question_ids]);
 
-  // Get the effective question count (subset for Smart Round, full quiz otherwise)
-  const sessionQuestionCount = scopedQuestions.length;
+  // Detect if this is an SRS/Topic Study result and compute display title
+  const isAggregatedResult = isSRSQuiz(result.quiz_id, effectiveUserId ?? undefined);
+  const displayTitle = React.useMemo(() => {
+    if (!isAggregatedResult) return quiz.title;
+    // For SRS results, try to get a meaningful title from category breakdown
+    const categories = Object.keys(result.category_breakdown ?? {});
+    if (categories.length === 1) {
+      return `Topic Study: ${categories[0]}`;
+    }
+    if (categories.length > 1) {
+      return "Study Session";
+    }
+    return "Study Session";
+  }, [isAggregatedResult, quiz.title, result.category_breakdown]);
+
+  // Get the effective question count - use result.question_ids for SRS results
+  // since quiz.questions is empty for the SRS quiz
+  const sessionQuestionCount = React.useMemo(() => {
+    if (isAggregatedResult && result.question_ids?.length) {
+      return result.question_ids.length;
+    }
+    return scopedQuestions.length;
+  }, [isAggregatedResult, result.question_ids, scopedQuestions.length]);
 
   const stats = React.useMemo(() => {
     if (!grading) return null;
@@ -340,7 +364,7 @@ export function ResultsContainer({
                 </Button>
                 <div>
                   <h1 className="line-clamp-1 text-sm font-semibold text-foreground">
-                    {quiz.title}
+                    {displayTitle}
                   </h1>
                   <div className="flex items-center gap-2">
 

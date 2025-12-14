@@ -4,7 +4,7 @@ import * as React from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, AlertCircle } from "lucide-react";
 import { ZenQuizContainer } from "@/components/quiz/ZenQuizContainer";
-import { SmartRoundBanner } from "@/components/quiz/SmartRoundBanner";
+import { SessionBanner } from "@/components/quiz/SessionBanner";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { Button } from "@/components/ui/Button";
@@ -12,6 +12,7 @@ import { useInitializeDatabase, useQuiz } from "@/hooks/useDatabase";
 import type { Question } from "@/types/quiz";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
+import { logger } from "@/lib/logger";
 import {
   clearSmartRoundState,
   SMART_ROUND_QUESTIONS_KEY,
@@ -19,15 +20,26 @@ import {
   SMART_ROUND_MISSED_COUNT_KEY,
   SMART_ROUND_FLAGGED_COUNT_KEY,
 } from "@/lib/smartRoundStorage";
+import {
+  clearTopicStudyState,
+  TOPIC_STUDY_QUESTIONS_KEY,
+  TOPIC_STUDY_QUIZ_ID_KEY,
+  TOPIC_STUDY_CATEGORY_KEY,
+  TOPIC_STUDY_MISSED_COUNT_KEY,
+  TOPIC_STUDY_FLAGGED_COUNT_KEY,
+} from "@/lib/topicStudyStorage";
 
-interface SmartRoundData {
+type StudyMode = "smart" | "topic" | null;
+
+interface StudyModeData {
   questionIds: string[];
   missedCount: number;
   flaggedCount: number;
+  category?: string;
 }
 
 /**
- * Page entry for Zen mode quizzes with Smart Round support.
+ * Page entry for Zen mode quizzes with Smart Round and Topic Study support.
  */
 export default function ZenModePage(): React.ReactElement {
   const params = useParams();
@@ -35,7 +47,15 @@ export default function ZenModePage(): React.ReactElement {
   const searchParams = useSearchParams();
   const quizId = params.id as string;
 
-  const isSmartRound = searchParams.get("mode") === "smart";
+  const rawMode = searchParams.get("mode");
+  const mode: StudyMode =
+    rawMode === "smart" || rawMode === "topic"
+      ? (rawMode as StudyMode)
+      : null;
+
+  const isSmartRound = mode === "smart";
+  const isTopicStudy = mode === "topic";
+  const isFilteredMode = isSmartRound || isTopicStudy;
 
   const { user } = useAuth();
   const effectiveUserId = useEffectiveUserId(user?.id);
@@ -46,65 +66,92 @@ export default function ZenModePage(): React.ReactElement {
     effectiveUserId ?? undefined,
   );
 
-  const [smartRoundData, setSmartRoundData] =
-    React.useState<SmartRoundData | null>(null);
+  const [studyModeData, setStudyModeData] =
+    React.useState<StudyModeData | null>(null);
   const [filteredQuestions, setFilteredQuestions] = React.useState<
     Question[] | null
   >(null);
 
   React.useEffect(() => {
-    if (isSmartRound && quiz) {
-      try {
-        const storedQuestionIds = sessionStorage.getItem(
-          SMART_ROUND_QUESTIONS_KEY,
-        );
-        const storedQuizId = sessionStorage.getItem(SMART_ROUND_QUIZ_ID_KEY);
-        const storedMissedCount = sessionStorage.getItem(
-          SMART_ROUND_MISSED_COUNT_KEY,
-        );
-        const storedFlaggedCount = sessionStorage.getItem(
-          SMART_ROUND_FLAGGED_COUNT_KEY,
-        );
+    if (!isFilteredMode || !quiz) return;
 
-        if (storedQuestionIds && storedQuizId === quizId) {
-          const questionIds: string[] = JSON.parse(storedQuestionIds);
+    // SSR guard: sessionStorage is only available in browser
+    if (typeof window === "undefined") return;
 
-          const filtered = quiz.questions.filter((q) =>
-            questionIds.includes(q.id),
-          );
-          const orderedFiltered = questionIds
-            .map((id) => filtered.find((q) => q.id === id))
-            .filter((q): q is Question => q !== undefined);
+    try {
+      // Determine which storage keys to use based on mode
+      let questionsKey: string;
+      let quizIdKey: string;
+      let missedKey: string | null = null;
+      let flaggedKey: string | null = null;
 
-          if (orderedFiltered.length > 0) {
-            setFilteredQuestions(orderedFiltered);
-            // Parse counts with proper handling for 0 (which is falsy but valid)
-            const parsedMissed = storedMissedCount !== null
-              ? Number.parseInt(storedMissedCount, 10)
-              : NaN;
-            const parsedFlagged = storedFlaggedCount !== null
-              ? Number.parseInt(storedFlaggedCount, 10)
-              : NaN;
-            setSmartRoundData({
-              questionIds,
-              missedCount: Number.isNaN(parsedMissed) ? orderedFiltered.length : parsedMissed,
-              flaggedCount: Number.isNaN(parsedFlagged) ? 0 : parsedFlagged,
-            });
-          } else {
-            router.replace(`/quiz/${quizId}/zen`);
-          }
+      if (isSmartRound) {
+        questionsKey = SMART_ROUND_QUESTIONS_KEY;
+        quizIdKey = SMART_ROUND_QUIZ_ID_KEY;
+        missedKey = SMART_ROUND_MISSED_COUNT_KEY;
+        flaggedKey = SMART_ROUND_FLAGGED_COUNT_KEY;
+      } else {
+        // Topic study mode
+        questionsKey = TOPIC_STUDY_QUESTIONS_KEY;
+        quizIdKey = TOPIC_STUDY_QUIZ_ID_KEY;
+        missedKey = TOPIC_STUDY_MISSED_COUNT_KEY;
+        flaggedKey = TOPIC_STUDY_FLAGGED_COUNT_KEY;
+      }
+
+      const storedQuestionIds = sessionStorage.getItem(questionsKey);
+      const storedQuizId = sessionStorage.getItem(quizIdKey);
+      const storedMissedCount = missedKey ? sessionStorage.getItem(missedKey) : null;
+      const storedFlaggedCount = flaggedKey ? sessionStorage.getItem(flaggedKey) : null;
+      const storedCategory = isTopicStudy
+        ? sessionStorage.getItem(TOPIC_STUDY_CATEGORY_KEY)
+        : undefined;
+
+
+      if (storedQuestionIds && storedQuizId === quizId) {
+        const questionIds: string[] = JSON.parse(storedQuestionIds);
+
+        const filtered = quiz.questions.filter((q) =>
+          questionIds.includes(q.id),
+        );
+        const orderedFiltered = questionIds
+          .map((id) => filtered.find((q) => q.id === id))
+          .filter((q): q is Question => q !== undefined);
+
+        if (orderedFiltered.length > 0) {
+          setFilteredQuestions(orderedFiltered);
+          // Parse counts with proper handling for 0 (which is falsy but valid)
+          const parsedMissed = storedMissedCount !== null
+            ? Number.parseInt(storedMissedCount, 10)
+            : NaN;
+          const parsedFlagged = storedFlaggedCount !== null
+            ? Number.parseInt(storedFlaggedCount, 10)
+            : NaN;
+          setStudyModeData({
+            questionIds,
+            missedCount: Number.isNaN(parsedMissed)
+              ? (isSmartRound ? orderedFiltered.length : 0)
+              : parsedMissed,
+            flaggedCount: Number.isNaN(parsedFlagged) ? 0 : parsedFlagged,
+            category: storedCategory ?? undefined,
+          });
         } else {
           router.replace(`/quiz/${quizId}/zen`);
         }
-      } catch (error) {
-        console.error("Failed to load Smart Round data:", error);
+      } else {
         router.replace(`/quiz/${quizId}/zen`);
       }
+    } catch (error) {
+      logger.error(`Failed to load ${mode} mode data`, { error });
+      router.replace(`/quiz/${quizId}/zen`);
     }
-  }, [isSmartRound, quiz, quizId, router]);
+  }, [isFilteredMode, isSmartRound, isTopicStudy, mode, quiz, quizId, router]);
 
-  const handleSmartRoundExit = (): void => {
-    clearSmartRoundState();
+  const handleModeExit = (): void => {
+    if (isSmartRound) {
+      clearSmartRoundState();
+    } else if (isTopicStudy) {
+      clearTopicStudyState();
+    }
     router.push("/");
   };
 
@@ -116,10 +163,16 @@ export default function ZenModePage(): React.ReactElement {
     );
   }
 
-  if (isSmartRound && !filteredQuestions) {
+  if (isFilteredMode && !filteredQuestions) {
+    let loadingText = "Preparing questions...";
+    if (isSmartRound) {
+      loadingText = "Preparing Smart Round...";
+    } else if (isTopicStudy) {
+      loadingText = "Preparing Topic Study...";
+    }
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
-        <LoadingSpinner size="lg" text="Preparing Smart Round..." />
+        <LoadingSpinner size="lg" text={loadingText} />
       </div>
     );
   }
@@ -172,7 +225,7 @@ export default function ZenModePage(): React.ReactElement {
   }
 
   const questionsToUse =
-    isSmartRound && filteredQuestions ? filteredQuestions : quiz.questions;
+    isFilteredMode && filteredQuestions ? filteredQuestions : quiz.questions;
 
   if (questionsToUse.length === 0) {
     return (
@@ -183,8 +236,8 @@ export default function ZenModePage(): React.ReactElement {
             No Questions
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            {isSmartRound
-              ? "No questions available for Smart Round."
+            {isFilteredMode
+              ? `No questions available for ${isSmartRound ? "Smart Round" : "Topic Study"}.`
               : "This quiz doesn't have any questions yet."}
           </p>
           <Button
@@ -200,9 +253,20 @@ export default function ZenModePage(): React.ReactElement {
   }
 
   const quizForSession =
-    isSmartRound && filteredQuestions
+    isFilteredMode && filteredQuestions
       ? { ...quiz, questions: filteredQuestions }
       : quiz;
+
+  // Build banner title based on mode
+  const getBannerTitle = (): string => {
+    if (isTopicStudy && studyModeData?.category) {
+      return `Topic Study: ${studyModeData.category}`;
+    }
+    if (isTopicStudy) {
+      return "Topic Study";
+    }
+    return "Smart Round";
+  };
 
   return (
     <ErrorBoundary
@@ -227,20 +291,24 @@ export default function ZenModePage(): React.ReactElement {
         </div>
       }
     >
-      {isSmartRound && smartRoundData && (
+      {isFilteredMode && studyModeData && (
         <div className="bg-background px-4 pt-4">
           <div className="mx-auto max-w-3xl">
-            <SmartRoundBanner
-              totalQuestions={smartRoundData.questionIds.length}
-              missedCount={smartRoundData.missedCount}
-              flaggedCount={smartRoundData.flaggedCount}
-              onExit={handleSmartRoundExit}
+            <SessionBanner
+              totalQuestions={studyModeData.questionIds.length}
+              missedCount={studyModeData.missedCount}
+              flaggedCount={studyModeData.flaggedCount}
+              onExit={handleModeExit}
+              title={getBannerTitle()}
             />
           </div>
         </div>
       )}
 
-      <ZenQuizContainer quiz={quizForSession} isSmartRound={isSmartRound} />
+      <ZenQuizContainer
+        quiz={quizForSession}
+        isSmartRound={isSmartRound}
+      />
     </ErrorBoundary>
   );
 }

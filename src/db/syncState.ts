@@ -1,4 +1,4 @@
-import { db } from "./index";
+import { db } from "@/db";
 import { NIL_UUID } from "@/lib/constants";
 import { logger } from "@/lib/logger";
 
@@ -148,6 +148,55 @@ export async function setQuizSyncCursor(
   });
 }
 
+export async function getSRSSyncCursor(userId: string): Promise<SyncCursor> {
+  if (!userId) return { timestamp: EPOCH_TIMESTAMP, lastId: NIL_UUID };
+
+  const key = `srs:${userId}`;
+  const state = await db.syncState.get(key);
+
+  let timestamp = EPOCH_TIMESTAMP;
+  let healed = false;
+  if (state?.lastSyncedAt) {
+    const rawTimestamp =
+      typeof state.lastSyncedAt === "string"
+        ? state.lastSyncedAt
+        : new Date(state.lastSyncedAt).toISOString();
+
+    // Heal future-corrupted cursors
+    const healResult = healFutureCursor(rawTimestamp, { userId, table: "srs" });
+    timestamp = healResult.timestamp;
+    healed = healResult.healed;
+  }
+
+  return {
+    timestamp,
+    // Clear lastId when healing to avoid keyset pagination skipping records
+    lastId: healed ? NIL_UUID : (state?.lastId || NIL_UUID),
+  };
+}
+
+export async function setSRSSyncCursor(
+  timestamp: string,
+  userId: string,
+  lastId?: string,
+): Promise<void> {
+  if (Number.isNaN(Date.parse(timestamp))) throw new Error("Invalid timestamp");
+
+  // Defense-in-depth: Don't persist future timestamps
+  const { timestamp: safeTimestamp } = healFutureCursor(timestamp, {
+    userId,
+    table: "srs-write",
+  });
+
+  const key = `srs:${userId}`;
+  await db.syncState.put({
+    table: key,
+    lastSyncedAt: safeTimestamp,
+    synced: 1,
+    lastId: lastId || NIL_UUID,
+  });
+}
+
 const QUIZ_BACKFILL_KEY = (userId: string): string =>
   `quizzes:backfill:${userId}`;
 
@@ -162,4 +211,99 @@ export async function setQuizBackfillDone(userId: string): Promise<void> {
     lastSyncedAt: Date.now(),
     synced: 1,
   });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Sync Block State (Throttle/Lockout for Schema Drift)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const SYNC_BLOCK_KEY = (userId: string, table: "results" | "quizzes" | "srs"): string =>
+  `sync_blocked:${table}:${userId}`;
+
+// Default lockout duration: 6 hours
+const SYNC_BLOCK_TTL_MS = 6 * 60 * 60 * 1000;
+
+export interface SyncBlockState {
+  reason: string;
+  blockedAt: number;
+  ttlMs: number;
+}
+
+/**
+ * Check if sync is currently blocked due to schema drift or other hard failures.
+ * Returns the block state if blocked and TTL hasn't expired, null otherwise.
+ */
+export async function getSyncBlockState(
+  userId: string,
+  table: "results" | "quizzes" | "srs",
+): Promise<SyncBlockState | null> {
+  const keyPrefix = SYNC_BLOCK_KEY(userId, table);
+  // The key stored is `${keyPrefix}:${reason}`, so we must search by prefix
+  const state = await db.syncState.where("table").startsWith(keyPrefix).first();
+
+  if (!state?.lastSyncedAt || state.synced !== 0) {
+    return null;
+  }
+
+  const blockedAt =
+    typeof state.lastSyncedAt === "number"
+      ? state.lastSyncedAt
+      : Date.parse(String(state.lastSyncedAt));
+
+  if (Number.isNaN(blockedAt)) {
+    return null;
+  }
+
+  // TTL is stored in lastId field (repurposed; not a UUID in this context)
+  // Defensive guard: parseInt returns NaN for non-numeric strings, and
+  // (any_number > NaN) is always false, which would prevent block expiration.
+  const parsedTtl = state.lastId ? parseInt(state.lastId, 10) : SYNC_BLOCK_TTL_MS;
+  const ttlMs = Number.isFinite(parsedTtl) && parsedTtl > 0 ? parsedTtl : SYNC_BLOCK_TTL_MS;
+  const reason =
+    state.table?.slice(keyPrefix.length + 1) || "schema_drift";
+
+  // Check if TTL has expired
+  if (Date.now() - blockedAt > ttlMs) {
+    // Auto-clear expired block
+    await clearSyncBlockState(userId, table);
+    return null;
+  }
+
+  return { reason, blockedAt, ttlMs };
+}
+
+/**
+ * Set sync blocked state to prevent retry-hammering after hard failures.
+ */
+export async function setSyncBlockState(
+  userId: string,
+  table: "results" | "quizzes" | "srs",
+  reason: string,
+  ttlMs: number = SYNC_BLOCK_TTL_MS,
+): Promise<void> {
+  // Validate TTL: reject NaN, negative, or non-finite values
+  const safeTtl = Number.isFinite(ttlMs) && ttlMs > 0 ? ttlMs : SYNC_BLOCK_TTL_MS;
+
+  // Clear any existing block for this user/table to ensure only one active block
+  await clearSyncBlockState(userId, table);
+
+  const key = SYNC_BLOCK_KEY(userId, table);
+  await db.syncState.put({
+    table: `${key}:${reason}`,
+    lastSyncedAt: Date.now(),
+    synced: 0, // synced: 0 indicates blocked state
+    lastId: String(safeTtl),
+  });
+  logger.warn(`Sync blocked for ${table}`, { userId, reason, ttlMs: safeTtl });
+}
+
+/**
+ * Clear sync blocked state (e.g., after app update or manual retry).
+ */
+export async function clearSyncBlockState(
+  userId: string,
+  table: "results" | "quizzes" | "srs",
+): Promise<void> {
+  const key = SYNC_BLOCK_KEY(userId, table);
+  await db.syncState.where("table").startsWith(key).delete();
 }

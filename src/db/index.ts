@@ -2,6 +2,7 @@ import Dexie, { type Table } from "dexie";
 import { computeQuizHash } from "@/lib/sync/quizDomain";
 import type { Quiz } from "@/types/quiz";
 import type { Result } from "@/types/result";
+import type { SRSState } from "@/types/srs";
 
 import type { SyncState } from "@/types/sync";
 
@@ -20,6 +21,8 @@ export class CertPrepDatabase extends Dexie {
   public results!: Table<Result, string>;
 
   public syncState!: Table<SyncState, string>;
+
+  public srs!: Table<SRSState, [string, string]>;
 
   constructor() {
     super("CertPrepDatabase");
@@ -132,9 +135,25 @@ export class CertPrepDatabase extends Dexie {
         "id, quiz_id, timestamp, synced, user_id, deleted_at, [user_id+synced], [user_id+quiz_id], [user_id+timestamp]",
     });
 
+    // Version 9: Add srs table for spaced repetition tracking (local-only)
+    this.version(9).stores({
+      srs: "&[question_id+user_id], user_id, next_review",
+    });
+
+    // Version 10: Add compound index for SRS sync
+    this.version(10).stores({
+      srs: "&[question_id+user_id], user_id, next_review, [user_id+synced]",
+    });
+
+    // Version 11: Add compound index for SRS due queries
+    this.version(11).stores({
+      srs: "&[question_id+user_id], user_id, next_review, [user_id+synced], [user_id+next_review]",
+    });
+
     this.quizzes = this.table("quizzes");
     this.results = this.table("results");
     this.syncState = this.table("syncState");
+    this.srs = this.table("srs");
   }
 }
 
@@ -183,11 +202,13 @@ export async function clearDatabase(): Promise<void> {
       db.quizzes,
       db.results,
       db.syncState,
+      db.srs,
       async () => {
         await Promise.all([
           db.quizzes.clear(),
           db.results.clear(),
           db.syncState.clear(),
+          db.srs.clear(),
         ]);
       },
     );

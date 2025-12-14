@@ -7,6 +7,8 @@ import {
   getQuizSyncCursor,
   setQuizBackfillDone,
   setQuizSyncCursor,
+  getSyncBlockState,
+  setSyncBlockState,
 } from "@/db/syncState";
 import { logger } from "@/lib/logger";
 import {
@@ -20,6 +22,17 @@ import { fetchUserQuizzes, upsertQuizzes } from "./quizRemote";
 import type { Quiz } from "@/types/quiz";
 import { QuestionSchema } from "@/validators/quizSchema";
 import { z } from "zod";
+import { createClient } from "@/lib/supabase/client";
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+let supabaseInstance: SupabaseClient | undefined;
+
+function getSupabaseClient(): SupabaseClient | undefined {
+  if (!supabaseInstance) {
+    supabaseInstance = createClient();
+  }
+  return supabaseInstance;
+}
 
 async function ensureQuizHash(
   quiz: Quiz,
@@ -40,6 +53,7 @@ async function ensureQuizHash(
 const BATCH_SIZE = 50;
 const TIME_BUDGET_MS = 5000;
 
+// Using .passthrough() to preserve unknown fields from newer schema versions
 const RemoteQuizSchema = z.object({
   id: z.string(),
   user_id: z.string(),
@@ -53,7 +67,7 @@ const RemoteQuizSchema = z.object({
   created_at: z.string(),
   updated_at: z.string(),
   deleted_at: z.string().nullable(),
-});
+}).passthrough();
 
 const syncState = {
   isSyncing: false,
@@ -82,14 +96,14 @@ export async function syncQuizzes(
               return await performQuizSync(userId);
             } catch (error) {
               logger.error("Quiz sync failed while holding lock", error);
-              return { incomplete: false };
+              return { incomplete: true };
             }
           },
         )) || { incomplete: false }
       );
     } catch (error) {
       logger.error("Failed to acquire quiz sync lock request", error);
-      return { incomplete: false };
+      return { incomplete: true };
     }
   }
 
@@ -108,7 +122,7 @@ export async function syncQuizzes(
     return await performQuizSync(userId);
   } catch (error) {
     logger.error("Quiz sync failed (fallback path)", error);
-    return { incomplete: false };
+    return { incomplete: true };
   } finally {
     syncState.isSyncing = false;
   }
@@ -121,6 +135,36 @@ async function performQuizSync(
   const startTime = Date.now();
   let incomplete = false;
   const stats = { pushed: 0, pulled: 0 };
+
+  // Check if sync is blocked due to previous schema drift
+  const blockState = await getSyncBlockState(userId, "quizzes");
+  if (blockState) {
+    const remainingMs = blockState.ttlMs - (Date.now() - blockState.blockedAt);
+    const remainingMins = Math.ceil(remainingMs / 60000);
+    logger.debug("Quiz sync blocked due to previous failure", {
+      userId,
+      reason: blockState.reason,
+      remainingMins,
+    });
+    return { incomplete: true };
+  }
+
+  // Validate auth session matches the userId we're syncing for
+  const client = getSupabaseClient();
+  if (!client) {
+    logger.warn("Quiz sync skipped: Supabase client unavailable");
+    return { incomplete: true };
+  }
+
+  const { data: { session }, error: authError } = await client.auth.getSession();
+  if (authError || !session?.user) {
+    logger.warn("Quiz sync skipped: No valid auth session", { authError: authError?.message });
+    return { incomplete: true };
+  }
+  if (session.user.id !== userId) {
+    logger.error("Quiz sync aborted: Auth user ID mismatch", { authUserId: session.user.id, syncUserId: userId });
+    return { incomplete: true };
+  }
 
   try {
     const backfillComplete = await getQuizBackfillState(userId);
@@ -139,15 +183,32 @@ async function performQuizSync(
       return { incomplete: true };
     }
 
-    incomplete =
-      (await pullRemoteChanges(userId, startTime, stats)) || incomplete;
+    const pullResult = await pullRemoteChanges(userId, startTime, stats);
+    incomplete = pullResult.incomplete || incomplete;
 
-    logger.info("Quiz sync complete", {
-      userId,
-      pushed: stats.pushed,
-      pulled: stats.pulled,
-      incomplete,
-    });
+    if (pullResult.hardFailure) {
+      // Schema drift is a hard failure that requires intervention, so we treat it differently.
+      logger.warn("Quiz sync halted due to schema drift", {
+        userId,
+        pushed: stats.pushed,
+        pulled: stats.pulled,
+        incomplete: true,
+      });
+    } else if (incomplete) {
+      logger.info("Quiz sync finished incomplete", {
+        userId,
+        pushed: stats.pushed,
+        pulled: stats.pulled,
+        incomplete: true,
+      });
+    } else {
+      logger.info("Quiz sync complete", {
+        userId,
+        pushed: stats.pushed,
+        pulled: stats.pulled,
+        incomplete: false,
+      });
+    }
     return { incomplete };
   } finally {
     performance.mark("quizSync-end");
@@ -233,6 +294,7 @@ async function pushLocalChanges(
       (quiz.last_synced_version ?? null) !== quiz.version,
   );
 
+
   for (let i = 0; i < dirtyQuizzes.length; i += BATCH_SIZE) {
     if (Date.now() - startTime > TIME_BUDGET_MS) {
       logger.warn("Quiz sync time budget exceeded during push");
@@ -246,11 +308,13 @@ async function pushLocalChanges(
     );
     const { error } = await upsertQuizzes(userId, remotePayload);
 
+
     if (error) {
       logger.error("Failed to push local quizzes to Supabase", {
         userId,
         error,
       });
+      incomplete = true;
       continue;
     }
 
@@ -275,8 +339,9 @@ async function pullRemoteChanges(
   userId: string,
   startTime: number,
   stats: { pulled: number },
-): Promise<boolean> {
+): Promise<{ incomplete: boolean; hardFailure: boolean }> {
   let incomplete = false;
+  let hardFailure = false;
   let hasMore = true;
 
   while (hasMore) {
@@ -296,6 +361,7 @@ async function pullRemoteChanges(
 
     if (error) {
       logger.error("Failed to pull quizzes from Supabase", { userId, error });
+      incomplete = true;
       break;
     }
 
@@ -434,21 +500,27 @@ async function pullRemoteChanges(
       stats.pulled += quizzesToSave.length;
     }
 
-    // If we only saw invalid items, advance past the last seen record to avoid getting stuck,
-    // but log so we can diagnose server/client schema drift.
+    // If we only saw invalid items, this indicates schema drift.
+    // HALT sync without advancing cursor and set block state.
     if (!sawValid && sawInvalid) {
       logger.error(
-        "All remote quizzes in batch failed validation; advancing cursor to avoid sync loop",
+        "All remote quizzes failed validation - schema drift detected. Halting sync.",
         {
           userId,
+          batchSize: remoteQuizzes.length,
           lastSeenTimestamp,
           lastSeenId,
         },
       );
-      lastCursorTimestamp = lastSeenTimestamp;
-      lastCursorId = lastSeenId;
-    } else if (sawValid && sawInvalid) {
-      // Some invalid items after valid ones; advance to last seen to avoid reprocessing the same invalid rows forever.
+      incomplete = true;
+      hardFailure = true;
+      // Set block state to prevent retry-hammering (6 hour default TTL)
+      await setSyncBlockState(userId, "quizzes", "schema_drift");
+      break; // Exit loop WITHOUT advancing cursor
+    }
+
+    // Mixed valid/invalid: advance cursor past last seen to avoid reprocessing
+    if (sawValid && sawInvalid) {
       logger.warn(
         "Mixed valid/invalid remote quizzes; advancing cursor past last seen item",
         {
@@ -468,5 +540,5 @@ async function pullRemoteChanges(
     }
   }
 
-  return incomplete;
+  return { incomplete, hardFailure };
 }

@@ -62,5 +62,19 @@ For your **Supabase data**:
 - Client‑side logs: `src/lib/logger.ts` integrates with Sentry in production.
 - Result sync: `src/lib/sync/syncManager.ts`.
 - Quiz sync: `src/lib/sync/quizSyncManager.ts`.
+- SRS sync: `src/lib/sync/srsSyncManager.ts`.
 
 Check your browser console (in development) and Supabase logs for detailed errors.
+
+---
+
+## How does the Spaced Repetition System (SRS) work?
+
+CertPrep.ai uses a **Leitner box algorithm** for optimized review scheduling:
+
+- Questions move through 5 boxes based on correct/incorrect answers.
+- Box 1 (new/forgotten) reviews daily; Box 5 (mastered) reviews every 14 days.
+- SRS state is stored locally and synced cross-device via Supabase.
+- Access your review queue at `/study-due`.
+
+For details, see the `srs` table schema in [ARCHITECTURE.md](./ARCHITECTURE.md#srs).

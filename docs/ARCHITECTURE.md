@@ -193,6 +193,111 @@ create policy "quizzes_update_owner" on public.quizzes
 
 > Note: direct `delete` operations are typically not used; the app performs soft‑deletes by setting `deleted_at`.
 
+#### `srs`
+
+Stores Spaced Repetition System (SRS) state for each question/user pair. Synchronized with server-side LWW conflict resolution.
+
+```sql
+create table if not exists public.srs (
+  question_id text not null,
+  user_id uuid not null,
+  box integer not null default 1,
+  last_reviewed bigint not null,
+  next_review bigint not null,
+  consecutive_correct integer not null default 0,
+  updated_at bigint not null,
+  primary key (question_id, user_id)
+);
+
+alter table public.srs enable row level security;
+```
+
+RLS policies (owner‑only access):
+
+```sql
+create policy "srs_select_owner" on public.srs
+  for select using (auth.uid() = user_id);
+
+create policy "srs_insert_owner" on public.srs
+  for insert with check (auth.uid() = user_id);
+
+create policy "srs_update_owner" on public.srs
+  for update using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+```
+
+Server-side LWW upsert RPC for batch sync (Secure):
+
+```sql
+create or replace function upsert_srs_lww_batch(items srs_input[])
+returns table(question_id uuid, updated boolean)
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  return query
+  with input_rows as (
+    select
+      (unnest.question_id)::uuid as question_id,
+      auth.uid() as user_id, -- Force auth.uid() for security
+      unnest.box,
+      unnest.last_reviewed,
+      unnest.next_review,
+      unnest.consecutive_correct
+    from unnest(items) as unnest
+  ),
+  upserted as (
+    insert into srs (question_id, user_id, box, last_reviewed, next_review, consecutive_correct)
+    select
+      ir.question_id,
+      ir.user_id,
+      ir.box,
+      ir.last_reviewed,
+      ir.next_review,
+      ir.consecutive_correct
+    from input_rows ir
+    on conflict (question_id, user_id) do update
+    set box = excluded.box,
+        last_reviewed = excluded.last_reviewed,
+        next_review = excluded.next_review,
+        consecutive_correct = excluded.consecutive_correct
+    where srs.last_reviewed < excluded.last_reviewed
+    returning srs.question_id, true as was_updated
+  )
+  select
+    ir.question_id,
+    coalesce(u.was_updated, false) as updated
+  from input_rows ir
+  left join upserted u on ir.question_id = u.question_id;
+end;
+$$;
+```
+
+#### Intentional Schema Design Decisions
+
+##### No Foreign Key on `results.quiz_id`
+
+`results.quiz_id` intentionally lacks a foreign key constraint to `quizzes.id` because:
+
+1. **Soft-delete pattern**: Quizzes use `deleted_at` for soft-deletes. A traditional FK with `ON DELETE CASCADE` or `ON DELETE RESTRICT` would conflict with this pattern.
+2. **Offline-first sync**: In an offline-first architecture, a result may be created and synced before its associated quiz arrives on that device. A strict FK would cause insertion failures during sync.
+3. **Graceful degradation**: The UI handles orphaned results (where the quiz no longer exists) gracefully by showing "Unknown Quiz" rather than failing.
+
+##### NIL_UUID Pattern (`00000000-0000-0000-0000-000000000000`)
+
+The `NIL_UUID` constant is used locally in IndexedDB (Dexie) to represent **legacy or orphaned data** that predates per-user scoping:
+
+- **Database migrations** (v5-v7) backfill older records without `user_id` to `NIL_UUID` to prevent cross-account data leakage.
+- **Local access checks** allow users to read/modify quizzes with `user_id === NIL_UUID` for backward compatibility.
+- **Sync filtering** skips uploading `NIL_UUID` records to Supabase since they cannot be attributed to a real user.
+
+> **Important**: The RLS policies on Supabase only permit access to rows where `auth.uid() = user_id`. This means:
+>
+> - NIL_UUID rows in Supabase (if any exist) are **inaccessible** via the API.
+> - The `.in("user_id", [userId, NIL_UUID])` filter in `quizRemote.ts` is effectively a no-op for remote fetches—Supabase will never return NIL_UUID rows.
+> - This dead path remains for potential future global/template quiz features, but is currently non-functional.
+
 ### Infrastructure
 
 | Service                                 | Purpose              |

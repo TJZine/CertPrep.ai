@@ -24,10 +24,23 @@ import type { Quiz } from "@/types/quiz";
 import { useCorrectAnswer } from "@/hooks/useCorrectAnswer";
 import { useQuizSubmission } from "@/hooks/useQuizSubmission";
 import { clearSmartRoundState } from "@/lib/smartRoundStorage";
+import { clearSRSReviewState } from "@/lib/srsReviewStorage";
+import { clearTopicStudyState } from "@/lib/topicStudyStorage";
+import { updateSRSState } from "@/db/srs";
+import { createSRSReviewResult, createTopicStudyResult } from "@/db/results";
+import { getOrCreateSRSQuiz } from "@/db/quizzes";
+import { calculatePercentage } from "@/lib/utils";
+import { useAuth } from "@/components/providers/AuthProvider";
+import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
+import { useSync } from "@/hooks/useSync";
 
 interface ZenQuizContainerProps {
   quiz: Quiz;
   isSmartRound?: boolean;
+  /** When true, SRS state is updated after each answer (promotes/demotes Leitner box). */
+  isSRSReview?: boolean;
+  /** When true, this is a Topic Study session (aggregates questions across quizzes). */
+  isTopicStudy?: boolean;
 }
 
 /**
@@ -36,6 +49,8 @@ interface ZenQuizContainerProps {
 export function ZenQuizContainer({
   quiz,
   isSmartRound = false,
+  isSRSReview = false,
+  isTopicStudy = false,
 }: ZenQuizContainerProps): React.ReactElement {
   const router = useRouter();
   const { addToast } = useToast();
@@ -51,6 +66,19 @@ export function ZenQuizContainer({
   const isMountedRef = React.useRef(false);
   const hasSavedResultRef = React.useRef(false);
   const completionTimeRef = React.useRef<number | null>(null);
+  // Track which question IDs have had SRS state updated to prevent duplicate updates
+  const srsUpdatedQuestionsRef = React.useRef<Set<string>>(new Set());
+
+  // Auth for SRS updates
+  const { user } = useAuth();
+  const effectiveUserId = useEffectiveUserId(user?.id);
+  const { sync } = useSync();
+
+  // Reset SRS tracking when session context changes (user OR quiz change)
+  // This ensures that retaking the same quiz or starting a new session clears the cache.
+  React.useEffect(() => {
+    srsUpdatedQuestionsRef.current.clear();
+  }, [quiz.id, effectiveUserId, isSRSReview]);
 
   const {
     initializeSession,
@@ -69,6 +97,7 @@ export function ZenQuizContainer({
     answers,
     flaggedQuestions,
     questionQueue,
+    questions,
     isComplete,
     error,
     clearError,
@@ -104,9 +133,144 @@ export function ZenQuizContainer({
 
   const handleSessionComplete = React.useCallback(
     async (timeTakenSeconds: number): Promise<void> => {
+      // SRS review sessions save results differently - no quiz lookup needed
+      if (isSRSReview && effectiveUserId) {
+        try {
+          // Ensure SRS quiz exists for this user (creates if needed)
+          const srsQuiz = await getOrCreateSRSQuiz(effectiveUserId);
+
+          // Build question map for O(1) lookups
+          const questionMap = new Map(questions.map((q) => [q.id, q]));
+
+          // Calculate score and category breakdown from answers
+          let correctCount = 0;
+          const categoryTotals: Record<string, { correct: number; total: number }> = {};
+          const answersRecord: Record<string, string> = {};
+          const actualQuestionIds: string[] = [];
+
+          answers.forEach((record, questionId) => {
+            answersRecord[questionId] = record.selectedAnswer;
+            const question = questionMap.get(questionId);
+            if (!question) return;
+
+            actualQuestionIds.push(questionId);
+            const category = question.category || "Uncategorized";
+            if (!categoryTotals[category]) {
+              categoryTotals[category] = { correct: 0, total: 0 };
+            }
+            categoryTotals[category].total += 1;
+
+            if (record.isCorrect) {
+              correctCount += 1;
+              categoryTotals[category].correct += 1;
+            }
+          });
+
+          const score = calculatePercentage(correctCount, answers.size);
+          const categoryBreakdown = Object.fromEntries(
+            Object.entries(categoryTotals).map(([category, { correct, total }]) => [
+              category,
+              calculatePercentage(correct, total),
+            ]),
+          );
+
+          const result = await createSRSReviewResult({
+            userId: effectiveUserId,
+            srsQuizId: srsQuiz.id,
+            answers: answersRecord,
+            flaggedQuestions: Array.from(flaggedQuestions),
+            timeTakenSeconds,
+            questionIds: actualQuestionIds,
+            score,
+            categoryBreakdown,
+          });
+
+          clearSRSReviewState();
+          addToast("success", "SRS Review complete! Keep up the great work.");
+          // Fire-and-forget sync: offline-first means local is source of truth,
+          // but when online we want the Unsynced badge to clear automatically.
+          void sync().catch((syncErr) => {
+            console.warn("Background sync failed after SRS review save:", syncErr);
+          });
+          router.push(`/results/${result.id}`);
+        } catch (err) {
+          console.error("Failed to save SRS review result:", err);
+          addToast("error", "Failed to save result. You can still continue studying.");
+          clearSRSReviewState();
+          router.push("/study-due");
+        }
+        return;
+      }
+
+      if (isTopicStudy && effectiveUserId) {
+        try {
+          // Reuse SRS quiz for FK compliance (both aggregate questions across quizzes)
+          const srsQuiz = await getOrCreateSRSQuiz(effectiveUserId);
+
+          // Build question map for O(1) lookups
+          const questionMap = new Map(questions.map((q) => [q.id, q]));
+
+          // Calculate score and category breakdown from answers
+          let correctCount = 0;
+          const categoryTotals: Record<string, { correct: number; total: number }> = {};
+          const answersRecord: Record<string, string> = {};
+          const actualQuestionIds: string[] = [];
+
+          answers.forEach((record, questionId) => {
+            answersRecord[questionId] = record.selectedAnswer;
+            const question = questionMap.get(questionId);
+            if (!question) return;
+
+            actualQuestionIds.push(questionId);
+            const category = question.category || "Uncategorized";
+            if (!categoryTotals[category]) {
+              categoryTotals[category] = { correct: 0, total: 0 };
+            }
+            categoryTotals[category].total += 1;
+
+            if (record.isCorrect) {
+              correctCount += 1;
+              categoryTotals[category].correct += 1;
+            }
+          });
+
+          const score = calculatePercentage(correctCount, answers.size);
+          const categoryBreakdown = Object.fromEntries(
+            Object.entries(categoryTotals).map(([category, { correct, total }]) => [
+              category,
+              calculatePercentage(correct, total),
+            ]),
+          );
+
+          const result = await createTopicStudyResult({
+            userId: effectiveUserId,
+            srsQuizId: srsQuiz.id,
+            answers: answersRecord,
+            flaggedQuestions: Array.from(flaggedQuestions),
+            timeTakenSeconds,
+            questionIds: actualQuestionIds,
+            score,
+            categoryBreakdown,
+          });
+
+          clearTopicStudyState();
+          addToast("success", "Topic Study complete! Great progress.");
+          void sync().catch((syncErr) => {
+            console.warn("Background sync failed after Topic Study save:", syncErr);
+          });
+          router.push(`/results/${result.id}`);
+        } catch (err) {
+          console.error("Failed to save topic study result:", err);
+          addToast("error", "Failed to save result. You can still continue studying.");
+          clearTopicStudyState();
+          router.push("/analytics");
+        }
+        return;
+      }
+
       await submitQuiz(timeTakenSeconds);
     },
-    [submitQuiz],
+    [isSRSReview, isTopicStudy, effectiveUserId, answers, questions, flaggedQuestions, addToast, router, submitQuiz, sync],
   );
 
   const retrySave = React.useCallback((): void => {
@@ -173,8 +337,18 @@ export function ZenQuizContainer({
     if (isSmartRound) {
       clearSmartRoundState();
     }
+    if (isSRSReview) {
+      clearSRSReviewState();
+      router.push("/study-due");
+      return;
+    }
+    if (isTopicStudy) {
+      clearTopicStudyState();
+      router.push("/analytics");
+      return;
+    }
     router.push("/");
-  }, [resetSession, isSmartRound, router]);
+  }, [resetSession, isSmartRound, isSRSReview, isTopicStudy, router]);
 
   const isCurrentAnswerCorrect = React.useMemo(() => {
     if (!currentQuestion || !hasSubmitted) return false;
@@ -199,6 +373,37 @@ export function ZenQuizContainer({
       addToast("success", "Correct! 🎉");
     }
   }, [hasSubmitted, isCurrentAnswerCorrect, addToast]);
+
+  // Update SRS state after each answer when in SRS review mode
+  React.useEffect(() => {
+    if (!isSRSReview || !hasSubmitted || !currentQuestion || !effectiveUserId) {
+      return;
+    }
+
+    // Prevent duplicate updates for the same question
+    if (srsUpdatedQuestionsRef.current.has(currentQuestion.id)) {
+      return;
+    }
+
+    const answerRecord = answers.get(currentQuestion.id);
+    if (!answerRecord) {
+      return;
+    }
+
+    // Mark as updated before async call to prevent race conditions
+    srsUpdatedQuestionsRef.current.add(currentQuestion.id);
+
+    // Fire-and-forget SRS update (don't block UI)
+    void updateSRSState(
+      currentQuestion.id,
+      effectiveUserId,
+      answerRecord.isCorrect,
+    ).catch((err) => {
+      console.warn("Failed to update SRS state:", err);
+      // Remove from set so retry is possible if user goes back
+      srsUpdatedQuestionsRef.current.delete(currentQuestion.id);
+    });
+  }, [isSRSReview, hasSubmitted, currentQuestion, effectiveUserId, answers]);
 
   const quizContent = (
     <div className="mx-auto max-w-3xl">

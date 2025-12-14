@@ -421,3 +421,75 @@ export async function getStorageStats(
     estimatedSizeKB,
   };
 }
+
+/**
+ * Get counts of soft-deleted (tombstoned) items pending cleanup.
+ */
+export async function getDeletedItemsStats(
+  userId: string | null | undefined,
+): Promise<{
+  deletedQuizCount: number;
+  deletedResultCount: number;
+}> {
+  if (!userId) {
+    return { deletedQuizCount: 0, deletedResultCount: 0 };
+  }
+
+  const deletedQuizCount = await db.quizzes
+    .where("user_id")
+    .equals(userId)
+    .filter((quiz) => quiz.deleted_at !== null && quiz.deleted_at !== undefined)
+    .count();
+
+  const deletedResultCount = await db.results
+    .where("user_id")
+    .equals(userId)
+    .filter((result) => result.deleted_at !== null && result.deleted_at !== undefined)
+    .count();
+
+  return { deletedQuizCount, deletedResultCount };
+}
+
+/**
+ * Permanently remove soft-deleted (tombstoned) items from local storage.
+ * This frees up space but means deletions can no longer sync to other devices.
+ */
+export async function purgeDeletedItems(
+  userId: string,
+): Promise<{
+  quizzesPurged: number;
+  resultsPurged: number;
+}> {
+  let quizzesPurged = 0;
+  let resultsPurged = 0;
+
+  await db.transaction("rw", db.quizzes, db.results, async () => {
+    // Find and delete tombstoned quizzes
+    const deletedQuizzes = await db.quizzes
+      .where("user_id")
+      .equals(userId)
+      .filter((quiz) => quiz.deleted_at !== null && quiz.deleted_at !== undefined)
+      .toArray();
+
+    if (deletedQuizzes.length > 0) {
+      const quizIds = deletedQuizzes.map((q) => q.id);
+      await db.quizzes.bulkDelete(quizIds);
+      quizzesPurged = quizIds.length;
+    }
+
+    // Find and delete tombstoned results
+    const deletedResults = await db.results
+      .where("user_id")
+      .equals(userId)
+      .filter((result) => result.deleted_at !== null && result.deleted_at !== undefined)
+      .toArray();
+
+    if (deletedResults.length > 0) {
+      const resultIds = deletedResults.map((r) => r.id);
+      await db.results.bulkDelete(resultIds);
+      resultsPurged = resultIds.length;
+    }
+  });
+
+  return { quizzesPurged, resultsPurged };
+}

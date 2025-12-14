@@ -20,11 +20,11 @@ const shouldRun = Boolean(
 const productionSupabaseHosts = process.env.PRODUCTION_SUPABASE_HOSTS;
 const knownProductionHosts = productionSupabaseHosts
   ? new Set(
-      productionSupabaseHosts
-        .split(",")
-        .map((host) => host.trim())
-        .filter(Boolean),
-    )
+    productionSupabaseHosts
+      .split(",")
+      .map((host) => host.trim())
+      .filter(Boolean),
+  )
   : new Set<string>();
 
 describe.skipIf(!shouldRun)("Row Level Security (RLS) Verification", () => {
@@ -236,13 +236,28 @@ describe.skipIf(!shouldRun)("Row Level Security (RLS) Verification", () => {
   });
 
   it("User A should be able to insert and read their own results", async () => {
+    const quizId = generateUUID();
+    // Insert quiz first
+    const { error: quizInsertError } = await userA.client.from("quizzes").insert({
+      id: quizId,
+      user_id: userA.id,
+      title: "RLS Test Quiz",
+      description: "",
+      tags: [],
+      version: 1,
+      questions: [],
+    });
+    if (quizInsertError) {
+      throw new Error(`Failed to insert quiz: ${quizInsertError.message}`);
+    }
+
     const resultId = generateUUID();
     const resultData = {
       id: resultId,
       user_id: userA.id,
-      quiz_id: generateUUID(),
+      quiz_id: quizId, // Link to real quiz
       timestamp: Date.now(),
-      mode: "practice",
+      mode: "zen", // Valid enum
       score: 100,
       time_taken_seconds: 60,
       answers: {},
@@ -271,13 +286,28 @@ describe.skipIf(!shouldRun)("Row Level Security (RLS) Verification", () => {
 
   it("User B should NOT be able to read User A's results", async () => {
     // User A creates a record (already done in previous test, but let's make a new one to be sure)
+    const quizId = generateUUID();
+    // Insert quiz first
+    const { error: quizInsertError } = await userA.client.from("quizzes").insert({
+      id: quizId,
+      user_id: userA.id,
+      title: "RLS Test Quiz",
+      description: "",
+      tags: [],
+      version: 1,
+      questions: [],
+    });
+    if (quizInsertError) {
+      throw new Error(`Failed to insert quiz: ${quizInsertError.message}`);
+    }
+
     const resultId = generateUUID();
     const resultData = {
       id: resultId,
       user_id: userA.id,
-      quiz_id: generateUUID(),
+      quiz_id: quizId, // Link to real quiz
       timestamp: Date.now(),
-      mode: "practice",
+      mode: "zen", // Valid enum
       score: 100,
       time_taken_seconds: 60,
       answers: {},
@@ -306,13 +336,28 @@ describe.skipIf(!shouldRun)("Row Level Security (RLS) Verification", () => {
 
   it("User B should NOT be able to update User A's results", async () => {
     // User A creates a record
+    const quizId = generateUUID();
+    // Insert quiz first
+    const { error: quizInsertError } = await userA.client.from("quizzes").insert({
+      id: quizId,
+      user_id: userA.id,
+      title: "RLS Test Quiz",
+      description: "",
+      tags: [],
+      version: 1,
+      questions: [],
+    });
+    if (quizInsertError) {
+      throw new Error(`Failed to insert quiz: ${quizInsertError.message}`);
+    }
+
     const resultId = generateUUID();
     const resultData = {
       id: resultId,
       user_id: userA.id,
-      quiz_id: generateUUID(),
+      quiz_id: quizId, // Link to real quiz
       timestamp: Date.now(),
-      mode: "practice",
+      mode: "zen", // Valid enum
       score: 100,
       time_taken_seconds: 60,
       answers: {},

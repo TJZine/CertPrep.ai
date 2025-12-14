@@ -2421,7 +2421,7 @@
     background: hsl(45, 25%, 93%);
   }
 
-  /* Fix for bunched header links due to wide Courier font */
+  /* RISO header nav: extra margin for wide Courier font (overrides base 2rem/ml-8) */
   [data-theme="riso"] header nav {
     margin-left: 4rem;
     gap: 3rem !important;

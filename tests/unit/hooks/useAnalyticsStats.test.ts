@@ -2,6 +2,7 @@
 import { renderHook, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import { useAnalyticsStats } from "@/hooks/useAnalyticsStats";
+import { formatDateKey } from "@/lib/date";
 import type { Quiz } from "@/types/quiz";
 import type { Result } from "@/types/result";
 
@@ -141,10 +142,7 @@ describe("useAnalyticsStats Hook", () => {
         await waitFor(() => expect(result.current.isLoading).toBe(false));
 
         // Today should have 1 minute (60 seconds)
-        const today = new Date().toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-        });
+        const today = formatDateKey(new Date());
         const todayStats = result.current.dailyStudyTime.find(
             (d) => d.date === today,
         );
