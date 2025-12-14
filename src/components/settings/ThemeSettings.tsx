@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { Sun, Check } from "lucide-react"; // Only need Sun for the header icon, and Check for selection
 
 export function ThemeSettings(): React.ReactElement {
-    const { theme, setTheme } = useTheme();
+    const { theme, setTheme, comfortMode, setComfortMode } = useTheme();
 
     return (
         <Card className="mb-8">
@@ -74,6 +74,35 @@ export function ThemeSettings(): React.ReactElement {
                             </button>
                         )
                     })}
+                </div>
+
+                {/* Comfort Mode Toggle */}
+                <div className="mt-6 flex items-center justify-between rounded-lg border border-border bg-muted/30 p-4">
+                    <div>
+                        <h4 className="font-medium text-foreground">Comfort Mode</h4>
+                        <p className="text-sm text-muted-foreground">
+                            Reduces eye strain by softening animations, glows, and harsh contrasts
+                        </p>
+                    </div>
+                    <button
+                        type="button"
+                        role="switch"
+                        aria-checked={comfortMode}
+                        onClick={() => setComfortMode(!comfortMode)}
+                        className={cn(
+                            "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                            comfortMode ? "bg-primary" : "bg-muted"
+                        )}
+                    >
+                        <span className="sr-only">Enable Comfort Mode</span>
+                        <span
+                            aria-hidden="true"
+                            className={cn(
+                                "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-background shadow-lg ring-0 transition-transform",
+                                comfortMode ? "translate-x-5" : "translate-x-0"
+                            )}
+                        />
+                    </button>
                 </div>
             </CardContent>
         </Card>

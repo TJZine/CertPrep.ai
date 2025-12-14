@@ -38,7 +38,7 @@ export default function MidnightParticles(): React.ReactElement | null {
             options={{
                 fullScreen: {
                     enable: true,
-                    zIndex: 1, // Behind content for starfield
+                    zIndex: 40,
                 },
                 fpsLimit: 30, // Lower FPS for subtle effect
                 particles: {

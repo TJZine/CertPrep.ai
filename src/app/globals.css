@@ -1026,8 +1026,7 @@
   }
 
   /* BRUTALIST BADGES - Hard shadow boxes */
-  [data-theme="brutalist"] [class*="badge"],
-  [data-theme="brutalist"] [class*="Badge"] {
+  [data-theme="brutalist"] [class*="badge"] {
     border: 2px solid black !important;
     border-radius: 0 !important;
     box-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 1);
@@ -1283,8 +1282,7 @@
   }
 
   /* SWISS BADGES - Minimal, no decoration */
-  [data-theme="swiss"] [class*="badge"],
-  [data-theme="swiss"] [class*="Badge"] {
+  [data-theme="swiss"] [class*="badge"] {
     border: 1px solid currentColor !important;
     border-radius: 0 !important;
     box-shadow: none !important;
@@ -2466,8 +2464,7 @@
   }
 
   /* RISO BADGES - Per-color ink variants with tilt */
-  [data-theme="riso"] [class*="badge"],
-  [data-theme="riso"] [class*="Badge"] {
+  [data-theme="riso"] [class*="badge"] {
     border-radius: 0 !important;
     border: 2px solid currentColor !important;
     font-weight: 700;
@@ -2477,13 +2474,11 @@
     letter-spacing: 0.05em;
   }
 
-  [data-theme="riso"] [class*="badge"]:nth-child(even),
-  [data-theme="riso"] [class*="Badge"]:nth-child(even) {
+  [data-theme="riso"] [class*="badge"]:nth-child(even) {
     transform: rotate(1.5deg);
   }
 
-  [data-theme="riso"] [class*="badge"]:nth-child(3n),
-  [data-theme="riso"] [class*="Badge"]:nth-child(3n) {
+  [data-theme="riso"] [class*="badge"]:nth-child(3n) {
     transform: rotate(-1deg);
   }
 
@@ -3421,6 +3416,148 @@
 
   .legend-dot-failing {
     background-color: hsl(var(--tier-failing));
+  }
+
+  /* ========================================================================== */
+  /* COMFORT MODE - Reduces eye strain with gentler visual effects             */
+  /* ========================================================================== */
+
+  /* Brutalist: Warm up colors, soften harsh shadows */
+  [data-comfort="true"][data-theme="brutalist"] {
+    --background: 45 50% 88%;
+    /* Warmer, slightly darker cream */
+    --card: 45 40% 94%;
+    /* Warmer card, lighter than bg for contrast */
+  }
+
+  [data-comfort="true"][data-theme="brutalist"] body {
+    background-color: hsl(45, 50%, 88%) !important;
+  }
+
+  [data-comfort="true"][data-theme="brutalist"] .card,
+  [data-comfort="true"][data-theme="brutalist"] .popover {
+    box-shadow: 3px 3px 0px 0px rgba(0, 0, 0, 0.6) !important;
+  }
+
+  [data-comfort="true"][data-theme="brutalist"] .card:hover {
+    box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 0.6) !important;
+  }
+
+  [data-comfort="true"][data-theme="brutalist"] button[class*="bg-primary"],
+  [data-comfort="true"][data-theme="brutalist"] a[class*="bg-primary"] {
+    box-shadow: 3px 3px 0px 0px rgba(0, 0, 0, 0.6);
+  }
+
+  /* Retro (Light): Disable CRT scanlines and flicker */
+  [data-comfort="true"][data-theme="retro"] body::after {
+    display: none !important;
+  }
+
+  /* Retro-Dark: Disable CRT effects, reduce chromatic aberration */
+  [data-comfort="true"][data-theme="retro-dark"] body::after {
+    display: none !important;
+  }
+
+  [data-comfort="true"][data-theme="retro-dark"] button:hover,
+  [data-comfort="true"][data-theme="retro-dark"] a:hover,
+  [data-comfort="true"][data-theme="retro-dark"] .card:hover {
+    text-shadow:
+      1px 0 0.5px rgba(255, 0, 0, 0.3),
+      -1px 0 0.5px rgba(0, 0, 255, 0.3) !important;
+  }
+
+  /* Vapor: Reduce glow intensity */
+  [data-comfort="true"][data-theme="vapor"] h1,
+  [data-comfort="true"][data-theme="vapor"] h2 {
+    filter: drop-shadow(0 0 8px hsla(320, 100%, 60%, 0.35)) !important;
+  }
+
+  [data-comfort="true"][data-theme="vapor"] h3,
+  [data-comfort="true"][data-theme="vapor"] h4 {
+    text-shadow:
+      0 0 4px hsla(320, 100%, 60%, 0.4),
+      0 0 10px hsla(190, 100%, 50%, 0.15) !important;
+  }
+
+  [data-comfort="true"][data-theme="vapor"] button[class*="bg-primary"]:hover,
+  [data-comfort="true"][data-theme="vapor"] a[class*="bg-primary"]:hover {
+    box-shadow:
+      0 0 10px hsla(320, 100%, 60%, 0.4),
+      0 0 20px hsla(320, 100%, 60%, 0.2) !important;
+  }
+
+  [data-comfort="true"][data-theme="vapor"] .card,
+  [data-comfort="true"][data-theme="vapor"] .popover {
+    box-shadow:
+      0 0 10px hsla(320, 100%, 60%, 0.15),
+      0 0 20px hsla(190, 100%, 50%, 0.08),
+      inset 0 1px 0 hsla(320, 100%, 70%, 0.08) !important;
+  }
+
+  /* Riso: Reduce brightness, remove card tilt */
+  [data-comfort="true"][data-theme="riso"] {
+    --background: 45 20% 87%;
+    /* Darker paper */
+    --card: 45 25% 90%;
+    /* Darker cards */
+  }
+
+  [data-comfort="true"][data-theme="riso"] body {
+    background-color: hsl(45, 25%, 85%) !important;
+  }
+
+  [data-comfort="true"][data-theme="riso"] .card,
+  [data-comfort="true"][data-theme="riso"] .card:nth-child(even),
+  [data-comfort="true"][data-theme="riso"] .card:nth-child(3n),
+  [data-comfort="true"][data-theme="riso"] .card:nth-child(4n) {
+    transform: rotate(0deg) !important;
+    background: hsl(45, 25%, 89%) !important;
+  }
+
+  [data-comfort="true"][data-theme="riso"] .card:hover {
+    transform: translateY(-3px) !important;
+  }
+
+  /* Mint: Slightly darker to reduce brightness */
+  [data-comfort="true"][data-theme="mint"] {
+    --background: 96 35% 89%;
+    /* Slightly darker sage */
+    --card: 96 32% 94%;
+    /* Slightly darker cards, but lighter than bg */
+  }
+
+  [data-comfort="true"][data-theme="mint"] body {
+    background-color: hsl(96, 35%, 89%) !important;
+  }
+
+  /* Swiss: Soften bright white outlines on black background */
+  [data-comfort="true"][data-theme="swiss"] {
+    --border: 0 0% 70%;
+    /* Softer grey instead of pure white */
+  }
+
+  [data-comfort="true"][data-theme="swiss"] .card,
+  [data-comfort="true"][data-theme="swiss"] .popover {
+    border-color: rgba(255, 255, 255, 0.2) !important;
+  }
+
+  [data-comfort="true"][data-theme="swiss"] .card:hover {
+    border-color: rgba(255, 255, 255, 0.4) !important;
+  }
+
+  [data-comfort="true"][data-theme="swiss"] button[class*="bg-primary"],
+  [data-comfort="true"][data-theme="swiss"] a[class*="bg-primary"] {
+    border-color: rgba(255, 255, 255, 0.3) !important;
+    opacity: 0.9;
+  }
+
+  /* Also respect prefers-reduced-motion for CRT effects globally */
+  @media (prefers-reduced-motion: reduce) {
+
+    [data-theme="retro"] body::after,
+    [data-theme="retro-dark"] body::after {
+      display: none !important;
+    }
   }
 }
 

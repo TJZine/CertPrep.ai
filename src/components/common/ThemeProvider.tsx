@@ -181,6 +181,8 @@ interface ThemeContextValue {
   resolvedTheme: Theme;
   setTheme: (theme: Theme) => void;
   toggleTheme: () => void;
+  comfortMode: boolean;
+  setComfortMode: (enabled: boolean) => void;
 }
 
 const ThemeContext = React.createContext<ThemeContextValue | null>(null);
@@ -204,6 +206,26 @@ export function ThemeProvider({
       const stored = window.localStorage.getItem("theme");
       if (stored && Object.keys(THEME_CONFIG).includes(stored)) {
         setThemeState(stored as Theme);
+      }
+    } catch {
+      // Ignore
+    }
+  }, []);
+
+  // Comfort Mode - reduces eye strain with gentler visual effects
+  const [comfortMode, setComfortModeState] = React.useState(false);
+
+  // On mount, read comfort mode from storage or detect system preference
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const stored = window.localStorage.getItem("comfortMode");
+      if (stored !== null) {
+        setComfortModeState(stored === "true");
+      } else {
+        // Auto-enable if user prefers reduced motion
+        const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        setComfortModeState(prefersReducedMotion);
       }
     } catch {
       // Ignore
@@ -273,6 +295,25 @@ export function ThemeProvider({
     }
   }, [theme, resolvedTheme, mounted]);
 
+  // 4. Apply comfort mode to DOM and Storage
+  React.useEffect(() => {
+    if (!mounted) return;
+
+    const root = document.documentElement;
+    if (comfortMode) {
+      root.setAttribute("data-comfort", "true");
+    } else {
+      root.removeAttribute("data-comfort");
+    }
+
+    // Persist preference
+    try {
+      window.localStorage.setItem("comfortMode", String(comfortMode));
+    } catch {
+      // Ignore
+    }
+  }, [comfortMode, mounted]);
+
   const setTheme = React.useCallback((newTheme: Theme) => {
     setThemeState(newTheme);
   }, []);
@@ -284,14 +325,20 @@ export function ThemeProvider({
     });
   }, [resolvedTheme]);
 
+  const setComfortMode = React.useCallback((enabled: boolean) => {
+    setComfortModeState(enabled);
+  }, []);
+
   const value = React.useMemo(
     () => ({
       theme,
       resolvedTheme,
       setTheme,
       toggleTheme,
+      comfortMode,
+      setComfortMode,
     }),
-    [theme, resolvedTheme, setTheme, toggleTheme],
+    [theme, resolvedTheme, setTheme, toggleTheme, comfortMode, setComfortMode],
   );
 
   // We render children immediately to avoid SEO/LCP impact.
