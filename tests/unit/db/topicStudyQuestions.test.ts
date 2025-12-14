@@ -18,6 +18,11 @@ const { quizzesData, resultsData, dbMock } = vi.hoisted(() => {
                 sortBy: vi.fn().mockImplementation(async () =>
                     resultsData.filter((r) => !r.deleted_at).reverse(),
                 ),
+                toArray: vi.fn().mockImplementation(async () =>
+                    quizzesData.filter(
+                        (quiz) => quiz.user_id === userId && !quiz.deleted_at,
+                    ),
+                ),
             })),
         })),
     });
