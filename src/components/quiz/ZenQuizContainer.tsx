@@ -25,8 +25,9 @@ import { useCorrectAnswer } from "@/hooks/useCorrectAnswer";
 import { useQuizSubmission } from "@/hooks/useQuizSubmission";
 import { clearSmartRoundState } from "@/lib/smartRoundStorage";
 import { clearSRSReviewState } from "@/lib/srsReviewStorage";
+import { clearTopicStudyState } from "@/lib/topicStudyStorage";
 import { updateSRSState } from "@/db/srs";
-import { createSRSReviewResult } from "@/db/results";
+import { createSRSReviewResult, createTopicStudyResult } from "@/db/results";
 import { getOrCreateSRSQuiz } from "@/db/quizzes";
 import { calculatePercentage } from "@/lib/utils";
 import { useAuth } from "@/components/providers/AuthProvider";
@@ -37,6 +38,10 @@ interface ZenQuizContainerProps {
   isSmartRound?: boolean;
   /** When true, SRS state is updated after each answer (promotes/demotes Leitner box). */
   isSRSReview?: boolean;
+  /** When true, this is a Topic Study session (aggregates questions across quizzes). */
+  isTopicStudy?: boolean;
+  /** Category being studied (for display in results). */
+  studyCategory?: string;
 }
 
 /**
@@ -46,6 +51,8 @@ export function ZenQuizContainer({
   quiz,
   isSmartRound = false,
   isSRSReview = false,
+  isTopicStudy = false,
+  studyCategory,
 }: ZenQuizContainerProps): React.ReactElement {
   const router = useRouter();
   const { addToast } = useToast();
@@ -179,9 +186,70 @@ export function ZenQuizContainer({
         }
         return;
       }
+
+      // Topic study sessions aggregate questions across quizzes - similar pattern to SRS
+      if (isTopicStudy && effectiveUserId) {
+        try {
+          // Reuse SRS quiz for FK compliance (both aggregate questions across quizzes)
+          const srsQuiz = await getOrCreateSRSQuiz(effectiveUserId);
+
+          // Calculate score and category breakdown from answers
+          let correctCount = 0;
+          const categoryTotals: Record<string, { correct: number; total: number }> = {};
+          const answersRecord: Record<string, string> = {};
+
+          answers.forEach((record, questionId) => {
+            answersRecord[questionId] = record.selectedAnswer;
+            const question = questions.find((q) => q.id === questionId);
+            if (!question) return;
+
+            const category = question.category || "Uncategorized";
+            if (!categoryTotals[category]) {
+              categoryTotals[category] = { correct: 0, total: 0 };
+            }
+            categoryTotals[category].total += 1;
+
+            if (record.isCorrect) {
+              correctCount += 1;
+              categoryTotals[category].correct += 1;
+            }
+          });
+
+          const score = calculatePercentage(correctCount, answers.size);
+          const categoryBreakdown = Object.fromEntries(
+            Object.entries(categoryTotals).map(([category, { correct, total }]) => [
+              category,
+              calculatePercentage(correct, total),
+            ]),
+          );
+
+          const result = await createTopicStudyResult({
+            userId: effectiveUserId,
+            srsQuizId: srsQuiz.id,
+            answers: answersRecord,
+            flaggedQuestions: Array.from(flaggedQuestions),
+            timeTakenSeconds,
+            questionIds: questions.map((q) => q.id),
+            score,
+            categoryBreakdown,
+            category: studyCategory,
+          });
+
+          clearTopicStudyState();
+          addToast("success", "Topic Study complete! Great progress.");
+          router.push(`/results/${result.id}`);
+        } catch (err) {
+          console.error("Failed to save topic study result:", err);
+          addToast("error", "Failed to save result. You can still continue studying.");
+          clearTopicStudyState();
+          router.push("/analytics");
+        }
+        return;
+      }
+
       await submitQuiz(timeTakenSeconds);
     },
-    [isSRSReview, effectiveUserId, answers, questions, flaggedQuestions, addToast, router, submitQuiz],
+    [isSRSReview, isTopicStudy, effectiveUserId, answers, questions, flaggedQuestions, addToast, router, submitQuiz, studyCategory],
   );
 
   const retrySave = React.useCallback((): void => {

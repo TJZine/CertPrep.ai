@@ -117,23 +117,7 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
       },
     });
 
-    const deleteUserData = async (
-      table: "results" | "quizzes",
-    ): Promise<unknown> => {
-      if (typeof supabaseAdmin.from !== "function") {
-        logger.warn(
-          "Supabase admin client missing from(); skipping data purge for table",
-          { table },
-        );
-        return null;
-      }
-      const { error } = await supabaseAdmin
-        .from(table)
-        .delete()
-        .eq("user_id", user.id);
-      return error;
-    };
-
+    // Sign out user first (invalidates all sessions)
     const { error: signOutError } = await supabase.auth.signOut({
       scope: "global",
     });
@@ -147,32 +131,11 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
 
     logger.info("Initiating account deletion for user", { userId: user.id });
 
-    // 3. Delete user data (best effort, fail on error to avoid orphaned PII)
-    const resultsDeleteError = await deleteUserData("results");
-    if (resultsDeleteError) {
-      logger.error("Error deleting user results via service role", {
-        error: resultsDeleteError,
-        userId: user.id,
-      });
-      return NextResponse.json(
-        { error: "Failed to delete account data" },
-        { status: 500 },
-      );
-    }
-
-    const quizzesDeleteError = await deleteUserData("quizzes");
-    if (quizzesDeleteError) {
-      logger.error("Error deleting user quizzes via service role", {
-        error: quizzesDeleteError,
-        userId: user.id,
-      });
-      return NextResponse.json(
-        { error: "Failed to delete account data" },
-        { status: 500 },
-      );
-    }
-
-    // 4. Delete User
+    // Delete user - ON DELETE CASCADE in schema automatically deletes:
+    // - profiles (id references auth.users)
+    // - quizzes (user_id references auth.users)
+    // - results (user_id references auth.users)
+    // - srs (user_id references auth.users)
     const { error } = await supabaseAdmin.auth.admin.deleteUser(user.id);
 
     if (error) {

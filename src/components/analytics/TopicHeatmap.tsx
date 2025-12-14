@@ -270,16 +270,18 @@ export function TopicHeatmap({
                 </div>
 
                 {/* Category rows */}
-                <div className="space-y-2">
+                <div className="space-y-2" role="grid" aria-label="Topic mastery heatmap">
                     {heatmapData.map((catData) => (
                         <div
                             key={catData.category}
                             className="grid items-center gap-2"
                             style={{ gridTemplateColumns: "1fr repeat(4, 60px)" }}
+                            role="row"
                         >
                             <div
                                 className="truncate text-sm font-medium text-foreground"
                                 title={catData.category}
+                                role="rowheader"
                             >
                                 {catData.category}
                             </div>

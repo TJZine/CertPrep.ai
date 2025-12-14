@@ -18,7 +18,6 @@ import { useToast } from "@/components/ui/Toast";
 import { getTopicStudyQuestions, type TopicStudyData } from "@/db/results";
 import {
   TOPIC_STUDY_QUESTIONS_KEY,
-  TOPIC_STUDY_QUIZ_ID_KEY,
   TOPIC_STUDY_CATEGORY_KEY,
   TOPIC_STUDY_MISSED_COUNT_KEY,
   TOPIC_STUDY_FLAGGED_COUNT_KEY,
@@ -125,16 +124,12 @@ export function WeakAreasCard({
   const handleStartStudying = (): void => {
     if (!modalState.data || modalState.data.quizIds.length === 0) return;
 
-    const firstQuizId = modalState.data.quizIds[0];
-    if (!firstQuizId) return;
-
     try {
-      // Store data in sessionStorage for Zen mode to pick up
+      // Store data in sessionStorage for the topic-review page to pick up
       sessionStorage.setItem(
         TOPIC_STUDY_QUESTIONS_KEY,
         JSON.stringify(modalState.data.questionIds),
       );
-      sessionStorage.setItem(TOPIC_STUDY_QUIZ_ID_KEY, firstQuizId);
       sessionStorage.setItem(TOPIC_STUDY_CATEGORY_KEY, modalState.category);
       sessionStorage.setItem(
         TOPIC_STUDY_MISSED_COUNT_KEY,
@@ -145,8 +140,8 @@ export function WeakAreasCard({
         String(modalState.data.flaggedCount),
       );
 
-      // Navigate to Zen mode with topic mode
-      router.push(`/quiz/${firstQuizId}/zen?mode=topic`);
+      // Navigate to the dedicated topic-review page (aggregates multi-quiz questions)
+      router.push("/quiz/topic-review");
     } catch (error) {
       logger.error("Failed to store topic study state", error);
       addToast("error", "Failed to start study session");

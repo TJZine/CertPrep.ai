@@ -12,6 +12,7 @@ import { useInitializeDatabase, useQuiz } from "@/hooks/useDatabase";
 import type { Question } from "@/types/quiz";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
+import { logger } from "@/lib/logger";
 import {
   clearSmartRoundState,
   SMART_ROUND_QUESTIONS_KEY,
@@ -127,7 +128,9 @@ export default function ZenModePage(): React.ReactElement {
             : NaN;
           setStudyModeData({
             questionIds,
-            missedCount: Number.isNaN(parsedMissed) ? orderedFiltered.length : parsedMissed,
+            missedCount: Number.isNaN(parsedMissed)
+              ? (isSmartRound ? orderedFiltered.length : 0)
+              : parsedMissed,
             flaggedCount: Number.isNaN(parsedFlagged) ? 0 : parsedFlagged,
             category: storedCategory ?? undefined,
           });
@@ -138,7 +141,7 @@ export default function ZenModePage(): React.ReactElement {
         router.replace(`/quiz/${quizId}/zen`);
       }
     } catch (error) {
-      console.error(`Failed to load ${mode} mode data:`, error);
+      logger.error(`Failed to load ${mode} mode data`, { error });
       router.replace(`/quiz/${quizId}/zen`);
     }
   }, [isFilteredMode, isSmartRound, isTopicStudy, mode, quiz, quizId, router]);
@@ -234,7 +237,7 @@ export default function ZenModePage(): React.ReactElement {
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
             {isFilteredMode
-              ? `No questions available for ${isSmartRound ? "Smart Round" : isTopicStudy ? "Topic Study" : "SRS Review"}.`
+              ? `No questions available for ${isSmartRound ? "Smart Round" : "Topic Study"}.`
               : "This quiz doesn't have any questions yet."}
           </p>
           <Button
@@ -258,6 +261,9 @@ export default function ZenModePage(): React.ReactElement {
   const getBannerTitle = (): string => {
     if (isTopicStudy && studyModeData?.category) {
       return `Topic Study: ${studyModeData.category}`;
+    }
+    if (isTopicStudy) {
+      return "Topic Study";
     }
     return "Smart Round";
   };

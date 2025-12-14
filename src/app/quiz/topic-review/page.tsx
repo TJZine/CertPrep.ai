@@ -12,20 +12,26 @@ import { useInitializeDatabase } from "@/hooks/useDatabase";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 import { db } from "@/db/index";
-import { clearSRSReviewState, SRS_REVIEW_QUESTIONS_KEY } from "@/lib/srsReviewStorage";
+import {
+    clearTopicStudyState,
+    TOPIC_STUDY_QUESTIONS_KEY,
+    TOPIC_STUDY_CATEGORY_KEY,
+    TOPIC_STUDY_MISSED_COUNT_KEY,
+    TOPIC_STUDY_FLAGGED_COUNT_KEY,
+} from "@/lib/topicStudyStorage";
 import { logger } from "@/lib/logger";
 import type { Quiz, Question } from "@/types/quiz";
 
 /**
- * Dedicated SRS Review page that aggregates questions from multiple quizzes.
- * 
+ * Dedicated Topic Study page that aggregates questions from multiple quizzes.
+ *
  * Unlike the regular zen page which requires a single quiz ID, this page:
- * 1. Reads question IDs from sessionStorage
+ * 1. Reads question IDs from sessionStorage (set by WeakAreasCard)
  * 2. Loads questions from ALL quizzes that contain them
  * 3. Creates a synthetic "aggregated" quiz object
- * 4. Passes to ZenQuizContainer for the review session
+ * 4. Passes to ZenQuizContainer for the topic study session
  */
-export default function SRSReviewPage(): React.ReactElement {
+export default function TopicReviewPage(): React.ReactElement {
     const router = useRouter();
     const { user } = useAuth();
     const effectiveUserId = useEffectiveUserId(user?.id);
@@ -35,6 +41,9 @@ export default function SRSReviewPage(): React.ReactElement {
     const [aggregatedQuiz, setAggregatedQuiz] = React.useState<Quiz | null>(null);
     const [questionCount, setQuestionCount] = React.useState(0);
     const [loadError, setLoadError] = React.useState<string | null>(null);
+    const [category, setCategory] = React.useState<string | null>(null);
+    const [missedCount, setMissedCount] = React.useState(0);
+    const [flaggedCount, setFlaggedCount] = React.useState(0);
 
     // Load questions from sessionStorage and aggregate across quizzes
     React.useEffect(() => {
@@ -45,10 +54,13 @@ export default function SRSReviewPage(): React.ReactElement {
                 // SSR guard
                 if (typeof window === "undefined") return;
 
-                const storedQuestionIds = sessionStorage.getItem(SRS_REVIEW_QUESTIONS_KEY);
+                const storedQuestionIds = sessionStorage.getItem(TOPIC_STUDY_QUESTIONS_KEY);
+                const storedCategory = sessionStorage.getItem(TOPIC_STUDY_CATEGORY_KEY);
+                const storedMissedCount = sessionStorage.getItem(TOPIC_STUDY_MISSED_COUNT_KEY);
+                const storedFlaggedCount = sessionStorage.getItem(TOPIC_STUDY_FLAGGED_COUNT_KEY);
 
                 if (!storedQuestionIds) {
-                    setLoadError("No review session found. Please start a review from the Study Due page.");
+                    setLoadError("No topic study session found. Please start from the Analytics page.");
                     setIsLoading(false);
                     return;
                 }
@@ -57,17 +69,30 @@ export default function SRSReviewPage(): React.ReactElement {
                 try {
                     questionIds = JSON.parse(storedQuestionIds);
                 } catch (parseError) {
-                    logger.warn("Invalid SRS review session data in sessionStorage", { parseError });
-                    sessionStorage.removeItem(SRS_REVIEW_QUESTIONS_KEY);
-                    setLoadError("Invalid review session data. Please start a new review from Study Due.");
+                    logger.warn("Invalid topic study session data in sessionStorage", { parseError });
+                    clearTopicStudyState();
+                    setLoadError("Invalid study session data. Please start a new session from Analytics.");
                     setIsLoading(false);
                     return;
                 }
 
                 if (questionIds.length === 0) {
-                    setLoadError("No questions in review session.");
+                    setLoadError("No questions in study session.");
                     setIsLoading(false);
                     return;
+                }
+
+                // Parse counts
+                if (storedMissedCount) {
+                    const parsed = Number.parseInt(storedMissedCount, 10);
+                    if (!Number.isNaN(parsed)) setMissedCount(parsed);
+                }
+                if (storedFlaggedCount) {
+                    const parsed = Number.parseInt(storedFlaggedCount, 10);
+                    if (!Number.isNaN(parsed)) setFlaggedCount(parsed);
+                }
+                if (storedCategory) {
+                    setCategory(storedCategory);
                 }
 
                 // Load all quizzes to find questions
@@ -100,9 +125,9 @@ export default function SRSReviewPage(): React.ReactElement {
 
                 // Create a synthetic "aggregated" quiz
                 const syntheticQuiz: Quiz = {
-                    id: "srs-review-aggregate",
-                    title: "SRS Review",
-                    description: "Spaced repetition review session",
+                    id: "topic-study-aggregate",
+                    title: storedCategory ? `Topic Study: ${storedCategory}` : "Topic Study",
+                    description: "Targeted topic study session",
                     questions: orderedQuestions,
                     tags: [],
                     created_at: Date.now(),
@@ -114,8 +139,8 @@ export default function SRSReviewPage(): React.ReactElement {
                 setQuestionCount(orderedQuestions.length);
                 setIsLoading(false);
             } catch (err) {
-                logger.error("Failed to load SRS review questions", { error: err });
-                setLoadError("Failed to load review session. Please try again.");
+                logger.error("Failed to load topic study questions", { error: err });
+                setLoadError("Failed to load study session. Please try again.");
                 setIsLoading(false);
             }
         };
@@ -124,15 +149,15 @@ export default function SRSReviewPage(): React.ReactElement {
     }, [isInitialized, effectiveUserId]);
 
     const handleExit = React.useCallback((): void => {
-        clearSRSReviewState();
-        router.push("/study-due");
+        clearTopicStudyState();
+        router.push("/analytics");
     }, [router]);
 
     // Loading states
     if (!isInitialized || !effectiveUserId || isLoading) {
         return (
             <div className="flex min-h-screen items-center justify-center bg-background">
-                <LoadingSpinner size="lg" text="Preparing SRS Review..." />
+                <LoadingSpinner size="lg" text="Preparing Topic Study..." />
             </div>
         );
     }
@@ -151,10 +176,10 @@ export default function SRSReviewPage(): React.ReactElement {
                     </p>
                     <Button
                         className="mt-6"
-                        onClick={() => router.push("/study-due")}
+                        onClick={() => router.push("/analytics")}
                         leftIcon={<ArrowLeft className="h-4 w-4" />}
                     >
-                        Back to Study Due
+                        Back to Analytics
                     </Button>
                 </div>
             </div>
@@ -168,22 +193,24 @@ export default function SRSReviewPage(): React.ReactElement {
                 <div className="max-w-md rounded-lg border border-border bg-card p-6 text-center shadow-sm">
                     <AlertCircle className="mx-auto h-12 w-12 text-warning" />
                     <h1 className="mt-4 text-xl font-semibold text-foreground">
-                        Review Session Not Found
+                        Study Session Not Found
                     </h1>
                     <p className="mt-2 text-sm text-muted-foreground">
-                        {loadError || "Could not load the review session."}
+                        {loadError || "Could not load the study session."}
                     </p>
                     <Button
                         className="mt-6"
-                        onClick={() => router.push("/study-due")}
+                        onClick={() => router.push("/analytics")}
                         leftIcon={<ArrowLeft className="h-4 w-4" />}
                     >
-                        Back to Study Due
+                        Back to Analytics
                     </Button>
                 </div>
             </div>
         );
     }
+
+    const bannerTitle = category ? `Topic Study: ${category}` : "Topic Study";
 
     return (
         <ErrorBoundary
@@ -195,14 +222,14 @@ export default function SRSReviewPage(): React.ReactElement {
                             Something Went Wrong
                         </h1>
                         <p className="mt-2 text-sm text-muted-foreground">
-                            An error occurred during the review session. Please try again.
+                            An error occurred during the study session. Please try again.
                         </p>
                         <Button
                             className="mt-6"
-                            onClick={() => router.push("/study-due")}
+                            onClick={() => router.push("/analytics")}
                             leftIcon={<ArrowLeft className="h-4 w-4" />}
                         >
-                            Back to Study Due
+                            Back to Analytics
                         </Button>
                     </div>
                 </div>
@@ -212,10 +239,10 @@ export default function SRSReviewPage(): React.ReactElement {
                 <div className="mx-auto max-w-3xl">
                     <SessionBanner
                         totalQuestions={questionCount}
-                        missedCount={0}
-                        flaggedCount={0}
+                        missedCount={missedCount}
+                        flaggedCount={flaggedCount}
                         onExit={handleExit}
-                        title="SRS Review"
+                        title={bannerTitle}
                     />
                 </div>
             </div>
@@ -223,7 +250,8 @@ export default function SRSReviewPage(): React.ReactElement {
             <ZenQuizContainer
                 quiz={aggregatedQuiz}
                 isSmartRound={false}
-                isSRSReview={true}
+                isTopicStudy={true}
+                studyCategory={category ?? undefined}
             />
         </ErrorBoundary>
     );

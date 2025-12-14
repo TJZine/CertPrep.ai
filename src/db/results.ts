@@ -170,6 +170,60 @@ export async function createSRSReviewResult(
   return result;
 }
 
+export interface CreateTopicStudyResultInput {
+  userId: string;
+  /** The per-user SRS quiz ID (reused for FK compliance) */
+  srsQuizId: string;
+  answers: Record<string, string>;
+  flaggedQuestions: string[];
+  timeTakenSeconds: number;
+  /** Question IDs that were part of this study session */
+  questionIds: string[];
+  /** Pre-calculated score (percentage) */
+  score: number;
+  /** Pre-calculated category breakdown */
+  categoryBreakdown: Record<string, number>;
+  /** Category being studied (for display purposes) */
+  category?: string;
+}
+
+/**
+ * Persists a Topic Study result using the per-user SRS quiz.
+ *
+ * Like SRS reviews, topic study sessions aggregate questions from
+ * multiple quizzes. We reuse the SRS quiz for FK compliance since
+ * both share the same aggregation pattern.
+ */
+export async function createTopicStudyResult(
+  input: CreateTopicStudyResultInput,
+): Promise<Result> {
+  if (!input.userId) {
+    throw new Error("Cannot create result without a user context.");
+  }
+
+  if (!input.srsQuizId) {
+    throw new Error("srsQuizId is required for topic study results.");
+  }
+
+  const result: Result = {
+    id: generateUUID(),
+    quiz_id: input.srsQuizId, // Uses per-user SRS quiz for FK compliance
+    user_id: input.userId,
+    timestamp: Date.now(),
+    mode: "zen", // Topic study uses zen mode
+    score: input.score,
+    time_taken_seconds: input.timeTakenSeconds,
+    answers: input.answers,
+    flagged_questions: input.flaggedQuestions,
+    category_breakdown: input.categoryBreakdown,
+    question_ids: input.questionIds,
+    synced: 0, // Will sync normally
+  };
+
+  await db.results.add(result);
+  return result;
+}
+
 /**
  * Retrieves a result by its identifier.
  */

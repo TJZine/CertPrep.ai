@@ -215,17 +215,17 @@ export default function ResultsPage(): React.ReactElement {
       );
     }
 
-    // Special handling for SRS Review results
-    const isSRSReviewResult = isSRSQuiz(result.quiz_id);
+    // Special handling for SRS Review / Topic Study results (both use SRS quiz)
+    const isAggregatedResult = isSRSQuiz(result.quiz_id);
 
     return (
       <div className="flex min-h-screen items-center justify-center bg-background p-4">
         <div className="max-w-md rounded-lg border border-border bg-card p-6 text-center shadow-sm">
           <div
-            className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full ${isSRSReviewResult ? "bg-success/20" : "bg-warning/20"
+            className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full ${isAggregatedResult ? "bg-success/20" : "bg-warning/20"
               }`}
           >
-            {isSRSReviewResult ? (
+            {isAggregatedResult ? (
               <span className="text-2xl">🎯</span>
             ) : (
               <AlertCircle
@@ -235,11 +235,11 @@ export default function ResultsPage(): React.ReactElement {
             )}
           </div>
           <h1 className="mt-4 text-xl font-semibold text-foreground">
-            {isSRSReviewResult ? "SRS Review Complete" : "Quiz Not Found"}
+            {isAggregatedResult ? "Study Session Complete" : "Quiz Not Found"}
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            {isSRSReviewResult
-              ? "Great job reviewing your spaced repetition questions!"
+            {isAggregatedResult
+              ? "Great job on your focused study session!"
               : "The quiz linked to this result isn't available right now."}
           </p>
 
@@ -249,12 +249,12 @@ export default function ResultsPage(): React.ReactElement {
               {result.score}%
             </p>
             <p className="text-sm text-muted-foreground">
-              {isSRSReviewResult ? "Review Score" : "Your score"}
+              {isAggregatedResult ? "Session Score" : "Your score"}
             </p>
           </div>
 
-          {/* Category Breakdown for SRS results */}
-          {isSRSReviewResult && result.category_breakdown && Object.keys(result.category_breakdown).length > 0 && (
+          {/* Category Breakdown for aggregated results */}
+          {isAggregatedResult && result.category_breakdown && Object.keys(result.category_breakdown).length > 0 && (
             <div className="mt-4 space-y-2 text-left">
               <h2 className="text-sm font-medium text-foreground">Category Breakdown</h2>
               {Object.entries(result.category_breakdown).map(([category, score]) => (
@@ -268,10 +268,10 @@ export default function ResultsPage(): React.ReactElement {
 
           <div className="mt-6 flex justify-center gap-4">
             <Button
-              onClick={() => router.push(isSRSReviewResult ? "/study-due" : "/")}
+              onClick={() => router.push(isAggregatedResult ? "/analytics" : "/")}
               leftIcon={<ArrowLeft className="h-4 w-4" aria-hidden="true" />}
             >
-              {isSRSReviewResult ? "Continue Studying" : "Back to Dashboard"}
+              {isAggregatedResult ? "Back to Analytics" : "Back to Dashboard"}
             </Button>
             <Button
               variant="danger"
