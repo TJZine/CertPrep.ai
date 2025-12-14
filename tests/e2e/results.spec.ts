@@ -88,6 +88,9 @@ test.describe("Results Page", () => {
 
             // Quiz title should be visible somewhere on the page
             await expect(page.getByText(quiz.title)).toBeVisible();
+
+            // Mode should be displayed as a badge (zen mode shows "🧘 Zen Study Mode")
+            await expect(page.getByText(/zen study mode/i)).toBeVisible();
         });
 
         test("retry button navigates to quiz lobby", async ({

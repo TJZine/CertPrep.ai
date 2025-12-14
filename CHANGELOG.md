@@ -20,12 +20,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Node.js Requirement**: Updated minimum version to `>=20.9.0` to match Next.js 16.
 - **Quiz Submission**: Now initializes SRS state for answered questions automatically.
 - **Analytics Page**: Added trend charts and heatmap visualizations.
 - **Sync Provider**: Improved state management and error handling.
 
 ### Fixed
 
+- **Modal Accessibility**: Added focus restoration when modals close (WCAG 2.1 SC 2.4.3).
+- **Topic Study**: Excluded soft-deleted quizzes from topic study query.
+- **Result Validation**: Added ownership and existence checks for SRS/Topic Study result creation.
+- **Button Semantics**: Added explicit `type="button"` to modal footer buttons.
 - **Streak Card**: Corrected study activity bar coloring for visual consistency.
 
 ## [1.2.0] - 2025-12-11
