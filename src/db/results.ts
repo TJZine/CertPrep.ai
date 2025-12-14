@@ -162,6 +162,10 @@ export async function createSRSReviewResult(
     );
   }
 
+  if (!isSRSQuiz(quiz.id, input.userId)) {
+    throw new Error("Invalid srsQuizId: quiz is not an SRS quiz.");
+  }
+
   const result: Result = {
     id: generateUUID(),
     quiz_id: input.srsQuizId, // Uses per-user SRS quiz for FK compliance
@@ -223,6 +227,10 @@ export async function createTopicStudyResult(
     throw new Error(
       "Security mismatch: SRS quiz does not belong to the current user.",
     );
+  }
+
+  if (!isSRSQuiz(quiz.id, input.userId)) {
+    throw new Error("Invalid srsQuizId: quiz is not an SRS quiz.");
   }
 
   const result: Result = {
@@ -514,11 +522,12 @@ export async function getTopicStudyQuestions(
   // We want to track the *latest* status of each question.
 
   // Fetch all user quizzes to resolve questions
-  const allQuizzes = await db.quizzes
+  const allQuizzesRaw = await db.quizzes
     .where("user_id")
     .equals(userId)
-    .filter((q) => !q.deleted_at)
     .toArray();
+  
+  const allQuizzes = allQuizzesRaw.filter((q) => q.deleted_at == null);
     
   const quizMap = new Map(allQuizzes.map((quiz) => [quiz.id, quiz]));
   const allQuestionsMap = new Map<string, { question: Question; quizId: string }>();

@@ -23,8 +23,17 @@ export interface SyncBlockedInfo {
   tables: Array<"results" | "quizzes" | "srs">;
 }
 
+export type SyncStatus = "success" | "partial" | "failed";
+
+export interface SyncOutcome {
+  status: SyncStatus;
+  success: boolean; // derived: status === "success"
+  error?: unknown;
+  details?: { quizzes: boolean; results: boolean; srs: boolean }; // values = incomplete flags
+}
+
 interface SyncContextType {
-  sync: () => Promise<{ success: boolean; error?: unknown }>;
+  sync: () => Promise<SyncOutcome>;
   isSyncing: boolean;
   hasInitialSyncCompleted: boolean;
   initialSyncError: Error | null;
@@ -60,42 +69,90 @@ export function SyncProvider({
   }, [userId]);
 
   // Compute SyncBlockedInfo from SyncBlockState
-  const computeBlockedInfo = useCallback(
-    async (): Promise<void> => {
-      if (!userId) {
-        setSyncBlocked(null);
-        return;
-      }
-      // Check all tables for blocks
-      const [resultsBlock, quizzesBlock, srsBlock] = await Promise.all([
+  const computeBlockedInfo = useCallback(async (): Promise<void> => {
+    if (!userId) {
+      setSyncBlocked(null);
+      return;
+    }
+
+    // Capture activeUserId to detect race conditions/stale updates
+    const activeUserId = userId;
+
+    try {
+      // Check all tables for blocks using allSettled
+      const results = await Promise.allSettled([
         getSyncBlockState(userId, "results"),
         getSyncBlockState(userId, "quizzes"),
         getSyncBlockState(userId, "srs"),
       ]);
 
+      // Guard: If user changed while awaiting, abort
+      if (userId !== activeUserId) return;
+
+      const [resultsResult, quizzesResult, srsResult] = results;
+
+      const resultsBlock =
+        resultsResult.status === "fulfilled" ? resultsResult.value : null;
+      const quizzesBlock =
+        quizzesResult.status === "fulfilled" ? quizzesResult.value : null;
+      const srsBlock =
+        srsResult.status === "fulfilled" ? srsResult.value : null;
+
+      // Log any failures
+      if (resultsResult.status === "rejected")
+        logger.warn("Failed to check results block state", resultsResult.reason);
+      if (quizzesResult.status === "rejected")
+        logger.warn("Failed to check quizzes block state", quizzesResult.reason);
+      if (srsResult.status === "rejected")
+        logger.warn("Failed to check srs block state", srsResult.reason);
+
       // Collect which tables are blocked
       const tables: Array<"results" | "quizzes" | "srs"> = [];
-      if (resultsBlock) tables.push("results");
-      if (quizzesBlock) tables.push("quizzes");
-      if (srsBlock) tables.push("srs");
+      const blocks = [];
 
-      // Use first block found for timing info
-      const block = resultsBlock ?? quizzesBlock ?? srsBlock;
-      if (block && tables.length > 0) {
-        const remainingMs = Math.max(0, block.ttlMs - (Date.now() - block.blockedAt));
-        const remainingMins = Math.ceil(remainingMs / 60_000);
+      if (resultsBlock) {
+        tables.push("results");
+        blocks.push(resultsBlock);
+      }
+      if (quizzesBlock) {
+        tables.push("quizzes");
+        blocks.push(quizzesBlock);
+      }
+      if (srsBlock) {
+        tables.push("srs");
+        blocks.push(srsBlock);
+      }
+
+      if (tables.length > 0) {
+        // Calculate remainingMs for each block and find the dominant one (max remaining time)
+        const now = Date.now();
+        const blockDetails = blocks.map((b) => ({
+          block: b,
+          remainingMs: Math.max(0, b.ttlMs - (now - b.blockedAt)),
+        }));
+
+        // Sort by remainingMs descending
+        blockDetails.sort((a, b) => b.remainingMs - a.remainingMs);
+
+        const dominant = blockDetails[0];
+        if (!dominant) return;
+        const remainingMins = Math.ceil(dominant.remainingMs / 60_000);
+
         setSyncBlocked({
-          reason: block.reason,
-          blockedAt: block.blockedAt,
+          reason: dominant.block.reason,
+          blockedAt: dominant.block.blockedAt,
           remainingMins,
           tables,
         });
       } else {
         setSyncBlocked(null);
       }
-    },
-    [userId],
-  );
+    } catch (error) {
+      // Should not happen with allSettled, but as a fallback
+      logger.error("Unexpected error in computeBlockedInfo", error);
+      // Do not update state on error to avoid flicker
+    }
+  }, [userId]);
 
   // Poll for block state changes
   useEffect(() => {
@@ -105,30 +162,51 @@ export function SyncProvider({
     return (): void => clearInterval(interval);
   }, [userId, computeBlockedInfo]);
 
-  const sync = useCallback(async (): Promise<{
-    success: boolean;
-    error?: unknown;
-  }> => {
+  const sync = useCallback(async (): Promise<SyncOutcome> => {
     if (userId) {
       setIsSyncing(true);
       try {
-        // Run syncs sequentially or parallel?
-        // Parallel is fine if they don't depend on each other.
-        // But better to catch errors individually or aggregate them.
-        // For now, sequential to avoid flooding network.
+        // Run syncs sequentially
+        const quizzesOutcome = await syncQuizzes(userId);
+        const resultsOutcome = await syncResults(userId);
+        const srsOutcome = await syncSRS(userId);
 
-        await syncQuizzes(userId);
-        await syncResults(userId);
-        await syncSRS(userId);
-        return { success: true };
+        const anyIncomplete =
+          quizzesOutcome.incomplete ||
+          resultsOutcome.incomplete ||
+          srsOutcome.incomplete;
+
+        const status: SyncStatus = anyIncomplete ? "partial" : "success";
+
+        // Refresh block info immediately after sync attempts
+        void computeBlockedInfo();
+
+        return {
+          status,
+          success: status === "success",
+          details: {
+            quizzes: quizzesOutcome.incomplete,
+            results: resultsOutcome.incomplete,
+            srs: srsOutcome.incomplete,
+          },
+        };
       } catch (error) {
-        return { success: false, error };
+        logger.error("Sync failed with exception", error);
+        return {
+          status: "failed",
+          success: false,
+          error,
+        };
       } finally {
         setIsSyncing(false);
       }
     }
-    return { success: false, error: "No user" };
-  }, [userId]);
+    return {
+      status: "failed",
+      success: false,
+      error: "No user",
+    };
+  }, [userId, computeBlockedInfo]);
 
   // Expose sync function for E2E testing
   useEffect(() => {
@@ -165,14 +243,19 @@ export function SyncProvider({
       try {
         const result = await sync();
 
-        if (isMounted && !result.success) {
-          const err =
-            result.error instanceof Error
-              ? result.error
-              : new Error(
-                result.error ? String(result.error) : "Initial sync failed",
-              );
-          setInitialSyncError(err);
+        if (isMounted) {
+            if (result.status === "failed") {
+                 const err =
+                    result.error instanceof Error
+                    ? result.error
+                    : new Error(
+                        result.error ? String(result.error) : "Initial sync failed",
+                    );
+                setInitialSyncError(err);
+            } else if (result.status === "partial") {
+                // Partial sync is acceptable for initial load, just log it
+                logger.info("Initial sync completed partially", result.details);
+            }
         }
       } catch (error) {
         logger.error("Initial sync failed:", error);
@@ -197,7 +280,13 @@ export function SyncProvider({
 
   return (
     <SyncContext.Provider
-      value={{ sync, isSyncing, hasInitialSyncCompleted, initialSyncError, syncBlocked }}
+      value={{
+        sync,
+        isSyncing,
+        hasInitialSyncCompleted,
+        initialSyncError,
+        syncBlocked,
+      }}
     >
       {children}
     </SyncContext.Provider>

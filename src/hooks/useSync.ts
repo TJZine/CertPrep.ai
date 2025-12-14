@@ -1,9 +1,9 @@
 import { useSyncContext } from "@/components/providers/SyncProvider";
-import type { SyncBlockedInfo } from "@/components/providers/SyncProvider";
+import type { SyncBlockedInfo, SyncOutcome } from "@/components/providers/SyncProvider";
 
 export interface UseSyncReturn {
   /** Manually trigger a sync */
-  sync: () => Promise<{ success: boolean; error?: unknown }>;
+  sync: () => Promise<SyncOutcome>;
   /** True while initial sync is in progress */
   isSyncing: boolean;
   /** True after the first sync attempt has completed (success or failure) */

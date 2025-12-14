@@ -88,12 +88,29 @@ create policy "Users can view own results"
 
 create policy "Users can insert own results"
   on results for insert
-  with check ( (SELECT auth.uid()) = user_id );
+  with check (
+    (select auth.uid()) = user_id
+    and exists (
+      select 1
+      from public.quizzes q
+      where q.id = results.quiz_id
+        and q.user_id = (select auth.uid())
+    )
+  );
 
 -- Results are immutable historical records, EXCEPT for sync idempotency (upserts)
 create policy "Users can update own results"
   on results for update
-  using ( (SELECT auth.uid()) = user_id );
+  using ( (SELECT auth.uid()) = user_id )
+  with check (
+    (select auth.uid()) = user_id
+    and exists (
+      select 1
+      from public.quizzes q
+      where q.id = results.quiz_id
+        and q.user_id = (select auth.uid())
+    )
+  );
 
 create policy "Users can delete own results"
   on results for delete

@@ -74,10 +74,11 @@ export function ZenQuizContainer({
   const effectiveUserId = useEffectiveUserId(user?.id);
   const { sync } = useSync();
 
-  // Reset SRS tracking when user changes to prevent stale data across sessions
+  // Reset SRS tracking when session context changes (user OR quiz change)
+  // This ensures that retaking the same quiz or starting a new session clears the cache.
   React.useEffect(() => {
-    srsUpdatedQuestionsRef.current = new Set();
-  }, [effectiveUserId]);
+    srsUpdatedQuestionsRef.current.clear();
+  }, [quiz.id, effectiveUserId, isSRSReview]);
 
   const {
     initializeSession,

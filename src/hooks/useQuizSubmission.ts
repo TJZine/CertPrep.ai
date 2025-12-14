@@ -9,6 +9,7 @@ import { useQuizSessionStore } from "@/stores/quizSessionStore";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 import { clearSmartRoundState } from "@/lib/smartRoundStorage";
+import { logger } from "@/lib/logger";
 
 interface UseQuizSubmissionProps {
   quizId: string;
@@ -98,13 +99,11 @@ export function useQuizSubmission({
         });
 
         // Initialize SRS state for answered questions (non-blocking)
-        try {
-          const quiz = await db.quizzes.get(quizId);
-          if (quiz) {
-            await initializeSRSForResult(result, quiz);
-          }
-        } catch (srsErr) {
-          console.warn("Failed to initialize SRS state:", srsErr);
+        const quiz = await db.quizzes.get(quizId);
+        if (quiz) {
+          void initializeSRSForResult(result, quiz).catch((srsErr) => {
+            logger.warn("Failed to initialize SRS state (background)", { error: srsErr });
+          });
         }
 
         // Fire-and-forget background sync - failures shouldn't invalidate the local save.

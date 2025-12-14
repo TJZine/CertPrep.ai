@@ -1,5 +1,5 @@
 import "fake-indexeddb/auto";
-import { beforeEach, describe, expect, it, vi, afterEach } from "vitest";
+import { beforeEach, describe, expect, it, vi, afterEach, afterAll } from "vitest";
 import { db, clearDatabase } from "@/db";
 import { syncQuizzes } from "@/lib/sync/quizSyncManager";
 import { fetchUserQuizzes, upsertQuizzes } from "@/lib/sync/quizRemote";
@@ -257,5 +257,9 @@ describe("Integration: Quiz Sync Engine", () => {
     const updatedLocal = await db.quizzes.get(srsQuiz.id);
     expect(updatedLocal?.last_synced_version).toBe(srsQuiz.version);
     expect(updatedLocal?.last_synced_at).not.toBeNull();
+  });
+
+  afterAll(() => {
+    vi.unstubAllGlobals();
   });
 });

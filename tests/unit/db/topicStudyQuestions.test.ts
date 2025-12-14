@@ -9,21 +9,12 @@ const { quizzesData, resultsData, dbMock } = vi.hoisted(() => {
 
     const quizzesWhere = vi.fn().mockReturnValue({
         equals: vi.fn().mockImplementation((userId: string) => ({
+            // Updated mock to support immediate toArray() call
             toArray: vi
                 .fn()
                 .mockImplementation(async () =>
                     quizzesData.filter((quiz) => quiz.user_id === userId),
                 ),
-            filter: vi.fn().mockImplementation(() => ({
-                sortBy: vi.fn().mockImplementation(async () =>
-                    resultsData.filter((r) => !r.deleted_at).reverse(),
-                ),
-                toArray: vi.fn().mockImplementation(async () =>
-                    quizzesData.filter(
-                        (quiz) => quiz.user_id === userId && !quiz.deleted_at,
-                    ),
-                ),
-            })),
         })),
     });
 
@@ -129,6 +120,8 @@ describe("getTopicStudyQuestions", () => {
         expect(data.questionIds).not.toContain("q2");
         expect(data.missedCount).toBe(1);
         expect(data.totalUniqueCount).toBe(1);
+        // Ensure source tracking works
+        expect(data.quizIds).toContain("quiz-1");
     });
 
     it("correctly identifies flagged questions", async () => {
@@ -263,6 +256,124 @@ describe("getTopicStudyQuestions", () => {
 
         expect(data.questionIds).toEqual([]);
         expect(data.totalUniqueCount).toBe(0);
+    });
+
+    it("respects Smart Round subset filtering", async () => {
+        quizzesData.push({
+            id: "quiz-1",
+            user_id: "user-a",
+            title: "Large Quiz",
+            description: "",
+            created_at: 1,
+            updated_at: 1,
+            questions: [
+                {
+                    id: "q1",
+                    category: "Networking",
+                    question: "Q1",
+                    options: { a: "A", b: "B" },
+                    correct_answer: "a",
+                    explanation: "",
+                },
+                {
+                    id: "q2",
+                    category: "Networking",
+                    question: "Q2",
+                    options: { a: "A", b: "B" },
+                    correct_answer: "a",
+                    explanation: "",
+                },
+            ],
+            tags: [],
+            version: 1,
+            deleted_at: null,
+            quiz_hash: null,
+        });
+
+        resultsData.push({
+            id: "result-smart-round",
+            quiz_id: "quiz-1",
+            user_id: "user-a",
+            timestamp: 1,
+            mode: "zen",
+            score: 0,
+            time_taken_seconds: 120,
+            // Only q2 was in this session
+            question_ids: ["q2"],
+            answers: { q2: "b" }, // Wrong
+            flagged_questions: [],
+            category_breakdown: {},
+        });
+
+        const data = await getTopicStudyQuestions("user-a", "Networking");
+
+        // Should include q2 (missed in subset)
+        expect(data.questionIds).toContain("q2");
+        // Should NOT include q1 (not in subset, even if implied missed or whatever)
+        expect(data.questionIds).not.toContain("q1");
+        expect(data.quizIds).toContain("quiz-1");
+    });
+
+    it("uses newest result status (deduplication)", async () => {
+        quizzesData.push({
+            id: "quiz-1",
+            user_id: "user-a",
+            title: "Test Quiz",
+            description: "",
+            created_at: 1,
+            updated_at: 1,
+            questions: [
+                {
+                    id: "q1",
+                    category: "Networking",
+                    question: "Q1",
+                    options: { a: "A", b: "B" },
+                    correct_answer: "a",
+                    explanation: "",
+                },
+            ],
+            tags: [],
+            version: 1,
+            deleted_at: null,
+            quiz_hash: null,
+        });
+
+        // Old result: Missed q1
+        resultsData.push({
+            id: "result-old",
+            quiz_id: "quiz-1",
+            user_id: "user-a",
+            timestamp: 1000,
+            mode: "zen",
+            score: 0,
+            time_taken_seconds: 60,
+            answers: { q1: "b" }, // Wrong
+            flagged_questions: [],
+            category_breakdown: {},
+        });
+
+        // New result: Correct q1
+        resultsData.push({
+            id: "result-new",
+            quiz_id: "quiz-1",
+            user_id: "user-a",
+            timestamp: 2000, // Newer
+            mode: "zen",
+            score: 100,
+            time_taken_seconds: 60,
+            answers: { q1: "a" }, // Correct
+            flagged_questions: [],
+            category_breakdown: {},
+        });
+
+        // Ensure array is sorted newest first as getAllResults does
+        resultsData.sort((a, b) => b.timestamp - a.timestamp);
+
+        const data = await getTopicStudyQuestions("user-a", "Networking");
+
+        // Should be empty because the latest attempt was correct
+        expect(data.questionIds).toEqual([]);
+        expect(data.missedCount).toBe(0);
     });
 
     it("returns empty array when no matching questions exist", async () => {

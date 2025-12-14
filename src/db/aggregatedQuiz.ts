@@ -26,20 +26,23 @@ export async function hydrateAggregatedQuiz(
   // Load all quizzes that might contain these questions.
   // We include user-owned quizzes and potentially system quizzes (NIL_UUID) if we supported them.
   // For now, we strictly look at user-owned quizzes as per current architecture.
-  const allQuizzes = await db.quizzes
+  // OPTIMIZATION: Fetch via toArray() then filter in-memory to avoid Dexie filter chain brittleness
+  const allQuizzesRaw = await db.quizzes
     .where("user_id")
     .equals(userId)
-    .filter((q) => !q.deleted_at)
     .toArray();
+
+  const allQuizzes = allQuizzesRaw.filter((q) => q.deleted_at == null);
 
   const questionMap = new Map<string, { question: Question; quiz: Quiz }>();
   const sourceQuizByQuestionId = new Map<string, Quiz>();
+  const questionIdSet = new Set(questionIds);
 
   // Build a lookup map of all available questions
   for (const quiz of allQuizzes) {
     for (const question of quiz.questions) {
       // Optimization: Only index questions we are looking for
-      if (questionIds.includes(question.id)) {
+      if (questionIdSet.has(question.id)) {
         // If a question appears in multiple quizzes (rare but possible if duplicated),
         // we take the first one we find.
         if (!questionMap.has(question.id)) {

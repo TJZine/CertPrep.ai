@@ -73,7 +73,8 @@ export function ResultsContainer({
     setIsSyncing(true);
     try {
       const syncResult = await sync();
-      if (syncResult.success) {
+
+      if (syncResult.status === "success") {
         // syncManager already marks items as synced in Dexie on success
         // useLiveQuery will automatically pick up the change
         addToast("success", "Sync complete! Checking result status...");
@@ -86,6 +87,8 @@ export function ResultsContainer({
           // Result wasn't synced in this batch (edge case)
           addToast("info", "Sync completed but this result may need another sync.");
         }
+      } else if (syncResult.status === "partial") {
+        addToast("info", "Sync completed partially. Some items may still be pending.");
       } else {
         addToast("error", "Sync failed. Please check your connection.");
       }
@@ -118,7 +121,7 @@ export function ResultsContainer({
   }, [quiz.questions, result.question_ids]);
 
   // Detect if this is an SRS/Topic Study result and compute display title
-  const isAggregatedResult = isSRSQuiz(quiz);
+  const isAggregatedResult = isSRSQuiz(result.quiz_id, effectiveUserId ?? undefined);
   const displayTitle = React.useMemo(() => {
     if (!isAggregatedResult) return quiz.title;
     // For SRS results, try to get a meaningful title from category breakdown

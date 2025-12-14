@@ -121,7 +121,10 @@ export function Header(): React.ReactElement {
     >
       <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 transition-opacity hover:opacity-90">
+        <Link 
+          href="/" 
+          className="flex items-center gap-2 transition-opacity hover:opacity-90 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        >
           <Logo />
         </Link>
 

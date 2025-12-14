@@ -35,12 +35,10 @@ describe("hydrateAggregatedQuiz", () => {
   });
 
   it("should hydrate a synthetic quiz from question IDs", async () => {
-    // Mock db.quizzes.where(...).filter(...).toArray()
+    // Mock db.quizzes.where(...).toArray() directly (filter removed)
     const mockWhere = {
       equals: vi.fn().mockReturnValue({
-        filter: vi.fn().mockReturnValue({
-          toArray: vi.fn().mockResolvedValue([quiz1, quiz2]),
-        }),
+        toArray: vi.fn().mockResolvedValue([quiz1, quiz2]),
       }),
     };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -59,9 +57,7 @@ describe("hydrateAggregatedQuiz", () => {
   it("should handle missing questions", async () => {
     const mockWhere = {
       equals: vi.fn().mockReturnValue({
-        filter: vi.fn().mockReturnValue({
-          toArray: vi.fn().mockResolvedValue([quiz1]), // quiz2 missing
-        }),
+        toArray: vi.fn().mockResolvedValue([quiz1]), // quiz2 missing
       }),
     };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -77,9 +73,7 @@ describe("hydrateAggregatedQuiz", () => {
   it("should respect question order", async () => {
      const mockWhere = {
       equals: vi.fn().mockReturnValue({
-        filter: vi.fn().mockReturnValue({
-          toArray: vi.fn().mockResolvedValue([quiz1, quiz2]),
-        }),
+        toArray: vi.fn().mockResolvedValue([quiz1, quiz2]),
       }),
     };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

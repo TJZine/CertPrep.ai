@@ -63,8 +63,16 @@ export default function ResultsPage(): React.ReactElement {
     try {
       await deleteResult(result.id, effectiveUserId);
       // Trigger sync to push deletion
-      await sync();
-      addToast("success", "Result deleted successfully");
+      const outcome = await sync();
+      
+      if (outcome.status === "success") {
+        addToast("success", "Result deleted successfully");
+      } else if (outcome.status === "partial") {
+        addToast("info", "Result deleted, but sync was incomplete.");
+      } else {
+        addToast("warning", "Result deleted locally, but sync failed.");
+      }
+      
       router.push("/");
     } catch (error) {
       logger.error("Failed to delete result", error);
@@ -245,7 +253,7 @@ export default function ResultsPage(): React.ReactElement {
     // Special handling for SRS Review / Topic Study results (both use SRS quiz)
     const isAggregatedResult = isSRSQuiz(
       result.quiz_id,
-      effectiveUserId ?? undefined,
+      effectiveUserId,
     );
 
     return (
