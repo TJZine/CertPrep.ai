@@ -102,6 +102,7 @@ test.describe("Results Page", () => {
 
             const result = createTestResult({
                 quiz_id: quiz.id,
+                mode: "zen",
                 score: 50,
             });
             await seedResult(page, result);

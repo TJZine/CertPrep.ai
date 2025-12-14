@@ -126,7 +126,7 @@ export function Header(): React.ReactElement {
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-8" aria-label="Main navigation">
+        <nav className="hidden md:flex items-center gap-8 ml-12" aria-label="Main navigation">
           {navigation.map((item) => {
             // Show if public OR if user is authenticated
             if (!item.public && !user) return null;

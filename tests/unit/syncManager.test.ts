@@ -15,6 +15,9 @@ vi.mock("@/db", () => ({
       bulkPut: vi.fn(),
       bulkDelete: vi.fn(),
     },
+    quizzes: {
+      bulkGet: vi.fn().mockResolvedValue([]),
+    },
     syncState: {
       where: vi.fn().mockReturnThis(),
       equals: vi.fn().mockReturnThis(),
@@ -181,6 +184,11 @@ describe("SyncManager", () => {
       unsyncedResults as unknown as Result[],
     );
 
+    // Mock: Quiz is synced (FK pre-flight passes)
+    vi.mocked(db.quizzes.bulkGet).mockResolvedValueOnce(
+      [{ id: "quiz-1", last_synced_at: Date.now() }] as unknown as Awaited<ReturnType<typeof db.quizzes.bulkGet>>,
+    );
+
     mockSupabase.upsert.mockResolvedValue({ error: null });
     mockSupabase.limit.mockResolvedValue({ data: [], error: null });
 
@@ -219,6 +227,11 @@ describe("SyncManager", () => {
 
     vi.mocked(db.results.toArray).mockResolvedValueOnce(
       unsyncedResults as unknown as Result[],
+    );
+
+    // Mock: Quiz is synced (FK pre-flight passes)
+    vi.mocked(db.quizzes.bulkGet).mockResolvedValueOnce(
+      [{ id: "quiz-1", last_synced_at: Date.now() }] as unknown as Awaited<ReturnType<typeof db.quizzes.bulkGet>>,
     );
 
     mockSupabase.upsert.mockResolvedValue({ error: null });
@@ -269,7 +282,7 @@ describe("SyncManager", () => {
 
     // Verify bulkDelete was called
     expect(db.results.bulkDelete).toHaveBeenCalledWith(["remote-deleted-1"]);
-    
+
     // Verify cursor updated to the deleted record's timestamp
     expect(syncState.setSyncCursor).toHaveBeenCalledWith(
       "2023-01-01T12:00:00.000Z",
@@ -300,6 +313,11 @@ describe("SyncManager", () => {
       unsyncedResults as unknown as Result[],
     );
 
+    // Mock: Quiz is synced (FK pre-flight passes)
+    vi.mocked(db.quizzes.bulkGet).mockResolvedValueOnce(
+      [{ id: "quiz-1", last_synced_at: Date.now() }] as unknown as Awaited<ReturnType<typeof db.quizzes.bulkGet>>,
+    );
+
     mockSupabase.upsert.mockResolvedValue({
       error: { message: "Network error" },
     });
@@ -312,5 +330,272 @@ describe("SyncManager", () => {
     expect(db.results.bulkUpdate).not.toHaveBeenCalled();
     expect(result.incomplete).toBe(true);
     expect(result.error).toContain("Network error");
+  });
+
+  describe("FK Pre-Flight Validation", () => {
+    it("should skip results whose quiz has not been synced yet", async () => {
+      const unsyncedResults = [
+        {
+          id: "result-1",
+          user_id: "user-123",
+          score: 80,
+          synced: 0,
+          quiz_id: "srs-user-123", // SRS quiz - not synced
+          timestamp: Date.now(),
+          mode: "zen",
+          time_taken_seconds: 120,
+          answers: {},
+          flagged_questions: [],
+          category_breakdown: {},
+          deleted_at: null,
+        },
+      ];
+
+      vi.mocked(db.results.toArray).mockResolvedValueOnce(
+        unsyncedResults as unknown as Result[],
+      );
+
+      // Mock: SRS quiz exists locally but has NOT been synced (last_synced_at = null)
+      vi.mocked(db.quizzes.bulkGet).mockResolvedValueOnce([
+        {
+          id: "srs-user-123",
+          user_id: "user-123",
+          title: "SRS Review Sessions",
+          last_synced_at: null, // Not synced!
+          last_synced_version: null,
+          version: 1,
+          questions: [],
+          tags: [],
+          created_at: Date.now(),
+          updated_at: Date.now(),
+          deleted_at: null,
+          quiz_hash: null,
+          description: "",
+        },
+      ]);
+
+      mockSupabase.limit.mockResolvedValue({ data: [], error: null });
+
+      const result = await syncResults("user-123");
+
+      // Verify upsert was NOT called (result should be skipped)
+      expect(mockSupabase.upsert).not.toHaveBeenCalled();
+      // Verify sync marked as incomplete (so retry happens later)
+      expect(result.incomplete).toBe(true);
+    });
+
+    it("should push results whose quiz has been synced", async () => {
+      const unsyncedResults = [
+        {
+          id: "result-2",
+          user_id: "user-123",
+          score: 90,
+          synced: 0,
+          quiz_id: "quiz-synced",
+          timestamp: Date.now(),
+          mode: "practice",
+          time_taken_seconds: 60,
+          answers: {},
+          flagged_questions: [],
+          category_breakdown: {},
+          deleted_at: null,
+        },
+      ];
+
+      vi.mocked(db.results.toArray).mockResolvedValueOnce(
+        unsyncedResults as unknown as Result[],
+      );
+
+      // Mock: Quiz HAS been synced
+      vi.mocked(db.quizzes.bulkGet).mockResolvedValueOnce([
+        {
+          id: "quiz-synced",
+          user_id: "user-123",
+          title: "My Synced Quiz",
+          last_synced_at: Date.now() - 10000, // Synced!
+          last_synced_version: 1,
+          version: 1,
+          questions: [],
+          tags: [],
+          created_at: Date.now(),
+          updated_at: Date.now(),
+          deleted_at: null,
+          quiz_hash: "abc123",
+          description: "",
+        },
+      ]);
+
+      mockSupabase.upsert.mockResolvedValue({ error: null });
+      mockSupabase.limit.mockResolvedValue({ data: [], error: null });
+
+      await syncResults("user-123");
+
+      // Verify upsert WAS called with the result
+      expect(mockSupabase.upsert).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({ id: "result-2" }),
+        ]),
+        { onConflict: "id" },
+      );
+      // Verify result marked as synced
+      expect(db.results.bulkUpdate).toHaveBeenCalledWith([
+        { key: "result-2", changes: { synced: 1 } },
+      ]);
+    });
+
+    it("should push only results with synced quizzes when mixed", async () => {
+      const unsyncedResults = [
+        {
+          id: "result-syncable",
+          user_id: "user-123",
+          score: 85,
+          synced: 0,
+          quiz_id: "quiz-synced",
+          timestamp: Date.now(),
+          mode: "practice",
+          time_taken_seconds: 45,
+          answers: {},
+          flagged_questions: [],
+          category_breakdown: {},
+          deleted_at: null,
+        },
+        {
+          id: "result-blocked",
+          user_id: "user-123",
+          score: 70,
+          synced: 0,
+          quiz_id: "srs-user-123", // Not synced
+          timestamp: Date.now(),
+          mode: "zen",
+          time_taken_seconds: 90,
+          answers: {},
+          flagged_questions: [],
+          category_breakdown: {},
+          deleted_at: null,
+        },
+      ];
+
+      vi.mocked(db.results.toArray).mockResolvedValueOnce(
+        unsyncedResults as unknown as Result[],
+      );
+
+      // Mock: One quiz synced, one not
+      vi.mocked(db.quizzes.bulkGet).mockResolvedValueOnce([
+        {
+          id: "quiz-synced",
+          user_id: "user-123",
+          title: "Synced Quiz",
+          last_synced_at: Date.now(),
+          last_synced_version: 1,
+          version: 1,
+          questions: [],
+          tags: [],
+          created_at: Date.now(),
+          updated_at: Date.now(),
+          deleted_at: null,
+          quiz_hash: "xyz",
+          description: "",
+        },
+        {
+          id: "srs-user-123",
+          user_id: "user-123",
+          title: "SRS Review Sessions",
+          last_synced_at: null, // NOT synced
+          last_synced_version: null,
+          version: 1,
+          questions: [],
+          tags: [],
+          created_at: Date.now(),
+          updated_at: Date.now(),
+          deleted_at: null,
+          quiz_hash: null,
+          description: "",
+        },
+      ]);
+
+      mockSupabase.upsert.mockResolvedValue({ error: null });
+      mockSupabase.limit.mockResolvedValue({ data: [], error: null });
+
+      const result = await syncResults("user-123");
+
+      // Verify only the syncable result was pushed
+      expect(mockSupabase.upsert).toHaveBeenCalledWith(
+        [expect.objectContaining({ id: "result-syncable" })],
+        { onConflict: "id" },
+      );
+      // Verify only the synced result was marked
+      expect(db.results.bulkUpdate).toHaveBeenCalledWith([
+        { key: "result-syncable", changes: { synced: 1 } },
+      ]);
+      // Verify incomplete due to skipped results
+      expect(result.incomplete).toBe(true);
+    });
+
+    it("should continue to PULL phase even when results are skipped (no deadlock)", async () => {
+      // This test verifies the fix for the sync deadlock issue:
+      // Previously, skipped results would cause early return before PULL,
+      // blocking all inbound sync updates.
+
+      const unsyncedResults = [
+        {
+          id: "result-blocked",
+          user_id: "user-123",
+          score: 70,
+          synced: 0,
+          quiz_id: "missing-quiz", // Quiz doesn't exist or not synced
+          timestamp: Date.now(),
+          mode: "zen",
+          time_taken_seconds: 90,
+          answers: {},
+          flagged_questions: [],
+          category_breakdown: {},
+          deleted_at: null,
+        },
+      ];
+
+      vi.mocked(db.results.toArray).mockResolvedValueOnce(
+        unsyncedResults as unknown as Result[],
+      );
+
+      // Mock: Quiz is NOT synced (will be skipped)
+      vi.mocked(db.quizzes.bulkGet).mockResolvedValueOnce([undefined]); // Quiz not found
+
+      // Mock: Remote has valid results to pull
+      const remoteResults = [
+        {
+          id: "remote-result-1",
+          quiz_id: "quiz-1",
+          timestamp: 1234567890,
+          mode: "zen", // Must be "zen" or "proctor" per schema
+          score: 85,
+          time_taken_seconds: 120,
+          answers: {},
+          flagged_questions: [],
+          category_breakdown: {},
+          created_at: "2023-06-01T10:00:00.000Z",
+          updated_at: "2023-06-01T12:00:00.000Z",
+          deleted_at: null,
+        },
+      ];
+
+      mockSupabase.limit
+        .mockResolvedValueOnce({ data: remoteResults, error: null })
+        .mockResolvedValueOnce({ data: [], error: null }); // End pagination
+
+      const result = await syncResults("user-123");
+
+      // CRITICAL: Verify PULL happened (no deadlock)
+      expect(db.results.bulkPut).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({ id: "remote-result-1" }),
+        ]),
+      );
+
+      // Sync marked incomplete (because push had skipped results)
+      expect(result.incomplete).toBe(true);
+
+      // But we DID pull successfully
+      expect(result.status).toBe("failed"); // status reflects push failure
+    });
   });
 });

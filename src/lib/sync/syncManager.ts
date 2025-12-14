@@ -132,7 +132,7 @@ export async function syncResults(userId: string): Promise<SyncResultsOutcome> {
         )) || { incomplete: false }
       );
     } catch (error) {
-      logger.error("Failed to acquire sync lock:", error);
+      logger.error("Failed to acquire sync lock:", toErrorMessage(error));
       return { incomplete: false };
     }
   } else {
@@ -186,14 +186,37 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
       .toArray();
 
     if (unsyncedResults.length > 0) {
-      for (let i = 0; i < unsyncedResults.length; i += BATCH_SIZE) {
+      // Pre-Flight FK Validation: Only push results whose quiz has been synced.
+      // This prevents FK constraint violations when a result references a newly-created
+      // quiz (like SRS quiz) that hasn't synced to Supabase yet.
+      const quizIds = [...new Set(unsyncedResults.map((r) => r.quiz_id))];
+      const quizzes = await db.quizzes.bulkGet(quizIds);
+      const syncedQuizIds = new Set(
+        quizzes
+          .filter((q): q is NonNullable<typeof q> => q !== undefined && q.last_synced_at !== null)
+          .map((q) => q.id),
+      );
+
+      const syncableResults = unsyncedResults.filter((r) => syncedQuizIds.has(r.quiz_id));
+      const skippedCount = unsyncedResults.length - syncableResults.length;
+
+      if (skippedCount > 0) {
+        logger.debug("Skipping results with unsynced quizzes (FK pre-flight)", {
+          userId,
+          skippedCount,
+          totalUnsynced: unsyncedResults.length,
+          syncable: syncableResults.length,
+        });
+      }
+
+      for (let i = 0; i < syncableResults.length; i += BATCH_SIZE) {
         if (Date.now() - startTime > TIME_BUDGET_MS) {
           logger.warn(`Sync time budget exceeded (${TIME_BUDGET_MS}ms) during PUSH, pausing.`);
           incomplete = true;
           break;
         }
 
-        const batch = unsyncedResults.slice(i, i + BATCH_SIZE);
+        const batch = syncableResults.slice(i, i + BATCH_SIZE);
 
         // Unified upsert payload handling both active and soft-deleted records
         const payload = batch.map((r) => ({
@@ -246,15 +269,18 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
           pushed += batch.length;
         }
       }
+
+      // If we skipped results, mark as incomplete so caller knows to retry.
+      // NOTE: We do NOT return early here - the PULL phase must still run
+      // to receive inbound updates. Returning early would block all inbound
+      // sync if any result references an unsynced quiz.
+      if (skippedCount > 0) {
+        incomplete = true;
+      }
     }
 
-    if (incomplete)
-      return {
-        incomplete,
-        error: lastError,
-        status: "failed",
-        shouldRetry: true,
-      };
+    // NOTE: Previously this would return early if incomplete, blocking PULL.
+    // This was removed to prevent sync deadlock - pull should always run.
 
     // 2. PULL: Incremental Sync with Keyset Pagination using updated_at
     let hasMore = true;
@@ -285,7 +311,7 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
         .limit(BATCH_SIZE);
 
       if (fetchError) {
-        logger.error("Failed to fetch results from Supabase:", fetchError);
+        logger.error("Failed to fetch results from Supabase:", toErrorMessage(fetchError));
         incomplete = true;
         lastError = toErrorMessage(fetchError);
         hasMore = false;
@@ -398,7 +424,7 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
       }
     }
   } catch (error) {
-    logger.error("Sync failed:", error);
+    logger.error("Sync failed:", toErrorMessage(error));
     incomplete = true;
     lastError = toErrorMessage(error);
   } finally {

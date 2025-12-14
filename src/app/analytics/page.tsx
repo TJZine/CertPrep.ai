@@ -10,7 +10,7 @@ import { StreakCard } from "@/components/analytics/StreakCard";
 import { RetryComparisonCard } from "@/components/analytics/RetryComparisonCard";
 import { TopicHeatmap } from "@/components/analytics/TopicHeatmap";
 import { CategoryTrendChart } from "@/components/analytics/CategoryTrendChart";
-import { CategoryBreakdown } from "@/components/results/TopicRadar";
+
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { EmptyState } from "@/components/common/EmptyState";
 import { Button } from "@/components/ui/Button";
@@ -125,7 +125,6 @@ export default function AnalyticsPage(): React.ReactElement {
   }, [quizzes]);
 
   const {
-    categoryPerformance,
     weakAreas,
     dailyStudyTime,
     isLoading: statsLoading,
@@ -251,16 +250,11 @@ export default function AnalyticsPage(): React.ReactElement {
       </div>
 
       <div className="mb-8 grid gap-8 lg:grid-cols-2">
-        <CategoryBreakdown categories={categoryPerformance} />
+        <TopicHeatmap results={results} quizzes={quizzes} />
         <WeakAreasCard
           weakAreas={weakAreas}
           userId={effectiveUserId ?? undefined}
         />
-      </div>
-
-      {/* Topic Heatmap (for comparison with CategoryBreakdown) */}
-      <div className="mb-8">
-        <TopicHeatmap results={results} quizzes={quizzes} />
       </div>
 
       {/* Category Trends Over Time */}
