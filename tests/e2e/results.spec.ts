@@ -63,8 +63,8 @@ test.describe("Results Page", () => {
             // Wait for loading
             await waitForLoadingToComplete(page, /loading your results/i);
 
-            // Verify score is displayed
-            await expect(page.getByText("50%")).toBeVisible();
+            // Verify score is displayed (use .first() as score appears in multiple places)
+            await expect(page.getByText("50%").first()).toBeVisible();
         });
 
         test("shows quiz title and mode", async ({
@@ -113,8 +113,8 @@ test.describe("Results Page", () => {
             await expect(retryButton).toBeVisible();
             await retryButton.click();
 
-            // Should navigate to quiz route
-            await expect(page).toHaveURL(`/quiz/${quiz.id}`);
+            // Should navigate to quiz route (now includes mode for direct retake UX)
+            await expect(page).toHaveURL(`/quiz/${quiz.id}/zen`);
         });
     });
 
