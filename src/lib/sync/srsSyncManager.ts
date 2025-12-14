@@ -184,8 +184,22 @@ async function performSRSSync(userId: string): Promise<{ incomplete: boolean }> 
 function toErrorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
   if (typeof error === "string") return error;
+
+  // Handle Supabase PostgrestError which has message/code/details/hint properties
+  if (error && typeof error === "object") {
+    const e = error as Record<string, unknown>;
+    if (typeof e.message === "string") {
+      const parts = [e.message];
+      if (e.code) parts.push(`code=${e.code}`);
+      if (e.details) parts.push(`details=${e.details}`);
+      if (e.hint) parts.push(`hint=${e.hint}`);
+      return parts.join(" | ");
+    }
+  }
+
   try {
-    return JSON.stringify(error);
+    const json = JSON.stringify(error);
+    return json === "{}" ? "Unknown error (empty object)" : json;
   } catch {
     return "Unknown error";
   }
