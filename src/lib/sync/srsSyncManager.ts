@@ -64,16 +64,16 @@ export async function syncSRS(userId: string): Promise<{ incomplete: boolean }> 
           async (lock) => {
             if (!lock) {
               logger.debug("SRS sync already in progress in another tab, skipping");
-              return { incomplete: false };
+              return { incomplete: true }; // Skipped — caller should retry
             }
             try {
               return await performSRSSync(userId);
             } catch (error) {
               logger.error("SRS sync failed while holding lock", error);
-              return { incomplete: false };
+              return { incomplete: true }; // Failed — caller should retry
             }
           },
-        )) || { incomplete: false }
+        )) ?? { incomplete: true }
       );
     } catch (error) {
       logger.error("Failed to acquire SRS sync lock request", error);
@@ -273,8 +273,8 @@ async function pushLocalChanges(
 
     // Log how many were actually updated (server had older data)
     const updatedCount = Array.isArray(data)
-      ? data.filter((r: { updated?: boolean }) => r.updated).length
-      : 0;
+      ? data.filter((r: { out_updated?: boolean }) => r.out_updated).length
+      : batch.length; // Backward compat: assume all updated if no structured response
     if (updatedCount < batch.length) {
       logger.debug("SRS batch push: some items skipped (server had newer data)", {
         sent: batch.length,
@@ -282,17 +282,29 @@ async function pushLocalChanges(
       });
     }
 
-    // Mark as synced locally (atomic update)
+    // Mark as synced locally — only if server accepted (LWW reconciliation)
     await db.transaction("rw", db.srs, async () => {
+      // Build set of question_ids that server actually updated
+      const updatedIds = new Set(
+        Array.isArray(data)
+          ? data
+            .filter((r: { out_updated?: boolean }) => r.out_updated)
+            .map((r: { out_question_id?: string }) => r.out_question_id)
+          : []
+      );
+
       await Promise.all(
-        batch.map((item) =>
-          db.srs.update([item.question_id, userId], {
-            synced: 1,
-          })
-        )
+        batch.map((item) => {
+          // Mark synced if: (1) server accepted, OR (2) no structured response (backward compat)
+          if (updatedIds.has(item.question_id) || !Array.isArray(data)) {
+            return db.srs.update([item.question_id, userId], { synced: 1 });
+          }
+          // Server had newer data — leave unsynced to trigger re-pull reconciliation
+          return Promise.resolve();
+        })
       );
     });
-    stats.pushed += batch.length;
+    stats.pushed += updatedCount;
   }
 
   return incomplete;
@@ -343,8 +355,12 @@ async function pullRemoteChanges(
     const cursor = await getSRSSyncCursor(userId);
     const timestamp = cursor.timestamp;
 
+    // Validate lastId to prevent query failures from corrupted cursors
+    const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const safeLastId = UUID_REGEX.test(cursor.lastId) ? cursor.lastId : "00000000-0000-0000-0000-000000000000";
+
     // Keyset pagination: (updated_at > ts) OR (updated_at = ts AND question_id > last_id)
-    const filter = `updated_at.gt.${timestamp},and(updated_at.eq.${timestamp},question_id.gt.${cursor.lastId})`;
+    const filter = `updated_at.gt.${timestamp},and(updated_at.eq.${timestamp},question_id.gt.${safeLastId})`;
 
     const { data: remoteItems, error } = await client
       .from("srs")

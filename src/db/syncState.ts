@@ -283,17 +283,22 @@ export async function setSyncBlockState(
 ): Promise<void> {
   // Validate TTL: reject NaN, negative, or non-finite values
   const safeTtl = Number.isFinite(ttlMs) && ttlMs > 0 ? ttlMs : SYNC_BLOCK_TTL_MS;
-
-  // Clear any existing block for this user/table to ensure only one active block
-  await clearSyncBlockState(userId, table);
-
   const key = SYNC_BLOCK_KEY(userId, table);
-  await db.syncState.put({
-    table: `${key}:${reason}`,
-    lastSyncedAt: Date.now(),
-    synced: 0, // synced: 0 indicates blocked state
-    lastId: String(safeTtl),
+
+  // Atomic transaction: delete existing blocks and insert new one in single operation
+  await db.transaction("rw", db.syncState, async () => {
+    // Delete any existing blocks for this user/table
+    await db.syncState.where("table").startsWith(key).delete();
+
+    // Insert the new block
+    await db.syncState.put({
+      table: `${key}:${reason}`,
+      lastSyncedAt: Date.now(),
+      synced: 0, // synced: 0 indicates blocked state
+      lastId: String(safeTtl),
+    });
   });
+
   logger.warn(`Sync blocked for ${table}`, { userId, reason, ttlMs: safeTtl });
 }
 
