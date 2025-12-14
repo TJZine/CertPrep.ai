@@ -11,7 +11,7 @@ import {
 import { formatDateKey, formatMonthDayLabel } from "@/lib/date";
 import { cn } from "@/lib/utils";
 import type { Result } from "@/types/result";
-import type { Quiz } from "@/types/quiz";
+import type { Quiz, Question } from "@/types/quiz";
 import { hashAnswer } from "@/lib/utils";
 
 interface TopicHeatmapProps {
@@ -93,6 +93,16 @@ export function TopicHeatmap({
         [quizzes],
     );
 
+    const allQuestionsMap = React.useMemo(() => {
+        const map = new Map<string, { question: Question; quizId: string }>();
+        quizzes.forEach((q) => {
+          q.questions.forEach((question) => {
+            map.set(question.id, { question, quizId: q.id });
+          });
+        });
+        return map;
+    }, [quizzes]);
+
     React.useEffect(() => {
         let isMounted = true;
 
@@ -121,8 +131,27 @@ export function TopicHeatmap({
 
             // Process all results
             for (const result of results) {
+                let sessionQuestions: Question[] = [];
                 const quiz = quizMap.get(result.quiz_id);
-                if (!quiz) continue;
+                
+                // Case 1: Standard Quiz
+                if (quiz && quiz.questions.length > 0) {
+                    // Filter to only questions served in this session
+                    const idSet = result.question_ids
+                        ? new Set(result.question_ids)
+                        : null;
+                    sessionQuestions = idSet
+                        ? quiz.questions.filter((q) => idSet.has(q.id))
+                        : quiz.questions;
+                }
+                // Case 2: Aggregated Result (SRS/Topic Study)
+                else if (result.question_ids && result.question_ids.length > 0) {
+                     sessionQuestions = result.question_ids
+                        .map(id => allQuestionsMap.get(id)?.question)
+                        .filter((q): q is Question => !!q);
+                }
+
+                if (sessionQuestions.length === 0) continue;
 
                 const resultDate = new Date(result.timestamp);
 
@@ -133,14 +162,6 @@ export function TopicHeatmap({
                 if (weekIndex === -1) continue;
 
                 const { weekKey } = weeks[weekIndex]!;
-
-                // Filter to questions served in this session
-                const idSet = result.question_ids
-                    ? new Set(result.question_ids)
-                    : null;
-                const sessionQuestions = idSet
-                    ? quiz.questions.filter((q) => idSet.has(q.id))
-                    : quiz.questions;
 
                 // Process each question
                 for (const question of sessionQuestions) {
@@ -216,7 +237,7 @@ export function TopicHeatmap({
         return (): void => {
             isMounted = false;
         };
-    }, [results, quizzes, weeks, quizMap]);
+    }, [results, quizzes, weeks, quizMap, allQuestionsMap]);
 
     if (isLoading) {
         return (

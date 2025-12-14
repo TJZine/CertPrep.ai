@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { calculateCategoryTrends, type TrendDirection } from "@/lib/analytics/trends";
 import { formatDateKey } from "@/lib/date";
 import { hashAnswer } from "@/lib/utils";
-import type { Quiz } from "@/types/quiz";
+import type { Quiz, Question } from "@/types/quiz";
 import type { Result } from "@/types/result";
 
 export interface CategoryStat {
@@ -102,22 +102,48 @@ export function useAnalyticsStats(
           { correct: number; total: number }
         >();
 
+        // Pre-index all questions from all available quizzes for O(1) lookup
+        // This is crucial for "aggregated" results (Topic Study/SRS) where the
+        // source quiz (SRS quiz) is empty or missing from the passed `quizzes` list,
+        // but the questions themselves exist in other user quizzes.
+        const allQuestionsMap = new Map<string, { question: Question; quizId: string }>();
+        quizzes.forEach((q) => {
+          q.questions.forEach((question) => {
+            allQuestionsMap.set(question.id, { question, quizId: q.id });
+          });
+        });
+
         // Calculate category performance
         const quizMap = new Map(quizzes.map((q) => [q.id, q]));
 
         // Calculate category performance
         const allResultsData = await Promise.all(
           results.map(async (result) => {
+            let sessionQuestions: Question[] = [];
+            
             const quiz = quizMap.get(result.quiz_id);
-            if (!quiz) return [];
 
-            // Filter to only questions served in this session (Smart Round, Review Missed)
-            const idSet = result.question_ids
-              ? new Set(result.question_ids)
-              : null;
-            const sessionQuestions = idSet
-              ? quiz.questions.filter((q) => idSet.has(q.id))
-              : quiz.questions;
+            // CASE 1: Normal Quiz Result
+            if (quiz && quiz.questions.length > 0) {
+              // Filter to only questions served in this session (Smart Round, Review Missed)
+              const idSet = result.question_ids
+                ? new Set(result.question_ids)
+                : null;
+              sessionQuestions = idSet
+                ? quiz.questions.filter((q) => idSet.has(q.id))
+                : quiz.questions;
+            } 
+            // CASE 2: Aggregated Result (Topic Study / SRS)
+            // The result has a list of question_ids, but the linked quiz is either 
+            // missing (filtered out) or empty (SRS quiz).
+            // We resolve the questions from our global map.
+            else if (result.question_ids && result.question_ids.length > 0) {
+               sessionQuestions = result.question_ids
+                .map(id => allQuestionsMap.get(id)?.question)
+                .filter((q): q is Question => !!q);
+            }
+
+            if (sessionQuestions.length === 0) return [];
 
             return Promise.all(
               sessionQuestions.map(async (question) => {

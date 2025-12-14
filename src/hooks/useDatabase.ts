@@ -8,6 +8,7 @@ import type { Quiz } from "@/types/quiz";
 import type { Result } from "@/types/result";
 import type { QuizStats } from "@/db/quizzes";
 import { getQuizStats, isSRSQuiz, sortQuizzesByNewest } from "@/db/quizzes";
+import { hydrateAggregatedQuiz } from "@/db/aggregatedQuiz";
 
 interface InitializationState {
   isInitialized: boolean;
@@ -43,6 +44,13 @@ interface UseResultResponse {
 interface UseQuizResultsResponse {
   results: Result[];
   isLoading: boolean;
+}
+
+interface UseResultWithHydratedQuizResponse {
+  result: Result | null | undefined;
+  quiz: Quiz | undefined;
+  isLoading: boolean;
+  isHydrating: boolean;
 }
 
 /**
@@ -221,5 +229,108 @@ export function useQuizResults(
   return {
     results: results ?? [],
     isLoading: !quizId || !userId ? true : results === undefined,
+  };
+}
+
+/**
+ * Retrieves a result and its quiz, hydrating the quiz if it's an aggregated one (SRS/Topic Study).
+ * This ensures that results for aggregated sessions have a fully populated "synthetic" quiz
+ * with all the necessary questions for rendering the results UI.
+ */
+export function useResultWithHydratedQuiz(
+  id: string | undefined,
+  userId: string | undefined,
+): UseResultWithHydratedQuizResponse {
+  const { result, isLoading: resultLoading } = useResult(id, userId);
+  const [hydratedQuiz, setHydratedQuiz] = useState<Quiz | undefined>(undefined);
+  const [isHydrating, setIsHydrating] = useState(false);
+
+  // We use live query for the base quiz to keep it reactive to title changes etc.
+  const quizId = result?.quiz_id;
+  const { quiz: baseQuiz, isLoading: baseQuizLoading } = useQuiz(
+    quizId,
+    userId,
+  );
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const hydrate = async (): Promise<void> => {
+      // Wait for all data to be ready
+      if (!result || !baseQuiz || !userId) {
+        if (isMounted) setHydratedQuiz(undefined);
+        return;
+      }
+
+      // 1. Standard Quiz: It has questions, so just use it.
+      // We check for questions length > 0 to differentiate from empty SRS quizzes.
+      if (!isSRSQuiz(baseQuiz) && baseQuiz.questions.length > 0) {
+        if (isMounted) {
+          setHydratedQuiz(baseQuiz);
+          setIsHydrating(false);
+        }
+        return;
+      }
+
+      // 2. Aggregated Quiz (SRS/Topic Study):
+      // The base quiz is empty (questions: []). We must hydrate questions from IDs.
+      if (result.question_ids && result.question_ids.length > 0) {
+        if (isMounted) setIsHydrating(true);
+        try {
+          // Determine a display title for the synthetic quiz
+          let title = baseQuiz.title;
+          if (isSRSQuiz(baseQuiz) && result.category_breakdown) {
+            const categories = Object.keys(result.category_breakdown);
+            if (categories.length === 1) {
+              title = `Topic Study: ${categories[0]}`;
+            } else if (categories.length > 1) {
+              title = "Study Session";
+            }
+          }
+
+          const { syntheticQuiz } = await hydrateAggregatedQuiz(
+            result.question_ids,
+            userId,
+            title,
+          );
+
+          if (isMounted) {
+            setHydratedQuiz(syntheticQuiz);
+          }
+        } catch (err) {
+          console.error("Failed to hydrate quiz", err);
+          // Fallback to base quiz (empty) so UI can at least show something
+          if (isMounted) {
+            setHydratedQuiz(baseQuiz);
+          }
+        } finally {
+          if (isMounted) {
+            setIsHydrating(false);
+          }
+        }
+      } else {
+        // Fallback: base quiz is empty and we have no question_ids to hydrate from.
+        if (isMounted) {
+          setHydratedQuiz(baseQuiz);
+          setIsHydrating(false);
+        }
+      }
+    };
+
+    void hydrate();
+
+    return (): void => {
+      isMounted = false;
+    };
+  }, [result, baseQuiz, userId]);
+
+  const isLoading =
+    resultLoading || (!!result?.quiz_id && baseQuizLoading) || isHydrating;
+
+  return {
+    result,
+    quiz: hydratedQuiz,
+    isLoading,
+    isHydrating,
   };
 }

@@ -7,10 +7,9 @@ import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { Button } from "@/components/ui/Button";
 import {
-  useResult,
-  useQuiz,
   useQuizResults,
   useInitializeDatabase,
+  useResultWithHydratedQuiz,
 } from "@/hooks/useDatabase";
 import { deleteResult, isSRSQuiz } from "@/db/results";
 import { useToast } from "@/components/ui/Toast";
@@ -34,20 +33,24 @@ export default function ResultsPage(): React.ReactElement {
   const { isSyncing, hasInitialSyncCompleted, sync } = useSync();
 
   const { isInitialized, error: dbError } = useInitializeDatabase();
-  const { result, isLoading: resultLoading } = useResult(
+
+  const {
+    result,
+    quiz,
+    isLoading: dataLoading,
+    isHydrating,
+  } = useResultWithHydratedQuiz(
     isInitialized ? resultId : undefined,
     effectiveUserId ?? undefined,
   );
-  // Only query for quiz if we have a valid result with quiz_id
+
+  // Still needed for previousScore logic
   const quizId = result?.quiz_id;
-  const { quiz, isLoading: quizLoading } = useQuiz(
-    quizId,
-    effectiveUserId ?? undefined,
-  );
   const { results: allQuizResults } = useQuizResults(
     quizId,
     effectiveUserId ?? undefined,
   );
+
   const [isRestoringQuiz, setIsRestoringQuiz] = React.useState(false);
   const [restoreAttempted, setRestoreAttempted] = React.useState(false);
   const [isDeleting, setIsDeleting] = React.useState(false);
@@ -93,7 +96,19 @@ export default function ResultsPage(): React.ReactElement {
 
   React.useEffect(() => {
     let isMounted = true;
-    if (!result || quiz || !effectiveUserId || restoreAttempted) {
+    // Attempt restore if:
+    // 1. Result exists
+    // 2. Quiz is MISSING (not even empty, but undefined) and NOT hydrating
+    // 3. We haven't tried yet
+    // 4. We are not currently loading
+    if (
+      !result ||
+      quiz ||
+      isHydrating ||
+      dataLoading ||
+      !effectiveUserId ||
+      restoreAttempted
+    ) {
       return undefined;
     }
 
@@ -116,7 +131,14 @@ export default function ResultsPage(): React.ReactElement {
     return (): void => {
       isMounted = false;
     };
-  }, [effectiveUserId, quiz, result, restoreAttempted]);
+  }, [
+    effectiveUserId,
+    quiz,
+    result,
+    restoreAttempted,
+    isHydrating,
+    dataLoading,
+  ]);
 
   if (dbError) {
     return (
@@ -145,10 +167,15 @@ export default function ResultsPage(): React.ReactElement {
   }
 
   // Show loading while DB initializes, user is determined, or result is being fetched
-  if (!isInitialized || !effectiveUserId || resultLoading) {
+  if (!isInitialized || !effectiveUserId || dataLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
-        <LoadingSpinner size="lg" text="Loading your results..." />
+        <LoadingSpinner
+          size="lg"
+          text={
+            isHydrating ? "Building study session..." : "Loading your results..."
+          }
+        />
       </div>
     );
   }
@@ -193,7 +220,7 @@ export default function ResultsPage(): React.ReactElement {
   }
 
   // Only check quiz loading when we have a result (and thus a quiz_id)
-  if (quizLoading) {
+  if (dataLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <LoadingSpinner size="lg" text="Loading quiz details..." />

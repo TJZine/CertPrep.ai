@@ -4,7 +4,7 @@ import { NIL_UUID } from "@/lib/constants";
 import { calculatePercentage, generateUUID } from "@/lib/utils";
 import { logger } from "@/lib/logger";
 import type { CategoryPerformance, Result } from "@/types/result";
-import type { Quiz, QuizMode } from "@/types/quiz";
+import type { Quiz, Question, QuizMode } from "@/types/quiz";
 import { evaluateAnswer } from "@/lib/grading";
 
 // Re-export for backwards compatibility
@@ -400,9 +400,17 @@ export async function getOverallStats(userId: string): Promise<OverallStats> {
   const results = allResults.filter((r) => !r.deleted_at);
   const quizzes = allQuizzes.filter((q) => !q.deleted_at);
 
-
-
   const quizMap = new Map(quizzes.map((quiz) => [quiz.id, quiz]));
+  
+  // Create a map of all questions for O(1) lookup during aggregation
+  // This allows us to score "aggregated" results (Topic Study/SRS) where the
+  // source quiz is empty, but the questions exist in other user quizzes.
+  const allQuestionsMap = new Map<string, { question: Question; quizId: string }>();
+  quizzes.forEach((q) => {
+    q.questions.forEach((question) => {
+      allQuestionsMap.set(question.id, { question, quizId: q.id });
+    });
+  });
 
   const totalQuizzes = quizzes.length;
   const totalAttempts = results.length;
@@ -422,13 +430,23 @@ export async function getOverallStats(userId: string): Promise<OverallStats> {
     const batch = results.slice(i, i + BATCH_SIZE);
     const batchData = await Promise.all(
       batch.map(async (result) => {
+        let sessionQuestions: Question[] = [];
         const quiz = quizMap.get(result.quiz_id);
-        if (!quiz) {
-          return [];
+
+        if (quiz && quiz.questions.length > 0) {
+           sessionQuestions = quiz.questions;
+        } 
+        // Handle aggregated results (Topic Study / SRS)
+        else if (result.question_ids && result.question_ids.length > 0) {
+           sessionQuestions = result.question_ids
+            .map(id => allQuestionsMap.get(id)?.question)
+            .filter((q): q is Question => !!q);
         }
 
+        if (sessionQuestions.length === 0) return [];
+
         return Promise.all(
-          quiz.questions.map(async (question) => {
+          sessionQuestions.map(async (question) => {
             const userAnswer = result.answers[String(question.id)];
             return evaluateAnswer(question, userAnswer);
           }),
@@ -492,15 +510,25 @@ export async function getTopicStudyQuestions(
   category: string,
 ): Promise<TopicStudyData> {
   const allResults = await getAllResults(userId);
+  // getAllResults returns newest first.
+  // We want to track the *latest* status of each question.
 
-  // Get unique quiz IDs from results (includes system/public quizzes the user has taken)
-  const quizIdsFromResults = [...new Set(allResults.map((r) => r.quiz_id))];
+  // Fetch all user quizzes to resolve questions
+  const allQuizzes = await db.quizzes
+    .where("user_id")
+    .equals(userId)
+    .filter((q) => !q.deleted_at)
+    .toArray();
+    
+  const quizMap = new Map(allQuizzes.map((quiz) => [quiz.id, quiz]));
+  const allQuestionsMap = new Map<string, { question: Question; quizId: string }>();
+  allQuizzes.forEach((q) => {
+    q.questions.forEach((question) => {
+      allQuestionsMap.set(question.id, { question, quizId: q.id });
+    });
+  });
 
-  // Fetch all referenced quizzes
-  const allQuizzes = await db.quizzes.bulkGet(quizIdsFromResults);
-  const quizzes = allQuizzes.filter((q): q is NonNullable<typeof q> => !!q && !q.deleted_at);
-  const quizMap = new Map(quizzes.map((quiz) => [quiz.id, quiz]));
-
+  const processedQuestionIds = new Set<string>();
   const missedIds = new Set<string>();
   const flaggedIds = new Set<string>();
   const sourceQuizIds = new Set<string>();
@@ -512,17 +540,41 @@ export async function getTopicStudyQuestions(
 
     await Promise.all(
       batch.map(async (result) => {
+        let sessionQuestions: Question[] = [];
         const quiz = quizMap.get(result.quiz_id);
-        if (!quiz) return;
 
-        // Get questions in this category (handle null/undefined as "Uncategorized")
-        const categoryQuestions = quiz.questions.filter((q) => {
+        if (quiz && quiz.questions.length > 0) {
+           // If we have question_ids (e.g. Smart Round), filter to them. 
+           // Otherwise use all quiz questions.
+           const idSet = result.question_ids ? new Set(result.question_ids) : null;
+           sessionQuestions = idSet 
+             ? quiz.questions.filter(q => idSet.has(q.id))
+             : quiz.questions;
+        }
+        else if (result.question_ids && result.question_ids.length > 0) {
+           sessionQuestions = result.question_ids
+            .map(id => allQuestionsMap.get(id)?.question)
+            .filter((q): q is Question => !!q);
+        }
+
+        if (sessionQuestions.length === 0) return;
+
+        // Filter for category if specified
+        const categoryQuestions = sessionQuestions.filter((q) => {
           const qCategory = q.category || "Uncategorized";
           return qCategory === category;
         });
 
         for (const question of categoryQuestions) {
           try {
+            // We only care about the latest attempt for a given question.
+            if (processedQuestionIds.has(question.id)) {
+                continue; 
+            }
+            
+            // Mark as processed so older results don't override
+            processedQuestionIds.add(question.id);
+
             const isFlagged = result.flagged_questions.includes(question.id);
             const userAnswer = result.answers[question.id];
             let isMissed = false;
@@ -541,12 +593,20 @@ export async function getTopicStudyQuestions(
             }
 
             if (isFlagged || isMissed) {
-              sourceQuizIds.add(quiz.id);
+              // We need to know which quiz this question actually belongs to
+              // for the "quizIds" return value (used for source linking).
+              // If it was an aggregated result, we need the source quiz ID.
+              const sourceInfo = allQuestionsMap.get(question.id);
+              if (sourceInfo) {
+                  sourceQuizIds.add(sourceInfo.quizId);
+              } else if (quiz) {
+                  sourceQuizIds.add(quiz.id);
+              }
             }
           } catch (error) {
             logger.error("Failed to process topic study question", {
               error,
-              quizId: quiz.id,
+              quizId: result.quiz_id,
               questionId: question.id,
               category,
             });
