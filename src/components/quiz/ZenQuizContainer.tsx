@@ -40,8 +40,6 @@ interface ZenQuizContainerProps {
   isSRSReview?: boolean;
   /** When true, this is a Topic Study session (aggregates questions across quizzes). */
   isTopicStudy?: boolean;
-  /** Category being studied (for display in results). */
-  studyCategory?: string;
 }
 
 /**
@@ -52,7 +50,6 @@ export function ZenQuizContainer({
   isSmartRound = false,
   isSRSReview = false,
   isTopicStudy = false,
-  studyCategory,
 }: ZenQuizContainerProps): React.ReactElement {
   const router = useRouter();
   const { addToast } = useToast();
@@ -74,6 +71,11 @@ export function ZenQuizContainer({
   // Auth for SRS updates
   const { user } = useAuth();
   const effectiveUserId = useEffectiveUserId(user?.id);
+
+  // Reset SRS tracking when user changes to prevent stale data across sessions
+  React.useEffect(() => {
+    srsUpdatedQuestionsRef.current = new Set();
+  }, [effectiveUserId]);
 
   const {
     initializeSession,
@@ -134,16 +136,21 @@ export function ZenQuizContainer({
           // Ensure SRS quiz exists for this user (creates if needed)
           const srsQuiz = await getOrCreateSRSQuiz(effectiveUserId);
 
+          // Build question map for O(1) lookups
+          const questionMap = new Map(questions.map((q) => [q.id, q]));
+
           // Calculate score and category breakdown from answers
           let correctCount = 0;
           const categoryTotals: Record<string, { correct: number; total: number }> = {};
           const answersRecord: Record<string, string> = {};
+          const actualQuestionIds: string[] = [];
 
           answers.forEach((record, questionId) => {
             answersRecord[questionId] = record.selectedAnswer;
-            const question = questions.find((q) => q.id === questionId);
+            const question = questionMap.get(questionId);
             if (!question) return;
 
+            actualQuestionIds.push(questionId);
             const category = question.category || "Uncategorized";
             if (!categoryTotals[category]) {
               categoryTotals[category] = { correct: 0, total: 0 };
@@ -170,7 +177,7 @@ export function ZenQuizContainer({
             answers: answersRecord,
             flaggedQuestions: Array.from(flaggedQuestions),
             timeTakenSeconds,
-            questionIds: questions.map((q) => q.id),
+            questionIds: actualQuestionIds,
             score,
             categoryBreakdown,
           });
@@ -187,22 +194,26 @@ export function ZenQuizContainer({
         return;
       }
 
-      // Topic study sessions aggregate questions across quizzes - similar pattern to SRS
       if (isTopicStudy && effectiveUserId) {
         try {
           // Reuse SRS quiz for FK compliance (both aggregate questions across quizzes)
           const srsQuiz = await getOrCreateSRSQuiz(effectiveUserId);
 
+          // Build question map for O(1) lookups
+          const questionMap = new Map(questions.map((q) => [q.id, q]));
+
           // Calculate score and category breakdown from answers
           let correctCount = 0;
           const categoryTotals: Record<string, { correct: number; total: number }> = {};
           const answersRecord: Record<string, string> = {};
+          const actualQuestionIds: string[] = [];
 
           answers.forEach((record, questionId) => {
             answersRecord[questionId] = record.selectedAnswer;
-            const question = questions.find((q) => q.id === questionId);
+            const question = questionMap.get(questionId);
             if (!question) return;
 
+            actualQuestionIds.push(questionId);
             const category = question.category || "Uncategorized";
             if (!categoryTotals[category]) {
               categoryTotals[category] = { correct: 0, total: 0 };
@@ -229,10 +240,9 @@ export function ZenQuizContainer({
             answers: answersRecord,
             flaggedQuestions: Array.from(flaggedQuestions),
             timeTakenSeconds,
-            questionIds: questions.map((q) => q.id),
+            questionIds: actualQuestionIds,
             score,
             categoryBreakdown,
-            category: studyCategory,
           });
 
           clearTopicStudyState();
@@ -249,7 +259,7 @@ export function ZenQuizContainer({
 
       await submitQuiz(timeTakenSeconds);
     },
-    [isSRSReview, isTopicStudy, effectiveUserId, answers, questions, flaggedQuestions, addToast, router, submitQuiz, studyCategory],
+    [isSRSReview, isTopicStudy, effectiveUserId, answers, questions, flaggedQuestions, addToast, router, submitQuiz],
   );
 
   const retrySave = React.useCallback((): void => {
@@ -321,8 +331,13 @@ export function ZenQuizContainer({
       router.push("/study-due");
       return;
     }
+    if (isTopicStudy) {
+      clearTopicStudyState();
+      router.push("/analytics");
+      return;
+    }
     router.push("/");
-  }, [resetSession, isSmartRound, isSRSReview, router]);
+  }, [resetSession, isSmartRound, isSRSReview, isTopicStudy, router]);
 
   const isCurrentAnswerCorrect = React.useMemo(() => {
     if (!currentQuestion || !hasSubmitted) return false;

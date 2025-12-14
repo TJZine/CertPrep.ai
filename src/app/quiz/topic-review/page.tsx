@@ -49,6 +49,8 @@ export default function TopicReviewPage(): React.ReactElement {
     React.useEffect(() => {
         if (!isInitialized || !effectiveUserId) return;
 
+        let isMounted = true;
+
         const loadQuestions = async (): Promise<void> => {
             try {
                 // SSR guard
@@ -60,8 +62,10 @@ export default function TopicReviewPage(): React.ReactElement {
                 const storedFlaggedCount = sessionStorage.getItem(TOPIC_STUDY_FLAGGED_COUNT_KEY);
 
                 if (!storedQuestionIds) {
-                    setLoadError("No topic study session found. Please start from the Analytics page.");
-                    setIsLoading(false);
+                    if (isMounted) {
+                        setLoadError("No topic study session found. Please start from the Analytics page.");
+                        setIsLoading(false);
+                    }
                     return;
                 }
 
@@ -71,32 +75,43 @@ export default function TopicReviewPage(): React.ReactElement {
                 } catch (parseError) {
                     logger.warn("Invalid topic study session data in sessionStorage", { parseError });
                     clearTopicStudyState();
-                    setLoadError("Invalid study session data. Please start a new session from Analytics.");
-                    setIsLoading(false);
+                    if (isMounted) {
+                        setLoadError("Invalid study session data. Please start a new session from Analytics.");
+                        setIsLoading(false);
+                    }
                     return;
                 }
 
                 if (questionIds.length === 0) {
-                    setLoadError("No questions in study session.");
-                    setIsLoading(false);
+                    if (isMounted) {
+                        setLoadError("No questions in study session.");
+                        setIsLoading(false);
+                    }
                     return;
                 }
 
-                // Parse counts
-                if (storedMissedCount) {
-                    const parsed = Number.parseInt(storedMissedCount, 10);
-                    if (!Number.isNaN(parsed)) setMissedCount(parsed);
-                }
-                if (storedFlaggedCount) {
-                    const parsed = Number.parseInt(storedFlaggedCount, 10);
-                    if (!Number.isNaN(parsed)) setFlaggedCount(parsed);
-                }
-                if (storedCategory) {
-                    setCategory(storedCategory);
+                // Parse counts (safe to set even if unmounting)
+                if (isMounted) {
+                    if (storedMissedCount) {
+                        const parsed = Number.parseInt(storedMissedCount, 10);
+                        if (!Number.isNaN(parsed)) setMissedCount(parsed);
+                    }
+                    if (storedFlaggedCount) {
+                        const parsed = Number.parseInt(storedFlaggedCount, 10);
+                        if (!Number.isNaN(parsed)) setFlaggedCount(parsed);
+                    }
+                    if (storedCategory) {
+                        setCategory(storedCategory);
+                    }
                 }
 
-                // Load all quizzes to find questions
-                const allQuizzes = await db.quizzes.toArray();
+                // Load quizzes scoped to the current user
+                const allQuizzes = await db.quizzes
+                    .where("user_id")
+                    .equals(effectiveUserId)
+                    .toArray();
+
+                if (!isMounted) return;
 
                 // Build a map of question ID -> question + source quiz
                 const questionMap = new Map<string, { question: Question; quiz: Quiz }>();
@@ -118,8 +133,10 @@ export default function TopicReviewPage(): React.ReactElement {
                 }
 
                 if (orderedQuestions.length === 0) {
-                    setLoadError("Could not find any of the requested questions. They may have been deleted.");
-                    setIsLoading(false);
+                    if (isMounted) {
+                        setLoadError("Could not find any of the requested questions. They may have been deleted.");
+                        setIsLoading(false);
+                    }
                     return;
                 }
 
@@ -135,17 +152,25 @@ export default function TopicReviewPage(): React.ReactElement {
                     version: 1,
                 };
 
-                setAggregatedQuiz(syntheticQuiz);
-                setQuestionCount(orderedQuestions.length);
-                setIsLoading(false);
+                if (isMounted) {
+                    setAggregatedQuiz(syntheticQuiz);
+                    setQuestionCount(orderedQuestions.length);
+                    setIsLoading(false);
+                }
             } catch (err) {
                 logger.error("Failed to load topic study questions", { error: err });
-                setLoadError("Failed to load study session. Please try again.");
-                setIsLoading(false);
+                if (isMounted) {
+                    setLoadError("Failed to load study session. Please try again.");
+                    setIsLoading(false);
+                }
             }
         };
 
         void loadQuestions();
+
+        return (): void => {
+            isMounted = false;
+        };
     }, [isInitialized, effectiveUserId]);
 
     const handleExit = React.useCallback((): void => {
@@ -250,8 +275,7 @@ export default function TopicReviewPage(): React.ReactElement {
             <ZenQuizContainer
                 quiz={aggregatedQuiz}
                 isSmartRound={false}
-                isTopicStudy={true}
-                studyCategory={category ?? undefined}
+                isTopicStudy
             />
         </ErrorBoundary>
     );

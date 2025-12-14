@@ -50,7 +50,9 @@ export async function getOrCreateSRSQuiz(userId: string): Promise<Quiz> {
     return existing;
   }
 
-  // Create new SRS quiz
+  // Create new SRS quiz using put() for idempotent upsert.
+  // This handles race conditions where concurrent calls may both pass
+  // the existence check - put() will succeed for both without errors.
   const now = Date.now();
   const srsQuiz: Quiz = {
     id: srsQuizId,
@@ -68,7 +70,7 @@ export async function getOrCreateSRSQuiz(userId: string): Promise<Quiz> {
     last_synced_version: null,
   };
 
-  await db.quizzes.add(srsQuiz);
+  await db.quizzes.put(srsQuiz);
   return srsQuiz;
 }
 

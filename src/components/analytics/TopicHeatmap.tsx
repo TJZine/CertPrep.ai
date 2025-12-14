@@ -33,16 +33,18 @@ interface CategoryWeekScore {
 }
 
 /**
- * Get the last N weeks (including current week).
+ * Get the last N weeks (including current week) using ISO week standard (Monday-start).
  */
 function getLastNWeeks(n: number): WeekData[] {
     const weeks: WeekData[] = [];
     const now = new Date();
     const currentDay = now.getDay();
 
-    // Find the start of the current week (Sunday)
+    // Find the start of the current week (Monday - ISO standard)
+    // Sunday (0) becomes -6, Monday (1) becomes 0, etc.
     const currentWeekStart = new Date(now);
-    currentWeekStart.setDate(now.getDate() - currentDay);
+    const diff = currentDay === 0 ? -6 : 1 - currentDay;
+    currentWeekStart.setDate(now.getDate() + diff);
     currentWeekStart.setHours(0, 0, 0, 0);
 
     for (let i = n - 1; i >= 0; i--) {
@@ -288,6 +290,7 @@ export function TopicHeatmap({
                             {catData.weeks.map((weekData) => (
                                 <div
                                     key={weekData.weekKey}
+                                    role="gridcell"
                                     className={cn(
                                         "flex h-8 items-center justify-center rounded-md text-xs font-medium transition-colors",
                                         getMasteryColor(weekData.score),

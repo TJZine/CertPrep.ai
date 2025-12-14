@@ -140,6 +140,9 @@ export function WeakAreasCard({
         String(modalState.data.flaggedCount),
       );
 
+      // Close modal before navigation to prevent it persisting during transition
+      handleCloseModal();
+
       // Navigate to the dedicated topic-review page (aggregates multi-quiz questions)
       router.push("/quiz/topic-review");
     } catch (error) {

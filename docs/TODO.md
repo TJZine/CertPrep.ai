@@ -145,14 +145,14 @@ SRS states reference `question_id`, but questions are stored as JSONB inside qui
 
 ### Proposed Solution
 
-Create a periodic cleanup function that removes SRS records where the question no longer exists in any quiz.
+Create a periodic cleanup function that removes SRS records where the question no longer exists in any quiz. Uses query-based deletion to avoid compound primary key dependencies.
 
 ```typescript
 // src/db/maintenance.ts
 export async function cleanOrphanedSRSStates(userId: string): Promise<number> {
   const allQuestions = new Set<string>();
 
-  // Collect all valid question IDs from all quizzes
+  // Collect all valid question IDs from all non-deleted quizzes
   const quizzes = await db.quizzes.where("user_id").equals(userId).toArray();
   for (const quiz of quizzes) {
     if (!quiz.deleted_at) {
@@ -162,18 +162,20 @@ export async function cleanOrphanedSRSStates(userId: string): Promise<number> {
     }
   }
 
-  // Find and remove orphaned SRS states
-  const srsStates = await db.srs.where("user_id").equals(userId).toArray();
-  const orphanIds = srsStates
+  // Use query-based deletion to avoid compound PK shape dependencies
+  const deletedCount = await db.srs
+    .where("user_id")
+    .equals(userId)
     .filter((s) => !allQuestions.has(s.question_id))
-    .map((s) => [s.question_id, s.user_id] as [string, string]);
+    .delete();
 
-  await db.srs.bulkDelete(orphanIds);
-  return orphanIds.length;
+  return deletedCount;
 }
 ```
 
 > [!NOTE]
+> **Tombstone Handling**: Quizzes with `deleted_at` set are intentionally excluded from the valid questions set, meaning their questions' SRS states will be cleaned up. SRS records themselves do not use tombstones—they sync via Last-Write-Wins (LWW) and are fully deleted locally.
+> [!IMPORTANT]
 > **Sync Implications**: This deletes orphans locally without syncing the deletion. If the server still has these records, they could reappear on the next pull. Consider either (1) running cleanup only after successful sync, or (2) adding an RPC to delete server-side orphans in the same operation.
 
 ### Trigger Options
@@ -186,6 +188,8 @@ export async function cleanOrphanedSRSStates(userId: string): Promise<number> {
 
 - [ ] Implement `cleanOrphanedSRSStates()` function
 - [ ] Add unit tests verifying orphan detection and cleanup
+- [ ] Add test case: deleted quizzes' questions are treated as orphans
+- [ ] Add test case: cleanup doesn't affect synced records incorrectly
 - [ ] Decide on trigger mechanism (manual preferred for safety)
 - [ ] Optional: Add UI indicator showing cleanup results
 
@@ -259,12 +263,51 @@ export const createClient = () => createSupabaseClient<Database>(url, key);
 ### Implementation Steps
 
 1. [ ] Install/verify `supabase` CLI is available in dev dependencies
-2. [ ] Add `supabase:types` script to `package.json`
-3. [ ] Generate initial `src/types/database.types.ts`
-4. [ ] Update `createClient` in both `client.ts` and `server.ts` to use `Database` generic
-5. [ ] Update sync files to use typed client (IDE will flag any mismatches)
-6. [ ] Add CI step to regenerate types on schema changes (optional but recommended)
-7. [ ] Consider removing redundant Zod schemas where generated types suffice (keep Zod for coercion like `z.coerce.number()`)
+2. [ ] Pin CLI version in `package.json` for reproducibility:
+
+   ```json
+   "devDependencies": {
+     "supabase": "1.x.x"
+   }
+   ```
+
+3. [ ] Add `supabase:types` script to `package.json`:
+
+   ```bash
+   # For local development (no auth needed)
+   "supabase:types": "supabase gen types typescript --local > src/types/database.types.ts"
+   # OR for CI/linked projects (requires SUPABASE_ACCESS_TOKEN)
+   "supabase:types:ci": "supabase gen types typescript --project-id $SUPABASE_PROJECT_ID > src/types/database.types.ts"
+   ```
+
+4. [ ] Generate initial `src/types/database.types.ts`
+5. [ ] Create separate typed client helpers for browser and server:
+
+   ```typescript
+   // src/lib/supabase/client.ts (browser - uses NEXT_PUBLIC_ vars only)
+   import type { Database } from "@/types/database.types";
+   import { createBrowserClient } from "@supabase/ssr";
+   export const createClient = () =>
+     createBrowserClient<Database>(
+       process.env.NEXT_PUBLIC_SUPABASE_URL!,
+       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+     );
+
+   // src/lib/supabase/server.ts (server - can use service role if needed)
+   import type { Database } from "@/types/database.types";
+   import { createServerClient } from "@supabase/ssr";
+   // NEVER expose SUPABASE_SERVICE_ROLE_KEY to browser code
+   ```
+
+6. [ ] Update sync files to use typed client (IDE will flag any mismatches)
+7. [ ] Add CI step to regenerate types and fail on divergence:
+
+   ```yaml
+   - run: npm run supabase:types:ci
+   - run: git diff --exit-code src/types/database.types.ts
+   ```
+
+8. [ ] Consider removing redundant Zod schemas where generated types suffice (keep Zod for coercion)
 
 ### Acceptance Criteria
 

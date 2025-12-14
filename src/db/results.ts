@@ -183,8 +183,6 @@ export interface CreateTopicStudyResultInput {
   score: number;
   /** Pre-calculated category breakdown */
   categoryBreakdown: Record<string, number>;
-  /** Category being studied (for display purposes) */
-  category?: string;
 }
 
 /**
@@ -495,10 +493,11 @@ export async function getTopicStudyQuestions(
         const quiz = quizMap.get(result.quiz_id);
         if (!quiz) return;
 
-        // Get questions in this category
-        const categoryQuestions = quiz.questions.filter(
-          (q) => q.category === category,
-        );
+        // Get questions in this category (handle null/undefined as "Uncategorized")
+        const categoryQuestions = quiz.questions.filter((q) => {
+          const qCategory = q.category || "Uncategorized";
+          return qCategory === category;
+        });
 
         for (const question of categoryQuestions) {
           try {
