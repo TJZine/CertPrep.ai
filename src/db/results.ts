@@ -151,6 +151,17 @@ export async function createSRSReviewResult(
     throw new Error("srsQuizId is required for SRS review results.");
   }
 
+  // Validate SRS quiz exists, is owned by user, and not soft-deleted
+  const quiz = await db.quizzes.get(input.srsQuizId);
+  if (!quiz || quiz.deleted_at) {
+    throw new Error("SRS quiz not found.");
+  }
+  if (quiz.user_id !== input.userId) {
+    throw new Error(
+      "Security mismatch: SRS quiz does not belong to the current user.",
+    );
+  }
+
   const result: Result = {
     id: generateUUID(),
     quiz_id: input.srsQuizId, // Uses per-user SRS quiz for FK compliance
@@ -201,6 +212,17 @@ export async function createTopicStudyResult(
 
   if (!input.srsQuizId) {
     throw new Error("srsQuizId is required for topic study results.");
+  }
+
+  // Validate SRS quiz exists, is owned by user, and not soft-deleted
+  const quiz = await db.quizzes.get(input.srsQuizId);
+  if (!quiz || quiz.deleted_at) {
+    throw new Error("SRS quiz not found.");
+  }
+  if (quiz.user_id !== input.userId) {
+    throw new Error(
+      "Security mismatch: SRS quiz does not belong to the current user.",
+    );
   }
 
   const result: Result = {

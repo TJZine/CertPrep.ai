@@ -53,6 +53,7 @@ export function Modal({
 }: ModalProps): React.ReactElement | null {
   const overlayRef = React.useRef<HTMLDivElement>(null);
   const dialogRef = React.useRef<HTMLDivElement>(null);
+  const previousFocusRef = React.useRef<HTMLElement | null>(null);
   const titleId = React.useId();
   const descriptionId = React.useId();
 
@@ -70,11 +71,16 @@ export function Modal({
   React.useEffect(() => {
     if (!isOpen) return undefined;
 
+    // Store the trigger element to restore focus on close
+    previousFocusRef.current = document.activeElement as HTMLElement;
+
     lockBodyScroll();
     focusFirstElement();
 
     return (): void => {
       unlockBodyScroll();
+      // Restore focus to trigger element (WCAG 2.1 SC 2.4.3)
+      previousFocusRef.current?.focus();
     };
   }, [focusFirstElement, isOpen]);
 

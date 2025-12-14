@@ -297,10 +297,11 @@ export function WeakAreasCard({
         size="sm"
         footer={
           <div className="flex justify-end gap-3">
-            <Button variant="outline" onClick={handleCloseModal}>
+            <Button type="button" variant="outline" onClick={handleCloseModal}>
               Cancel
             </Button>
             <Button
+              type="button"
               onClick={handleStartStudying}
               disabled={!modalState.data || modalState.data.quizIds.length === 0}
             >

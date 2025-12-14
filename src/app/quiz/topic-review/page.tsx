@@ -105,10 +105,11 @@ export default function TopicReviewPage(): React.ReactElement {
                     }
                 }
 
-                // Load quizzes scoped to the current user
+                // Load quizzes scoped to the current user (exclude soft-deleted)
                 const allQuizzes = await db.quizzes
                     .where("user_id")
                     .equals(effectiveUserId)
+                    .filter((q) => !q.deleted_at)
                     .toArray();
 
                 if (!isMounted) return;

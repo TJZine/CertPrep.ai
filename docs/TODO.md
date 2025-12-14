@@ -191,6 +191,10 @@ export async function cleanOrphanedSRSStates(userId: string): Promise<number> {
 - [ ] Add test case: deleted quizzes' questions are treated as orphans
 - [ ] Add test case: cleanup doesn't affect synced records incorrectly
 - [ ] Decide on trigger mechanism (manual preferred for safety)
+- [ ] **Sync Strategy**: Choose one approach and document:
+  - Option A: Run cleanup only after successful client→server sync (test: verify no reappearance on next pull)
+  - Option B: Add server-side RPC to delete orphans atomically (test: E2E RPC test)
+  - Option C: Accept orphans as low-risk (no sync test needed)
 - [ ] Optional: Add UI indicator showing cleanup results
 
 ---
@@ -340,6 +344,17 @@ export const createClient = () => createSupabaseClient<Database>(url, key);
 | `results.spec.ts`      | Results page display                           |
 | `offline-sync.spec.ts` | Offline mode, sync behavior                    |
 | `settings.spec.ts`     | Settings page                                  |
+
+### Priority / Effort Matrix
+
+| Gap               | Priority  | Effort        | Impact                 |
+| ----------------- | --------- | ------------- | ---------------------- |
+| SRS Review Flow   | 🔴 High   | Medium (2-3h) | Core feature untested  |
+| Auth Edge Cases   | 🔴 High   | Low (1-2h)    | Security-sensitive     |
+| Topic Study Mode  | 🟡 Medium | Low (1h)      | Recently added feature |
+| Smart Round Mode  | 🟡 Medium | Medium (2h)   | Algorithm validation   |
+| Cross-Device Sync | 🟡 Medium | High (3-4h)   | Complex setup          |
+| Error States      | 🟢 Low    | Low (1h)      | Edge cases             |
 
 ### Gaps & Opportunities
 

@@ -125,7 +125,7 @@ CertPrep.ai is a modern, offline-first quiz application designed to help users p
 
 | Requirement      | Version    | Installation                     |
 | ---------------- | ---------- | -------------------------------- |
-| Node.js          | `>=20.0.0` | [Download](https://nodejs.org/)  |
+| Node.js          | `>=20.9.0` | [Download](https://nodejs.org/)  |
 | npm/yarn/pnpm    | Latest     | Comes with Node.js               |
 | Supabase Account | -          | [Sign up](https://supabase.com/) |
 
