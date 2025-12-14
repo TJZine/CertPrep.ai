@@ -7,12 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.3.0] - 2025-12-13
+## [1.3.0] - 2025-12-14
 
 ### Added
 
 - **Spaced Repetition System (SRS)**: Leitner box algorithm for optimized review scheduling (`/study-due` page, `DueQuestionsCard` component).
 - **SRS Supabase Sync**: Cross-device SRS progress sync with server-side LWW conflict resolution (`upsert_srs_lww_batch` RPC).
+- **Topic Study Mode**: Targeted practice sessions generated from analytics weak areas (`/quiz/topic-review`).
 - **Category Trend Charts**: Temporal proficiency visualization in Analytics (`CategoryTrendChart`, `useCategoryTrends` hook).
 - **Topic Heatmap**: Visual category performance overview (`TopicHeatmap` component).
 - **Storage Maintenance**: Purge deleted data (tombstones) from local storage to free up space (Settings → Data Management).

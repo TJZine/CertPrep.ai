@@ -53,14 +53,14 @@ CertPrep.ai is a modern, offline-first quiz application designed to help users p
     <td align="center" width="33%">
       <img src="https://img.icons8.com/fluency/48/000000/test.png" width="40" alt="Quiz modes icon"><br>
       <strong>Quiz Modes</strong><br>
-      <sub>Proctor and Zen modes for different learning experiences</sub>
+      <sub>Proctor, Zen, Topic Study, and Spaced Repetition modes</sub>
     </td>
   </tr>
   <tr>
     <td align="center" width="33%">
       <img src="https://img.icons8.com/fluency/48/000000/analytics.png" width="40" alt="Analytics dashboard icon"><br>
       <strong>Analytics Dashboard</strong><br>
-      <sub>Track progress, scores, and performance over time</sub>
+      <sub>Track progress, heatmaps, and trend charts</sub>
     </td>
     <td align="center" width="33%">
       <img src="https://img.icons8.com/fluency/48/000000/smartphone-tablet.png" width="40" alt="Responsive design icon"><br>
@@ -214,10 +214,12 @@ For code-level examples (auth, quizzes, results, and sync), see the dedicated [A
 
 ### Quiz Modes
 
-| Mode           | Description                       | Best For           |
-| -------------- | --------------------------------- | ------------------ |
-| 🎯 **Proctor** | Timed, monitored quiz environment | Assessments, exams |
-| 🧘 **Zen**     | Relaxed, self-paced learning      | Practice, study    |
+| Mode           | Description                        | Best For            |
+| -------------- | ---------------------------------- | ------------------- |
+| 🎯 **Proctor** | Timed, monitored quiz environment  | Assessments, exams  |
+| 🧘 **Zen**     | Relaxed, self-paced learning       | Practice, study     |
+| 🧠 **SRS**     | Spaced repetition review (Leitner) | Long-term retention |
+| 📚 **Topic**   | Targeted category practice         | Weak area improv.   |
 
 <details>
 <summary>View mode comparison</summary>
@@ -227,6 +229,7 @@ graph TD
     A[Start Quiz] --> B{Select Mode}
     B -->|Proctor| C[Timer Enabled]
     B -->|Zen| D[No Timer]
+    B -->|SRS/Topic| D
     C --> E[Strict Navigation]
     D --> F[Free Navigation]
     E --> G[Submit on Complete]

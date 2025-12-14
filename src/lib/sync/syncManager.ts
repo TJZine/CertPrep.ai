@@ -408,8 +408,11 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
       }
 
       if (resultsToDelete.length > 0) {
-        // Inbound deletions are applied as physical deletes to match prior behavior.
-        // TODO: Revisit if soft-delete history is required for audit/replay.
+        // DECISION: Hard-delete intentionally chosen over soft-delete.
+        // Rationale: Soft-deleting locally would allow offline devices to "resurrect"
+        // deleted records when they sync, which is worse than data loss. The deletion
+        // UI requires multi-step confirmation, so accidental deletion is not a concern.
+        // Users have a right to permanently remove their data (GDPR erasure principle).
         await db.results.bulkDelete(resultsToDelete);
         logger.debug("Applied remote deletions locally", { count: resultsToDelete.length, userId });
       }
