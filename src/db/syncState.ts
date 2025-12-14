@@ -255,7 +255,10 @@ export async function getSyncBlockState(
   }
 
   // TTL is stored in lastId field (repurposed; not a UUID in this context)
-  const ttlMs = state.lastId ? parseInt(state.lastId, 10) : SYNC_BLOCK_TTL_MS;
+  // Defensive guard: parseInt returns NaN for non-numeric strings, and
+  // (any_number > NaN) is always false, which would prevent block expiration.
+  const parsedTtl = state.lastId ? parseInt(state.lastId, 10) : SYNC_BLOCK_TTL_MS;
+  const ttlMs = Number.isFinite(parsedTtl) && parsedTtl > 0 ? parsedTtl : SYNC_BLOCK_TTL_MS;
   const reason =
     state.table?.slice(keyPrefix.length + 1) || "schema_drift";
 
@@ -278,6 +281,9 @@ export async function setSyncBlockState(
   reason: string,
   ttlMs: number = SYNC_BLOCK_TTL_MS,
 ): Promise<void> {
+  // Validate TTL: reject NaN, negative, or non-finite values
+  const safeTtl = Number.isFinite(ttlMs) && ttlMs > 0 ? ttlMs : SYNC_BLOCK_TTL_MS;
+
   // Clear any existing block for this user/table to ensure only one active block
   await clearSyncBlockState(userId, table);
 
@@ -286,9 +292,9 @@ export async function setSyncBlockState(
     table: `${key}:${reason}`,
     lastSyncedAt: Date.now(),
     synced: 0, // synced: 0 indicates blocked state
-    lastId: String(ttlMs),
+    lastId: String(safeTtl),
   });
-  logger.warn(`Sync blocked for ${table}`, { userId, reason, ttlMs });
+  logger.warn(`Sync blocked for ${table}`, { userId, reason, ttlMs: safeTtl });
 }
 
 /**

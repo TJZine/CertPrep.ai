@@ -297,7 +297,7 @@ export const createClient = () => createSupabaseClient<Database>(url, key);
 
    ```json
    "devDependencies": {
-     "supabase": "1.x.x"
+     "supabase": "1.145.0"
    }
    ```
 
@@ -306,9 +306,12 @@ export const createClient = () => createSupabaseClient<Database>(url, key);
    ```bash
    # For local development (no auth needed)
    "supabase:types": "supabase gen types typescript --local > src/types/database.types.ts"
-   # OR for CI/linked projects (requires SUPABASE_ACCESS_TOKEN)
+   # OR for CI/linked projects (requires SUPABASE_ACCESS_TOKEN, SUPABASE_PROJECT_ID secrets)
    "supabase:types:ci": "supabase gen types typescript --project-id $SUPABASE_PROJECT_ID > src/types/database.types.ts"
    ```
+
+   > [!NOTE]
+   > For CI usage, ensure `SUPABASE_PROJECT_ID` and `SUPABASE_ACCESS_TOKEN` are set as repository secrets.
 
 4. [ ] Generate initial `src/types/database.types.ts`
 5. [ ] Create separate typed client helpers for browser and server:
@@ -466,7 +469,7 @@ test("displays error when quiz not found");
 - Use `seedTestQuiz` fixture pattern from existing tests
 - Use `waitForDatabase()` helper for Dexie timing
 - Mock Supabase for cross-device tests (or use test accounts)
-- SRS tests need date mocking for `next_review` scheduling
+- SRS tests need date mocking (e.g., `jest.useFakeTimers()` or similar Playwright-compatible approach) for `next_review` scheduling
 
 ### Acceptance Criteria
 
