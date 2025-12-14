@@ -576,16 +576,17 @@ export async function getTopicStudyQuestions(
 
         for (const question of categoryQuestions) {
           try {
+            const questionId = String(question.id);
             // We only care about the latest attempt for a given question.
-            if (processedQuestionIds.has(question.id)) {
+            if (processedQuestionIds.has(questionId)) {
               continue;
             }
 
             // Mark as processed so older results don't override
-            processedQuestionIds.add(question.id);
+            processedQuestionIds.add(questionId);
 
-            const isFlagged = result.flagged_questions.includes(question.id);
-            const userAnswer = result.answers[question.id];
+            const isFlagged = result.flagged_questions.includes(questionId);
+            const userAnswer = result.answers[questionId];
             let isMissed = false;
 
             if (userAnswer) {
@@ -594,18 +595,18 @@ export async function getTopicStudyQuestions(
             }
 
             if (isFlagged) {
-              flaggedIds.add(question.id);
+              flaggedIds.add(questionId);
             }
 
             if (isMissed) {
-              missedIds.add(question.id);
+              missedIds.add(questionId);
             }
 
             if (isFlagged || isMissed) {
               // We need to know which quiz this question actually belongs to
               // for the "quizIds" return value (used for source linking).
               // If it was an aggregated result, we need the source quiz ID.
-              const sourceInfo = allQuestionsMap.get(question.id);
+              const sourceInfo = allQuestionsMap.get(questionId);
               if (sourceInfo) {
                 sourceQuizIds.add(sourceInfo.quizId);
               } else if (quiz) {

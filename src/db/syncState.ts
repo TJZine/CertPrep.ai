@@ -254,6 +254,7 @@ export async function getSyncBlockState(
     return null;
   }
 
+  // TTL is stored in lastId field (repurposed; not a UUID in this context)
   const ttlMs = state.lastId ? parseInt(state.lastId, 10) : SYNC_BLOCK_TTL_MS;
   const reason =
     state.table?.slice(keyPrefix.length + 1) || "schema_drift";

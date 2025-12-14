@@ -2,6 +2,32 @@
 
 ---
 
+## Known Issues
+
+### Sync Fails with "No valid auth session" (Dev Environment)
+
+**Last Seen:** 2025-12-14
+
+**Symptoms:**
+
+- Console: `Sync skipped: No valid auth session { authError: undefined }`
+- User is logged in (UI works, can take quizzes)
+- Sync operations fail, "Unsynced" badge persists
+
+**Root Cause:**
+Stale browser cookies/localStorage. The `@supabase/ssr` client's `getSession()` reads from local cache which can become out of sync, while `onAuthStateChange` (used by AuthProvider) still works correctly.
+
+**Workaround:**
+
+1. DevTools → Application → Storage → "Clear site data"
+2. Hard refresh (`Cmd+Shift+R` / `Ctrl+Shift+R`)
+3. Log back in
+
+**Permanent Fix (if recurs frequently):**
+Change sync managers (`syncManager.ts`, `quizSyncManager.ts`, `srsSyncManager.ts`) to use `getUser()` instead of `getSession()`. This validates with the server (adds ~50-200ms) but is more reliable. See Supabase SSR docs.
+
+---
+
 ## Technical Debt: Playwright `--disable-web-security` Flag
 
 **Priority**: Low-Medium | **Effort**: 4-8 hours | **Category**: Test Infrastructure

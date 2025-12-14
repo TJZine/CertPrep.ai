@@ -67,14 +67,17 @@ export async function hydrateAggregatedQuiz(
   }
 
   if (missingQuestionIds.length > 0) {
+    const sample = missingQuestionIds.slice(0, 20);
     logger.warn("Some questions could not be re-hydrated for aggregated result", {
       count: missingQuestionIds.length,
-      missingIds: missingQuestionIds,
+      sample,
+      ...(sample.length < missingQuestionIds.length && { truncated: true }),
     });
+    logger.debug("Full list of missing question IDs", { missingIds: missingQuestionIds });
   }
 
   const syntheticQuiz: Quiz = {
-    id: "synthetic-aggregate", // Placeholder ID, not saved to DB
+    id: `synthetic-${userId}-${Date.now()}`, // Unique per hydration, not saved to DB
     user_id: userId,
     title,
     description: "Dynamically aggregated session from multiple quizzes",
@@ -83,6 +86,7 @@ export async function hydrateAggregatedQuiz(
     created_at: Date.now(),
     updated_at: Date.now(),
     version: 1,
+    deleted_at: null,
     quiz_hash: null,
     last_synced_at: null,
     last_synced_version: null,
