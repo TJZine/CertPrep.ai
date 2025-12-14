@@ -55,6 +55,22 @@ export function SyncProvider({
   const [syncBlocked, setSyncBlocked] = useState<SyncBlockedInfo | null>(null);
   const initialSyncAttemptedRef = useRef<string | null>(null);
 
+  // Refs for async guard pattern (prevents stale updates on user switch/unmount)
+  const currentUserIdRef = useRef<string | null>(null);
+  const isMountedRef = useRef(true);
+
+  // Track current user ID in ref for async guards
+  useEffect((): void => {
+    currentUserIdRef.current = userId ?? null;
+  }, [userId]);
+
+  // Unmount cleanup
+  useEffect((): (() => void) => {
+    return (): void => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
   useEffect(() => {
     if (!userId) {
       // Reset sync state when user logs out
@@ -86,8 +102,9 @@ export function SyncProvider({
         getSyncBlockState(userId, "srs"),
       ]);
 
-      // Guard: If user changed while awaiting, abort
-      if (userId !== activeUserId) return;
+      // Guard: Abort if unmounted or user changed during async operation
+      if (!isMountedRef.current) return;
+      if (currentUserIdRef.current !== activeUserId) return;
 
       const [resultsResult, quizzesResult, srsResult] = results;
 
@@ -244,18 +261,18 @@ export function SyncProvider({
         const result = await sync();
 
         if (isMounted) {
-            if (result.status === "failed") {
-                 const err =
-                    result.error instanceof Error
-                    ? result.error
-                    : new Error(
-                        result.error ? String(result.error) : "Initial sync failed",
-                    );
-                setInitialSyncError(err);
-            } else if (result.status === "partial") {
-                // Partial sync is acceptable for initial load, just log it
-                logger.info("Initial sync completed partially", result.details);
-            }
+          if (result.status === "failed") {
+            const err =
+              result.error instanceof Error
+                ? result.error
+                : new Error(
+                  result.error ? String(result.error) : "Initial sync failed",
+                );
+            setInitialSyncError(err);
+          } else if (result.status === "partial") {
+            // Partial sync is acceptable for initial load, just log it
+            logger.info("Initial sync completed partially", result.details);
+          }
         }
       } catch (error) {
         logger.error("Initial sync failed:", error);

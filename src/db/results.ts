@@ -1,4 +1,4 @@
-import { db } from "./index";
+import { db } from "@/db";
 import { isSRSQuiz } from "./quizzes";
 import { NIL_UUID } from "@/lib/constants";
 import { calculatePercentage, generateUUID } from "@/lib/utils";
@@ -409,7 +409,7 @@ export async function getOverallStats(userId: string): Promise<OverallStats> {
   const quizzes = allQuizzes.filter((q) => !q.deleted_at);
 
   const quizMap = new Map(quizzes.map((quiz) => [quiz.id, quiz]));
-  
+
   // Create a map of all questions for O(1) lookup during aggregation
   // This allows us to score "aggregated" results (Topic Study/SRS) where the
   // source quiz is empty, but the questions exist in other user quizzes.
@@ -442,11 +442,11 @@ export async function getOverallStats(userId: string): Promise<OverallStats> {
         const quiz = quizMap.get(result.quiz_id);
 
         if (quiz && quiz.questions.length > 0) {
-           sessionQuestions = quiz.questions;
-        } 
+          sessionQuestions = quiz.questions;
+        }
         // Handle aggregated results (Topic Study / SRS)
         else if (result.question_ids && result.question_ids.length > 0) {
-           sessionQuestions = result.question_ids
+          sessionQuestions = result.question_ids
             .map(id => allQuestionsMap.get(id)?.question)
             .filter((q): q is Question => !!q);
         }
@@ -526,9 +526,9 @@ export async function getTopicStudyQuestions(
     .where("user_id")
     .equals(userId)
     .toArray();
-  
+
   const allQuizzes = allQuizzesRaw.filter((q) => q.deleted_at == null);
-    
+
   const quizMap = new Map(allQuizzes.map((quiz) => [quiz.id, quiz]));
   const allQuestionsMap = new Map<string, { question: Question; quizId: string }>();
   allQuizzes.forEach((q) => {
@@ -553,15 +553,15 @@ export async function getTopicStudyQuestions(
         const quiz = quizMap.get(result.quiz_id);
 
         if (quiz && quiz.questions.length > 0) {
-           // If we have question_ids (e.g. Smart Round), filter to them. 
-           // Otherwise use all quiz questions.
-           const idSet = result.question_ids ? new Set(result.question_ids) : null;
-           sessionQuestions = idSet 
-             ? quiz.questions.filter(q => idSet.has(q.id))
-             : quiz.questions;
+          // If we have question_ids (e.g. Smart Round), filter to them. 
+          // Otherwise use all quiz questions.
+          const idSet = result.question_ids ? new Set(result.question_ids) : null;
+          sessionQuestions = idSet
+            ? quiz.questions.filter(q => idSet.has(q.id))
+            : quiz.questions;
         }
         else if (result.question_ids && result.question_ids.length > 0) {
-           sessionQuestions = result.question_ids
+          sessionQuestions = result.question_ids
             .map(id => allQuestionsMap.get(id)?.question)
             .filter((q): q is Question => !!q);
         }
@@ -578,9 +578,9 @@ export async function getTopicStudyQuestions(
           try {
             // We only care about the latest attempt for a given question.
             if (processedQuestionIds.has(question.id)) {
-                continue; 
+              continue;
             }
-            
+
             // Mark as processed so older results don't override
             processedQuestionIds.add(question.id);
 
@@ -607,9 +607,9 @@ export async function getTopicStudyQuestions(
               // If it was an aggregated result, we need the source quiz ID.
               const sourceInfo = allQuestionsMap.get(question.id);
               if (sourceInfo) {
-                  sourceQuizIds.add(sourceInfo.quizId);
+                sourceQuizIds.add(sourceInfo.quizId);
               } else if (quiz) {
-                  sourceQuizIds.add(quiz.id);
+                sourceQuizIds.add(quiz.id);
               }
             }
           } catch (error) {

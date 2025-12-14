@@ -1,5 +1,5 @@
 import Dexie from "dexie";
-import { db } from "./index";
+import { db } from "@/db";
 import type { Quiz } from "@/types/quiz";
 import type { Result } from "@/types/result";
 import type { LeitnerBox, SRSState } from "@/types/srs";

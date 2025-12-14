@@ -194,16 +194,24 @@ describe("SyncManager", () => {
 
     await syncResults("user-123");
 
-    // Verify upsert called with correct data (deleted_at: null)
+    // Verify upsert called with correct data
+    // NOTE: deleted_at is intentionally OMITTED when null (LWW protection)
+    // This prevents resurrection of remotely deleted records
     expect(mockSupabase.upsert).toHaveBeenCalledWith(
       expect.arrayContaining([
         expect.objectContaining({
           id: "local-1",
-          deleted_at: null,
         }),
       ]),
       { onConflict: "id" },
     );
+
+    // Verify deleted_at is NOT in the payload for non-deleted results
+    const upsertCall = mockSupabase.upsert.mock.calls[0];
+    const payload = upsertCall?.[0] ?? [];
+    const firstRecord = payload[0] as Record<string, unknown> | undefined;
+    expect(firstRecord).toBeDefined();
+    expect("deleted_at" in (firstRecord ?? {})).toBe(false);
   });
 
   it("should push locally deleted results to Supabase", async () => {

@@ -1,5 +1,5 @@
 import { Dexie } from "dexie";
-import { db } from "./index";
+import { db } from "@/db";
 import { NIL_UUID } from "@/lib/constants";
 import { sanitizeQuestionText } from "@/lib/sanitize";
 import { calculatePercentage, generateUUID, hashAnswer } from "@/lib/utils";

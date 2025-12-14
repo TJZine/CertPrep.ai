@@ -1,11 +1,27 @@
 import "fake-indexeddb/auto";
-import { beforeEach, describe, expect, it, vi, afterEach, afterAll } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it, vi, afterEach, afterAll } from "vitest";
 import { db, clearDatabase } from "@/db";
 import { syncQuizzes } from "@/lib/sync/quizSyncManager";
 import { fetchUserQuizzes, upsertQuizzes } from "@/lib/sync/quizRemote";
+import { syncResults } from "@/lib/sync/syncManager";
 import type { Quiz } from "@/types/quiz";
 
-const { supabaseMock } = vi.hoisted(() => {
+const { supabaseMock, mockFrom, createChain } = vi.hoisted(() => {
+  const mockFrom = vi.fn();
+
+  // Chainable mock builder
+  const createChain = (returnValue: { data: unknown[]; error: null }): Record<string, ReturnType<typeof vi.fn>> => {
+    const chain = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      or: vi.fn().mockReturnThis(),
+      order: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockResolvedValue(returnValue), // Terminating call for PULL
+      upsert: vi.fn().mockResolvedValue({ error: null }), // Terminating call for PUSH
+    };
+    return chain;
+  };
+
   const supabase = {
     auth: {
       getSession: vi.fn().mockResolvedValue({
@@ -13,9 +29,10 @@ const { supabaseMock } = vi.hoisted(() => {
         error: null,
       }),
     },
+    from: mockFrom,
   };
 
-  return { supabaseMock: supabase };
+  return { supabaseMock: supabase, mockFrom, createChain };
 });
 
 vi.mock("@/lib/supabase/client", () => ({
@@ -32,10 +49,20 @@ vi.mock("@/lib/sync/quizRemote", () => ({
 const requestLock = vi.fn(async (_name, _options, callback) => {
   return callback({ name: "mock-lock" });
 });
-vi.stubGlobal("navigator", { locks: { request: requestLock } });
 
 describe("Integration: Quiz Sync Engine", () => {
   const userId = "test-user-123";
+
+  beforeAll(() => {
+    vi.stubGlobal("navigator", {
+      locks: { request: requestLock },
+      onLine: true,
+    });
+  });
+
+  afterAll(() => {
+    vi.unstubAllGlobals();
+  });
 
   beforeEach(async () => {
     vi.clearAllMocks();
@@ -44,6 +71,9 @@ describe("Integration: Quiz Sync Engine", () => {
     // Default mock responses
     vi.mocked(fetchUserQuizzes).mockResolvedValue({ data: [], error: null });
     vi.mocked(upsertQuizzes).mockResolvedValue({ error: null });
+
+    // Default supabase chain behavior (return empty list for generic selects)
+    mockFrom.mockReturnValue(createChain({ data: [], error: null }));
   });
 
   afterEach(async () => {
@@ -259,7 +289,55 @@ describe("Integration: Quiz Sync Engine", () => {
     expect(updatedLocal?.last_synced_at).not.toBeNull();
   });
 
-  afterAll(() => {
-    vi.unstubAllGlobals();
+  it("applies remote deletions locally (prevents resurrection)", async () => {
+    // 1. Create a result locally that is NOT deleted
+    const resultId = "resurrect-test";
+    await db.results.add({
+      id: resultId,
+      user_id: userId,
+      quiz_id: "some-quiz",
+      timestamp: Date.now() - 10000,
+      mode: "zen",
+      score: 50,
+      time_taken_seconds: 10,
+      answers: {},
+      flagged_questions: [],
+      category_breakdown: {},
+      synced: 1, // Assume already synced previously
+      deleted_at: undefined,
+    });
+
+    // 2. Mock Remote Data: Same result but DELETED remotely
+    const remoteDeletedResult = {
+      id: resultId,
+      user_id: userId,
+      quiz_id: "some-quiz",
+      timestamp: 1234567890,
+      mode: "zen",
+      score: 50,
+      deleted_at: new Date().toISOString(), // Deleted remotely!
+      updated_at: new Date().toISOString(),
+      created_at: new Date(Date.now() - 20000).toISOString(),
+      // Required fields for schema validation
+      time_taken_seconds: 10,
+      answers: {},
+      flagged_questions: [],
+      category_breakdown: {},
+      question_ids: [],
+    };
+
+    // 3. Setup Mock for this specific test
+    // We override the default mock behavior to return our deleted result
+    mockFrom.mockReturnValueOnce(createChain({
+      data: [remoteDeletedResult],
+      error: null
+    }));
+
+    // 4. Run Sync
+    await syncResults(userId);
+
+    // 5. Verify local result is DELETED
+    const localResult = await db.results.get(resultId);
+    expect(localResult).toBeUndefined();
   });
 });

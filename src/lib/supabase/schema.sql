@@ -175,6 +175,10 @@ create trigger results_set_updated_at
   before update on results
   for each row execute procedure public.set_updated_at();
 
+-- PROTECTION: LWW guard for deleted records
+-- See migration: 20251214_results_lww_protection.sql
+-- Prevents stale clients from resurrecting remotely deleted results
+
 -- TABLE: srs (Spaced Repetition State)
 create table if not exists srs (
   question_id uuid not null,

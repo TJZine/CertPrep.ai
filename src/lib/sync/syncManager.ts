@@ -193,7 +193,7 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
       const quizzes = await db.quizzes.bulkGet(quizIds);
       const syncedQuizIds = new Set(
         quizzes
-          .filter((q): q is NonNullable<typeof q> => q !== undefined && q.last_synced_at !== null)
+          .filter((q): q is NonNullable<typeof q> => q !== undefined && q.last_synced_at != null)
           .map((q) => q.id),
       );
 
@@ -220,21 +220,7 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
         const batch = syncableResults.slice(i, i + BATCH_SIZE);
 
         // Unified upsert payload handling both active and soft-deleted records
-        const payload = batch.map((r) => ({
-          id: r.id,
-          user_id: userId,
-          quiz_id: r.quiz_id,
-          timestamp: r.timestamp,
-          mode: r.mode,
-          score: r.score,
-          time_taken_seconds: r.time_taken_seconds,
-          answers: r.answers,
-          flagged_questions: r.flagged_questions,
-          category_breakdown: r.category_breakdown,
-          question_ids: r.question_ids,
-          // If deleted locally, send the local deletion timestamp (ISO string)
-          deleted_at: r.deleted_at ? new Date(r.deleted_at).toISOString() : null,
-        }));
+        const payload = buildSyncPayload(batch, userId);
 
         const { error } = await client.from("results").upsert(
           payload,
@@ -464,4 +450,22 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
     status: incomplete ? "failed" : "synced",
     shouldRetry: incomplete,
   };
+}
+
+export function buildSyncPayload(batch: Result[], userId: string): Record<string, unknown>[] {
+  return batch.map((r) => ({
+    id: r.id,
+    user_id: userId,
+    quiz_id: r.quiz_id,
+    timestamp: r.timestamp,
+    mode: r.mode,
+    score: r.score,
+    time_taken_seconds: r.time_taken_seconds,
+    answers: r.answers,
+    flagged_questions: r.flagged_questions,
+    category_breakdown: r.category_breakdown,
+    question_ids: r.question_ids,
+    // Only include deleted_at if set (prevents resurrecting remotely deleted records)
+    ...(r.deleted_at && { deleted_at: new Date(r.deleted_at).toISOString() }),
+  }));
 }

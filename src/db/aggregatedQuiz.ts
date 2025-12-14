@@ -1,4 +1,4 @@
-import { db } from "./index";
+import { db } from "@/db";
 import type { Quiz, Question } from "@/types/quiz";
 import { logger } from "@/lib/logger";
 
