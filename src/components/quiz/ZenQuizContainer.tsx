@@ -32,6 +32,7 @@ import { getOrCreateSRSQuiz } from "@/db/quizzes";
 import { calculatePercentage } from "@/lib/utils";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
+import { useSync } from "@/hooks/useSync";
 
 interface ZenQuizContainerProps {
   quiz: Quiz;
@@ -71,6 +72,7 @@ export function ZenQuizContainer({
   // Auth for SRS updates
   const { user } = useAuth();
   const effectiveUserId = useEffectiveUserId(user?.id);
+  const { sync } = useSync();
 
   // Reset SRS tracking when user changes to prevent stale data across sessions
   React.useEffect(() => {
@@ -184,6 +186,11 @@ export function ZenQuizContainer({
 
           clearSRSReviewState();
           addToast("success", "SRS Review complete! Keep up the great work.");
+          // Fire-and-forget sync: offline-first means local is source of truth,
+          // but when online we want the Unsynced badge to clear automatically.
+          void sync().catch((syncErr) => {
+            console.warn("Background sync failed after SRS review save:", syncErr);
+          });
           router.push(`/results/${result.id}`);
         } catch (err) {
           console.error("Failed to save SRS review result:", err);
@@ -247,6 +254,9 @@ export function ZenQuizContainer({
 
           clearTopicStudyState();
           addToast("success", "Topic Study complete! Great progress.");
+          void sync().catch((syncErr) => {
+            console.warn("Background sync failed after Topic Study save:", syncErr);
+          });
           router.push(`/results/${result.id}`);
         } catch (err) {
           console.error("Failed to save topic study result:", err);
@@ -259,7 +269,7 @@ export function ZenQuizContainer({
 
       await submitQuiz(timeTakenSeconds);
     },
-    [isSRSReview, isTopicStudy, effectiveUserId, answers, questions, flaggedQuestions, addToast, router, submitQuiz],
+    [isSRSReview, isTopicStudy, effectiveUserId, answers, questions, flaggedQuestions, addToast, router, submitQuiz, sync],
   );
 
   const retrySave = React.useCallback((): void => {

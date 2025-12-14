@@ -107,12 +107,10 @@ export function useQuizSubmission({
           console.warn("Failed to initialize SRS state:", srsErr);
         }
 
-        // Attempt background sync - failures here shouldn't invalidate the local save
-        try {
-          await sync();
-        } catch (syncErr) {
+        // Fire-and-forget background sync - failures shouldn't invalidate the local save.
+        void sync().catch((syncErr) => {
           console.warn("Background sync failed after local save:", syncErr);
-        }
+        });
 
 
         if (!isMountedRef.current) return;

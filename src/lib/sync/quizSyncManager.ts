@@ -294,6 +294,7 @@ async function pushLocalChanges(
       (quiz.last_synced_version ?? null) !== quiz.version,
   );
 
+
   for (let i = 0; i < dirtyQuizzes.length; i += BATCH_SIZE) {
     if (Date.now() - startTime > TIME_BUDGET_MS) {
       logger.warn("Quiz sync time budget exceeded during push");
@@ -306,6 +307,7 @@ async function pushLocalChanges(
       batch.map((quiz) => toRemoteQuiz(userId, quiz)),
     );
     const { error } = await upsertQuizzes(userId, remotePayload);
+
 
     if (error) {
       logger.error("Failed to push local quizzes to Supabase", {

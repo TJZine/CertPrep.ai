@@ -12,6 +12,7 @@ import { useAuth } from "@/components/providers/AuthProvider";
 import { syncResults } from "@/lib/sync/syncManager";
 import { syncQuizzes } from "@/lib/sync/quizSyncManager";
 import { syncSRS } from "@/lib/sync/srsSyncManager";
+
 import { getSyncBlockState } from "@/db/syncState";
 import { logger } from "@/lib/logger";
 
@@ -115,6 +116,7 @@ export function SyncProvider({
         // Parallel is fine if they don't depend on each other.
         // But better to catch errors individually or aggregate them.
         // For now, sequential to avoid flooding network.
+
         await syncQuizzes(userId);
         await syncResults(userId);
         await syncSRS(userId);

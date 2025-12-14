@@ -118,7 +118,7 @@ export function ResultsContainer({
   }, [quiz.questions, result.question_ids]);
 
   // Detect if this is an SRS/Topic Study result and compute display title
-  const isAggregatedResult = isSRSQuiz(quiz.id);
+  const isAggregatedResult = isSRSQuiz(quiz);
   const displayTitle = React.useMemo(() => {
     if (!isAggregatedResult) return quiz.title;
     // For SRS results, try to get a meaningful title from category breakdown

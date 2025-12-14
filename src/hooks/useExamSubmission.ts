@@ -100,11 +100,22 @@ export function useExamSubmission({
                 timeTakenSeconds: Math.max(0, durationMinutes * 60 - timeRemaining),
             });
             hasSavedResultRef.current = true;
-            const syncResult = await sync();
-            if (!syncResult.success) {
-                console.error("Failed to sync results after submit:", syncResult.error);
-            }
             addToast("success", "Exam submitted successfully!");
+            void sync()
+                .then((syncResult) => {
+                    if (!syncResult.success) {
+                        console.error(
+                            "Failed to sync results after submit:",
+                            syncResult.error,
+                        );
+                    }
+                })
+                .catch((syncErr) => {
+                    console.warn(
+                        "Background sync failed after exam submit:",
+                        syncErr,
+                    );
+                });
             router.push(`/results/${result.id}`);
         } catch (error) {
             console.error("Failed to submit exam:", error);
@@ -156,14 +167,22 @@ export function useExamSubmission({
             });
             hasSavedResultRef.current = true;
             setAutoResultId(result.id);
-            const syncResult = await sync();
-            if (!syncResult.success) {
-                console.error(
-                    "Failed to sync results after auto-submit:",
-                    syncResult.error,
-                );
-            }
             setShowTimeUpModal(true);
+            void sync()
+                .then((syncResult) => {
+                    if (!syncResult.success) {
+                        console.error(
+                            "Failed to sync results after auto-submit:",
+                            syncResult.error,
+                        );
+                    }
+                })
+                .catch((syncErr) => {
+                    console.warn(
+                        "Background sync failed after exam auto-submit:",
+                        syncErr,
+                    );
+                });
             return result.id;
         } catch (error) {
             console.error("Failed to auto-submit exam:", error);

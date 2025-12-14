@@ -216,7 +216,10 @@ export default function ResultsPage(): React.ReactElement {
     }
 
     // Special handling for SRS Review / Topic Study results (both use SRS quiz)
-    const isAggregatedResult = isSRSQuiz(result.quiz_id);
+    const isAggregatedResult = isSRSQuiz(
+      result.quiz_id,
+      effectiveUserId ?? undefined,
+    );
 
     return (
       <div className="flex min-h-screen items-center justify-center bg-background p-4">

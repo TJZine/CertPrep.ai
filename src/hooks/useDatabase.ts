@@ -90,7 +90,7 @@ export function useQuizzes(userId: string | undefined): UseQuizzesResponse {
     const results = await db.quizzes
       .where("user_id")
       .equals(userId)
-      .filter((quiz) => !quiz.deleted_at && !isSRSQuiz(quiz.id))
+      .filter((quiz) => !quiz.deleted_at && !isSRSQuiz(quiz))
       .toArray();
 
     // Stable sort: Newest created first -> Alphabetical by title

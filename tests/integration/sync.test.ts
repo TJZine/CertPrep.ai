@@ -234,11 +234,11 @@ describe("Integration: Quiz Sync Engine", () => {
 
   it("pushes SRS quiz to remote during sync", async () => {
     // 1. Create SRS quiz using the helper
-    const { getOrCreateSRSQuiz } = await import("@/db/quizzes");
+    const { getOrCreateSRSQuiz, getSRSQuizId } = await import("@/db/quizzes");
     const srsQuiz = await getOrCreateSRSQuiz(userId);
 
     // Verify it was created locally
-    expect(srsQuiz.id).toBe(`srs-${userId}`);
+    expect(srsQuiz.id).toBe(getSRSQuizId(userId));
     expect(srsQuiz.last_synced_version).toBeNull();
 
     // 2. Run Sync

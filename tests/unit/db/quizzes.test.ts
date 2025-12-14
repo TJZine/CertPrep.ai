@@ -8,10 +8,11 @@ import {
   getSRSQuizId,
   isSRSQuiz,
   getOrCreateSRSQuiz,
-  SRS_QUIZ_ID_PREFIX,
+  LEGACY_SRS_QUIZ_ID_PREFIX,
 } from "@/db/quizzes";
 import { hashAnswer } from "@/lib/utils";
 import type { QuizImportInput } from "@/validators/quizSchema";
+import { validate as uuidValidate, version as uuidVersion } from "uuid";
 
 describe("DB: quizzes", () => {
   beforeEach(async () => {
@@ -138,9 +139,10 @@ describe("SRS Quiz Utilities", () => {
   });
 
   describe("getSRSQuizId", () => {
-    it("should return srs-prefixed id for user", () => {
+    it("should return a valid UUID", () => {
       const result = getSRSQuizId(userId);
-      expect(result).toBe(`${SRS_QUIZ_ID_PREFIX}${userId}`);
+      expect(uuidValidate(result)).toBe(true);
+      expect(uuidVersion(result)).toBe(5);
     });
 
     it("should generate deterministic IDs", () => {
@@ -157,19 +159,29 @@ describe("SRS Quiz Utilities", () => {
   });
 
   describe("isSRSQuiz", () => {
-    it("should return true for srs- prefix", () => {
+    it("should return true for legacy srs- prefix", () => {
       expect(isSRSQuiz("srs-user-123")).toBe(true);
       expect(isSRSQuiz("srs-")).toBe(true);
       expect(isSRSQuiz("srs-abc-def")).toBe(true);
     });
 
-    it("should return false for regular quiz ids", () => {
+    it("should return true for deterministic UUID when userId provided", () => {
+      const srsId = getSRSQuizId(userId);
+      expect(isSRSQuiz(srsId, userId)).toBe(true);
+    });
+
+    it("should return true for quiz objects with deterministic SRS id", () => {
+      const srsId = getSRSQuizId(userId);
+      expect(isSRSQuiz({ id: srsId, user_id: userId })).toBe(true);
+    });
+
+    it("should return false for regular quiz ids without user context", () => {
       expect(isSRSQuiz("quiz-123")).toBe(false);
       expect(isSRSQuiz("abcd-1234")).toBe(false);
       expect(isSRSQuiz("")).toBe(false);
     });
 
-    it("should return false for ids containing srs but not prefixed", () => {
+    it("should return false for ids containing srs but not legacy prefixed", () => {
       expect(isSRSQuiz("my-srs-quiz")).toBe(false);
       expect(isSRSQuiz("quiz-srs-123")).toBe(false);
     });
@@ -196,10 +208,8 @@ describe("SRS Quiz Utilities", () => {
       expect(quiz1.created_at).toBe(quiz2.created_at);
 
       // Verify only one quiz in DB
-      const allSRS = await db.quizzes
-        .where("id")
-        .startsWith(SRS_QUIZ_ID_PREFIX)
-        .toArray();
+      const allUserQuizzes = await db.quizzes.where("user_id").equals(userId).toArray();
+      const allSRS = allUserQuizzes.filter((q) => isSRSQuiz(q));
       expect(allSRS).toHaveLength(1);
     });
 
@@ -210,6 +220,52 @@ describe("SRS Quiz Utilities", () => {
       expect(quiz1.id).not.toBe(quiz2.id);
       expect(quiz1.user_id).toBe("user-a");
       expect(quiz2.user_id).toBe("user-b");
+    });
+
+    it("should migrate legacy srs-{userId} quiz and results", async () => {
+      const legacyId = `${LEGACY_SRS_QUIZ_ID_PREFIX}${userId}`;
+      const now = Date.now();
+
+      await db.quizzes.add({
+        id: legacyId,
+        user_id: userId,
+        title: "SRS Review Sessions",
+        description: "",
+        questions: [],
+        tags: ["srs", "system"],
+        version: 1,
+        created_at: now - 1000,
+        updated_at: now - 1000,
+        deleted_at: null,
+        quiz_hash: null,
+        last_synced_at: null,
+        last_synced_version: null,
+      });
+
+      await db.results.add({
+        id: "legacy-result-1",
+        user_id: userId,
+        quiz_id: legacyId,
+        timestamp: now,
+        mode: "zen",
+        score: 100,
+        time_taken_seconds: 10,
+        answers: {},
+        flagged_questions: [],
+        category_breakdown: {},
+        question_ids: [],
+        synced: 0,
+      });
+
+      const migratedQuiz = await getOrCreateSRSQuiz(userId);
+      expect(migratedQuiz.id).toBe(getSRSQuizId(userId));
+
+      const legacyQuizAfter = await db.quizzes.get(legacyId);
+      expect(legacyQuizAfter).toBeUndefined();
+
+      const migratedResult = await db.results.get("legacy-result-1");
+      expect(migratedResult?.quiz_id).toBe(migratedQuiz.id);
+      expect(migratedResult?.synced).toBe(0);
     });
   });
 
@@ -244,7 +300,7 @@ describe("SRS Quiz Utilities", () => {
 
       expect(quizzes).toHaveLength(2);
       expect(quizzes.some((q) => q.id === "regular-quiz-1")).toBe(true);
-      expect(quizzes.some((q) => isSRSQuiz(q.id))).toBe(true);
+      expect(quizzes.some((q) => isSRSQuiz(q))).toBe(true);
     });
 
     it("should still be accessible via direct DB query", async () => {

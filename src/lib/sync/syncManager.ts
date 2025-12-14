@@ -200,6 +200,7 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
       const syncableResults = unsyncedResults.filter((r) => syncedQuizIds.has(r.quiz_id));
       const skippedCount = unsyncedResults.length - syncableResults.length;
 
+
       if (skippedCount > 0) {
         logger.debug("Skipping results with unsynced quizzes (FK pre-flight)", {
           userId,
@@ -239,6 +240,7 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
           payload,
           { onConflict: "id" },
         );
+
 
         if (error) {
           const errorMsg = toErrorMessage(error);
