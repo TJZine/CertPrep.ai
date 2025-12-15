@@ -56,6 +56,17 @@ export interface Result {
    * Maps category name → { correct, total } counts.
    */
   computed_category_scores?: Record<string, { correct: number; total: number }>;
+  /**
+   * Self-assessed difficulty ratings from Zen mode.
+   * Maps Question ID → rating (1=again, 2=hard, 3=good).
+   * Only populated for Zen mode quizzes where user rates questions.
+   */
+  difficulty_ratings?: Record<string, 1 | 2 | 3>;
+  /**
+   * Time spent on each question in seconds.
+   * Maps Question ID → seconds spent before submitting answer.
+   */
+  time_per_question?: Record<string, number>;
 }
 
 /**

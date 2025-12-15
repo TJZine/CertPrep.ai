@@ -25,6 +25,7 @@ interface AnswerRecord {
   isCorrect: boolean;
   timestamp: number;
   difficulty: "again" | "hard" | "good" | null;
+  timeSpentSeconds: number;
 }
 
 // Main session state
@@ -49,6 +50,8 @@ interface QuizSessionState {
   isPaused: boolean;
   // Error state
   error: string | null;
+  // Time tracking
+  questionStartTime: number | null;
   // Proctor-specific
   seenQuestions: Set<string>;
   examDurationMinutes: number;
@@ -125,6 +128,7 @@ const createInitialState = (): QuizSessionState => ({
   isSubmitting: false,
   isPaused: false,
   error: null,
+  questionStartTime: null,
   seenQuestions: new Set<string>(),
   examDurationMinutes: TIMER.DEFAULT_EXAM_DURATION_MINUTES,
   timeRemaining: TIMER.DEFAULT_EXAM_DURATION_MINUTES * 60,
@@ -145,6 +149,7 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
         state.questionQueue = questions.map((question) => question.id);
         state.currentIndex = 0;
         state.startTime = Date.now();
+        state.questionStartTime = Date.now();
       });
     },
 
@@ -159,6 +164,7 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
         state.examDurationMinutes = durationMinutes;
         state.timeRemaining = durationMinutes * 60;
         state.startTime = Date.now();
+        state.questionStartTime = Date.now();
         state.isAutoSubmitted = false;
         if (questions[0]) {
           state.seenQuestions.add(questions[0].id);
@@ -259,6 +265,7 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
         state.selectedAnswer = null;
         state.hasSubmitted = false;
         state.showExplanation = false;
+        state.questionStartTime = Date.now();
       });
     },
 
@@ -284,6 +291,7 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
         state.selectedAnswer = null;
         state.hasSubmitted = false;
         state.showExplanation = false;
+        state.questionStartTime = Date.now();
       });
     },
 
@@ -307,6 +315,7 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
         }
         state.hasSubmitted = false;
         state.showExplanation = false;
+        state.questionStartTime = Date.now();
       });
     },
 
@@ -388,12 +397,18 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
             const previousDifficulty =
               draft.answers.get(questionId)?.difficulty ?? null;
 
+            // Calculate time spent on this question (capped at 5 minutes)
+            const timeSpentSeconds = draft.questionStartTime
+              ? Math.min(300, Math.round((Date.now() - draft.questionStartTime) / 1000))
+              : 0;
+
             const record: AnswerRecord = {
               questionId,
               selectedAnswer: currentSelectedAnswer,
               isCorrect,
               timestamp: Date.now(),
               difficulty: previousDifficulty,
+              timeSpentSeconds,
             };
 
             draft.answers.set(questionId, record);
@@ -489,6 +504,9 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
               isCorrect,
               timestamp: Date.now(),
               difficulty: null,
+              timeSpentSeconds: draft.questionStartTime
+                ? Math.min(300, Math.round((Date.now() - draft.questionStartTime) / 1000))
+                : 0,
             });
             draft.answeredQuestions.add(questionId);
             draft.seenQuestions.add(questionId);

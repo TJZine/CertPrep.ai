@@ -372,6 +372,7 @@ export default function ResultsPage(): React.ReactElement {
         result={result}
         quiz={quiz}
         previousScore={previousScore}
+        allQuizResults={allQuizResults}
       />
     </ErrorBoundary>
   );

@@ -1,0 +1,121 @@
+"use client";
+
+import * as React from "react";
+import { Gauge } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { cn } from "@/lib/utils";
+import type { Question } from "@/types/quiz";
+
+interface DifficultyBreakdownProps {
+    questions: Array<{
+        question: Question;
+        isCorrect: boolean;
+    }>;
+    className?: string;
+}
+
+interface DifficultyStats {
+    label: string;
+    correct: number;
+    total: number;
+    percentage: number;
+    color: string;
+    bgColor: string;
+}
+
+/**
+ * Breakdown of performance by question difficulty level.
+ * Shows correct/total and percentage for Easy, Medium, and Hard questions.
+ */
+export function DifficultyBreakdown({
+    questions,
+    className,
+}: DifficultyBreakdownProps): React.ReactElement | null {
+    const stats = React.useMemo((): DifficultyStats[] => {
+        const difficultyMap = new Map<string, { correct: number; total: number }>();
+
+        // Initialize with expected difficulty levels
+        ["Easy", "Medium", "Hard"].forEach((level) => {
+            difficultyMap.set(level, { correct: 0, total: 0 });
+        });
+
+        // Count questions by difficulty
+        questions.forEach(({ question, isCorrect }) => {
+            const difficulty = question.difficulty || "Medium"; // Default to Medium if not set
+            const current = difficultyMap.get(difficulty) || { correct: 0, total: 0 };
+            current.total += 1;
+            if (isCorrect) {
+                current.correct += 1;
+            }
+            difficultyMap.set(difficulty, current);
+        });
+
+        const colors: Record<string, { color: string; bgColor: string }> = {
+            Easy: { color: "text-success", bgColor: "bg-success" },
+            Medium: { color: "text-warning", bgColor: "bg-warning" },
+            Hard: { color: "text-destructive", bgColor: "bg-destructive" },
+        };
+
+        return ["Easy", "Medium", "Hard"]
+            .map((level) => {
+                const data = difficultyMap.get(level) || { correct: 0, total: 0 };
+                const percentage = data.total > 0 ? Math.round((data.correct / data.total) * 100) : 0;
+                return {
+                    label: level,
+                    correct: data.correct,
+                    total: data.total,
+                    percentage,
+                    color: colors[level]?.color || "text-muted-foreground",
+                    bgColor: colors[level]?.bgColor || "bg-muted",
+                };
+            })
+            .filter((stat) => stat.total > 0); // Only show levels that have questions
+    }, [questions]);
+
+    // Don't render if no difficulty data available
+    if (stats.length === 0) {
+        return null;
+    }
+
+    return (
+        <Card className={className}>
+            <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-base">
+                    <Gauge className="h-4 w-4" aria-hidden="true" />
+                    Difficulty Breakdown
+                </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+                {stats.map((stat) => (
+                    <div key={stat.label} className="space-y-1">
+                        <div className="flex items-center justify-between text-sm">
+                            <span className={cn("font-medium", stat.color)}>{stat.label}</span>
+                            <span className="text-muted-foreground">
+                                {stat.correct}/{stat.total} ({stat.percentage}%)
+                            </span>
+                        </div>
+                        <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
+                            <div
+                                className={cn("h-full transition-all duration-500", stat.bgColor)}
+                                style={{ width: `${stat.percentage}%` }}
+                                aria-label={`${stat.label}: ${stat.percentage}% correct`}
+                            />
+                        </div>
+                    </div>
+                ))}
+
+                {stats.length > 0 && (
+                    <p className="pt-2 text-xs text-muted-foreground">
+                        {(stats.find((s) => s.label === "Hard")?.percentage ?? 0) >= 70
+                            ? "💪 Great work on hard questions!"
+                            : (stats.find((s) => s.label === "Easy")?.percentage ?? 0) < 80
+                                ? "📚 Focus on fundamentals first"
+                                : "📈 Ready to tackle harder content"}
+                    </p>
+                )}
+            </CardContent>
+        </Card>
+    );
+}
+
+export default DifficultyBreakdown;

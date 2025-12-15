@@ -79,17 +79,19 @@ export function TopicRadar({
   const { containerRef, isReady } = useChartDimensions();
 
   const chartData = React.useMemo(() => {
-    return categories.map((cat) => ({
-      subject:
-        cat.category.length > 15
-          ? `${cat.category.substring(0, 15)}...`
-          : cat.category,
-      fullName: cat.category,
-      score: cat.score,
-      correct: cat.correct,
-      total: cat.total,
-      fullMark: 100,
-    }));
+    return categories
+      .filter((cat) => cat.category && typeof cat.score === "number" && !Number.isNaN(cat.score))
+      .map((cat) => ({
+        subject:
+          cat.category.length > 15
+            ? `${cat.category.substring(0, 15)}...`
+            : cat.category,
+        fullName: cat.category,
+        score: Math.max(0, Math.min(100, Math.round(cat.score))), // Clamp to 0-100
+        correct: cat.correct ?? 0,
+        total: cat.total ?? 0,
+        fullMark: 100,
+      }));
   }, [categories]);
 
   const { strongest, weakest } = React.useMemo(() => {
@@ -270,14 +272,17 @@ export function TopicRadar({
 
 interface CategoryBreakdownProps {
   categories: CategoryScore[];
+  onCategoryClick?: (category: string) => void;
   className?: string;
 }
 
 /**
  * Linear breakdown of categories sorted by score.
+ * Categories are clickable if onCategoryClick is provided.
  */
 export function CategoryBreakdown({
   categories,
+  onCategoryClick,
   className,
 }: CategoryBreakdownProps): React.ReactElement {
   const sorted = React.useMemo(() => {
@@ -308,7 +313,16 @@ export function CategoryBreakdown({
       <CardContent>
         <div className="space-y-4">
           {sorted.map((cat) => (
-            <div key={cat.category}>
+            <button
+              key={cat.category}
+              type="button"
+              onClick={() => onCategoryClick?.(cat.category)}
+              disabled={!onCategoryClick}
+              className={cn(
+                "w-full text-left rounded-lg p-2 -m-2 transition-colors",
+                onCategoryClick && "hover:bg-accent cursor-pointer"
+              )}
+            >
               <div className="mb-1 flex items-center justify-between">
                 <span className="text-sm font-medium text-foreground">
                   {cat.category}
@@ -326,7 +340,7 @@ export function CategoryBreakdown({
                   {cat.correct}/{cat.total}
                 </span>
               </div>
-            </div>
+            </button>
           ))}
         </div>
       </CardContent>

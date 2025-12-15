@@ -17,6 +17,11 @@ import { TopicRadar, CategoryBreakdown } from "./TopicRadar";
 import { ResultsSummary } from "./ResultsSummary";
 import { QuestionReviewList, type FilterType } from "./QuestionReviewList";
 import { SmartActions } from "./SmartActions";
+import { AttemptHistoryTimeline } from "./AttemptHistoryTimeline";
+import { DifficultyBreakdown } from "./DifficultyBreakdown";
+import { SRSStatusDisplay } from "./SRSStatusDisplay";
+import { SelfAssessmentSummary } from "./SelfAssessmentSummary";
+import { TimePerQuestionHeatmap } from "./TimePerQuestionHeatmap";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
@@ -38,6 +43,7 @@ interface ResultsContainerProps {
   result: Result;
   quiz: Quiz;
   previousScore?: number | null;
+  allQuizResults?: Result[];
 }
 
 /**
@@ -47,6 +53,7 @@ export function ResultsContainer({
   result,
   quiz,
   previousScore,
+  allQuizResults,
 }: ResultsContainerProps): React.ReactElement {
   const router = useRouter();
   const { addToast } = useToast();
@@ -221,7 +228,17 @@ export function ResultsContainer({
   );
 
   const [questionFilter, setQuestionFilter] = React.useState<FilterType>("all");
+  const [categoryFilter, setCategoryFilter] = React.useState<string | null>(null);
   const [autoFilterApplied, setAutoFilterApplied] = React.useState(false);
+
+  const handleCategoryFilter = React.useCallback((category: string) => {
+    setCategoryFilter(category);
+    // Scroll to question review section
+    const reviewSection = document.getElementById("question-review");
+    if (reviewSection) {
+      reviewSection.scrollIntoView({ behavior: "smooth" });
+    }
+  }, []);
 
   // Update filter once grading is done
   React.useEffect(() => {
@@ -469,6 +486,14 @@ export function ResultsContainer({
               className="mb-8"
             />
 
+            {allQuizResults && allQuizResults.length > 1 && (
+              <AttemptHistoryTimeline
+                currentResultId={result.id}
+                allResults={allQuizResults}
+                className="mb-8"
+              />
+            )}
+
             <div className="mb-8 grid gap-8 lg:grid-cols-2">
               <TopicRadar categories={categoryScores} />
               <ResultsSummary
@@ -484,9 +509,40 @@ export function ResultsContainer({
               />
             </div>
 
-            <div className="mb-8 lg:hidden">
-              <CategoryBreakdown categories={categoryScores} />
+            <div className="mb-8 grid gap-4 lg:hidden">
+              <CategoryBreakdown categories={categoryScores} onCategoryClick={handleCategoryFilter} />
+              <DifficultyBreakdown questions={questionsWithAnswers} />
             </div>
+
+            {/* Desktop: Show DifficultyBreakdown and SRS in its own row */}
+            <div className="mb-8 hidden gap-4 lg:grid lg:grid-cols-2">
+              <DifficultyBreakdown questions={questionsWithAnswers} />
+              {effectiveUserId && (
+                <SRSStatusDisplay
+                  questionIds={scopedQuestions.map((q) => q.id)}
+                  userId={effectiveUserId}
+                  quizId={quiz.id}
+                />
+              )}
+            </div>
+
+            {/* Self-assessment and time analytics (Zen mode features) */}
+            {(result.difficulty_ratings || result.time_per_question) && (
+              <div className="mb-8 grid gap-4 lg:grid-cols-2">
+                {result.difficulty_ratings && (
+                  <SelfAssessmentSummary
+                    difficultyRatings={result.difficulty_ratings}
+                    questionStatus={grading?.questionStatus ?? {}}
+                  />
+                )}
+                {result.time_per_question && (
+                  <TimePerQuestionHeatmap
+                    timePerQuestion={result.time_per_question}
+                    questions={scopedQuestions}
+                  />
+                )}
+              </div>
+            )}
 
             <SmartActions
               quizId={quiz.id}
@@ -506,6 +562,8 @@ export function ResultsContainer({
                 questions={questionsWithAnswers}
                 filter={questionFilter}
                 onFilterChange={handleFilterChange}
+                categoryFilter={categoryFilter}
+                onCategoryFilterChange={setCategoryFilter}
                 isResolving={isResolving}
               />
             </div>

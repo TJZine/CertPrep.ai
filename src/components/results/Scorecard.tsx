@@ -123,6 +123,47 @@ function getTrendIndicator(
 }
 
 /**
+ * Hook for animating a number from 0 to target value.
+ * Respects prefers-reduced-motion.
+ */
+function useAnimatedScore(target: number, duration = 1000): number {
+  const [displayValue, setDisplayValue] = React.useState(0);
+  const prefersReducedMotion = React.useMemo(() => {
+    if (typeof window === "undefined") return false;
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }, []);
+
+  React.useEffect(() => {
+    if (prefersReducedMotion) {
+      setDisplayValue(target);
+      return;
+    }
+
+    let startTime: number | null = null;
+    let animationFrame: number;
+
+    const animate = (currentTime: number): void => {
+      if (startTime === null) startTime = currentTime;
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+
+      // Ease-out cubic for smooth deceleration
+      const easeOut = 1 - Math.pow(1 - progress, 3);
+      setDisplayValue(Math.round(target * easeOut));
+
+      if (progress < 1) {
+        animationFrame = requestAnimationFrame(animate);
+      }
+    };
+
+    animationFrame = requestAnimationFrame(animate);
+    return (): void => cancelAnimationFrame(animationFrame);
+  }, [target, duration, prefersReducedMotion]);
+
+  return displayValue;
+}
+
+/**
  * Prominent scorecard for quiz results.
  */
 export function Scorecard({
@@ -138,6 +179,7 @@ export function Scorecard({
   const tier = getPerformanceTier(score);
   const trend = getTrendIndicator(score, previousScore);
   const incorrectCount = totalCount - correctCount;
+  const animatedScore = useAnimatedScore(score);
 
   return (
     <Card className={cn("overflow-hidden", tier.bgColor, className)}>
@@ -147,7 +189,7 @@ export function Scorecard({
 
           <div className="mb-2">
             <span className={cn("text-6xl font-bold sm:text-7xl", tier.color)}>
-              {score}
+              {animatedScore}
             </span>
             <span className={cn("text-4xl font-bold", tier.color)}>%</span>
           </div>

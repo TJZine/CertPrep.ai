@@ -21,6 +21,8 @@ interface QuestionReviewListProps {
   questions: QuestionWithAnswer[];
   filter?: FilterType;
   onFilterChange?: (filter: FilterType) => void;
+  categoryFilter?: string | null;
+  onCategoryFilterChange?: (category: string | null) => void;
   className?: string;
   isResolving?: boolean;
 }
@@ -32,6 +34,8 @@ export function QuestionReviewList({
   questions,
   filter,
   onFilterChange,
+  categoryFilter,
+  onCategoryFilterChange,
   className,
   isResolving = false,
 }: QuestionReviewListProps): React.ReactElement {
@@ -51,17 +55,25 @@ export function QuestionReviewList({
   }, [questions]);
 
   const filteredQuestions = React.useMemo(() => {
+    let result = questions;
+
+    // Apply category filter first
+    if (categoryFilter) {
+      result = result.filter((q) => q.question.category === categoryFilter);
+    }
+
+    // Then apply status filter
     switch (activeFilter) {
       case "correct":
-        return questions.filter((q) => q.isCorrect);
+        return result.filter((q) => q.isCorrect);
       case "incorrect":
-        return questions.filter((q) => !q.isCorrect);
+        return result.filter((q) => !q.isCorrect);
       case "flagged":
-        return questions.filter((q) => q.isFlagged);
+        return result.filter((q) => q.isFlagged);
       default:
-        return questions;
+        return result;
     }
-  }, [questions, activeFilter]);
+  }, [questions, activeFilter, categoryFilter]);
 
   const handleFilterChange = (value: FilterType): void => {
     if (!filter) {
@@ -133,6 +145,19 @@ export function QuestionReviewList({
 
       <p className="mb-4 text-sm text-muted-foreground">
         Showing {filteredQuestions.length} of {questions.length} questions
+        {categoryFilter && (
+          <>
+            {" "}
+            in <Badge variant="outline" className="ml-1">{categoryFilter}</Badge>
+            <button
+              type="button"
+              onClick={() => onCategoryFilterChange?.(null)}
+              className="ml-2 text-primary hover:underline"
+            >
+              Clear
+            </button>
+          </>
+        )}
       </p>
 
       {filteredQuestions.length === 0 ? (

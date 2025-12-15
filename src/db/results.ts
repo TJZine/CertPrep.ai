@@ -18,6 +18,10 @@ export interface CreateResultInput {
   timeTakenSeconds: number;
   activeQuestionIds?: string[];
   userId: string;
+  /** Self-assessed difficulty ratings (Zen mode only) */
+  difficultyRatings?: Record<string, 1 | 2 | 3>;
+  /** Time spent per question in seconds */
+  timePerQuestion?: Record<string, number>;
 }
 
 export interface OverallStats {
@@ -117,6 +121,8 @@ export async function createResult(input: CreateResultInput): Promise<Result> {
     category_breakdown: categoryBreakdown,
     question_ids: input.activeQuestionIds, // Persist for accurate grading on results page
     computed_category_scores: categoryScores, // Pre-computed for analytics
+    difficulty_ratings: input.difficultyRatings,
+    time_per_question: input.timePerQuestion,
     synced: 0,
   };
 
