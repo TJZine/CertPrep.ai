@@ -272,9 +272,16 @@ async function pushLocalChanges(
     }
 
     // Log how many were actually updated (server had older data)
-    const updatedCount = Array.isArray(data)
-      ? data.filter((r: { out_updated?: boolean }) => r.out_updated).length
-      : batch.length; // Backward compat: assume all updated if no structured response
+    let updatedCount: number;
+    if (Array.isArray(data)) {
+      updatedCount = data.filter((r: { out_updated?: boolean }) => r.out_updated).length;
+    } else {
+      // Backward compat: assume all updated if no structured response
+      logger.debug("SRS batch push: unstructured response, assuming all updated", {
+        batchSize: batch.length,
+      });
+      updatedCount = batch.length;
+    }
     if (updatedCount < batch.length) {
       logger.debug("SRS batch push: some items skipped (server had newer data)", {
         sent: batch.length,

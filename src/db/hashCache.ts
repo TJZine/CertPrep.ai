@@ -2,6 +2,30 @@ import { db } from "@/db";
 import { hashAnswer } from "@/lib/utils";
 import { logger } from "@/lib/logger";
 
+/** Maximum number of entries before eviction is triggered. */
+const MAX_CACHE_ENTRIES = 10_000;
+/** Number of entries to keep after eviction (buffer to reduce frequency). */
+const EVICTION_TARGET = 8_000;
+
+/**
+ * Evict old cache entries if the cache exceeds MAX_CACHE_ENTRIES.
+ * Uses FIFO approximation (oldest entries by insertion order).
+ * Fire-and-forget — errors are logged but don't interrupt caller.
+ */
+async function maybeEvictCache(): Promise<void> {
+    try {
+        const count = await db.hashCache.count();
+        if (count > MAX_CACHE_ENTRIES) {
+            const toDelete = count - EVICTION_TARGET;
+            const keys = await db.hashCache.limit(toDelete).primaryKeys();
+            await db.hashCache.bulkDelete(keys);
+            logger.debug("Hash cache evicted entries", { deleted: keys.length, remaining: EVICTION_TARGET });
+        }
+    } catch (err) {
+        logger.warn("Hash cache eviction failed", err);
+    }
+}
+
 /**
  * Gets a hash for an answer, using the persistent IndexedDB cache when possible.
  * Falls back to computing the hash if not cached.
@@ -74,7 +98,10 @@ export async function getCachedHashBatch(
             }
 
             // Batch store new entries (fire and forget)
-            db.hashCache.bulkPut(newEntries).catch((err) => {
+            db.hashCache.bulkPut(newEntries).then(() => {
+                // Evict old entries if cache is too large (fire and forget)
+                maybeEvictCache();
+            }).catch((err) => {
                 logger.warn("Failed to bulk cache hashes", err);
             });
         }
@@ -89,3 +116,4 @@ export async function getCachedHashBatch(
 
     return results;
 }
+
