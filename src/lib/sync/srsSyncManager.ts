@@ -357,7 +357,15 @@ async function pullRemoteChanges(
 
     // Validate lastId to prevent query failures from corrupted cursors
     const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    const safeLastId = UUID_REGEX.test(cursor.lastId) ? cursor.lastId : "00000000-0000-0000-0000-000000000000";
+    const isValidCursor = UUID_REGEX.test(cursor.lastId);
+    const safeLastId = isValidCursor ? cursor.lastId : "00000000-0000-0000-0000-000000000000";
+
+    if (!isValidCursor && cursor.lastId) {
+      logger.warn("Corrupted SRS cursor detected; resetting to start", {
+        userId,
+        invalidLastId: cursor.lastId,
+      });
+    }
 
     // Keyset pagination: (updated_at > ts) OR (updated_at = ts AND question_id > last_id)
     const filter = `updated_at.gt.${timestamp},and(updated_at.eq.${timestamp},question_id.gt.${safeLastId})`;

@@ -265,7 +265,11 @@ export function PerformanceHistory({
                       onClick={() => router.push(`/results/${result.id}`)}
                     />
                     {isMissingCategory && (
-                      <span title="Quiz missing category — excluded from grouped heatmap">
+                      <span
+                        role="img"
+                        aria-label="Warning: Quiz missing category — excluded from grouped heatmap"
+                        title="Quiz missing category — excluded from grouped heatmap"
+                      >
                         <AlertTriangle
                           className="h-4 w-4 flex-shrink-0 text-warning"
                           aria-hidden="true"

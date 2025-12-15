@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import Particles, { initParticlesEngine } from '@tsparticles/react';
+import type { Container } from '@tsparticles/engine';
 import { loadSlim } from '@tsparticles/slim';
 
 /**
@@ -14,17 +15,37 @@ import { loadSlim } from '@tsparticles/slim';
  */
 export default function MidnightParticles(): React.ReactElement | null {
     const [init, setInit] = useState(false);
+    const containerRef = useRef<Container | null>(null);
 
     useEffect(() => {
+        let mounted = true;
+
         initParticlesEngine(async (engine) => {
             await loadSlim(engine);
-        }).then(() => {
-            setInit(true);
-        });
+        })
+            .then(() => {
+                if (mounted) setInit(true);
+            })
+            .catch((err) => {
+                console.error('[MidnightParticles] Failed to initialize:', err);
+            });
+
+        return (): void => {
+            mounted = false;
+            // Defensive cleanup: destroy container if it exists
+            if (containerRef.current) {
+                containerRef.current.destroy();
+                containerRef.current = null;
+            }
+        };
     }, []);
 
-    const particlesLoaded = useCallback(async (): Promise<void> => {
-        // Stars loaded
+    // Note: async is required by tsparticles API even though we don't await anything
+    const particlesLoaded = useCallback(async (container?: Container): Promise<void> => {
+        // Store container reference for cleanup
+        if (container) {
+            containerRef.current = container;
+        }
     }, []);
 
     if (!init) {

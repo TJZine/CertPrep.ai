@@ -353,7 +353,7 @@ export default function ResultsPage(): React.ReactElement {
     >
       {/* Missing category banner */}
       {quiz && !quiz.category && (
-        <div className="mx-auto mb-4 flex max-w-4xl items-center gap-3 rounded-lg border border-warning/30 bg-warning/10 px-4 py-3">
+        <div role="status" className="mx-auto mb-4 flex max-w-4xl items-center gap-3 rounded-lg border border-warning/30 bg-warning/10 px-4 py-3">
           <AlertTriangle className="h-5 w-5 flex-shrink-0 text-warning" aria-hidden="true" />
           <p className="flex-1 text-sm text-foreground">
             This quiz is missing category metadata and won&apos;t appear in grouped analytics.

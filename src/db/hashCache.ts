@@ -63,8 +63,12 @@ export async function getCachedHashBatch(
         if (uncached.length > 0) {
             const newEntries: Array<{ answer: string; hash: string }> = [];
 
-            for (const answer of uncached) {
+            const hashPromises = uncached.map(async (answer) => {
                 const hash = await hashAnswer(answer);
+                return { answer, hash };
+            });
+            const computed = await Promise.all(hashPromises);
+            for (const { answer, hash } of computed) {
                 results.set(answer, hash);
                 newEntries.push({ answer, hash });
             }

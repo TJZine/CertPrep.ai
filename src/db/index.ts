@@ -221,16 +221,14 @@ export async function clearDatabase(): Promise<void> {
   try {
     await db.transaction(
       "rw",
-      db.quizzes,
-      db.results,
-      db.syncState,
-      db.srs,
+      [db.quizzes, db.results, db.syncState, db.srs, db.hashCache],
       async () => {
         await Promise.all([
           db.quizzes.clear(),
           db.results.clear(),
           db.syncState.clear(),
           db.srs.clear(),
+          db.hashCache.clear(),
         ]);
       },
     );

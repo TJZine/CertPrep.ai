@@ -82,6 +82,16 @@ export function ImportModal({
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const tabListRef = React.useRef<HTMLDivElement>(null);
 
+  // Refs to access current category/subcategory values without stale closures
+  const categoryRef = React.useRef(category);
+  const subcategoryRef = React.useRef(subcategory);
+
+  // Keep refs in sync with state
+  React.useEffect(() => {
+    categoryRef.current = category;
+    subcategoryRef.current = subcategory;
+  }, [category, subcategory]);
+
   const resetState = (): void => {
     setActiveTab("paste");
     setJsonText("");
@@ -108,11 +118,12 @@ export function ImportModal({
         setValidationResult(result);
 
         // Pre-populate category/subcategory from parsed JSON if available
+        // Using refs to access current values without stale closures
         if (result.success && result.data) {
-          if (result.data.category && !category) {
+          if (result.data.category && !categoryRef.current) {
             setCategory(result.data.category);
           }
-          if (result.data.subcategory && !subcategory) {
+          if (result.data.subcategory && !subcategoryRef.current) {
             setSubcategory(result.data.subcategory);
           }
         }
@@ -143,8 +154,7 @@ export function ImportModal({
         setIsValidating(false);
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- Pre-populate category/subcategory only once when JSON is first parsed, not on every state change
-    [],
+    [], // Empty deps is correct: uses refs for current category/subcategory values
   );
 
   React.useEffect((): (() => void) | void => {
@@ -555,6 +565,7 @@ export function ImportModal({
                 <input
                   id="import-category"
                   type="text"
+                  aria-describedby="analytics-description"
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
                   placeholder="e.g., Insurance, Firearms, Custom"
@@ -572,6 +583,7 @@ export function ImportModal({
                 <input
                   id="import-subcategory"
                   type="text"
+                  aria-describedby="analytics-description"
                   value={subcategory}
                   onChange={(e) => setSubcategory(e.target.value)}
                   placeholder="e.g., Massachusetts Personal Lines"

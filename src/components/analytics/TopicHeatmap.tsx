@@ -58,14 +58,14 @@ interface CategoryData {
 }
 
 /**
- * Get time columns: 1 week (days 8-14 ago) + 7 individual days (last 7 days).
+ * Get time columns: 1 week (days 7-13 ago) + 7 individual days (last 7 days).
  */
 function getTimeColumns(): TimeColumn[] {
     const columns: TimeColumn[] = [];
     const now = new Date();
     now.setHours(23, 59, 59, 999);
 
-    // Previous week: days 8-14 ago
+    // Previous week: days 7-13 ago
     const weekEnd = new Date(now);
     weekEnd.setDate(now.getDate() - 7);
     weekEnd.setHours(23, 59, 59, 999);
@@ -635,7 +635,7 @@ export function TopicHeatmap({
                     </div>
 
                     {/* Category rows with optional parent group headers */}
-                    <div className="min-w-[600px] space-y-1" role="grid" aria-label="Topic mastery heatmap">
+                    <div className="min-w-[600px] space-y-1" role="table" aria-label="Topic mastery heatmap">
                         {groupedData.map((group) => (
                             <React.Fragment key={group.groupKey ?? "ungrouped"}>
                                 {/* Group header (only shown when grouping by quiz category) */}

@@ -453,6 +453,8 @@ export async function updateQuiz(
       "title",
       "description",
       "tags",
+      "category",
+      "subcategory",
     ].some((key) => key in sanitizedUpdates);
     const updatedAt =
       shouldBumpVersion || "deleted_at" in sanitizedUpdates

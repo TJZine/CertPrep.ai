@@ -43,6 +43,8 @@ export interface RemoteQuizInput {
   created_at?: string;
   updated_at?: string;
   deleted_at?: string | null;
+  category?: string | null;
+  subcategory?: string | null;
 }
 
 let cachedSubtleCrypto: SubtleCrypto | null = null;
@@ -124,6 +126,8 @@ export async function toRemoteQuiz(
     deleted_at: local.deleted_at
       ? new Date(local.deleted_at).toISOString()
       : null,
+    category: local.category ?? null,
+    subcategory: local.subcategory ?? null,
   };
 }
 

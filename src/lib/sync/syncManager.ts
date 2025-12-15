@@ -35,6 +35,9 @@ const RemoteResultSchema = z.object({
   flagged_questions: z.array(z.string()).nullable().optional().transform(v => v ?? []),
   category_breakdown: z.record(z.string(), z.number()).nullable().optional().transform(v => v ?? {}),
   question_ids: z.array(z.string()).optional().nullable(),
+  computed_category_scores: z.record(z.string(), z.object({ correct: z.number(), total: z.number() })).nullable().optional(),
+  difficulty_ratings: z.record(z.string(), z.union([z.literal(1), z.literal(2), z.literal(3)])).nullable().optional(),
+  time_per_question: z.record(z.string(), z.number()).nullable().optional(),
   created_at: z.string(),
   updated_at: z.string(),
   deleted_at: z.string().nullable().optional(), // For cross-device deletion sync
@@ -290,7 +293,7 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
       const { data: remoteResults, error: fetchError } = await client
         .from("results")
         .select(
-          "id, quiz_id, timestamp, mode, score, time_taken_seconds, answers, flagged_questions, category_breakdown, question_ids, created_at, updated_at, deleted_at",
+          "id, quiz_id, timestamp, mode, score, time_taken_seconds, answers, flagged_questions, category_breakdown, question_ids, computed_category_scores, difficulty_ratings, time_per_question, created_at, updated_at, deleted_at",
         )
         .eq("user_id", userId)
         .or(filter)
@@ -356,6 +359,9 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
           flagged_questions: validResult.flagged_questions,
           category_breakdown: validResult.category_breakdown,
           question_ids: validResult.question_ids || undefined,
+          computed_category_scores: validResult.computed_category_scores || undefined,
+          difficulty_ratings: validResult.difficulty_ratings || undefined,
+          time_per_question: validResult.time_per_question || undefined,
           synced: 1,
         });
 
@@ -465,6 +471,9 @@ export function buildSyncPayload(batch: Result[], userId: string): Record<string
     flagged_questions: r.flagged_questions,
     category_breakdown: r.category_breakdown,
     question_ids: r.question_ids,
+    computed_category_scores: r.computed_category_scores,
+    difficulty_ratings: r.difficulty_ratings,
+    time_per_question: r.time_per_question,
     // Only include deleted_at if set (prevents resurrecting remotely deleted records)
     ...(r.deleted_at && { deleted_at: new Date(r.deleted_at).toISOString() }),
   }));
