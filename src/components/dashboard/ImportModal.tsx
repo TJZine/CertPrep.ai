@@ -7,6 +7,7 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
+  X,
 } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
@@ -551,7 +552,7 @@ export function ImportModal({
             <p className="text-sm font-medium text-foreground">
               Analytics Grouping (Optional)
             </p>
-            <p className="text-xs text-muted-foreground">
+            <p id="analytics-description" className="text-xs text-muted-foreground">
               Set category and subcategory to group this quiz in the Topic Heatmap.
             </p>
             <div className="grid gap-3 sm:grid-cols-2">
@@ -562,16 +563,28 @@ export function ImportModal({
                 >
                   Category
                 </label>
-                <input
-                  id="import-category"
-                  type="text"
-                  aria-describedby="analytics-description"
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  placeholder="e.g., Insurance, Firearms, Custom"
-                  maxLength={50}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                />
+                <div className="relative">
+                  <input
+                    id="import-category"
+                    type="text"
+                    aria-describedby="analytics-description"
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    placeholder="e.g., Insurance, Firearms, Custom"
+                    maxLength={50}
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 pr-8 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  />
+                  {category && (
+                    <button
+                      type="button"
+                      onClick={() => setCategory("")}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted-foreground hover:text-foreground"
+                      aria-label="Clear category"
+                    >
+                      <X className="h-3.5 w-3.5" aria-hidden="true" />
+                    </button>
+                  )}
+                </div>
               </div>
               <div>
                 <label
@@ -580,16 +593,28 @@ export function ImportModal({
                 >
                   Subcategory
                 </label>
-                <input
-                  id="import-subcategory"
-                  type="text"
-                  aria-describedby="analytics-description"
-                  value={subcategory}
-                  onChange={(e) => setSubcategory(e.target.value)}
-                  placeholder="e.g., Massachusetts Personal Lines"
-                  maxLength={100}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                />
+                <div className="relative">
+                  <input
+                    id="import-subcategory"
+                    type="text"
+                    aria-describedby="analytics-description"
+                    value={subcategory}
+                    onChange={(e) => setSubcategory(e.target.value)}
+                    placeholder="e.g., Massachusetts Personal Lines"
+                    maxLength={100}
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 pr-8 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  />
+                  {subcategory && (
+                    <button
+                      type="button"
+                      onClick={() => setSubcategory("")}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted-foreground hover:text-foreground"
+                      aria-label="Clear subcategory"
+                    >
+                      <X className="h-3.5 w-3.5" aria-hidden="true" />
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>

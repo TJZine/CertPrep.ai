@@ -72,6 +72,12 @@ export function TimePerQuestionHeatmap({
         };
     }, [timePerQuestion, questions]);
 
+    // Precompute id→index map for O(1) lookups (avoids O(n²) findIndex calls)
+    const indexMap = React.useMemo(
+        () => new Map(questions.map((q, i) => [q.id, i])),
+        [questions],
+    );
+
     // Don't render if no time data
     if (!stats) {
         return null;
@@ -123,7 +129,7 @@ export function TimePerQuestionHeatmap({
                                     className="flex items-center justify-between rounded-lg border border-border px-3 py-2 text-sm"
                                 >
                                     <span className="truncate text-muted-foreground">
-                                        Q{questions.findIndex((x) => x.id === q.questionId) + 1}:{" "}
+                                        Q{(indexMap.get(q.questionId) ?? -1) + 1 || "?"}:{" "}
                                         {q.category}
                                     </span>
                                     <Badge
@@ -155,7 +161,7 @@ export function TimePerQuestionHeatmap({
                                     className="flex items-center justify-between rounded-lg border border-border px-3 py-2 text-sm"
                                 >
                                     <span className="truncate text-muted-foreground">
-                                        Q{questions.findIndex((x) => x.id === q.questionId) + 1}:{" "}
+                                        Q{(indexMap.get(q.questionId) ?? -1) + 1 || "?"}:{" "}
                                         {q.category}
                                     </span>
                                     <Badge

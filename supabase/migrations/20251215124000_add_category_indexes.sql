@@ -5,6 +5,7 @@
 
 -- Defensive guard: only create indexes if columns exist (protects against partial migration state)
 DO $$ BEGIN
+  -- Check and create category index
   IF EXISTS (
     SELECT 1 FROM information_schema.columns 
     WHERE table_schema = 'public' 
@@ -13,6 +14,15 @@ DO $$ BEGIN
   ) THEN
     CREATE INDEX IF NOT EXISTS idx_quizzes_category 
       ON quizzes(category) WHERE category IS NOT NULL;
+  END IF;
+
+  -- Check and create subcategory index independently
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_schema = 'public' 
+      AND table_name = 'quizzes' 
+      AND column_name = 'subcategory'
+  ) THEN
     CREATE INDEX IF NOT EXISTS idx_quizzes_subcategory 
       ON quizzes(subcategory) WHERE subcategory IS NOT NULL;
   END IF;

@@ -190,7 +190,7 @@ function HeatmapSkeleton({ className }: { className?: string }): React.ReactElem
 
 /**
  * Topic Heatmap showing category performance over time.
- * Displays: Prev Week (days 8-14 ago) + Last 7 days individually.
+ * Displays: Prev Week (days 7-13 ago) + Last 7 days individually.
  */
 export function TopicHeatmap({
     results,
@@ -282,9 +282,14 @@ export function TopicHeatmap({
 
                     let isCorrect = false;
                     if (userAnswer) {
-                        const userHash = await getCachedHash(userAnswer);
-                        if (userHash === question.correct_answer_hash) {
-                            isCorrect = true;
+                        try {
+                            const userHash = await getCachedHash(userAnswer);
+                            if (userHash === question.correct_answer_hash) {
+                                isCorrect = true;
+                            }
+                        } catch (err) {
+                            // Fallback: mark as incorrect if hash fails
+                            logger.warn("Failed to hash answer for heatmap", { questionId: question.id, err });
                         }
                     }
 
@@ -517,10 +522,11 @@ export function TopicHeatmap({
                 String(data.flaggedCount),
             );
 
-            router.push("/quiz/topic-review");
+            await router.push("/quiz/topic-review");
         } catch (error) {
             logger.error("Failed to load topic study questions", error);
             addToast("error", "Failed to prepare study session");
+        } finally {
             setLoadingCategory(null);
         }
     };
@@ -706,7 +712,7 @@ export function TopicHeatmap({
                                                 {catData.columns.map((colData) => (
                                                     <div
                                                         key={colData.key}
-                                                        role="gridcell"
+                                                        role="cell"
                                                         className={cn(
                                                             "flex h-8 items-center justify-center rounded-md text-xs transition-colors",
                                                             getMasteryColor(colData.score),

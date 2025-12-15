@@ -55,6 +55,7 @@ export default function MidnightParticles(): React.ReactElement | null {
     return (
         <Particles
             id="midnight-particles"
+            aria-hidden="true"
             particlesLoaded={particlesLoaded}
             options={{
                 fullScreen: {

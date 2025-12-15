@@ -43,21 +43,24 @@ export function SelfAssessmentSummary({
         };
 
         entries.forEach(([questionId, rating]) => {
-            const isCorrect = questionStatus[questionId] ?? false;
+            const status = questionStatus[questionId];
 
-            // Count ratings
+            // Always count ratings
             if (rating === 1) result.again++;
             else if (rating === 2) result.hard++;
             else if (rating === 3) result.good++;
 
-            // Calibration insights
-            if (rating === 1 && isCorrect) {
+            // Only calculate calibration insights when we know the answer status
+            if (status === undefined) return;
+
+            // Calibration insights (status is now guaranteed to be boolean)
+            if (rating === 1 && status) {
                 // Rated "Again" but got it right
                 result.luckyGuesses++;
-            } else if (rating === 3 && !isCorrect) {
+            } else if (rating === 3 && !status) {
                 // Rated "Good" but got it wrong
                 result.overconfident++;
-            } else if (rating === 3 && isCorrect) {
+            } else if (rating === 3 && status) {
                 // Rated "Good" and got it right
                 result.calibrated++;
             }

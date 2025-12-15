@@ -207,6 +207,7 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
           }
           state.hasSubmitted = false;
           state.showExplanation = false;
+          state.questionStartTime = Date.now();
           return;
         }
 
@@ -217,6 +218,7 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
         state.selectedAnswer = null;
         state.hasSubmitted = false;
         state.showExplanation = false;
+        state.questionStartTime = Date.now();
       });
     },
 

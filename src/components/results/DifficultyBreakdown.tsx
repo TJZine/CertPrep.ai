@@ -24,6 +24,17 @@ interface DifficultyStats {
 }
 
 /**
+ * Normalize difficulty string to expected title-case format.
+ * Handles case-insensitive input and unknown values.
+ */
+function normalizeDifficulty(raw: string | undefined): "Easy" | "Medium" | "Hard" {
+    const normalized = (raw || "medium").trim().toLowerCase();
+    if (normalized === "easy") return "Easy";
+    if (normalized === "hard") return "Hard";
+    return "Medium";
+}
+
+/**
  * Breakdown of performance by question difficulty level.
  * Shows correct/total and percentage for Easy, Medium, and Hard questions.
  */
@@ -41,7 +52,7 @@ export function DifficultyBreakdown({
 
         // Count questions by difficulty
         questions.forEach(({ question, isCorrect }) => {
-            const difficulty = question.difficulty || "Medium"; // Default to Medium if not set
+            const difficulty = normalizeDifficulty(question.difficulty);
             const current = difficultyMap.get(difficulty) || { correct: 0, total: 0 };
             current.total += 1;
             if (isCorrect) {

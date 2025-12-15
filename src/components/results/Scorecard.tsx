@@ -124,13 +124,21 @@ function getTrendIndicator(
 
 /**
  * Hook for animating a number from 0 to target value.
- * Respects prefers-reduced-motion.
+ * Respects prefers-reduced-motion and reacts to changes.
  */
 function useAnimatedScore(target: number, duration = 1000): number {
   const [displayValue, setDisplayValue] = React.useState(0);
-  const prefersReducedMotion = React.useMemo(() => {
-    if (typeof window === "undefined") return false;
-    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const [prefersReducedMotion, setPrefersReducedMotion] = React.useState(false);
+
+  // Listen for changes to prefers-reduced-motion
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mql = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setPrefersReducedMotion(mql.matches);
+
+    const handler = (e: MediaQueryListEvent): void => setPrefersReducedMotion(e.matches);
+    mql.addEventListener("change", handler);
+    return (): void => mql.removeEventListener("change", handler);
   }, []);
 
   React.useEffect(() => {
