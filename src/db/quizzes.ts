@@ -262,7 +262,14 @@ export async function sanitizeQuestions(
  */
 export async function createQuiz(
   input: QuizImportInput,
-  meta: { userId: string; sourceId?: string },
+  meta: {
+    userId: string;
+    sourceId?: string;
+    /** Parent category for analytics grouping (e.g., "Insurance"). */
+    category?: string;
+    /** Subcategory for analytics grouping (e.g., "Massachusetts Personal Lines"). */
+    subcategory?: string;
+  },
 ): Promise<Quiz> {
   if (!meta.userId) {
     throw new Error("Missing userId for quiz creation.");
@@ -284,6 +291,10 @@ export async function createQuiz(
   const sanitizedTags = (validation.data.tags ?? []).map((tag) =>
     sanitizeQuestionText(tag),
   );
+  // Prefer meta overrides, fall back to input data (from JSON), then undefined
+  const category = meta.category ?? validatedData.category;
+  const subcategory = meta.subcategory ?? validatedData.subcategory;
+
   const createdAt = Date.now();
   const quiz: Quiz = {
     id: generateUUID(),
@@ -305,6 +316,8 @@ export async function createQuiz(
     }),
     last_synced_at: null,
     last_synced_version: null,
+    category: category ? sanitizeQuestionText(category) : undefined,
+    subcategory: subcategory ? sanitizeQuestionText(subcategory) : undefined,
   };
 
   await db.quizzes.add(quiz);

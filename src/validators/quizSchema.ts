@@ -77,6 +77,10 @@ export const QuizImportSchema = z.object({
   description: TrimmedString.transform((val) => val.slice(0, 500))
     .optional()
     .default(""),
+  /** Parent category for analytics grouping (e.g., "Insurance", "Firearms"). */
+  category: TrimmedString.max(50, "Category must be 50 characters or less").optional(),
+  /** Subcategory for analytics grouping (e.g., "Massachusetts Personal Lines"). */
+  subcategory: TrimmedString.max(100, "Subcategory must be 100 characters or less").optional(),
   questions: z
     .array(QuestionSchema)
     .min(1, "At least one question is required"),

@@ -246,7 +246,7 @@ export default function AnalyticsPage(): React.ReactElement {
       )}
 
       <div className="mb-8">
-        <PerformanceHistory results={results} quizTitles={quizTitles} />
+        <PerformanceHistory results={results} quizTitles={quizTitles} quizzes={quizzes} />
       </div>
 
       <div className="mb-8 grid gap-8 lg:grid-cols-2">

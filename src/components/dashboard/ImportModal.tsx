@@ -74,6 +74,9 @@ export function ImportModal({
   const [isValidating, setIsValidating] = React.useState(false);
   const [isImporting, setIsImporting] = React.useState(false);
   const [isDragOver, setIsDragOver] = React.useState(false);
+  // Category fields for analytics grouping (optional)
+  const [category, setCategory] = React.useState("");
+  const [subcategory, setSubcategory] = React.useState("");
 
   const { addToast } = useToast();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -89,6 +92,8 @@ export function ImportModal({
     setIsValidating(false);
     setIsImporting(false);
     setIsDragOver(false);
+    setCategory("");
+    setSubcategory("");
   };
 
   const validateJson = React.useCallback(
@@ -101,6 +106,16 @@ export function ImportModal({
         setParseError(null);
         const result = validateQuizImport(parsed);
         setValidationResult(result);
+
+        // Pre-populate category/subcategory from parsed JSON if available
+        if (result.success && result.data) {
+          if (result.data.category && !category) {
+            setCategory(result.data.category);
+          }
+          if (result.data.subcategory && !subcategory) {
+            setSubcategory(result.data.subcategory);
+          }
+        }
 
         // Check for truncation warnings
         const newWarnings: string[] = [];
@@ -128,6 +143,7 @@ export function ImportModal({
         setIsValidating(false);
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Pre-populate category/subcategory only once when JSON is first parsed, not on every state change
     [],
   );
 
@@ -206,7 +222,11 @@ export function ImportModal({
 
     setIsImporting(true);
     try {
-      const quiz = await createQuiz(result.data, { userId });
+      const quiz = await createQuiz(result.data, {
+        userId,
+        category: category.trim() || undefined,
+        subcategory: subcategory.trim() || undefined,
+      });
       onImportSuccess(quiz);
       resetState();
       onClose();
@@ -514,6 +534,55 @@ export function ImportModal({
         </div>
 
         {renderValidationArea()}
+
+        {/* Category fields (shown after successful validation) */}
+        {validationResult?.success && validationResult.data && (
+          <div className="mt-4 space-y-3 rounded-lg border border-border bg-muted/30 p-4">
+            <p className="text-sm font-medium text-foreground">
+              Analytics Grouping (Optional)
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Set category and subcategory to group this quiz in the Topic Heatmap.
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <label
+                  htmlFor="import-category"
+                  className="mb-1 block text-xs font-medium text-muted-foreground"
+                >
+                  Category
+                </label>
+                <input
+                  id="import-category"
+                  type="text"
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  placeholder="e.g., Insurance, Firearms, Custom"
+                  maxLength={50}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="import-subcategory"
+                  className="mb-1 block text-xs font-medium text-muted-foreground"
+                >
+                  Subcategory
+                </label>
+                <input
+                  id="import-subcategory"
+                  type="text"
+                  value={subcategory}
+                  onChange={(e) => setSubcategory(e.target.value)}
+                  placeholder="e.g., Massachusetts Personal Lines"
+                  maxLength={100}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
         {renderWarnings()}
       </div>
     </Modal>

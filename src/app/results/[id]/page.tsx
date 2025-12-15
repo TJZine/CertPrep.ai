@@ -13,7 +13,7 @@ import {
 } from "@/hooks/useDatabase";
 import { deleteResult, isSRSQuiz } from "@/db/results";
 import { useToast } from "@/components/ui/Toast";
-import { ArrowLeft, AlertCircle, Trash2 } from "lucide-react";
+import { ArrowLeft, AlertCircle, AlertTriangle, Trash2, Settings } from "lucide-react";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 import { useSync } from "@/hooks/useSync";
@@ -64,7 +64,7 @@ export default function ResultsPage(): React.ReactElement {
       await deleteResult(result.id, effectiveUserId);
       // Trigger sync to push deletion
       const outcome = await sync();
-      
+
       if (outcome.status === "success") {
         addToast("success", "Result deleted successfully");
       } else if (outcome.status === "partial") {
@@ -72,7 +72,7 @@ export default function ResultsPage(): React.ReactElement {
       } else {
         addToast("warning", "Result deleted locally, but sync failed.");
       }
-      
+
       router.push("/");
     } catch (error) {
       logger.error("Failed to delete result", error);
@@ -351,6 +351,23 @@ export default function ResultsPage(): React.ReactElement {
         </div>
       }
     >
+      {/* Missing category banner */}
+      {quiz && !quiz.category && (
+        <div className="mx-auto mb-4 flex max-w-4xl items-center gap-3 rounded-lg border border-warning/30 bg-warning/10 px-4 py-3">
+          <AlertTriangle className="h-5 w-5 flex-shrink-0 text-warning" aria-hidden="true" />
+          <p className="flex-1 text-sm text-foreground">
+            This quiz is missing category metadata and won&apos;t appear in grouped analytics.
+          </p>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => router.push(`/quiz/${quiz.id}/settings`)}
+            leftIcon={<Settings className="h-4 w-4" aria-hidden="true" />}
+          >
+            Add Category
+          </Button>
+        </div>
+      )}
       <ResultsContainer
         result={result}
         quiz={quiz}

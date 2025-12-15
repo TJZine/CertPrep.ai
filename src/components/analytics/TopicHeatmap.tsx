@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import type { Result } from "@/types/result";
 import type { Quiz, Question } from "@/types/quiz";
 import { getCachedHash } from "@/db/hashCache";
-import { ChevronDown, BookOpen, TrendingUp, TrendingDown, Minus, Loader2 } from "lucide-react";
+import { ChevronDown, ChevronRight, BookOpen, TrendingUp, TrendingDown, Minus, Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 import { getTopicStudyQuestions } from "@/db/results";
 import {
@@ -33,7 +33,7 @@ interface TopicHeatmapProps {
     className?: string;
 }
 
-type SortMode = "worst-first" | "best-first" | "alphabetical";
+type SortMode = "worst-first" | "best-first" | "alphabetical" | "by-quiz-group";
 
 interface TimeColumn {
     key: string;
@@ -205,6 +205,8 @@ export function TopicHeatmap({
     const [sortMode, setSortMode] = React.useState<SortMode>("worst-first");
     const [showSortMenu, setShowSortMenu] = React.useState(false);
     const [loadingCategory, setLoadingCategory] = React.useState<string | null>(null);
+    // Tracks which parent groups are collapsed (quiz category — subcategory)
+    const [collapsedGroups, setCollapsedGroups] = React.useState<Set<string>>(new Set());
 
     const timeColumns = React.useMemo(() => getTimeColumns(), []);
     const quizMap = React.useMemo(
@@ -366,6 +368,25 @@ export function TopicHeatmap({
         };
     }, [results, quizzes, timeColumns, quizMap, allQuestionsMap]);
 
+    // Build a map from question category -> quiz parent group
+    // This allows us to group question-level categories by their quiz's category/subcategory
+    const categoryToQuizGroup = React.useMemo(() => {
+        const map = new Map<string, string>();
+        quizzes.forEach((quiz) => {
+            const groupKey = quiz.category && quiz.subcategory
+                ? `${quiz.category} — ${quiz.subcategory}`
+                : quiz.category || "Uncategorized";
+            quiz.questions.forEach((q) => {
+                const qCat = q.category || "Uncategorized";
+                // First quiz wins (most questions from a quiz determines the group)
+                if (!map.has(qCat)) {
+                    map.set(qCat, groupKey);
+                }
+            });
+        });
+        return map;
+    }, [quizzes]);
+
     // Sort data based on current mode
     const sortedData = React.useMemo(() => {
         const sorted = [...heatmapData];
@@ -374,10 +395,59 @@ export function TopicHeatmap({
                 return sorted.sort((a, b) => a.category.localeCompare(b.category));
             case "best-first":
                 return sorted.sort((a, b) => b.averageScore - a.averageScore);
+            case "by-quiz-group":
+                // Sort by parent group first, then by score within group
+                return sorted.sort((a, b) => {
+                    const groupA = categoryToQuizGroup.get(a.category) || "Uncategorized";
+                    const groupB = categoryToQuizGroup.get(b.category) || "Uncategorized";
+                    const groupCmp = groupA.localeCompare(groupB);
+                    if (groupCmp !== 0) return groupCmp;
+                    // Within same group, sort by worst first
+                    return a.averageScore - b.averageScore;
+                });
             default: // worst-first
                 return sorted.sort((a, b) => a.averageScore - b.averageScore);
         }
-    }, [heatmapData, sortMode]);
+    }, [heatmapData, sortMode, categoryToQuizGroup]);
+
+    // Group sorted data by quiz parent category when in by-quiz-group mode
+    const groupedData = React.useMemo(() => {
+        if (sortMode !== "by-quiz-group") {
+            return [{ groupKey: null, categories: sortedData }];
+        }
+        const groups: Array<{ groupKey: string; categories: CategoryData[]; avgScore: number }> = [];
+        const groupMap = new Map<string, CategoryData[]>();
+        for (const cat of sortedData) {
+            const groupKey = categoryToQuizGroup.get(cat.category) || "Uncategorized";
+            if (!groupMap.has(groupKey)) {
+                groupMap.set(groupKey, []);
+            }
+            groupMap.get(groupKey)!.push(cat);
+        }
+        for (const [groupKey, categories] of groupMap) {
+            const totalScore = categories.reduce((sum, c) => sum + c.averageScore, 0);
+            groups.push({
+                groupKey,
+                categories,
+                avgScore: categories.length > 0 ? totalScore / categories.length : 0,
+            });
+        }
+        // Sort groups by average score (worst first)
+        return groups.sort((a, b) => a.avgScore - b.avgScore);
+    }, [sortedData, sortMode, categoryToQuizGroup]);
+
+    // Toggle group collapse
+    const toggleGroup = React.useCallback((groupKey: string) => {
+        setCollapsedGroups((prev) => {
+            const next = new Set(prev);
+            if (next.has(groupKey)) {
+                next.delete(groupKey);
+            } else {
+                next.add(groupKey);
+            }
+            return next;
+        });
+    }, []);
 
     // Calculate weekly summary (compare daily avg to prev week)
     const weeklySummary = React.useMemo(() => {
@@ -459,6 +529,7 @@ export function TopicHeatmap({
         "worst-first": "Weakest First",
         "best-first": "Strongest First",
         "alphabetical": "A-Z",
+        "by-quiz-group": "By Quiz Category",
     };
 
     if (isLoading) {
@@ -563,81 +634,116 @@ export function TopicHeatmap({
                         ))}
                     </div>
 
-                    {/* Category rows */}
+                    {/* Category rows with optional parent group headers */}
                     <div className="min-w-[600px] space-y-1" role="grid" aria-label="Topic mastery heatmap">
-                        {sortedData.map((catData) => (
-                            <div
-                                key={catData.category}
-                                className="grid items-center gap-1"
-                                style={{ gridTemplateColumns: "minmax(140px, 1fr) repeat(8, minmax(44px, 52px))" }}
-                                role="row"
-                            >
-                                <div
-                                    className="flex items-center gap-1"
-                                    role="rowheader"
-                                >
-                                    <span
-                                        className="truncate text-sm font-medium text-foreground"
-                                        title={catData.category}
+                        {groupedData.map((group) => (
+                            <React.Fragment key={group.groupKey ?? "ungrouped"}>
+                                {/* Group header (only shown when grouping by quiz category) */}
+                                {group.groupKey && (
+                                    <button
+                                        type="button"
+                                        onClick={() => toggleGroup(group.groupKey!)}
+                                        className="flex w-full items-center gap-2 rounded-md bg-muted/50 px-2 py-1.5 text-left hover:bg-muted"
+                                        aria-expanded={!collapsedGroups.has(group.groupKey)}
+                                        aria-controls={`group-${group.groupKey}`}
                                     >
-                                        {catData.category}
-                                    </span>
-                                    {/* Focus Here button */}
-                                    {userId && (
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-5 w-5 flex-shrink-0 p-0"
-                                            onClick={() => handleFocusCategory(catData.category)}
-                                            disabled={loadingCategory !== null}
-                                            title={`Study ${catData.category}`}
-                                            aria-label={`Study ${catData.category}`}
-                                        >
-                                            {loadingCategory === catData.category ? (
-                                                <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
-                                            ) : (
-                                                <BookOpen className="h-3 w-3 text-muted-foreground hover:text-primary" aria-hidden="true" />
-                                            )}
-                                        </Button>
-                                    )}
-                                </div>
-                                {catData.columns.map((colData) => (
-                                    <div
-                                        key={colData.key}
-                                        role="gridcell"
-                                        className={cn(
-                                            "flex h-8 items-center justify-center rounded-md text-xs transition-colors",
-                                            getMasteryColor(colData.score),
-                                            // Volume indicator: dim low-sample cells
-                                            colData.total > 0 && colData.total < 3 && "opacity-50",
-                                            colData.total >= 3 && colData.total < 5 && "opacity-75",
-                                            // Heatmap intensity: bold high-sample cells
-                                            colData.total >= 10 && "font-bold ring-1 ring-current/20",
-                                            colData.total >= 5 && colData.total < 10 && "font-semibold",
-                                            colData.total > 0 && colData.total < 5 && "font-normal",
-                                            // Text color
-                                            colData.score !== null && colData.score >= 70
-                                                ? "text-white"
-                                                : "text-foreground",
-                                        )}
-                                        title={`${catData.category} - ${colData.label}: ${colData.score !== null ? `${colData.score}% (${colData.correct}/${colData.total})` : "No data"}${colData.total > 0 && colData.total < 5 ? " (low sample)" : ""}${colData.total >= 10 ? " (high confidence)" : ""}`}
-                                        aria-label={`${catData.category}, ${colData.label}: ${colData.score !== null ? `${colData.score}% (${colData.correct} of ${colData.total})` : "No data"}`}
-                                    >
-                                        {colData.score !== null ? (
-                                            <span className="flex items-center gap-0.5">
-                                                {colData.score}%
-                                                {colData.trend && (
-                                                    <span className={cn("text-[10px]", getTrendColor(colData.trend))}>
-                                                        {getTrendIndicator(colData.trend)}
-                                                    </span>
-                                                )}
-                                            </span>
+                                        {collapsedGroups.has(group.groupKey) ? (
+                                            <ChevronRight className="h-4 w-4 flex-shrink-0 text-muted-foreground" aria-hidden="true" />
                                         ) : (
-                                            "—"
+                                            <ChevronDown className="h-4 w-4 flex-shrink-0 text-muted-foreground" aria-hidden="true" />
                                         )}
+                                        <span className="flex-1 truncate text-sm font-semibold text-foreground">
+                                            {group.groupKey}
+                                        </span>
+                                        <span className="text-xs text-muted-foreground">
+                                            {group.categories.length} topics · {Math.round(group.avgScore)}% avg
+                                        </span>
+                                    </button>
+                                )}
+
+                                {/* Category rows (hidden when group is collapsed) */}
+                                {(!group.groupKey || !collapsedGroups.has(group.groupKey)) && (
+                                    <div
+                                        id={group.groupKey ? `group-${group.groupKey}` : undefined}
+                                        className={cn("space-y-1", group.groupKey && "ml-4 border-l border-border pl-2")}
+                                    >
+                                        {group.categories.map((catData) => (
+                                            <div
+                                                key={catData.category}
+                                                className="grid items-center gap-1"
+                                                style={{ gridTemplateColumns: "minmax(140px, 1fr) repeat(8, minmax(44px, 52px))" }}
+                                                role="row"
+                                            >
+                                                <div
+                                                    className="flex items-center gap-1"
+                                                    role="rowheader"
+                                                >
+                                                    <span
+                                                        className="truncate text-sm font-medium text-foreground"
+                                                        title={catData.category}
+                                                    >
+                                                        {catData.category}
+                                                    </span>
+                                                    {/* Focus Here button */}
+                                                    {userId && (
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            className="h-5 w-5 flex-shrink-0 p-0"
+                                                            onClick={() => handleFocusCategory(catData.category)}
+                                                            disabled={loadingCategory !== null}
+                                                            title={`Study ${catData.category}`}
+                                                            aria-label={`Study ${catData.category}`}
+                                                        >
+                                                            {loadingCategory === catData.category ? (
+                                                                <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
+                                                            ) : (
+                                                                <BookOpen className="h-3 w-3 text-muted-foreground hover:text-primary" aria-hidden="true" />
+                                                            )}
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                                {catData.columns.map((colData) => (
+                                                    <div
+                                                        key={colData.key}
+                                                        role="gridcell"
+                                                        className={cn(
+                                                            "flex h-8 items-center justify-center rounded-md text-xs transition-colors",
+                                                            getMasteryColor(colData.score),
+                                                            // Volume indicator: dim low-sample cells
+                                                            colData.total > 0 && colData.total < 3 && "opacity-50",
+                                                            colData.total >= 3 && colData.total < 5 && "opacity-75",
+                                                            // Heatmap intensity: bold high-sample cells
+                                                            colData.total >= 10 && "font-bold ring-1 ring-current/20",
+                                                            colData.total >= 5 && colData.total < 10 && "font-semibold",
+                                                            colData.total > 0 && colData.total < 5 && "font-normal",
+                                                            // Text color
+                                                            colData.score !== null && colData.score >= 70
+                                                                ? "text-white"
+                                                                : "text-foreground",
+                                                        )}
+                                                        title={`${catData.category} - ${colData.label}: ${colData.score !== null ? `${colData.score}% (${colData.correct}/${colData.total})` : "No data"}${colData.total > 0 && colData.total < 5 ? " (low sample)" : ""}${colData.total >= 10 ? " (high confidence)" : ""}`}
+                                                        aria-label={`${catData.category}, ${colData.label}: ${colData.score !== null ? `${colData.score}% (${colData.correct} of ${colData.total})` : "No data"}`}
+                                                    >
+                                                        {colData.score !== null ? (
+                                                            <span className="flex items-center gap-0.5">
+                                                                {colData.score}%
+                                                                {colData.trend && (
+                                                                    <span className={cn("text-[10px]", getTrendColor(colData.trend))}>
+                                                                        {getTrendIndicator(colData.trend)}
+                                                                    </span>
+                                                                )}
+                                                            </span>
+                                                        ) : (
+                                                            "—"
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ))}
                                     </div>
-                                ))}
-                            </div>
+                                )}
+                            </React.Fragment>
                         ))}
                     </div>
                 </div>

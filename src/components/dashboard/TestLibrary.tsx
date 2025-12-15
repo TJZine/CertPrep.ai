@@ -151,6 +151,8 @@ export function TestLibrary({
       const quiz = await createQuiz(validation.data, {
         sourceId: entry.id,
         userId,
+        category: entry.category,
+        subcategory: entry.subcategory,
       });
       addToast("success", `"${quiz.title}" imported successfully.`);
       onImportSuccess(quiz);

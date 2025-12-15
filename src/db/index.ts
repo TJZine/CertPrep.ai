@@ -168,6 +168,9 @@ export class CertPrepDatabase extends Dexie {
       hashCache: "&answer",
     });
 
+    // Note: Quiz.category and Quiz.subcategory added in TypeScript types (no Dexie
+    // schema change needed since they are optional, unindexed fields).
+
     this.quizzes = this.table("quizzes");
     this.results = this.table("results");
     this.syncState = this.table("syncState");

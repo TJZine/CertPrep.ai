@@ -13,7 +13,7 @@ import {
   ReferenceLine,
   TooltipProps,
 } from "recharts";
-import { TrendingUp, TrendingDown, ChevronRight } from "lucide-react";
+import { TrendingUp, TrendingDown, ChevronRight, AlertTriangle } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -26,12 +26,15 @@ import { Button } from "@/components/ui/Button";
 import { ScorecardCompact } from "@/components/results/Scorecard";
 import { cn } from "@/lib/utils";
 import type { Result } from "@/types/result";
+import type { Quiz } from "@/types/quiz";
 import { useChartColors } from "@/hooks/useChartColors";
 import { useChartDimensions } from "@/hooks/useChartDimensions";
 
 interface PerformanceHistoryProps {
   results: Result[];
   quizTitles: Map<string, string>;
+  /** Quiz data used to check for missing category metadata */
+  quizzes?: Quiz[];
   className?: string;
 }
 
@@ -82,12 +85,19 @@ function PerformanceHistoryTooltip({
 export function PerformanceHistory({
   results,
   quizTitles,
+  quizzes = [],
   className,
 }: PerformanceHistoryProps): React.ReactElement {
   const router = useRouter();
   const { colors, isReady: colorsReady } = useChartColors();
   const { containerRef, isReady: dimensionsReady } = useChartDimensions();
   const isReady = colorsReady && dimensionsReady;
+
+  // Map for quick quiz lookup to check category metadata
+  const quizMap = React.useMemo(
+    () => new Map(quizzes.map((q) => [q.id, q])),
+    [quizzes],
+  );
 
   const sortedResults = React.useMemo(
     () => [...results].sort((a, b) => b.timestamp - a.timestamp),
@@ -242,16 +252,29 @@ export function PerformanceHistory({
           <h3 className="mb-4 font-semibold text-foreground">Recent Results</h3>
           <div className="space-y-2">
             {(showAllResults ? sortedResults : sortedResults.slice(0, 5)).map(
-              (result) => (
-                <ScorecardCompact
-                  key={result.id}
-                  score={result.score}
-                  mode={result.mode}
-                  timestamp={result.timestamp}
-                  timeTakenSeconds={result.time_taken_seconds}
-                  onClick={() => router.push(`/results/${result.id}`)}
-                />
-              ),
+              (result) => {
+                const quiz = quizMap.get(result.quiz_id);
+                const isMissingCategory = quiz && !quiz.category;
+                return (
+                  <div key={result.id} className="flex items-center gap-2">
+                    <ScorecardCompact
+                      score={result.score}
+                      mode={result.mode}
+                      timestamp={result.timestamp}
+                      timeTakenSeconds={result.time_taken_seconds}
+                      onClick={() => router.push(`/results/${result.id}`)}
+                    />
+                    {isMissingCategory && (
+                      <span title="Quiz missing category — excluded from grouped heatmap">
+                        <AlertTriangle
+                          className="h-4 w-4 flex-shrink-0 text-warning"
+                          aria-hidden="true"
+                        />
+                      </span>
+                    )}
+                  </div>
+                );
+              },
             )}
           </div>
 

@@ -74,6 +74,10 @@ export interface Quiz {
   last_synced_at?: number | null;
   /** The version number of the quiz at the last sync. */
   last_synced_version?: number | null;
+  /** Parent category for analytics grouping (e.g., "Insurance", "Firearms"). */
+  category?: string;
+  /** Subcategory for analytics grouping (e.g., "Massachusetts Personal Lines"). */
+  subcategory?: string;
 }
 
 export const QUIZ_MODES = ["zen", "proctor"] as const;
