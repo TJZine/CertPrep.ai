@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computeQuizHash, resolveQuizConflict } from "@/lib/sync/quizDomain";
+import { computeQuizHash, resolveQuizConflict, toRemoteQuiz } from "@/lib/sync/quizDomain";
 import type { Quiz } from "@/types/quiz";
 
 const baseQuiz: Quiz = {
@@ -63,5 +63,33 @@ describe("quizDomain", () => {
 
     expect(result.winner).toBe("remote");
     expect(result.merged.deleted_at).toEqual(remote.deleted_at);
+  });
+
+  describe("toRemoteQuiz", () => {
+    it("includes category and subcategory in remote payload", async () => {
+      const quizWithCategory: Quiz = {
+        ...baseQuiz,
+        category: "Insurance",
+        subcategory: "Personal Lines",
+      };
+
+      const remote = await toRemoteQuiz("user-1", quizWithCategory);
+
+      expect(remote.category).toBe("Insurance");
+      expect(remote.subcategory).toBe("Personal Lines");
+    });
+
+    it("sets category and subcategory to null when not present", async () => {
+      const quizWithoutCategory: Quiz = {
+        ...baseQuiz,
+        category: undefined,
+        subcategory: undefined,
+      };
+
+      const remote = await toRemoteQuiz("user-1", quizWithoutCategory);
+
+      expect(remote.category).toBeNull();
+      expect(remote.subcategory).toBeNull();
+    });
   });
 });
