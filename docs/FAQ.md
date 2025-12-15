@@ -78,3 +78,42 @@ CertPrep.ai uses a **Leitner box algorithm** for optimized review scheduling:
 - Access your review queue at `/study-due`.
 
 For details, see the `srs` table schema in [ARCHITECTURE.md](./ARCHITECTURE.md#srs).
+
+---
+
+## How do I categorize quizzes for analytics?
+
+Add `category` and `subcategory` fields to your quiz JSON:
+
+```json
+{
+  "title": "Insurance Exam",
+  "category": "Insurance",
+  "subcategory": "MA Personal Lines",
+  "questions": [...]
+}
+```
+
+These fields enable the **Topic Heatmap** on the Analytics page, grouping performance by category. Quizzes without categories will show a warning indicator.
+
+---
+
+## What is Comfort Mode?
+
+**Settings → Appearance → Reduce visual effects** enables Comfort Mode:
+
+- Disables particle animations (Blossom, Midnight, Vapor themes)
+- Reduces motion for users sensitive to animations
+- May improve battery life on mobile devices
+
+---
+
+## What is Topic Study Mode?
+
+Topic Study lets you practice questions from weak areas:
+
+1. Go to the **Analytics** page
+2. Find a category with low performance in the Topic Heatmap
+3. Click **Focus here** to start a targeted practice session
+
+Only questions from that category are included, helping you focus on weak areas.
