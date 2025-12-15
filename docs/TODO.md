@@ -2,6 +2,37 @@
 
 ---
 
+## Feature: Quiz Format Info Page
+
+**Priority**: Medium | **Effort**: 2-4 hours | **Category**: Documentation / UX
+
+### Context
+
+Users import custom quizzes and generate them via GPT/Gemini. To ensure quizzes have proper metadata (especially `category` and `subcategory` for analytics grouping), we need a clear info page documenting the expected JSON format.
+
+### Deliverables
+
+1. Create `/app/help/quiz-format/page.tsx` with:
+   - Complete JSON schema documentation
+   - Example quiz with all recommended fields
+   - Field descriptions including `category` and `subcategory`
+   - Tips for AI-generated quizzes
+
+2. Link from import modal and quiz creation flows
+
+### User Action Required
+
+Update GPT/Gemini prompts for quiz generation to include `category` and `subcategory` fields.
+
+### Acceptance Criteria
+
+- [ ] Info page created with clear documentation
+- [ ] Example JSON includes `category` and `subcategory`
+- [ ] Link accessible from import modal
+- [ ] Mobile-responsive layout
+
+---
+
 ## Known Issues
 
 ### Sync Fails with "No valid auth session" (Dev Environment)

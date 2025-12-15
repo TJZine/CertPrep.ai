@@ -250,7 +250,7 @@ export default function AnalyticsPage(): React.ReactElement {
       </div>
 
       <div className="mb-8 grid gap-8 lg:grid-cols-2">
-        <TopicHeatmap results={results} quizzes={quizzes} />
+        <TopicHeatmap results={results} quizzes={quizzes} userId={effectiveUserId ?? undefined} />
         <WeakAreasCard
           weakAreas={weakAreas}
           userId={effectiveUserId ?? undefined}

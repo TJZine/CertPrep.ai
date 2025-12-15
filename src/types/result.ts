@@ -50,6 +50,12 @@ export interface Result {
    * during the next sync cycle.
    */
   deleted_at?: number;
+  /**
+   * Pre-computed category scores calculated at save time.
+   * Used by analytics to avoid re-hashing answers on every render.
+   * Maps category name → { correct, total } counts.
+   */
+  computed_category_scores?: Record<string, { correct: number; total: number }>;
 }
 
 /**

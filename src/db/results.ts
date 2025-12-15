@@ -30,12 +30,17 @@ export interface OverallStats {
 
 /**
  * Calculates overall and per-category performance for a completed quiz.
+ * Also returns raw category scores for pre-computed analytics storage.
  */
 export async function calculateResults(
   quiz: Quiz,
   answers: Record<string, string>,
   activeQuestionIds?: string[],
-): Promise<{ score: number; categoryBreakdown: Record<string, number> }> {
+): Promise<{
+  score: number;
+  categoryBreakdown: Record<string, number>;
+  categoryScores: Record<string, { correct: number; total: number }>;
+}> {
   let correctCount = 0;
   const categoryTotals: Record<string, { correct: number; total: number }> = {};
 
@@ -70,7 +75,7 @@ export async function calculateResults(
     ]),
   );
 
-  return { score, categoryBreakdown };
+  return { score, categoryBreakdown, categoryScores: categoryTotals };
 }
 
 /**
@@ -94,7 +99,7 @@ export async function createResult(input: CreateResultInput): Promise<Result> {
     );
   }
 
-  const { score, categoryBreakdown } = await calculateResults(
+  const { score, categoryBreakdown, categoryScores } = await calculateResults(
     quiz,
     input.answers,
     input.activeQuestionIds,
@@ -111,6 +116,7 @@ export async function createResult(input: CreateResultInput): Promise<Result> {
     flagged_questions: input.flaggedQuestions,
     category_breakdown: categoryBreakdown,
     question_ids: input.activeQuestionIds, // Persist for accurate grading on results page
+    computed_category_scores: categoryScores, // Pre-computed for analytics
     synced: 0,
   };
 
@@ -129,8 +135,10 @@ export interface CreateSRSReviewResultInput {
   questionIds: string[];
   /** Pre-calculated score (percentage) */
   score: number;
-  /** Pre-calculated category breakdown */
+  /** Pre-calculated category breakdown (percentages) */
   categoryBreakdown: Record<string, number>;
+  /** Pre-calculated raw category scores for analytics */
+  categoryScores?: Record<string, { correct: number; total: number }>;
 }
 
 /**
@@ -178,6 +186,7 @@ export async function createSRSReviewResult(
     flagged_questions: input.flaggedQuestions,
     category_breakdown: input.categoryBreakdown,
     question_ids: input.questionIds,
+    computed_category_scores: input.categoryScores, // Pre-computed for analytics
     synced: 0, // Will sync normally now
   };
 
@@ -196,8 +205,10 @@ export interface CreateTopicStudyResultInput {
   questionIds: string[];
   /** Pre-calculated score (percentage) */
   score: number;
-  /** Pre-calculated category breakdown */
+  /** Pre-calculated category breakdown (percentages) */
   categoryBreakdown: Record<string, number>;
+  /** Pre-calculated raw category scores for analytics */
+  categoryScores?: Record<string, { correct: number; total: number }>;
 }
 
 /**
@@ -245,6 +256,7 @@ export async function createTopicStudyResult(
     flagged_questions: input.flaggedQuestions,
     category_breakdown: input.categoryBreakdown,
     question_ids: input.questionIds,
+    computed_category_scores: input.categoryScores, // Pre-computed for analytics
     synced: 0, // Will sync normally
   };
 

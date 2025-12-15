@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import {
     Card,
     CardContent,
@@ -8,60 +9,112 @@ import {
     CardTitle,
     CardDescription,
 } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
 import { formatDateKey, formatMonthDayLabel } from "@/lib/date";
 import { cn } from "@/lib/utils";
 import type { Result } from "@/types/result";
 import type { Quiz, Question } from "@/types/quiz";
-import { hashAnswer } from "@/lib/utils";
+import { getCachedHash } from "@/db/hashCache";
+import { ChevronDown, BookOpen, TrendingUp, TrendingDown, Minus, Loader2 } from "lucide-react";
+import { useToast } from "@/components/ui/Toast";
+import { getTopicStudyQuestions } from "@/db/results";
+import {
+    TOPIC_STUDY_QUESTIONS_KEY,
+    TOPIC_STUDY_CATEGORY_KEY,
+    TOPIC_STUDY_MISSED_COUNT_KEY,
+    TOPIC_STUDY_FLAGGED_COUNT_KEY,
+} from "@/lib/topicStudyStorage";
+import { logger } from "@/lib/logger";
 
 interface TopicHeatmapProps {
     results: Result[];
     quizzes: Quiz[];
+    userId?: string;
     className?: string;
 }
 
-interface WeekData {
-    weekKey: string;
-    weekLabel: string;
+type SortMode = "worst-first" | "best-first" | "alphabetical";
+
+interface TimeColumn {
+    key: string;
+    label: string;
+    shortLabel: string;
     startDate: Date;
     endDate: Date;
+    type: "week" | "day";
 }
 
-interface CategoryWeekScore {
+interface CategoryData {
     category: string;
-    weeks: Array<{ weekKey: string; weekLabel: string; score: number | null; correct: number; total: number }>;
+    columns: Array<{
+        key: string;
+        label: string;
+        score: number | null;
+        correct: number;
+        total: number;
+        trend: "up" | "down" | "stable" | null;
+    }>;
+    averageScore: number;
 }
 
 /**
- * Get the last N weeks (including current week) using ISO week standard (Monday-start).
+ * Get time columns: 1 week (days 8-14 ago) + 7 individual days (last 7 days).
  */
-function getLastNWeeks(n: number): WeekData[] {
-    const weeks: WeekData[] = [];
+function getTimeColumns(): TimeColumn[] {
+    const columns: TimeColumn[] = [];
     const now = new Date();
-    const currentDay = now.getDay();
+    now.setHours(23, 59, 59, 999);
 
-    // Find the start of the current week (Monday - ISO standard)
-    // Sunday (0) becomes -6, Monday (1) becomes 0, etc.
-    const currentWeekStart = new Date(now);
-    const diff = currentDay === 0 ? -6 : 1 - currentDay;
-    currentWeekStart.setDate(now.getDate() + diff);
-    currentWeekStart.setHours(0, 0, 0, 0);
+    // Previous week: days 8-14 ago
+    const weekEnd = new Date(now);
+    weekEnd.setDate(now.getDate() - 7);
+    weekEnd.setHours(23, 59, 59, 999);
 
-    for (let i = n - 1; i >= 0; i--) {
-        const startDate = new Date(currentWeekStart);
-        startDate.setDate(currentWeekStart.getDate() - i * 7);
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() - 13);
+    weekStart.setHours(0, 0, 0, 0);
 
-        const endDate = new Date(startDate);
-        endDate.setDate(startDate.getDate() + 6);
-        endDate.setHours(23, 59, 59, 999);
+    columns.push({
+        key: "prev-week",
+        label: "Prev Week",
+        shortLabel: "Prev",
+        startDate: weekStart,
+        endDate: weekEnd,
+        type: "week",
+    });
 
-        const weekKey = formatDateKey(startDate);
-        const weekLabel = formatMonthDayLabel(startDate);
+    // Last 7 days (oldest first, so day 6 ago -> today)
+    for (let i = 6; i >= 0; i--) {
+        const dayDate = new Date(now);
+        dayDate.setDate(now.getDate() - i);
+        dayDate.setHours(0, 0, 0, 0);
 
-        weeks.push({ weekKey, weekLabel, startDate, endDate });
+        const dayEnd = new Date(dayDate);
+        dayEnd.setHours(23, 59, 59, 999);
+
+        const dayLabel = i === 0
+            ? "Today"
+            : i === 1
+                ? "Yesterday"
+                : formatMonthDayLabel(dayDate);
+
+        const shortLabel = i === 0
+            ? "Today"
+            : i === 1
+                ? "Yest"
+                : formatMonthDayLabel(dayDate);
+
+        columns.push({
+            key: formatDateKey(dayDate),
+            label: dayLabel,
+            shortLabel,
+            startDate: dayDate,
+            endDate: dayEnd,
+            type: "day",
+        });
     }
 
-    return weeks;
+    return columns;
 }
 
 /**
@@ -76,18 +129,84 @@ function getMasteryColor(score: number | null): string {
 }
 
 /**
+ * Get trend indicator symbol.
+ */
+function getTrendIndicator(trend: "up" | "down" | "stable" | null): string {
+    if (trend === "up") return "↑";
+    if (trend === "down") return "↓";
+    if (trend === "stable") return "→";
+    return "";
+}
+
+/**
+ * Get trend color class.
+ */
+function getTrendColor(trend: "up" | "down" | "stable" | null): string {
+    if (trend === "up") return "text-success";
+    if (trend === "down") return "text-destructive";
+    return "";
+}
+
+/**
+ * Skeleton loader matching the heatmap layout.
+ */
+function HeatmapSkeleton({ className }: { className?: string }): React.ReactElement {
+    return (
+        <Card className={className}>
+            <CardHeader>
+                <div className="h-6 w-48 animate-pulse rounded bg-muted" />
+                <div className="mt-1 h-4 w-72 animate-pulse rounded bg-muted" />
+            </CardHeader>
+            <CardContent>
+                {/* Header row skeleton */}
+                <div
+                    className="mb-2 grid gap-1 overflow-x-auto"
+                    style={{ gridTemplateColumns: "minmax(120px, 1fr) repeat(8, minmax(40px, 50px))" }}
+                >
+                    <div />
+                    {[...Array(8)].map((_, i) => (
+                        <div key={i} className="h-4 animate-pulse rounded bg-muted" />
+                    ))}
+                </div>
+                {/* Data rows skeleton */}
+                <div className="space-y-2">
+                    {[...Array(5)].map((_, i) => (
+                        <div
+                            key={i}
+                            className="grid items-center gap-1"
+                            style={{ gridTemplateColumns: "minmax(120px, 1fr) repeat(8, minmax(40px, 50px))" }}
+                        >
+                            <div className="h-6 w-24 animate-pulse rounded bg-muted" />
+                            {[...Array(8)].map((_, j) => (
+                                <div key={j} className="h-8 animate-pulse rounded bg-muted" />
+                            ))}
+                        </div>
+                    ))}
+                </div>
+            </CardContent>
+        </Card>
+    );
+}
+
+/**
  * Topic Heatmap showing category performance over time.
- * Rows = categories, Columns = weeks.
+ * Displays: Prev Week (days 8-14 ago) + Last 7 days individually.
  */
 export function TopicHeatmap({
     results,
     quizzes,
+    userId,
     className,
 }: TopicHeatmapProps): React.ReactElement {
-    const [heatmapData, setHeatmapData] = React.useState<CategoryWeekScore[]>([]);
+    const router = useRouter();
+    const { addToast } = useToast();
+    const [heatmapData, setHeatmapData] = React.useState<CategoryData[]>([]);
     const [isLoading, setIsLoading] = React.useState(true);
+    const [sortMode, setSortMode] = React.useState<SortMode>("worst-first");
+    const [showSortMenu, setShowSortMenu] = React.useState(false);
+    const [loadingCategory, setLoadingCategory] = React.useState<string | null>(null);
 
-    const weeks = React.useMemo(() => getLastNWeeks(4), []);
+    const timeColumns = React.useMemo(() => getTimeColumns(), []);
     const quizMap = React.useMemo(
         () => new Map(quizzes.map((q) => [q.id, q])),
         [quizzes],
@@ -96,9 +215,9 @@ export function TopicHeatmap({
     const allQuestionsMap = React.useMemo(() => {
         const map = new Map<string, { question: Question; quizId: string }>();
         quizzes.forEach((q) => {
-          q.questions.forEach((question) => {
-            map.set(question.id, { question, quizId: q.id });
-          });
+            q.questions.forEach((question) => {
+                map.set(question.id, { question, quizId: q.id });
+            });
         });
         return map;
     }, [quizzes]);
@@ -113,30 +232,21 @@ export function TopicHeatmap({
                 return;
             }
 
-            // Category -> Week -> { correct, total }
-            const categoryWeekData = new Map<
+            // Category -> Column Key -> { correct, total }
+            const categoryColumnData = new Map<
                 string,
                 Map<string, { correct: number; total: number }>
             >();
 
-            // Cache for hash results to avoid redundant crypto operations
-            const hashCache = new Map<string, string>();
-            const getCachedHash = async (answer: string): Promise<string> => {
-                const cached = hashCache.get(answer);
-                if (cached) return cached;
-                const hash = await hashAnswer(answer);
-                hashCache.set(answer, hash);
-                return hash;
-            };
+            // Uses persistent IndexedDB cache for answer hashes (survives page reloads)
 
             // Process all results
             for (const result of results) {
                 let sessionQuestions: Question[] = [];
                 const quiz = quizMap.get(result.quiz_id);
-                
+
                 // Case 1: Standard Quiz
                 if (quiz && quiz.questions.length > 0) {
-                    // Filter to only questions served in this session
                     const idSet = result.question_ids
                         ? new Set(result.question_ids)
                         : null;
@@ -146,7 +256,7 @@ export function TopicHeatmap({
                 }
                 // Case 2: Aggregated Result (SRS/Topic Study)
                 else if (result.question_ids && result.question_ids.length > 0) {
-                     sessionQuestions = result.question_ids
+                    sessionQuestions = result.question_ids
                         .map(id => allQuestionsMap.get(id)?.question)
                         .filter((q): q is Question => !!q);
                 }
@@ -155,13 +265,13 @@ export function TopicHeatmap({
 
                 const resultDate = new Date(result.timestamp);
 
-                // Find which week this result belongs to
-                const weekIndex = weeks.findIndex(
-                    (w) => resultDate >= w.startDate && resultDate <= w.endDate,
+                // Find which column this result belongs to
+                const columnIndex = timeColumns.findIndex(
+                    (col) => resultDate >= col.startDate && resultDate <= col.endDate,
                 );
-                if (weekIndex === -1) continue;
+                if (columnIndex === -1) continue;
 
-                const { weekKey } = weeks[weekIndex]!;
+                const { key: columnKey } = timeColumns[columnIndex]!;
 
                 // Process each question
                 for (const question of sessionQuestions) {
@@ -177,53 +287,70 @@ export function TopicHeatmap({
                     }
 
                     // Initialize category if not exists
-                    if (!categoryWeekData.has(category)) {
-                        categoryWeekData.set(category, new Map());
+                    if (!categoryColumnData.has(category)) {
+                        categoryColumnData.set(category, new Map());
                     }
-                    const weekMap = categoryWeekData.get(category)!;
+                    const columnMap = categoryColumnData.get(category)!;
 
-                    // Initialize week if not exists
-                    if (!weekMap.has(weekKey)) {
-                        weekMap.set(weekKey, { correct: 0, total: 0 });
+                    // Initialize column if not exists
+                    if (!columnMap.has(columnKey)) {
+                        columnMap.set(columnKey, { correct: 0, total: 0 });
                     }
 
-                    const weekStats = weekMap.get(weekKey)!;
-                    weekStats.total += 1;
+                    const columnStats = columnMap.get(columnKey)!;
+                    columnStats.total += 1;
                     if (isCorrect) {
-                        weekStats.correct += 1;
+                        columnStats.correct += 1;
                     }
                 }
             }
 
-            // Convert to array format
-            const data: CategoryWeekScore[] = Array.from(
-                categoryWeekData.entries(),
-            ).map(([category, weekMap]) => ({
-                category,
-                weeks: weeks.map((w) => {
-                    const stats = weekMap.get(w.weekKey);
+            // Convert to array format with trends
+            const data: CategoryData[] = Array.from(
+                categoryColumnData.entries(),
+            ).map(([category, columnMap]) => {
+                const columns = timeColumns.map((col, index) => {
+                    const stats = columnMap.get(col.key);
+                    const score =
+                        stats && stats.total > 0
+                            ? Math.round((stats.correct / stats.total) * 100)
+                            : null;
+
+                    // Calculate trend (compare to previous column)
+                    let trend: "up" | "down" | "stable" | null = null;
+                    if (index > 0 && score !== null) {
+                        const prevStats = columnMap.get(timeColumns[index - 1]!.key);
+                        const prevScore =
+                            prevStats && prevStats.total > 0
+                                ? Math.round((prevStats.correct / prevStats.total) * 100)
+                                : null;
+
+                        if (prevScore !== null) {
+                            const diff = score - prevScore;
+                            if (diff > 5) trend = "up";
+                            else if (diff < -5) trend = "down";
+                            else trend = "stable";
+                        }
+                    }
+
                     return {
-                        weekKey: w.weekKey,
-                        weekLabel: w.weekLabel,
-                        score:
-                            stats && stats.total > 0
-                                ? Math.round((stats.correct / stats.total) * 100)
-                                : null,
+                        key: col.key,
+                        label: col.label,
+                        score,
                         correct: stats?.correct ?? 0,
                         total: stats?.total ?? 0,
+                        trend,
                     };
-                }),
-            }));
+                });
 
-            // Sort by average score (lowest first to highlight weak areas)
-            data.sort((a, b) => {
-                const aAvg =
-                    a.weeks.filter((w) => w.score !== null).reduce((sum, w) => sum + (w.score ?? 0), 0) /
-                    Math.max(a.weeks.filter((w) => w.score !== null).length, 1);
-                const bAvg =
-                    b.weeks.filter((w) => w.score !== null).reduce((sum, w) => sum + (w.score ?? 0), 0) /
-                    Math.max(b.weeks.filter((w) => w.score !== null).length, 1);
-                return aAvg - bAvg;
+                // Calculate average score for sorting
+                const validScores = columns.filter((c) => c.score !== null);
+                const averageScore =
+                    validScores.length > 0
+                        ? validScores.reduce((sum, c) => sum + (c.score ?? 0), 0) / validScores.length
+                        : 0;
+
+                return { category, columns, averageScore };
             });
 
             if (isMounted) {
@@ -237,22 +364,105 @@ export function TopicHeatmap({
         return (): void => {
             isMounted = false;
         };
-    }, [results, quizzes, weeks, quizMap, allQuestionsMap]);
+    }, [results, quizzes, timeColumns, quizMap, allQuestionsMap]);
+
+    // Sort data based on current mode
+    const sortedData = React.useMemo(() => {
+        const sorted = [...heatmapData];
+        switch (sortMode) {
+            case "alphabetical":
+                return sorted.sort((a, b) => a.category.localeCompare(b.category));
+            case "best-first":
+                return sorted.sort((a, b) => b.averageScore - a.averageScore);
+            default: // worst-first
+                return sorted.sort((a, b) => a.averageScore - b.averageScore);
+        }
+    }, [heatmapData, sortMode]);
+
+    // Calculate weekly summary (compare daily avg to prev week)
+    const weeklySummary = React.useMemo(() => {
+        if (heatmapData.length === 0) return null;
+
+        let prevWeekTotal = 0;
+        let prevWeekCount = 0;
+        let thisWeekTotal = 0;
+        let thisWeekCount = 0;
+
+        for (const cat of heatmapData) {
+            // Prev week is index 0
+            const prevWeekCol = cat.columns[0];
+            if (prevWeekCol?.score !== null && prevWeekCol?.score !== undefined) {
+                prevWeekTotal += prevWeekCol.score;
+                prevWeekCount++;
+            }
+            // Daily columns are indices 1-7
+            for (let i = 1; i < cat.columns.length; i++) {
+                const col = cat.columns[i];
+                if (col?.score !== null && col?.score !== undefined) {
+                    thisWeekTotal += col.score;
+                    thisWeekCount++;
+                }
+            }
+        }
+
+        if (prevWeekCount === 0 || thisWeekCount === 0) return null;
+
+        const prevWeekAvg = prevWeekTotal / prevWeekCount;
+        const thisWeekAvg = thisWeekTotal / thisWeekCount;
+        const change = Math.round(thisWeekAvg - prevWeekAvg);
+
+        return { change, thisWeekAvg: Math.round(thisWeekAvg) };
+    }, [heatmapData]);
+
+    // Handle "Focus Here" button click
+    const handleFocusCategory = async (category: string): Promise<void> => {
+        if (!userId) {
+            logger.warn("Cannot focus category: no userId provided");
+            return;
+        }
+
+        setLoadingCategory(category);
+
+        try {
+            const data = await getTopicStudyQuestions(userId, category);
+
+            if (data.totalUniqueCount === 0) {
+                addToast("info", `No active questions found to study for ${category}`);
+                setLoadingCategory(null);
+                return;
+            }
+
+            // Store in sessionStorage for topic-review page
+            sessionStorage.setItem(
+                TOPIC_STUDY_QUESTIONS_KEY,
+                JSON.stringify(data.questionIds),
+            );
+            sessionStorage.setItem(TOPIC_STUDY_CATEGORY_KEY, category);
+            sessionStorage.setItem(
+                TOPIC_STUDY_MISSED_COUNT_KEY,
+                String(data.missedCount),
+            );
+            sessionStorage.setItem(
+                TOPIC_STUDY_FLAGGED_COUNT_KEY,
+                String(data.flaggedCount),
+            );
+
+            router.push("/quiz/topic-review");
+        } catch (error) {
+            logger.error("Failed to load topic study questions", error);
+            addToast("error", "Failed to prepare study session");
+            setLoadingCategory(null);
+        }
+    };
+
+    const sortLabels: Record<SortMode, string> = {
+        "worst-first": "Weakest First",
+        "best-first": "Strongest First",
+        "alphabetical": "A-Z",
+    };
 
     if (isLoading) {
-        return (
-            <Card className={className}>
-                <CardHeader>
-                    <CardTitle>Topic Mastery Over Time</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="flex h-32 items-center justify-center" role="status" aria-label="Loading topic mastery data">
-                        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" aria-hidden="true" />
-                        <span className="sr-only">Loading</span>
-                    </div>
-                </CardContent>
-            </Card>
-        );
+        return <HeatmapSkeleton className={className} />;
     }
 
     if (heatmapData.length === 0) {
@@ -272,84 +482,190 @@ export function TopicHeatmap({
 
     return (
         <Card className={className}>
-            <CardHeader>
-                <CardTitle>Topic Mastery Over Time</CardTitle>
-                <CardDescription>
-                    Track how your performance in each topic has changed over the last 4 weeks
-                </CardDescription>
-            </CardHeader>
-            <CardContent>
-                {/* Header row with week labels */}
-                <div className="mb-2 grid gap-2" style={{ gridTemplateColumns: "1fr repeat(4, 60px)" }}>
-                    <div /> {/* Empty cell for category column */}
-                    {weeks.map((w) => (
-                        <div
-                            key={w.weekKey}
-                            className="text-center text-xs font-medium text-muted-foreground"
-                        >
-                            {w.weekLabel}
-                        </div>
-                    ))}
-                </div>
-
-                {/* Category rows */}
-                <div className="space-y-2" role="grid" aria-label="Topic mastery heatmap">
-                    {heatmapData.map((catData) => (
-                        <div
-                            key={catData.category}
-                            className="grid items-center gap-2"
-                            style={{ gridTemplateColumns: "1fr repeat(4, 60px)" }}
-                            role="row"
-                        >
-                            <div
-                                className="truncate text-sm font-medium text-foreground"
-                                title={catData.category}
-                                role="rowheader"
+            <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0">
+                <div className="flex-1">
+                    <CardTitle>Topic Mastery Over Time</CardTitle>
+                    <CardDescription className="flex flex-wrap items-center gap-2">
+                        <span>Previous week summary + daily breakdown</span>
+                        {/* Weekly Summary Stat */}
+                        {weeklySummary && (
+                            <span
+                                className={cn(
+                                    "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
+                                    weeklySummary.change > 0 && "bg-success/10 text-success",
+                                    weeklySummary.change < 0 && "bg-destructive/10 text-destructive",
+                                    weeklySummary.change === 0 && "bg-muted text-muted-foreground",
+                                )}
                             >
-                                {catData.category}
-                            </div>
-                            {catData.weeks.map((weekData) => (
-                                <div
-                                    key={weekData.weekKey}
-                                    role="gridcell"
+                                {weeklySummary.change > 0 && <TrendingUp className="h-3 w-3" aria-hidden="true" />}
+                                {weeklySummary.change < 0 && <TrendingDown className="h-3 w-3" aria-hidden="true" />}
+                                {weeklySummary.change === 0 && <Minus className="h-3 w-3" aria-hidden="true" />}
+                                {weeklySummary.change > 0 ? "+" : ""}{weeklySummary.change}% this week
+                            </span>
+                        )}
+                    </CardDescription>
+                </div>
+                {/* Sort toggle */}
+                <div className="relative">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowSortMenu(!showSortMenu)}
+                        className="text-xs"
+                        aria-label="Change sort order"
+                        aria-expanded={showSortMenu}
+                    >
+                        {sortLabels[sortMode]}
+                        <ChevronDown className="ml-1 h-3 w-3" aria-hidden="true" />
+                    </Button>
+                    {showSortMenu && (
+                        <div
+                            className="absolute right-0 top-full z-10 mt-1 rounded-md border border-border bg-card shadow-lg"
+                            role="menu"
+                        >
+                            {(Object.keys(sortLabels) as SortMode[]).map((mode) => (
+                                <button
+                                    key={mode}
+                                    onClick={() => {
+                                        setSortMode(mode);
+                                        setShowSortMenu(false);
+                                    }}
                                     className={cn(
-                                        "flex h-8 items-center justify-center rounded-md text-xs font-medium transition-colors",
-                                        getMasteryColor(weekData.score),
-                                        weekData.score !== null && weekData.score >= 70
-                                            ? "text-white"
-                                            : "text-foreground",
+                                        "block w-full px-3 py-1.5 text-left text-xs hover:bg-muted",
+                                        sortMode === mode && "bg-muted font-medium",
                                     )}
-                                    title={`${catData.category} - ${weekData.weekLabel}: ${weekData.score !== null ? `${weekData.score}% (${weekData.correct}/${weekData.total})` : "No data"}`}
-                                    aria-label={`${catData.category}, week of ${weekData.weekLabel}: ${weekData.score !== null ? `${weekData.score}% (${weekData.correct} of ${weekData.total})` : "No data"}`}
+                                    role="menuitem"
                                 >
-                                    {weekData.score !== null ? `${weekData.score}%` : "—"}
-                                </div>
+                                    {sortLabels[mode]}
+                                </button>
                             ))}
                         </div>
-                    ))}
+                    )}
+                </div>
+            </CardHeader>
+            <CardContent>
+                {/* Scrollable container for mobile */}
+                <div className="-mx-2 overflow-x-auto px-2 pb-2" style={{ WebkitOverflowScrolling: "touch" }}>
+                    {/* Header row with column labels */}
+                    <div
+                        className="mb-2 grid min-w-[600px] gap-1"
+                        style={{ gridTemplateColumns: "minmax(140px, 1fr) repeat(8, minmax(44px, 52px))" }}
+                    >
+                        <div className="text-xs font-medium text-muted-foreground">Category</div>
+                        {timeColumns.map((col) => (
+                            <div
+                                key={col.key}
+                                className="text-center text-xs font-medium text-muted-foreground"
+                                title={col.label}
+                            >
+                                {col.shortLabel}
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Category rows */}
+                    <div className="min-w-[600px] space-y-1" role="grid" aria-label="Topic mastery heatmap">
+                        {sortedData.map((catData) => (
+                            <div
+                                key={catData.category}
+                                className="grid items-center gap-1"
+                                style={{ gridTemplateColumns: "minmax(140px, 1fr) repeat(8, minmax(44px, 52px))" }}
+                                role="row"
+                            >
+                                <div
+                                    className="flex items-center gap-1"
+                                    role="rowheader"
+                                >
+                                    <span
+                                        className="truncate text-sm font-medium text-foreground"
+                                        title={catData.category}
+                                    >
+                                        {catData.category}
+                                    </span>
+                                    {/* Focus Here button */}
+                                    {userId && (
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-5 w-5 flex-shrink-0 p-0"
+                                            onClick={() => handleFocusCategory(catData.category)}
+                                            disabled={loadingCategory !== null}
+                                            title={`Study ${catData.category}`}
+                                            aria-label={`Study ${catData.category}`}
+                                        >
+                                            {loadingCategory === catData.category ? (
+                                                <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
+                                            ) : (
+                                                <BookOpen className="h-3 w-3 text-muted-foreground hover:text-primary" aria-hidden="true" />
+                                            )}
+                                        </Button>
+                                    )}
+                                </div>
+                                {catData.columns.map((colData) => (
+                                    <div
+                                        key={colData.key}
+                                        role="gridcell"
+                                        className={cn(
+                                            "flex h-8 items-center justify-center rounded-md text-xs transition-colors",
+                                            getMasteryColor(colData.score),
+                                            // Volume indicator: dim low-sample cells
+                                            colData.total > 0 && colData.total < 3 && "opacity-50",
+                                            colData.total >= 3 && colData.total < 5 && "opacity-75",
+                                            // Heatmap intensity: bold high-sample cells
+                                            colData.total >= 10 && "font-bold ring-1 ring-current/20",
+                                            colData.total >= 5 && colData.total < 10 && "font-semibold",
+                                            colData.total > 0 && colData.total < 5 && "font-normal",
+                                            // Text color
+                                            colData.score !== null && colData.score >= 70
+                                                ? "text-white"
+                                                : "text-foreground",
+                                        )}
+                                        title={`${catData.category} - ${colData.label}: ${colData.score !== null ? `${colData.score}% (${colData.correct}/${colData.total})` : "No data"}${colData.total > 0 && colData.total < 5 ? " (low sample)" : ""}${colData.total >= 10 ? " (high confidence)" : ""}`}
+                                        aria-label={`${catData.category}, ${colData.label}: ${colData.score !== null ? `${colData.score}% (${colData.correct} of ${colData.total})` : "No data"}`}
+                                    >
+                                        {colData.score !== null ? (
+                                            <span className="flex items-center gap-0.5">
+                                                {colData.score}%
+                                                {colData.trend && (
+                                                    <span className={cn("text-[10px]", getTrendColor(colData.trend))}>
+                                                        {getTrendIndicator(colData.trend)}
+                                                    </span>
+                                                )}
+                                            </span>
+                                        ) : (
+                                            "—"
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        ))}
+                    </div>
                 </div>
 
                 {/* Legend */}
-                <div className="mt-4 flex flex-wrap items-center justify-center gap-4 border-t border-border pt-4">
+                <div className="mt-4 flex flex-wrap items-center justify-center gap-3 border-t border-border pt-4 text-xs">
                     <div className="flex items-center gap-1.5">
                         <div className="h-3 w-3 rounded-sm bg-success" />
-                        <span className="text-xs text-muted-foreground">90%+ Mastered</span>
+                        <span className="text-muted-foreground">90%+</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                         <div className="h-3 w-3 rounded-sm bg-success/60" />
-                        <span className="text-xs text-muted-foreground">70-89% Competent</span>
+                        <span className="text-muted-foreground">70-89%</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                         <div className="h-3 w-3 rounded-sm bg-warning" />
-                        <span className="text-xs text-muted-foreground">50-69% Needs work</span>
+                        <span className="text-muted-foreground">50-69%</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                         <div className="h-3 w-3 rounded-sm bg-destructive/70" />
-                        <span className="text-xs text-muted-foreground">&lt;50% Struggling</span>
+                        <span className="text-muted-foreground">&lt;50%</span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                        <div className="h-3 w-3 rounded-sm bg-muted" />
-                        <span className="text-xs text-muted-foreground">No data</span>
+                        <div className="h-3 w-3 rounded-sm bg-muted opacity-50" />
+                        <span className="text-muted-foreground">Low sample</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-muted-foreground">
+                        <span className="text-success">↑</span>/<span className="text-destructive">↓</span> Trend
                     </div>
                 </div>
             </CardContent>
