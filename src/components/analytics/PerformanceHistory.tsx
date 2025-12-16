@@ -266,14 +266,27 @@ export function PerformanceHistory({
                     />
                     {isMissingCategory && (
                       <span
+                        className="group/warning relative flex-shrink-0"
                         role="img"
-                        aria-label="Warning: Quiz missing category — excluded from grouped heatmap"
-                        title="Quiz missing category — excluded from grouped heatmap"
+                        aria-label="Warning: Quiz missing category for analytics"
                       >
                         <AlertTriangle
-                          className="h-4 w-4 flex-shrink-0 text-warning"
+                          className="h-4 w-4 text-warning cursor-help"
                           aria-hidden="true"
                         />
+                        <span
+                          className="pointer-events-none absolute left-full top-1/2 z-20 ml-2 -translate-y-1/2 w-48 rounded-lg bg-popover px-3 py-2 text-xs text-popover-foreground shadow-lg opacity-0 transition-opacity group-hover/warning:opacity-100 border border-border"
+                          role="tooltip"
+                        >
+                          <strong className="block mb-1">Missing Category</strong>
+                          <span className="text-muted-foreground">
+                            This quiz won&apos;t appear in grouped analytics. Fix via:
+                          </span>
+                          <ul className="mt-1 list-disc pl-3 text-muted-foreground">
+                            <li>Dashboard → Quiz menu → Edit Settings</li>
+                            <li>Result page → Add Category button</li>
+                          </ul>
+                        </span>
                       </span>
                     )}
                   </div>
