@@ -10,7 +10,12 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/Card"
  */
 export function DashboardSkeleton(): React.ReactElement {
     return (
-        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <div
+            className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8"
+            role="status"
+            aria-label="Loading dashboard"
+        >
+            <span className="sr-only">Loading your quiz library...</span>
             {/* Header skeleton */}
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="space-y-2">
@@ -65,5 +70,3 @@ export function DashboardSkeleton(): React.ReactElement {
         </div>
     );
 }
-
-export default DashboardSkeleton;
