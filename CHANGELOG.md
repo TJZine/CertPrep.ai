@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.6] - 2025-12-16
+
+### Changed
+
+- **Question Review List**: Implemented UI virtualization using `react-window` (v2) for improved performance with large question sets.
+- **Database Schema**: Updated Dexie schema to v13, adding `category` and `subcategory` indexes to the `quizzes` table.
+- **Middleware**: Refactored Content Security Policy (CSP) logic into `src/lib/security.ts` for better maintainability.
+
+### Added
+
+- **Dependencies**: Added `react-window` (^2.2.3) and `react-virtualized-auto-sizer` (^1.0.26) for UI virtualization.
+
 ## [1.3.5] - 2025-12-15
 
 ### Added

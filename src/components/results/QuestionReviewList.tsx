@@ -93,12 +93,17 @@ const Row = ({ index, style, data }: { index: number; style: React.CSSProperties
 function VirtualList({ height, width, itemCount, itemData }: VirtualListProps): React.ReactElement {
   // Use a ref to track row heights for dynamic sizing
   const sizeMap = React.useRef<{ [index: number]: number }>({});
+  const [layoutVersion, setLayoutVersion] = React.useState(0);
 
   // Force re-render of List when these change to reset internal state/cache
-  const listKey = `${itemData.activeFilter}-${itemData.expandAllSignal}-${itemCount}`;
+  const listKey = `${itemData.activeFilter}-${itemData.expandAllSignal}-${itemCount}-${layoutVersion}`;
 
   const setSize = React.useCallback((index: number, size: number): void => {
-    sizeMap.current[index] = size;
+    if (sizeMap.current[index] !== size) {
+      sizeMap.current[index] = size;
+      // Trigger re-render to update list layout
+      setLayoutVersion((v) => v + 1);
+    }
   }, []);
 
   const getSize = (index: number): number => sizeMap.current[index] || 200;
@@ -203,6 +208,25 @@ export function QuestionReviewList({
     },
   ] as const;
 
+  const itemData = React.useMemo(
+    () => ({
+      questions: questions,
+      filteredItems: filteredQuestions,
+      expandAll,
+      expandAllSignal,
+      activeFilter,
+      isResolving,
+    }),
+    [
+      questions,
+      filteredQuestions,
+      expandAll,
+      expandAllSignal,
+      activeFilter,
+      isResolving,
+    ],
+  );
+
   return (
     <div className={className}>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
@@ -259,21 +283,14 @@ export function QuestionReviewList({
           </p>
         </div>
       ) : (
-        <div className="h-[800px] w-full">
+        <div className="h-full min-h-[400px] w-full flex-1">
           <AutoSizer>
             {({ height, width }: { height: number; width: number }) => (
               <VirtualList
                 height={height}
                 width={width}
                 itemCount={filteredQuestions.length}
-                itemData={{
-                  questions: questions,
-                  filteredItems: filteredQuestions,
-                  expandAll,
-                  expandAllSignal,
-                  activeFilter,
-                  isResolving,
-                }}
+                itemData={itemData}
               />
             )}
           </AutoSizer>

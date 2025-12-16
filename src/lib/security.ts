@@ -15,7 +15,7 @@ export function buildCSPHeader(nonce: string, isDev: boolean): string {
     frame-ancestors 'self';
     frame-src 'self' https://hcaptcha.com https://*.hcaptcha.com https://sentry.io https://browser.sentry-cdn.com;
     upgrade-insecure-requests;
-    connect-src 'self' ${process.env.NEXT_PUBLIC_SUPABASE_URL || ""} ${process.env.NEXT_PUBLIC_SUPABASE_URL
+    connect-src 'self' ${process.env.NEXT_PUBLIC_SUPABASE_URL || ""} ${process.env.NEXT_PUBLIC_SUPABASE_URL && URL.canParse(process.env.NEXT_PUBLIC_SUPABASE_URL)
             ? `wss://${new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname}`
             : ""
         } *.sentry.io https://hcaptcha.com https://*.hcaptcha.com https://browser.sentry-cdn.com https://vitals.vercel-insights.com;
