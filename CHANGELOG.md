@@ -7,6 +7,74 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.5] - 2025-12-15
+
+### Added
+
+- **Quiz Category & Subcategory**: Quizzes now support `category` and `subcategory` fields for analytics grouping.
+- **Topic Heatmap Enhancements**: Category-based performance visualization, "Focus here" links to Topic Study, weekly summary stats.
+- **hashCache Eviction**: LRU-style eviction (10k entry cap) prevents unbounded IndexedDB growth.
+- **Migration Guards**: Defensive `IF EXISTS` checks on index migrations.
+- **Date Range Filter**: Analytics page now includes a date range filter (7d/30d/90d/All) with localStorage persistence.
+- **Empty Card States**: Standardized empty state component for analytics cards with consistent messaging.
+- **Recent Results Quiz Titles**: Recent Results card now displays quiz titles instead of IDs.
+
+### Fixed
+
+- **SRS Sync Logging**: Added debug log for backward-compat response handling.
+- **Modal Vertical Scrolling**: Improved modal positioning with proper z-index layering.
+- **TopicHeatmap Table Accessibility**: Header row now correctly nested inside `role="table"` container for proper screen reader association.
+- **DifficultyBreakdown Progressbar Accessibility**: Added `role="progressbar"` with ARIA attributes for screen reader support.
+- **DateRangeFilter Type Safety**: Exported `DATE_RANGE_VALUES` constant to prevent localStorage validation drift.
+
+---
+
+## [1.3.4] - 2025-12-15
+
+### Added
+
+- **Self-Assessment Summary**: New component showing difficulty ratings breakdown on results page.
+- **Time Per Question Heatmap**: Visual display of time spent per question.
+- **Category Drill-Down Links**: Direct links from analytics to category-filtered quizzes.
+
+### Fixed
+
+- **SRS Sync Metrics**: Corrected `updatedCount` to use server response.
+- **Missing Category Indicators**: Warning icons for quizzes lacking category metadata.
+
+---
+
+## [1.3.3] - 2025-12-15
+
+### Added
+
+- **Comfort Mode**: Reduces visual effects for users sensitive to motion.
+- **SRS Integration Display**: Shows SRS status on quiz results page.
+
+### Fixed
+
+- **Sync Reliability**: Atomic blocking, LWW reconciliation improvements.
+
+---
+
+## [1.3.2] - 2025-12-14
+
+### Fixed
+
+- **LWW Deletion Protection**: Server-side trigger prevents stale clients from resurrecting deleted records.
+- **Sync Block TTL**: Fixed permanent sync blocks from TTL parsing issue.
+
+---
+
+## [1.3.1] - 2025-12-14
+
+### Fixed
+
+- **Code Review Fixes**: Invalid `practice` mode in tests, capped logging of `missingIds`, synthetic quiz ID uniqueness.
+- **Result Validation**: Normalized `question.id` to string consistently.
+
+---
+
 ## [1.3.0] - 2025-12-14
 
 ### Added

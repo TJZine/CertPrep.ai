@@ -2,6 +2,7 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import {
   MoreVertical,
   Play,
@@ -13,6 +14,8 @@ import {
   BarChart3,
   History,
   TrendingUp,
+  Settings,
+  AlertTriangle,
 } from "lucide-react";
 import {
   Card,
@@ -77,6 +80,7 @@ export function QuizCard({
   onStart,
   onDelete,
 }: QuizCardProps): React.ReactElement {
+  const router = useRouter();
   const [showMenu, setShowMenu] = React.useState(false);
   const [showTagsPopover, setShowTagsPopover] = React.useState(false);
   const [focusedMenuIndex, setFocusedMenuIndex] = React.useState(0);
@@ -120,6 +124,16 @@ export function QuizCard({
       addToast("error", "Unable to copy link. Please try again.");
     }
   };
+
+  const handleEditSettings = (e: React.MouseEvent): void => {
+    e.preventDefault();
+    e.stopPropagation();
+    setShowMenu(false);
+    router.push(`/quiz/${quiz.id}/settings`);
+  };
+
+  // Check if quiz is missing category for analytics
+  const isMissingCategory = !quiz.category;
 
   const lastScore = stats?.lastAttemptScore ?? null;
   const attemptCount = stats?.attemptCount ?? 0;
@@ -207,7 +221,27 @@ export function QuizCard({
         <CardHeader className="pb-4">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 space-y-1">
-              <CardTitle className="line-clamp-2 text-lg">{quiz.title}</CardTitle>
+              <div className="flex items-center gap-2">
+                {isMissingCategory && (
+                  <button
+                    type="button"
+                    className="group/tooltip relative flex-shrink-0 rounded border-none bg-transparent p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    aria-label="Missing category for full analytics"
+                  >
+                    <AlertTriangle
+                      className="h-4 w-4 text-warning"
+                      aria-hidden="true"
+                    />
+                    <span
+                      className="pointer-events-none absolute left-1/2 top-full z-20 mt-1 -translate-x-1/2 whitespace-nowrap rounded bg-popover px-2 py-1 text-xs text-popover-foreground shadow-md opacity-0 transition-opacity group-hover/tooltip:opacity-100 group-focus-visible/tooltip:opacity-100 border border-border"
+                      role="tooltip"
+                    >
+                      Missing category for full analytics
+                    </span>
+                  </button>
+                )}
+                <CardTitle className="line-clamp-2 text-lg">{quiz.title}</CardTitle>
+              </div>
               <p className="text-sm text-muted-foreground">
                 {quiz.description?.trim()
                   ? quiz.description
@@ -251,10 +285,21 @@ export function QuizCard({
                   <button
                     ref={(el) => { menuItemRefs.current[1] = el; }}
                     type="button"
+                    onClick={handleEditSettings}
+                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-foreground transition hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+                    role="menuitem"
+                    tabIndex={focusedMenuIndex === 1 ? 0 : -1}
+                  >
+                    <Settings className="h-4 w-4" aria-hidden="true" />
+                    Edit Settings
+                  </button>
+                  <button
+                    ref={(el) => { menuItemRefs.current[2] = el; }}
+                    type="button"
                     onClick={handleDelete}
                     className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-destructive transition hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
                     role="menuitem"
-                    tabIndex={focusedMenuIndex === 1 ? 0 : -1}
+                    tabIndex={focusedMenuIndex === 2 ? 0 : -1}
                   >
                     <Trash2 className="h-4 w-4" aria-hidden="true" />
                     Delete

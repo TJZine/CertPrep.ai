@@ -2,6 +2,37 @@
 
 ---
 
+## Feature: Quiz Format Info Page
+
+**Priority**: Medium | **Effort**: 2-4 hours | **Category**: Documentation / UX
+
+### Context
+
+Users import custom quizzes and generate them via GPT/Gemini. To ensure quizzes have proper metadata (especially `category` and `subcategory` for analytics grouping), we need a clear info page documenting the expected JSON format.
+
+### Deliverables
+
+1. Create `/app/help/quiz-format/page.tsx` with:
+   - Complete JSON schema documentation
+   - Example quiz with all recommended fields
+   - Field descriptions including `category` and `subcategory`
+   - Tips for AI-generated quizzes
+
+2. Link from import modal and quiz creation flows
+
+### User Action Required
+
+Update GPT/Gemini prompts for quiz generation to include `category` and `subcategory` fields.
+
+### Acceptance Criteria
+
+- [ ] Info page created with clear documentation
+- [ ] Example JSON includes `category` and `subcategory`
+- [ ] Link accessible from import modal
+- [ ] Mobile-responsive layout
+
+---
+
 ## Known Issues
 
 ### Sync Fails with "No valid auth session" (Dev Environment)
@@ -19,12 +50,29 @@ Stale browser cookies/localStorage. The `@supabase/ssr` client's `getSession()` 
 
 **Workaround:**
 
+> [!WARNING]
+> "Clear site data" deletes IndexedDB and will **destroy all offline quizzes, results, and SRS progress** that haven't synced. Only use as a last resort if you have no unsaved work.
+
+**Step 1 — Try safer fixes first:**
+
+1. Sign out via the app UI (Settings → Sign Out)
+2. Hard refresh (`Cmd+Shift+R` / `Ctrl+Shift+R`)
+3. Log back in
+
+**Step 2 — If Step 1 fails, clear only auth cookies:**
+
+1. DevTools → Application → Cookies → Select your domain
+2. Delete cookies starting with `sb-` (e.g., `sb-xxx-auth-token`)
+3. Hard refresh and log back in
+
+**Step 3 — Last resort (data loss risk):**
+
 1. DevTools → Application → Storage → "Clear site data"
 2. Hard refresh (`Cmd+Shift+R` / `Ctrl+Shift+R`)
 3. Log back in
 
 **Permanent Fix (if recurs frequently):**
-Change sync managers (`syncManager.ts`, `quizSyncManager.ts`, `srsSyncManager.ts`) to use `getUser()` instead of `getSession()`. This validates with the server (adds ~50-200ms) but is more reliable. See Supabase SSR docs.
+Change sync managers (`syncManager.ts`, `quizSyncManager.ts`, `srsSyncManager.ts`) to use `getUser()` instead of `getSession()`. This validates with the server (adds ~50-200ms latency) but is more reliable. See Supabase SSR docs.
 
 ---
 

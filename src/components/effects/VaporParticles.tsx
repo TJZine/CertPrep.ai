@@ -59,7 +59,7 @@ export default function VaporParticles(): React.ReactElement | null {
             options={{
                 fullScreen: {
                     enable: true,
-                    zIndex: 1, // Behind content
+                    zIndex: 40,
                 },
                 fpsLimit: 60, // Smooth for that neon vibe
                 particles: {

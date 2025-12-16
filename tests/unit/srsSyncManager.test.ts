@@ -106,7 +106,7 @@ describe("srsSyncManager", () => {
 
     // Reset Supabase mock chain
     supabaseMock.from.mockReturnThis();
-    supabaseMock.rpc.mockResolvedValue({ data: [{ question_id: "q-1", updated: true }], error: null });
+    supabaseMock.rpc.mockResolvedValue({ data: [{ out_question_id: "q-1", out_updated: true }], error: null });
     supabaseMock.select.mockReturnThis();
     supabaseMock.eq.mockReturnThis();
     supabaseMock.or.mockReturnThis();
@@ -302,20 +302,18 @@ describe("srsSyncManager", () => {
     expect(setSRSSyncCursor).toHaveBeenCalled();
   });
 
-  it("logs when server rejects stale local data (server has newer last_reviewed)", async () => {
-    // RPC returns updated: false, indicating server had newer data
+  it("does NOT mark synced when server rejects stale local data (server has newer last_reviewed)", async () => {
+    // RPC returns out_updated: false, indicating server had newer data
     supabaseMock.rpc.mockResolvedValueOnce({
-      data: [{ question_id: "q-1", updated: false }],
+      data: [{ out_question_id: "q-1", out_updated: false }],
       error: null,
     });
 
     await syncSRS("user-1");
 
-    // Should still mark as synced locally (we attempted sync)
-    expect(dbMock.srs.update).toHaveBeenCalledWith(
-      [sampleSRS.question_id, "user-1"],
-      { synced: 1 }
-    );
+    // Should NOT mark as synced — server rejected because it had newer data
+    // This leaves the item unsynced so next pull can reconcile
+    expect(dbMock.srs.update).not.toHaveBeenCalled();
 
     // Verify RPC was called with correct structure
     expect(supabaseMock.rpc).toHaveBeenCalledWith(

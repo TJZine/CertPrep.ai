@@ -28,6 +28,8 @@ export interface RemoteQuizRow {
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
+  category?: string | null;
+  subcategory?: string | null;
 }
 
 export interface RemoteQuizInput {
@@ -43,6 +45,8 @@ export interface RemoteQuizInput {
   created_at?: string;
   updated_at?: string;
   deleted_at?: string | null;
+  category?: string | null;
+  subcategory?: string | null;
 }
 
 let cachedSubtleCrypto: SubtleCrypto | null = null;
@@ -124,6 +128,8 @@ export async function toRemoteQuiz(
     deleted_at: local.deleted_at
       ? new Date(local.deleted_at).toISOString()
       : null,
+    category: local.category ?? null,
+    subcategory: local.subcategory ?? null,
   };
 }
 
@@ -155,6 +161,8 @@ export function toLocalQuiz(remote: RemoteQuizRow): Quiz {
     quiz_hash: remote.quiz_hash ?? null,
     last_synced_version: remote.version,
     last_synced_at: Date.now(),
+    category: remote.category ?? undefined,
+    subcategory: remote.subcategory ?? undefined,
   };
 }
 

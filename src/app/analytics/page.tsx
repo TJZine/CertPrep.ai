@@ -4,6 +4,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { AnalyticsOverview } from "@/components/analytics/AnalyticsOverview";
 import { PerformanceHistory } from "@/components/analytics/PerformanceHistory";
+import { RecentResultsCard } from "@/components/analytics/RecentResultsCard";
 import { WeakAreasCard } from "@/components/analytics/WeakAreasCard";
 import { ExamReadinessCard } from "@/components/analytics/ExamReadinessCard";
 import { StreakCard } from "@/components/analytics/StreakCard";
@@ -28,6 +29,7 @@ import { BarChart3, Plus, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 import type { Result } from "@/types/result";
+import { DateRangeFilter, type DateRange, DATE_RANGE_VALUES } from "@/components/analytics/DateRangeFilter";
 
 /**
  * Wrapper component for CategoryTrendChart that uses the trend hook.
@@ -79,6 +81,47 @@ export default function AnalyticsPage(): React.ReactElement {
   );
   const [statsError, setStatsError] = React.useState<string | null>(null);
 
+  // Date range filter state
+  const [dateRange, setDateRange] = React.useState<DateRange>("all");
+
+  // Load persisted date range on mount
+  React.useEffect(() => {
+    try {
+      const saved = localStorage.getItem("analytics-date-range");
+      if (saved && DATE_RANGE_VALUES.includes(saved as DateRange)) {
+        setDateRange(saved as DateRange);
+      }
+    } catch {
+      // Safari Private Browsing or storage disabled – use default
+    }
+  }, []);
+
+  const handleDateRangeChange = (range: DateRange): void => {
+    setDateRange(range);
+    try {
+      localStorage.setItem("analytics-date-range", range);
+    } catch {
+      // Quota exceeded or private mode – UI state still works
+    }
+  };
+
+  // Stable "now" reference to prevent hydration mismatches and impure render errors
+  const [now] = React.useState(() => Date.now());
+
+  const filteredResults = React.useMemo(() => {
+    if (dateRange === "all") return results;
+
+    const msPerDay = 24 * 60 * 60 * 1000;
+    const days = {
+      "7d": 7,
+      "30d": 30,
+      "90d": 90,
+    }[dateRange];
+
+    const cutoff = now - days * msPerDay;
+    return results.filter((r) => r.timestamp >= cutoff);
+  }, [results, dateRange, now]);
+
   React.useEffect((): void | (() => void) => {
     if (!isInitialized) return undefined;
 
@@ -88,6 +131,11 @@ export default function AnalyticsPage(): React.ReactElement {
     const timeoutId = setTimeout(() => {
       const loadStats = async (): Promise<void> => {
         try {
+          // Overall stats should probably reflect the filter too?
+          // getOverallStats is likely a DB call.
+          // For now, let's keep overallStats as "All Time" summary or we'd need to refactor getOverallStats to accept a date range.
+          // Given the UI placement (top), overall stats usually implies "Lifetime Stats".
+          // Let's keep it as is for now.
           const stats = effectiveUserId
             ? await getOverallStats(effectiveUserId)
             : null;
@@ -128,8 +176,10 @@ export default function AnalyticsPage(): React.ReactElement {
     weakAreas,
     dailyStudyTime,
     isLoading: statsLoading,
-  } = useAnalyticsStats(results, quizzes);
+  } = useAnalyticsStats(filteredResults, quizzes);
 
+  // Advanced analytics (Streaks, Readiness) should usually reflect "current state based on history"
+  // Keep using full 'results' for accurate streaks and readiness
   const advancedAnalytics = useAdvancedAnalytics(results, quizzes);
 
   // Show loading while initializing database or during hydration (effectiveUserId is null).
@@ -207,13 +257,16 @@ export default function AnalyticsPage(): React.ReactElement {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground">
-          Analytics
-        </h1>
-        <p className="mt-1 text-muted-foreground">
-          Track your progress and identify areas for improvement
-        </p>
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">
+            Analytics
+          </h1>
+          <p className="mt-1 text-muted-foreground">
+            Track your progress and identify areas for improvement
+          </p>
+        </div>
+        <DateRangeFilter value={dateRange} onChange={handleDateRangeChange} />
       </div>
 
       {statsError && (
@@ -221,6 +274,7 @@ export default function AnalyticsPage(): React.ReactElement {
           {statsError}
         </p>
       )}
+
       {/* Hero: Exam Readiness */}
       <div className="mb-8">
         <ExamReadinessCard
@@ -245,20 +299,27 @@ export default function AnalyticsPage(): React.ReactElement {
         <AnalyticsOverview stats={overallStats} className="mb-8" />
       )}
 
+      {/* Performance History Chart (full width) */}
       <div className="mb-8">
-        <PerformanceHistory results={results} quizTitles={quizTitles} />
+        <PerformanceHistory results={filteredResults} quizTitles={quizTitles} />
       </div>
 
+      {/* Recent Results + Focus to Improve (side-by-side) */}
       <div className="mb-8 grid gap-8 lg:grid-cols-2">
-        <TopicHeatmap results={results} quizzes={quizzes} />
+        <RecentResultsCard results={filteredResults} quizzes={quizzes} quizTitles={quizTitles} />
         <WeakAreasCard
           weakAreas={weakAreas}
           userId={effectiveUserId ?? undefined}
         />
       </div>
 
+      {/* Topic Heatmap (full width for dense data) */}
+      <div className="mb-8">
+        <TopicHeatmap results={filteredResults} quizzes={quizzes} userId={effectiveUserId ?? undefined} />
+      </div>
+
       {/* Category Trends Over Time */}
-      <CategoryTrendChartSection results={results} />
+      <CategoryTrendChartSection results={filteredResults} />
 
       {/* Retry Comparison */}
       <div className="mb-8">
@@ -271,3 +332,4 @@ export default function AnalyticsPage(): React.ReactElement {
     </div>
   );
 }
+

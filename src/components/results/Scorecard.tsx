@@ -123,6 +123,55 @@ function getTrendIndicator(
 }
 
 /**
+ * Hook for animating a number from 0 to target value.
+ * Respects prefers-reduced-motion and reacts to changes.
+ */
+function useAnimatedScore(target: number, duration = 1000): number {
+  const [displayValue, setDisplayValue] = React.useState(0);
+  const [prefersReducedMotion, setPrefersReducedMotion] = React.useState(false);
+
+  // Listen for changes to prefers-reduced-motion
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mql = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setPrefersReducedMotion(mql.matches);
+
+    const handler = (e: MediaQueryListEvent): void => setPrefersReducedMotion(e.matches);
+    mql.addEventListener("change", handler);
+    return (): void => mql.removeEventListener("change", handler);
+  }, []);
+
+  React.useEffect(() => {
+    if (prefersReducedMotion) {
+      setDisplayValue(target);
+      return;
+    }
+
+    let startTime: number | null = null;
+    let animationFrame: number;
+
+    const animate = (currentTime: number): void => {
+      if (startTime === null) startTime = currentTime;
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+
+      // Ease-out cubic for smooth deceleration
+      const easeOut = 1 - Math.pow(1 - progress, 3);
+      setDisplayValue(Math.round(target * easeOut));
+
+      if (progress < 1) {
+        animationFrame = requestAnimationFrame(animate);
+      }
+    };
+
+    animationFrame = requestAnimationFrame(animate);
+    return (): void => cancelAnimationFrame(animationFrame);
+  }, [target, duration, prefersReducedMotion]);
+
+  return displayValue;
+}
+
+/**
  * Prominent scorecard for quiz results.
  */
 export function Scorecard({
@@ -138,6 +187,7 @@ export function Scorecard({
   const tier = getPerformanceTier(score);
   const trend = getTrendIndicator(score, previousScore);
   const incorrectCount = totalCount - correctCount;
+  const animatedScore = useAnimatedScore(score);
 
   return (
     <Card className={cn("overflow-hidden", tier.bgColor, className)}>
@@ -147,7 +197,7 @@ export function Scorecard({
 
           <div className="mb-2">
             <span className={cn("text-6xl font-bold sm:text-7xl", tier.color)}>
-              {score}
+              {animatedScore}
             </span>
             <span className={cn("text-4xl font-bold", tier.color)}>%</span>
           </div>
@@ -255,6 +305,7 @@ interface ScorecardCompactProps {
   timeTakenSeconds: number;
   onClick?: () => void;
   className?: string;
+  title?: string;
 }
 
 /**
@@ -267,6 +318,7 @@ export function ScorecardCompact({
   timeTakenSeconds,
   onClick,
   className,
+  title,
 }: ScorecardCompactProps): React.ReactElement {
   const tier = getPerformanceTier(score);
 
@@ -291,25 +343,31 @@ export function ScorecardCompact({
         <span className={cn("text-xl font-bold", tier.color)}>{score}%</span>
       </div>
 
-      <div className="flex-1">
-        <div className="flex items-center gap-2">
+      <div className="flex-1 min-w-0">
+        {title && (
+          <h4 className="mb-1 truncate text-base font-medium text-foreground">
+            {title}
+          </h4>
+        )}
+        <div className="flex flex-wrap items-center gap-2">
           <Badge
             variant={mode === "zen" ? "default" : "secondary"}
             className="text-xs"
           >
             {mode === "zen" ? "Study" : "Exam"}
           </Badge>
-          <span className="text-sm text-muted-foreground">
+          <span className="text-sm text-muted-foreground whitespace-nowrap">
             {formatDate(timestamp)}
           </span>
         </div>
-        <p className="mt-1 text-sm text-foreground">
+        <p className="mt-1 text-sm text-muted-foreground">
           Completed in {formatTime(timeTakenSeconds)}
         </p>
       </div>
 
       <Badge
         variant={score >= 70 ? "success" : score >= 60 ? "warning" : "danger"}
+        className="flex-shrink-0"
       >
         {tier.label}
       </Badge>

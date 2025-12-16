@@ -187,4 +187,82 @@ describe("DELETE /api/auth/delete-account", () => {
     expect(response.status).toBe(500);
     expect(supabaseAuth.signOut).toHaveBeenCalledWith({ scope: "global" });
   });
+
+  it("rejects requests with any body content", async () => {
+    const request = new NextRequest(
+      "https://certprep.ai/api/auth/delete-account",
+      {
+        method: "DELETE",
+        headers: {
+          origin: "https://certprep.ai",
+          "sec-fetch-site": "same-origin",
+          "content-length": "1", // Any body content rejects
+        },
+      },
+    );
+
+    const response = await DELETE(request);
+
+    expect(response.status).toBe(413);
+    const body = await response.json();
+    expect(body.error).toBe("Request body not allowed");
+    expect(supabaseAdminClient.auth.admin.deleteUser).not.toHaveBeenCalled();
+  });
+
+  it("allows requests with content-length: 0", async () => {
+    const request = new NextRequest(
+      "https://certprep.ai/api/auth/delete-account",
+      {
+        method: "DELETE",
+        headers: {
+          origin: "https://certprep.ai",
+          "sec-fetch-site": "same-origin",
+          "content-length": "0",
+        },
+      },
+    );
+
+    const response = await DELETE(request);
+
+    // Should proceed to auth check (200 success with mock)
+    expect(response.status).toBe(200);
+  });
+
+  it("allows requests without content-length header", async () => {
+    const request = new NextRequest(
+      "https://certprep.ai/api/auth/delete-account",
+      {
+        method: "DELETE",
+        headers: {
+          origin: "https://certprep.ai",
+          "sec-fetch-site": "same-origin",
+        },
+      },
+    );
+
+    const response = await DELETE(request);
+
+    // Should proceed to auth check (200 success with mock)
+    expect(response.status).toBe(200);
+  });
+
+  it("rejects requests with invalid content-length header", async () => {
+    const request = new NextRequest(
+      "https://certprep.ai/api/auth/delete-account",
+      {
+        method: "DELETE",
+        headers: {
+          origin: "https://certprep.ai",
+          "sec-fetch-site": "same-origin",
+          "content-length": "invalid",
+        },
+      },
+    );
+
+    const response = await DELETE(request);
+
+    expect(response.status).toBe(413);
+    const body = await response.json();
+    expect(body.error).toBe("Request body not allowed");
+  });
 });

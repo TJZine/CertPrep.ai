@@ -4,6 +4,42 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 let client: SupabaseClient | undefined;
 
+// SECURITY: Default timeout for Supabase API calls (30 seconds)
+const SUPABASE_TIMEOUT_MS = 30000;
+
+/**
+ * Fetch wrapper that adds timeout to all Supabase requests.
+ * Prevents indefinite hangs on network issues.
+ * 
+ * DESIGN: Caller-provided init.signal overrides the built-in timeout (explicit opt-out).
+ */
+function fetchWithTimeout(
+  input: RequestInfo | URL,
+  init?: RequestInit
+): Promise<Response> {
+  // If caller provides their own signal, respect it (explicit opt-out of built-in timeout)
+  if (init?.signal) {
+    return fetch(input, init);
+  }
+
+  // Use AbortSignal.timeout if available (Node 18+, modern browsers)
+  if (typeof AbortSignal.timeout === "function") {
+    return fetch(input, {
+      ...init,
+      signal: AbortSignal.timeout(SUPABASE_TIMEOUT_MS),
+    });
+  }
+
+  // Fallback for older runtimes (Safari <15, older Node)
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), SUPABASE_TIMEOUT_MS);
+
+  return fetch(input, {
+    ...init,
+    signal: controller.signal,
+  }).finally(() => clearTimeout(timeoutId));
+}
+
 export const createClient = (): SupabaseClient | undefined => {
   if (client) return client;
 
@@ -21,7 +57,11 @@ export const createClient = (): SupabaseClient | undefined => {
       supabaseUrl = `https://${supabaseUrl}`;
     }
 
-    client = createBrowserClient(supabaseUrl, supabaseKey);
+    client = createBrowserClient(supabaseUrl, supabaseKey, {
+      global: {
+        fetch: fetchWithTimeout,
+      },
+    });
 
     // Expose client on window for E2E testing
     if (

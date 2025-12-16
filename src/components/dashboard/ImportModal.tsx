@@ -7,6 +7,7 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
+  X,
 } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
@@ -74,10 +75,23 @@ export function ImportModal({
   const [isValidating, setIsValidating] = React.useState(false);
   const [isImporting, setIsImporting] = React.useState(false);
   const [isDragOver, setIsDragOver] = React.useState(false);
+  // Category fields for analytics grouping (optional)
+  const [category, setCategory] = React.useState("");
+  const [subcategory, setSubcategory] = React.useState("");
 
   const { addToast } = useToast();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const tabListRef = React.useRef<HTMLDivElement>(null);
+
+  // Refs to access current category/subcategory values without stale closures
+  const categoryRef = React.useRef(category);
+  const subcategoryRef = React.useRef(subcategory);
+
+  // Keep refs in sync with state
+  React.useEffect(() => {
+    categoryRef.current = category;
+    subcategoryRef.current = subcategory;
+  }, [category, subcategory]);
 
   const resetState = (): void => {
     setActiveTab("paste");
@@ -89,6 +103,8 @@ export function ImportModal({
     setIsValidating(false);
     setIsImporting(false);
     setIsDragOver(false);
+    setCategory("");
+    setSubcategory("");
   };
 
   const validateJson = React.useCallback(
@@ -101,6 +117,17 @@ export function ImportModal({
         setParseError(null);
         const result = validateQuizImport(parsed);
         setValidationResult(result);
+
+        // Pre-populate category/subcategory from parsed JSON if available
+        // Using refs to access current values without stale closures
+        if (result.success && result.data) {
+          if (result.data.category && !categoryRef.current) {
+            setCategory(result.data.category);
+          }
+          if (result.data.subcategory && !subcategoryRef.current) {
+            setSubcategory(result.data.subcategory);
+          }
+        }
 
         // Check for truncation warnings
         const newWarnings: string[] = [];
@@ -128,7 +155,7 @@ export function ImportModal({
         setIsValidating(false);
       }
     },
-    [],
+    [], // Empty deps is correct: uses refs for current category/subcategory values
   );
 
   React.useEffect((): (() => void) | void => {
@@ -206,7 +233,11 @@ export function ImportModal({
 
     setIsImporting(true);
     try {
-      const quiz = await createQuiz(result.data, { userId });
+      const quiz = await createQuiz(result.data, {
+        userId,
+        category: category.trim() || undefined,
+        subcategory: subcategory.trim() || undefined,
+      });
       onImportSuccess(quiz);
       resetState();
       onClose();
@@ -514,6 +545,81 @@ export function ImportModal({
         </div>
 
         {renderValidationArea()}
+
+        {/* Category fields (shown after successful validation) */}
+        {validationResult?.success && validationResult.data && (
+          <div className="mt-4 space-y-3 rounded-lg border border-border bg-muted/30 p-4">
+            <p className="text-sm font-medium text-foreground">
+              Analytics Grouping (Optional)
+            </p>
+            <p id="analytics-description" className="text-xs text-muted-foreground">
+              Set category and subcategory to group this quiz in the Topic Heatmap.
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <label
+                  htmlFor="import-category"
+                  className="mb-1 block text-xs font-medium text-muted-foreground"
+                >
+                  Category
+                </label>
+                <div className="relative">
+                  <input
+                    id="import-category"
+                    type="text"
+                    aria-describedby="analytics-description"
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    placeholder="e.g., Insurance, Firearms, Custom"
+                    maxLength={50}
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 pr-8 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  />
+                  {category && (
+                    <button
+                      type="button"
+                      onClick={() => setCategory("")}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted-foreground hover:text-foreground"
+                      aria-label="Clear category"
+                    >
+                      <X className="h-3.5 w-3.5" aria-hidden="true" />
+                    </button>
+                  )}
+                </div>
+              </div>
+              <div>
+                <label
+                  htmlFor="import-subcategory"
+                  className="mb-1 block text-xs font-medium text-muted-foreground"
+                >
+                  Subcategory
+                </label>
+                <div className="relative">
+                  <input
+                    id="import-subcategory"
+                    type="text"
+                    aria-describedby="analytics-description"
+                    value={subcategory}
+                    onChange={(e) => setSubcategory(e.target.value)}
+                    placeholder="e.g., Massachusetts Personal Lines"
+                    maxLength={100}
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 pr-8 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  />
+                  {subcategory && (
+                    <button
+                      type="button"
+                      onClick={() => setSubcategory("")}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted-foreground hover:text-foreground"
+                      aria-label="Clear subcategory"
+                    >
+                      <X className="h-3.5 w-3.5" aria-hidden="true" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {renderWarnings()}
       </div>
     </Modal>

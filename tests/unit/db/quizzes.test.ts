@@ -129,6 +129,28 @@ describe("DB: quizzes", () => {
     expect(sorted[1]!.title).toBe("AQuiz"); // Tie-breaker: A comes before Z
     expect(sorted[2]!.title).toBe("ZQuiz");
   });
+
+  it("should bump version when category is updated", async () => {
+    const quiz = await createQuiz(mockQuizInput, { userId });
+    const initialVersion = quiz.version;
+
+    await updateQuiz(quiz.id, userId, { category: "Insurance" });
+    const updated = await getQuizById(quiz.id, userId);
+
+    expect(updated!.version).toBe(initialVersion + 1);
+    expect(updated!.category).toBe("Insurance");
+  });
+
+  it("should bump version when subcategory is updated", async () => {
+    const quiz = await createQuiz(mockQuizInput, { userId });
+    const initialVersion = quiz.version;
+
+    await updateQuiz(quiz.id, userId, { subcategory: "Personal Lines" });
+    const updated = await getQuizById(quiz.id, userId);
+
+    expect(updated!.version).toBe(initialVersion + 1);
+    expect(updated!.subcategory).toBe("Personal Lines");
+  });
 });
 
 describe("SRS Quiz Utilities", () => {

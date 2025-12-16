@@ -17,6 +17,7 @@ import { TrendingUp } from "lucide-react";
 import { useChartColors } from "@/hooks/useChartColors";
 import { useChartDimensions } from "@/hooks/useChartDimensions";
 import type { CategoryTrendPoint } from "@/hooks/useCategoryTrends";
+import { EmptyCardState } from "@/components/analytics/EmptyCardState";
 
 interface CategoryTrendChartProps {
     /** Time-series data with weekly aggregated scores per category */
@@ -88,37 +89,25 @@ export function CategoryTrendChart({
 
     if (data.length === 0) {
         return (
-            <Card className={className}>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <TrendingUp className="h-5 w-5" aria-hidden="true" />
-                        Category Trends
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <p className="text-center text-muted-foreground">
-                        Complete more quizzes over multiple weeks to see proficiency trends.
-                    </p>
-                </CardContent>
-            </Card>
+            <EmptyCardState
+                className={className}
+                headerIcon={<TrendingUp className="h-5 w-5" aria-hidden="true" />}
+                icon={<TrendingUp aria-hidden="true" />}
+                title="Category Trends"
+                description="Complete quizzes over multiple weeks to see proficiency trends."
+            />
         );
     }
 
     if (data.length < 2) {
         return (
-            <Card className={className}>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <TrendingUp className="h-5 w-5" aria-hidden="true" />
-                        Category Trends
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <p className="text-center text-muted-foreground">
-                        Need at least 2 weeks of data to show trends. Keep studying!
-                    </p>
-                </CardContent>
-            </Card>
+            <EmptyCardState
+                className={className}
+                headerIcon={<TrendingUp className="h-5 w-5" aria-hidden="true" />}
+                icon={<TrendingUp aria-hidden="true" />}
+                title="Category Trends"
+                description="Need at least 2 weeks of data to show trends. Keep studying!"
+            />
         );
     }
 

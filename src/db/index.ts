@@ -15,6 +15,16 @@ import { NIL_UUID } from "@/lib/constants";
 /**
  * Dexie-backed database instance for CertPrep.ai.
  */
+/**
+ * Cached answer hash for avoiding redundant crypto operations.
+ */
+export interface HashCacheEntry {
+  /** The raw answer text (primary key). */
+  answer: string;
+  /** The SHA-256 hash of the answer. */
+  hash: string;
+}
+
 export class CertPrepDatabase extends Dexie {
   public quizzes!: Table<Quiz, string>;
 
@@ -23,6 +33,9 @@ export class CertPrepDatabase extends Dexie {
   public syncState!: Table<SyncState, string>;
 
   public srs!: Table<SRSState, [string, string]>;
+
+  /** Cache of answer → hash mappings to avoid redundant crypto operations. */
+  public hashCache!: Table<HashCacheEntry, string>;
 
   constructor() {
     super("CertPrepDatabase");
@@ -150,9 +163,18 @@ export class CertPrepDatabase extends Dexie {
       srs: "&[question_id+user_id], user_id, next_review, [user_id+synced], [user_id+next_review]",
     });
 
+    // Version 12: Add hashCache table for persisting answer→hash mappings
+    this.version(12).stores({
+      hashCache: "&answer",
+    });
+
+    // Note: Quiz.category and Quiz.subcategory added in TypeScript types (no Dexie
+    // schema change needed since they are optional, unindexed fields).
+
     this.quizzes = this.table("quizzes");
     this.results = this.table("results");
     this.syncState = this.table("syncState");
+    this.hashCache = this.table("hashCache");
     this.srs = this.table("srs");
   }
 }
@@ -199,16 +221,14 @@ export async function clearDatabase(): Promise<void> {
   try {
     await db.transaction(
       "rw",
-      db.quizzes,
-      db.results,
-      db.syncState,
-      db.srs,
+      [db.quizzes, db.results, db.syncState, db.srs, db.hashCache],
       async () => {
         await Promise.all([
           db.quizzes.clear(),
           db.results.clear(),
           db.syncState.clear(),
           db.srs.clear(),
+          db.hashCache.clear(),
         ]);
       },
     );

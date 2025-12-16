@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
 import {
   LineChart,
   Line,
@@ -13,7 +12,7 @@ import {
   ReferenceLine,
   TooltipProps,
 } from "recharts";
-import { TrendingUp, TrendingDown, ChevronRight } from "lucide-react";
+import { TrendingUp, TrendingDown } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -22,12 +21,11 @@ import {
   CardDescription,
 } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
-import { ScorecardCompact } from "@/components/results/Scorecard";
 import { cn } from "@/lib/utils";
 import type { Result } from "@/types/result";
 import { useChartColors } from "@/hooks/useChartColors";
 import { useChartDimensions } from "@/hooks/useChartDimensions";
+import { EmptyCardState } from "@/components/analytics/EmptyCardState";
 
 interface PerformanceHistoryProps {
   results: Result[];
@@ -77,14 +75,13 @@ function PerformanceHistoryTooltip({
 }
 
 /**
- * Performance history chart and recent results list.
+ * Performance history chart showing score trends over time.
  */
 export function PerformanceHistory({
   results,
   quizTitles,
   className,
 }: PerformanceHistoryProps): React.ReactElement {
-  const router = useRouter();
   const { colors, isReady: colorsReady } = useChartColors();
   const { containerRef, isReady: dimensionsReady } = useChartDimensions();
   const isReady = colorsReady && dimensionsReady;
@@ -93,7 +90,6 @@ export function PerformanceHistory({
     () => [...results].sort((a, b) => b.timestamp - a.timestamp),
     [results],
   );
-  const [showAllResults, setShowAllResults] = React.useState(false);
 
   const trend = React.useMemo(() => {
     if (sortedResults.length < 2) return null;
@@ -138,16 +134,13 @@ export function PerformanceHistory({
 
   if (results.length === 0) {
     return (
-      <Card className={className}>
-        <CardHeader>
-          <CardTitle>Performance History</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-center text-muted-foreground">
-            Complete some quizzes to see your performance history.
-          </p>
-        </CardContent>
-      </Card>
+      <EmptyCardState
+        className={className}
+        headerIcon={null}
+        icon={<TrendingUp className="h-5 w-5" aria-hidden="true" />}
+        title="Performance History"
+        description="Complete some quizzes to see your performance history."
+      />
     );
   }
 
@@ -237,40 +230,10 @@ export function PerformanceHistory({
             </div>
           )}
         </div>
-
-        <div className="mt-6 border-t border-border pt-6">
-          <h3 className="mb-4 font-semibold text-foreground">Recent Results</h3>
-          <div className="space-y-2">
-            {(showAllResults ? sortedResults : sortedResults.slice(0, 5)).map(
-              (result) => (
-                <ScorecardCompact
-                  key={result.id}
-                  score={result.score}
-                  mode={result.mode}
-                  timestamp={result.timestamp}
-                  timeTakenSeconds={result.time_taken_seconds}
-                  onClick={() => router.push(`/results/${result.id}`)}
-                />
-              ),
-            )}
-          </div>
-
-          {sortedResults.length > 5 && !showAllResults && (
-            <Button
-              variant="ghost"
-              className="mt-4 w-full"
-              rightIcon={
-                <ChevronRight className="h-4 w-4" aria-hidden="true" />
-              }
-              onClick={() => setShowAllResults(true)}
-            >
-              View All {sortedResults.length} Results
-            </Button>
-          )}
-        </div>
       </CardContent>
     </Card>
   );
 }
 
 export default PerformanceHistory;
+

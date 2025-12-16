@@ -136,7 +136,7 @@ export function Modal({
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-50 flex items-start justify-center bg-background/80 px-4 py-6 backdrop-blur-sm sm:items-center"
+      className="fixed inset-0 z-50 flex items-start justify-center overflow-hidden bg-background/80 px-4 py-6 backdrop-blur-sm sm:items-center"
       onClick={handleOverlayClick}
       role="presentation"
     >

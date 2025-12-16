@@ -45,11 +45,11 @@ export function PageTransition({
                 };
             case "vapor":
             case "midnight":
-                // Quick Tech Fade
+                // Quick Tech Fade (no blur filter - breaks position:fixed in children)
                 return {
-                    initial: { opacity: 0, filter: "blur(4px)" },
-                    animate: { opacity: 1, filter: "blur(0px)" },
-                    exit: { opacity: 0, filter: "blur(4px)" },
+                    initial: { opacity: 0 },
+                    animate: { opacity: 1 },
+                    exit: { opacity: 0 },
                     transition: { duration: 0.2 },
                 };
             default:
