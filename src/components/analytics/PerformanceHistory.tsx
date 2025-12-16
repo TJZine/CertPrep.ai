@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
 import {
   LineChart,
   Line,
@@ -13,7 +12,7 @@ import {
   ReferenceLine,
   TooltipProps,
 } from "recharts";
-import { TrendingUp, TrendingDown, ChevronRight, AlertTriangle } from "lucide-react";
+import { TrendingUp, TrendingDown } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -22,19 +21,14 @@ import {
   CardDescription,
 } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
-import { ScorecardCompact } from "@/components/results/Scorecard";
 import { cn } from "@/lib/utils";
 import type { Result } from "@/types/result";
-import type { Quiz } from "@/types/quiz";
 import { useChartColors } from "@/hooks/useChartColors";
 import { useChartDimensions } from "@/hooks/useChartDimensions";
 
 interface PerformanceHistoryProps {
   results: Result[];
   quizTitles: Map<string, string>;
-  /** Quiz data used to check for missing category metadata */
-  quizzes?: Quiz[];
   className?: string;
 }
 
@@ -80,30 +74,21 @@ function PerformanceHistoryTooltip({
 }
 
 /**
- * Performance history chart and recent results list.
+ * Performance history chart showing score trends over time.
  */
 export function PerformanceHistory({
   results,
   quizTitles,
-  quizzes = [],
   className,
 }: PerformanceHistoryProps): React.ReactElement {
-  const router = useRouter();
   const { colors, isReady: colorsReady } = useChartColors();
   const { containerRef, isReady: dimensionsReady } = useChartDimensions();
   const isReady = colorsReady && dimensionsReady;
-
-  // Map for quick quiz lookup to check category metadata
-  const quizMap = React.useMemo(
-    () => new Map(quizzes.map((q) => [q.id, q])),
-    [quizzes],
-  );
 
   const sortedResults = React.useMemo(
     () => [...results].sort((a, b) => b.timestamp - a.timestamp),
     [results],
   );
-  const [showAllResults, setShowAllResults] = React.useState(false);
 
   const trend = React.useMemo(() => {
     if (sortedResults.length < 2) return null;
@@ -247,70 +232,10 @@ export function PerformanceHistory({
             </div>
           )}
         </div>
-
-        <div className="mt-6 border-t border-border pt-6">
-          <h3 className="mb-4 font-semibold text-foreground">Recent Results</h3>
-          <div className="space-y-2">
-            {(showAllResults ? sortedResults : sortedResults.slice(0, 5)).map(
-              (result) => {
-                const quiz = quizMap.get(result.quiz_id);
-                const isMissingCategory = quiz && !quiz.category;
-                return (
-                  <div key={result.id} className="flex items-center gap-2">
-                    <ScorecardCompact
-                      score={result.score}
-                      mode={result.mode}
-                      timestamp={result.timestamp}
-                      timeTakenSeconds={result.time_taken_seconds}
-                      onClick={() => router.push(`/results/${result.id}`)}
-                    />
-                    {isMissingCategory && (
-                      <span
-                        className="group/warning relative flex-shrink-0"
-                        role="img"
-                        aria-label="Warning: Quiz missing category for analytics"
-                      >
-                        <AlertTriangle
-                          className="h-4 w-4 text-warning cursor-help"
-                          aria-hidden="true"
-                        />
-                        <span
-                          className="pointer-events-none absolute left-full top-1/2 z-20 ml-2 -translate-y-1/2 w-48 rounded-lg bg-popover px-3 py-2 text-xs text-popover-foreground shadow-lg opacity-0 transition-opacity group-hover/warning:opacity-100 border border-border"
-                          role="tooltip"
-                        >
-                          <strong className="block mb-1">Missing Category</strong>
-                          <span className="text-muted-foreground">
-                            This quiz won&apos;t appear in grouped analytics. Fix via:
-                          </span>
-                          <ul className="mt-1 list-disc pl-3 text-muted-foreground">
-                            <li>Dashboard → Quiz menu → Edit Settings</li>
-                            <li>Result page → Add Category button</li>
-                          </ul>
-                        </span>
-                      </span>
-                    )}
-                  </div>
-                );
-              },
-            )}
-          </div>
-
-          {sortedResults.length > 5 && !showAllResults && (
-            <Button
-              variant="ghost"
-              className="mt-4 w-full"
-              rightIcon={
-                <ChevronRight className="h-4 w-4" aria-hidden="true" />
-              }
-              onClick={() => setShowAllResults(true)}
-            >
-              View All {sortedResults.length} Results
-            </Button>
-          )}
-        </div>
       </CardContent>
     </Card>
   );
 }
 
 export default PerformanceHistory;
+

@@ -4,6 +4,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { AnalyticsOverview } from "@/components/analytics/AnalyticsOverview";
 import { PerformanceHistory } from "@/components/analytics/PerformanceHistory";
+import { RecentResultsCard } from "@/components/analytics/RecentResultsCard";
 import { WeakAreasCard } from "@/components/analytics/WeakAreasCard";
 import { ExamReadinessCard } from "@/components/analytics/ExamReadinessCard";
 import { StreakCard } from "@/components/analytics/StreakCard";
@@ -221,6 +222,7 @@ export default function AnalyticsPage(): React.ReactElement {
           {statsError}
         </p>
       )}
+
       {/* Hero: Exam Readiness */}
       <div className="mb-8">
         <ExamReadinessCard
@@ -245,16 +247,23 @@ export default function AnalyticsPage(): React.ReactElement {
         <AnalyticsOverview stats={overallStats} className="mb-8" />
       )}
 
+      {/* Performance History Chart (full width) */}
       <div className="mb-8">
-        <PerformanceHistory results={results} quizTitles={quizTitles} quizzes={quizzes} />
+        <PerformanceHistory results={results} quizTitles={quizTitles} />
       </div>
 
+      {/* Recent Results + Focus to Improve (side-by-side) */}
       <div className="mb-8 grid gap-8 lg:grid-cols-2">
-        <TopicHeatmap results={results} quizzes={quizzes} userId={effectiveUserId ?? undefined} />
+        <RecentResultsCard results={results} quizzes={quizzes} />
         <WeakAreasCard
           weakAreas={weakAreas}
           userId={effectiveUserId ?? undefined}
         />
+      </div>
+
+      {/* Topic Heatmap (full width for dense data) */}
+      <div className="mb-8">
+        <TopicHeatmap results={results} quizzes={quizzes} userId={effectiveUserId ?? undefined} />
       </div>
 
       {/* Category Trends Over Time */}
@@ -271,3 +280,4 @@ export default function AnalyticsPage(): React.ReactElement {
     </div>
   );
 }
+
