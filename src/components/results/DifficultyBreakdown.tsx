@@ -37,6 +37,18 @@ function normalizeDifficulty(raw: string | undefined): DifficultyLabel {
 }
 
 /**
+ * Determine performance message based on difficulty breakdown stats.
+ */
+function getPerformanceMessage(stats: DifficultyStats[]): string {
+    const hardPct = stats.find((s) => s.label === "Hard")?.percentage ?? 0;
+    const easyPct = stats.find((s) => s.label === "Easy")?.percentage ?? 0;
+
+    if (hardPct >= 70) return "💪 Great work on hard questions!";
+    if (easyPct < 80) return "📚 Focus on fundamentals first";
+    return "📈 Ready to tackle harder content";
+}
+
+/**
  * Breakdown of performance by question difficulty level.
  * Shows correct/total and percentage for Easy, Medium, and Hard questions.
  */
@@ -57,12 +69,13 @@ export function DifficultyBreakdown({
         // Count questions by difficulty
         questions.forEach(({ question, isCorrect }) => {
             const difficulty = normalizeDifficulty(question.difficulty);
-            const current = difficultyMap.get(difficulty) || { correct: 0, total: 0 };
+            // Non-null assertion safe: all levels initialized above
+            const current = difficultyMap.get(difficulty)!;
             current.total += 1;
             if (isCorrect) {
                 current.correct += 1;
             }
-            difficultyMap.set(difficulty, current);
+            // No need to .set() — we mutate the existing object in place
         });
 
         const colors: Record<DifficultyLabel, { color: string; bgColor: string }> = {
@@ -121,15 +134,9 @@ export function DifficultyBreakdown({
                     </div>
                 ))}
 
-                {stats.length > 0 && (
-                    <p className="pt-2 text-xs text-muted-foreground">
-                        {(stats.find((s) => s.label === "Hard")?.percentage ?? 0) >= 70
-                            ? "💪 Great work on hard questions!"
-                            : (stats.find((s) => s.label === "Easy")?.percentage ?? 0) < 80
-                                ? "📚 Focus on fundamentals first"
-                                : "📈 Ready to tackle harder content"}
-                    </p>
-                )}
+                <p className="pt-2 text-xs text-muted-foreground">
+                    {getPerformanceMessage(stats)}
+                </p>
             </CardContent>
         </Card>
     );

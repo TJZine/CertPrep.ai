@@ -44,14 +44,18 @@ function isSameSiteRequest(request: NextRequest): boolean {
 
 export async function DELETE(request: NextRequest): Promise<NextResponse> {
   try {
-    // SECURITY: Reject requests with bodies > 1KB
-    // DELETE requests should have no body; this prevents DoS via oversized payloads
+    // SECURITY: DELETE requests should have no body per HTTP semantics
+    // Reject any body (>0 bytes) or malformed content-length headers to prevent DoS
     const contentLength = request.headers.get("content-length");
-    if (contentLength && parseInt(contentLength, 10) > 1024) {
-      return NextResponse.json(
-        { error: "Request body too large" },
-        { status: 413 }
-      );
+    if (contentLength !== null) {
+      const length = parseInt(contentLength, 10);
+      // Reject if: body present (>0), or header is malformed (NaN)
+      if (!Number.isFinite(length) || length > 0) {
+        return NextResponse.json(
+          { error: "Request body not allowed" },
+          { status: 413 }
+        );
+      }
     }
 
     const cookieStore = await cookies();

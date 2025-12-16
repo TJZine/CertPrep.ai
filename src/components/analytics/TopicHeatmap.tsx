@@ -189,6 +189,14 @@ function HeatmapSkeleton({ className }: { className?: string }): React.ReactElem
     );
 }
 
+/** Sort labels for the dropdown menu */
+const SORT_LABELS: Record<SortMode, string> = {
+    "worst-first": "Weakest First",
+    "best-first": "Strongest First",
+    "alphabetical": "A-Z",
+    "by-quiz-group": "By Quiz Category",
+};
+
 /**
  * Topic Heatmap showing category performance over time.
  * Displays: Prev Week (days 7-13 ago) + Last 7 days individually.
@@ -205,9 +213,70 @@ export function TopicHeatmap({
     const [isLoading, setIsLoading] = React.useState(true);
     const [sortMode, setSortMode] = React.useState<SortMode>("worst-first");
     const [showSortMenu, setShowSortMenu] = React.useState(false);
+    const [focusedSortIndex, setFocusedSortIndex] = React.useState(0);
+    const sortMenuRef = React.useRef<HTMLDivElement>(null);
+    const sortButtonRef = React.useRef<HTMLButtonElement>(null);
     const [loadingCategory, setLoadingCategory] = React.useState<string | null>(null);
     // Tracks which parent groups are collapsed (quiz category — subcategory)
     const [collapsedGroups, setCollapsedGroups] = React.useState<Set<string>>(new Set());
+
+    // Clear collapsed groups when sort mode changes to prevent stale state
+    React.useEffect(() => {
+        setCollapsedGroups(new Set());
+    }, [sortMode]);
+
+    // Keyboard and click-outside handling for sort dropdown
+    React.useEffect(() => {
+        if (!showSortMenu) return;
+
+        const sortModes = Object.keys(SORT_LABELS) as SortMode[];
+
+        const handleClickOutside = (e: MouseEvent): void => {
+            if (
+                sortMenuRef.current &&
+                !sortMenuRef.current.contains(e.target as Node) &&
+                sortButtonRef.current &&
+                !sortButtonRef.current.contains(e.target as Node)
+            ) {
+                setShowSortMenu(false);
+            }
+        };
+
+        const handleKeyDown = (e: KeyboardEvent): void => {
+            switch (e.key) {
+                case "Escape":
+                    e.preventDefault();
+                    setShowSortMenu(false);
+                    sortButtonRef.current?.focus();
+                    break;
+                case "ArrowDown":
+                    e.preventDefault();
+                    setFocusedSortIndex((prev) => (prev + 1) % sortModes.length);
+                    break;
+                case "ArrowUp":
+                    e.preventDefault();
+                    setFocusedSortIndex((prev) => (prev - 1 + sortModes.length) % sortModes.length);
+                    break;
+                case "Enter":
+                case " ":
+                    e.preventDefault();
+                    setSortMode(sortModes[focusedSortIndex]!);
+                    setShowSortMenu(false);
+                    sortButtonRef.current?.focus();
+                    break;
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+        document.addEventListener("keydown", handleKeyDown);
+
+        return (): void => {
+            document.removeEventListener("mousedown", handleClickOutside);
+            document.removeEventListener("keydown", handleKeyDown);
+        };
+    }, [showSortMenu, focusedSortIndex, sortMode]);
+
+    // Use module-level constant for sort labels
 
     const timeColumns = React.useMemo(() => getTimeColumns(), []);
     const quizMap = React.useMemo(
@@ -521,19 +590,25 @@ export function TopicHeatmap({
             }
 
             // Store in sessionStorage for topic-review page
-            sessionStorage.setItem(
-                TOPIC_STUDY_QUESTIONS_KEY,
-                JSON.stringify(data.questionIds),
-            );
-            sessionStorage.setItem(TOPIC_STUDY_CATEGORY_KEY, category);
-            sessionStorage.setItem(
-                TOPIC_STUDY_MISSED_COUNT_KEY,
-                String(data.missedCount),
-            );
-            sessionStorage.setItem(
-                TOPIC_STUDY_FLAGGED_COUNT_KEY,
-                String(data.flaggedCount),
-            );
+            // Wrapped in try-catch for Safari Private Browsing / quota exceeded
+            try {
+                sessionStorage.setItem(
+                    TOPIC_STUDY_QUESTIONS_KEY,
+                    JSON.stringify(data.questionIds),
+                );
+                sessionStorage.setItem(TOPIC_STUDY_CATEGORY_KEY, category);
+                sessionStorage.setItem(
+                    TOPIC_STUDY_MISSED_COUNT_KEY,
+                    String(data.missedCount),
+                );
+                sessionStorage.setItem(
+                    TOPIC_STUDY_FLAGGED_COUNT_KEY,
+                    String(data.flaggedCount),
+                );
+            } catch (storageError) {
+                logger.warn("sessionStorage unavailable, topic study may lack context", { storageError });
+                // Continue anyway — topic-review page can operate without pre-loaded data
+            }
 
             await router.push("/quiz/topic-review");
         } catch (error) {
@@ -542,13 +617,6 @@ export function TopicHeatmap({
         } finally {
             setLoadingCategory(null);
         }
-    };
-
-    const sortLabels: Record<SortMode, string> = {
-        "worst-first": "Weakest First",
-        "best-first": "Strongest First",
-        "alphabetical": "A-Z",
-        "by-quiz-group": "By Quiz Category",
     };
 
     if (isLoading) {
@@ -598,33 +666,48 @@ export function TopicHeatmap({
                 {/* Sort toggle */}
                 <div className="relative">
                     <Button
+                        ref={sortButtonRef}
                         variant="ghost"
                         size="sm"
-                        onClick={() => setShowSortMenu(!showSortMenu)}
+                        onClick={() => {
+                            setShowSortMenu(!showSortMenu);
+                            // Reset focus index to current selection when opening
+                            if (!showSortMenu) {
+                                const sortModes = Object.keys(SORT_LABELS) as SortMode[];
+                                setFocusedSortIndex(sortModes.indexOf(sortMode));
+                            }
+                        }}
                         className="text-xs"
                         aria-label="Change sort order"
+                        aria-haspopup="listbox"
                         aria-expanded={showSortMenu}
                     >
-                        {sortLabels[sortMode]}
+                        {SORT_LABELS[sortMode]}
                         <ChevronDown className="ml-1 h-3 w-3" aria-hidden="true" />
                     </Button>
                     {showSortMenu && (
                         <div
+                            ref={sortMenuRef}
+                            role="listbox"
+                            aria-label="Sort order options"
                             className="absolute right-0 top-full z-10 mt-1 rounded-md border border-border bg-card shadow-lg"
                         >
-                            {(Object.keys(sortLabels) as SortMode[]).map((mode) => (
+                            {(Object.keys(SORT_LABELS) as SortMode[]).map((mode, index) => (
                                 <button
                                     key={mode}
+                                    role="option"
+                                    aria-selected={sortMode === mode}
                                     onClick={() => {
                                         setSortMode(mode);
                                         setShowSortMenu(false);
                                     }}
                                     className={cn(
                                         "block w-full px-3 py-1.5 text-left text-xs hover:bg-muted",
-                                        sortMode === mode && "bg-muted font-medium",
+                                        sortMode === mode && "font-medium",
+                                        focusedSortIndex === index && "bg-muted",
                                     )}
                                 >
-                                    {sortLabels[mode]}
+                                    {SORT_LABELS[mode]}
                                 </button>
                             ))}
                         </div>
@@ -736,9 +819,9 @@ export function TopicHeatmap({
                                                             colData.total >= 10 && "font-bold ring-1 ring-current/20",
                                                             colData.total >= 5 && colData.total < 10 && "font-semibold",
                                                             colData.total > 0 && colData.total < 5 && "font-normal",
-                                                            // Text color
+                                                            // Text color (using semantic token for theme-aware contrast)
                                                             colData.score !== null && colData.score >= 70
-                                                                ? "text-white"
+                                                                ? "text-success-foreground"
                                                                 : "text-foreground",
                                                         )}
                                                         title={`${catData.category} - ${colData.label}: ${colData.score !== null ? `${colData.score}% (${colData.correct}/${colData.total})` : "No data"}${colData.total > 0 && colData.total < 5 ? " (low sample)" : ""}${colData.total >= 10 ? " (high confidence)" : ""}`}
