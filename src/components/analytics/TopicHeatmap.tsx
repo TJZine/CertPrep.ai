@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import type { Result } from "@/types/result";
 import type { Quiz, Question } from "@/types/quiz";
 import { getCachedHash } from "@/db/hashCache";
-import { ChevronDown, ChevronRight, BookOpen, TrendingUp, TrendingDown, Minus, Loader2 } from "lucide-react";
+import { ChevronDown, ChevronRight, BookOpen, TrendingUp, TrendingDown, Minus, Loader2, Trophy } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 import { getTopicStudyQuestions } from "@/db/results";
 import {
@@ -25,6 +25,7 @@ import {
     TOPIC_STUDY_FLAGGED_COUNT_KEY,
 } from "@/lib/topicStudyStorage";
 import { logger } from "@/lib/logger";
+import { EmptyCardState } from "@/components/analytics/EmptyCardState";
 
 interface TopicHeatmapProps {
     results: Result[];
@@ -625,16 +626,13 @@ export function TopicHeatmap({
 
     if (heatmapData.length === 0) {
         return (
-            <Card className={className}>
-                <CardHeader>
-                    <CardTitle>Topic Mastery Over Time</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <p className="text-center text-muted-foreground">
-                        Complete some quizzes to see your topic mastery over time.
-                    </p>
-                </CardContent>
-            </Card>
+            <EmptyCardState
+                className={className}
+                headerIcon={null}
+                icon={<Trophy className="h-5 w-5" aria-hidden="true" />}
+                title="Topic Mastery Over Time"
+                description="Complete some quizzes to see your topic mastery over time."
+            />
         );
     }
 

@@ -25,6 +25,7 @@ import { cn } from "@/lib/utils";
 import type { Result } from "@/types/result";
 import { useChartColors } from "@/hooks/useChartColors";
 import { useChartDimensions } from "@/hooks/useChartDimensions";
+import { EmptyCardState } from "@/components/analytics/EmptyCardState";
 
 interface PerformanceHistoryProps {
   results: Result[];
@@ -133,16 +134,13 @@ export function PerformanceHistory({
 
   if (results.length === 0) {
     return (
-      <Card className={className}>
-        <CardHeader>
-          <CardTitle>Performance History</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-center text-muted-foreground">
-            Complete some quizzes to see your performance history.
-          </p>
-        </CardContent>
-      </Card>
+      <EmptyCardState
+        className={className}
+        headerIcon={null}
+        icon={<TrendingUp className="h-5 w-5" aria-hidden="true" />}
+        title="Performance History"
+        description="Complete some quizzes to see your performance history."
+      />
     );
   }
 

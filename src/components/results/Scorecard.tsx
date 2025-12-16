@@ -305,6 +305,7 @@ interface ScorecardCompactProps {
   timeTakenSeconds: number;
   onClick?: () => void;
   className?: string;
+  title?: string;
 }
 
 /**
@@ -317,6 +318,7 @@ export function ScorecardCompact({
   timeTakenSeconds,
   onClick,
   className,
+  title,
 }: ScorecardCompactProps): React.ReactElement {
   const tier = getPerformanceTier(score);
 
@@ -341,25 +343,31 @@ export function ScorecardCompact({
         <span className={cn("text-xl font-bold", tier.color)}>{score}%</span>
       </div>
 
-      <div className="flex-1">
-        <div className="flex items-center gap-2">
+      <div className="flex-1 min-w-0">
+        {title && (
+          <h4 className="mb-1 truncate text-base font-medium text-foreground">
+            {title}
+          </h4>
+        )}
+        <div className="flex flex-wrap items-center gap-2">
           <Badge
             variant={mode === "zen" ? "default" : "secondary"}
             className="text-xs"
           >
             {mode === "zen" ? "Study" : "Exam"}
           </Badge>
-          <span className="text-sm text-muted-foreground">
+          <span className="text-sm text-muted-foreground whitespace-nowrap">
             {formatDate(timestamp)}
           </span>
         </div>
-        <p className="mt-1 text-sm text-foreground">
+        <p className="mt-1 text-sm text-muted-foreground">
           Completed in {formatTime(timeTakenSeconds)}
         </p>
       </div>
 
       <Badge
         variant={score >= 70 ? "success" : score >= 60 ? "warning" : "danger"}
+        className="flex-shrink-0"
       >
         {tier.label}
       </Badge>

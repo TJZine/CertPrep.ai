@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/Card";
 import { formatDateKey } from "@/lib/date";
 import { cn } from "@/lib/utils";
+import { EmptyCardState } from "@/components/analytics/EmptyCardState";
 
 interface DailyStudyData {
     date: string;
@@ -220,19 +221,13 @@ export function StreakCard({
 
     if (!hasActivity && currentStreak === 0 && longestStreak === 0) {
         return (
-            <Card className={className}>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <Flame className="h-5 w-5 text-warning" aria-hidden="true" />
-                        Study Streak
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <p className="text-center text-muted-foreground">
-                        Complete a quiz today to start your streak! 🔥
-                    </p>
-                </CardContent>
-            </Card>
+            <EmptyCardState
+                className={className}
+                headerIcon={<Flame className="h-5 w-5 text-warning" aria-hidden="true" />}
+                icon={<Flame className="text-warning" aria-hidden="true" />}
+                title="Study Streak"
+                description="Complete a quiz today to start your streak! 🔥"
+            />
         );
     }
 

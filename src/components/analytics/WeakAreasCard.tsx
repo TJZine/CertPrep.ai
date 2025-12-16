@@ -24,6 +24,7 @@ import {
 } from "@/lib/topicStudyStorage";
 import { logger } from "@/lib/logger";
 import { useQuizzes } from "@/hooks/useDatabase";
+import { EmptyCardState } from "@/components/analytics/EmptyCardState";
 
 interface WeakArea {
   category: string;
@@ -162,27 +163,13 @@ export function WeakAreasCard({
 
   if (weakAreas.length === 0) {
     return (
-      <Card className={className}>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <AlertTriangle
-              className="h-5 w-5 text-success"
-              aria-hidden="true"
-            />
-            Areas to Improve
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-lg border border-success/50 bg-success/10 p-4 text-center">
-            <p className="font-medium text-success">
-              🎉 Great job! No weak areas identified.
-            </p>
-            <p className="mt-1 text-sm text-success/80">
-              Keep practicing to maintain your knowledge.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+      <EmptyCardState
+        className={className}
+        headerIcon={<AlertTriangle className="h-5 w-5 text-success" aria-hidden="true" />}
+        icon={<AlertTriangle className="text-success" aria-hidden="true" />}
+        title="Areas to Improve"
+        description="🎉 Great job! No weak areas identified. Keep practicing to maintain your knowledge."
+      />
     );
   }
 

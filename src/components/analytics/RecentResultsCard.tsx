@@ -14,10 +14,12 @@ import { Button } from "@/components/ui/Button";
 import { ScorecardCompact } from "@/components/results/Scorecard";
 import type { Result } from "@/types/result";
 import type { Quiz } from "@/types/quiz";
+import { EmptyCardState } from "@/components/analytics/EmptyCardState";
 
 interface RecentResultsCardProps {
     results: Result[];
     quizzes?: Quiz[];
+    quizTitles?: Map<string, string>;
     /** Maximum number of results to show initially before "View All" */
     initialLimit?: number;
     className?: string;
@@ -30,6 +32,7 @@ interface RecentResultsCardProps {
 export function RecentResultsCard({
     results,
     quizzes = [],
+    quizTitles,
     initialLimit = 5,
     className,
 }: RecentResultsCardProps): React.ReactElement {
@@ -50,19 +53,13 @@ export function RecentResultsCard({
 
     if (results.length === 0) {
         return (
-            <Card className={className}>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <History className="h-5 w-5" aria-hidden="true" />
-                        Recent Results
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <p className="text-center text-muted-foreground">
-                        Complete some quizzes to see your recent results.
-                    </p>
-                </CardContent>
-            </Card>
+            <EmptyCardState
+                className={className}
+                headerIcon={<History className="h-5 w-5" aria-hidden="true" />}
+                icon={<History aria-hidden="true" />}
+                title="Recent Results"
+                description="Complete some quizzes to see your recent results."
+            />
         );
     }
 
@@ -82,13 +79,16 @@ export function RecentResultsCard({
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="space-y-2">
+                <div className="space-y-4">
                     {displayedResults.map((result) => {
                         const quiz = quizMap.get(result.quiz_id);
                         const isMissingCategory = quiz && !quiz.category;
+                        const quizTitle = quizTitles?.get(result.quiz_id) || "Unknown Quiz";
+
                         return (
-                            <div key={result.id} className="flex items-center gap-2">
+                            <div key={result.id} className="relative">
                                 <ScorecardCompact
+                                    title={quizTitle}
                                     score={result.score}
                                     mode={result.mode}
                                     timestamp={result.timestamp}
@@ -97,7 +97,7 @@ export function RecentResultsCard({
                                 />
                                 {isMissingCategory && (
                                     <span
-                                        className="group/warning relative flex-shrink-0"
+                                        className="group/warning absolute right-2 top-2 z-10"
                                         role="img"
                                         aria-label="Warning: Quiz missing category for analytics"
                                     >
@@ -106,7 +106,7 @@ export function RecentResultsCard({
                                             aria-hidden="true"
                                         />
                                         <span
-                                            className="pointer-events-none absolute left-full top-1/2 z-20 ml-2 -translate-y-1/2 w-48 rounded-lg bg-popover px-3 py-2 text-xs text-popover-foreground shadow-lg opacity-0 transition-opacity group-hover/warning:opacity-100 border border-border"
+                                            className="pointer-events-none absolute right-0 top-6 w-48 rounded-lg bg-popover px-3 py-2 text-xs text-popover-foreground shadow-lg opacity-0 transition-opacity group-hover/warning:opacity-100 border border-border z-20"
                                             role="tooltip"
                                         >
                                             <strong className="block mb-1">Missing Category</strong>
