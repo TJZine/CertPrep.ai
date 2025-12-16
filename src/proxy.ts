@@ -8,8 +8,8 @@ const PROTECTED_ROUTES = ["/settings"];
 const AUTH_ROUTES = ["/login", "/signup", "/forgot-password"];
 
 export async function proxy(request: NextRequest): Promise<NextResponse> {
-  // 1. Generate Nonce for CSP
-  const nonce = crypto.randomUUID();
+  // 1. Generate Nonce for CSP (base64-encoded per CSP Level 3 spec)
+  const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
 
   // 2. Prepare CSP Header
   const isDev = process.env.NODE_ENV === "development";

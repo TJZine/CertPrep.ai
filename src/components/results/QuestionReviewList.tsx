@@ -84,6 +84,11 @@ const Row = ({ index, style, data }: { index: number; style: React.CSSProperties
           expandAllSignal={expandAllSignal}
           correctAnswer={item.correctAnswer}
           isResolving={isResolving}
+          onResize={() => {
+            if (rowRef.current) {
+              setSize(index, rowRef.current.getBoundingClientRect().height + 16);
+            }
+          }}
         />
       </div>
     </div>
@@ -283,7 +288,11 @@ export function QuestionReviewList({
           </p>
         </div>
       ) : (
-        <div className="h-full min-h-[400px] w-full flex-1">
+        <div
+          className="h-full min-h-[400px] w-full flex-1"
+          role="list"
+          aria-label="Question review list"
+        >
           <AutoSizer>
             {({ height, width }: { height: number; width: number }) => (
               <VirtualList

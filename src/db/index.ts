@@ -174,8 +174,7 @@ export class CertPrepDatabase extends Dexie {
         "id, user_id, created_at, deleted_at, *tags, quiz_hash, updated_at, [user_id+created_at], category, subcategory",
     });
 
-    // Note: Quiz.category and Quiz.subcategory added in TypeScript types (no Dexie
-    // schema change needed since they are optional, unindexed fields).
+    // Note: Quiz.category and Quiz.subcategory are now indexed as of version 13.
 
     this.quizzes = this.table("quizzes");
     this.results = this.table("results");

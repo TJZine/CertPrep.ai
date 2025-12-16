@@ -60,6 +60,7 @@ export function TestLibrary({
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
+  const tabRefs = React.useRef<(HTMLButtonElement | null)[]>([]);
 
   React.useEffect(() => {
     let isMounted = true;
@@ -157,7 +158,40 @@ export function TestLibrary({
     } else {
       params.set("category", category);
     }
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    const queryString = params.toString();
+    router.replace(queryString ? `${pathname}?${queryString}` : pathname, { scroll: false });
+  };
+
+  const handleTabKeyDown = (
+    e: React.KeyboardEvent,
+    currentIndex: number,
+  ): void => {
+    const lastIndex = categories.length - 1;
+    let nextIndex: number | null = null;
+
+    switch (e.key) {
+      case "ArrowRight":
+        nextIndex = currentIndex < lastIndex ? currentIndex + 1 : 0;
+        break;
+      case "ArrowLeft":
+        nextIndex = currentIndex > 0 ? currentIndex - 1 : lastIndex;
+        break;
+      case "Home":
+        nextIndex = 0;
+        break;
+      case "End":
+        nextIndex = lastIndex;
+        break;
+      default:
+        return;
+    }
+
+    e.preventDefault();
+    const nextCategory = categories[nextIndex];
+    if (nextCategory) {
+      handleCategoryChange(nextCategory);
+      tabRefs.current[nextIndex]?.focus();
+    }
   };
 
   const filteredManifest = React.useMemo(() => {
@@ -257,12 +291,17 @@ export function TestLibrary({
                   className="flex gap-2 overflow-x-auto pb-1"
                   aria-label="Filter by category"
                 >
-                  {categories.map((category) => (
+                  {categories.map((category, index) => (
                     <button
                       key={category}
+                      ref={(el) => {
+                        tabRefs.current[index] = el;
+                      }}
                       role="tab"
                       aria-selected={categoryFilter === category}
+                      tabIndex={categoryFilter === category ? 0 : -1}
                       onClick={() => handleCategoryChange(category)}
+                      onKeyDown={(e) => handleTabKeyDown(e, index)}
                       className={cn(
                         "shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                         categoryFilter === category

@@ -64,7 +64,6 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@types/react-virtualized-auto-sizer": "^1.0.4",
     "@types/uuid": "^10.0.0",
     "@typescript-eslint/eslint-plugin": "^8.48.0",
     "@typescript-eslint/parser": "^8.48.0",

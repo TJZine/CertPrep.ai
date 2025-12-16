@@ -29,6 +29,8 @@ interface QuestionReviewCardProps {
   expandAllSignal?: number;
   correctAnswer?: string | null;
   isResolving?: boolean;
+  /** Callback when card height changes (e.g., on expand/collapse). */
+  onResize?: () => void;
 }
 
 /**
@@ -45,6 +47,7 @@ export function QuestionReviewCard({
   expandAllSignal,
   correctAnswer,
   isResolving = false,
+  onResize,
 }: QuestionReviewCardProps): React.ReactElement {
   const [isExpanded, setIsExpanded] = React.useState(defaultExpanded);
 
@@ -98,6 +101,11 @@ export function QuestionReviewCard({
       setIsExpanded(expandAllState);
     }
   }, [expandAllSignal, expandAllState]);
+
+  // Notify parent when expansion changes so virtualized list can remeasure
+  React.useLayoutEffect(() => {
+    onResize?.();
+  }, [isExpanded, onResize]);
 
   return (
     <Card
