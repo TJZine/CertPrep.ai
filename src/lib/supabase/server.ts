@@ -48,13 +48,14 @@ export const createClient = async (): Promise<
     }
 
     try {
-      // Use AbortSignal.timeout (Node 18+)
+      // AbortSignal.timeout available since Node.js v16.14.0
       return await fetch(input, {
         ...init,
         signal: AbortSignal.timeout(SUPABASE_TIMEOUT_MS),
       });
     } catch (e) {
-      if (e instanceof DOMException && e.name === "AbortError") {
+      // AbortSignal.timeout() throws TimeoutError (not AbortError)
+      if (e instanceof DOMException && e.name === "TimeoutError") {
         throw new Error(
           `Supabase request timed out after ${SUPABASE_TIMEOUT_MS}ms`,
         );

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { List as ListIcon, CheckCircle, XCircle, Flag } from "lucide-react";
-import { List } from "react-window";
+import { List, useDynamicRowHeight } from "react-window";
 import AutoSizer from "react-virtualized-auto-sizer";
 import { QuestionReviewCard } from "./QuestionReviewCard";
 import { Button } from "@/components/ui/Button";
@@ -29,12 +29,7 @@ interface QuestionReviewListProps {
   isResolving?: boolean;
 }
 
-interface VirtualListProps {
-  height: number;
-  width: number;
-  itemCount: number;
-  itemData: Omit<RowData, "setSize">;
-}
+// Row height sizing is handled by useDynamicRowHeight hook
 
 interface RowData {
   filteredItems: QuestionWithAnswer[];
@@ -43,7 +38,7 @@ interface RowData {
   expandAllSignal: number;
   activeFilter: FilterType;
   isResolving: boolean;
-  setSize: (index: number, size: number) => void;
+  setRowHeight: (index: number, size: number) => void;
 }
 
 // Define the shape of props passed to the Row component (excluding index/style which are added by List)
@@ -53,15 +48,15 @@ interface ListRowProps {
 
 const Row = ({ index, style, data }: { index: number; style: React.CSSProperties; data: RowData }): React.ReactElement => {
   const rowRef = React.useRef<HTMLDivElement>(null);
-  const { filteredItems, questions, expandAll, expandAllSignal, activeFilter, isResolving, setSize } = data;
+  const { filteredItems, questions, expandAll, expandAllSignal, activeFilter, isResolving, setRowHeight } = data;
   const item = filteredItems[index];
 
-  // Measure height
+  // Measure height and notify dynamic sizing system
   React.useLayoutEffect(() => {
     if (rowRef.current) {
-      setSize(index, rowRef.current.getBoundingClientRect().height + 16); // +16 for gap (space-y-4 equivalent)
+      setRowHeight(index, rowRef.current.getBoundingClientRect().height + 16); // +16 for gap (space-y-4 equivalent)
     }
-  }, [setSize, index, expandAllSignal, activeFilter]);
+  }, [setRowHeight, index, expandAllSignal, activeFilter]);
 
   if (!item) return <div style={style} />;
 
@@ -86,7 +81,7 @@ const Row = ({ index, style, data }: { index: number; style: React.CSSProperties
           isResolving={isResolving}
           onResize={() => {
             if (rowRef.current) {
-              setSize(index, rowRef.current.getBoundingClientRect().height + 16);
+              setRowHeight(index, rowRef.current.getBoundingClientRect().height + 16);
             }
           }}
         />
@@ -95,36 +90,7 @@ const Row = ({ index, style, data }: { index: number; style: React.CSSProperties
   );
 };
 
-function VirtualList({ height, width, itemCount, itemData }: VirtualListProps): React.ReactElement {
-  // Use a ref to track row heights for dynamic sizing
-  const sizeMap = React.useRef<{ [index: number]: number }>({});
-  const [layoutVersion, setLayoutVersion] = React.useState(0);
-
-  // Force re-render of List when these change to reset internal state/cache
-  const listKey = `${itemData.activeFilter}-${itemData.expandAllSignal}-${itemCount}-${layoutVersion}`;
-
-  const setSize = React.useCallback((index: number, size: number): void => {
-    if (sizeMap.current[index] !== size) {
-      sizeMap.current[index] = size;
-      // Trigger re-render to update list layout
-      setLayoutVersion((v) => v + 1);
-    }
-  }, []);
-
-  const getSize = (index: number): number => sizeMap.current[index] || 200;
-
-  return (
-    <List<ListRowProps>
-      key={listKey}
-      style={{ height, width }}
-      rowCount={itemCount}
-      rowHeight={getSize}
-      rowProps={{ data: { ...itemData, setSize } }}
-      rowComponent={Row}
-      className="scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent"
-    />
-  );
-}
+// VirtualList inlined into main component using useDynamicRowHeight
 
 /**
  * Filterable list of question review cards.
@@ -143,6 +109,13 @@ export function QuestionReviewList({
   const [expandAllSignal, setExpandAllSignal] = React.useState(0);
 
   const activeFilter = filter ?? internalFilter;
+
+  // Use react-window v2's built-in dynamic row height hook
+  // This avoids the need for key-based remounting
+  const dynamicRowHeight = useDynamicRowHeight({
+    defaultRowHeight: 200, // Estimated collapsed card height
+    key: `${activeFilter}-${expandAllSignal}`, // Reset cache on filter/expand changes
+  });
 
   const counts = React.useMemo(() => {
     return {
@@ -213,7 +186,7 @@ export function QuestionReviewList({
     },
   ] as const;
 
-  const itemData = React.useMemo(
+  const itemData: RowData = React.useMemo(
     () => ({
       questions: questions,
       filteredItems: filteredQuestions,
@@ -221,6 +194,7 @@ export function QuestionReviewList({
       expandAllSignal,
       activeFilter,
       isResolving,
+      setRowHeight: dynamicRowHeight.setRowHeight,
     }),
     [
       questions,
@@ -229,6 +203,7 @@ export function QuestionReviewList({
       expandAllSignal,
       activeFilter,
       isResolving,
+      dynamicRowHeight.setRowHeight,
     ],
   );
 
@@ -295,11 +270,13 @@ export function QuestionReviewList({
         >
           <AutoSizer>
             {({ height, width }: { height: number; width: number }) => (
-              <VirtualList
-                height={height}
-                width={width}
-                itemCount={filteredQuestions.length}
-                itemData={itemData}
+              <List<ListRowProps>
+                style={{ height, width }}
+                rowCount={filteredQuestions.length}
+                rowHeight={dynamicRowHeight}
+                rowProps={{ data: itemData }}
+                rowComponent={Row}
+                className="scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent"
               />
             )}
           </AutoSizer>
