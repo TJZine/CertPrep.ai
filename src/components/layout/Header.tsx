@@ -123,7 +123,7 @@ export function Header(): React.ReactElement {
         {/* Logo */}
         <Link
           href="/"
-          className="flex items-center gap-2 transition-opacity hover:opacity-90 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          className="flex items-center gap-2 transition-all hover:opacity-90 hover:scale-105 active:scale-95 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
           <Logo />
         </Link>
@@ -232,7 +232,7 @@ export function Header(): React.ReactElement {
       <div
         inert={!isMenuOpen ? true : undefined}
         className={cn(
-          "fixed inset-x-0 top-16 z-40 bg-background md:hidden transition-[transform,opacity] duration-300 ease-in-out h-[calc(100dvh-4rem)] min-h-[calc(100vh-4rem)]",
+          "fixed inset-x-0 top-16 z-40 bg-background/95 backdrop-blur-xl md:hidden transition-[transform,opacity] duration-300 ease-in-out h-[calc(100dvh-4rem)] min-h-[calc(100vh-4rem)]",
           isMenuOpen ? "translate-x-0 opacity-100" : "translate-x-full opacity-0",
         )}
         aria-hidden={!isMenuOpen}
@@ -258,7 +258,7 @@ export function Header(): React.ReactElement {
                       : "text-muted-foreground hover:bg-accent hover:text-foreground",
                   )}
                 >
-                  <Icon className="h-5 w-5" />
+                  <Icon className="h-5 w-5" aria-hidden="true" />
                   {item.name}
                 </Link>
               );
