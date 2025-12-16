@@ -72,7 +72,7 @@
     "eslint-config-next": "16.0.7",
     "fake-indexeddb": "^6.2.5",
     "husky": "^9.0.11",
-    "jsdom": "^27.2.0",
+    "jsdom": "^27.3.0",
     "lint-staged": "^15.2.2",
     "postcss": "^8.4.47",
     "prettier": "^3.7.4",
