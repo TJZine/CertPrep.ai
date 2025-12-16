@@ -35,10 +35,12 @@ export function EmptyCardState({
       </CardHeader>
       <CardContent className="flex flex-1 flex-col items-center justify-center py-6 text-center">
         <div className="mb-4 text-muted-foreground opacity-50">
-           {/* Clone the icon to potentially adjust size if needed, though usually passed as is */}
-           {React.isValidElement(icon) ? React.cloneElement(icon as React.ReactElement<{ className?: string }>, {
-             className: cn("h-12 w-12", (icon as React.ReactElement<{ className?: string }>).props.className)
-           }) : icon}
+          {/* Clone the icon to potentially adjust size if needed, though usually passed as is */}
+          {React.isValidElement(icon)
+            ? React.cloneElement(icon as React.ReactElement<{ className?: string }>, {
+              className: cn("h-12 w-12", (icon as React.ReactElement<{ className?: string }>).props.className),
+            })
+            : icon}
         </div>
         <p className="max-w-[80%] text-sm text-muted-foreground">
           {description}

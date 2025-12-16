@@ -224,15 +224,16 @@ export function QuizCard({
               <div className="flex items-center gap-2">
                 {isMissingCategory && (
                   <span
-                    className="group/tooltip relative flex-shrink-0"
-                    aria-label="Missing category for analytics"
+                    className="group/tooltip relative flex-shrink-0 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    tabIndex={0}
+                    aria-label="Missing category for full analytics"
                   >
                     <AlertTriangle
                       className="h-4 w-4 text-warning"
                       aria-hidden="true"
                     />
                     <span
-                      className="pointer-events-none absolute left-1/2 top-full z-20 mt-1 -translate-x-1/2 whitespace-nowrap rounded bg-popover px-2 py-1 text-xs text-popover-foreground shadow-md opacity-0 transition-opacity group-hover/tooltip:opacity-100 border border-border"
+                      className="pointer-events-none absolute left-1/2 top-full z-20 mt-1 -translate-x-1/2 whitespace-nowrap rounded bg-popover px-2 py-1 text-xs text-popover-foreground shadow-md opacity-0 transition-opacity group-hover/tooltip:opacity-100 group-focus/tooltip:opacity-100 border border-border"
                       role="tooltip"
                     >
                       Missing category for full analytics

@@ -15,11 +15,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Topic Heatmap Enhancements**: Category-based performance visualization, "Focus here" links to Topic Study, weekly summary stats.
 - **hashCache Eviction**: LRU-style eviction (10k entry cap) prevents unbounded IndexedDB growth.
 - **Migration Guards**: Defensive `IF EXISTS` checks on index migrations.
+- **Date Range Filter**: Analytics page now includes a date range filter (7d/30d/90d/All) with localStorage persistence.
+- **Empty Card States**: Standardized empty state component for analytics cards with consistent messaging.
+- **Recent Results Quiz Titles**: Recent Results card now displays quiz titles instead of IDs.
 
 ### Fixed
 
 - **SRS Sync Logging**: Added debug log for backward-compat response handling.
 - **Modal Vertical Scrolling**: Improved modal positioning with proper z-index layering.
+- **TopicHeatmap Table Accessibility**: Header row now correctly nested inside `role="table"` container for proper screen reader association.
+- **DifficultyBreakdown Progressbar Accessibility**: Added `role="progressbar"` with ARIA attributes for screen reader support.
+- **DateRangeFilter Type Safety**: Exported `DATE_RANGE_VALUES` constant to prevent localStorage validation drift.
 
 ---
 

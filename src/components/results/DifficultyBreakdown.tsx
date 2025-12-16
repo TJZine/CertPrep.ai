@@ -133,6 +133,7 @@ export function DifficultyBreakdown({
                             <div
                                 className={cn("h-full transition-all duration-500", stat.bgColor)}
                                 style={{ width: `${stat.percentage}%` }}
+                                aria-hidden="true"
                             />
                         </div>
                     </div>

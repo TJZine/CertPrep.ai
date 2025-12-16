@@ -97,16 +97,17 @@ export function RecentResultsCard({
                                 />
                                 {isMissingCategory && (
                                     <span
-                                        className="group/warning absolute right-2 top-2 z-10"
-                                        role="img"
-                                        aria-label="Warning: Quiz missing category for analytics"
+                                        className="group/warning absolute right-2 top-2 z-10 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                        tabIndex={0}
+                                        aria-describedby={`tooltip-missing-cat-${result.id}`}
                                     >
                                         <AlertTriangle
                                             className="h-4 w-4 text-warning cursor-help"
                                             aria-hidden="true"
                                         />
                                         <span
-                                            className="pointer-events-none absolute right-0 top-6 w-48 rounded-lg bg-popover px-3 py-2 text-xs text-popover-foreground shadow-lg opacity-0 transition-opacity group-hover/warning:opacity-100 border border-border z-20"
+                                            id={`tooltip-missing-cat-${result.id}`}
+                                            className="pointer-events-none absolute right-0 top-6 w-48 rounded-lg bg-popover px-3 py-2 text-xs text-popover-foreground shadow-lg opacity-0 transition-opacity group-hover/warning:opacity-100 group-focus/warning:opacity-100 border border-border z-20"
                                             role="tooltip"
                                         >
                                             <strong className="block mb-1">Missing Category</strong>

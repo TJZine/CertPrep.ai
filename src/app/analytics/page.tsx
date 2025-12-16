@@ -86,15 +86,23 @@ export default function AnalyticsPage(): React.ReactElement {
 
   // Load persisted date range on mount
   React.useEffect(() => {
-    const saved = localStorage.getItem("analytics-date-range");
-    if (saved && DATE_RANGE_VALUES.includes(saved as DateRange)) {
-      setDateRange(saved as DateRange);
+    try {
+      const saved = localStorage.getItem("analytics-date-range");
+      if (saved && DATE_RANGE_VALUES.includes(saved as DateRange)) {
+        setDateRange(saved as DateRange);
+      }
+    } catch {
+      // Safari Private Browsing or storage disabled – use default
     }
   }, []);
 
   const handleDateRangeChange = (range: DateRange): void => {
     setDateRange(range);
-    localStorage.setItem("analytics-date-range", range);
+    try {
+      localStorage.setItem("analytics-date-range", range);
+    } catch {
+      // Quota exceeded or private mode – UI state still works
+    }
   };
 
   // Stable "now" reference to prevent hydration mismatches and impure render errors

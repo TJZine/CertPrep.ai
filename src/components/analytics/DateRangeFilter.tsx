@@ -12,12 +12,12 @@ interface DateRangeFilterProps {
   className?: string;
 }
 
-const RANGES: { value: DateRange; label: string }[] = [
+const RANGES = [
   { value: "7d", label: "7 Days" },
   { value: "30d", label: "30 Days" },
   { value: "90d", label: "90 Days" },
   { value: "all", label: "All Time" },
-];
+] as const satisfies readonly { value: DateRange; label: string }[];
 
 /** Valid date range values for runtime validation (e.g., localStorage) */
 export const DATE_RANGE_VALUES = RANGES.map((r) => r.value);
