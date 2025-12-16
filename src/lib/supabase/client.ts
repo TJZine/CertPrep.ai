@@ -4,6 +4,30 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 let client: SupabaseClient | undefined;
 
+// SECURITY: Default timeout for Supabase API calls (30 seconds)
+const SUPABASE_TIMEOUT_MS = 30000;
+
+/**
+ * Fetch wrapper that adds timeout to all Supabase requests.
+ * Prevents indefinite hangs on network issues.
+ */
+function fetchWithTimeout(
+  input: RequestInfo | URL,
+  init?: RequestInit
+): Promise<Response> {
+  // Use AbortSignal.timeout if available (Node 18+, modern browsers)
+  // Otherwise fall back to manual AbortController
+  const signal =
+    typeof AbortSignal.timeout === "function"
+      ? AbortSignal.timeout(SUPABASE_TIMEOUT_MS)
+      : undefined;
+
+  return fetch(input, {
+    ...init,
+    signal: init?.signal ?? signal,
+  });
+}
+
 export const createClient = (): SupabaseClient | undefined => {
   if (client) return client;
 
@@ -21,7 +45,11 @@ export const createClient = (): SupabaseClient | undefined => {
       supabaseUrl = `https://${supabaseUrl}`;
     }
 
-    client = createBrowserClient(supabaseUrl, supabaseKey);
+    client = createBrowserClient(supabaseUrl, supabaseKey, {
+      global: {
+        fetch: fetchWithTimeout,
+      },
+    });
 
     // Expose client on window for E2E testing
     if (

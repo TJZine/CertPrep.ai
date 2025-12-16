@@ -187,4 +187,25 @@ describe("DELETE /api/auth/delete-account", () => {
     expect(response.status).toBe(500);
     expect(supabaseAuth.signOut).toHaveBeenCalledWith({ scope: "global" });
   });
+
+  it("rejects requests with oversized body (>1KB)", async () => {
+    const request = new NextRequest(
+      "https://certprep.ai/api/auth/delete-account",
+      {
+        method: "DELETE",
+        headers: {
+          origin: "https://certprep.ai",
+          "sec-fetch-site": "same-origin",
+          "content-length": "2048", // 2KB > 1KB limit
+        },
+      },
+    );
+
+    const response = await DELETE(request);
+
+    expect(response.status).toBe(413);
+    const body = await response.json();
+    expect(body.error).toBe("Request body too large");
+    expect(supabaseAdminClient.auth.admin.deleteUser).not.toHaveBeenCalled();
+  });
 });

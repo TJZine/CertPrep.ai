@@ -44,6 +44,16 @@ function isSameSiteRequest(request: NextRequest): boolean {
 
 export async function DELETE(request: NextRequest): Promise<NextResponse> {
   try {
+    // SECURITY: Reject requests with bodies > 1KB
+    // DELETE requests should have no body; this prevents DoS via oversized payloads
+    const contentLength = request.headers.get("content-length");
+    if (contentLength && parseInt(contentLength, 10) > 1024) {
+      return NextResponse.json(
+        { error: "Request body too large" },
+        { status: 413 }
+      );
+    }
+
     const cookieStore = await cookies();
     const requestOrigin = request.nextUrl.origin;
 
