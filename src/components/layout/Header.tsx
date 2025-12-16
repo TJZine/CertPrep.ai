@@ -121,8 +121,8 @@ export function Header(): React.ReactElement {
     >
       <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
         {/* Logo */}
-        <Link 
-          href="/" 
+        <Link
+          href="/"
           className="flex items-center gap-2 transition-opacity hover:opacity-90 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
           <Logo />
@@ -208,13 +208,22 @@ export function Header(): React.ReactElement {
             onClick={(): void => setIsMenuOpen((prev) => !prev)}
             aria-expanded={isMenuOpen}
             aria-controls="mobile-nav"
-            aria-label="Toggle menu"
+            aria-label={isMenuOpen ? "Close menu" : "Open menu"}
           >
-            {isMenuOpen ? (
-              <X className="h-6 w-6" />
-            ) : (
-              <Menu className="h-6 w-6" />
-            )}
+            <span className="relative h-6 w-6">
+              <Menu
+                className={cn(
+                  "absolute inset-0 h-6 w-6 transition-all duration-200",
+                  isMenuOpen ? "rotate-90 opacity-0" : "rotate-0 opacity-100"
+                )}
+              />
+              <X
+                className={cn(
+                  "absolute inset-0 h-6 w-6 transition-all duration-200",
+                  isMenuOpen ? "rotate-0 opacity-100" : "-rotate-90 opacity-0"
+                )}
+              />
+            </span>
           </button>
         </div>
       </div>
@@ -223,8 +232,8 @@ export function Header(): React.ReactElement {
       <div
         inert={!isMenuOpen ? true : undefined}
         className={cn(
-          "fixed inset-x-0 top-16 z-40 bg-background md:hidden transition-transform duration-300 ease-in-out h-[calc(100dvh-4rem)] min-h-[calc(100vh-4rem)]",
-          isMenuOpen ? "translate-x-0" : "translate-x-full",
+          "fixed inset-x-0 top-16 z-40 bg-background md:hidden transition-[transform,opacity] duration-300 ease-in-out h-[calc(100dvh-4rem)] min-h-[calc(100vh-4rem)]",
+          isMenuOpen ? "translate-x-0 opacity-100" : "translate-x-full opacity-0",
         )}
         aria-hidden={!isMenuOpen}
         id="mobile-nav"
