@@ -223,9 +223,9 @@ export function QuizCard({
             <div className="min-w-0 space-y-1">
               <div className="flex items-center gap-2">
                 {isMissingCategory && (
-                  <span
-                    className="group/tooltip relative flex-shrink-0 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    tabIndex={0}
+                  <button
+                    type="button"
+                    className="group/tooltip relative flex-shrink-0 rounded border-none bg-transparent p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     aria-label="Missing category for full analytics"
                   >
                     <AlertTriangle
@@ -233,12 +233,12 @@ export function QuizCard({
                       aria-hidden="true"
                     />
                     <span
-                      className="pointer-events-none absolute left-1/2 top-full z-20 mt-1 -translate-x-1/2 whitespace-nowrap rounded bg-popover px-2 py-1 text-xs text-popover-foreground shadow-md opacity-0 transition-opacity group-hover/tooltip:opacity-100 group-focus/tooltip:opacity-100 border border-border"
+                      className="pointer-events-none absolute left-1/2 top-full z-20 mt-1 -translate-x-1/2 whitespace-nowrap rounded bg-popover px-2 py-1 text-xs text-popover-foreground shadow-md opacity-0 transition-opacity group-hover/tooltip:opacity-100 group-focus-visible/tooltip:opacity-100 border border-border"
                       role="tooltip"
                     >
                       Missing category for full analytics
                     </span>
-                  </span>
+                  </button>
                 )}
                 <CardTitle className="line-clamp-2 text-lg">{quiz.title}</CardTitle>
               </div>

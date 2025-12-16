@@ -96,9 +96,9 @@ export function RecentResultsCard({
                                     onClick={() => router.push(`/results/${result.id}`)}
                                 />
                                 {isMissingCategory && (
-                                    <span
-                                        className="group/warning absolute right-2 top-2 z-10 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                        tabIndex={0}
+                                    <button
+                                        type="button"
+                                        className="group/warning absolute right-2 top-2 z-10 rounded border-none bg-transparent p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                         aria-describedby={`tooltip-missing-cat-${result.id}`}
                                     >
                                         <AlertTriangle
@@ -107,7 +107,7 @@ export function RecentResultsCard({
                                         />
                                         <span
                                             id={`tooltip-missing-cat-${result.id}`}
-                                            className="pointer-events-none absolute right-0 top-6 w-48 rounded-lg bg-popover px-3 py-2 text-xs text-popover-foreground shadow-lg opacity-0 transition-opacity group-hover/warning:opacity-100 group-focus/warning:opacity-100 border border-border z-20"
+                                            className="pointer-events-none absolute right-0 top-6 w-48 rounded-lg bg-popover px-3 py-2 text-xs text-popover-foreground shadow-lg opacity-0 transition-opacity group-hover/warning:opacity-100 group-focus-visible/warning:opacity-100 border border-border z-20"
                                             role="tooltip"
                                         >
                                             <strong className="block mb-1">Missing Category</strong>
@@ -119,7 +119,7 @@ export function RecentResultsCard({
                                                 <li>Result page → Add Category button</li>
                                             </ul>
                                         </span>
-                                    </span>
+                                    </button>
                                 )}
                             </div>
                         );
