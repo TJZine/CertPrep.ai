@@ -59,6 +59,84 @@ test.describe("Quiz Library & Dashboard", () => {
         });
     });
 
+    test.describe("Category Filtering", () => {
+        test.beforeEach(async ({ authenticatedPage: page }) => {
+            // Mock with 2 categories
+            await page.route("/tests/index.json", async (route) => {
+                await route.fulfill({
+                    status: 200,
+                    contentType: "application/json",
+                    body: JSON.stringify({
+                        tests: [
+                            {
+                                id: "cat-a-quiz",
+                                title: "Quiz A",
+                                description: "Description A",
+                                category: "Category A",
+                                path: "/tests/a.json",
+                            },
+                            {
+                                id: "cat-b-quiz",
+                                title: "Quiz B",
+                                description: "Description B",
+                                category: "Category B",
+                                path: "/tests/b.json",
+                            },
+                        ],
+                    }),
+                });
+            });
+        });
+
+        test("defaults to first non-all category", async ({ authenticatedPage: page }) => {
+            await page.goto("/library");
+            await expect(page.getByText(/loading/i).first()).not.toBeVisible();
+
+            // Expect Category A to be selected (sorted alphabetically)
+            const tabA = page.getByRole("tab", { name: "Category A" });
+            const tabB = page.getByRole("tab", { name: "Category B" });
+
+            await expect(tabA).toHaveAttribute("aria-selected", "true");
+            await expect(tabB).toHaveAttribute("aria-selected", "false");
+
+            await expect(page.getByRole("heading", { name: "Quiz A" })).toBeVisible();
+            await expect(page.getByRole("heading", { name: "Quiz B" })).not.toBeVisible();
+        });
+
+        test("can switch categories", async ({ authenticatedPage: page }) => {
+            await page.goto("/library");
+            await expect(page.getByText(/loading/i).first()).not.toBeVisible();
+
+            await page.getByRole("tab", { name: "Category B" }).click();
+
+            const tabA = page.getByRole("tab", { name: "Category A" });
+            const tabB = page.getByRole("tab", { name: "Category B" });
+
+            await expect(tabB).toHaveAttribute("aria-selected", "true");
+            await expect(tabA).toHaveAttribute("aria-selected", "false");
+
+            await expect(page.getByRole("heading", { name: "Quiz B" })).toBeVisible();
+            await expect(page.getByRole("heading", { name: "Quiz A" })).not.toBeVisible();
+        });
+
+        test("persists selection in URL", async ({ authenticatedPage: page }) => {
+            await page.goto("/library");
+            await expect(page.getByText(/loading/i).first()).not.toBeVisible();
+
+            await page.getByRole("tab", { name: "Category B" }).click();
+            await expect(page).toHaveURL(/category=Category(%20|\+)B/);
+        });
+
+        test("respects URL param on load", async ({ authenticatedPage: page }) => {
+            await page.goto("/library?category=Category B");
+            await expect(page.getByText(/loading/i).first()).not.toBeVisible();
+
+            const tabB = page.getByRole("tab", { name: "Category B" });
+            await expect(tabB).toHaveAttribute("aria-selected", "true");
+            await expect(page.getByRole("heading", { name: "Quiz B" })).toBeVisible();
+        });
+    });
+
     test.describe("Quiz Import", () => {
         test.beforeEach(async ({ authenticatedPage: page }) => {
             // Mock the library manifest
