@@ -30,10 +30,12 @@ interface QuestionReviewListProps {
 }
 
 // Row height sizing is handled by useDynamicRowHeight hook
+// Bottom spacing matches pb-4 (1rem = 16px)
+const ROW_BOTTOM_SPACING = 16;
 
 interface RowData {
   filteredItems: QuestionWithAnswer[];
-  questions: QuestionWithAnswer[];
+  questionIndexMap: Map<string, number>;
   expandAll: boolean;
   expandAllSignal: number;
   activeFilter: FilterType;
@@ -48,25 +50,30 @@ interface ListRowProps {
 
 const Row = ({ index, style, data }: { index: number; style: React.CSSProperties; data: RowData }): React.ReactElement => {
   const rowRef = React.useRef<HTMLDivElement>(null);
-  const { filteredItems, questions, expandAll, expandAllSignal, activeFilter, isResolving, setRowHeight } = data;
+  const { filteredItems, questionIndexMap, expandAll, expandAllSignal, activeFilter, isResolving, setRowHeight } = data;
   const item = filteredItems[index];
 
   // Measure height and notify dynamic sizing system
   React.useLayoutEffect(() => {
     if (rowRef.current) {
-      setRowHeight(index, rowRef.current.getBoundingClientRect().height + 16); // +16 for gap (space-y-4 equivalent)
+      setRowHeight(index, rowRef.current.getBoundingClientRect().height + ROW_BOTTOM_SPACING);
     }
   }, [setRowHeight, index, expandAllSignal, activeFilter]);
 
+  // Stable callback for child component to trigger re-measurement
+  const handleResize = React.useCallback(() => {
+    if (rowRef.current) {
+      setRowHeight(index, rowRef.current.getBoundingClientRect().height + ROW_BOTTOM_SPACING);
+    }
+  }, [setRowHeight, index]);
+
   if (!item) return <div style={style} />;
 
-  // Find original index for Q# display
-  const originalIndex = questions.findIndex(
-    (q) => q.question.id === item.question.id,
-  );
+  // O(1) lookup for original question index
+  const originalIndex = questionIndexMap.get(item.question.id) ?? index;
 
   return (
-    <div style={style}>
+    <div style={style} role="listitem">
       <div ref={rowRef} className="pb-4 pr-2">
         <QuestionReviewCard
           key={item.question.id}
@@ -79,11 +86,7 @@ const Row = ({ index, style, data }: { index: number; style: React.CSSProperties
           expandAllSignal={expandAllSignal}
           correctAnswer={item.correctAnswer}
           isResolving={isResolving}
-          onResize={() => {
-            if (rowRef.current) {
-              setRowHeight(index, rowRef.current.getBoundingClientRect().height + 16);
-            }
-          }}
+          onResize={handleResize}
         />
       </div>
     </div>
@@ -186,9 +189,15 @@ export function QuestionReviewList({
     },
   ] as const;
 
+  // Pre-compute question index map for O(1) lookups in Row
+  const questionIndexMap = React.useMemo(
+    () => new Map(questions.map((q, i) => [q.question.id, i])),
+    [questions],
+  );
+
   const itemData: RowData = React.useMemo(
     () => ({
-      questions: questions,
+      questionIndexMap,
       filteredItems: filteredQuestions,
       expandAll,
       expandAllSignal,
@@ -197,7 +206,7 @@ export function QuestionReviewList({
       setRowHeight: dynamicRowHeight.setRowHeight,
     }),
     [
-      questions,
+      questionIndexMap,
       filteredQuestions,
       expandAll,
       expandAllSignal,
