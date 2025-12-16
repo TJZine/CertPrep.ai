@@ -122,6 +122,18 @@ export default function AnalyticsPage(): React.ReactElement {
     return results.filter((r) => r.timestamp >= cutoff);
   }, [results, dateRange, now]);
 
+  // Calculate days to track for dailyStudyTime based on date range
+  const daysToTrack = React.useMemo(() => {
+    const rangeDays = { "7d": 7, "30d": 30, "90d": 90, all: 14 };
+    return rangeDays[dateRange];
+  }, [dateRange]);
+
+  // Human-readable label for filtered date range (used in StreakCard)
+  const dateRangeLabel = React.useMemo(() => {
+    const labels = { "7d": "Last 7 days", "30d": "Last 30 days", "90d": "Last 90 days", all: "Last 14 days" };
+    return labels[dateRange];
+  }, [dateRange]);
+
   React.useEffect((): void | (() => void) => {
     if (!isInitialized) return undefined;
 
@@ -176,7 +188,7 @@ export default function AnalyticsPage(): React.ReactElement {
     weakAreas,
     dailyStudyTime,
     isLoading: statsLoading,
-  } = useAnalyticsStats(filteredResults, quizzes);
+  } = useAnalyticsStats(filteredResults, quizzes, daysToTrack);
 
   // Advanced analytics (Streaks, Readiness) should usually reflect "current state based on history"
   // Keep using full 'results' for accurate streaks and readiness
@@ -292,6 +304,7 @@ export default function AnalyticsPage(): React.ReactElement {
           consistencyScore={advancedAnalytics.consistencyScore}
           last7DaysActivity={advancedAnalytics.last7DaysActivity}
           dailyStudyTime={dailyStudyTime}
+          studyTimeRangeLabel={dateRangeLabel}
         />
       </div>
 

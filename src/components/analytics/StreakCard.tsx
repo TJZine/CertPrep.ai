@@ -24,6 +24,8 @@ interface StreakCardProps {
     consistencyScore: number;
     last7DaysActivity: boolean[];
     dailyStudyTime?: DailyStudyData[];
+    /** Human-readable label for the filtered date range (e.g., "Last 7 days") */
+    studyTimeRangeLabel?: string;
     className?: string;
 }
 
@@ -215,6 +217,7 @@ export function StreakCard({
     consistencyScore,
     last7DaysActivity,
     dailyStudyTime = [],
+    studyTimeRangeLabel,
     className,
 }: StreakCardProps): React.ReactElement {
     const hasActivity = last7DaysActivity.some((day) => day);
@@ -239,7 +242,9 @@ export function StreakCard({
                     Study Streak
                 </CardTitle>
                 <CardDescription>
-                    Stay consistent to build your streak
+                    {studyTimeRangeLabel
+                        ? `Study time: ${studyTimeRangeLabel.toLowerCase()}`
+                        : "Stay consistent to build your streak"}
                 </CardDescription>
             </CardHeader>
             <CardContent>

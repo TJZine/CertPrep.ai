@@ -19,18 +19,20 @@ export interface AnalyticsStats {
   isLoading: boolean;
 }
 
-const DAYS_TO_TRACK = 14;
+const DEFAULT_DAYS_TO_TRACK = 14;
 
 /**
  * Asynchronously calculates analytics stats from results and quizzes.
  *
  * @param results - Array of all quiz results.
  * @param quizzes - Array of available quizzes.
+ * @param daysToTrack - Number of days to show in dailyStudyTime (default: 14).
  * @returns An `AnalyticsStats` object containing category performance, weak areas, and daily study time.
  */
 export function useAnalyticsStats(
   results: Result[],
   quizzes: Quiz[],
+  daysToTrack: number = DEFAULT_DAYS_TO_TRACK,
 ): AnalyticsStats {
   const [stats, setStats] = useState<Omit<AnalyticsStats, "isLoading">>({
     categoryPerformance: [],
@@ -120,7 +122,7 @@ export function useAnalyticsStats(
         const allResultsData = await Promise.all(
           results.map(async (result) => {
             let sessionQuestions: Question[] = [];
-            
+
             const quiz = quizMap.get(result.quiz_id);
 
             // CASE 1: Normal Quiz Result
@@ -132,13 +134,13 @@ export function useAnalyticsStats(
               sessionQuestions = idSet
                 ? quiz.questions.filter((q) => idSet.has(q.id))
                 : quiz.questions;
-            } 
+            }
             // CASE 2: Aggregated Result (Topic Study / SRS)
             // The result has a list of question_ids, but the linked quiz is either 
             // missing (filtered out) or empty (SRS quiz).
             // We resolve the questions from our global map.
             else if (result.question_ids && result.question_ids.length > 0) {
-               sessionQuestions = result.question_ids
+              sessionQuestions = result.question_ids
                 .map(id => allQuestionsMap.get(id)?.question)
                 .filter((q): q is Question => !!q);
             }
@@ -201,11 +203,11 @@ export function useAnalyticsStats(
             recentTrend: categoryTrends.get(cat.category),
           }));
 
-        // Calculate daily study time for the last DAYS_TO_TRACK days
+        // Calculate daily study time for the last daysToTrack days
         const now = new Date();
         const days: Map<string, number> = new Map();
 
-        for (let i = DAYS_TO_TRACK - 1; i >= 0; i -= 1) {
+        for (let i = daysToTrack - 1; i >= 0; i -= 1) {
           const date = new Date(now);
           date.setDate(date.getDate() - i);
           const dateKey = formatDateKey(date.getTime());
@@ -229,7 +231,7 @@ export function useAnalyticsStats(
             (nowDay.getTime() - resultDay.getTime()) / (1000 * 60 * 60 * 24),
           );
 
-          if (daysDiff < DAYS_TO_TRACK) {
+          if (daysDiff < daysToTrack) {
             const dateKey = formatDateKey(resultDate);
             if (days.has(dateKey)) {
               days.set(
@@ -275,7 +277,7 @@ export function useAnalyticsStats(
       isMounted = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resultsHash, quizzesHash]);
+  }, [resultsHash, quizzesHash, daysToTrack]);
 
   return { ...stats, isLoading };
 }

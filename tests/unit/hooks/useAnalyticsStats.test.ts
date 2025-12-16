@@ -158,4 +158,15 @@ describe("useAnalyticsStats Hook", () => {
         expect(result.current.weakAreas).toEqual([]);
         expect(result.current.dailyStudyTime).toEqual([]);
     });
+
+    it("should respect custom daysToTrack parameter for daily study time", async () => {
+        const { result } = renderHook(() =>
+            useAnalyticsStats([mockResult], [mockQuiz], 7),
+        );
+
+        await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+        // Should return exactly 7 days of data (custom daysToTrack)
+        expect(result.current.dailyStudyTime.length).toBe(7);
+    });
 });
