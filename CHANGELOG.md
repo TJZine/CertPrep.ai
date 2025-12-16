@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.7] - 2025-12-16
+
+### Added
+
+- **Dashboard Skeleton**: Replaced generic loading spinner with dedicated skeleton UI that mimics the actual layout for seamless perceived loading.
+
+### Changed
+
+- **Mobile Header UX**: Enhanced logo animation with scale effects, added backdrop blur to mobile menu, improved menu toggle icon animation with rotation/opacity transitions.
+- **Mobile Menu Accessibility**: Dynamic `aria-label` for menu toggle ("Open menu"/"Close menu"), added `aria-hidden` to decorative nav icons.
+- **Analytics Overflow**: Added `overflow-x-hidden` to analytics page to prevent horizontal scroll on mobile.
+
 ## [1.3.6] - 2025-12-16
 
 ### Changed
