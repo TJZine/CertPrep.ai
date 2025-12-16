@@ -84,11 +84,12 @@ export function TimePerQuestionHeatmap({
     }
 
     const formatSeconds = (seconds: number): string => {
-        if (seconds < 60) {
-            return `${Math.round(seconds)}s`;
+        const rounded = Math.round(seconds);
+        if (rounded < 60) {
+            return `${rounded}s`;
         }
-        const mins = Math.floor(seconds / 60);
-        const secs = Math.round(seconds % 60);
+        const mins = Math.floor(rounded / 60);
+        const secs = rounded % 60;
         return secs > 0 ? `${mins}m ${secs}s` : `${mins}m`;
     };
 
@@ -123,23 +124,26 @@ export function TimePerQuestionHeatmap({
                             Slowest Questions
                         </p>
                         <div className="space-y-1">
-                            {stats.slowestQuestions.map((q, idx) => (
-                                <div
-                                    key={q.questionId}
-                                    className="flex items-center justify-between rounded-lg border border-border px-3 py-2 text-sm"
-                                >
-                                    <span className="truncate text-muted-foreground">
-                                        Q{(indexMap.get(q.questionId) ?? -1) + 1 || "?"}:{" "}
-                                        {q.category}
-                                    </span>
-                                    <Badge
-                                        variant={idx === 0 ? "danger" : "secondary"}
-                                        className="ml-2 shrink-0"
+                            {stats.slowestQuestions.map((q, idx) => {
+                                const questionIndex = indexMap.get(q.questionId);
+                                const label = questionIndex !== undefined ? `Q${questionIndex + 1}` : "Q?";
+                                return (
+                                    <div
+                                        key={q.questionId}
+                                        className="flex items-center justify-between rounded-lg border border-border px-3 py-2 text-sm"
                                     >
-                                        {formatSeconds(q.time)}
-                                    </Badge>
-                                </div>
-                            ))}
+                                        <span className="truncate text-muted-foreground">
+                                            {label}: {q.category}
+                                        </span>
+                                        <Badge
+                                            variant={idx === 0 ? "danger" : "secondary"}
+                                            className="ml-2 shrink-0"
+                                        >
+                                            {formatSeconds(q.time)}
+                                        </Badge>
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
                 )}
@@ -155,23 +159,26 @@ export function TimePerQuestionHeatmap({
                             Fastest Questions
                         </p>
                         <div className="space-y-1">
-                            {stats.fastestQuestions.map((q, idx) => (
-                                <div
-                                    key={q.questionId}
-                                    className="flex items-center justify-between rounded-lg border border-border px-3 py-2 text-sm"
-                                >
-                                    <span className="truncate text-muted-foreground">
-                                        Q{(indexMap.get(q.questionId) ?? -1) + 1 || "?"}:{" "}
-                                        {q.category}
-                                    </span>
-                                    <Badge
-                                        variant={idx === 0 ? "success" : "secondary"}
-                                        className="ml-2 shrink-0"
+                            {stats.fastestQuestions.map((q, idx) => {
+                                const questionIndex = indexMap.get(q.questionId);
+                                const label = questionIndex !== undefined ? `Q${questionIndex + 1}` : "Q?";
+                                return (
+                                    <div
+                                        key={q.questionId}
+                                        className="flex items-center justify-between rounded-lg border border-border px-3 py-2 text-sm"
                                     >
-                                        {formatSeconds(q.time)}
-                                    </Badge>
-                                </div>
-                            ))}
+                                        <span className="truncate text-muted-foreground">
+                                            {label}: {q.category}
+                                        </span>
+                                        <Badge
+                                            variant={idx === 0 ? "success" : "secondary"}
+                                            className="ml-2 shrink-0"
+                                        >
+                                            {formatSeconds(q.time)}
+                                        </Badge>
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
                 )}

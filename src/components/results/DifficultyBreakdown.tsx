@@ -14,8 +14,10 @@ interface DifficultyBreakdownProps {
     className?: string;
 }
 
+type DifficultyLabel = "Easy" | "Medium" | "Hard";
+
 interface DifficultyStats {
-    label: string;
+    label: DifficultyLabel;
     correct: number;
     total: number;
     percentage: number;
@@ -27,7 +29,7 @@ interface DifficultyStats {
  * Normalize difficulty string to expected title-case format.
  * Handles case-insensitive input and unknown values.
  */
-function normalizeDifficulty(raw: string | undefined): "Easy" | "Medium" | "Hard" {
+function normalizeDifficulty(raw: string | undefined): DifficultyLabel {
     const normalized = (raw || "medium").trim().toLowerCase();
     if (normalized === "easy") return "Easy";
     if (normalized === "hard") return "Hard";
@@ -43,10 +45,12 @@ export function DifficultyBreakdown({
     className,
 }: DifficultyBreakdownProps): React.ReactElement | null {
     const stats = React.useMemo((): DifficultyStats[] => {
-        const difficultyMap = new Map<string, { correct: number; total: number }>();
+        const difficultyMap = new Map<DifficultyLabel, { correct: number; total: number }>();
+
+        const levels: DifficultyLabel[] = ["Easy", "Medium", "Hard"];
 
         // Initialize with expected difficulty levels
-        ["Easy", "Medium", "Hard"].forEach((level) => {
+        levels.forEach((level) => {
             difficultyMap.set(level, { correct: 0, total: 0 });
         });
 
@@ -61,13 +65,13 @@ export function DifficultyBreakdown({
             difficultyMap.set(difficulty, current);
         });
 
-        const colors: Record<string, { color: string; bgColor: string }> = {
+        const colors: Record<DifficultyLabel, { color: string; bgColor: string }> = {
             Easy: { color: "text-success", bgColor: "bg-success" },
             Medium: { color: "text-warning", bgColor: "bg-warning" },
             Hard: { color: "text-destructive", bgColor: "bg-destructive" },
         };
 
-        return ["Easy", "Medium", "Hard"]
+        return levels
             .map((level) => {
                 const data = difficultyMap.get(level) || { correct: 0, total: 0 };
                 const percentage = data.total > 0 ? Math.round((data.correct / data.total) * 100) : 0;
@@ -105,11 +109,13 @@ export function DifficultyBreakdown({
                                 {stat.correct}/{stat.total} ({stat.percentage}%)
                             </span>
                         </div>
-                        <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
+                        <div
+                            className="h-2 w-full overflow-hidden rounded-full bg-secondary"
+                            aria-hidden="true"
+                        >
                             <div
                                 className={cn("h-full transition-all duration-500", stat.bgColor)}
                                 style={{ width: `${stat.percentage}%` }}
-                                aria-label={`${stat.label}: ${stat.percentage}% correct`}
                             />
                         </div>
                     </div>

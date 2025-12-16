@@ -55,6 +55,7 @@ interface CategoryData {
         trend: "up" | "down" | "stable" | null;
     }>;
     averageScore: number;
+    hasData: boolean;
 }
 
 /**
@@ -281,7 +282,7 @@ export function TopicHeatmap({
                     const userAnswer = result.answers[question.id];
 
                     let isCorrect = false;
-                    if (userAnswer) {
+                    if (userAnswer !== undefined && userAnswer !== null) {
                         try {
                             const userHash = await getCachedHash(userAnswer);
                             if (userHash === question.correct_answer_hash) {
@@ -352,12 +353,12 @@ export function TopicHeatmap({
 
                 // Calculate average score for sorting
                 const validScores = columns.filter((c) => c.score !== null);
-                const averageScore =
-                    validScores.length > 0
-                        ? validScores.reduce((sum, c) => sum + (c.score ?? 0), 0) / validScores.length
-                        : 0;
+                const hasData = validScores.length > 0;
+                const averageScore = hasData
+                    ? validScores.reduce((sum, c) => sum + (c.score ?? 0), 0) / validScores.length
+                    : 0;
 
-                return { category, columns, averageScore };
+                return { category, columns, averageScore, hasData };
             });
 
             if (isMounted) {
@@ -399,7 +400,12 @@ export function TopicHeatmap({
             case "alphabetical":
                 return sorted.sort((a, b) => a.category.localeCompare(b.category));
             case "best-first":
-                return sorted.sort((a, b) => b.averageScore - a.averageScore);
+                return sorted.sort((a, b) => {
+                    // Push no-data categories to end
+                    if (a.hasData && !b.hasData) return -1;
+                    if (!a.hasData && b.hasData) return 1;
+                    return b.averageScore - a.averageScore;
+                });
             case "by-quiz-group":
                 // Sort by parent group first, then by score within group
                 return sorted.sort((a, b) => {
@@ -407,11 +413,18 @@ export function TopicHeatmap({
                     const groupB = categoryToQuizGroup.get(b.category) || "Uncategorized";
                     const groupCmp = groupA.localeCompare(groupB);
                     if (groupCmp !== 0) return groupCmp;
-                    // Within same group, sort by worst first
+                    // Within same group: push no-data to end, then sort by worst first
+                    if (a.hasData && !b.hasData) return -1;
+                    if (!a.hasData && b.hasData) return 1;
                     return a.averageScore - b.averageScore;
                 });
             default: // worst-first
-                return sorted.sort((a, b) => a.averageScore - b.averageScore);
+                return sorted.sort((a, b) => {
+                    // Push no-data categories to end
+                    if (a.hasData && !b.hasData) return -1;
+                    if (!a.hasData && b.hasData) return 1;
+                    return a.averageScore - b.averageScore;
+                });
         }
     }, [heatmapData, sortMode, categoryToQuizGroup]);
 
@@ -598,7 +611,6 @@ export function TopicHeatmap({
                     {showSortMenu && (
                         <div
                             className="absolute right-0 top-full z-10 mt-1 rounded-md border border-border bg-card shadow-lg"
-                            role="menu"
                         >
                             {(Object.keys(sortLabels) as SortMode[]).map((mode) => (
                                 <button
@@ -611,7 +623,6 @@ export function TopicHeatmap({
                                         "block w-full px-3 py-1.5 text-left text-xs hover:bg-muted",
                                         sortMode === mode && "bg-muted font-medium",
                                     )}
-                                    role="menuitem"
                                 >
                                     {sortLabels[mode]}
                                 </button>
@@ -627,13 +638,15 @@ export function TopicHeatmap({
                     <div
                         className="mb-2 grid min-w-[600px] gap-1"
                         style={{ gridTemplateColumns: "minmax(140px, 1fr) repeat(8, minmax(44px, 52px))" }}
+                        role="row"
                     >
-                        <div className="text-xs font-medium text-muted-foreground">Category</div>
+                        <div className="text-xs font-medium text-muted-foreground" role="columnheader">Category</div>
                         {timeColumns.map((col) => (
                             <div
                                 key={col.key}
                                 className="text-center text-xs font-medium text-muted-foreground"
                                 title={col.label}
+                                role="columnheader"
                             >
                                 {col.shortLabel}
                             </div>
