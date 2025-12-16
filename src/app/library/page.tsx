@@ -78,13 +78,17 @@ export default function LibraryPage(): React.ReactElement {
         </Link>
       </div>
 
-      <TestLibrary
-        existingQuizzes={quizzes ?? []}
-        userId={effectiveUserId}
-        onImportSuccess={(): void => {
-          // No-op: useQuizzes live query will refresh imported state automatically.
-        }}
-      />
+      <React.Suspense
+        fallback={<LoadingSpinner size="lg" text="Loading library..." />}
+      >
+        <TestLibrary
+          existingQuizzes={quizzes ?? []}
+          userId={effectiveUserId}
+          onImportSuccess={(): void => {
+            // No-op: useQuizzes live query will refresh imported state automatically.
+          }}
+        />
+      </React.Suspense>
     </main>
   );
 }

@@ -2,6 +2,8 @@
 
 import * as React from "react";
 import { Download, FolderOpen } from "lucide-react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 import {
   Card,
   CardContent,
@@ -55,6 +57,10 @@ export function TestLibrary({
   const [searchTerm, setSearchTerm] = React.useState("");
   const [categoryFilter, setCategoryFilter] = React.useState<string>("all");
   const { addToast } = useToast();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const tabRefs = React.useRef<(HTMLButtonElement | null)[]>([]);
 
   React.useEffect(() => {
     let isMounted = true;
@@ -113,6 +119,80 @@ export function TestLibrary({
     });
     return ["all", ...Array.from(unique).sort((a, b) => a.localeCompare(b))];
   }, [manifest]);
+
+  // Handle URL and LocalStorage persistence
+  React.useEffect(() => {
+    if (isLoading || manifest.length === 0) return;
+
+    const urlCategory = searchParams.get("category");
+    const storedCategory =
+      typeof window !== "undefined"
+        ? localStorage.getItem("library-category-filter")
+        : null;
+
+    let target = "all";
+
+    // 1. URL param takes precedence
+    if (urlCategory && categories.includes(urlCategory)) {
+      target = urlCategory;
+    }
+    // 2. LocalStorage fallback
+    else if (storedCategory && categories.includes(storedCategory)) {
+      target = storedCategory;
+    }
+    // 3. Default to first real category if available (instead of "all")
+    else if (categories.length > 1) {
+      target = categories[1] ?? "all";
+    }
+
+    setCategoryFilter(target);
+  }, [isLoading, manifest, categories, searchParams]);
+
+  const handleCategoryChange = (category: string): void => {
+    setCategoryFilter(category);
+    localStorage.setItem("library-category-filter", category);
+
+    const params = new URLSearchParams(searchParams);
+    if (category === "all") {
+      params.delete("category");
+    } else {
+      params.set("category", category);
+    }
+    const queryString = params.toString();
+    router.replace(queryString ? `${pathname}?${queryString}` : pathname, { scroll: false });
+  };
+
+  const handleTabKeyDown = (
+    e: React.KeyboardEvent,
+    currentIndex: number,
+  ): void => {
+    const lastIndex = categories.length - 1;
+    let nextIndex: number | null = null;
+
+    switch (e.key) {
+      case "ArrowRight":
+        nextIndex = currentIndex < lastIndex ? currentIndex + 1 : 0;
+        break;
+      case "ArrowLeft":
+        nextIndex = currentIndex > 0 ? currentIndex - 1 : lastIndex;
+        break;
+      case "Home":
+        nextIndex = 0;
+        break;
+      case "End":
+        nextIndex = lastIndex;
+        break;
+      default:
+        return;
+    }
+
+    e.preventDefault();
+    const nextCategory = categories[nextIndex];
+    if (nextCategory) {
+      handleCategoryChange(nextCategory);
+      tabRefs.current[nextIndex]?.focus();
+    }
+  };
 
   const filteredManifest = React.useMemo(() => {
     const search = searchTerm.trim().toLowerCase();
@@ -206,24 +286,34 @@ export function TestLibrary({
                 aria-label="Search built-in tests"
               />
               <div className="flex items-center gap-2">
-                <label
-                  htmlFor="category-filter"
-                  className="text-sm font-medium text-foreground"
+                <div
+                  role="tablist"
+                  className="flex gap-2 overflow-x-auto pb-1"
+                  aria-label="Filter by category"
                 >
-                  Category
-                </label>
-                <select
-                  id="category-filter"
-                  value={categoryFilter}
-                  onChange={(event) => setCategoryFilter(event.target.value)}
-                  className="rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                >
-                  {categories.map((category) => (
-                    <option key={category} value={category}>
+                  {categories.map((category, index) => (
+                    <button
+                      key={category}
+                      type="button"
+                      ref={(el) => {
+                        tabRefs.current[index] = el;
+                      }}
+                      role="tab"
+                      aria-selected={categoryFilter === category}
+                      tabIndex={categoryFilter === category ? 0 : -1}
+                      onClick={() => handleCategoryChange(category)}
+                      onKeyDown={(e) => handleTabKeyDown(e, index)}
+                      className={cn(
+                        "shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                        categoryFilter === category
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-muted-foreground hover:bg-muted/80",
+                      )}
+                    >
                       {category === "all" ? "All" : category}
-                    </option>
+                    </button>
                   ))}
-                </select>
+                </div>
               </div>
             </div>
 

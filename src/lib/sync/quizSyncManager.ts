@@ -67,6 +67,8 @@ const RemoteQuizSchema = z.object({
   created_at: z.string(),
   updated_at: z.string(),
   deleted_at: z.string().nullable(),
+  category: z.string().nullable().optional(),
+  subcategory: z.string().nullable().optional(),
 }).passthrough();
 
 const syncState = {

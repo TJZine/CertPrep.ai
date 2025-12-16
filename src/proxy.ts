@@ -1,50 +1,19 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { logger } from "@/lib/logger";
+import { buildCSPHeader } from "@/lib/security";
 
 const PROTECTED_ROUTES = ["/settings"];
 // Retained to prevent open redirects; server-side redirect logic (lines 147+) temporarily disabled
 const AUTH_ROUTES = ["/login", "/signup", "/forgot-password"];
 
 export async function proxy(request: NextRequest): Promise<NextResponse> {
-  // 1. Generate Nonce for CSP
-  const nonce = crypto.randomUUID();
+  // 1. Generate Nonce for CSP (base64-encoded per CSP Level 3 spec)
+  const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
 
   // 2. Prepare CSP Header
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-  let supabaseHostname = "";
-  try {
-    if (supabaseUrl) {
-      supabaseHostname = new URL(supabaseUrl).hostname;
-    }
-  } catch {
-    // Ignore invalid URL
-  }
-
   const isDev = process.env.NODE_ENV === "development";
-  const styleSrc = isDev
-    ? `'self' 'unsafe-inline' 'nonce-${nonce}' https://hcaptcha.com https://*.hcaptcha.com`
-    : `'self' 'nonce-${nonce}' https://hcaptcha.com https://*.hcaptcha.com`;
-
-  const cspHeader = `
-    default-src 'self';
-    script-src 'self' 'nonce-${nonce}' ${isDev ? "'unsafe-eval'" : ""} https://js.hcaptcha.com https://*.hcaptcha.com https://*.sentry.io https://va.vercel-scripts.com;
-    style-src ${styleSrc};
-    img-src 'self' blob: data:;
-    font-src 'self';
-    object-src 'none';
-    base-uri 'self';
-    form-action 'self';
-    frame-ancestors 'self';
-    frame-src 'self' https://hcaptcha.com https://*.hcaptcha.com https://sentry.io https://browser.sentry-cdn.com;
-    upgrade-insecure-requests;
-    connect-src 'self' ${supabaseUrl} ${supabaseHostname ? `wss://${supabaseHostname}` : ""} *.sentry.io https://hcaptcha.com https://*.hcaptcha.com https://browser.sentry-cdn.com https://vitals.vercel-insights.com;
-    worker-src 'self' blob:;
-  `;
-  // Replace newlines with spaces
-  const contentSecurityPolicyHeaderValue = cspHeader
-    .replace(/\s{2,}/g, " ")
-    .trim();
+  const contentSecurityPolicyHeaderValue = buildCSPHeader(nonce, isDev);
 
   // 3. Initialize Response with Headers ONCE
   const requestHeaders = new Headers(request.headers);

@@ -36,8 +36,39 @@ export const createClient = async (): Promise<
     supabaseUrl = `https://${supabaseUrl}`;
   }
 
+  const SUPABASE_TIMEOUT_MS = 30000;
+
+  async function fetchWithTimeout(
+    input: RequestInfo | URL,
+    init?: RequestInit,
+  ): Promise<Response> {
+    // If caller provides their own signal, respect it (explicit opt-out of built-in timeout)
+    if (init?.signal) {
+      return fetch(input, init);
+    }
+
+    try {
+      // AbortSignal.timeout available since Node.js v16.14.0
+      return await fetch(input, {
+        ...init,
+        signal: AbortSignal.timeout(SUPABASE_TIMEOUT_MS),
+      });
+    } catch (e) {
+      // AbortSignal.timeout() throws TimeoutError (not AbortError)
+      if (e instanceof DOMException && e.name === "TimeoutError") {
+        throw new Error(
+          `Supabase request timed out after ${SUPABASE_TIMEOUT_MS}ms`,
+        );
+      }
+      throw e;
+    }
+  }
+
   try {
     return createServerClient(supabaseUrl, supabaseKey, {
+      global: {
+        fetch: fetchWithTimeout,
+      },
       cookies: {
         get(name: string) {
           return cookieStore.get(name)?.value;
