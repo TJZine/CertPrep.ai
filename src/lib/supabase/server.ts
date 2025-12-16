@@ -38,7 +38,7 @@ export const createClient = async (): Promise<
 
   const SUPABASE_TIMEOUT_MS = 30000;
 
-  function fetchWithTimeout(
+  async function fetchWithTimeout(
     input: RequestInfo | URL,
     init?: RequestInit,
   ): Promise<Response> {
@@ -47,11 +47,20 @@ export const createClient = async (): Promise<
       return fetch(input, init);
     }
 
-    // Use AbortSignal.timeout (Node 18+)
-    return fetch(input, {
-      ...init,
-      signal: AbortSignal.timeout(SUPABASE_TIMEOUT_MS),
-    });
+    try {
+      // Use AbortSignal.timeout (Node 18+)
+      return await fetch(input, {
+        ...init,
+        signal: AbortSignal.timeout(SUPABASE_TIMEOUT_MS),
+      });
+    } catch (e) {
+      if (e instanceof DOMException && e.name === "AbortError") {
+        throw new Error(
+          `Supabase request timed out after ${SUPABASE_TIMEOUT_MS}ms`,
+        );
+      }
+      throw e;
+    }
   }
 
   try {

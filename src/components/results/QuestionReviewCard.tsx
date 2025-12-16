@@ -102,7 +102,8 @@ export function QuestionReviewCard({
     }
   }, [expandAllSignal, expandAllState]);
 
-  // Notify parent when expansion changes so virtualized list can remeasure
+  // Notify parent when expansion changes so virtualized list can remeasure.
+  // onResize should be stable (wraps useCallback-based setSize) to avoid spurious calls.
   React.useLayoutEffect(() => {
     onResize?.();
   }, [isExpanded, onResize]);

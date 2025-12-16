@@ -294,6 +294,7 @@ export function TestLibrary({
                   {categories.map((category, index) => (
                     <button
                       key={category}
+                      type="button"
                       ref={(el) => {
                         tabRefs.current[index] = el;
                       }}

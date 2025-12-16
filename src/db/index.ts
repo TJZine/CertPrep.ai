@@ -174,7 +174,8 @@ export class CertPrepDatabase extends Dexie {
         "id, user_id, created_at, deleted_at, *tags, quiz_hash, updated_at, [user_id+created_at], category, subcategory",
     });
 
-    // Note: Quiz.category and Quiz.subcategory are now indexed as of version 13.
+    // Note: Quiz.category and Quiz.subcategory are now indexed as of version 13,
+    // enabling optimized filtering by category in the library view.
 
     this.quizzes = this.table("quizzes");
     this.results = this.table("results");
