@@ -19,6 +19,9 @@ const RANGES: { value: DateRange; label: string }[] = [
   { value: "all", label: "All Time" },
 ];
 
+/** Valid date range values for runtime validation (e.g., localStorage) */
+export const DATE_RANGE_VALUES = RANGES.map((r) => r.value);
+
 /**
  * A segmented control for filtering analytics data by date range.
  */

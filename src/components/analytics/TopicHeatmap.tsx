@@ -715,27 +715,28 @@ export function TopicHeatmap({
             <CardContent>
                 {/* Scrollable container for mobile */}
                 <div className="-mx-2 overflow-x-auto px-2 pb-2" style={{ WebkitOverflowScrolling: "touch" }}>
-                    {/* Header row with column labels */}
-                    <div
-                        className="mb-2 grid min-w-[600px] gap-1"
-                        style={{ gridTemplateColumns: "minmax(140px, 1fr) repeat(8, minmax(44px, 52px))" }}
-                        role="row"
-                    >
-                        <div className="text-xs font-medium text-muted-foreground" role="columnheader">Category</div>
-                        {timeColumns.map((col) => (
-                            <div
-                                key={col.key}
-                                className="text-center text-xs font-medium text-muted-foreground"
-                                title={col.label}
-                                role="columnheader"
-                            >
-                                {col.shortLabel}
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* Category rows with optional parent group headers */}
+                    {/* Table with header row and category data rows */}
                     <div className="min-w-[600px] space-y-1" role="table" aria-label="Topic mastery heatmap">
+                        {/* Header row with column labels */}
+                        <div
+                            className="mb-2 grid gap-1"
+                            style={{ gridTemplateColumns: "minmax(140px, 1fr) repeat(8, minmax(44px, 52px))" }}
+                            role="row"
+                        >
+                            <div className="text-xs font-medium text-muted-foreground" role="columnheader">Category</div>
+                            {timeColumns.map((col) => (
+                                <div
+                                    key={col.key}
+                                    className="text-center text-xs font-medium text-muted-foreground"
+                                    title={col.label}
+                                    role="columnheader"
+                                >
+                                    {col.shortLabel}
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Category rows with optional parent group headers */}
                         {groupedData.map((group) => (
                             <React.Fragment key={group.groupKey ?? "ungrouped"}>
                                 {/* Group header (only shown when grouping by quiz category) */}

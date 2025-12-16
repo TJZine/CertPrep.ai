@@ -29,7 +29,7 @@ import { BarChart3, Plus, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 import type { Result } from "@/types/result";
-import { DateRangeFilter, type DateRange } from "@/components/analytics/DateRangeFilter";
+import { DateRangeFilter, type DateRange, DATE_RANGE_VALUES } from "@/components/analytics/DateRangeFilter";
 
 /**
  * Wrapper component for CategoryTrendChart that uses the trend hook.
@@ -86,9 +86,9 @@ export default function AnalyticsPage(): React.ReactElement {
 
   // Load persisted date range on mount
   React.useEffect(() => {
-    const saved = localStorage.getItem("analytics-date-range") as DateRange;
-    if (saved && ["7d", "30d", "90d", "all"].includes(saved)) {
-      setDateRange(saved);
+    const saved = localStorage.getItem("analytics-date-range");
+    if (saved && DATE_RANGE_VALUES.includes(saved as DateRange)) {
+      setDateRange(saved as DateRange);
     }
   }, []);
 

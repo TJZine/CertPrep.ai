@@ -124,7 +124,11 @@ export function DifficultyBreakdown({
                         </div>
                         <div
                             className="h-2 w-full overflow-hidden rounded-full bg-secondary"
-                            aria-hidden="true"
+                            role="progressbar"
+                            aria-valuenow={stat.percentage}
+                            aria-valuemin={0}
+                            aria-valuemax={100}
+                            aria-label={`${stat.label} accuracy: ${stat.percentage}%`}
                         >
                             <div
                                 className={cn("h-full transition-all duration-500", stat.bgColor)}
