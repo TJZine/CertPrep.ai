@@ -1,7 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { List, CheckCircle, XCircle, Flag } from "lucide-react";
+import { List as ListIcon, CheckCircle, XCircle, Flag } from "lucide-react";
+import { List } from "react-window";
+import AutoSizer from "react-virtualized-auto-sizer";
 import { QuestionReviewCard } from "./QuestionReviewCard";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -25,6 +27,93 @@ interface QuestionReviewListProps {
   onCategoryFilterChange?: (category: string | null) => void;
   className?: string;
   isResolving?: boolean;
+}
+
+interface VirtualListProps {
+  height: number;
+  width: number;
+  itemCount: number;
+  itemData: Omit<RowData, "setSize">;
+}
+
+interface RowData {
+  filteredItems: QuestionWithAnswer[];
+  questions: QuestionWithAnswer[];
+  expandAll: boolean;
+  expandAllSignal: number;
+  activeFilter: FilterType;
+  isResolving: boolean;
+  setSize: (index: number, size: number) => void;
+}
+
+// Define the shape of props passed to the Row component (excluding index/style which are added by List)
+interface ListRowProps {
+  data: RowData;
+}
+
+const Row = ({ index, style, data }: { index: number; style: React.CSSProperties; data: RowData }): React.ReactElement => {
+  const rowRef = React.useRef<HTMLDivElement>(null);
+  const { filteredItems, questions, expandAll, expandAllSignal, activeFilter, isResolving, setSize } = data;
+  const item = filteredItems[index];
+
+  // Measure height
+  React.useLayoutEffect(() => {
+    if (rowRef.current) {
+      setSize(index, rowRef.current.getBoundingClientRect().height + 16); // +16 for gap (space-y-4 equivalent)
+    }
+  }, [setSize, index, expandAllSignal, activeFilter]);
+
+  if (!item) return <div style={style} />;
+
+  // Find original index for Q# display
+  const originalIndex = questions.findIndex(
+    (q) => q.question.id === item.question.id,
+  );
+
+  return (
+    <div style={style}>
+      <div ref={rowRef} className="pb-4 pr-2">
+        <QuestionReviewCard
+          key={item.question.id}
+          question={item.question}
+          questionNumber={originalIndex + 1}
+          userAnswer={item.userAnswer}
+          isFlagged={item.isFlagged}
+          defaultExpanded={activeFilter === "incorrect" && !item.isCorrect}
+          expandAllState={expandAll}
+          expandAllSignal={expandAllSignal}
+          correctAnswer={item.correctAnswer}
+          isResolving={isResolving}
+        />
+      </div>
+    </div>
+  );
+};
+
+function VirtualList({ height, width, itemCount, itemData }: VirtualListProps): React.ReactElement {
+  // Use a ref to track row heights for dynamic sizing
+  const sizeMap = React.useRef<{ [index: number]: number }>({});
+
+  // Force re-render of List when these change to reset internal state/cache
+  const listKey = `${itemData.activeFilter}-${itemData.expandAllSignal}-${itemCount}`;
+
+  const setSize = React.useCallback((index: number, size: number): void => {
+    sizeMap.current[index] = size;
+  }, []);
+
+  const getSize = (index: number): number => sizeMap.current[index] || 200;
+
+  return (
+    <List<ListRowProps>
+      key={listKey}
+      style={{ height, width }}
+      rowCount={itemCount}
+      rowHeight={getSize}
+      rowProps={{ data: { ...itemData, setSize } }}
+      rowComponent={Row}
+      className="scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent"
+    />
+  );
 }
 
 /**
@@ -91,7 +180,7 @@ export function QuestionReviewList({
     {
       id: "all",
       label: "All",
-      icon: <List className="h-4 w-4" aria-hidden="true" />,
+      icon: <ListIcon className="h-4 w-4" aria-hidden="true" />,
       count: counts.all,
     },
     {
@@ -170,29 +259,24 @@ export function QuestionReviewList({
           </p>
         </div>
       ) : (
-        <div className="space-y-4">
-          {filteredQuestions.map((item) => {
-            const originalIndex = questions.findIndex(
-              (q) => q.question.id === item.question.id,
-            );
-
-            return (
-              <QuestionReviewCard
-                key={item.question.id}
-                question={item.question}
-                questionNumber={originalIndex + 1}
-                userAnswer={item.userAnswer}
-                isFlagged={item.isFlagged}
-                defaultExpanded={
-                  activeFilter === "incorrect" && !item.isCorrect
-                }
-                expandAllState={expandAll}
-                expandAllSignal={expandAllSignal}
-                correctAnswer={item.correctAnswer}
-                isResolving={isResolving}
+        <div className="h-[800px] w-full">
+          <AutoSizer>
+            {({ height, width }: { height: number; width: number }) => (
+              <VirtualList
+                height={height}
+                width={width}
+                itemCount={filteredQuestions.length}
+                itemData={{
+                  questions: questions,
+                  filteredItems: filteredQuestions,
+                  expandAll,
+                  expandAllSignal,
+                  activeFilter,
+                  isResolving,
+                }}
               />
-            );
-          })}
+            )}
+          </AutoSizer>
         </div>
       )}
     </div>
