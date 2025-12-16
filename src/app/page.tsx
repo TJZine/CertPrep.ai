@@ -12,7 +12,7 @@ import { ImportModal } from "@/components/dashboard/ImportModal";
 import { ModeSelectModal } from "@/components/dashboard/ModeSelectModal";
 import { DeleteConfirmModal } from "@/components/dashboard/DeleteConfirmModal";
 import { DueQuestionsCard } from "@/components/srs/DueQuestionsCard";
-import { LoadingSpinner } from "@/components/common/LoadingSpinner";
+import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import { useToast } from "@/components/ui/Toast";
 import type { Quiz } from "@/types/quiz";
 import type { LeitnerBox } from "@/types/srs";
@@ -99,11 +99,7 @@ export default function DashboardPage(): React.ReactElement {
   };
 
   if (!isInitialized || quizzesLoading || statsLoading) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <LoadingSpinner size="lg" text="Loading your quiz library..." />
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   if (dbError) {
