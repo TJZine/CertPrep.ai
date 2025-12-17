@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import * as React from "react";
-import { ToastProvider, useToast } from "@/components/ui/Toast";
+import { ToastProvider, useToast, DEDUP_WINDOW_MS } from "@/components/ui/Toast";
 
 /**
  * Helper wrapper for rendering hooks that need ToastProvider context.
@@ -146,9 +146,9 @@ describe("ToastProvider", () => {
 
             expect(result.current.toasts).toHaveLength(1);
 
-            // Advance past the debounce window (500ms)
+            // Advance past the debounce window
             act(() => {
-                vi.advanceTimersByTime(501);
+                vi.advanceTimersByTime(DEDUP_WINDOW_MS + 1);
             });
 
             act(() => {

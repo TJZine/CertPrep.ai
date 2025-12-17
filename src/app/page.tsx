@@ -207,9 +207,9 @@ export default function DashboardPage(): React.ReactElement {
 
       {deleteContext !== null && (
         <DeleteConfirmModal
-          quiz={deleteContext?.quiz ?? null}
-          attemptCount={deleteContext?.attemptCount ?? 0}
-          isOpen={deleteContext !== null}
+          quiz={deleteContext.quiz}
+          attemptCount={deleteContext.attemptCount}
+          isOpen
           onClose={() => setDeleteContext(null)}
           onConfirm={handleConfirmDelete}
           isDeleting={isDeleting}

@@ -106,7 +106,7 @@ export function useToast(): ToastContextValue {
 }
 
 /** Debounce window (ms) for deduplicating identical toasts. */
-const DEDUP_WINDOW_MS = 500;
+export const DEDUP_WINDOW_MS = 500;
 
 /**
  * Toast provider that manages toast stack and renders notifications.

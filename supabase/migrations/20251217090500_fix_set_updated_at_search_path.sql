@@ -6,7 +6,7 @@ CREATE OR REPLACE FUNCTION public.set_updated_at()
 RETURNS trigger
 LANGUAGE plpgsql
 SECURITY INVOKER
-SET search_path = public, pg_catalog
+SET search_path = pg_catalog
 AS $$
 BEGIN
   NEW.updated_at := now();
@@ -15,5 +15,5 @@ END;
 $$;
 
 -- Note: This function is used as a trigger on tables with updated_at columns.
--- The explicit search_path ensures now() resolves from pg_catalog regardless
--- of the caller's search_path setting.
+-- The minimal search_path (pg_catalog only) ensures now() resolves unambiguously
+-- and prevents any public schema function from shadowing built-ins.
