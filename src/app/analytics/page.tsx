@@ -11,8 +11,7 @@ import { StreakCard } from "@/components/analytics/StreakCard";
 import { RetryComparisonCard } from "@/components/analytics/RetryComparisonCard";
 import { TopicHeatmap } from "@/components/analytics/TopicHeatmap";
 import { CategoryTrendChart } from "@/components/analytics/CategoryTrendChart";
-
-import { LoadingSpinner } from "@/components/common/LoadingSpinner";
+import { AnalyticsSkeleton } from "@/components/analytics/AnalyticsSkeleton";
 import { EmptyState } from "@/components/common/EmptyState";
 import { Button } from "@/components/ui/Button";
 import {
@@ -232,13 +231,10 @@ export default function AnalyticsPage(): React.ReactElement {
   }
 
   if (isLoadingData || isWaitingForSync) {
-    const loadingText = isSyncing
-      ? "Syncing your data..."
-      : "Loading analytics...";
     return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <LoadingSpinner size="lg" text={loadingText} />
-      </div>
+      <AnalyticsSkeleton
+        syncingText={isSyncing ? "Syncing your data..." : undefined}
+      />
     );
   }
 
