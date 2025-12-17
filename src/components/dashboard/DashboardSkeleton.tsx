@@ -4,11 +4,97 @@ import * as React from "react";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/Card";
 
+interface DashboardSkeletonProps {
+    /**
+     * Skeleton variant for progressive loading:
+     * - minimal: Auth loading - header + centered spinner
+     * - empty: No quizzes expected - header + empty state placeholder
+     * - populated: Quizzes expected - full StatsBar + 6 quiz cards (default)
+     */
+    variant?: "minimal" | "empty" | "populated";
+}
+
 /**
  * Skeleton loading state for the Dashboard page.
- * Mimics StatsBar + QuizGrid layout for seamless loading transition.
+ * Supports multiple variants for auth-aware progressive loading.
  */
-export function DashboardSkeleton(): React.ReactElement {
+export function DashboardSkeleton({
+    variant = "populated",
+}: DashboardSkeletonProps): React.ReactElement {
+    switch (variant) {
+        case "minimal":
+            return <MinimalSkeleton />;
+        case "empty":
+            return <EmptyDashboardSkeleton />;
+        case "populated":
+        default:
+            return <PopulatedDashboardSkeleton />;
+    }
+}
+
+/**
+ * Minimal skeleton shown during auth resolution.
+ * Just header + subtle centered spinner to avoid layout shift.
+ */
+function MinimalSkeleton(): React.ReactElement {
+    return (
+        <div
+            className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8"
+            role="status"
+            aria-label="Loading"
+        >
+            <span className="sr-only">Loading...</span>
+            {/* Header skeleton */}
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="space-y-2">
+                    <Skeleton className="h-9 w-48" />
+                    <Skeleton className="h-5 w-64" />
+                </div>
+                <Skeleton className="h-10 w-32" />
+            </div>
+            {/* Centered subtle spinner */}
+            <div className="mt-16 flex justify-center">
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+            </div>
+        </div>
+    );
+}
+
+/**
+ * Empty state skeleton for users with no quizzes.
+ * Matches the EmptyState component layout.
+ */
+function EmptyDashboardSkeleton(): React.ReactElement {
+    return (
+        <div
+            className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8"
+            role="status"
+            aria-label="Loading dashboard"
+        >
+            <span className="sr-only">Loading your dashboard...</span>
+            {/* Header skeleton */}
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="space-y-2">
+                    <Skeleton className="h-9 w-48" />
+                    <Skeleton className="h-5 w-64" />
+                </div>
+                <Skeleton className="h-10 w-32" />
+            </div>
+            {/* Empty state placeholder */}
+            <div className="mt-8 flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-card px-6 py-16 text-center">
+                <Skeleton className="h-12 w-12 rounded-full" />
+                <Skeleton className="mt-4 h-6 w-40" />
+                <Skeleton className="mt-2 h-4 w-64" />
+            </div>
+        </div>
+    );
+}
+
+/**
+ * Full populated skeleton with StatsBar + QuizGrid.
+ * Used when user is authenticated and quizzes are expected.
+ */
+function PopulatedDashboardSkeleton(): React.ReactElement {
     return (
         <div
             className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8"
@@ -70,3 +156,4 @@ export function DashboardSkeleton(): React.ReactElement {
         </div>
     );
 }
+

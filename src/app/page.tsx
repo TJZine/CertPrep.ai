@@ -33,7 +33,7 @@ const DeleteConfirmModal = dynamic(
 );
 
 export default function DashboardPage(): React.ReactElement {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const effectiveUserId = useEffectiveUserId(user?.id);
   const { isInitialized, error: dbError } = useInitializeDatabase();
   const { quizzes, isLoading: quizzesLoading } = useQuizzes(
@@ -120,8 +120,14 @@ export default function DashboardPage(): React.ReactElement {
     }
   };
 
+  // Phase 1: Auth still loading → minimal skeleton (prevents complex skeleton flash)
+  if (authLoading) {
+    return <DashboardSkeleton variant="minimal" />;
+  }
+
+  // Phase 2: User context resolved, but DB/data loading → populated skeleton
   if (!isInitialized || quizzesLoading || statsLoading) {
-    return <DashboardSkeleton />;
+    return <DashboardSkeleton variant="populated" />;
   }
 
   if (dbError) {
