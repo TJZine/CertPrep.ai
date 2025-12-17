@@ -24,6 +24,7 @@ const pressStart2P = Press_Start_2P({
   display: "swap",
   variable: "--font-press-start",
   fallback: ["monospace"],
+  preload: false, // Retro theme only - reduces initial font download
 });
 
 const nunito = Nunito({
@@ -52,6 +53,7 @@ const playfairDisplay = Playfair_Display({
   display: "swap",
   variable: "--font-playfair",
   fallback: ["serif"],
+  preload: false, // Blossom theme only - reduces initial font download
 });
 
 const jetbrainsMono = JetBrains_Mono({

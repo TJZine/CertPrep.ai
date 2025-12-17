@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import dynamic from "next/dynamic";
 import { useQuizzes, useInitializeDatabase } from "@/hooks/useDatabase";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { deleteQuiz } from "@/db/quizzes";
@@ -8,16 +9,28 @@ import { getDueCountsByBox } from "@/db/srs";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { StatsBar } from "@/components/dashboard/StatsBar";
 import { QuizGrid } from "@/components/dashboard/QuizGrid";
-import { ImportModal } from "@/components/dashboard/ImportModal";
-import { ModeSelectModal } from "@/components/dashboard/ModeSelectModal";
-import { DeleteConfirmModal } from "@/components/dashboard/DeleteConfirmModal";
 import { DueQuestionsCard } from "@/components/srs/DueQuestionsCard";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import { useToast } from "@/components/ui/Toast";
+import { prefetchOnIdle } from "@/lib/prefetch";
 import type { Quiz } from "@/types/quiz";
 import type { LeitnerBox } from "@/types/srs";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
+
+// Code-split modals - loaded on demand, not in initial bundle
+const ImportModal = dynamic(
+  () => import("@/components/dashboard/ImportModal").then((mod) => ({ default: mod.ImportModal })),
+  { ssr: false }
+);
+const ModeSelectModal = dynamic(
+  () => import("@/components/dashboard/ModeSelectModal").then((mod) => ({ default: mod.ModeSelectModal })),
+  { ssr: false }
+);
+const DeleteConfirmModal = dynamic(
+  () => import("@/components/dashboard/DeleteConfirmModal").then((mod) => ({ default: mod.DeleteConfirmModal })),
+  { ssr: false }
+);
 
 export default function DashboardPage(): React.ReactElement {
   const { user } = useAuth();
@@ -62,6 +75,15 @@ export default function DashboardPage(): React.ReactElement {
 
     void loadDueCounts();
   }, [effectiveUserId, isInitialized]);
+
+  // Prefetch modal chunks during idle time for faster first-open and offline reliability
+  React.useEffect(() => {
+    prefetchOnIdle([
+      { key: 'ImportModal', load: (): Promise<typeof import('@/components/dashboard/ImportModal')> => import('@/components/dashboard/ImportModal') },
+      { key: 'ModeSelectModal', load: (): Promise<typeof import('@/components/dashboard/ModeSelectModal')> => import('@/components/dashboard/ModeSelectModal') },
+      { key: 'DeleteConfirmModal', load: (): Promise<typeof import('@/components/dashboard/DeleteConfirmModal')> => import('@/components/dashboard/DeleteConfirmModal') },
+    ]);
+  }, []);
 
   const { addToast } = useToast();
 
@@ -159,27 +181,34 @@ export default function DashboardPage(): React.ReactElement {
         />
       </div>
 
-      <ImportModal
-        isOpen={isImportModalOpen}
-        onClose={() => setIsImportModalOpen(false)}
-        onImportSuccess={handleImportSuccess}
-        userId={effectiveUserId}
-      />
+      {/* Modals - conditionally rendered to avoid loading chunk until needed */}
+      {isImportModalOpen && (
+        <ImportModal
+          isOpen={isImportModalOpen}
+          onClose={() => setIsImportModalOpen(false)}
+          onImportSuccess={handleImportSuccess}
+          userId={effectiveUserId}
+        />
+      )}
 
-      <ModeSelectModal
-        quiz={modeSelectQuiz}
-        isOpen={modeSelectQuiz !== null}
-        onClose={() => setModeSelectQuiz(null)}
-      />
+      {modeSelectQuiz !== null && (
+        <ModeSelectModal
+          quiz={modeSelectQuiz}
+          isOpen={modeSelectQuiz !== null}
+          onClose={() => setModeSelectQuiz(null)}
+        />
+      )}
 
-      <DeleteConfirmModal
-        quiz={deleteContext?.quiz ?? null}
-        attemptCount={deleteContext?.attemptCount ?? 0}
-        isOpen={deleteContext !== null}
-        onClose={() => setDeleteContext(null)}
-        onConfirm={handleConfirmDelete}
-        isDeleting={isDeleting}
-      />
+      {deleteContext !== null && (
+        <DeleteConfirmModal
+          quiz={deleteContext?.quiz ?? null}
+          attemptCount={deleteContext?.attemptCount ?? 0}
+          isOpen={deleteContext !== null}
+          onClose={() => setDeleteContext(null)}
+          onConfirm={handleConfirmDelete}
+          isDeleting={isDeleting}
+        />
+      )}
     </main>
   );
 }

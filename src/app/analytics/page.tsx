@@ -1,19 +1,20 @@
 "use client";
 
 import * as React from "react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { AnalyticsOverview } from "@/components/analytics/AnalyticsOverview";
-import { PerformanceHistory } from "@/components/analytics/PerformanceHistory";
 import { RecentResultsCard } from "@/components/analytics/RecentResultsCard";
 import { WeakAreasCard } from "@/components/analytics/WeakAreasCard";
 import { ExamReadinessCard } from "@/components/analytics/ExamReadinessCard";
 import { StreakCard } from "@/components/analytics/StreakCard";
 import { RetryComparisonCard } from "@/components/analytics/RetryComparisonCard";
 import { TopicHeatmap } from "@/components/analytics/TopicHeatmap";
-import { CategoryTrendChart } from "@/components/analytics/CategoryTrendChart";
 import { AnalyticsSkeleton } from "@/components/analytics/AnalyticsSkeleton";
 import { EmptyState } from "@/components/common/EmptyState";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { Skeleton } from "@/components/ui/Skeleton";
 import {
   useResults,
   useQuizzes,
@@ -29,6 +30,31 @@ import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 import type { Result } from "@/types/result";
 import { DateRangeFilter, type DateRange, DATE_RANGE_VALUES } from "@/components/analytics/DateRangeFilter";
+
+// Code-split recharts-heavy components for smaller initial bundle
+const PerformanceHistory = dynamic(
+  () => import("@/components/analytics/PerformanceHistory").then((mod) => ({ default: mod.PerformanceHistory })),
+  {
+    loading: () => (
+      <Card className="min-h-[300px]">
+        <Skeleton className="h-full w-full" aria-label="Loading performance chart" />
+      </Card>
+    ),
+    ssr: false,
+  }
+);
+
+const CategoryTrendChart = dynamic(
+  () => import("@/components/analytics/CategoryTrendChart").then((mod) => ({ default: mod.CategoryTrendChart })),
+  {
+    loading: () => (
+      <Card className="min-h-[350px]">
+        <Skeleton className="h-full w-full" aria-label="Loading category trends" />
+      </Card>
+    ),
+    ssr: false,
+  }
+);
 
 /**
  * Wrapper component for CategoryTrendChart that uses the trend hook.
