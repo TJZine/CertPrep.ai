@@ -19,6 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Prefetch Utility**: New `src/lib/prefetch.ts` with SSR-guarded idle-time prefetch and deduplication.
 
+### Fixed
+
+- **Import Security**: Added 10MB file size limit to `ImportModal` to prevent browser memory exhaustion from oversized JSON uploads.
+
 ## [1.3.7] - 2025-12-16
 
 ### Added
