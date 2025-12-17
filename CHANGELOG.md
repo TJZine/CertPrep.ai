@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.8] - 2025-12-17
+
+### Changed
+
+- **Dashboard Modals**: Code-split `ImportModal`, `ModeSelectModal`, and `DeleteConfirmModal` using `next/dynamic` with idle-time prefetch for faster initial load.
+- **Analytics Charts**: Code-split `PerformanceHistory` and `CategoryTrendChart` with skeleton fallbacks to reduce initial JS bundle.
+- **Font Loading**: Disabled preload for theme-specific fonts (`Press_Start_2P`, `Playfair_Display`) to reduce FCP blocking.
+
+### Added
+
+- **Prefetch Utility**: New `src/lib/prefetch.ts` with SSR-guarded idle-time prefetch and deduplication.
+
 ## [1.3.7] - 2025-12-16
 
 ### Added
