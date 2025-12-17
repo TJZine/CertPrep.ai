@@ -5,7 +5,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, AlertCircle } from "lucide-react";
 import { ZenQuizContainer } from "@/components/quiz/ZenQuizContainer";
 import { SessionBanner } from "@/components/quiz/SessionBanner";
-import { LoadingSpinner } from "@/components/common/LoadingSpinner";
+import { ZenQuizSkeleton } from "@/components/quiz/ZenQuizSkeleton";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { Button } from "@/components/ui/Button";
 import { useInitializeDatabase, useQuiz } from "@/hooks/useDatabase";
@@ -156,25 +156,12 @@ export default function ZenModePage(): React.ReactElement {
   };
 
   if (!isInitialized || !effectiveUserId || isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <LoadingSpinner size="lg" text="Loading quiz..." />
-      </div>
-    );
+    return <ZenQuizSkeleton />;
   }
 
   if (isFilteredMode && !filteredQuestions) {
-    let loadingText = "Preparing questions...";
-    if (isSmartRound) {
-      loadingText = "Preparing Smart Round...";
-    } else if (isTopicStudy) {
-      loadingText = "Preparing Topic Study...";
-    }
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <LoadingSpinner size="lg" text={loadingText} />
-      </div>
-    );
+    // Filtered mode (Smart Round / Topic Study) still loading
+    return <ZenQuizSkeleton />;
   }
 
   if (dbError) {

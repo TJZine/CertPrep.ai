@@ -6,7 +6,7 @@ import { useQuizWithStats } from "@/hooks/useDatabase";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { LoadingSpinner } from "@/components/common/LoadingSpinner";
+import { QuizLobbySkeleton } from "@/components/quiz/QuizLobbySkeleton";
 import { EmptyState } from "@/components/common/EmptyState";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
@@ -24,11 +24,7 @@ export default function QuizLobbyPage(): React.ReactElement {
   );
 
   if (isLoading) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <LoadingSpinner size="lg" text="Loading quiz details..." />
-      </div>
-    );
+    return <QuizLobbySkeleton />;
   }
 
   if (!quiz) {
