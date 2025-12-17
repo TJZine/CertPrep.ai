@@ -105,6 +105,9 @@ export function useToast(): ToastContextValue {
   return context;
 }
 
+/** Debounce window (ms) for deduplicating identical toasts. */
+const DEDUP_WINDOW_MS = 500;
+
 /**
  * Toast provider that manages toast stack and renders notifications.
  */
@@ -115,6 +118,11 @@ export function ToastProvider({
 }): React.ReactElement {
   const [toasts, setToasts] = React.useState<Toast[]>([]);
   const timers = React.useRef<Map<string, number>>(new Map());
+  /**
+   * Tracks recently shown toast keys (type:message) to prevent duplicates
+   * within the debounce window.
+   */
+  const recentToasts = React.useRef<Map<string, number>>(new Map());
 
   const removeToast = React.useCallback((id: string): void => {
     const timerId = timers.current.get(id);
@@ -127,6 +135,24 @@ export function ToastProvider({
 
   const addToast = React.useCallback(
     (type: ToastType, message: string, duration = 5000): void => {
+      const now = Date.now();
+
+      // Deduplication: skip if the same type:message was shown recently
+      const dedupKey = `${type}:${message}`;
+      const lastShown = recentToasts.current.get(dedupKey);
+      if (lastShown && now - lastShown < DEDUP_WINDOW_MS) {
+        return; // Skip duplicate
+      }
+
+      // Prune stale entries to prevent unbounded memory growth
+      recentToasts.current.forEach((timestamp, key) => {
+        if (now - timestamp >= DEDUP_WINDOW_MS) {
+          recentToasts.current.delete(key);
+        }
+      });
+
+      recentToasts.current.set(dedupKey, now);
+
       const id = generateId();
       setToasts((prev) => [...prev, { id, type, message, duration }]);
 
