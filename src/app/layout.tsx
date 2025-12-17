@@ -173,7 +173,7 @@ export default async function RootLayout({
           nonce={nonce}
           strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
-            __html: `console.log('[SW] Script start');if('serviceWorker'in navigator){console.log('[SW] Registering...');navigator.serviceWorker.register('/sw.js',{scope:'/'}).then(function(r){console.log('[SW] Registered:',r.scope);}).catch(function(e){console.error('[SW] Failed:',e);});}else{console.log('[SW] Not supported');}`,
+            __html: `if('serviceWorker'in navigator){navigator.serviceWorker.register('/sw.js',{scope:'/'}).catch(function(e){console.error('[SW] Failed:',e);});}`,
           }}
         />
       </head>
