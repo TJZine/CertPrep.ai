@@ -12,6 +12,10 @@ interface DashboardSkeletonProps {
      * - populated: Quizzes expected - full StatsBar + 6 quiz cards (default)
      */
     variant?: "minimal" | "empty" | "populated";
+    /** Number of quiz cards to render for the populated skeleton. */
+    quizCardCount?: number;
+    /** Whether to reserve space for the DueQuestionsCard. */
+    includeDuePlaceholder?: boolean;
 }
 
 /**
@@ -20,6 +24,8 @@ interface DashboardSkeletonProps {
  */
 export function DashboardSkeleton({
     variant = "populated",
+    quizCardCount,
+    includeDuePlaceholder,
 }: DashboardSkeletonProps): React.ReactElement {
     switch (variant) {
         case "minimal":
@@ -28,7 +34,12 @@ export function DashboardSkeleton({
             return <EmptyDashboardSkeleton />;
         case "populated":
         default:
-            return <PopulatedDashboardSkeleton />;
+            return (
+                <PopulatedDashboardSkeleton
+                    quizCardCount={quizCardCount}
+                    includeDuePlaceholder={includeDuePlaceholder}
+                />
+            );
     }
 }
 
@@ -94,10 +105,22 @@ function EmptyDashboardSkeleton(): React.ReactElement {
  * Full populated skeleton with StatsBar + QuizGrid.
  * Used when user is authenticated and quizzes are expected.
  */
-function PopulatedDashboardSkeleton(): React.ReactElement {
+function PopulatedDashboardSkeleton({
+    quizCardCount,
+    includeDuePlaceholder = true,
+}: {
+    quizCardCount?: number;
+    includeDuePlaceholder?: boolean;
+}): React.ReactElement {
+    const clampedQuizCardCount = Math.min(
+        12,
+        Math.max(0, Math.floor(quizCardCount ?? 0)),
+    );
+    const resolvedQuizCardCount = clampedQuizCardCount > 0 ? clampedQuizCardCount : 6;
+
     return (
         <div
-            className="mx-auto max-w-7xl min-h-[530dvh] px-4 py-8 sm:min-h-[max(190dvh,1760px)] sm:px-6 lg:px-8"
+            className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8"
             role="status"
             aria-label="Loading dashboard"
         >
@@ -126,22 +149,23 @@ function PopulatedDashboardSkeleton(): React.ReactElement {
                 ))}
             </div>
 
-            {/* DueQuestionsCard placeholder */}
-            <div className="mt-8 flex justify-center" aria-hidden="true">
-                <Card className="mx-auto w-full max-w-md min-h-[120px]">
-                    <CardContent className="flex items-center gap-4 p-4">
-                        <Skeleton className="h-12 w-12 rounded-full" />
-                        <div className="flex-1 space-y-2">
-                            <Skeleton className="h-6 w-32" />
-                            <Skeleton className="h-4 w-48" />
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
+            {includeDuePlaceholder ? (
+                <div className="mt-8 flex justify-center" aria-hidden="true">
+                    <Card className="mx-auto w-full max-w-md min-h-[120px]">
+                        <CardContent className="flex items-center gap-4 p-4">
+                            <Skeleton className="h-12 w-12 rounded-full" />
+                            <div className="flex-1 space-y-2">
+                                <Skeleton className="h-6 w-32" />
+                                <Skeleton className="h-4 w-48" />
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+            ) : null}
 
             {/* QuizGrid skeleton */}
             <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {Array.from({ length: 8 }).map((_, i) => (
+                {Array.from({ length: resolvedQuizCardCount }).map((_, i) => (
                     <Card key={i} className="flex h-full flex-col">
                         <CardHeader className="pb-4">
                             <div className="space-y-2">

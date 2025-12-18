@@ -126,18 +126,33 @@ export default function DashboardPage(): React.ReactElement {
     }
   };
 
-  // Phase 1: Auth still loading → minimal skeleton (prevents complex skeleton flash)
-  if (authLoading) {
-    return <DashboardSkeleton variant="minimal" />;
-  }
+  const quizCardCountForSkeleton =
+    !quizzesLoading && quizzes.length > 0 ? quizzes.length : undefined;
 
-  // Phase 2: User context resolved, but DB/data loading → populated skeleton
-  if (!isInitialized || quizzesLoading || statsLoading || isDueCountsLoading) {
+  // Loading: auth/user context and DB/data fetches.
+  // Keep a single skeleton visible until all dynamic sections (including SRS due counts) are ready.
+  if (
+    authLoading ||
+    effectiveUserId === null ||
+    !isInitialized ||
+    quizzesLoading ||
+    statsLoading ||
+    isDueCountsLoading
+  ) {
     const variant =
       !quizzesLoading && quizzes.length === 0
         ? "empty"
         : "populated";
-    return <DashboardSkeleton variant={variant} />;
+    const includeDuePlaceholder =
+      dueCountsStatus !== "ready" || totalDue > 0;
+
+    return (
+      <DashboardSkeleton
+        variant={variant}
+        quizCardCount={quizCardCountForSkeleton}
+        includeDuePlaceholder={includeDuePlaceholder}
+      />
+    );
   }
 
   if (dbError) {

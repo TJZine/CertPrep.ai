@@ -44,7 +44,7 @@ export function AnalyticsSkeleton({
 
             {/* ExamReadinessCard skeleton */}
             <div className="mb-8" aria-hidden="true">
-                <Card className="min-h-[280px] p-6">
+                <Card className="min-h-[320px] p-6">
                     <Skeleton className="mb-4 h-8 w-48" />
                     <Skeleton className="mb-4 h-32 w-full" />
                     <Skeleton className="h-16 w-full" />
@@ -53,13 +53,14 @@ export function AnalyticsSkeleton({
 
             {/* StreakCard skeleton */}
             <div className="mb-8" aria-hidden="true">
-                <Card className="min-h-[220px] p-6">
+                <Card className="min-h-[320px] p-6">
                     <Skeleton className="mb-4 h-6 w-32" />
                     <div className="grid grid-cols-3 gap-4">
                         {Array.from({ length: 3 }).map((_, i) => (
                             <Skeleton key={i} className="h-20" />
                         ))}
                     </div>
+                    <Skeleton className="mt-6 h-20 w-full" />
                 </Card>
             </div>
 
@@ -80,7 +81,7 @@ export function AnalyticsSkeleton({
 
             {/* PerformanceHistory chart skeleton */}
             <div className="mb-8" aria-hidden="true">
-                <Card className="min-h-[300px] p-6">
+                <Card className="min-h-[380px] p-6">
                     <Skeleton className="mb-4 h-6 w-40" />
                     <Skeleton className="h-52 w-full" />
                 </Card>
@@ -102,6 +103,35 @@ export function AnalyticsSkeleton({
                         {Array.from({ length: 3 }).map((_, i) => (
                             <Skeleton key={i} className="h-12 w-full" />
                         ))}
+                    </div>
+                </Card>
+            </div>
+
+            {/* Topic Heatmap skeleton */}
+            <div className="mb-8" aria-hidden="true">
+                <Card className="min-h-[420px] p-6">
+                    <Skeleton className="mb-4 h-6 w-40" />
+                    <Skeleton className="mb-2 h-4 w-64" />
+                    <Skeleton className="h-80 w-full" />
+                </Card>
+            </div>
+
+            {/* Category Trends skeleton */}
+            <div className="mb-8" aria-hidden="true">
+                <Card className="min-h-[380px] p-6">
+                    <Skeleton className="mb-4 h-6 w-40" />
+                    <Skeleton className="h-72 w-full" />
+                </Card>
+            </div>
+
+            {/* Retry Comparison skeleton */}
+            <div className="mb-8" aria-hidden="true">
+                <Card className="min-h-[280px] p-6">
+                    <Skeleton className="mb-4 h-6 w-44" />
+                    <div className="space-y-4">
+                        <Skeleton className="h-12 w-full" />
+                        <Skeleton className="h-12 w-full" />
+                        <Skeleton className="h-16 w-full" />
                     </div>
                 </Card>
             </div>
