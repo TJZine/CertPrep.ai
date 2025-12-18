@@ -173,8 +173,9 @@ export default function DashboardPage(): React.ReactElement {
         // localStorage unavailable
       }
     }
-    // No cache: first-time visitor, show empty variant (not 6 cards)
-    // They'll see empty skeleton → likely empty dashboard (common for new users)
+    // No cache exists - determine default based on auth state
+    // Authenticated users likely have synced data, show populated skeleton
+    // Anonymous users are genuinely new, show empty skeleton
     return null;
   }, [quizzes.length, quizzesLoading]);
 
@@ -188,12 +189,20 @@ export default function DashboardPage(): React.ReactElement {
     statsLoading ||
     isDueCountsLoading
   ) {
-    // Determine skeleton variant based on cached/loaded quiz count
-    // null (no cache) or 0 = empty variant; >0 = populated variant
+    // Determine skeleton variant based on cached/loaded quiz count and auth state
+    // - Cached value: use exactly what we cached
+    // - No cache + authenticated: assume populated (cloud sync likely has data)
+    // - No cache + anonymous: assume empty (genuinely new user)
     const variant =
-      cachedQuizCount === null || cachedQuizCount === 0
-        ? "empty"
-        : "populated";
+      cachedQuizCount !== null
+        ? cachedQuizCount === 0 ? "empty" : "populated"
+        : user
+          ? "populated"  // Authenticated user likely has synced data
+          : "empty";     // Anonymous first-time visitor
+
+    // Default quiz card count for authenticated users without cache (reasonable middle-ground)
+    const defaultAuthQuizCount = 6;
+    const quizCardCount = cachedQuizCount ?? (user ? defaultAuthQuizCount : undefined);
 
     // Determine SRS placeholder variant based on cached/loaded state
     // - 'full': User had dues last visit → reserve full card height
@@ -216,7 +225,7 @@ export default function DashboardPage(): React.ReactElement {
     return (
       <DashboardSkeleton
         variant={variant}
-        quizCardCount={cachedQuizCount ?? undefined}
+        quizCardCount={quizCardCount}
         duePlaceholder={duePlaceholder}
       />
     );
