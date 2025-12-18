@@ -6,7 +6,7 @@ import { calculatePercentage, generateUUID, hashAnswer } from "@/lib/utils";
 import type { Question, Quiz } from "@/types/quiz";
 import { computeQuizHash } from "@/lib/sync/quizDomain";
 
-import { v5 as uuidv5 } from "uuid";
+import { v5 as uuidv5, validate as isValidUUID } from "uuid";
 import type { QuizImportInput } from "@/validators/quizSchema";
 import {
   formatValidationErrors,
@@ -14,6 +14,13 @@ import {
   QuestionSchema,
 } from "@/validators/quizSchema";
 import { z } from "zod";
+
+/**
+ * Namespace for deterministic UUID generation (UUID v5).
+ * Used when questions have non-UUID IDs to ensure they work with SRS sync
+ * while remaining stable for deduplication.
+ */
+const QUESTION_ID_NAMESPACE = uuidv5.DNS;
 
 /**
  * Legacy prefix for per-user SRS quiz IDs.
@@ -235,9 +242,15 @@ export async function sanitizeQuestions(
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { correct_answer: _omitted, ...rest } = q;
 
+      // Ensure question ID is a valid UUID (for SRS sync keyset pagination)
+      const rawId = String(q.id);
+      const questionId = isValidUUID(rawId)
+        ? rawId
+        : uuidv5(`${q.question}:${JSON.stringify(sanitizedOptions)}`, QUESTION_ID_NAMESPACE);
+
       return {
         ...rest,
-        id: String(q.id),
+        id: questionId,
         category: sanitizeQuestionText(q.category),
         question: sanitizeQuestionText(q.question),
         explanation: sanitizeQuestionText(q.explanation),

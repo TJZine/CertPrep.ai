@@ -156,6 +156,7 @@ export async function getSRSSyncCursor(userId: string): Promise<SyncCursor> {
 
   let timestamp = EPOCH_TIMESTAMP;
   let healed = false;
+  let lastIdHealed = false;
   if (state?.lastSyncedAt) {
     const rawTimestamp =
       typeof state.lastSyncedAt === "string"
@@ -168,10 +169,27 @@ export async function getSRSSyncCursor(userId: string): Promise<SyncCursor> {
     healed = healResult.healed;
   }
 
+  // Validate lastId format (must be UUID for keyset pagination)
+  const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const rawLastId = state?.lastId || NIL_UUID;
+  const isValidUUID = UUID_REGEX.test(rawLastId);
+
+  if (!isValidUUID && rawLastId !== NIL_UUID) {
+    logger.warn("Healing corrupted SRS cursor lastId", { userId, invalidLastId: rawLastId });
+    lastIdHealed = true;
+  }
+
+  const safeLastId = healed || !isValidUUID ? NIL_UUID : rawLastId;
+
+  // Persist healed cursor to prevent repeated warnings
+  if (healed || lastIdHealed) {
+    await setSRSSyncCursor(timestamp, userId, safeLastId);
+  }
+
   return {
     timestamp,
     // Clear lastId when healing to avoid keyset pagination skipping records
-    lastId: healed ? NIL_UUID : (state?.lastId || NIL_UUID),
+    lastId: safeLastId,
   };
 }
 
