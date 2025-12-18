@@ -82,6 +82,31 @@ export default function DashboardPage(): React.ReactElement {
     void loadDueCounts();
   }, [effectiveUserId, isInitialized]);
 
+  // Persist quiz count for skeleton size caching (CLS optimization)
+  // This allows the skeleton to match the user's actual library size on subsequent visits
+  // We persist 0 for empty state so returning users with no quizzes see "empty" variant
+  React.useEffect(() => {
+    if (!quizzesLoading) {
+      try {
+        localStorage.setItem("dashboard_quiz_count", String(quizzes.length));
+      } catch {
+        // localStorage may be unavailable in private browsing
+      }
+    }
+  }, [quizzes.length, quizzesLoading]);
+
+  // Persist SRS due state for skeleton sizing (CLS optimization)
+  // Allows skeleton to show correct placeholder size based on last visit
+  React.useEffect(() => {
+    if (dueCountsStatus === "ready") {
+      try {
+        localStorage.setItem("dashboard_has_srs_dues", totalDue > 0 ? "1" : "0");
+      } catch {
+        // localStorage may be unavailable in private browsing
+      }
+    }
+  }, [dueCountsStatus, totalDue]);
+
   // Prefetch modal chunks during idle time for faster first-open and offline reliability
   React.useEffect(() => {
     prefetchOnIdle([
@@ -126,8 +151,32 @@ export default function DashboardPage(): React.ReactElement {
     }
   };
 
-  const quizCardCountForSkeleton =
-    !quizzesLoading && quizzes.length > 0 ? quizzes.length : undefined;
+  // Use cached quiz count for skeleton sizing (CLS optimization)
+  // Returns null if cached value is 0 (empty state) or no cache exists
+  // This drives both skeleton variant and card count
+  const cachedQuizCount = React.useMemo((): number | null => {
+    // If we already have quiz data loaded, use that
+    if (!quizzesLoading) {
+      return quizzes.length;
+    }
+    // Otherwise, read cached count from localStorage
+    if (typeof window !== "undefined") {
+      try {
+        const cached = localStorage.getItem("dashboard_quiz_count");
+        if (cached !== null) {
+          const count = Number(cached);
+          if (Number.isFinite(count) && count >= 0 && count <= 20) {
+            return count;
+          }
+        }
+      } catch {
+        // localStorage unavailable
+      }
+    }
+    // No cache: first-time visitor, show empty variant (not 6 cards)
+    // They'll see empty skeleton → likely empty dashboard (common for new users)
+    return null;
+  }, [quizzes.length, quizzesLoading]);
 
   // Loading: auth/user context and DB/data fetches.
   // Keep a single skeleton visible until all dynamic sections (including SRS due counts) are ready.
@@ -139,18 +188,36 @@ export default function DashboardPage(): React.ReactElement {
     statsLoading ||
     isDueCountsLoading
   ) {
+    // Determine skeleton variant based on cached/loaded quiz count
+    // null (no cache) or 0 = empty variant; >0 = populated variant
     const variant =
-      !quizzesLoading && quizzes.length === 0
+      cachedQuizCount === null || cachedQuizCount === 0
         ? "empty"
         : "populated";
-    const includeDuePlaceholder =
-      dueCountsStatus !== "ready" || totalDue > 0;
+
+    // Determine SRS placeholder variant based on cached/loaded state
+    // - 'full': User had dues last visit → reserve full card height
+    // - 'compact': User had no dues (or first visit) → reserve compact height
+    // - false: Empty dashboard variant doesn't show SRS card
+    let duePlaceholder: "compact" | "full" | false = "compact";
+    if (variant === "empty") {
+      duePlaceholder = false;
+    } else if (dueCountsStatus === "ready") {
+      duePlaceholder = totalDue > 0 ? "full" : "compact";
+    } else if (typeof window !== "undefined") {
+      try {
+        const cached = localStorage.getItem("dashboard_has_srs_dues");
+        duePlaceholder = cached === "1" ? "full" : "compact";
+      } catch {
+        // localStorage unavailable, default to compact
+      }
+    }
 
     return (
       <DashboardSkeleton
         variant={variant}
-        quizCardCount={quizCardCountForSkeleton}
-        includeDuePlaceholder={includeDuePlaceholder}
+        quizCardCount={cachedQuizCount ?? undefined}
+        duePlaceholder={duePlaceholder}
       />
     );
   }

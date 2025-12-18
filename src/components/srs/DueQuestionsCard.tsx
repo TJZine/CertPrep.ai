@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Brain, Box, ArrowRight } from "lucide-react";
+import { Brain, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import {
     Card,
@@ -100,27 +100,22 @@ export function DueQuestionsCard({
 }: DueQuestionsCardProps): React.ReactElement {
     const hasQuestionsDue = totalDue > 0;
 
+    // Compact empty state - minimal height to reduce whitespace
+    // Skeleton reserves this height when cached state shows no dues
     if (!hasQuestionsDue) {
         return (
-            <Card className={className}>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <Brain className="h-5 w-5 text-primary" aria-hidden="true" />
-                        Spaced Repetition
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="text-center">
-                        <Box className="mx-auto h-12 w-12 text-muted-foreground/50" aria-hidden="true" />
-                        <p className="mt-2 text-muted-foreground">
-                            No questions due for review! 🎉
-                        </p>
-                        <p className="mt-1 text-sm text-muted-foreground">
-                            Complete quizzes to build your review queue.
-                        </p>
-                    </div>
-                </CardContent>
-            </Card>
+            <div
+                className={cn(
+                    "flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 py-3",
+                    className,
+                )}
+            >
+                <Brain className="h-4 w-4 text-success" aria-hidden="true" />
+                <span className="text-sm text-muted-foreground">
+                    No questions due for review
+                </span>
+                <span className="text-success" aria-hidden="true">✓</span>
+            </div>
         );
     }
 

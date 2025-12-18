@@ -9,13 +9,18 @@ interface DashboardSkeletonProps {
      * Skeleton variant for progressive loading:
      * - minimal: Auth loading - header + centered spinner
      * - empty: No quizzes expected - header + empty state placeholder
-     * - populated: Quizzes expected - full StatsBar + 6 quiz cards (default)
+     * - populated: Quizzes expected - full StatsBar + quiz cards (default)
      */
     variant?: "minimal" | "empty" | "populated";
     /** Number of quiz cards to render for the populated skeleton. */
     quizCardCount?: number;
-    /** Whether to reserve space for the DueQuestionsCard. */
-    includeDuePlaceholder?: boolean;
+    /**
+     * SRS DueQuestionsCard placeholder variant:
+     * - 'compact': Small placeholder for empty state (~48px)
+     * - 'full': Full card placeholder for populated state (~200px)
+     * - false: No placeholder
+     */
+    duePlaceholder?: "compact" | "full" | false;
 }
 
 /**
@@ -25,7 +30,7 @@ interface DashboardSkeletonProps {
 export function DashboardSkeleton({
     variant = "populated",
     quizCardCount,
-    includeDuePlaceholder,
+    duePlaceholder,
 }: DashboardSkeletonProps): React.ReactElement {
     switch (variant) {
         case "minimal":
@@ -37,7 +42,7 @@ export function DashboardSkeleton({
             return (
                 <PopulatedDashboardSkeleton
                     quizCardCount={quizCardCount}
-                    includeDuePlaceholder={includeDuePlaceholder}
+                    duePlaceholder={duePlaceholder}
                 />
             );
     }
@@ -107,10 +112,10 @@ function EmptyDashboardSkeleton(): React.ReactElement {
  */
 function PopulatedDashboardSkeleton({
     quizCardCount,
-    includeDuePlaceholder = true,
+    duePlaceholder = "compact",
 }: {
     quizCardCount?: number;
-    includeDuePlaceholder?: boolean;
+    duePlaceholder?: "compact" | "full" | false;
 }): React.ReactElement {
     const clampedQuizCardCount = Math.min(
         12,
@@ -134,8 +139,8 @@ function PopulatedDashboardSkeleton({
                 <Skeleton className="h-10 w-32" />
             </div>
 
-            {/* StatsBar skeleton */}
-            <div className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
+            {/* StatsBar skeleton - min-h ensures stable height */}
+            <div className="mt-8 grid min-h-[100px] grid-cols-2 gap-4 lg:grid-cols-4">
                 {Array.from({ length: 4 }).map((_, i) => (
                     <Card key={i}>
                         <CardContent className="flex items-center gap-4 p-4">
@@ -149,19 +154,35 @@ function PopulatedDashboardSkeleton({
                 ))}
             </div>
 
-            {includeDuePlaceholder ? (
+            {/* SRS DueQuestionsCard placeholder */}
+            {duePlaceholder === "full" && (
                 <div className="mt-8 flex justify-center" aria-hidden="true">
-                    <Card className="mx-auto w-full max-w-md min-h-[120px]">
-                        <CardContent className="flex items-center gap-4 p-4">
-                            <Skeleton className="h-12 w-12 rounded-full" />
-                            <div className="flex-1 space-y-2">
-                                <Skeleton className="h-6 w-32" />
-                                <Skeleton className="h-4 w-48" />
+                    <Card className="mx-auto w-full max-w-md min-h-[200px]">
+                        <CardContent className="space-y-4 p-6">
+                            <div className="flex items-center gap-2">
+                                <Skeleton className="h-5 w-5 rounded" />
+                                <Skeleton className="h-6 w-36" />
                             </div>
+                            <Skeleton className="h-4 w-48" />
+                            <div className="text-center">
+                                <Skeleton className="mx-auto h-10 w-16" />
+                                <Skeleton className="mx-auto mt-2 h-4 w-32" />
+                            </div>
+                            <Skeleton className="h-3 w-full rounded-full" />
+                            <Skeleton className="h-10 w-full" />
                         </CardContent>
                     </Card>
                 </div>
-            ) : null}
+            )}
+            {duePlaceholder === "compact" && (
+                <div className="mt-8 flex justify-center" aria-hidden="true">
+                    <div className="mx-auto flex w-full max-w-md items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 py-3">
+                        <Skeleton className="h-4 w-4 rounded" />
+                        <Skeleton className="h-4 w-40" />
+                        <Skeleton className="h-4 w-4" />
+                    </div>
+                </div>
+            )}
 
             {/* QuizGrid skeleton */}
             <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

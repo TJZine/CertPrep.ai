@@ -44,7 +44,7 @@ export function AnalyticsSkeleton({
 
             {/* ExamReadinessCard skeleton */}
             <div className="mb-8" aria-hidden="true">
-                <Card className="min-h-[320px] p-6">
+                <Card className="min-h-[400px] p-6 [contain:layout]">
                     <Skeleton className="mb-4 h-8 w-48" />
                     <Skeleton className="mb-4 h-32 w-full" />
                     <Skeleton className="h-16 w-full" />
@@ -53,7 +53,7 @@ export function AnalyticsSkeleton({
 
             {/* StreakCard skeleton */}
             <div className="mb-8" aria-hidden="true">
-                <Card className="min-h-[320px] p-6">
+                <Card className="min-h-[380px] p-6 [contain:layout]">
                     <Skeleton className="mb-4 h-6 w-32" />
                     <div className="grid grid-cols-3 gap-4">
                         {Array.from({ length: 3 }).map((_, i) => (
@@ -109,7 +109,7 @@ export function AnalyticsSkeleton({
 
             {/* Topic Heatmap skeleton */}
             <div className="mb-8" aria-hidden="true">
-                <Card className="min-h-[420px] p-6">
+                <Card className="min-h-[560px] p-6 [contain:layout]">
                     <Skeleton className="mb-4 h-6 w-40" />
                     <Skeleton className="mb-2 h-4 w-64" />
                     <Skeleton className="h-80 w-full" />
