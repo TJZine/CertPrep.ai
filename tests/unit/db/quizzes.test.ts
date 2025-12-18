@@ -83,7 +83,7 @@ describe("DB: quizzes", () => {
     expect(updated!.title).toBe("Updated Title");
     expect(updated!.questions).toHaveLength(2);
 
-    const q2 = updated!.questions.find((q) => q.id === "q2");
+    const q2 = updated!.questions.find((q) => q.question === "What is 3+3?");
     expect(q2).toBeDefined();
     // The bug would cause this to fail before reaching here, or q2 would be missing hash if logic failed silently
     expect(q2!.correct_answer_hash).toBeDefined();
