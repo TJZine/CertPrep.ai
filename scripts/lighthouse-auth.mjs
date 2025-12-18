@@ -78,14 +78,14 @@ async function runLighthouse(browser, url, pageName) {
         logLevel: 'error',
     }, LIGHTHOUSE_CONFIG);
 
-    // Extract key metrics
+    // Extract key metrics (with null guards for partial/failed results)
     const metrics = {
-        score: Math.round(lhr.categories.performance.score * 100),
-        lcp: Math.round(lhr.audits['largest-contentful-paint'].numericValue),
-        cls: lhr.audits['cumulative-layout-shift'].numericValue.toFixed(3),
-        tbt: Math.round(lhr.audits['total-blocking-time'].numericValue),
-        fcp: Math.round(lhr.audits['first-contentful-paint'].numericValue),
-        accessibility: Math.round(lhr.categories.accessibility.score * 100),
+        score: Math.round((lhr.categories.performance?.score ?? 0) * 100),
+        lcp: Math.round(lhr.audits['largest-contentful-paint']?.numericValue ?? 0),
+        cls: (lhr.audits['cumulative-layout-shift']?.numericValue ?? 0).toFixed(3),
+        tbt: Math.round(lhr.audits['total-blocking-time']?.numericValue ?? 0),
+        fcp: Math.round(lhr.audits['first-contentful-paint']?.numericValue ?? 0),
+        accessibility: Math.round((lhr.categories.accessibility?.score ?? 0) * 100),
     };
 
     console.log(`   Performance: ${metrics.score}/100`);
@@ -128,16 +128,18 @@ async function main() {
 
         await waitForEnter('Press ENTER here after you are logged in and see the dashboard... ');
 
-        // Verify login succeeded
+        // Verify login succeeded (exact path match to avoid false positives)
         const currentUrl = page.url();
-        if (currentUrl.includes('/login')) {
+        const urlPath = new URL(currentUrl).pathname;
+        if (urlPath === '/login') {
             throw new Error('Still on login page. Please log in first.');
         }
 
         console.log('✅ Login confirmed! Starting Lighthouse tests...\n');
 
-        // Wait a moment for any data loading
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        // Wait for client-side hydration and initial data fetch to settle
+        const HYDRATION_DELAY_MS = 2000;
+        await new Promise(resolve => setTimeout(resolve, HYDRATION_DELAY_MS));
 
         // Run Lighthouse on each page
         const results = {};
