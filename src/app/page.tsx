@@ -58,18 +58,24 @@ export default function DashboardPage(): React.ReactElement {
   const [dueCountsByBox, setDueCountsByBox] = React.useState<Record<LeitnerBox, number>>({
     1: 0, 2: 0, 3: 0, 4: 0, 5: 0,
   });
+  const [dueCountsStatus, setDueCountsStatus] = React.useState<"idle" | "loading" | "ready">("idle");
   const totalDue = Object.values(dueCountsByBox).reduce((sum, count) => sum + count, 0);
+  const shouldLoadDueCounts = Boolean(effectiveUserId) && isInitialized;
+  const isDueCountsLoading = shouldLoadDueCounts && dueCountsStatus !== "ready";
 
   // Fetch SRS due counts
   React.useEffect(() => {
     if (!effectiveUserId || !isInitialized) return;
 
     const loadDueCounts = async (): Promise<void> => {
+      setDueCountsStatus("loading");
       try {
         const counts = await getDueCountsByBox(effectiveUserId);
         setDueCountsByBox(counts);
       } catch (err) {
         console.warn("Failed to load SRS due counts:", err);
+      } finally {
+        setDueCountsStatus("ready");
       }
     };
 
@@ -126,8 +132,12 @@ export default function DashboardPage(): React.ReactElement {
   }
 
   // Phase 2: User context resolved, but DB/data loading → populated skeleton
-  if (!isInitialized || quizzesLoading || statsLoading) {
-    return <DashboardSkeleton variant="populated" />;
+  if (!isInitialized || quizzesLoading || statsLoading || isDueCountsLoading) {
+    const variant =
+      !quizzesLoading && quizzes.length === 0
+        ? "empty"
+        : "populated";
+    return <DashboardSkeleton variant={variant} />;
   }
 
   if (dbError) {

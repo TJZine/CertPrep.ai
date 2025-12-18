@@ -97,7 +97,7 @@ function EmptyDashboardSkeleton(): React.ReactElement {
 function PopulatedDashboardSkeleton(): React.ReactElement {
     return (
         <div
-            className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8"
+            className="mx-auto max-w-7xl min-h-[530dvh] px-4 py-8 sm:min-h-[max(190dvh,1760px)] sm:px-6 lg:px-8"
             role="status"
             aria-label="Loading dashboard"
         >
@@ -126,9 +126,22 @@ function PopulatedDashboardSkeleton(): React.ReactElement {
                 ))}
             </div>
 
+            {/* DueQuestionsCard placeholder */}
+            <div className="mt-8 flex justify-center" aria-hidden="true">
+                <Card className="mx-auto w-full max-w-md min-h-[120px]">
+                    <CardContent className="flex items-center gap-4 p-4">
+                        <Skeleton className="h-12 w-12 rounded-full" />
+                        <div className="flex-1 space-y-2">
+                            <Skeleton className="h-6 w-32" />
+                            <Skeleton className="h-4 w-48" />
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+
             {/* QuizGrid skeleton */}
             <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {Array.from({ length: 6 }).map((_, i) => (
+                {Array.from({ length: 8 }).map((_, i) => (
                     <Card key={i} className="flex h-full flex-col">
                         <CardHeader className="pb-4">
                             <div className="space-y-2">
@@ -156,4 +169,3 @@ function PopulatedDashboardSkeleton(): React.ReactElement {
         </div>
     );
 }
-

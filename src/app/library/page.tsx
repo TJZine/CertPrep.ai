@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useQuizzes, useInitializeDatabase } from "@/hooks/useDatabase";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { TestLibrary } from "@/components/dashboard/TestLibrary";
+import { LibrarySkeleton } from "@/components/library/LibrarySkeleton";
 import { buttonVariants } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/providers/AuthProvider";
@@ -18,11 +19,7 @@ export default function LibraryPage(): React.ReactElement {
   const { quizzes, isLoading } = useQuizzes(effectiveUserId ?? undefined);
 
   if (!isInitialized || !effectiveUserId || isLoading) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <LoadingSpinner size="lg" text="Loading library..." />
-      </div>
-    );
+    return <LibrarySkeleton />;
   }
 
   if (dbError) {
