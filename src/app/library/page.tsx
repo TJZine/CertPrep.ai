@@ -4,7 +4,6 @@ import * as React from "react";
 import { ArrowLeft, BookOpen } from "lucide-react";
 import Link from "next/link";
 import { useQuizzes, useInitializeDatabase } from "@/hooks/useDatabase";
-import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { TestLibrary } from "@/components/dashboard/TestLibrary";
 import { LibrarySkeleton } from "@/components/library/LibrarySkeleton";
 import { buttonVariants } from "@/components/ui/Button";
@@ -75,17 +74,13 @@ export default function LibraryPage(): React.ReactElement {
         </Link>
       </div>
 
-      <React.Suspense
-        fallback={<LoadingSpinner size="lg" text="Loading library..." />}
-      >
-        <TestLibrary
-          existingQuizzes={quizzes ?? []}
-          userId={effectiveUserId}
-          onImportSuccess={(): void => {
-            // No-op: useQuizzes live query will refresh imported state automatically.
-          }}
-        />
-      </React.Suspense>
+      <TestLibrary
+        existingQuizzes={quizzes ?? []}
+        userId={effectiveUserId}
+        onImportSuccess={(): void => {
+          // No-op: useQuizzes live query will refresh imported state automatically.
+        }}
+      />
     </main>
   );
 }

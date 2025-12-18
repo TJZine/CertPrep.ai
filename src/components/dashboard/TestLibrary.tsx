@@ -101,8 +101,6 @@ export function TestLibrary({
             target = urlCategory;
           } else if (storedCategory && nextCategories.includes(storedCategory)) {
             target = storedCategory;
-          } else if (nextCategories.length > 1) {
-            target = nextCategories[1] ?? "all";
           }
 
           setCategoryFilter(target);
