@@ -154,7 +154,7 @@ function getTrendColor(trend: "up" | "down" | "stable" | null): string {
  */
 function HeatmapSkeleton({ className }: { className?: string }): React.ReactElement {
     return (
-        <Card className={className}>
+        <Card className={cn("min-h-[400px] [contain:layout]", className)}>
             <CardHeader>
                 <div className="h-6 w-48 animate-pulse rounded bg-muted" />
                 <div className="mt-1 h-4 w-72 animate-pulse rounded bg-muted" />
@@ -637,7 +637,7 @@ export function TopicHeatmap({
     }
 
     return (
-        <Card className={className}>
+        <Card className={cn("[contain:layout]", className)}>
             <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0">
                 <div className="flex-1">
                     <CardTitle>Topic Mastery Over Time</CardTitle>

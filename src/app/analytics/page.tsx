@@ -354,7 +354,7 @@ export default function AnalyticsPage(): React.ReactElement {
       </div>
 
       {/* Topic Heatmap (full width for dense data) */}
-      <div className="mb-8 min-h-[560px]">
+      <div className="mb-8">
         <TopicHeatmap results={filteredResults} quizzes={quizzes} userId={effectiveUserId ?? undefined} />
       </div>
 
