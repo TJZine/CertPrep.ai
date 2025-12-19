@@ -245,14 +245,30 @@ export function ExamReadinessCard({
                         <h4 className="font-semibold text-foreground">
                             Category Breakdown
                         </h4>
-                        {categories.map(([category, score]) => (
-                            <CategoryBar
-                                key={category}
-                                category={category}
-                                score={score}
-                                threshold={passingThreshold}
-                            />
-                        ))}
+                        {/* Always render 6 rows for stable height */}
+                        {Array.from({ length: 6 }).map((_, index) => {
+                            const category = categories[index];
+                            if (category) {
+                                return (
+                                    <CategoryBar
+                                        key={category[0]}
+                                        category={category[0]}
+                                        score={category[1]}
+                                        threshold={passingThreshold}
+                                    />
+                                );
+                            }
+                            // Placeholder for missing categories
+                            return (
+                                <div key={`placeholder-${index}`} className="space-y-1">
+                                    <div className="flex items-center justify-between text-sm">
+                                        <div className="h-4 w-24 animate-pulse rounded bg-muted" />
+                                        <div className="h-4 w-8 animate-pulse rounded bg-muted" />
+                                    </div>
+                                    <div className="h-2 w-full rounded-full bg-secondary" />
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
             </CardContent>
