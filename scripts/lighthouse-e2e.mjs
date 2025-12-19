@@ -229,12 +229,12 @@ async function runLighthouse(browser, url, config) {
   );
 
   const metrics = {
-    score: Math.round(lhr.categories.performance.score * 100),
-    lcp: Math.round(lhr.audits["largest-contentful-paint"].numericValue),
-    cls: Number(lhr.audits["cumulative-layout-shift"].numericValue.toFixed(3)),
-    tbt: Math.round(lhr.audits["total-blocking-time"].numericValue),
-    fcp: Math.round(lhr.audits["first-contentful-paint"].numericValue),
-    accessibility: Math.round(lhr.categories.accessibility.score * 100),
+    score: Math.round((lhr.categories?.performance?.score ?? 0) * 100),
+    lcp: Math.round(lhr.audits?.["largest-contentful-paint"]?.numericValue ?? 0),
+    cls: Number((lhr.audits?.["cumulative-layout-shift"]?.numericValue ?? 0).toFixed(3)),
+    tbt: Math.round(lhr.audits?.["total-blocking-time"]?.numericValue ?? 0),
+    fcp: Math.round(lhr.audits?.["first-contentful-paint"]?.numericValue ?? 0),
+    accessibility: Math.round((lhr.categories?.accessibility?.score ?? 0) * 100),
   };
 
   return { lhr, metrics };

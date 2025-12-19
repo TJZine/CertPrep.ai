@@ -11,6 +11,9 @@ export interface SyncCursor {
 const EPOCH_TIMESTAMP = "1970-01-01T00:00:00.000Z";
 const ONE_HOUR_MS = 60 * 60 * 1000;
 
+// UUID validation regex for keyset pagination cursor validation
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 interface HealResult {
   timestamp: string;
   healed: boolean;
@@ -170,7 +173,6 @@ export async function getSRSSyncCursor(userId: string): Promise<SyncCursor> {
   }
 
   // Validate lastId format (must be UUID for keyset pagination)
-  const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   const rawLastId = state?.lastId || NIL_UUID;
   const isValidUUID = UUID_REGEX.test(rawLastId);
 
@@ -181,7 +183,8 @@ export async function getSRSSyncCursor(userId: string): Promise<SyncCursor> {
 
   const safeLastId = healed || !isValidUUID ? NIL_UUID : rawLastId;
 
-  // Persist healed cursor to prevent repeated warnings
+  // Side-effect: persist healed cursor immediately to prevent repeated
+  // warnings on subsequent calls. This is idempotent and safe under concurrency.
   if (healed || lastIdHealed) {
     await setSRSSyncCursor(timestamp, userId, safeLastId);
   }

@@ -14,6 +14,7 @@
  */
 
 import puppeteer from "puppeteer";
+import path from "path";
 
 const DEFAULT_BASE_URL = "http://localhost:3100";
 const DEFAULT_VIEWPORT = { width: 1350, height: 940 };
@@ -106,10 +107,10 @@ async function collectScenario(page, scenario) {
 
     const getHeight = (selector) => document.querySelector(selector)?.offsetHeight ?? null;
 
-    const heightOfCardWithTitle = (title) => {
-      const cards = Array.from(document.querySelectorAll(".card"));
-      const matching = cards.find((el) => (el.textContent || "").includes(title));
-      return matching ? matching.offsetHeight : null;
+    // Use data-testid for stable selectors (preferred for E2E tooling)
+    const heightOfCard = (testId) => {
+      const card = document.querySelector(`[data-testid="${testId}"]`);
+      return card ? card.offsetHeight : null;
     };
 
     return {
@@ -121,9 +122,9 @@ async function collectScenario(page, scenario) {
         statsBar: getHeight(".grid.grid-cols-2.lg\\:grid-cols-4"),
         quizGrid: getHeight(".grid.gap-6.sm\\:grid-cols-2.lg\\:grid-cols-3"),
         analyticsMain: getHeight(".mx-auto.max-w-7xl"),
-        examReadinessCard: heightOfCardWithTitle("Exam Readiness"),
-        streakCard: heightOfCardWithTitle("Study Streak"),
-        performanceHistoryCard: heightOfCardWithTitle("Performance History"),
+        examReadinessCard: heightOfCard("exam-readiness-card"),
+        streakCard: heightOfCard("streak-card"),
+        performanceHistoryCard: heightOfCard("performance-history-card"),
         libraryMain: getHeight("main.mx-auto"),
       },
     };
@@ -342,7 +343,7 @@ async function main() {
   });
 
   try {
-  const scenarios = [
+    const scenarios = [
       { name: "dashboard-0", path: "/", quizCount: 0, dueCount: 0 },
       { name: "dashboard-6", path: "/", quizCount: 6, dueCount: 0 },
       { name: "dashboard-8", path: "/", quizCount: 8, dueCount: 0 },
@@ -387,7 +388,7 @@ async function main() {
 
     const outputPath = String(args.get("--out") || "lighthouse-reports/cls-audit.json");
     await import("fs").then(({ mkdirSync, writeFileSync, existsSync }) => {
-      const dir = outputPath.split("/").slice(0, -1).join("/") || ".";
+      const dir = path.dirname(path.resolve(outputPath)) || ".";
       if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
       writeFileSync(outputPath, JSON.stringify({ baseUrl, viewport, results }, null, 2));
     });

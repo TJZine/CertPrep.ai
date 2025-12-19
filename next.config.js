@@ -103,5 +103,3 @@ module.exports = withSentryConfig(nextConfig, {
   // Keeping it enabled until Sentry provides the new API.
   automaticVercelMonitors: true,
 });
-
-

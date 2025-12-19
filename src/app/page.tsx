@@ -67,20 +67,22 @@ export default function DashboardPage(): React.ReactElement {
   // Fetch SRS due counts
   React.useEffect(() => {
     if (!effectiveUserId || !isInitialized) return;
+    let cancelled = false;
 
     const loadDueCounts = async (): Promise<void> => {
       setDueCountsStatus("loading");
       try {
         const counts = await getDueCountsByBox(effectiveUserId);
-        setDueCountsByBox(counts);
+        if (!cancelled) setDueCountsByBox(counts);
       } catch (err) {
         console.warn("Failed to load SRS due counts:", err);
       } finally {
-        setDueCountsStatus("ready");
+        if (!cancelled) setDueCountsStatus("ready");
       }
     };
 
     void loadDueCounts();
+    return (): void => { cancelled = true; };
   }, [effectiveUserId, isInitialized]);
 
   // Persist quiz count for skeleton size caching (CLS optimization)
@@ -254,7 +256,7 @@ export default function DashboardPage(): React.ReactElement {
       {/* Modals - rendered as siblings, use portals internally */}
       {isImportModalOpen && (
         <ImportModal
-          isOpen={isImportModalOpen}
+          isOpen
           onClose={() => setIsImportModalOpen(false)}
           onImportSuccess={handleImportSuccess}
           userId={effectiveUserId}
@@ -264,7 +266,7 @@ export default function DashboardPage(): React.ReactElement {
       {modeSelectQuiz !== null && (
         <ModeSelectModal
           quiz={modeSelectQuiz}
-          isOpen={modeSelectQuiz !== null}
+          isOpen
           onClose={() => setModeSelectQuiz(null)}
         />
       )}

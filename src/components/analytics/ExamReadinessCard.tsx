@@ -203,7 +203,7 @@ export function ExamReadinessCard({
 
     if (categoryReadiness.size === 0) {
         return (
-            <Card className={className}>
+            <Card className={className} data-testid="exam-readiness-card">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         🎯 Exam Readiness
@@ -219,7 +219,7 @@ export function ExamReadinessCard({
     }
 
     return (
-        <Card className={className}>
+        <Card className={className} data-testid="exam-readiness-card">
             <CardHeader>
                 <div className="flex items-center justify-between">
                     <div>

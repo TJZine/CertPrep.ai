@@ -578,7 +578,7 @@ CREATE POLICY "Users can update own results" ON results
 | TTI    | < 3.5s | ~1.5s ✅          |
 | CLS    | < 0.1  | ~0.09-0.10 ✅     |
 
-> **Note:** Metrics measured via Lighthouse CLI with desktop preset and authenticated sessions (Dec 2025).
+> **Note:** Metrics measured via Lighthouse CLI with desktop preset and authenticated sessions. See `scripts/lighthouse-e2e.mjs` and `scripts/cls-audit.mjs` for reproducibility.
 
 ---
 

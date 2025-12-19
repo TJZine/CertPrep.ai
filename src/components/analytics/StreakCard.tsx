@@ -235,7 +235,7 @@ export function StreakCard({
     }
 
     return (
-        <Card className={className}>
+        <Card className={className} data-testid="streak-card">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <Flame className="h-5 w-5 text-warning" aria-hidden="true" />
