@@ -12,8 +12,10 @@ type SyncState = "syncing" | "saved" | "offline" | "idle";
 /**
  * Subtle sync status indicator for the header.
  * Shows syncing state, brief "Saved" confirmation, or offline status.
+ * 
+ * Uses a fixed-width wrapper with opacity toggle to prevent CLS.
  */
-export function SyncStatusIndicator(): React.ReactElement | null {
+export function SyncStatusIndicator(): React.ReactElement {
     const { user } = useAuth();
     const { isSyncing, hasInitialSyncCompleted } = useSync();
     const { isOnline } = useOnlineStatus();
@@ -31,12 +33,12 @@ export function SyncStatusIndicator(): React.ReactElement | null {
         prevSyncingRef.current = isSyncing;
     }, [isSyncing, hasInitialSyncCompleted]);
 
-    // Don't show for unauthenticated users
-    if (!user) return null;
-
     // Determine current state
     let state: SyncState = "idle";
-    if (!isOnline) {
+    if (!user) {
+        // Keep idle for unauthenticated - wrapper will be invisible
+        state = "idle";
+    } else if (!isOnline) {
         state = "offline";
     } else if (isSyncing) {
         state = "syncing";
@@ -44,40 +46,50 @@ export function SyncStatusIndicator(): React.ReactElement | null {
         state = "saved";
     }
 
-    // Don't render anything in idle state
-    if (state === "idle") return null;
+    const isVisible = state !== "idle";
 
+    // Always render a fixed-width wrapper to prevent CLS
+    // Use opacity toggle with smooth transition instead of conditional mounting
     return (
         <div
             className={cn(
-                "flex items-center gap-1.5 text-xs font-medium transition-opacity duration-300",
-                state === "syncing" && "text-muted-foreground",
-                state === "saved" && "text-success",
-                state === "offline" && "text-warning",
+                "w-[72px] transition-opacity duration-300 ease-in-out",
+                isVisible ? "opacity-100" : "opacity-0 pointer-events-none",
             )}
             role="status"
             aria-live="polite"
+            aria-hidden={!isVisible}
         >
-            {state === "syncing" && (
-                <>
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
-                    <span>Syncing...</span>
-                </>
-            )}
-            {state === "saved" && (
-                <>
-                    <Check className="h-3.5 w-3.5" aria-hidden="true" />
-                    <span>Saved</span>
-                </>
-            )}
-            {state === "offline" && (
-                <>
-                    <CloudOff className="h-3.5 w-3.5" aria-hidden="true" />
-                    <span>Offline</span>
-                </>
-            )}
+            <div
+                className={cn(
+                    "flex items-center gap-1.5 text-xs font-medium",
+                    state === "syncing" && "text-muted-foreground",
+                    state === "saved" && "text-success",
+                    state === "offline" && "text-warning",
+                )}
+            >
+                {state === "syncing" && (
+                    <>
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                        <span>Syncing...</span>
+                    </>
+                )}
+                {state === "saved" && (
+                    <>
+                        <Check className="h-3.5 w-3.5" aria-hidden="true" />
+                        <span>Saved</span>
+                    </>
+                )}
+                {state === "offline" && (
+                    <>
+                        <CloudOff className="h-3.5 w-3.5" aria-hidden="true" />
+                        <span>Offline</span>
+                    </>
+                )}
+            </div>
         </div>
     );
 }
 
 export default SyncStatusIndicator;
+

@@ -145,7 +145,7 @@ export function PerformanceHistory({
   }
 
   return (
-    <Card className={className} data-testid="performance-history-card">
+    <Card className={cn("min-h-[320px]", className)} data-testid="performance-history-card">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>

@@ -340,7 +340,7 @@ export default function AnalyticsPage(): React.ReactElement {
       </div>
 
       {/* Performance History Chart (full width) */}
-      <div className="mb-8">
+      <div className="mb-8 min-h-[320px]">
         <PerformanceHistory results={filteredResults} quizTitles={quizTitles} />
       </div>
 
@@ -359,7 +359,9 @@ export default function AnalyticsPage(): React.ReactElement {
       </div>
 
       {/* Category Trends Over Time */}
-      <CategoryTrendChartSection results={filteredResults} />
+      <div className="min-h-[380px]">
+        <CategoryTrendChartSection results={filteredResults} />
+      </div>
 
       {/* Retry Comparison */}
       <div className="mb-8">
