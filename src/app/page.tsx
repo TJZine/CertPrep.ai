@@ -11,6 +11,7 @@ import { StatsBar } from "@/components/dashboard/StatsBar";
 import { QuizGrid } from "@/components/dashboard/QuizGrid";
 import { DueQuestionsCard } from "@/components/srs/DueQuestionsCard";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
+import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { useToast } from "@/components/ui/Toast";
 import { prefetchOnIdle } from "@/lib/prefetch";
 import type { Quiz } from "@/types/quiz";
@@ -83,29 +84,28 @@ export default function DashboardPage(): React.ReactElement {
   }, [effectiveUserId, isInitialized]);
 
   // Persist quiz count for skeleton size caching (CLS optimization)
-  // This allows the skeleton to match the user's actual library size on subsequent visits
-  // We persist 0 for empty state so returning users with no quizzes see "empty" variant
+  // User-scoped to prevent cross-account cache pollution
   React.useEffect(() => {
-    if (!quizzesLoading) {
+    if (!quizzesLoading && effectiveUserId) {
       try {
-        localStorage.setItem("dashboard_quiz_count", String(quizzes.length));
+        localStorage.setItem(`dashboard_${effectiveUserId}_quiz_count`, String(quizzes.length));
       } catch {
         // localStorage may be unavailable in private browsing
       }
     }
-  }, [quizzes.length, quizzesLoading]);
+  }, [quizzes.length, quizzesLoading, effectiveUserId]);
 
   // Persist SRS due state for skeleton sizing (CLS optimization)
-  // Allows skeleton to show correct placeholder size based on last visit
+  // User-scoped to prevent cross-account cache pollution
   React.useEffect(() => {
-    if (dueCountsStatus === "ready") {
+    if (dueCountsStatus === "ready" && effectiveUserId) {
       try {
-        localStorage.setItem("dashboard_has_srs_dues", totalDue > 0 ? "1" : "0");
+        localStorage.setItem(`dashboard_${effectiveUserId}_has_srs_dues`, totalDue > 0 ? "1" : "0");
       } catch {
         // localStorage may be unavailable in private browsing
       }
     }
-  }, [dueCountsStatus, totalDue]);
+  }, [dueCountsStatus, totalDue, effectiveUserId]);
 
   // Prefetch modal chunks during idle time for faster first-open and offline reliability
   React.useEffect(() => {
@@ -152,20 +152,19 @@ export default function DashboardPage(): React.ReactElement {
   };
 
   // Use cached quiz count for skeleton sizing (CLS optimization)
-  // Returns null if cached value is 0 (empty state) or no cache exists
-  // This drives both skeleton variant and card count
+  // User-scoped cache prevents cross-account pollution
   const cachedQuizCount = React.useMemo((): number | null => {
     // If we already have quiz data loaded, use that
     if (!quizzesLoading) {
       return quizzes.length;
     }
-    // Otherwise, read cached count from localStorage
-    if (typeof window !== "undefined") {
+    // Otherwise, read user-scoped cached count from localStorage
+    if (typeof window !== "undefined" && effectiveUserId) {
       try {
-        const cached = localStorage.getItem("dashboard_quiz_count");
+        const cached = localStorage.getItem(`dashboard_${effectiveUserId}_quiz_count`);
         if (cached !== null) {
           const count = Number(cached);
-          if (Number.isFinite(count) && count >= 0 && count <= 20) {
+          if (Number.isFinite(count) && count >= 0) {
             return count;
           }
         }
@@ -173,11 +172,9 @@ export default function DashboardPage(): React.ReactElement {
         // localStorage unavailable
       }
     }
-    // No cache exists - determine default based on auth state
-    // Authenticated users likely have synced data, show populated skeleton
-    // Anonymous users are genuinely new, show empty skeleton
+    // No cache exists - return null, skeleton logic will determine variant
     return null;
-  }, [quizzes.length, quizzesLoading]);
+  }, [quizzes.length, quizzesLoading, effectiveUserId]);
 
   // Loading: auth/user context and DB/data fetches.
   // Keep a single skeleton visible until all dynamic sections (including SRS due counts) are ready.
@@ -189,46 +186,10 @@ export default function DashboardPage(): React.ReactElement {
     statsLoading ||
     isDueCountsLoading
   ) {
-    // Determine skeleton variant based on cached/loaded quiz count and auth state
-    // - Cached value: use exactly what we cached
-    // - No cache + authenticated: assume populated (cloud sync likely has data)
-    // - No cache + anonymous: assume empty (genuinely new user)
-    const variant =
-      cachedQuizCount !== null
-        ? cachedQuizCount === 0 ? "empty" : "populated"
-        : user
-          ? "populated"  // Authenticated user likely has synced data
-          : "empty";     // Anonymous first-time visitor
+    // Use cached quiz count for skeleton, default to 6 for reasonable first-load
+    const quizCardCount = cachedQuizCount ?? 6;
 
-    // Default quiz card count for authenticated users without cache (reasonable middle-ground)
-    const defaultAuthQuizCount = 6;
-    const quizCardCount = cachedQuizCount ?? (user ? defaultAuthQuizCount : undefined);
-
-    // Determine SRS placeholder variant based on cached/loaded state
-    // - 'full': User had dues last visit → reserve full card height
-    // - 'compact': User had no dues (or first visit) → reserve compact height
-    // - false: Empty dashboard variant doesn't show SRS card
-    let duePlaceholder: "compact" | "full" | false = "compact";
-    if (variant === "empty") {
-      duePlaceholder = false;
-    } else if (dueCountsStatus === "ready") {
-      duePlaceholder = totalDue > 0 ? "full" : "compact";
-    } else if (typeof window !== "undefined") {
-      try {
-        const cached = localStorage.getItem("dashboard_has_srs_dues");
-        duePlaceholder = cached === "1" ? "full" : "compact";
-      } catch {
-        // localStorage unavailable, default to compact
-      }
-    }
-
-    return (
-      <DashboardSkeleton
-        variant={variant}
-        quizCardCount={quizCardCount}
-        duePlaceholder={duePlaceholder}
-      />
-    );
+    return <DashboardSkeleton quizCardCount={quizCardCount} />;
   }
 
   if (dbError) {
@@ -249,46 +210,48 @@ export default function DashboardPage(): React.ReactElement {
   }
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <DashboardHeader
-        onImportClick={() => setIsImportModalOpen(true)}
-        quizCount={quizzes.length}
-      />
-
-      {quizzes.length > 0 && overallStats ? (
-        <div className="mt-8">
-          <StatsBar
-            totalQuizzes={overallStats.totalQuizzes}
-            totalAttempts={overallStats.totalAttempts}
-            averageScore={
-              overallStats.totalAttempts > 0 ? overallStats.averageScore : null
-            }
-            totalStudyTime={overallStats.totalStudyTime}
+    <>
+      <DashboardShell
+        headerSlot={
+          <DashboardHeader
+            onImportClick={() => setIsImportModalOpen(true)}
+            quizCount={quizzes.length}
           />
-        </div>
-      ) : null}
-
-      {/* SRS Due Questions Card - only show when there are due questions */}
-      {totalDue > 0 && (
-        <div className="mt-8">
+        }
+        statsSlot={
+          quizzes.length > 0 && overallStats ? (
+            <StatsBar
+              totalQuizzes={overallStats.totalQuizzes}
+              totalAttempts={overallStats.totalAttempts}
+              averageScore={
+                overallStats.totalAttempts > 0 ? overallStats.averageScore : null
+              }
+              totalStudyTime={overallStats.totalStudyTime}
+            />
+          ) : (
+            <div className="grid min-h-[100px] grid-cols-2 gap-4 lg:grid-cols-4">
+              {/* Empty stats placeholder to maintain layout */}
+            </div>
+          )
+        }
+        srsSlot={
           <DueQuestionsCard
             dueCountsByBox={dueCountsByBox}
             totalDue={totalDue}
             className="mx-auto max-w-md"
           />
-        </div>
-      )}
+        }
+        contentSlot={
+          <QuizGrid
+            quizzes={quizzes}
+            quizStats={quizStats}
+            onStartQuiz={handleStartQuiz}
+            onDeleteQuiz={handleDeleteClick}
+          />
+        }
+      />
 
-      <div className="mt-8">
-        <QuizGrid
-          quizzes={quizzes}
-          quizStats={quizStats}
-          onStartQuiz={handleStartQuiz}
-          onDeleteQuiz={handleDeleteClick}
-        />
-      </div>
-
-      {/* Modals - conditionally rendered to avoid loading chunk until needed */}
+      {/* Modals - rendered as siblings, use portals internally */}
       {isImportModalOpen && (
         <ImportModal
           isOpen={isImportModalOpen}
@@ -316,6 +279,7 @@ export default function DashboardPage(): React.ReactElement {
           isDeleting={isDeleting}
         />
       )}
-    </main>
+    </>
   );
 }
+
