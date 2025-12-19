@@ -151,6 +151,14 @@ export function ToastProvider({
         }
       });
 
+      // Size limit: if map exceeds 100 entries, keep only the 50 most recent
+      if (recentToasts.current.size > 100) {
+        const entries = Array.from(recentToasts.current.entries())
+          .sort((a, b) => b[1] - a[1]) // Sort by timestamp descending (newest first)
+          .slice(0, 50);
+        recentToasts.current = new Map(entries);
+      }
+
       recentToasts.current.set(dedupKey, now);
 
       const id = generateId();

@@ -151,6 +151,21 @@ export async function setQuizSyncCursor(
   });
 }
 
+/**
+ * Retrieves the SRS sync cursor for keyset pagination.
+ *
+ * **Self-Healing Behavior (Side-Effect):** If the stored cursor is corrupted
+ * (future timestamp or invalid UUID lastId), this function will:
+ * 1. Log a warning
+ * 2. Immediately persist the healed cursor to IndexedDB
+ * 3. Return the healed cursor
+ *
+ * This side-effect is intentional to prevent repeated healing/warning on
+ * subsequent calls. The operation is idempotent and safe under concurrency.
+ *
+ * @param userId - The user ID to get the sync cursor for
+ * @returns SyncCursor with validated timestamp and lastId
+ */
 export async function getSRSSyncCursor(userId: string): Promise<SyncCursor> {
   if (!userId) return { timestamp: EPOCH_TIMESTAMP, lastId: NIL_UUID };
 
@@ -183,15 +198,13 @@ export async function getSRSSyncCursor(userId: string): Promise<SyncCursor> {
 
   const safeLastId = healed || !isValidUUID ? NIL_UUID : rawLastId;
 
-  // Side-effect: persist healed cursor immediately to prevent repeated
-  // warnings on subsequent calls. This is idempotent and safe under concurrency.
+  // Persist healed cursor immediately (see JSDoc for rationale)
   if (healed || lastIdHealed) {
     await setSRSSyncCursor(timestamp, userId, safeLastId);
   }
 
   return {
     timestamp,
-    // Clear lastId when healing to avoid keyset pagination skipping records
     lastId: safeLastId,
   };
 }

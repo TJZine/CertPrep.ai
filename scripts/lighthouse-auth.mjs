@@ -72,8 +72,18 @@ function waitForEnter(prompt) {
 async function runLighthouse(browser, url, pageName) {
     console.log(`\n📊 Running Lighthouse on ${pageName} (${url})...`);
 
+    // Safely extract DevTools port from browser WebSocket endpoint
+    const wsEndpoint = browser.wsEndpoint();
+    if (!wsEndpoint) {
+        throw new Error('Could not get browser WebSocket endpoint');
+    }
+    const port = new URL(wsEndpoint).port;
+    if (!port) {
+        throw new Error(`Could not extract DevTools port from endpoint: ${wsEndpoint}`);
+    }
+
     const { lhr } = await lighthouse(url, {
-        port: new URL(browser.wsEndpoint()).port,
+        port,
         output: 'json',
         logLevel: 'error',
     }, LIGHTHOUSE_CONFIG);

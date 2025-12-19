@@ -111,7 +111,7 @@ export default function DashboardPage(): React.ReactElement {
 
   // Prefetch modal chunks during idle time for faster first-open and offline reliability
   React.useEffect(() => {
-    prefetchOnIdle([
+    return prefetchOnIdle([
       { key: 'ImportModal', load: (): Promise<typeof import('@/components/dashboard/ImportModal')> => import('@/components/dashboard/ImportModal') },
       { key: 'ModeSelectModal', load: (): Promise<typeof import('@/components/dashboard/ModeSelectModal')> => import('@/components/dashboard/ModeSelectModal') },
       { key: 'DeleteConfirmModal', load: (): Promise<typeof import('@/components/dashboard/DeleteConfirmModal')> => import('@/components/dashboard/DeleteConfirmModal') },
@@ -231,8 +231,10 @@ export default function DashboardPage(): React.ReactElement {
               totalStudyTime={overallStats.totalStudyTime}
             />
           ) : (
-            <div className="grid min-h-[100px] grid-cols-2 gap-4 lg:grid-cols-4">
-              {/* Empty stats placeholder to maintain layout */}
+            <div data-testid="stats-bar-empty" className="grid min-h-[100px] grid-cols-1 place-items-center lg:grid-cols-1">
+              <p className="text-sm text-muted-foreground">
+                Complete quizzes to see your stats here
+              </p>
             </div>
           )
         }

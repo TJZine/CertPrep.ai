@@ -50,6 +50,7 @@ export function DashboardShell({
 }: DashboardShellProps): React.ReactElement {
     return (
         <main
+            data-testid="dashboard-shell"
             className="mx-auto max-w-7xl min-h-[calc(100vh-65px)] px-4 py-8 sm:px-6 lg:px-8"
             role={isLoading ? "status" : undefined}
             aria-label={ariaLabel}

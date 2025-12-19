@@ -118,14 +118,15 @@ async function collectScenario(page, scenario) {
       shiftCount: shifts.length,
       topSources,
       heights: {
-        dashboardMain: getHeight("main.mx-auto"),
-        statsBar: getHeight(".grid.grid-cols-2.lg\\:grid-cols-4"),
-        quizGrid: getHeight(".grid.gap-6.sm\\:grid-cols-2.lg\\:grid-cols-3"),
-        analyticsMain: getHeight(".mx-auto.max-w-7xl"),
+        // Use data-testid for stable selectors (preferred for E2E tooling)
+        dashboardMain: getHeight("[data-testid='dashboard-shell']") ?? getHeight("main.mx-auto"),
+        statsBar: heightOfCard("stats-bar") ?? heightOfCard("stats-bar-empty"),
+        quizGrid: heightOfCard("quiz-grid"),
+        analyticsMain: getHeight("[data-testid='analytics-main']") ?? getHeight(".mx-auto.max-w-7xl"),
         examReadinessCard: heightOfCard("exam-readiness-card"),
         streakCard: heightOfCard("streak-card"),
         performanceHistoryCard: heightOfCard("performance-history-card"),
-        libraryMain: getHeight("main.mx-auto"),
+        libraryMain: getHeight("[data-testid='library-main']") ?? getHeight("main.mx-auto"),
       },
     };
   });
