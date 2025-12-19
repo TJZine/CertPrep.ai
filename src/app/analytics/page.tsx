@@ -36,7 +36,7 @@ const PerformanceHistory = dynamic(
   () => import("@/components/analytics/PerformanceHistory").then((mod) => ({ default: mod.PerformanceHistory })),
   {
     loading: () => (
-      <Card className="min-h-[380px]">
+      <Card className="h-[348px]">
         <Skeleton className="h-full w-full" aria-label="Loading performance chart" />
       </Card>
     ),
@@ -340,7 +340,7 @@ export default function AnalyticsPage(): React.ReactElement {
       </div>
 
       {/* Performance History Chart (full width) */}
-      <div className="mb-8 min-h-[320px]">
+      <div className="mb-8 h-[348px]">
         <PerformanceHistory results={filteredResults} quizTitles={quizTitles} />
       </div>
 
