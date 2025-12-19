@@ -201,23 +201,9 @@ export function ExamReadinessCard({
         }
     };
 
-    if (categoryReadiness.size === 0) {
-        return (
-            <Card className={className} data-testid="exam-readiness-card">
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        🎯 Exam Readiness
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <p className="text-center text-muted-foreground">
-                        Complete some quizzes to see your exam readiness score.
-                    </p>
-                </CardContent>
-            </Card>
-        );
-    }
+    const isEmpty = categoryReadiness.size === 0;
 
+    // Always render full Card structure for stable height
     return (
         <Card className={className} data-testid="exam-readiness-card">
             <CardHeader>
@@ -227,18 +213,32 @@ export function ExamReadinessCard({
                             🎯 Exam Readiness
                         </CardTitle>
                         <CardDescription>
-                            {isPassing
-                                ? "You're on track to pass!"
-                                : `Target: ${passingThreshold}% to pass`}
+                            {isEmpty
+                                ? "Track your exam preparation progress"
+                                : isPassing
+                                    ? "You're on track to pass!"
+                                    : `Target: ${passingThreshold}% to pass`}
                         </CardDescription>
                     </div>
-                    {getConfidenceBadge(readinessConfidence)}
+                    {!isEmpty && getConfidenceBadge(readinessConfidence)}
                 </div>
             </CardHeader>
             <CardContent>
                 <div className="grid gap-8 md:grid-cols-2">
                     <div className="flex items-center justify-center">
-                        <ReadinessGauge score={readinessScore} threshold={passingThreshold} />
+                        {isEmpty ? (
+                            // Empty state gauge placeholder
+                            <div className="flex h-[200px] w-[200px] flex-col items-center justify-center">
+                                <div className="text-center">
+                                    <div className="text-6xl">🎯</div>
+                                    <p className="mt-3 text-sm text-muted-foreground">
+                                        Complete some quizzes to see your readiness score
+                                    </p>
+                                </div>
+                            </div>
+                        ) : (
+                            <ReadinessGauge score={readinessScore} threshold={passingThreshold} />
+                        )}
                     </div>
 
                     <div className="space-y-3">

@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/Card";
 import { formatDateKey } from "@/lib/date";
 import { cn } from "@/lib/utils";
-import { EmptyCardState } from "@/components/analytics/EmptyCardState";
 
 interface DailyStudyData {
     date: string;
@@ -221,19 +220,9 @@ export function StreakCard({
     className,
 }: StreakCardProps): React.ReactElement {
     const hasActivity = last7DaysActivity.some((day) => day);
+    const isEmpty = !hasActivity && currentStreak === 0 && longestStreak === 0;
 
-    if (!hasActivity && currentStreak === 0 && longestStreak === 0) {
-        return (
-            <EmptyCardState
-                className={className}
-                headerIcon={<Flame className="h-5 w-5 text-warning" aria-hidden="true" />}
-                icon={<Flame className="text-warning" aria-hidden="true" />}
-                title="Study Streak"
-                description="Complete a quiz today to start your streak! 🔥"
-            />
-        );
-    }
-
+    // Always render full Card shell for stable height, toggle only inner content
     return (
         <Card className={className} data-testid="streak-card">
             <CardHeader>
@@ -242,54 +231,80 @@ export function StreakCard({
                     Study Streak
                 </CardTitle>
                 <CardDescription>
-                    {studyTimeRangeLabel
-                        ? `Study time: ${studyTimeRangeLabel.toLowerCase()}`
-                        : "Stay consistent to build your streak"}
+                    {isEmpty
+                        ? "Track your daily study progress"
+                        : studyTimeRangeLabel
+                            ? `Study time: ${studyTimeRangeLabel.toLowerCase()}`
+                            : "Stay consistent to build your streak"}
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="grid gap-6 sm:grid-cols-2">
-                    <div className="space-y-4">
-                        <StatItem
-                            icon={Flame}
-                            label="Current Streak"
-                            value={`${currentStreak} day${currentStreak !== 1 ? "s" : ""}`}
-                            valueColor={
-                                currentStreak > 0
-                                    ? "text-warning"
-                                    : "text-muted-foreground"
-                            }
-                        />
-
-                        <StatItem
-                            icon={Trophy}
-                            label="Longest Streak"
-                            value={`${longestStreak} day${longestStreak !== 1 ? "s" : ""}`}
-                            valueColor="text-foreground"
-                        />
-
-                        <StatItem
-                            icon={Calendar}
-                            label="30-Day Consistency"
-                            value={`${consistencyScore}%`}
-                            valueColor={
-                                consistencyScore >= 50
-                                    ? "text-success"
-                                    : "text-muted-foreground"
-                            }
-                        />
+                {isEmpty ? (
+                    // Empty state content (same structure height as full content)
+                    <div className="grid gap-6 sm:grid-cols-2">
+                        <div className="flex items-center justify-center py-8">
+                            <div className="text-center">
+                                <Flame className="mx-auto h-12 w-12 text-warning/30" aria-hidden="true" />
+                                <p className="mt-3 text-sm text-muted-foreground">
+                                    Complete a quiz today to start your streak! 🔥
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex flex-col justify-center">
+                            <h3 className="mb-3 text-sm font-medium text-muted-foreground">
+                                Last 7 Days
+                            </h3>
+                            <StudyActivityBars
+                                last7DaysActivity={last7DaysActivity}
+                                dailyStudyTime={dailyStudyTime}
+                            />
+                        </div>
                     </div>
+                ) : (
+                    // Full content
+                    <div className="grid gap-6 sm:grid-cols-2">
+                        <div className="space-y-4">
+                            <StatItem
+                                icon={Flame}
+                                label="Current Streak"
+                                value={`${currentStreak} day${currentStreak !== 1 ? "s" : ""}`}
+                                valueColor={
+                                    currentStreak > 0
+                                        ? "text-warning"
+                                        : "text-muted-foreground"
+                                }
+                            />
 
-                    <div className="flex flex-col justify-center">
-                        <h3 className="mb-3 text-sm font-medium text-muted-foreground">
-                            Last 7 Days
-                        </h3>
-                        <StudyActivityBars
-                            last7DaysActivity={last7DaysActivity}
-                            dailyStudyTime={dailyStudyTime}
-                        />
+                            <StatItem
+                                icon={Trophy}
+                                label="Longest Streak"
+                                value={`${longestStreak} day${longestStreak !== 1 ? "s" : ""}`}
+                                valueColor="text-foreground"
+                            />
+
+                            <StatItem
+                                icon={Calendar}
+                                label="30-Day Consistency"
+                                value={`${consistencyScore}%`}
+                                valueColor={
+                                    consistencyScore >= 50
+                                        ? "text-success"
+                                        : "text-muted-foreground"
+                                }
+                            />
+                        </div>
+
+                        <div className="flex flex-col justify-center">
+                            <h3 className="mb-3 text-sm font-medium text-muted-foreground">
+                                Last 7 Days
+                            </h3>
+                            <StudyActivityBars
+                                last7DaysActivity={last7DaysActivity}
+                                dailyStudyTime={dailyStudyTime}
+                            />
+                        </div>
                     </div>
-                </div>
+                )}
             </CardContent>
         </Card>
     );
