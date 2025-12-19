@@ -10,6 +10,29 @@ export interface AnalyticsSkeletonProps {
 }
 
 /**
+ * Skeleton for AnalyticsOverview stat cards.
+ * Exported separately for progressive loading in the analytics page.
+ */
+export function AnalyticsOverviewSkeleton(): React.ReactElement {
+    return (
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4" aria-hidden="true">
+            {Array.from({ length: 4 }).map((_, i) => (
+                <Card key={i}>
+                    <CardContent className="flex items-center gap-4 p-4">
+                        <Skeleton className="h-12 w-12 rounded-full" />
+                        <div className="space-y-2">
+                            <Skeleton className="h-7 w-16" />
+                            <Skeleton className="h-4 w-20" />
+                        </div>
+                    </CardContent>
+                </Card>
+            ))}
+        </div>
+    );
+}
+
+
+/**
  * Skeleton loading state for the Analytics page.
  * Shows REAL header immediately with skeleton placeholders for cards
  * to improve LCP and eliminate CLS during data loading.

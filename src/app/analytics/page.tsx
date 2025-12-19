@@ -10,7 +10,7 @@ import { ExamReadinessCard } from "@/components/analytics/ExamReadinessCard";
 import { StreakCard } from "@/components/analytics/StreakCard";
 import { RetryComparisonCard } from "@/components/analytics/RetryComparisonCard";
 import { TopicHeatmap } from "@/components/analytics/TopicHeatmap";
-import { AnalyticsSkeleton } from "@/components/analytics/AnalyticsSkeleton";
+import { AnalyticsSkeleton, AnalyticsOverviewSkeleton } from "@/components/analytics/AnalyticsSkeleton";
 import { EmptyState } from "@/components/common/EmptyState";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -36,7 +36,7 @@ const PerformanceHistory = dynamic(
   () => import("@/components/analytics/PerformanceHistory").then((mod) => ({ default: mod.PerformanceHistory })),
   {
     loading: () => (
-      <Card className="min-h-[300px]">
+      <Card className="min-h-[380px]">
         <Skeleton className="h-full w-full" aria-label="Loading performance chart" />
       </Card>
     ),
@@ -48,7 +48,7 @@ const CategoryTrendChart = dynamic(
   () => import("@/components/analytics/CategoryTrendChart").then((mod) => ({ default: mod.CategoryTrendChart })),
   {
     loading: () => (
-      <Card className="min-h-[350px]">
+      <Card className="min-h-[380px]">
         <Skeleton className="h-full w-full" aria-label="Loading category trends" />
       </Card>
     ),
@@ -330,9 +330,14 @@ export default function AnalyticsPage(): React.ReactElement {
         />
       </div>
 
-      {overallStats && (
-        <AnalyticsOverview stats={overallStats} className="mb-8" />
-      )}
+      {/* AnalyticsOverview slot - always rendered with min-h to prevent CLS */}
+      <div className="mb-8 min-h-[88px]">
+        {overallStats ? (
+          <AnalyticsOverview stats={overallStats} />
+        ) : (
+          <AnalyticsOverviewSkeleton />
+        )}
+      </div>
 
       {/* Performance History Chart (full width) */}
       <div className="mb-8">
@@ -349,7 +354,7 @@ export default function AnalyticsPage(): React.ReactElement {
       </div>
 
       {/* Topic Heatmap (full width for dense data) */}
-      <div className="mb-8">
+      <div className="mb-8 min-h-[560px]">
         <TopicHeatmap results={filteredResults} quizzes={quizzes} userId={effectiveUserId ?? undefined} />
       </div>
 
