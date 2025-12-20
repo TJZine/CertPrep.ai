@@ -119,7 +119,7 @@ describe("syncState cursor operations", () => {
             expect(cursor.lastId).toBe(NIL_UUID);
         });
 
-        it("heals corrupted lastId (non-UUID format)", async () => {
+        it("accepts non-UUID lastId", async () => {
             await db.syncState.put({
                 table: `srs:${testUserId}`,
                 lastSyncedAt: "2024-01-15T10:00:00.000Z",
@@ -128,7 +128,7 @@ describe("syncState cursor operations", () => {
             });
 
             const cursor = await getSRSSyncCursor(testUserId);
-            expect(cursor.lastId).toBe(NIL_UUID);
+            expect(cursor.lastId).toBe("exam-2-q25");
         });
 
         it("accepts valid UUID lastId", async () => {
@@ -137,6 +137,21 @@ describe("syncState cursor operations", () => {
 
             const cursor = await getSRSSyncCursor(testUserId);
             expect(cursor.lastId).toBe(validUUID);
+        });
+
+        it("heals empty lastId", async () => {
+            await db.syncState.put({
+                table: `srs:${testUserId}`,
+                lastSyncedAt: "2024-01-15T10:00:00.000Z",
+                synced: 1,
+                lastId: "   ",
+            });
+
+            const cursor = await getSRSSyncCursor(testUserId);
+            expect(cursor.lastId).toBe(NIL_UUID);
+
+            const state = await db.syncState.get(`srs:${testUserId}`);
+            expect(state?.lastId).toBe(NIL_UUID);
         });
 
         it("accepts NIL_UUID as valid lastId", async () => {
@@ -161,6 +176,15 @@ describe("syncState cursor operations", () => {
 
             const cursor = await getSRSSyncCursor(testUserId);
             expect(cursor.timestamp).toBe("1970-01-01T00:00:00.000Z");
+        });
+    });
+
+    describe("setSRSSyncCursor", () => {
+        it("normalizes empty lastId to NIL_UUID", async () => {
+            await setSRSSyncCursor("2024-01-15T10:00:00.000Z", testUserId, "   ");
+
+            const state = await db.syncState.get(`srs:${testUserId}`);
+            expect(state?.lastId).toBe(NIL_UUID);
         });
     });
 

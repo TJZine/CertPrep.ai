@@ -237,16 +237,24 @@ export async function getSRSSyncCursor(userId: string): Promise<SyncCursor> {
     healed = healResult.healed;
   }
 
-  // Validate lastId format (must be UUID for keyset pagination)
-  const rawLastId = state?.lastId || NIL_UUID;
-  const isValidUUID = UUID_REGEX.test(rawLastId);
+  // SRS uses TEXT question_id, so accept any non-empty string as a valid cursor.
+  const rawLastId = state?.lastId;
+  const hasValidLastId =
+    typeof rawLastId === "string" && rawLastId.trim().length > 0;
 
-  if (!isValidUUID && rawLastId !== NIL_UUID) {
-    logger.warn("Healing corrupted SRS cursor lastId", { userId, invalidLastId: rawLastId });
+  if (hasValidLastId && !UUID_REGEX.test(rawLastId)) {
+    logger.info("SRS cursor uses non-UUID lastId", { userId, lastId: rawLastId });
+  }
+
+  if (rawLastId != null && !hasValidLastId) {
+    logger.warn("Healing corrupted SRS cursor lastId", {
+      userId,
+      invalidLastId: rawLastId,
+    });
     lastIdHealed = true;
   }
 
-  const safeLastId = healed || !isValidUUID ? NIL_UUID : rawLastId;
+  const safeLastId = healed || !hasValidLastId ? NIL_UUID : rawLastId;
 
   // Persist healed cursor immediately (see JSDoc for rationale)
   if (healed || lastIdHealed) {
@@ -280,12 +288,15 @@ export async function setSRSSyncCursor(
     table: "srs-write",
   });
 
+  const normalizedLastId =
+    typeof lastId === "string" && lastId.trim().length > 0 ? lastId : NIL_UUID;
+
   const key = `srs:${userId}`;
   await db.syncState.put({
     table: key,
     lastSyncedAt: safeTimestamp,
     synced: 1,
-    lastId: lastId || NIL_UUID,
+    lastId: normalizedLastId,
   });
 }
 
