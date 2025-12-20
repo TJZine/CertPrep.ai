@@ -108,6 +108,8 @@ function QuizCardSkeleton(): React.ReactElement {
                         <Skeleton key={j} className="h-16 rounded-lg" />
                     ))}
                 </div>
+                {/* Last attempt date placeholder - matches QuizCard line 389 */}
+                <Skeleton className="h-[28px] w-full rounded-lg" />
             </CardContent>
             <CardFooter className="pt-0">
                 <Skeleton className="h-10 w-full" />
