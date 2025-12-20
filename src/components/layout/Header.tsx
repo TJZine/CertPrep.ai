@@ -232,7 +232,7 @@ export function Header(): React.ReactElement {
       <div
         inert={!isMenuOpen ? true : undefined}
         className={cn(
-          "fixed inset-x-0 top-[var(--header-height)] z-40 bg-background/95 backdrop-blur-xl md:hidden transition-[transform,opacity] duration-300 ease-in-out h-[calc(100dvh-var(--header-height))] min-h-[calc(100vh-var(--header-height))]",
+          "fixed inset-x-0 top-[var(--header-height,4rem)] z-40 bg-background/95 backdrop-blur-xl md:hidden transition-[transform,opacity] duration-300 ease-in-out h-[calc(100dvh-var(--header-height,4rem))] min-h-[calc(100vh-var(--header-height,4rem))]",
           isMenuOpen ? "translate-x-0 opacity-100" : "translate-x-full opacity-0",
         )}
         aria-hidden={!isMenuOpen}
