@@ -3,8 +3,8 @@ import { cn } from "@/lib/utils";
 /**
  * Skeleton loading placeholder.
  * Includes data-skeleton marker for E2E hydration detection.
- * Note: Do not use Skeleton for UI placeholders in loaded state;
- * use regular divs with animate-pulse instead.
+ * Only use for loading states. For empty-state or static placeholders,
+ * use styled divs directly.
  */
 function Skeleton({
     className,

@@ -60,6 +60,7 @@ export async function getSyncCursor(userId: string): Promise<SyncCursor> {
 
   let timestamp = EPOCH_TIMESTAMP;
   let healed = false;
+  let lastIdHealed = false;
   if (state?.lastSyncedAt) {
     const rawTimestamp =
       typeof state.lastSyncedAt === "string"
@@ -72,10 +73,32 @@ export async function getSyncCursor(userId: string): Promise<SyncCursor> {
     healed = healResult.healed;
   }
 
+  // Validate lastId format (must be UUID for keyset pagination)
+  const rawLastId = state?.lastId || NIL_UUID;
+  const isValidUUID = UUID_REGEX.test(rawLastId);
+
+  if (!isValidUUID && rawLastId !== NIL_UUID) {
+    logger.warn("Healing corrupted results cursor lastId", { userId, invalidLastId: rawLastId });
+    lastIdHealed = true;
+  }
+
+  const safeLastId = healed || !isValidUUID ? NIL_UUID : rawLastId;
+
+  // Persist healed cursor to prevent repeated warnings
+  if (healed || lastIdHealed) {
+    try {
+      await setSyncCursor(timestamp, userId, safeLastId);
+    } catch (err) {
+      logger.error("Failed to persist healed results cursor", {
+        userId,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }
+
   return {
     timestamp,
-    // Clear lastId when healing to avoid keyset pagination skipping records
-    lastId: healed ? NIL_UUID : (state?.lastId || NIL_UUID),
+    lastId: safeLastId,
   };
 }
 
@@ -110,6 +133,7 @@ export async function getQuizSyncCursor(userId: string): Promise<SyncCursor> {
 
   let timestamp = EPOCH_TIMESTAMP;
   let healed = false;
+  let lastIdHealed = false;
   if (state?.lastSyncedAt) {
     const rawTimestamp =
       typeof state.lastSyncedAt === "string"
@@ -122,10 +146,32 @@ export async function getQuizSyncCursor(userId: string): Promise<SyncCursor> {
     healed = healResult.healed;
   }
 
+  // Validate lastId format (must be UUID for keyset pagination)
+  const rawLastId = state?.lastId || NIL_UUID;
+  const isValidUUID = UUID_REGEX.test(rawLastId);
+
+  if (!isValidUUID && rawLastId !== NIL_UUID) {
+    logger.warn("Healing corrupted quizzes cursor lastId", { userId, invalidLastId: rawLastId });
+    lastIdHealed = true;
+  }
+
+  const safeLastId = healed || !isValidUUID ? NIL_UUID : rawLastId;
+
+  // Persist healed cursor to prevent repeated warnings
+  if (healed || lastIdHealed) {
+    try {
+      await setQuizSyncCursor(timestamp, userId, safeLastId);
+    } catch (err) {
+      logger.error("Failed to persist healed quizzes cursor", {
+        userId,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }
+
   return {
     timestamp,
-    // Clear lastId when healing to avoid keyset pagination skipping records
-    lastId: healed ? NIL_UUID : (state?.lastId || NIL_UUID),
+    lastId: safeLastId,
   };
 }
 
@@ -200,7 +246,15 @@ export async function getSRSSyncCursor(userId: string): Promise<SyncCursor> {
 
   // Persist healed cursor immediately (see JSDoc for rationale)
   if (healed || lastIdHealed) {
-    await setSRSSyncCursor(timestamp, userId, safeLastId);
+    try {
+      await setSRSSyncCursor(timestamp, userId, safeLastId);
+    } catch (err) {
+      logger.error("Failed to persist healed SRS cursor", {
+        userId,
+        error: err instanceof Error ? err.message : String(err),
+      });
+      // Don't rethrow — cursor will be re-healed on next access
+    }
   }
 
   return {

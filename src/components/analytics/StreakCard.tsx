@@ -242,7 +242,7 @@ export function StreakCard({
                 {isEmpty ? (
                     // Empty state content (same structure height as full content)
                     <div className="grid gap-6 sm:grid-cols-2">
-                        <div className="flex items-center justify-center py-8">
+                        <div className="flex items-center justify-center py-12">
                             <div className="text-center">
                                 <Flame className="mx-auto h-12 w-12 text-warning/30" aria-hidden="true" />
                                 <p className="mt-3 text-sm text-muted-foreground">

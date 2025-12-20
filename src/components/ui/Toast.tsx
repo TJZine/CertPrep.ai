@@ -105,8 +105,11 @@ export function useToast(): ToastContextValue {
   return context;
 }
 
-/** Debounce window (ms) for deduplicating identical toasts. */
+/** Deduplication window (ms) for suppressing identical toasts. */
 export const DEDUP_WINDOW_MS = 500;
+
+/** Maximum entries in recent toasts map before eviction. */
+const MAX_RECENT_TOASTS = 100;
 
 /**
  * Toast provider that manages toast stack and renders notifications.
@@ -120,9 +123,11 @@ export function ToastProvider({
   const timers = React.useRef<Map<string, number>>(new Map());
   /**
    * Tracks recently shown toast keys (type:message) to prevent duplicates
-   * within the debounce window.
+   * within the deduplication window.
    */
   const recentToasts = React.useRef<Map<string, number>>(new Map());
+  /** Insertion-order queue for O(1) eviction when capacity is exceeded. */
+  const toastQueue = React.useRef<string[]>([]);
 
   const removeToast = React.useCallback((id: string): void => {
     const timerId = timers.current.get(id);
@@ -144,22 +149,17 @@ export function ToastProvider({
         return; // Skip duplicate
       }
 
-      // Prune stale entries to prevent unbounded memory growth
-      recentToasts.current.forEach((timestamp, key) => {
-        if (now - timestamp >= DEDUP_WINDOW_MS) {
-          recentToasts.current.delete(key);
-        }
-      });
-
-      // Size limit: if map exceeds 100 entries, keep only the 50 most recent
-      if (recentToasts.current.size > 100) {
-        const entries = Array.from(recentToasts.current.entries())
-          .sort((a, b) => b[1] - a[1]) // Sort by timestamp descending (newest first)
-          .slice(0, 50);
-        recentToasts.current = new Map(entries);
-      }
-
+      // Add to map and queue
       recentToasts.current.set(dedupKey, now);
+      toastQueue.current.push(dedupKey);
+
+      // O(1) eviction: remove oldest entries when capacity exceeded
+      while (toastQueue.current.length > MAX_RECENT_TOASTS) {
+        const oldestKey = toastQueue.current.shift();
+        if (oldestKey) {
+          recentToasts.current.delete(oldestKey);
+        }
+      }
 
       const id = generateId();
       setToasts((prev) => [...prev, { id, type, message, duration }]);

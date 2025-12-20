@@ -637,7 +637,7 @@ export function TopicHeatmap({
     }
 
     return (
-        <Card className={cn("[contain:layout]", className)}>
+        <Card className={cn("min-h-[300px] [contain:layout]", className)}>
             <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0">
                 <div className="flex-1">
                     <CardTitle>Topic Mastery Over Time</CardTitle>
