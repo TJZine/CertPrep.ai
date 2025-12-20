@@ -86,7 +86,8 @@
     --tier-failing-foreground: 0 0% 100%;
 
     --radius: 0.5rem;
-    --header-height: 65px;
+    /* Header uses h-16 (4rem); Tailwind preflight keeps borders inside height. */
+    --header-height: 4rem;
 
     /* Font Variables
        These reference CSS custom properties injected at runtime by next/font (see layout.tsx).
