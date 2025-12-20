@@ -43,7 +43,7 @@ export function AnalyticsSkeleton({
     return (
         <div
             data-testid="analytics-main"
-            className="mx-auto min-h-[calc(100vh-65px)] max-w-7xl overflow-x-hidden px-4 py-8 sm:px-6 lg:px-8"
+            className="mx-auto min-h-[calc(100dvh-65px)] max-w-7xl overflow-x-hidden px-4 py-8 sm:px-6 lg:px-8"
             role="status"
             aria-label="Loading analytics"
         >
