@@ -10,6 +10,11 @@ Sentry.init({
   // Define how likely traces are sampled. Adjust this value in production, or use tracesSampler for greater control.
   tracesSampleRate: process.env.NODE_ENV === "production" ? 0.1 : 1,
 
+  // Capture console.log, console.warn, console.error as structured logs
+  integrations: [
+    Sentry.consoleLoggingIntegration({ levels: ["log", "warn", "error"] }),
+  ],
+
   // Only enable SDK logs outside production
   enableLogs: process.env.NODE_ENV !== "production",
 

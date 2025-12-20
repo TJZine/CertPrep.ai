@@ -201,25 +201,11 @@ export function ExamReadinessCard({
         }
     };
 
-    if (categoryReadiness.size === 0) {
-        return (
-            <Card className={className}>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        🎯 Exam Readiness
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <p className="text-center text-muted-foreground">
-                        Complete some quizzes to see your exam readiness score.
-                    </p>
-                </CardContent>
-            </Card>
-        );
-    }
+    const isEmpty = categoryReadiness.size === 0;
 
+    // Always render full Card structure for stable height
     return (
-        <Card className={className}>
+        <Card className={className} data-testid="exam-readiness-card">
             <CardHeader>
                 <div className="flex items-center justify-between">
                     <div>
@@ -227,32 +213,62 @@ export function ExamReadinessCard({
                             🎯 Exam Readiness
                         </CardTitle>
                         <CardDescription>
-                            {isPassing
-                                ? "You're on track to pass!"
-                                : `Target: ${passingThreshold}% to pass`}
+                            {isEmpty
+                                ? "Track your exam preparation progress"
+                                : isPassing
+                                    ? "You're on track to pass!"
+                                    : `Target: ${passingThreshold}% to pass`}
                         </CardDescription>
                     </div>
-                    {getConfidenceBadge(readinessConfidence)}
+                    {!isEmpty && getConfidenceBadge(readinessConfidence)}
                 </div>
             </CardHeader>
             <CardContent>
                 <div className="grid gap-8 md:grid-cols-2">
                     <div className="flex items-center justify-center">
-                        <ReadinessGauge score={readinessScore} threshold={passingThreshold} />
+                        {isEmpty ? (
+                            // Empty state gauge placeholder
+                            <div className="flex h-[200px] w-[200px] flex-col items-center justify-center">
+                                <div className="text-center">
+                                    <div className="text-6xl">🎯</div>
+                                    <p className="mt-3 text-sm text-muted-foreground">
+                                        Complete some quizzes to see your readiness score
+                                    </p>
+                                </div>
+                            </div>
+                        ) : (
+                            <ReadinessGauge score={readinessScore} threshold={passingThreshold} />
+                        )}
                     </div>
 
                     <div className="space-y-3">
                         <h4 className="font-semibold text-foreground">
                             Category Breakdown
                         </h4>
-                        {categories.map(([category, score]) => (
-                            <CategoryBar
-                                key={category}
-                                category={category}
-                                score={score}
-                                threshold={passingThreshold}
-                            />
-                        ))}
+                        {/* Always render 6 rows for stable height */}
+                        {Array.from({ length: 6 }).map((_, index) => {
+                            const category = categories[index];
+                            if (category) {
+                                return (
+                                    <CategoryBar
+                                        key={category[0]}
+                                        category={category[0]}
+                                        score={category[1]}
+                                        threshold={passingThreshold}
+                                    />
+                                );
+                            }
+                            // Placeholder for missing categories
+                            return (
+                                <div key={`placeholder-${index}`} className="space-y-1">
+                                    <div className="flex items-center justify-between text-sm">
+                                        <div className="h-4 w-24 animate-pulse rounded bg-muted" />
+                                        <div className="h-4 w-8 animate-pulse rounded bg-muted" />
+                                    </div>
+                                    <div className="h-2 w-full rounded-full bg-secondary" />
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
             </CardContent>

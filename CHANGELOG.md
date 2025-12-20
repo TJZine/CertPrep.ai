@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.8] - 2025-12-20
+
+### Added
+
+- **Prefetch Utility**: New `src/lib/prefetch.ts` with SSR-guarded idle-time prefetch and deduplication.
+- **Library Skeleton**: New `LibrarySkeleton.tsx` component replacing generic spinner for reduced CLS on library page.
+- **Quiz Page Skeletons**: New `QuizLobbySkeleton.tsx` and `ZenQuizSkeleton.tsx` for quiz mode selection and zen mode pages.
+- **CLS Audit Script**: New `scripts/cls-audit.mjs` for automated CLS measurement with seeded data states and multi-viewport support.
+- **Lighthouse E2E Script**: New `scripts/lighthouse-e2e.mjs` for headless authenticated Lighthouse testing.
+
+### Changed
+
+- **Dashboard Modals**: Code-split `ImportModal`, `ModeSelectModal`, and `DeleteConfirmModal` using `next/dynamic` with idle-time prefetch for faster initial load.
+- **Analytics Charts**: Code-split `PerformanceHistory` and `CategoryTrendChart` with skeleton fallbacks to reduce initial JS bundle.
+- **Font Loading**: Disabled preload for theme-specific fonts (`Press_Start_2P`, `Playfair_Display`) to reduce FCP blocking.
+- **Dashboard Skeleton**: Updated to use responsive `min-h` with `dvh` units for stable skeleton-to-content transitions across viewports.
+- **Dashboard Skeleton**: Added `DueQuestionsCard` placeholder to prevent CLS when SRS card renders conditionally.
+- **Dashboard Skeleton**: Increased quiz grid skeleton to 8 cards to better match typical user data.
+- **Sentry Console Logging**: Added `consoleLoggingIntegration` for Sentry logging in server/edge configs with development-only `enableLogs`.
+
+### Fixed
+
+- **Import Security**: Added 10MB file size limit to `ImportModal` to prevent browser memory exhaustion from oversized JSON uploads.
+- **CLS Regression**: Resolved 83-99% CLS regression on Dashboard, Analytics, and Library pages caused by skeleton/content height mismatch.
+
 ## [1.3.7] - 2025-12-16
 
 ### Added

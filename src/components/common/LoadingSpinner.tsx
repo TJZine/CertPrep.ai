@@ -40,13 +40,15 @@ export function LoadingSpinner({
         aria-hidden="true"
       />
       {text ? <span>{text}</span> : null}
-      <span className="sr-only">{text}</span>
+      {/* Note: Visible text serves as the accessible label; no duplicate sr-only needed */}
     </div>
   );
 
   if (fullScreen) {
     return (
-      <div className="fixed inset-0 z-40 flex items-center justify-center bg-background/80 backdrop-blur">
+      // Use solid semi-transparent background instead of backdrop-blur
+      // for better performance on low-end devices
+      <div className="fixed inset-0 z-40 flex items-center justify-center bg-background/95">
         {spinner}
       </div>
     );

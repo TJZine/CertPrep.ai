@@ -18,6 +18,7 @@ interface InitializationState {
 interface UseQuizzesResponse {
   quizzes: Quiz[];
   isLoading: boolean;
+  error: Error | null;
 }
 
 interface UseQuizResponse {
@@ -91,23 +92,38 @@ export function useInitializeDatabase(): InitializationState {
  * Retrieves all quizzes (user-owned and public) with live updates.
  */
 export function useQuizzes(userId: string | undefined): UseQuizzesResponse {
+  const [error, setError] = useState<Error | null>(null);
   const quizzes = useLiveQuery(async () => {
-    if (!userId) return [];
-    // Only query for the user's own quizzes.
-    // NIL_UUID (orphaned/system data) should not be mixed into the personal library.
-    const results = await db.quizzes
-      .where("user_id")
-      .equals(userId)
-      .filter((quiz) => !quiz.deleted_at && !isSRSQuiz(quiz))
-      .toArray();
+    if (!userId) {
+      setError(null);
+      return [];
+    }
+    try {
+      // Only query for the user's own quizzes.
+      // NIL_UUID (orphaned/system data) should not be mixed into the personal library.
+      const results = await db.quizzes
+        .where("user_id")
+        .equals(userId)
+        .filter((quiz) => !quiz.deleted_at && !isSRSQuiz(quiz))
+        .toArray();
 
-    // Stable sort: Newest created first -> Alphabetical by title
-    return sortQuizzesByNewest(results);
+      // Stable sort: Newest created first -> Alphabetical by title
+      setError(null);
+      return sortQuizzesByNewest(results);
+    } catch (err) {
+      const normalizedError =
+        err instanceof Error
+          ? err
+          : new Error("Failed to load quizzes.");
+      setError(normalizedError);
+      return [];
+    }
   }, [userId]);
 
   return {
     quizzes: quizzes ?? [],
-    isLoading: !userId ? false : quizzes === undefined,
+    isLoading: !userId ? true : quizzes === undefined && error === null,
+    error,
   };
 }
 

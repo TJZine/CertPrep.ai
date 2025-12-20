@@ -156,6 +156,8 @@ create table if not exists public.quizzes (
   version integer not null default 1,
   questions jsonb not null,
   quiz_hash text,
+  category text,
+  subcategory text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   deleted_at timestamptz
@@ -571,12 +573,14 @@ CREATE POLICY "Users can update own results" ON results
 
 ### Performance Metrics Targets
 
-| Metric | Target | Current |
-| ------ | ------ | ------- |
-| FCP    | < 1.5s | TBD     |
-| LCP    | < 2.5s | TBD     |
-| TTI    | < 3.5s | TBD     |
-| CLS    | < 0.1  | TBD     |
+| Metric | Target | Current (Desktop) |
+| ------ | ------ | ----------------- |
+| FCP    | < 1.5s | ~234ms ✅         |
+| LCP    | < 2.5s | ~790-1008ms ✅    |
+| TTI    | < 3.5s | ~1.5s ✅          |
+| CLS    | < 0.1  | ~0.09-0.10 ✅     |
+
+> **Note:** Metrics measured via Lighthouse CLI with desktop preset and authenticated sessions. See `scripts/lighthouse-e2e.mjs` and `scripts/cls-audit.mjs` for reproducibility.
 
 ---
 

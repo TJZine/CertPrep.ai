@@ -4,8 +4,8 @@ import * as React from "react";
 import { ArrowLeft, BookOpen } from "lucide-react";
 import Link from "next/link";
 import { useQuizzes, useInitializeDatabase } from "@/hooks/useDatabase";
-import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { TestLibrary } from "@/components/dashboard/TestLibrary";
+import { LibrarySkeleton } from "@/components/library/LibrarySkeleton";
 import { buttonVariants } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/providers/AuthProvider";
@@ -15,26 +15,27 @@ export default function LibraryPage(): React.ReactElement {
   const { user } = useAuth();
   const effectiveUserId = useEffectiveUserId(user?.id);
   const { isInitialized, error: dbError } = useInitializeDatabase();
-  const { quizzes, isLoading } = useQuizzes(effectiveUserId ?? undefined);
+  const { quizzes, isLoading, error: quizzesError } = useQuizzes(
+    effectiveUserId ?? undefined,
+  );
 
   if (!isInitialized || !effectiveUserId || isLoading) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <LoadingSpinner size="lg" text="Loading library..." />
-      </div>
-    );
+    return <LibrarySkeleton />;
   }
 
-  if (dbError) {
+  if (dbError || quizzesError) {
+    const message =
+      dbError?.message ??
+      quizzesError?.message ??
+      "An unexpected error occurred. Please refresh and try again.";
     return (
-      <div className="mx-auto max-w-4xl px-4 py-10">
+      <div className="mx-auto min-h-[calc(100dvh-var(--header-height))] max-w-4xl px-4 py-10">
         <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
           <h1 className="text-xl font-semibold text-destructive">
             Database Error
           </h1>
           <p className="mt-2 text-sm text-destructive">
-            {dbError.message ||
-              "An unexpected error occurred. Please refresh and try again."}
+            {message}
           </p>
           <Link
             href="/"
@@ -53,7 +54,7 @@ export default function LibraryPage(): React.ReactElement {
   }
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+    <main data-testid="library-main" className="mx-auto min-h-[calc(100dvh-var(--header-height))] max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="mb-8 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="flex items-center gap-2 text-3xl font-bold text-foreground">
@@ -78,17 +79,13 @@ export default function LibraryPage(): React.ReactElement {
         </Link>
       </div>
 
-      <React.Suspense
-        fallback={<LoadingSpinner size="lg" text="Loading library..." />}
-      >
-        <TestLibrary
-          existingQuizzes={quizzes ?? []}
-          userId={effectiveUserId}
-          onImportSuccess={(): void => {
-            // No-op: useQuizzes live query will refresh imported state automatically.
-          }}
-        />
-      </React.Suspense>
+      <TestLibrary
+        existingQuizzes={quizzes ?? []}
+        userId={effectiveUserId}
+        onImportSuccess={(): void => {
+          // No-op: useQuizzes live query will refresh imported state automatically.
+        }}
+      />
     </main>
   );
 }

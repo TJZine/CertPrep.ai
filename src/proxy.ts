@@ -32,6 +32,22 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
     "Content-Security-Policy",
     contentSecurityPolicyHeaderValue,
   );
+  response.headers.set("x-nonce", nonce);
+
+  // Nonces cannot be safely paired with cached HTML (a cached body will contain
+  // a stale nonce while middleware generates a fresh nonce per request). Force
+  // document navigations to be non-cacheable to avoid nonce/header mismatches.
+  const accept = request.headers.get("accept") ?? "";
+  const secFetchDest = request.headers.get("sec-fetch-dest") ?? "";
+  const isDocumentRequest =
+    secFetchDest === "document" || accept.includes("text/html");
+  if (isDocumentRequest) {
+    response.headers.set(
+      "Cache-Control",
+      "private, no-cache, no-store, max-age=0, must-revalidate",
+    );
+    response.headers.set("Pragma", "no-cache");
+  }
 
   // 4. Supabase Client
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;

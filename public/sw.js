@@ -3,9 +3,10 @@ const APP_SHELL = "/"; // SPA shell - critical for offline navigation
 const STATIC_ASSETS = [
   APP_SHELL,
   "/manifest.json",
-  "/icon.svg",
   "/favicon.ico",
-  "/apple-touch-icon.png",
+  "/logo-icon.svg",
+  "/full-icon.svg",
+  "/icons/logo-icon-180.png",
 ];
 
 // Cacheable destination types and path prefixes

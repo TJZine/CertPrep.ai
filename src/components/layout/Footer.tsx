@@ -1,13 +1,22 @@
 "use client";
 
 import * as React from "react";
+import { usePathname } from "next/navigation";
 import { Shield } from "lucide-react";
 import { APP_NAME, APP_VERSION } from "@/lib/constants";
 
 /**
  * Application footer with privacy messaging.
+ * Hidden on dashboard route for PWA-style app experience.
  */
-export function Footer(): React.ReactElement {
+export function Footer(): React.ReactElement | null {
+  const pathname = usePathname();
+
+  // Hide footer on dashboard for stable CLS (PWA-style experience)
+  if (pathname === "/") {
+    return null;
+  }
+
   return (
     <footer className="border-t border-border bg-background">
       <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-4 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">

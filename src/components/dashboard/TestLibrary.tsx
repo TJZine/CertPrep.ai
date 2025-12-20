@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { useToast } from "@/components/ui/Toast";
-import { QuizCardSkeleton } from "@/components/dashboard/QuizCardSkeleton";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { createQuiz } from "@/db/quizzes";
 import {
   formatValidationErrors,
@@ -40,6 +40,16 @@ interface TestLibraryProps {
   existingQuizzes: Quiz[];
   userId: string;
   onImportSuccess: (quiz: Quiz) => void;
+}
+
+function computeCategories(entries: TestManifestEntry[]): string[] {
+  const unique = new Set<string>();
+  entries.forEach((entry) => {
+    if (entry.category) {
+      unique.add(entry.category);
+    }
+  });
+  return ["all", ...Array.from(unique).sort((a, b) => a.localeCompare(b))];
 }
 
 /**
@@ -74,7 +84,27 @@ export function TestLibrary({
         }
         const data = (await response.json()) as TestManifest;
         if (isMounted) {
-          setManifest(data.tests ?? []);
+          const tests = data.tests ?? [];
+          const nextCategories = computeCategories(tests);
+
+          const urlCategory =
+            typeof window !== "undefined"
+              ? new URLSearchParams(window.location.search).get("category")
+              : null;
+          const storedCategory =
+            typeof window !== "undefined"
+              ? localStorage.getItem("library-category-filter")
+              : null;
+
+          let target = "all";
+          if (urlCategory && nextCategories.includes(urlCategory)) {
+            target = urlCategory;
+          } else if (storedCategory && nextCategories.includes(storedCategory)) {
+            target = storedCategory;
+          }
+
+          setCategoryFilter(target);
+          setManifest(tests);
           setError(null);
         }
       } catch (err) {
@@ -111,42 +141,8 @@ export function TestLibrary({
   );
 
   const categories = React.useMemo(() => {
-    const unique = new Set<string>();
-    manifest.forEach((entry) => {
-      if (entry.category) {
-        unique.add(entry.category);
-      }
-    });
-    return ["all", ...Array.from(unique).sort((a, b) => a.localeCompare(b))];
+    return computeCategories(manifest);
   }, [manifest]);
-
-  // Handle URL and LocalStorage persistence
-  React.useEffect(() => {
-    if (isLoading || manifest.length === 0) return;
-
-    const urlCategory = searchParams.get("category");
-    const storedCategory =
-      typeof window !== "undefined"
-        ? localStorage.getItem("library-category-filter")
-        : null;
-
-    let target = "all";
-
-    // 1. URL param takes precedence
-    if (urlCategory && categories.includes(urlCategory)) {
-      target = urlCategory;
-    }
-    // 2. LocalStorage fallback
-    else if (storedCategory && categories.includes(storedCategory)) {
-      target = storedCategory;
-    }
-    // 3. Default to first real category if available (instead of "all")
-    else if (categories.length > 1) {
-      target = categories[1] ?? "all";
-    }
-
-    setCategoryFilter(target);
-  }, [isLoading, manifest, categories, searchParams]);
 
   const handleCategoryChange = (category: string): void => {
     setCategoryFilter(category);
@@ -261,11 +257,43 @@ export function TestLibrary({
       </CardHeader>
       <CardContent className="space-y-4">
         {isLoading ? (
-          <div className="grid gap-3 md:grid-cols-2">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <QuizCardSkeleton key={i} />
-            ))}
-          </div>
+          <>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <Skeleton className="h-10 w-full sm:max-w-sm" />
+              <div className="flex items-center gap-2">
+                <div className="flex gap-2 overflow-x-auto pb-1" aria-hidden="true">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <Skeleton key={i} className="h-9 w-24 rounded-full" />
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-2">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="flex flex-col gap-3 rounded-lg border border-border bg-muted p-4 shadow-sm"
+                >
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1 space-y-2">
+                        <Skeleton className="h-5 w-2/3" />
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-5/6" />
+                      </div>
+                      <Skeleton className="h-6 w-20 rounded-full" />
+                    </div>
+                    <Skeleton className="h-3 w-40" />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Skeleton className="h-3 w-28" />
+                    <Skeleton className="h-8 w-24 rounded-md" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         ) : error ? (
           <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
             {error}

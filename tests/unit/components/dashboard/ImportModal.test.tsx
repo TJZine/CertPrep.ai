@@ -185,6 +185,28 @@ describe("ImportModal", () => {
         expect(defaultProps.onClose).not.toHaveBeenCalled();
     });
 
+    it("rejects files larger than 10MB", async () => {
+        render(<ImportModal {...defaultProps} />);
+
+        // Switch to upload tab
+        fireEvent.click(screen.getByRole("tab", { name: "Upload File" }));
+
+        // Create a mock file > 10MB (11MB)
+        const largeFile = new File(
+            [new ArrayBuffer(11 * 1024 * 1024)],
+            "large.json",
+            { type: "application/json" }
+        );
+
+        const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+        fireEvent.change(fileInput, { target: { files: [largeFile] } });
+
+        expect(mockAddToast).toHaveBeenCalledWith(
+            "error",
+            expect.stringContaining("File too large")
+        );
+    });
+
     it("pre-populates category fields from JSON if present", async () => {
         render(<ImportModal {...defaultProps} />);
 

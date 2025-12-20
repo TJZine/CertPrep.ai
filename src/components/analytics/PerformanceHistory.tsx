@@ -145,7 +145,10 @@ export function PerformanceHistory({
   }
 
   return (
-    <Card className={className}>
+    <Card
+      className={cn("h-[348px] [contain:layout]", className)}
+      data-testid="performance-history-card"
+    >
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
@@ -180,8 +183,27 @@ export function PerformanceHistory({
         </div>
       </CardHeader>
       <CardContent>
-        <div ref={containerRef} className="h-[250px]">
-          {isReady ? (
+        <div ref={containerRef} className="relative h-[250px]">
+          {/* Spinner - always in DOM, hidden when ready */}
+          <div
+            className={cn(
+              "absolute inset-0 flex items-center justify-center transition-opacity duration-200",
+              isReady ? "pointer-events-none opacity-0" : "opacity-100"
+            )}
+            role="status"
+            aria-label="Loading chart"
+            aria-hidden={isReady}
+          >
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" aria-hidden="true" />
+          </div>
+          {/* Chart - always in DOM, hidden until ready */}
+          <div
+            className={cn(
+              "h-full w-full transition-opacity duration-200",
+              isReady ? "opacity-100" : "pointer-events-none opacity-0"
+            )}
+            aria-hidden={!isReady}
+          >
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
                 data={chartData}
@@ -224,11 +246,7 @@ export function PerformanceHistory({
                 />
               </LineChart>
             </ResponsiveContainer>
-          ) : (
-            <div className="flex h-full items-center justify-center" role="status" aria-label="Loading chart">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" aria-hidden="true" />
-            </div>
-          )}
+          </div>
         </div>
       </CardContent>
     </Card>
@@ -236,4 +254,3 @@ export function PerformanceHistory({
 }
 
 export default PerformanceHistory;
-

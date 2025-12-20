@@ -105,6 +105,12 @@ export function useToast(): ToastContextValue {
   return context;
 }
 
+/** Deduplication window (ms) for suppressing identical toasts. */
+export const DEDUP_WINDOW_MS = 500;
+
+/** Maximum entries in recent toasts map before eviction. */
+const MAX_RECENT_TOASTS = 100;
+
 /**
  * Toast provider that manages toast stack and renders notifications.
  */
@@ -115,6 +121,13 @@ export function ToastProvider({
 }): React.ReactElement {
   const [toasts, setToasts] = React.useState<Toast[]>([]);
   const timers = React.useRef<Map<string, number>>(new Map());
+  /**
+   * Tracks recently shown toast keys (type:message) to prevent duplicates
+   * within the deduplication window.
+   */
+  const recentToasts = React.useRef<Map<string, number>>(new Map());
+  /** Insertion-order queue for O(1) eviction when capacity is exceeded. */
+  const toastQueue = React.useRef<string[]>([]);
 
   const removeToast = React.useCallback((id: string): void => {
     const timerId = timers.current.get(id);
@@ -127,6 +140,30 @@ export function ToastProvider({
 
   const addToast = React.useCallback(
     (type: ToastType, message: string, duration = 5000): void => {
+      const now = Date.now();
+
+      // Deduplication: skip if the same type:message was shown recently
+      const dedupKey = `${type}:${message}`;
+      const lastShown = recentToasts.current.get(dedupKey);
+      if (lastShown && now - lastShown < DEDUP_WINDOW_MS) {
+        return; // Skip duplicate
+      }
+
+      // Only add to queue if this is a NEW entry (prevents queue/map desync)
+      const isNewEntry = !recentToasts.current.has(dedupKey);
+      recentToasts.current.set(dedupKey, now);
+      if (isNewEntry) {
+        toastQueue.current.push(dedupKey);
+      }
+
+      // O(1) eviction: remove oldest entries when capacity exceeded
+      while (toastQueue.current.length > MAX_RECENT_TOASTS) {
+        const oldestKey = toastQueue.current.shift();
+        if (oldestKey) {
+          recentToasts.current.delete(oldestKey);
+        }
+      }
+
       const id = generateId();
       setToasts((prev) => [...prev, { id, type, message, duration }]);
 

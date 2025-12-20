@@ -87,12 +87,19 @@ module.exports = withSentryConfig(nextConfig, {
   // side errors will fail.
   // tunnelRoute: "/monitoring",
 
-  // Automatically tree-shake Sentry logger statements to reduce bundle size
-  disableLogger: true,
+  // Bundle size optimizations (replaces deprecated disableLogger)
+  bundleSizeOptimizations: {
+    // Automatically tree-shake Sentry logger statements to reduce bundle size
+    excludeDebugStatements: true,
+    // Exclude tracing instrumentation for smaller bundle (only if not using performance monitoring)
+    // excludeTracing: true,
+  },
 
   // Enables automatic instrumentation of Vercel Cron Monitors. (Does not yet work with App Router route handlers.)
   // See the following for more information:
   // https://docs.sentry.io/product/crons/
   // https://vercel.com/docs/cron-jobs
+  // NOTE: This feature is marked as deprecated but no migration path exists yet.
+  // Keeping it enabled until Sentry provides the new API.
   automaticVercelMonitors: true,
 });

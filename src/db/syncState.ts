@@ -11,6 +11,9 @@ export interface SyncCursor {
 const EPOCH_TIMESTAMP = "1970-01-01T00:00:00.000Z";
 const ONE_HOUR_MS = 60 * 60 * 1000;
 
+// UUID validation regex for keyset pagination cursor validation
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 interface HealResult {
   timestamp: string;
   healed: boolean;
@@ -57,6 +60,7 @@ export async function getSyncCursor(userId: string): Promise<SyncCursor> {
 
   let timestamp = EPOCH_TIMESTAMP;
   let healed = false;
+  let lastIdHealed = false;
   if (state?.lastSyncedAt) {
     const rawTimestamp =
       typeof state.lastSyncedAt === "string"
@@ -69,10 +73,35 @@ export async function getSyncCursor(userId: string): Promise<SyncCursor> {
     healed = healResult.healed;
   }
 
+  // Validate lastId format (must be UUID for keyset pagination)
+  const rawLastId = state?.lastId || NIL_UUID;
+  const isValidUUID = UUID_REGEX.test(rawLastId);
+
+  if (!isValidUUID && rawLastId !== NIL_UUID) {
+    logger.warn("Healing corrupted results cursor lastId", { userId, invalidLastId: rawLastId });
+    lastIdHealed = true;
+  }
+
+  // Reset lastId when timestamp is healed OR lastId is invalid.
+  // Both must reset together to maintain valid composite cursor for keyset pagination:
+  // the (timestamp, lastId) pair must be coherent for correct page boundaries.
+  const safeLastId = healed || !isValidUUID ? NIL_UUID : rawLastId;
+
+  // Persist healed cursor to prevent repeated warnings
+  if (healed || lastIdHealed) {
+    try {
+      await setSyncCursor(timestamp, userId, safeLastId);
+    } catch (err) {
+      logger.error("Failed to persist healed results cursor", {
+        userId,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }
+
   return {
     timestamp,
-    // Clear lastId when healing to avoid keyset pagination skipping records
-    lastId: healed ? NIL_UUID : (state?.lastId || NIL_UUID),
+    lastId: safeLastId,
   };
 }
 
@@ -107,6 +136,7 @@ export async function getQuizSyncCursor(userId: string): Promise<SyncCursor> {
 
   let timestamp = EPOCH_TIMESTAMP;
   let healed = false;
+  let lastIdHealed = false;
   if (state?.lastSyncedAt) {
     const rawTimestamp =
       typeof state.lastSyncedAt === "string"
@@ -119,10 +149,32 @@ export async function getQuizSyncCursor(userId: string): Promise<SyncCursor> {
     healed = healResult.healed;
   }
 
+  // Validate lastId format (must be UUID for keyset pagination)
+  const rawLastId = state?.lastId || NIL_UUID;
+  const isValidUUID = UUID_REGEX.test(rawLastId);
+
+  if (!isValidUUID && rawLastId !== NIL_UUID) {
+    logger.warn("Healing corrupted quizzes cursor lastId", { userId, invalidLastId: rawLastId });
+    lastIdHealed = true;
+  }
+
+  const safeLastId = healed || !isValidUUID ? NIL_UUID : rawLastId;
+
+  // Persist healed cursor to prevent repeated warnings
+  if (healed || lastIdHealed) {
+    try {
+      await setQuizSyncCursor(timestamp, userId, safeLastId);
+    } catch (err) {
+      logger.error("Failed to persist healed quizzes cursor", {
+        userId,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }
+
   return {
     timestamp,
-    // Clear lastId when healing to avoid keyset pagination skipping records
-    lastId: healed ? NIL_UUID : (state?.lastId || NIL_UUID),
+    lastId: safeLastId,
   };
 }
 
@@ -148,6 +200,22 @@ export async function setQuizSyncCursor(
   });
 }
 
+/**
+ * Retrieves the SRS sync cursor for keyset pagination.
+ *
+ * **Self-Healing Behavior (Side-Effect):** If the stored cursor is corrupted
+ * (future timestamp or invalid UUID lastId), this function will:
+ * 1. Log a warning
+ * 2. Immediately persist the healed cursor to IndexedDB
+ * 3. Return the healed cursor
+ *
+ * This side-effect is intentional to prevent repeated healing/warning on
+ * subsequent calls. The operation is idempotent and tolerant of concurrency
+ * (a race could overwrite a concurrent update, but next sync self-corrects).
+ *
+ * @param userId - The user ID to get the sync cursor for
+ * @returns SyncCursor with validated timestamp and lastId
+ */
 export async function getSRSSyncCursor(userId: string): Promise<SyncCursor> {
   if (!userId) return { timestamp: EPOCH_TIMESTAMP, lastId: NIL_UUID };
 
@@ -156,6 +224,7 @@ export async function getSRSSyncCursor(userId: string): Promise<SyncCursor> {
 
   let timestamp = EPOCH_TIMESTAMP;
   let healed = false;
+  let lastIdHealed = false;
   if (state?.lastSyncedAt) {
     const rawTimestamp =
       typeof state.lastSyncedAt === "string"
@@ -168,10 +237,41 @@ export async function getSRSSyncCursor(userId: string): Promise<SyncCursor> {
     healed = healResult.healed;
   }
 
+  // SRS uses TEXT question_id, so accept any non-empty string as a valid cursor.
+  const rawLastId = state?.lastId;
+  const hasValidLastId =
+    typeof rawLastId === "string" && rawLastId.trim().length > 0;
+
+  if (hasValidLastId && !UUID_REGEX.test(rawLastId)) {
+    logger.debug("SRS cursor uses non-UUID lastId", { userId, lastId: rawLastId });
+  }
+
+  if (rawLastId != null && !hasValidLastId) {
+    logger.warn("Healing corrupted SRS cursor lastId", {
+      userId,
+      invalidLastId: rawLastId,
+    });
+    lastIdHealed = true;
+  }
+
+  const safeLastId = healed || !hasValidLastId ? NIL_UUID : rawLastId;
+
+  // Persist healed cursor immediately (see JSDoc for rationale)
+  if (healed || lastIdHealed) {
+    try {
+      await setSRSSyncCursor(timestamp, userId, safeLastId);
+    } catch (err) {
+      logger.error("Failed to persist healed SRS cursor", {
+        userId,
+        error: err instanceof Error ? err.message : String(err),
+      });
+      // Don't rethrow — cursor will be re-healed on next access
+    }
+  }
+
   return {
     timestamp,
-    // Clear lastId when healing to avoid keyset pagination skipping records
-    lastId: healed ? NIL_UUID : (state?.lastId || NIL_UUID),
+    lastId: safeLastId,
   };
 }
 
@@ -188,12 +288,15 @@ export async function setSRSSyncCursor(
     table: "srs-write",
   });
 
+  const normalizedLastId =
+    typeof lastId === "string" && lastId.trim().length > 0 ? lastId : NIL_UUID;
+
   const key = `srs:${userId}`;
   await db.syncState.put({
     table: key,
     lastSyncedAt: safeTimestamp,
     synced: 1,
-    lastId: lastId || NIL_UUID,
+    lastId: normalizedLastId,
   });
 }
 

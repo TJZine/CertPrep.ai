@@ -17,7 +17,6 @@ import { TrendingUp } from "lucide-react";
 import { useChartColors } from "@/hooks/useChartColors";
 import { useChartDimensions } from "@/hooks/useChartDimensions";
 import type { CategoryTrendPoint } from "@/hooks/useCategoryTrends";
-import { EmptyCardState } from "@/components/analytics/EmptyCardState";
 
 interface CategoryTrendChartProps {
     /** Time-series data with weekly aggregated scores per category */
@@ -86,33 +85,11 @@ export function CategoryTrendChart({
 
     // Limit to 5 categories for visual clarity
     const displayCategories = categories.slice(0, 5);
-
-    if (data.length === 0) {
-        return (
-            <EmptyCardState
-                className={className}
-                headerIcon={<TrendingUp className="h-5 w-5" aria-hidden="true" />}
-                icon={<TrendingUp aria-hidden="true" />}
-                title="Category Trends"
-                description="Complete quizzes over multiple weeks to see proficiency trends."
-            />
-        );
-    }
-
-    if (data.length < 2) {
-        return (
-            <EmptyCardState
-                className={className}
-                headerIcon={<TrendingUp className="h-5 w-5" aria-hidden="true" />}
-                icon={<TrendingUp aria-hidden="true" />}
-                title="Category Trends"
-                description="Need at least 2 weeks of data to show trends. Keep studying!"
-            />
-        );
-    }
-
+    const isEmpty = data.length === 0;
+    const needsMoreData = data.length < 2;
     const isReady = colorsReady && dimensionsReady;
 
+    // Always render full Card structure for stable height
     return (
         <Card className={className}>
             <CardHeader>
@@ -123,7 +100,17 @@ export function CategoryTrendChart({
             </CardHeader>
             <CardContent>
                 <div ref={containerRef} className="h-[300px] w-full">
-                    {isReady ? (
+                    {isEmpty || needsMoreData ? (
+                        // Empty state - same height as chart
+                        <div className="flex h-full flex-col items-center justify-center text-center">
+                            <TrendingUp className="h-12 w-12 text-muted-foreground/30" aria-hidden="true" />
+                            <p className="mt-3 max-w-xs text-sm text-muted-foreground">
+                                {isEmpty
+                                    ? "Complete quizzes over multiple weeks to see proficiency trends."
+                                    : "Need at least 2 weeks of data to show trends. Keep studying!"}
+                            </p>
+                        </div>
+                    ) : isReady ? (
                         <ResponsiveContainer width="100%" height="100%">
                             <LineChart
                                 data={data}
@@ -164,8 +151,8 @@ export function CategoryTrendChart({
                             </LineChart>
                         </ResponsiveContainer>
                     ) : (
-                        <div className="flex h-full items-center justify-center">
-                            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+                        <div className="flex h-full items-center justify-center" role="status" aria-label="Loading chart">
+                            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" aria-hidden="true" />
                         </div>
                     )}
                 </div>

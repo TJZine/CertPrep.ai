@@ -525,3 +525,45 @@ test("displays error when quiz not found");
 - [ ] Add auth edge case tests to existing or new spec
 - [ ] Verify all specs pass in CI
 - [ ] Document any new fixtures in `tests/e2e/README.md`
+
+# Sync Performance Optimization TODO
+
+Future optimizations to consider if slow sync issues persist after the cursor fix.
+
+## Immediate (P0) ✅
+
+- [x] Fix SRS cursor corruption (deterministic UUIDs + persistent healing)
+
+## High Priority (P1)
+
+- [ ] **Parallel sync execution** – Run Results, Quizzes, and SRS syncs concurrently instead of sequentially
+  - File: `src/hooks/useDataSync.ts`
+  - Expected improvement: ~2x faster initial sync
+- [ ] **Debounced/coalesced sync triggers** – Batch rapid sync requests into single execution
+  - Prevents redundant syncs when multiple components mount
+
+## Medium Priority (P2)
+
+- [ ] **Selective column fetch for quizzes** – Don't fetch `questions[]` array on initial list sync
+  - Only fetch full quiz when user opens it
+  - File: `src/lib/sync/quizSyncManager.ts`
+- [ ] **Raise SLOW_SYNC_THRESHOLD for mobile** – 300ms is too aggressive for 4G
+  - Consider 500-800ms or network-aware thresholds
+  - File: `src/lib/sync/syncLogging.ts`
+
+- [ ] **Compress large payloads** – Use gzip for quiz pushes with many questions
+  - Supabase supports `Accept-Encoding: gzip`
+
+## Lower Priority (P3)
+
+- [ ] **Background sync via Service Worker** – Move sync to SW for better UX
+- [ ] **Delta sync for quizzes** – Only sync changed questions, not full array
+- [ ] **Cursor-based pagination for Results** – Match SRS approach for consistency
+- [ ] **IndexedDB read optimizations** – Batch local reads with `bulkGet`
+- [ ] **Sync priority queue** – Results before Quizzes before SRS (user-facing first)
+
+## Monitoring
+
+- [ ] Add Sentry performance spans for each sync phase
+- [ ] Track sync duration percentiles (p50, p95, p99)
+- [ ] Alert on sync duration regression

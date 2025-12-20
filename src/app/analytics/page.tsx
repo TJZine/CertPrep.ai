@@ -1,20 +1,20 @@
 "use client";
 
 import * as React from "react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { AnalyticsOverview } from "@/components/analytics/AnalyticsOverview";
-import { PerformanceHistory } from "@/components/analytics/PerformanceHistory";
 import { RecentResultsCard } from "@/components/analytics/RecentResultsCard";
 import { WeakAreasCard } from "@/components/analytics/WeakAreasCard";
 import { ExamReadinessCard } from "@/components/analytics/ExamReadinessCard";
 import { StreakCard } from "@/components/analytics/StreakCard";
 import { RetryComparisonCard } from "@/components/analytics/RetryComparisonCard";
 import { TopicHeatmap } from "@/components/analytics/TopicHeatmap";
-import { CategoryTrendChart } from "@/components/analytics/CategoryTrendChart";
-
-import { LoadingSpinner } from "@/components/common/LoadingSpinner";
+import { AnalyticsSkeleton, AnalyticsOverviewSkeleton } from "@/components/analytics/AnalyticsSkeleton";
 import { EmptyState } from "@/components/common/EmptyState";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { Skeleton } from "@/components/ui/Skeleton";
 import {
   useResults,
   useQuizzes,
@@ -30,6 +30,31 @@ import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 import type { Result } from "@/types/result";
 import { DateRangeFilter, type DateRange, DATE_RANGE_VALUES } from "@/components/analytics/DateRangeFilter";
+
+// Code-split recharts-heavy components for smaller initial bundle
+const PerformanceHistory = dynamic(
+  () => import("@/components/analytics/PerformanceHistory").then((mod) => ({ default: mod.PerformanceHistory })),
+  {
+    loading: () => (
+      <Card className="h-[348px]">
+        <Skeleton className="h-full w-full" aria-label="Loading performance chart" />
+      </Card>
+    ),
+    ssr: false,
+  }
+);
+
+const CategoryTrendChart = dynamic(
+  () => import("@/components/analytics/CategoryTrendChart").then((mod) => ({ default: mod.CategoryTrendChart })),
+  {
+    loading: () => (
+      <Card className="min-h-[380px]">
+        <Skeleton className="h-full w-full" aria-label="Loading category trends" />
+      </Card>
+    ),
+    ssr: false,
+  }
+);
 
 /**
  * Wrapper component for CategoryTrendChart that uses the trend hook.
@@ -72,7 +97,7 @@ export default function AnalyticsPage(): React.ReactElement {
   const { results, isLoading: resultsLoading } = useResults(
     effectiveUserId ?? undefined,
   );
-  const { quizzes, isLoading: quizzesLoading } = useQuizzes(
+  const { quizzes, isLoading: quizzesLoading, error: quizzesError } = useQuizzes(
     effectiveUserId ?? undefined,
   );
 
@@ -209,15 +234,16 @@ export default function AnalyticsPage(): React.ReactElement {
     results.length === 0 &&
     isSyncing;
 
-  if (dbError) {
+  if (dbError || quizzesError) {
+    const message = dbError?.message ?? quizzesError?.message ?? "Unknown error";
     return (
-      <div className="mx-auto max-w-7xl px-4 py-8">
+      <div className="mx-auto min-h-[calc(100dvh-var(--header-height))] max-w-7xl px-4 py-8">
         <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
           <h2 className="text-lg font-semibold text-destructive">
             Failed to load analytics
           </h2>
           <p className="mt-2 text-destructive">
-            {dbError.message}
+            {message}
           </p>
           <Button
             className="mt-4"
@@ -232,20 +258,17 @@ export default function AnalyticsPage(): React.ReactElement {
   }
 
   if (isLoadingData || isWaitingForSync) {
-    const loadingText = isSyncing
-      ? "Syncing your data..."
-      : "Loading analytics...";
     return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <LoadingSpinner size="lg" text={loadingText} />
-      </div>
+      <AnalyticsSkeleton
+        syncingText={isSyncing ? "Syncing your data..." : undefined}
+      />
     );
   }
 
   // Only show empty state after sync has completed and we still have no results
   if (results.length === 0) {
     return (
-      <div className="mx-auto max-w-7xl px-4 py-8">
+      <div className="mx-auto min-h-[calc(100dvh-var(--header-height))] max-w-7xl px-4 py-8">
         <h1 className="mb-8 text-3xl font-bold text-foreground">
           Analytics
         </h1>
@@ -268,7 +291,7 @@ export default function AnalyticsPage(): React.ReactElement {
   }
 
   return (
-    <div className="mx-auto max-w-7xl overflow-x-hidden px-4 py-8 sm:px-6 lg:px-8">
+    <div data-testid="analytics-main" className="mx-auto min-h-[calc(100dvh-var(--header-height))] max-w-7xl overflow-x-hidden px-4 py-8 sm:px-6 lg:px-8">
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">
@@ -308,12 +331,17 @@ export default function AnalyticsPage(): React.ReactElement {
         />
       </div>
 
-      {overallStats && (
-        <AnalyticsOverview stats={overallStats} className="mb-8" />
-      )}
+      {/* AnalyticsOverview slot - always rendered with min-h to prevent CLS */}
+      <div className="mb-8 min-h-[88px]">
+        {overallStats ? (
+          <AnalyticsOverview stats={overallStats} />
+        ) : (
+          <AnalyticsOverviewSkeleton />
+        )}
+      </div>
 
       {/* Performance History Chart (full width) */}
-      <div className="mb-8">
+      <div className="mb-8 h-[348px]">
         <PerformanceHistory results={filteredResults} quizTitles={quizTitles} />
       </div>
 
@@ -332,7 +360,9 @@ export default function AnalyticsPage(): React.ReactElement {
       </div>
 
       {/* Category Trends Over Time */}
-      <CategoryTrendChartSection results={filteredResults} />
+      <div className="min-h-[380px]">
+        <CategoryTrendChartSection results={filteredResults} />
+      </div>
 
       {/* Retry Comparison */}
       <div className="mb-8">
@@ -345,4 +375,3 @@ export default function AnalyticsPage(): React.ReactElement {
     </div>
   );
 }
-

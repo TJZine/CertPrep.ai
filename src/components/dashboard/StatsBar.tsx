@@ -86,7 +86,7 @@ export function StatsBar({
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+    <div data-testid="stats-bar" className="grid min-h-[100px] grid-cols-2 gap-4 lg:grid-cols-4">
       {stats.map((stat) => (
         <StatItem
           key={stat.label}

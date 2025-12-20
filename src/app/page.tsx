@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import dynamic from "next/dynamic";
 import { useQuizzes, useInitializeDatabase } from "@/hooks/useDatabase";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { deleteQuiz } from "@/db/quizzes";
@@ -8,22 +9,39 @@ import { getDueCountsByBox } from "@/db/srs";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { StatsBar } from "@/components/dashboard/StatsBar";
 import { QuizGrid } from "@/components/dashboard/QuizGrid";
-import { ImportModal } from "@/components/dashboard/ImportModal";
-import { ModeSelectModal } from "@/components/dashboard/ModeSelectModal";
-import { DeleteConfirmModal } from "@/components/dashboard/DeleteConfirmModal";
 import { DueQuestionsCard } from "@/components/srs/DueQuestionsCard";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
+import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { useToast } from "@/components/ui/Toast";
+import { prefetchOnIdle } from "@/lib/prefetch";
 import type { Quiz } from "@/types/quiz";
 import type { LeitnerBox } from "@/types/srs";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 
+// Code-split modals - loaded on demand, not in initial bundle
+const ImportModal = dynamic(
+  () => import("@/components/dashboard/ImportModal").then((mod) => ({ default: mod.ImportModal })),
+  { ssr: false }
+);
+const ModeSelectModal = dynamic(
+  () => import("@/components/dashboard/ModeSelectModal").then((mod) => ({ default: mod.ModeSelectModal })),
+  { ssr: false }
+);
+const DeleteConfirmModal = dynamic(
+  () => import("@/components/dashboard/DeleteConfirmModal").then((mod) => ({ default: mod.DeleteConfirmModal })),
+  { ssr: false }
+);
+
 export default function DashboardPage(): React.ReactElement {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const effectiveUserId = useEffectiveUserId(user?.id);
   const { isInitialized, error: dbError } = useInitializeDatabase();
-  const { quizzes, isLoading: quizzesLoading } = useQuizzes(
+  const {
+    quizzes,
+    isLoading: quizzesLoading,
+    error: quizzesError,
+  } = useQuizzes(
     effectiveUserId ?? undefined,
   );
 
@@ -45,23 +63,69 @@ export default function DashboardPage(): React.ReactElement {
   const [dueCountsByBox, setDueCountsByBox] = React.useState<Record<LeitnerBox, number>>({
     1: 0, 2: 0, 3: 0, 4: 0, 5: 0,
   });
+  const [dueCountsStatus, setDueCountsStatus] = React.useState<"idle" | "loading" | "ready" | "error">("idle");
   const totalDue = Object.values(dueCountsByBox).reduce((sum, count) => sum + count, 0);
+  const shouldLoadDueCounts = Boolean(effectiveUserId) && isInitialized;
+  // Show loading state only while actively loading (not on error or ready)
+  const isDueCountsLoading = shouldLoadDueCounts && dueCountsStatus === "loading";
 
   // Fetch SRS due counts
   React.useEffect(() => {
     if (!effectiveUserId || !isInitialized) return;
+    let cancelled = false;
 
     const loadDueCounts = async (): Promise<void> => {
+      setDueCountsStatus("loading");
       try {
         const counts = await getDueCountsByBox(effectiveUserId);
-        setDueCountsByBox(counts);
+        if (!cancelled) {
+          setDueCountsByBox(counts);
+          setDueCountsStatus("ready");
+        }
       } catch (err) {
         console.warn("Failed to load SRS due counts:", err);
+        if (!cancelled) {
+          setDueCountsStatus("error");
+        }
       }
     };
 
     void loadDueCounts();
+    return (): void => { cancelled = true; };
   }, [effectiveUserId, isInitialized]);
+
+  // Persist quiz count for skeleton size caching (CLS optimization)
+  // User-scoped to prevent cross-account cache pollution
+  React.useEffect(() => {
+    if (!quizzesLoading && effectiveUserId) {
+      try {
+        localStorage.setItem(`dashboard_${effectiveUserId}_quiz_count`, String(quizzes.length));
+      } catch {
+        // localStorage may be unavailable in private browsing
+      }
+    }
+  }, [quizzes.length, quizzesLoading, effectiveUserId]);
+
+  // Persist SRS due state for skeleton sizing (CLS optimization)
+  // User-scoped to prevent cross-account cache pollution
+  React.useEffect(() => {
+    if (dueCountsStatus === "ready" && effectiveUserId) {
+      try {
+        localStorage.setItem(`dashboard_${effectiveUserId}_has_srs_dues`, totalDue > 0 ? "1" : "0");
+      } catch {
+        // localStorage may be unavailable in private browsing
+      }
+    }
+  }, [dueCountsStatus, totalDue, effectiveUserId]);
+
+  // Prefetch modal chunks during idle time for faster first-open and offline reliability
+  React.useEffect(() => {
+    return prefetchOnIdle([
+      { key: 'ImportModal', load: (): Promise<typeof import('@/components/dashboard/ImportModal')> => import('@/components/dashboard/ImportModal') },
+      { key: 'ModeSelectModal', load: (): Promise<typeof import('@/components/dashboard/ModeSelectModal')> => import('@/components/dashboard/ModeSelectModal') },
+      { key: 'DeleteConfirmModal', load: (): Promise<typeof import('@/components/dashboard/DeleteConfirmModal')> => import('@/components/dashboard/DeleteConfirmModal') },
+    ]);
+  }, []);
 
   const { addToast } = useToast();
 
@@ -98,8 +162,45 @@ export default function DashboardPage(): React.ReactElement {
     }
   };
 
-  if (!isInitialized || quizzesLoading || statsLoading) {
-    return <DashboardSkeleton />;
+  // Use cached quiz count for skeleton sizing (CLS optimization)
+  // User-scoped cache prevents cross-account pollution
+  const cachedQuizCount = React.useMemo((): number | null => {
+    // If we already have quiz data loaded, use that
+    if (!quizzesLoading) {
+      return quizzes.length;
+    }
+    // Otherwise, read user-scoped cached count from localStorage
+    if (typeof window !== "undefined" && effectiveUserId) {
+      try {
+        const cached = localStorage.getItem(`dashboard_${effectiveUserId}_quiz_count`);
+        if (cached !== null) {
+          const count = Number(cached);
+          if (Number.isFinite(count) && count >= 0) {
+            return count;
+          }
+        }
+      } catch {
+        // localStorage unavailable
+      }
+    }
+    // No cache exists - return null, skeleton logic will determine variant
+    return null;
+  }, [quizzes.length, quizzesLoading, effectiveUserId]);
+
+  // Loading: auth/user context and DB/data fetches.
+  // Keep a single skeleton visible until all dynamic sections (including SRS due counts) are ready.
+  if (
+    authLoading ||
+    effectiveUserId === null ||
+    !isInitialized ||
+    quizzesLoading ||
+    statsLoading ||
+    isDueCountsLoading
+  ) {
+    // Use cached quiz count for skeleton, default to 6 for reasonable first-load
+    const quizCardCount = cachedQuizCount ?? 6;
+
+    return <DashboardSkeleton quizCardCount={quizCardCount} />;
   }
 
   if (dbError) {
@@ -120,66 +221,87 @@ export default function DashboardPage(): React.ReactElement {
   }
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <DashboardHeader
-        onImportClick={() => setIsImportModalOpen(true)}
-        quizCount={quizzes.length}
-      />
-
-      {quizzes.length > 0 && overallStats ? (
-        <div className="mt-8">
-          <StatsBar
-            totalQuizzes={overallStats.totalQuizzes}
-            totalAttempts={overallStats.totalAttempts}
-            averageScore={
-              overallStats.totalAttempts > 0 ? overallStats.averageScore : null
-            }
-            totalStudyTime={overallStats.totalStudyTime}
+    <>
+      <DashboardShell
+        headerSlot={
+          <DashboardHeader
+            onImportClick={() => setIsImportModalOpen(true)}
+            quizCount={quizzes.length}
           />
-        </div>
-      ) : null}
-
-      {/* SRS Due Questions Card - only show when there are due questions */}
-      {totalDue > 0 && (
-        <div className="mt-8">
+        }
+        statsSlot={
+          quizzes.length > 0 && overallStats ? (
+            <StatsBar
+              totalQuizzes={overallStats.totalQuizzes}
+              totalAttempts={overallStats.totalAttempts}
+              averageScore={
+                overallStats.totalAttempts > 0 ? overallStats.averageScore : null
+              }
+              totalStudyTime={overallStats.totalStudyTime}
+            />
+          ) : (
+            <div data-testid="stats-bar-empty" className="grid min-h-[100px] grid-cols-1 place-items-center lg:grid-cols-1">
+              <p className="text-sm text-muted-foreground">
+                Complete quizzes to see your stats here
+              </p>
+            </div>
+          )
+        }
+        srsSlot={
           <DueQuestionsCard
             dueCountsByBox={dueCountsByBox}
             totalDue={totalDue}
             className="mx-auto max-w-md"
           />
-        </div>
+        }
+        contentSlot={
+          <div className="space-y-4">
+            {quizzesError && (
+              <div
+                role="alert"
+                className="rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-sm text-destructive"
+              >
+                Unable to load quizzes: {quizzesError.message}
+              </div>
+            )}
+            <QuizGrid
+              quizzes={quizzes}
+              quizStats={quizStats}
+              onStartQuiz={handleStartQuiz}
+              onDeleteQuiz={handleDeleteClick}
+            />
+          </div>
+        }
+      />
+
+      {/* Modals - rendered as siblings, use portals internally */}
+      {isImportModalOpen && (
+        <ImportModal
+          isOpen
+          onClose={() => setIsImportModalOpen(false)}
+          onImportSuccess={handleImportSuccess}
+          userId={effectiveUserId}
+        />
       )}
 
-      <div className="mt-8">
-        <QuizGrid
-          quizzes={quizzes}
-          quizStats={quizStats}
-          onStartQuiz={handleStartQuiz}
-          onDeleteQuiz={handleDeleteClick}
+      {modeSelectQuiz !== null && (
+        <ModeSelectModal
+          quiz={modeSelectQuiz}
+          isOpen
+          onClose={() => setModeSelectQuiz(null)}
         />
-      </div>
+      )}
 
-      <ImportModal
-        isOpen={isImportModalOpen}
-        onClose={() => setIsImportModalOpen(false)}
-        onImportSuccess={handleImportSuccess}
-        userId={effectiveUserId}
-      />
-
-      <ModeSelectModal
-        quiz={modeSelectQuiz}
-        isOpen={modeSelectQuiz !== null}
-        onClose={() => setModeSelectQuiz(null)}
-      />
-
-      <DeleteConfirmModal
-        quiz={deleteContext?.quiz ?? null}
-        attemptCount={deleteContext?.attemptCount ?? 0}
-        isOpen={deleteContext !== null}
-        onClose={() => setDeleteContext(null)}
-        onConfirm={handleConfirmDelete}
-        isDeleting={isDeleting}
-      />
-    </main>
+      {deleteContext !== null && (
+        <DeleteConfirmModal
+          quiz={deleteContext.quiz}
+          attemptCount={deleteContext.attemptCount}
+          isOpen
+          onClose={() => setDeleteContext(null)}
+          onConfirm={handleConfirmDelete}
+          isDeleting={isDeleting}
+        />
+      )}
+    </>
   );
 }

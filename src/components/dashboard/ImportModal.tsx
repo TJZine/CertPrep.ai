@@ -23,6 +23,10 @@ import {
 } from "@/validators/quizSchema";
 import type { Quiz } from "@/types/quiz";
 
+// SECURITY: Prevent DoS via oversized file loading into browser memory
+// 10 MB is generous for quiz JSON (a 10,000-question quiz is typically 2-5 MB)
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
+
 export interface ImportModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -180,6 +184,15 @@ export function ImportModal({
   }, [isOpen]);
 
   const handleFileSelect = (file: File): void => {
+    // SECURITY: Prevent DoS via oversized file loading
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      addToast(
+        "error",
+        `File too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Maximum size is 10 MB.`
+      );
+      return;
+    }
+
     if (
       file.type !== "application/json" &&
       !file.name.toLowerCase().endsWith(".json")
