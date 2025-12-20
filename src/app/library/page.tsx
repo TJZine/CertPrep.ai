@@ -23,7 +23,7 @@ export default function LibraryPage(): React.ReactElement {
 
   if (dbError) {
     return (
-      <div className="mx-auto max-w-4xl px-4 py-10">
+      <div className="mx-auto min-h-[calc(100vh-65px)] max-w-4xl px-4 py-10">
         <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
           <h1 className="text-xl font-semibold text-destructive">
             Database Error
@@ -49,7 +49,7 @@ export default function LibraryPage(): React.ReactElement {
   }
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+    <main data-testid="library-main" className="mx-auto min-h-[calc(100vh-65px)] max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="mb-8 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="flex items-center gap-2 text-3xl font-bold text-foreground">

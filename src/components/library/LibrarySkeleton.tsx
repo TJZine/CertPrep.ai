@@ -8,7 +8,8 @@ import { QuizCardSkeleton } from "@/components/dashboard/QuizCardSkeleton";
 export function LibrarySkeleton(): React.ReactElement {
   return (
     <main
-      className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8"
+      data-testid="library-main"
+      className="mx-auto min-h-[calc(100vh-65px)] max-w-5xl px-4 py-8 sm:px-6 lg:px-8"
       role="status"
       aria-label="Loading library"
     >
