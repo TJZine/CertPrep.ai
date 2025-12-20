@@ -88,19 +88,21 @@ test.describe("Quiz Library & Dashboard", () => {
             });
         });
 
-        test("defaults to first non-all category", async ({ authenticatedPage: page }) => {
+        test("defaults to all category", async ({ authenticatedPage: page }) => {
             await page.goto("/library");
             await expect(page.getByText(/loading/i).first()).not.toBeVisible();
 
-            // Expect Category A to be selected (sorted alphabetically)
+            // Expect All to be selected by default
+            const tabAll = page.getByRole("tab", { name: "All" });
             const tabA = page.getByRole("tab", { name: "Category A" });
             const tabB = page.getByRole("tab", { name: "Category B" });
 
-            await expect(tabA).toHaveAttribute("aria-selected", "true");
+            await expect(tabAll).toHaveAttribute("aria-selected", "true");
+            await expect(tabA).toHaveAttribute("aria-selected", "false");
             await expect(tabB).toHaveAttribute("aria-selected", "false");
 
             await expect(page.getByRole("heading", { name: "Quiz A" })).toBeVisible();
-            await expect(page.getByRole("heading", { name: "Quiz B" })).not.toBeVisible();
+            await expect(page.getByRole("heading", { name: "Quiz B" })).toBeVisible();
         });
 
         test("can switch categories", async ({ authenticatedPage: page }) => {
