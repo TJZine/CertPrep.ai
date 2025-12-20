@@ -149,9 +149,12 @@ export function ToastProvider({
         return; // Skip duplicate
       }
 
-      // Add to map and queue
+      // Only add to queue if this is a NEW entry (prevents queue/map desync)
+      const isNewEntry = !recentToasts.current.has(dedupKey);
       recentToasts.current.set(dedupKey, now);
-      toastQueue.current.push(dedupKey);
+      if (isNewEntry) {
+        toastQueue.current.push(dedupKey);
+      }
 
       // O(1) eviction: remove oldest entries when capacity exceeded
       while (toastQueue.current.length > MAX_RECENT_TOASTS) {

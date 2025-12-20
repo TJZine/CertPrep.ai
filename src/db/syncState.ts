@@ -207,7 +207,8 @@ export async function setQuizSyncCursor(
  * 3. Return the healed cursor
  *
  * This side-effect is intentional to prevent repeated healing/warning on
- * subsequent calls. The operation is idempotent and safe under concurrency.
+ * subsequent calls. The operation is idempotent and tolerant of concurrency
+ * (a race could overwrite a concurrent update, but next sync self-corrects).
  *
  * @param userId - The user ID to get the sync cursor for
  * @returns SyncCursor with validated timestamp and lastId
