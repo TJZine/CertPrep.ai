@@ -87,19 +87,9 @@ export function AnalyticsSkeleton({
                 </Card>
             </div>
 
-            {/* AnalyticsOverview skeleton (stats grid) */}
-            <div className="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4" aria-hidden="true">
-                {Array.from({ length: 4 }).map((_, i) => (
-                    <Card key={i}>
-                        <CardContent className="flex items-center gap-4 p-4">
-                            <Skeleton className="h-12 w-12 rounded-full" />
-                            <div className="space-y-2">
-                                <Skeleton className="h-7 w-16" />
-                                <Skeleton className="h-4 w-20" />
-                            </div>
-                        </CardContent>
-                    </Card>
-                ))}
+            {/* AnalyticsOverview skeleton (stats grid) - reuse exported component */}
+            <div className="mb-8">
+                <AnalyticsOverviewSkeleton />
             </div>
 
             {/* PerformanceHistory chart skeleton */}

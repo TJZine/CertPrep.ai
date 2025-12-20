@@ -15,64 +15,9 @@
 
 import puppeteer from "puppeteer";
 import path from "path";
+import { parseArgs, resolveViewport, formatNumber } from "./lib/cli-utils.mjs";
 
 const DEFAULT_BASE_URL = "http://localhost:3100";
-const DEFAULT_VIEWPORT = { width: 1350, height: 940 };
-
-function parseArgs(argv) {
-  const args = new Map();
-  for (let i = 2; i < argv.length; i += 1) {
-    const key = argv[i];
-    const value = argv[i + 1];
-    if (!key || !key.startsWith("--")) continue;
-    if (!value || value.startsWith("--")) {
-      args.set(key, true);
-      i -= 1;
-      continue;
-    }
-    args.set(key, value);
-  }
-  return args;
-}
-
-function parseViewport(value) {
-  if (typeof value !== "string") return null;
-  const match = value.trim().match(/^(\d{2,5})x(\d{2,5})$/i);
-  if (!match) return null;
-  const width = Number(match[1]);
-  const height = Number(match[2]);
-  if (!Number.isFinite(width) || !Number.isFinite(height)) return null;
-  if (width < 200 || height < 200) return null;
-  return { width, height };
-}
-
-function resolveViewport(args) {
-  const preset = args.get("--preset");
-  if (preset === "mobile") return { width: 390, height: 844 };
-  if (preset === "ipad") return { width: 820, height: 1180 };
-  if (preset === "desktop") return { ...DEFAULT_VIEWPORT };
-
-  const viewportArg = args.get("--viewport");
-  const parsed = parseViewport(typeof viewportArg === "string" ? viewportArg : "");
-  if (parsed) return parsed;
-
-  const widthArg = args.get("--width");
-  const heightArg = args.get("--height");
-  if (typeof widthArg === "string" && typeof heightArg === "string") {
-    const width = Number(widthArg);
-    const height = Number(heightArg);
-    if (Number.isFinite(width) && Number.isFinite(height) && width >= 200 && height >= 200) {
-      return { width, height };
-    }
-  }
-
-  return { ...DEFAULT_VIEWPORT };
-}
-
-function formatNumber(value) {
-  if (typeof value !== "number" || Number.isNaN(value)) return "n/a";
-  return `${Math.round(value)}px`;
-}
 
 async function collectScenario(page, scenario) {
   const url = `${scenario.baseUrl}${scenario.path}`;
@@ -84,7 +29,26 @@ async function collectScenario(page, scenario) {
     () => document.readyState === "complete",
     { timeout: 30_000 },
   );
-  await new Promise((resolve) => setTimeout(resolve, 2000));
+
+  // Poll for hydration completion instead of arbitrary sleep.
+  // Skeleton.tsx adds data-skeleton attribute to mark true loading skeletons.
+  // Note: Some components (ExamReadinessCard) use animate-pulse for UI placeholders,
+  // which is why we check data-skeleton specifically.
+  try {
+    await page.waitForFunction(
+      () => {
+        // Check for skeleton elements (Skeleton.tsx sets data-skeleton attribute)
+        const hasSkeletons = document.querySelector('[data-skeleton]') !== null;
+        // Check for loading status containers
+        const hasLoadingStatus = document.querySelector('[role="status"][aria-label*="Loading"]') !== null;
+        return !hasSkeletons && !hasLoadingStatus;
+      },
+      { timeout: 10_000 },
+    );
+  } catch {
+    // Fallback: if no skeletons detected or timeout, wait briefly
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+  }
 
   const metrics = await page.evaluate(() => {
     const shifts = Array.isArray(window.__clsAudit?.shifts) ? window.__clsAudit.shifts : [];

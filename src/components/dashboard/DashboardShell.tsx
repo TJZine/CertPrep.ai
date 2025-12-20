@@ -52,11 +52,13 @@ export function DashboardShell({
         <main
             data-testid="dashboard-shell"
             className="mx-auto max-w-7xl min-h-[calc(100vh-65px)] px-4 py-8 sm:px-6 lg:px-8"
-            role={isLoading ? "status" : undefined}
+            aria-busy={isLoading}
             aria-label={ariaLabel}
         >
             {isLoading && (
-                <span className="sr-only">Loading your dashboard...</span>
+                <div role="status" aria-live="polite" className="sr-only">
+                    Loading your dashboard...
+                </div>
             )}
 
             {/* Header slot - always visible */}

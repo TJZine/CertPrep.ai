@@ -59,10 +59,11 @@ export default function DashboardPage(): React.ReactElement {
   const [dueCountsByBox, setDueCountsByBox] = React.useState<Record<LeitnerBox, number>>({
     1: 0, 2: 0, 3: 0, 4: 0, 5: 0,
   });
-  const [dueCountsStatus, setDueCountsStatus] = React.useState<"idle" | "loading" | "ready">("idle");
+  const [dueCountsStatus, setDueCountsStatus] = React.useState<"idle" | "loading" | "ready" | "error">("idle");
   const totalDue = Object.values(dueCountsByBox).reduce((sum, count) => sum + count, 0);
   const shouldLoadDueCounts = Boolean(effectiveUserId) && isInitialized;
-  const isDueCountsLoading = shouldLoadDueCounts && dueCountsStatus !== "ready";
+  // Show loading state only while actively loading (not on error or ready)
+  const isDueCountsLoading = shouldLoadDueCounts && dueCountsStatus === "loading";
 
   // Fetch SRS due counts
   React.useEffect(() => {
@@ -73,11 +74,15 @@ export default function DashboardPage(): React.ReactElement {
       setDueCountsStatus("loading");
       try {
         const counts = await getDueCountsByBox(effectiveUserId);
-        if (!cancelled) setDueCountsByBox(counts);
+        if (!cancelled) {
+          setDueCountsByBox(counts);
+          setDueCountsStatus("ready");
+        }
       } catch (err) {
         console.warn("Failed to load SRS due counts:", err);
-      } finally {
-        if (!cancelled) setDueCountsStatus("ready");
+        if (!cancelled) {
+          setDueCountsStatus("error");
+        }
       }
     };
 

@@ -50,6 +50,8 @@ export function SyncStatusIndicator(): React.ReactElement {
 
     // Always render a fixed-width wrapper to prevent CLS
     // Use opacity toggle with smooth transition instead of conditional mounting
+    // Note: Fixed 72px width assumes English text ("Syncing...", "Saved", "Offline").
+    // Adjust if i18n is added and translations exceed this width.
     return (
         <div
             className={cn(

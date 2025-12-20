@@ -13,66 +13,9 @@
 import puppeteer from "puppeteer";
 import lighthouse from "lighthouse";
 import { existsSync, mkdirSync, writeFileSync } from "fs";
+import { parseArgs, resolveViewport, resolveFormFactor } from "./lib/cli-utils.mjs";
 
 const DEFAULT_BASE_URL = "http://localhost:3100";
-
-const DEFAULT_VIEWPORT = { width: 1350, height: 940 };
-
-function parseArgs(argv) {
-  const args = new Map();
-  for (let i = 2; i < argv.length; i += 1) {
-    const key = argv[i];
-    const value = argv[i + 1];
-    if (!key || !key.startsWith("--")) continue;
-    if (!value || value.startsWith("--")) {
-      args.set(key, true);
-      i -= 1;
-      continue;
-    }
-    args.set(key, value);
-  }
-  return args;
-}
-
-function parseViewport(value) {
-  if (typeof value !== "string") return null;
-  const match = value.trim().match(/^(\d{2,5})x(\d{2,5})$/i);
-  if (!match) return null;
-  const width = Number(match[1]);
-  const height = Number(match[2]);
-  if (!Number.isFinite(width) || !Number.isFinite(height)) return null;
-  if (width < 200 || height < 200) return null;
-  return { width, height };
-}
-
-function resolveViewport(args) {
-  const preset = args.get("--preset");
-  if (preset === "mobile") return { width: 390, height: 844 };
-  if (preset === "ipad") return { width: 820, height: 1180 };
-  if (preset === "desktop") return { ...DEFAULT_VIEWPORT };
-
-  const viewportArg = args.get("--viewport");
-  const parsed = parseViewport(typeof viewportArg === "string" ? viewportArg : "");
-  if (parsed) return parsed;
-
-  const widthArg = args.get("--width");
-  const heightArg = args.get("--height");
-  if (typeof widthArg === "string" && typeof heightArg === "string") {
-    const width = Number(widthArg);
-    const height = Number(heightArg);
-    if (Number.isFinite(width) && Number.isFinite(height) && width >= 200 && height >= 200) {
-      return { width, height };
-    }
-  }
-
-  return { ...DEFAULT_VIEWPORT };
-}
-
-function resolveFormFactor(args, viewport) {
-  const arg = args.get("--formFactor");
-  if (arg === "mobile" || arg === "desktop") return arg;
-  return viewport.width <= 480 ? "mobile" : "desktop";
-}
 
 function buildLighthouseConfig({ viewport, formFactor }) {
   const isMobile = formFactor === "mobile";
