@@ -156,6 +156,8 @@ create table if not exists public.quizzes (
   version integer not null default 1,
   questions jsonb not null,
   quiz_hash text,
+  category text,
+  subcategory text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   deleted_at timestamptz

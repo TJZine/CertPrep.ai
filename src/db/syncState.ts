@@ -243,7 +243,7 @@ export async function getSRSSyncCursor(userId: string): Promise<SyncCursor> {
     typeof rawLastId === "string" && rawLastId.trim().length > 0;
 
   if (hasValidLastId && !UUID_REGEX.test(rawLastId)) {
-    logger.info("SRS cursor uses non-UUID lastId", { userId, lastId: rawLastId });
+    logger.debug("SRS cursor uses non-UUID lastId", { userId, lastId: rawLastId });
   }
 
   if (rawLastId != null && !hasValidLastId) {
