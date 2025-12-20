@@ -51,7 +51,7 @@ export function DashboardShell({
     return (
         <main
             data-testid="dashboard-shell"
-            className="mx-auto max-w-7xl min-h-[calc(100vh-65px)] px-4 py-8 sm:px-6 lg:px-8"
+            className="mx-auto max-w-7xl min-h-[calc(100vh-var(--header-height))] px-4 py-8 sm:px-6 lg:px-8"
             aria-busy={isLoading}
             aria-label={ariaLabel}
         >

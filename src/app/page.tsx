@@ -37,7 +37,11 @@ export default function DashboardPage(): React.ReactElement {
   const { user, isLoading: authLoading } = useAuth();
   const effectiveUserId = useEffectiveUserId(user?.id);
   const { isInitialized, error: dbError } = useInitializeDatabase();
-  const { quizzes, isLoading: quizzesLoading } = useQuizzes(
+  const {
+    quizzes,
+    isLoading: quizzesLoading,
+    error: quizzesError,
+  } = useQuizzes(
     effectiveUserId ?? undefined,
   );
 
@@ -251,12 +255,22 @@ export default function DashboardPage(): React.ReactElement {
           />
         }
         contentSlot={
-          <QuizGrid
-            quizzes={quizzes}
-            quizStats={quizStats}
-            onStartQuiz={handleStartQuiz}
-            onDeleteQuiz={handleDeleteClick}
-          />
+          <div className="space-y-4">
+            {quizzesError && (
+              <div
+                role="alert"
+                className="rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-sm text-destructive"
+              >
+                Unable to load quizzes: {quizzesError.message}
+              </div>
+            )}
+            <QuizGrid
+              quizzes={quizzes}
+              quizStats={quizStats}
+              onStartQuiz={handleStartQuiz}
+              onDeleteQuiz={handleDeleteClick}
+            />
+          </div>
         }
       />
 
@@ -291,4 +305,3 @@ export default function DashboardPage(): React.ReactElement {
     </>
   );
 }
-

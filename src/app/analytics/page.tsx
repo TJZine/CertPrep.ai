@@ -97,7 +97,7 @@ export default function AnalyticsPage(): React.ReactElement {
   const { results, isLoading: resultsLoading } = useResults(
     effectiveUserId ?? undefined,
   );
-  const { quizzes, isLoading: quizzesLoading } = useQuizzes(
+  const { quizzes, isLoading: quizzesLoading, error: quizzesError } = useQuizzes(
     effectiveUserId ?? undefined,
   );
 
@@ -234,15 +234,16 @@ export default function AnalyticsPage(): React.ReactElement {
     results.length === 0 &&
     isSyncing;
 
-  if (dbError) {
+  if (dbError || quizzesError) {
+    const message = dbError?.message ?? quizzesError?.message ?? "Unknown error";
     return (
-      <div className="mx-auto min-h-[calc(100dvh-65px)] max-w-7xl px-4 py-8">
+      <div className="mx-auto min-h-[calc(100dvh-var(--header-height))] max-w-7xl px-4 py-8">
         <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
           <h2 className="text-lg font-semibold text-destructive">
             Failed to load analytics
           </h2>
           <p className="mt-2 text-destructive">
-            {dbError.message}
+            {message}
           </p>
           <Button
             className="mt-4"
@@ -267,7 +268,7 @@ export default function AnalyticsPage(): React.ReactElement {
   // Only show empty state after sync has completed and we still have no results
   if (results.length === 0) {
     return (
-      <div className="mx-auto min-h-[calc(100dvh-65px)] max-w-7xl px-4 py-8">
+      <div className="mx-auto min-h-[calc(100dvh-var(--header-height))] max-w-7xl px-4 py-8">
         <h1 className="mb-8 text-3xl font-bold text-foreground">
           Analytics
         </h1>
@@ -290,7 +291,7 @@ export default function AnalyticsPage(): React.ReactElement {
   }
 
   return (
-    <div data-testid="analytics-main" className="mx-auto min-h-[calc(100dvh-65px)] max-w-7xl overflow-x-hidden px-4 py-8 sm:px-6 lg:px-8">
+    <div data-testid="analytics-main" className="mx-auto min-h-[calc(100dvh-var(--header-height))] max-w-7xl overflow-x-hidden px-4 py-8 sm:px-6 lg:px-8">
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">
@@ -374,4 +375,3 @@ export default function AnalyticsPage(): React.ReactElement {
     </div>
   );
 }
-

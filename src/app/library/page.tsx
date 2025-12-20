@@ -15,22 +15,27 @@ export default function LibraryPage(): React.ReactElement {
   const { user } = useAuth();
   const effectiveUserId = useEffectiveUserId(user?.id);
   const { isInitialized, error: dbError } = useInitializeDatabase();
-  const { quizzes, isLoading } = useQuizzes(effectiveUserId ?? undefined);
+  const { quizzes, isLoading, error: quizzesError } = useQuizzes(
+    effectiveUserId ?? undefined,
+  );
 
   if (!isInitialized || !effectiveUserId || isLoading) {
     return <LibrarySkeleton />;
   }
 
-  if (dbError) {
+  if (dbError || quizzesError) {
+    const message =
+      dbError?.message ??
+      quizzesError?.message ??
+      "An unexpected error occurred. Please refresh and try again.";
     return (
-      <div className="mx-auto min-h-[calc(100dvh-65px)] max-w-4xl px-4 py-10">
+      <div className="mx-auto min-h-[calc(100dvh-var(--header-height))] max-w-4xl px-4 py-10">
         <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
           <h1 className="text-xl font-semibold text-destructive">
             Database Error
           </h1>
           <p className="mt-2 text-sm text-destructive">
-            {dbError.message ||
-              "An unexpected error occurred. Please refresh and try again."}
+            {message}
           </p>
           <Link
             href="/"
@@ -49,7 +54,7 @@ export default function LibraryPage(): React.ReactElement {
   }
 
   return (
-    <main data-testid="library-main" className="mx-auto min-h-[calc(100dvh-65px)] max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+    <main data-testid="library-main" className="mx-auto min-h-[calc(100dvh-var(--header-height))] max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="mb-8 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="flex items-center gap-2 text-3xl font-bold text-foreground">

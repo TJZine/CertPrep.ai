@@ -56,7 +56,7 @@ export function WeakAreasCard({
 }: WeakAreasCardProps): React.ReactElement {
   const router = useRouter();
   const { addToast } = useToast();
-  const { quizzes } = useQuizzes(userId);
+  const { quizzes, error: quizzesError } = useQuizzes(userId);
   const [isLoading, setIsLoading] = React.useState(false);
   const [loadingCategory, setLoadingCategory] = React.useState<string | null>(null);
   const [modalState, setModalState] = React.useState<ModalState>({
@@ -189,6 +189,11 @@ export function WeakAreasCard({
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {quizzesError && (
+            <p className="mb-4 text-sm text-destructive">
+              Quiz titles may be incomplete: {quizzesError.message}
+            </p>
+          )}
           <div className="space-y-4">
             {weakAreas.map((area) => (
               <div
