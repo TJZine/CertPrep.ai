@@ -327,7 +327,7 @@ export function ScorecardCompact({
       type="button"
       onClick={onClick}
       className={cn(
-        "flex w-full items-center gap-4 rounded-lg border border-border p-4 text-left transition-colors",
+        "flex w-full items-center gap-3 sm:gap-4 rounded-lg border border-border p-3 sm:p-4 text-left transition-colors",
         "hover:bg-accent bg-card",
         onClick ? "cursor-pointer" : "cursor-default",
         className,
@@ -335,17 +335,17 @@ export function ScorecardCompact({
     >
       <div
         className={cn(
-          "flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full",
+          "flex h-12 w-12 sm:h-14 sm:w-14 flex-shrink-0 items-center justify-center rounded-full",
           tier.bgColor,
         )}
         aria-label={`Score ${score}%`}
       >
-        <span className={cn("text-xl font-bold", tier.color)}>{score}%</span>
+        <span className={cn("text-lg sm:text-xl font-bold", tier.color)}>{score}%</span>
       </div>
 
       <div className="flex-1 min-w-0">
         {title && (
-          <h4 className="mb-1 truncate text-base font-medium text-foreground">
+          <h4 className="mb-1 truncate text-sm sm:text-base font-medium text-foreground">
             {title}
           </h4>
         )}
@@ -371,7 +371,7 @@ export function ScorecardCompact({
       >
         {tier.label}
       </Badge>
-    </button>
+    </button >
   );
 }
 
