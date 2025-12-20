@@ -82,6 +82,9 @@ export async function getSyncCursor(userId: string): Promise<SyncCursor> {
     lastIdHealed = true;
   }
 
+  // Reset lastId when timestamp is healed OR lastId is invalid.
+  // Both must reset together to maintain valid composite cursor for keyset pagination:
+  // the (timestamp, lastId) pair must be coherent for correct page boundaries.
   const safeLastId = healed || !isValidUUID ? NIL_UUID : rawLastId;
 
   // Persist healed cursor to prevent repeated warnings
