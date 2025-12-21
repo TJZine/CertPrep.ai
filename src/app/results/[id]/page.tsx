@@ -250,6 +250,10 @@ export default function ResultsPage(): React.ReactElement {
     );
   }
 
+  // Render priority:
+  // 1. Quiz with questions → Full ResultsContainer with question review
+  // 2. No quiz or empty quiz → Simplified fallback card (hydration failed, orphaned)
+
   // Quiz exists and has questions (hydrated successfully or is a regular quiz)
   // Render full ResultsContainer
   if (quiz && quiz.questions.length > 0) {
