@@ -30,6 +30,7 @@ import { clearInterleavedState } from "@/lib/interleavedStorage";
 import { updateSRSState } from "@/db/srs";
 import { createSRSReviewResult, createTopicStudyResult, createInterleavedResult } from "@/db/results";
 import { getOrCreateSRSQuiz } from "@/db/quizzes";
+import { db } from "@/db";
 import { calculatePercentage } from "@/lib/utils";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
@@ -182,6 +183,21 @@ export function ZenQuizContainer({
             ]),
           );
 
+          // Build source map by querying all user quizzes and mapping question IDs to source quiz IDs
+          const allQuizzes = await db.quizzes
+            .where("user_id")
+            .equals(effectiveUserId)
+            .filter((q) => !q.deleted_at)
+            .toArray();
+          const sourceMap: Record<string, string> = {};
+          for (const q of allQuizzes) {
+            for (const question of q.questions) {
+              if (actualQuestionIds.includes(question.id) && !sourceMap[question.id]) {
+                sourceMap[question.id] = q.id;
+              }
+            }
+          }
+
           const result = await createSRSReviewResult({
             userId: effectiveUserId,
             srsQuizId: srsQuiz.id,
@@ -191,6 +207,7 @@ export function ZenQuizContainer({
             questionIds: actualQuestionIds,
             score,
             categoryBreakdown,
+            sourceMap,
           });
 
           clearSRSReviewState();
@@ -243,6 +260,21 @@ export function ZenQuizContainer({
             ]),
           );
 
+          // Build source map by querying all user quizzes and mapping question IDs to source quiz IDs
+          const allQuizzes = await db.quizzes
+            .where("user_id")
+            .equals(effectiveUserId)
+            .filter((q) => !q.deleted_at)
+            .toArray();
+          const sourceMap: Record<string, string> = {};
+          for (const q of allQuizzes) {
+            for (const question of q.questions) {
+              if (actualQuestionIds.includes(question.id) && !sourceMap[question.id]) {
+                sourceMap[question.id] = q.id;
+              }
+            }
+          }
+
           const result = await createTopicStudyResult({
             userId: effectiveUserId,
             srsQuizId: srsQuiz.id,
@@ -252,6 +284,7 @@ export function ZenQuizContainer({
             questionIds: actualQuestionIds,
             score,
             categoryBreakdown,
+            sourceMap,
           });
 
           clearTopicStudyState();

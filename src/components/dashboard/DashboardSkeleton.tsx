@@ -28,7 +28,12 @@ export function DashboardSkeleton({
         <DashboardShell
             headerSlot={<HeaderSkeleton />}
             statsSlot={<StatsBarSkeleton />}
-            srsSlot={<SRSPlaceholderSkeleton />}
+            srsSlot={
+                <div className="mx-auto grid max-w-2xl gap-4 md:grid-cols-2">
+                    <SRSPlaceholderSkeleton />
+                    <InterleavedPlaceholderSkeleton />
+                </div>
+            }
             contentSlot={<QuizGridSkeleton count={cardCount} />}
             aria-label="Loading dashboard"
             isLoading
@@ -78,13 +83,32 @@ function StatsBarSkeleton(): React.ReactElement {
  */
 function SRSPlaceholderSkeleton(): React.ReactElement {
     return (
-        <div className="flex justify-center" aria-hidden="true">
-            <div className="mx-auto flex w-full max-w-md items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 py-3">
-                <Skeleton className="h-4 w-4 rounded" />
-                <Skeleton className="h-4 w-40" />
-                <Skeleton className="h-4 w-4" />
-            </div>
+        <div className="flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 py-3" aria-hidden="true">
+            <Skeleton className="h-4 w-4 rounded" />
+            <Skeleton className="h-4 w-40" />
+            <Skeleton className="h-4 w-4" />
         </div>
+    );
+}
+
+/**
+ * InterleavedPracticeCard skeleton - matches the card structure
+ * Renders as a Card with header + button placeholder
+ */
+function InterleavedPlaceholderSkeleton(): React.ReactElement {
+    return (
+        <Card className="border-primary/20" aria-hidden="true">
+            <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                    <Skeleton className="h-5 w-5 rounded" />
+                    <Skeleton className="h-5 w-36" />
+                </div>
+                <Skeleton className="mt-1 h-4 w-48" />
+            </CardHeader>
+            <CardContent>
+                <Skeleton className="h-10 w-full rounded-md" />
+            </CardContent>
+        </Card>
     );
 }
 

@@ -145,6 +145,8 @@ export interface CreateSRSReviewResultInput {
   categoryBreakdown: Record<string, number>;
   /** Pre-calculated raw category scores for analytics */
   categoryScores?: Record<string, { correct: number; total: number }>;
+  /** Maps questionId → sourceQuizId for question attribution */
+  sourceMap?: Record<string, string>;
 }
 
 /**
@@ -194,6 +196,7 @@ export async function createSRSReviewResult(
     question_ids: input.questionIds,
     computed_category_scores: input.categoryScores, // Pre-computed for analytics
     session_type: "srs_review", // Explicit session classification for analytics
+    source_map: input.sourceMap, // Question attribution
     synced: 0, // Will sync normally now
   };
 
@@ -216,6 +219,8 @@ export interface CreateTopicStudyResultInput {
   categoryBreakdown: Record<string, number>;
   /** Pre-calculated raw category scores for analytics */
   categoryScores?: Record<string, { correct: number; total: number }>;
+  /** Maps questionId → sourceQuizId for question attribution */
+  sourceMap?: Record<string, string>;
 }
 
 /**
@@ -265,6 +270,7 @@ export async function createTopicStudyResult(
     question_ids: input.questionIds,
     computed_category_scores: input.categoryScores, // Pre-computed for analytics
     session_type: "topic_study", // Explicit session classification for analytics
+    source_map: input.sourceMap, // Question attribution
     synced: 0, // Will sync normally
   };
 
