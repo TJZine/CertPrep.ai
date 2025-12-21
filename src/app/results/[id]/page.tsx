@@ -102,6 +102,14 @@ export default function ResultsPage(): React.ReactElement {
     return null;
   }, [allQuizResults, result]);
 
+  // Debounce restore effect to allow useLiveQuery to settle after navigation
+  const [initialLoadComplete, setInitialLoadComplete] = React.useState(false);
+  React.useEffect(() => {
+    // Give Dexie's useLiveQuery a moment to subscribe and return cached data
+    const timer = setTimeout((): void => setInitialLoadComplete(true), 500);
+    return (): void => clearTimeout(timer);
+  }, []);
+
   React.useEffect(() => {
     let isMounted = true;
     // Attempt restore if:
@@ -109,13 +117,15 @@ export default function ResultsPage(): React.ReactElement {
     // 2. Quiz is MISSING (not even empty, but undefined) and NOT hydrating
     // 3. We haven't tried yet
     // 4. We are not currently loading
+    // 5. Initial load delay has passed (avoids race with useLiveQuery)
     if (
       !result ||
       quiz ||
       isHydrating ||
       dataLoading ||
       !effectiveUserId ||
-      restoreAttempted
+      restoreAttempted ||
+      !initialLoadComplete
     ) {
       return undefined;
     }
@@ -146,6 +156,7 @@ export default function ResultsPage(): React.ReactElement {
     restoreAttempted,
     isHydrating,
     dataLoading,
+    initialLoadComplete,
   ]);
 
   if (dbError) {

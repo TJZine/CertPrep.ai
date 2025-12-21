@@ -116,6 +116,8 @@ test.describe("Quiz Flow Tests", () => {
             await page.getByRole("button", { name: /good/i }).click();
 
             // 3. Verify Q1 reappears (Cycle back to Q1)
+            // Wait for any loading state to complete before asserting
+            await expect(page.getByText(/loading/i).first()).not.toBeVisible({ timeout: 10000 });
             await expect(page.getByText(quiz.questions[0]!.question!)).toBeVisible();
         });
 
@@ -210,7 +212,10 @@ test.describe("Quiz Flow Tests", () => {
 
             // 9. Verify redirected to results page
             await expect(page).toHaveURL(new RegExp(`/results`));
-            await expect(page.getByText("100%").first()).toBeVisible();
+            // Wait for all loading states to complete (longer timeout for quiz hydration)
+            await expect(page.getByText(/loading|syncing|building|restoring/i).first()).not.toBeVisible({ timeout: 20000 });
+            // Wait for score animation to complete - the counter animates up to the final value
+            await expect(page.getByText("100%").first()).toBeVisible({ timeout: 15000 });
         });
 
         test("can navigate between questions freely", async ({

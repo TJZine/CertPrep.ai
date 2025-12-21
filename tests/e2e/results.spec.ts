@@ -61,7 +61,7 @@ test.describe("Results Page", () => {
             await page.goto(`/results/${result.id}`);
 
             // Wait for loading
-            await waitForLoadingToComplete(page, /loading your results/i);
+            await waitForLoadingToComplete(page, /loading|syncing|building|restoring/i);
 
             // Verify score is displayed (use .first() as score appears in multiple places)
             await expect(page.getByText("50%").first()).toBeVisible();
@@ -84,7 +84,7 @@ test.describe("Results Page", () => {
 
             await page.goto(`/results/${result.id}`);
 
-            await waitForLoadingToComplete(page, /loading your results/i);
+            await waitForLoadingToComplete(page, /loading|syncing|building|restoring/i);
 
             // Quiz title should be visible somewhere on the page
             await expect(page.getByText(quiz.title)).toBeVisible();
@@ -110,7 +110,7 @@ test.describe("Results Page", () => {
 
             await page.goto(`/results/${result.id}`);
 
-            await waitForLoadingToComplete(page, /loading your results/i);
+            await waitForLoadingToComplete(page, /loading|syncing|building|restoring/i);
 
             // Find and click retry/retake button
             const retryButton = page.getByRole("button", { name: "Retake Quiz" });
