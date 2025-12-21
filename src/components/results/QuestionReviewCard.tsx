@@ -29,6 +29,8 @@ interface QuestionReviewCardProps {
   expandAllSignal?: number;
   correctAnswer?: string | null;
   isResolving?: boolean;
+  /** Optional source quiz name for aggregated sessions */
+  sourceQuizName?: string | null;
   /** Callback when card height changes (e.g., on expand/collapse). */
   onResize?: () => void;
 }
@@ -47,6 +49,7 @@ export function QuestionReviewCard({
   expandAllSignal,
   correctAnswer,
   isResolving = false,
+  sourceQuizName,
   onResize,
 }: QuestionReviewCardProps): React.ReactElement {
   const [isExpanded, setIsExpanded] = React.useState(defaultExpanded);
@@ -174,6 +177,11 @@ export function QuestionReviewCard({
               <Badge variant="warning" className="gap-1">
                 <Flag className="h-3 w-3" aria-hidden="true" />
                 Flagged
+              </Badge>
+            )}
+            {sourceQuizName && (
+              <Badge variant="outline" className="text-xs">
+                From: {sourceQuizName}
               </Badge>
             )}
           </div>

@@ -53,10 +53,10 @@ Files to modify:
 
 #### Acceptance Criteria
 
-- [ ] Aggregated results show full question review (like normal results)
-- [ ] Source quiz name displayed for each question (when available)
-- [ ] Graceful fallback if questions can't be hydrated
-- [ ] Tests cover hydration edge cases
+- [x] Aggregated results show full question review (like normal results)
+- [x] Source quiz name displayed for each question (when available)
+- [x] Graceful fallback if questions can't be hydrated
+- [x] Tests cover hydration edge cases
 
 ---
 

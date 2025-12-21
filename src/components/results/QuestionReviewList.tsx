@@ -15,6 +15,7 @@ interface QuestionWithAnswer {
   isCorrect: boolean;
   isFlagged: boolean;
   correctAnswer?: string | null;
+  sourceQuizName?: string | null;
 }
 
 interface QuestionReviewListProps {
@@ -58,6 +59,7 @@ const MemoizedCard = React.memo(function MemoizedCard({
         expandAllSignal={expandAllSignal}
         correctAnswer={item.correctAnswer}
         isResolving={isResolving}
+        sourceQuizName={item.sourceQuizName}
       />
     </div>
   );

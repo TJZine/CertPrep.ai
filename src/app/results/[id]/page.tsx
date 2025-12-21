@@ -236,144 +236,149 @@ export default function ResultsPage(): React.ReactElement {
     );
   }
 
-  if (!quiz) {
-    if (isRestoringQuiz) {
-      return (
-        <div className="flex min-h-screen items-center justify-center bg-background p-4">
-          <div className="flex flex-col items-center gap-3 rounded-lg border border-border bg-card p-6 text-center shadow-sm">
-            <LoadingSpinner size="lg" text="Restoring quiz..." />
-            <p className="text-sm text-muted-foreground">
-              We&apos;re attempting to restore the quiz linked to this result.
-            </p>
-          </div>
-        </div>
-      );
-    }
-
-    // Special handling for SRS Review / Topic Study results (both use SRS quiz)
-    const isAggregatedResult = isSRSQuiz(
-      result.quiz_id,
-      effectiveUserId,
-    );
-
+  // Show restoring state first
+  if (isRestoringQuiz) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background p-4">
-        <div className="max-w-md rounded-lg border border-border bg-card p-6 text-center shadow-sm">
-          <div
-            className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full ${isAggregatedResult ? "bg-success/20" : "bg-warning/20"
-              }`}
-          >
-            {isAggregatedResult ? (
-              <span className="text-2xl">🎯</span>
-            ) : (
-              <AlertCircle
-                className="h-8 w-8 text-warning"
-                aria-hidden="true"
-              />
-            )}
-          </div>
-          <h1 className="mt-4 text-xl font-semibold text-foreground">
-            {isAggregatedResult ? "Study Session Complete" : "Quiz Not Found"}
-          </h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {isAggregatedResult
-              ? "Great job on your focused study session!"
-              : "The quiz linked to this result isn't available right now."}
+        <div className="flex flex-col items-center gap-3 rounded-lg border border-border bg-card p-6 text-center shadow-sm">
+          <LoadingSpinner size="lg" text="Restoring quiz..." />
+          <p className="text-sm text-muted-foreground">
+            We&apos;re attempting to restore the quiz linked to this result.
           </p>
-
-          {/* Score Display */}
-          <div className="mt-4 rounded-lg bg-muted p-4">
-            <p className="text-3xl font-bold text-foreground">
-              {result.score}%
-            </p>
-            <p className="text-sm text-muted-foreground">
-              {isAggregatedResult ? "Session Score" : "Your score"}
-            </p>
-          </div>
-
-          {/* Category Breakdown for aggregated results */}
-          {isAggregatedResult && result.category_breakdown && Object.keys(result.category_breakdown).length > 0 && (
-            <div className="mt-4 space-y-2 text-left">
-              <h2 className="text-sm font-medium text-foreground">Category Breakdown</h2>
-              {Object.entries(result.category_breakdown).map(([category, score]) => (
-                <div key={category} className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">{category}</span>
-                  <span className="font-medium text-foreground">{score}%</span>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div className="mt-6 flex justify-center gap-4">
-            <Button
-              onClick={() => router.push(isAggregatedResult ? "/analytics" : "/")}
-              leftIcon={<ArrowLeft className="h-4 w-4" aria-hidden="true" />}
-            >
-              {isAggregatedResult ? "Back to Analytics" : "Back to Dashboard"}
-            </Button>
-            <Button
-              variant="danger"
-              onClick={handleDeleteResult}
-              isLoading={isDeleting}
-              leftIcon={<Trash2 className="h-4 w-4" aria-hidden="true" />}
-            >
-              Delete Result
-            </Button>
-          </div>
         </div>
       </div>
     );
   }
 
-  return (
-    <ErrorBoundary
-      fallback={
-        <div className="flex min-h-screen items-center justify-center bg-background p-4">
-          <div className="max-w-md rounded-lg border border-destructive/50 bg-card p-6 text-center shadow-sm">
-            <AlertCircle
-              className="mx-auto h-12 w-12 text-destructive"
-              aria-hidden="true"
-            />
-            <h1 className="mt-4 text-xl font-semibold text-foreground">
-              Something Went Wrong
-            </h1>
-            <p className="mt-2 text-sm text-muted-foreground">
-              An error occurred while displaying your results.
+  // Quiz exists and has questions (hydrated successfully or is a regular quiz)
+  // Render full ResultsContainer
+  if (quiz && quiz.questions.length > 0) {
+    return (
+      <ErrorBoundary
+        fallback={
+          <div className="flex min-h-screen items-center justify-center bg-background p-4">
+            <div className="max-w-md rounded-lg border border-destructive/50 bg-card p-6 text-center shadow-sm">
+              <AlertCircle
+                className="mx-auto h-12 w-12 text-destructive"
+                aria-hidden="true"
+              />
+              <h1 className="mt-4 text-xl font-semibold text-foreground">
+                Something Went Wrong
+              </h1>
+              <p className="mt-2 text-sm text-muted-foreground">
+                An error occurred while displaying your results.
+              </p>
+              <Button
+                className="mt-6"
+                onClick={() => router.push("/")}
+                leftIcon={<ArrowLeft className="h-4 w-4" aria-hidden="true" />}
+              >
+                Back to Dashboard
+              </Button>
+            </div>
+          </div>
+        }
+      >
+        {/* Missing category banner */}
+        {!quiz.category && (
+          <div role="status" className="mx-auto mb-4 flex max-w-4xl items-center gap-3 rounded-lg border border-warning/30 bg-warning/10 px-4 py-3">
+            <AlertTriangle className="h-5 w-5 flex-shrink-0 text-warning" aria-hidden="true" />
+            <p className="flex-1 text-sm text-foreground">
+              This quiz is missing category metadata and won&apos;t appear in grouped analytics.
             </p>
             <Button
-              className="mt-6"
-              onClick={() => router.push("/")}
-              leftIcon={<ArrowLeft className="h-4 w-4" aria-hidden="true" />}
+              variant="ghost"
+              size="sm"
+              onClick={() => router.push(`/quiz/${quiz.id}/settings`)}
+              leftIcon={<Settings className="h-4 w-4" aria-hidden="true" />}
             >
-              Back to Dashboard
+              Add Category
             </Button>
           </div>
+        )}
+        <ResultsContainer
+          result={result}
+          quiz={quiz}
+          previousScore={previousScore}
+          allQuizResults={allQuizResults}
+          sourceMap={result.source_map}
+        />
+      </ErrorBoundary>
+    );
+  }
+
+  // Fallback: No quiz or quiz has no questions (hydration failed, orphaned result)
+  const isAggregatedResult = isSRSQuiz(
+    result.quiz_id,
+    effectiveUserId,
+  );
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background p-4">
+      <div className="max-w-md rounded-lg border border-border bg-card p-6 text-center shadow-sm">
+        <div
+          className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full ${isAggregatedResult ? "bg-success/20" : "bg-warning/20"
+            }`}
+        >
+          {isAggregatedResult ? (
+            <span className="text-2xl">🎯</span>
+          ) : (
+            <AlertCircle
+              className="h-8 w-8 text-warning"
+              aria-hidden="true"
+            />
+          )}
         </div>
-      }
-    >
-      {/* Missing category banner */}
-      {quiz && !quiz.category && (
-        <div role="status" className="mx-auto mb-4 flex max-w-4xl items-center gap-3 rounded-lg border border-warning/30 bg-warning/10 px-4 py-3">
-          <AlertTriangle className="h-5 w-5 flex-shrink-0 text-warning" aria-hidden="true" />
-          <p className="flex-1 text-sm text-foreground">
-            This quiz is missing category metadata and won&apos;t appear in grouped analytics.
+        <h1 className="mt-4 text-xl font-semibold text-foreground">
+          {isAggregatedResult ? "Study Session Complete" : "Quiz Not Found"}
+        </h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          {isAggregatedResult
+            ? "Great job on your focused study session!"
+            : "The quiz linked to this result isn't available right now."}
+        </p>
+
+        {/* Score Display */}
+        <div className="mt-4 rounded-lg bg-muted p-4">
+          <p className="text-3xl font-bold text-foreground">
+            {result.score}%
           </p>
+          <p className="text-sm text-muted-foreground">
+            {isAggregatedResult ? "Session Score" : "Your score"}
+          </p>
+        </div>
+
+        {/* Category Breakdown for aggregated results */}
+        {isAggregatedResult && result.category_breakdown && Object.keys(result.category_breakdown).length > 0 && (
+          <div className="mt-4 space-y-2 text-left">
+            <h2 className="text-sm font-medium text-foreground">Category Breakdown</h2>
+            {Object.entries(result.category_breakdown).map(([category, score]) => (
+              <div key={category} className="flex justify-between text-sm">
+                <span className="text-muted-foreground">{category}</span>
+                <span className="font-medium text-foreground">{score}%</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="mt-6 flex justify-center gap-4">
           <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => router.push(`/quiz/${quiz.id}/settings`)}
-            leftIcon={<Settings className="h-4 w-4" aria-hidden="true" />}
+            onClick={() => router.push(isAggregatedResult ? "/analytics" : "/")}
+            leftIcon={<ArrowLeft className="h-4 w-4" aria-hidden="true" />}
           >
-            Add Category
+            {isAggregatedResult ? "Back to Analytics" : "Back to Dashboard"}
+          </Button>
+          <Button
+            variant="danger"
+            onClick={handleDeleteResult}
+            isLoading={isDeleting}
+            leftIcon={<Trash2 className="h-4 w-4" aria-hidden="true" />}
+          >
+            Delete Result
           </Button>
         </div>
-      )}
-      <ResultsContainer
-        result={result}
-        quiz={quiz}
-        previousScore={previousScore}
-        allQuizResults={allQuizResults}
-      />
-    </ErrorBoundary>
+      </div>
+    </div>
   );
+
 }
