@@ -34,7 +34,7 @@ import { calculatePercentage } from "@/lib/utils";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 import { useSync } from "@/hooks/useSync";
-import { remixQuiz } from "@/lib/quiz-remix";
+import { remixQuiz, buildAnswersRecord } from "@/lib/quiz-remix";
 
 interface ZenQuizContainerProps {
   quiz: Quiz;
@@ -61,8 +61,6 @@ export function ZenQuizContainer({
   isTopicStudy = false,
   isInterleaved = false,
   interleavedSourceMap = null,
-  // TODO: Will be used for answer translation when review is implemented
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   interleavedKeyMappings = null,
 }: ZenQuizContainerProps): React.ReactElement {
   const router = useRouter();
@@ -278,11 +276,11 @@ export function ZenQuizContainer({
           const questionMap = new Map(questions.map((q) => [q.id, q]));
           let correctCount = 0;
           const categoryTotals: Record<string, { correct: number; total: number }> = {};
-          const answersRecord: Record<string, string> = {};
+          // Translate remixed keys to original keys for consistent analytics
+          const answersRecord = buildAnswersRecord(answers, interleavedKeyMappings);
           const actualQuestionIds: string[] = [];
 
-          answers.forEach((record, questionId) => {
-            answersRecord[questionId] = record.selectedAnswer;
+          Object.keys(answersRecord).forEach((questionId) => {
             const question = questionMap.get(questionId);
             if (!question) return;
 
@@ -293,7 +291,9 @@ export function ZenQuizContainer({
             }
             categoryTotals[category].total += 1;
 
-            if (record.isCorrect) {
+            // Get isCorrect from original answers Map
+            const answerRecord = answers.get(questionId);
+            if (answerRecord?.isCorrect) {
               correctCount += 1;
               categoryTotals[category].correct += 1;
             }
@@ -344,7 +344,7 @@ export function ZenQuizContainer({
 
       await submitQuiz(timeTakenSeconds);
     },
-    [isSRSReview, isTopicStudy, isInterleaved, effectiveUserId, answers, questions, flaggedQuestions, interleavedSourceMap, addToast, router, submitQuiz, sync],
+    [isSRSReview, isTopicStudy, isInterleaved, effectiveUserId, answers, questions, flaggedQuestions, interleavedSourceMap, interleavedKeyMappings, addToast, router, submitQuiz, sync],
   );
 
   const retrySave = React.useCallback((): void => {
@@ -354,6 +354,7 @@ export function ZenQuizContainer({
   }, [retrySaveAction]);
 
   React.useEffect(() => {
+    let mounted = true;
     const init = async (): Promise<void> => {
       setIsInitializing(true);
       hasSavedResultRef.current = false;
@@ -361,6 +362,7 @@ export function ZenQuizContainer({
       if (searchParams?.get("remix") === "true") {
         try {
           const { quiz: remixedQuiz, keyMappings } = await remixQuiz(quiz);
+          if (!mounted) return; // Guard against unmount during async
           initializeSession(
             quiz.id,
             "zen",
@@ -369,12 +371,14 @@ export function ZenQuizContainer({
           );
         } catch (err) {
           console.error("Failed to remix quiz:", err);
+          if (!mounted) return;
           initializeSession(quiz.id, "zen", quiz.questions);
         }
       } else {
         initializeSession(quiz.id, "zen", quiz.questions);
       }
 
+      if (!mounted) return;
       startTimer();
       setIsInitializing(false);
     };
@@ -382,6 +386,7 @@ export function ZenQuizContainer({
     void init();
 
     return (): void => {
+      mounted = false;
       resetSession();
       hasSavedResultRef.current = false;
     };

@@ -42,6 +42,10 @@ export const QuestionSchema = z
       .refine(
         (opts) => Object.keys(opts).length >= 2,
         "At least 2 options are required",
+      )
+      .refine(
+        (opts) => Object.keys(opts).length <= 8,
+        "Maximum 8 options are supported",
       ),
     correct_answer: TrimmedString.optional(),
     correct_answer_hash: TrimmedString.optional(),

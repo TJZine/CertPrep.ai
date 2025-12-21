@@ -132,7 +132,6 @@ function EmptyStateSkeleton(): React.ReactElement {
     return (
         <div
             className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-card px-6 py-10 text-center"
-            aria-busy="true"
         >
             <div
                 className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground"

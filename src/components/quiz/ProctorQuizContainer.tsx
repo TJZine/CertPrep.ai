@@ -123,12 +123,14 @@ export function ProctorQuizContainer({
   }, [timeRemaining, updateTimeRemaining]);
 
   React.useEffect((): (() => void) => {
+    let mounted = true;
     const init = async (): Promise<void> => {
       setIsInitializing(true);
 
       if (searchParams?.get("remix") === "true") {
         try {
           const { quiz: remixedQuiz, keyMappings } = await remixQuiz(quiz);
+          if (!mounted) return; // Guard against unmount during async
           initializeProctorSession(
             quiz.id,
             remixedQuiz.questions,
@@ -137,12 +139,14 @@ export function ProctorQuizContainer({
           );
         } catch (err) {
           console.error("Failed to remix exam:", err);
+          if (!mounted) return;
           initializeProctorSession(quiz.id, quiz.questions, durationMinutes);
         }
       } else {
         initializeProctorSession(quiz.id, quiz.questions, durationMinutes);
       }
 
+      if (!mounted) return;
       startTimer();
       setIsInitializing(false);
     };
@@ -150,6 +154,7 @@ export function ProctorQuizContainer({
     void init();
 
     return () => {
+      mounted = false;
       pauseTimer();
       resetSession();
     };

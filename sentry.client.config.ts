@@ -77,7 +77,7 @@ if (dsn && !Sentry.getClient()) {
       replayLoaded = true;
 
       // Dynamic import to load replay chunk on demand
-      void import("@sentry/nextjs").then((SentryModule) => {
+      import("@sentry/nextjs").then((SentryModule) => {
         const client = SentryModule.getClient();
         if (client) {
           client.addIntegration(
@@ -87,6 +87,8 @@ if (dsn && !Sentry.getClient()) {
             }),
           );
         }
+      }).catch((error) => {
+        console.warn("[Sentry] Failed to lazy-load Replay integration:", error);
       });
     };
 

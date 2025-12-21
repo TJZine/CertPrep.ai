@@ -69,11 +69,8 @@ export async function remixQuestion(
     // Shuffle the option entries (preserves [key, text] pairs, just reorders)
     const shuffledEntries = shuffle(originalEntries);
 
-    // Find the original correct answer text (to identify it after shuffling)
+    // Find the original correct answer key
     const originalCorrectKey = question.correct_answer;
-    const correctText = originalCorrectKey
-        ? question.options[originalCorrectKey]
-        : null;
 
     // Rebuild options with new keys and track the mapping
     const newOptions: Record<string, string> = {};
@@ -91,8 +88,9 @@ export async function remixQuestion(
         newOptions[newKey] = text;
         keyMapping[newKey] = originalKey; // Map: new key → original key
 
-        // Track where the correct answer ended up
-        if (text === correctText) {
+        // Track where the correct answer ended up using key comparison
+        // (more robust than text comparison for duplicate option texts)
+        if (originalKey === originalCorrectKey) {
             newCorrectKey = newKey;
         }
     }

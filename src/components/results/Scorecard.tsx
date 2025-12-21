@@ -371,7 +371,7 @@ export function ScorecardCompact({
       >
         {tier.label}
       </Badge>
-    </button >
+    </button>
   );
 }
 
