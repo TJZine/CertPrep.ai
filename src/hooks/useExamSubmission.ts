@@ -4,6 +4,7 @@ import { useToast } from "@/components/ui/Toast";
 import { useSync } from "@/hooks/useSync";
 import { useQuizSessionStore } from "@/stores/quizSessionStore";
 import { createResult } from "@/db/results";
+import { buildAnswersRecord } from "@/lib/quiz-remix";
 import type { Quiz } from "@/types/quiz";
 
 interface UseExamSubmissionProps {
@@ -52,7 +53,7 @@ export function useExamSubmission({
     const router = useRouter();
     const { addToast } = useToast();
     const { sync } = useSync();
-    const { submitExam, autoSubmitExam } = useQuizSessionStore();
+    const { submitExam, autoSubmitExam, keyMappings } = useQuizSessionStore();
 
     const [showSubmitModal, setShowSubmitModal] = React.useState(false);
     const [showTimeUpModal, setShowTimeUpModal] = React.useState(false);
@@ -67,16 +68,6 @@ export function useExamSubmission({
             isMountedRef.current = false;
         };
     }, []);
-
-    // Helper to convert Map to Record
-    const buildAnswersRecord = React.useCallback((): Record<string, string> => {
-        return Object.fromEntries(
-            Array.from(answers.entries()).map(([id, record]) => [
-                id,
-                record.selectedAnswer,
-            ]),
-        );
-    }, [answers]);
 
     const handleSubmitExam = React.useCallback(async (): Promise<void> => {
         if (isSubmitting || hasSavedResultRef.current) return;
@@ -95,7 +86,7 @@ export function useExamSubmission({
                 quizId: quiz.id,
                 userId: effectiveUserId,
                 mode: "proctor",
-                answers: buildAnswersRecord(),
+                answers: buildAnswersRecord(answers, keyMappings),
                 flaggedQuestions: Array.from(flaggedQuestions),
                 timeTakenSeconds: Math.max(0, durationMinutes * 60 - timeRemaining),
             });
@@ -129,7 +120,8 @@ export function useExamSubmission({
         }
     }, [
         addToast,
-        buildAnswersRecord,
+        answers,
+        keyMappings,
         durationMinutes,
         effectiveUserId,
         flaggedQuestions,
@@ -161,7 +153,7 @@ export function useExamSubmission({
                 quizId: quiz.id,
                 userId: effectiveUserId,
                 mode: "proctor",
-                answers: buildAnswersRecord(),
+                answers: buildAnswersRecord(answers, keyMappings),
                 flaggedQuestions: Array.from(flaggedQuestions),
                 timeTakenSeconds: durationMinutes * 60,
             });
@@ -200,7 +192,8 @@ export function useExamSubmission({
         addToast,
         autoResultId,
         autoSubmitExam,
-        buildAnswersRecord,
+        answers,
+        keyMappings,
         durationMinutes,
         effectiveUserId,
         flaggedQuestions,

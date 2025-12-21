@@ -58,6 +58,8 @@ interface QuizSessionState {
   timeRemaining: number;
   isTimeWarning: boolean;
   isAutoSubmitted: boolean;
+  // Remix mapping
+  keyMappings: Map<string, Record<string, string>> | null;
 }
 
 interface QuizSessionActions {
@@ -65,11 +67,13 @@ interface QuizSessionActions {
     quizId: string,
     mode: QuizMode,
     questions: Question[],
+    keyMappings?: Map<string, Record<string, string>>,
   ) => void;
   initializeProctorSession: (
     quizId: string,
     questions: Question[],
     durationMinutes: number,
+    keyMappings?: Map<string, Record<string, string>>,
   ) => void;
   resetSession: () => void;
   completeSession: () => void;
@@ -134,13 +138,14 @@ const createInitialState = (): QuizSessionState => ({
   timeRemaining: TIMER.DEFAULT_EXAM_DURATION_MINUTES * 60,
   isTimeWarning: false,
   isAutoSubmitted: false,
+  keyMappings: null,
 });
 
 export const useQuizSessionStore = create<QuizSessionStore>()(
   immer((set, get) => ({
     ...createInitialState(),
 
-    initializeSession: (quizId, mode, questions): void => {
+    initializeSession: (quizId, mode, questions, keyMappings): void => {
       set((state) => {
         Object.assign(state, createInitialState());
         state.quizId = quizId;
@@ -150,10 +155,16 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
         state.currentIndex = 0;
         state.startTime = Date.now();
         state.questionStartTime = Date.now();
+        state.keyMappings = keyMappings ?? null;
       });
     },
 
-    initializeProctorSession: (quizId, questions, durationMinutes): void => {
+    initializeProctorSession: (
+      quizId,
+      questions,
+      durationMinutes,
+      keyMappings,
+    ): void => {
       set((state) => {
         Object.assign(state, createInitialState());
         state.quizId = quizId;
@@ -166,6 +177,7 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
         state.startTime = Date.now();
         state.questionStartTime = Date.now();
         state.isAutoSubmitted = false;
+        state.keyMappings = keyMappings ?? null;
         if (questions[0]) {
           state.seenQuestions.add(questions[0].id);
         }

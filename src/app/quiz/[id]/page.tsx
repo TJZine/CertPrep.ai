@@ -1,11 +1,11 @@
-"use client";
-
+import * as React from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Brain, Clock, History, Trophy, Play } from "lucide-react";
+import { ArrowLeft, Brain, Clock, History, Trophy, Play, Shuffle } from "lucide-react";
 import { useQuizWithStats } from "@/hooks/useDatabase";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { Switch } from "@/components/ui/Switch";
 import { QuizLobbySkeleton } from "@/components/quiz/QuizLobbySkeleton";
 import { EmptyState } from "@/components/common/EmptyState";
 import { useAuth } from "@/components/providers/AuthProvider";
@@ -22,6 +22,8 @@ export default function QuizLobbyPage(): React.ReactElement {
     id,
     effectiveUserId ?? undefined,
   );
+
+  const [isRemixEnabled, setIsRemixEnabled] = React.useState(false);
 
   if (isLoading) {
     return <QuizLobbySkeleton />;
@@ -137,6 +139,35 @@ export default function QuizLobbyPage(): React.ReactElement {
         </div>
       )}
 
+      {/* Remix Toggle */}
+      <div className="mb-6 flex items-center justify-between rounded-lg border border-border bg-card p-4">
+        <div className="flex items-center gap-3">
+          <div className="rounded-full bg-accent/10 p-2">
+            <Shuffle className="h-4 w-4 text-accent" />
+          </div>
+          <div>
+            <label
+              htmlFor="remix-toggle"
+              className="text-sm font-medium text-foreground cursor-pointer"
+            >
+              Remix Mode
+            </label>
+            <p
+              id="remix-description"
+              className="text-xs text-muted-foreground"
+            >
+              Shuffle questions and answer order
+            </p>
+          </div>
+        </div>
+        <Switch
+          id="remix-toggle"
+          checked={isRemixEnabled}
+          onCheckedChange={setIsRemixEnabled}
+          aria-describedby="remix-description"
+        />
+      </div>
+
       {/* Mode Selection */}
       <div className="grid gap-6 md:grid-cols-2">
         {/* Zen Mode */}
@@ -169,7 +200,11 @@ export default function QuizLobbyPage(): React.ReactElement {
             <Button
               className="w-full"
               size="lg"
-              onClick={() => router.push(`/quiz/${id}/zen`)}
+              onClick={() =>
+                router.push(
+                  `/quiz/${id}/zen${isRemixEnabled ? "?remix=true" : ""}`
+                )
+              }
               leftIcon={<Play className="h-5 w-5" />}
             >
               Start Practice
@@ -208,7 +243,11 @@ export default function QuizLobbyPage(): React.ReactElement {
               className="w-full"
               variant="outline"
               size="lg"
-              onClick={() => router.push(`/quiz/${id}/proctor`)}
+              onClick={() =>
+                router.push(
+                  `/quiz/${id}/proctor${isRemixEnabled ? "?remix=true" : ""}`
+                )
+              }
               leftIcon={<Play className="h-5 w-5" />}
             >
               Start Exam
