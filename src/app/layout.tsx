@@ -34,6 +34,7 @@ const nunito = Nunito({
   display: "swap",
   variable: "--font-nunito",
   fallback: ["system-ui", "sans-serif"],
+  preload: false, // Vapor theme only - reduces initial font download
 });
 
 const robotoSlab = Roboto_Slab({
@@ -41,6 +42,7 @@ const robotoSlab = Roboto_Slab({
   display: "swap",
   variable: "--font-roboto-slab",
   fallback: ["serif"],
+  preload: false, // Classic theme only - reduces initial font download
 });
 
 const spaceGrotesk = Space_Grotesk({
@@ -48,6 +50,7 @@ const spaceGrotesk = Space_Grotesk({
   display: "swap",
   variable: "--font-space",
   fallback: ["sans-serif"],
+  preload: false, // Midnight theme only - reduces initial font download
 });
 
 const playfairDisplay = Playfair_Display({
@@ -71,6 +74,7 @@ const courierPrime = Courier_Prime({
   display: "swap",
   variable: "--font-courier",
   fallback: ["Courier New", "monospace"],
+  preload: false, // Retro theme code blocks only - reduces initial font download
 });
 
 const cormorantGaramond = Cormorant_Garamond({
@@ -79,6 +83,7 @@ const cormorantGaramond = Cormorant_Garamond({
   display: "swap",
   variable: "--font-cormorant",
   fallback: ["serif"],
+  preload: false, // Academic theme only - reduces initial font download
 });
 
 
