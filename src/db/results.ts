@@ -193,6 +193,7 @@ export async function createSRSReviewResult(
     category_breakdown: input.categoryBreakdown,
     question_ids: input.questionIds,
     computed_category_scores: input.categoryScores, // Pre-computed for analytics
+    session_type: "srs_review", // Explicit session classification for analytics
     synced: 0, // Will sync normally now
   };
 
@@ -263,7 +264,82 @@ export async function createTopicStudyResult(
     category_breakdown: input.categoryBreakdown,
     question_ids: input.questionIds,
     computed_category_scores: input.categoryScores, // Pre-computed for analytics
+    session_type: "topic_study", // Explicit session classification for analytics
     synced: 0, // Will sync normally
+  };
+
+  await db.results.add(result);
+  return result;
+}
+
+export interface CreateInterleavedResultInput {
+  userId: string;
+  /** The per-user SRS quiz ID (reused for FK compliance) */
+  srsQuizId: string;
+  answers: Record<string, string>;
+  flaggedQuestions: string[];
+  timeTakenSeconds: number;
+  /** Question IDs that were part of this session */
+  questionIds: string[];
+  /** Maps questionId → sourceQuizId for attribution */
+  sourceMap: Record<string, string>;
+  /** Pre-calculated score (percentage) */
+  score: number;
+  /** Pre-calculated category breakdown (percentages) */
+  categoryBreakdown: Record<string, number>;
+  /** Pre-calculated raw category scores for analytics */
+  categoryScores?: Record<string, { correct: number; total: number }>;
+}
+
+/**
+ * Persists an Interleaved Practice result.
+ *
+ * Like Topic Study, interleaved sessions aggregate questions from
+ * multiple quizzes. Uses the SRS quiz for FK compliance and stores
+ * source_map for question attribution.
+ */
+export async function createInterleavedResult(
+  input: CreateInterleavedResultInput,
+): Promise<Result> {
+  if (!input.userId) {
+    throw new Error("Cannot create result without a user context.");
+  }
+
+  if (!input.srsQuizId) {
+    throw new Error("srsQuizId is required for interleaved results.");
+  }
+
+  // Validate SRS quiz exists, is owned by user, and not soft-deleted
+  const quiz = await db.quizzes.get(input.srsQuizId);
+  if (!quiz || quiz.deleted_at) {
+    throw new Error("SRS quiz not found.");
+  }
+  if (quiz.user_id !== input.userId) {
+    throw new Error(
+      "Security mismatch: SRS quiz does not belong to the current user.",
+    );
+  }
+
+  if (!isSRSQuiz(quiz.id, input.userId)) {
+    throw new Error("Invalid srsQuizId: quiz is not an SRS quiz.");
+  }
+
+  const result: Result = {
+    id: generateUUID(),
+    quiz_id: input.srsQuizId, // Uses per-user SRS quiz for FK compliance
+    user_id: input.userId,
+    timestamp: Date.now(),
+    mode: "zen", // Interleaved practice uses zen mode
+    score: input.score,
+    time_taken_seconds: input.timeTakenSeconds,
+    answers: input.answers,
+    flagged_questions: input.flaggedQuestions,
+    category_breakdown: input.categoryBreakdown,
+    question_ids: input.questionIds,
+    computed_category_scores: input.categoryScores,
+    session_type: "interleaved", // Explicit session classification
+    source_map: input.sourceMap, // Question attribution
+    synced: 0,
   };
 
   await db.results.add(result);

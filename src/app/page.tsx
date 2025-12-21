@@ -10,6 +10,7 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { StatsBar } from "@/components/dashboard/StatsBar";
 import { QuizGrid } from "@/components/dashboard/QuizGrid";
 import { DueQuestionsCard } from "@/components/srs/DueQuestionsCard";
+import { InterleavedPracticeCard } from "@/components/dashboard/InterleavedPracticeCard";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { useToast } from "@/components/ui/Toast";
@@ -250,11 +251,13 @@ export default function DashboardPage(): React.ReactElement {
           )
         }
         srsSlot={
-          <DueQuestionsCard
-            dueCountsByBox={dueCountsByBox}
-            totalDue={totalDue}
-            className="mx-auto max-w-md"
-          />
+          <div className="mx-auto grid max-w-2xl gap-4 md:grid-cols-2">
+            <DueQuestionsCard
+              dueCountsByBox={dueCountsByBox}
+              totalDue={totalDue}
+            />
+            <InterleavedPracticeCard />
+          </div>
         }
         contentSlot={
           <div className="space-y-4">

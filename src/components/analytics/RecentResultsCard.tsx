@@ -83,7 +83,14 @@ export function RecentResultsCard({
                     {displayedResults.map((result) => {
                         const quiz = quizMap.get(result.quiz_id);
                         const isMissingCategory = quiz && !quiz.category;
-                        const quizTitle = quizTitles?.get(result.quiz_id) || "Unknown Quiz";
+                        // Use session_type for aggregated sessions, fall back to quiz title lookup
+                        const getQuizTitle = (): string => {
+                            if (result.session_type === "srs_review") return "SRS Review";
+                            if (result.session_type === "topic_study") return "Topic Study";
+                            if (result.session_type === "interleaved") return "Interleaved Practice";
+                            return quizTitles?.get(result.quiz_id) || "Unknown Quiz";
+                        };
+                        const quizTitle = getQuizTitle();
 
                         return (
                             <div key={result.id} className="relative">

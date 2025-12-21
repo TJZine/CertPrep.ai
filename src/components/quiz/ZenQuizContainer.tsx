@@ -26,8 +26,9 @@ import { useQuizSubmission } from "@/hooks/useQuizSubmission";
 import { clearSmartRoundState } from "@/lib/smartRoundStorage";
 import { clearSRSReviewState } from "@/lib/srsReviewStorage";
 import { clearTopicStudyState } from "@/lib/topicStudyStorage";
+import { clearInterleavedState } from "@/lib/interleavedStorage";
 import { updateSRSState } from "@/db/srs";
-import { createSRSReviewResult, createTopicStudyResult } from "@/db/results";
+import { createSRSReviewResult, createTopicStudyResult, createInterleavedResult } from "@/db/results";
 import { getOrCreateSRSQuiz } from "@/db/quizzes";
 import { calculatePercentage } from "@/lib/utils";
 import { useAuth } from "@/components/providers/AuthProvider";
@@ -42,6 +43,12 @@ interface ZenQuizContainerProps {
   isSRSReview?: boolean;
   /** When true, this is a Topic Study session (aggregates questions across quizzes). */
   isTopicStudy?: boolean;
+  /** When true, this is an Interleaved Practice session. */
+  isInterleaved?: boolean;
+  /** Maps questionId → sourceQuizId for interleaved sessions. */
+  interleavedSourceMap?: Map<string, string> | null;
+  /** Key mappings for answer translation in remixed interleaved sessions. */
+  interleavedKeyMappings?: Map<string, Record<string, string>> | null;
 }
 
 /**
@@ -52,6 +59,11 @@ export function ZenQuizContainer({
   isSmartRound = false,
   isSRSReview = false,
   isTopicStudy = false,
+  isInterleaved = false,
+  interleavedSourceMap = null,
+  // TODO: Will be used for answer translation when review is implemented
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  interleavedKeyMappings = null,
 }: ZenQuizContainerProps): React.ReactElement {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -259,9 +271,80 @@ export function ZenQuizContainer({
         return;
       }
 
+      // Handle Interleaved Practice session completion
+      if (isInterleaved && effectiveUserId) {
+        try {
+          const srsQuiz = await getOrCreateSRSQuiz(effectiveUserId);
+          const questionMap = new Map(questions.map((q) => [q.id, q]));
+          let correctCount = 0;
+          const categoryTotals: Record<string, { correct: number; total: number }> = {};
+          const answersRecord: Record<string, string> = {};
+          const actualQuestionIds: string[] = [];
+
+          answers.forEach((record, questionId) => {
+            answersRecord[questionId] = record.selectedAnswer;
+            const question = questionMap.get(questionId);
+            if (!question) return;
+
+            actualQuestionIds.push(questionId);
+            const category = question.category || "Uncategorized";
+            if (!categoryTotals[category]) {
+              categoryTotals[category] = { correct: 0, total: 0 };
+            }
+            categoryTotals[category].total += 1;
+
+            if (record.isCorrect) {
+              correctCount += 1;
+              categoryTotals[category].correct += 1;
+            }
+          });
+
+          const score = calculatePercentage(correctCount, answers.size);
+          const categoryBreakdown = Object.fromEntries(
+            Object.entries(categoryTotals).map(([category, { correct, total }]) => [
+              category,
+              calculatePercentage(correct, total),
+            ]),
+          );
+
+          // Convert sourceMap to plain object
+          // Note: Map.forEach iterates as (value, key), not (key, value)
+          const sourceMapObject: Record<string, string> = {};
+          interleavedSourceMap?.forEach((sourceQuizId, questionIdKey) => {
+            sourceMapObject[questionIdKey] = sourceQuizId;
+          });
+
+          const result = await createInterleavedResult({
+            userId: effectiveUserId,
+            srsQuizId: srsQuiz.id,
+            answers: answersRecord,
+            flaggedQuestions: Array.from(flaggedQuestions),
+            timeTakenSeconds,
+            questionIds: actualQuestionIds,
+            sourceMap: sourceMapObject,
+            score,
+            categoryBreakdown,
+            categoryScores: categoryTotals,
+          });
+
+          clearInterleavedState();
+          addToast("success", "Interleaved Practice complete! Great job.");
+          void sync().catch((syncErr) => {
+            console.warn("Background sync failed after Interleaved save:", syncErr);
+          });
+          router.push(`/results/${result.id}`);
+        } catch (err) {
+          console.error("Failed to save interleaved result:", err);
+          addToast("error", "Failed to save result. You can still continue studying.");
+          clearInterleavedState();
+          router.push("/interleaved");
+        }
+        return;
+      }
+
       await submitQuiz(timeTakenSeconds);
     },
-    [isSRSReview, isTopicStudy, effectiveUserId, answers, questions, flaggedQuestions, addToast, router, submitQuiz, sync],
+    [isSRSReview, isTopicStudy, isInterleaved, effectiveUserId, answers, questions, flaggedQuestions, interleavedSourceMap, addToast, router, submitQuiz, sync],
   );
 
   const retrySave = React.useCallback((): void => {
@@ -356,8 +439,13 @@ export function ZenQuizContainer({
       router.push("/analytics");
       return;
     }
+    if (isInterleaved) {
+      clearInterleavedState();
+      router.push("/interleaved");
+      return;
+    }
     router.push("/");
-  }, [resetSession, isSmartRound, isSRSReview, isTopicStudy, router]);
+  }, [resetSession, isSmartRound, isSRSReview, isTopicStudy, isInterleaved, router]);
 
   const isCurrentAnswerCorrect = React.useMemo(() => {
     if (!currentQuestion || !hasSubmitted) return false;

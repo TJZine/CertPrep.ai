@@ -1,3 +1,5 @@
+"use client";
+
 import * as React from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Brain, Clock, History, Trophy, Play, Shuffle } from "lucide-react";

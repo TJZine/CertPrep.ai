@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { logNetworkAwareSlowSync } from "@/lib/sync/syncLogging";
 import { safeMark, safeMeasure } from "@/lib/perfMarks";
 import { QUIZ_MODES, type QuizMode } from "@/types/quiz";
-import type { Result } from "@/types/result";
+import type { Result, SessionType } from "@/types/result";
 import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -38,6 +38,8 @@ const RemoteResultSchema = z.object({
   computed_category_scores: z.record(z.string(), z.object({ correct: z.number(), total: z.number() })).nullable().optional(),
   difficulty_ratings: z.record(z.string(), z.union([z.literal(1), z.literal(2), z.literal(3)])).nullable().optional(),
   time_per_question: z.record(z.string(), z.number()).nullable().optional(),
+  session_type: z.string().nullable().optional().transform(v => v as SessionType | undefined),
+  source_map: z.record(z.string(), z.string()).nullable().optional(),
   created_at: z.string(),
   updated_at: z.string(),
   deleted_at: z.string().nullable().optional(), // For cross-device deletion sync
@@ -293,7 +295,7 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
       const { data: remoteResults, error: fetchError } = await client
         .from("results")
         .select(
-          "id, quiz_id, timestamp, mode, score, time_taken_seconds, answers, flagged_questions, category_breakdown, question_ids, computed_category_scores, difficulty_ratings, time_per_question, created_at, updated_at, deleted_at",
+          "id, quiz_id, timestamp, mode, score, time_taken_seconds, answers, flagged_questions, category_breakdown, question_ids, computed_category_scores, difficulty_ratings, time_per_question, session_type, source_map, created_at, updated_at, deleted_at",
         )
         .eq("user_id", userId)
         .or(filter)
@@ -362,6 +364,8 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
           computed_category_scores: validResult.computed_category_scores || undefined,
           difficulty_ratings: validResult.difficulty_ratings || undefined,
           time_per_question: validResult.time_per_question || undefined,
+          session_type: validResult.session_type || undefined,
+          source_map: validResult.source_map || undefined,
           synced: 1,
         });
 
@@ -474,6 +478,8 @@ export function buildSyncPayload(batch: Result[], userId: string): Record<string
     computed_category_scores: r.computed_category_scores,
     difficulty_ratings: r.difficulty_ratings,
     time_per_question: r.time_per_question,
+    session_type: r.session_type,
+    source_map: r.source_map,
     // Only include deleted_at if set (prevents resurrecting remotely deleted records)
     ...(r.deleted_at && { deleted_at: new Date(r.deleted_at).toISOString() }),
   }));

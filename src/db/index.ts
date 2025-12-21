@@ -174,6 +174,11 @@ export class CertPrepDatabase extends Dexie {
         "id, user_id, created_at, deleted_at, *tags, quiz_hash, updated_at, [user_id+created_at], category, subcategory",
     });
 
+    // Version 14: Acknowledge new optional fields on Result type for Interleaved Practice.
+    // Fields: session_type, source_map (no index changes needed, they're optional metadata).
+    // This version bump ensures Dexie re-evaluates the schema after the type changed.
+    this.version(14).stores({});
+
     // Note: Quiz.category and Quiz.subcategory are now indexed as of version 13,
     // enabling optimized filtering by category in the library view.
 
