@@ -21,6 +21,7 @@ import {
   waitForDatabase,
   clearDatabase,
 } from "./helpers/db";
+import { E2E_TIMEOUTS } from "./helpers/timeouts";
 
 /**
  * Helper to select an answer option by its letter key.
@@ -95,7 +96,7 @@ test.describe("Offline Data Persistence", () => {
     // Navigate to quiz while online (page must load first)
     await page.goto(`/quiz/${quiz.id}/zen`);
     await expect(page.getByText("What is 2 + 2?")).toBeVisible({
-      timeout: 15000,
+      timeout: E2E_TIMEOUTS.LOADING,
     });
 
     // Go offline
@@ -400,7 +401,7 @@ test.describe("Sync Request Verification", () => {
         },
         {
           message: "Sync should complete: request made AND synced flag updated",
-          timeout: 20000,
+          timeout: E2E_TIMEOUTS.HYDRATION,
           intervals: [1000, 2000, 5000],
         },
       )

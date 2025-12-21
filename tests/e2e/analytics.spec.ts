@@ -1,6 +1,7 @@
 import { test, expect, TEST_QUIZ } from "./fixtures";
 import { seedAnalyticsData } from "./fixtures/analyticsData";
 import { waitForDatabase } from "./helpers/db";
+import { E2E_TIMEOUTS } from "./helpers/timeouts";
 import type { Page } from "@playwright/test";
 import type { Quiz } from "@/types/quiz";
 
@@ -26,7 +27,7 @@ async function setupAnalyticsWithData(
     // Wait for loading to finish
     await expect(
         page.getByText(/loading analytics|syncing/i).first(),
-    ).not.toBeVisible({ timeout: 15000 });
+    ).not.toBeVisible({ timeout: E2E_TIMEOUTS.LOADING });
 
     return quiz;
 }

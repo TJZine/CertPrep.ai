@@ -21,6 +21,18 @@ import { syncQuizzes } from "@/lib/sync/quizSyncManager";
 import { logger } from "@/lib/logger";
 
 /**
+ * Debounce delay before attempting quiz restoration.
+ * 
+ * useLiveQuery needs a brief moment to subscribe and return cached data
+ * after navigation. This prevents a race condition where we'd attempt
+ * restoration before Dexie has a chance to return the quiz from cache.
+ * 
+ * 500ms is empirically chosen to be long enough for subscription setup
+ * but short enough to not noticeably delay the UI.
+ */
+const DEXIE_SETTLE_DELAY_MS = 500;
+
+/**
  * Results page integrating analytics and review.
  */
 export default function ResultsPage(): React.ReactElement {
@@ -106,7 +118,7 @@ export default function ResultsPage(): React.ReactElement {
   const [initialLoadComplete, setInitialLoadComplete] = React.useState(false);
   React.useEffect(() => {
     // Give Dexie's useLiveQuery a moment to subscribe and return cached data
-    const timer = setTimeout((): void => setInitialLoadComplete(true), 500);
+    const timer = setTimeout((): void => setInitialLoadComplete(true), DEXIE_SETTLE_DELAY_MS);
     return (): void => clearTimeout(timer);
   }, []);
 
