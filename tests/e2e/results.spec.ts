@@ -3,9 +3,7 @@ import type { Page } from "@playwright/test";
 
 import { seedResult, createTestResult } from "./fixtures/analyticsData";
 import { waitForDatabase } from "./helpers/db";
-
-/** Max timeout for loading states to resolve */
-const LOADING_TIMEOUT = 15000;
+import { E2E_TIMEOUTS } from "./helpers/timeouts";
 
 /**
  * Reloads the page and waits for the IndexedDB database to be ready.
@@ -31,7 +29,7 @@ async function waitForLoadingToComplete(
 ): Promise<void> {
     await expect(
         page.getByText(pattern).first(),
-    ).not.toBeVisible({ timeout: LOADING_TIMEOUT });
+    ).not.toBeVisible({ timeout: E2E_TIMEOUTS.LOADING });
 }
 
 

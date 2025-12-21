@@ -618,7 +618,7 @@ export function ZenQuizContainer({
         onExit={handleExit}
         mode="zen"
       >
-        <div className="py-12 text-center">
+        <div className="py-12 text-center" aria-busy="true">
           <p className="text-muted-foreground">Initializing quiz session...</p>
         </div>
       </QuizLayout>

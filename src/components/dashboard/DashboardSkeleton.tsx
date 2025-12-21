@@ -176,7 +176,7 @@ function EmptyStateSkeleton(): React.ReactElement {
 /**
  * QuizGrid skeleton - grid of quiz card skeletons or empty state.
  * 
- * When count is 0's, we render the actual EmptyState structure with real text
+ * When count is 0, we render the actual EmptyState structure with real text
  * to optimize LCP. When count > 0, we render skeleton cards.
  */
 function QuizGridSkeleton({ count }: { count: number }): React.ReactElement {

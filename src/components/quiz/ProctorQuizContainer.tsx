@@ -216,7 +216,7 @@ export function ProctorQuizContainer({
         onExit={handleExit}
         mode="proctor"
       >
-        <div className="py-12 text-center">
+        <div className="py-12 text-center" aria-busy="true">
           <p className="text-muted-foreground">Initializing exam session...</p>
         </div>
       </QuizLayout>
