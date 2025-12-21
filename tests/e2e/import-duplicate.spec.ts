@@ -6,6 +6,7 @@
 
 import { test, expect, TEST_QUIZ } from "./fixtures";
 import { waitForDatabase, getAllQuizzes } from "./helpers/db";
+import { E2E_TIMEOUTS } from "./helpers/timeouts";
 
 test.describe("Import Duplicate Detection", () => {
     test.beforeEach(async ({ authenticatedPage: page, seedTestQuiz }) => {
@@ -20,7 +21,7 @@ test.describe("Import Duplicate Detection", () => {
     }) => {
         // Navigate to dashboard
         await page.goto("/");
-        await expect(page.getByText("Loading your quiz library...").first()).not.toBeVisible();
+        await expect(page.getByText("Loading your quiz library...").first()).not.toBeVisible({ timeout: E2E_TIMEOUTS.LOADING });
 
         // Open import modal
         await page.getByRole("button", { name: /import/i }).first().click();
@@ -48,23 +49,23 @@ test.describe("Import Duplicate Detection", () => {
         await expect(page.getByText(/validation passed/i)).toBeVisible();
 
         // Click Import button
-        await page.getByRole("button", { name: "Import Quiz" }).click();
+        await page.getByRole("dialog").getByRole("button", { name: "Import Quiz" }).click();
 
         // Should see duplicate warning
         await expect(page.getByText("Quiz Already Exists")).toBeVisible();
         await expect(page.getByText(/already exists with/i)).toBeVisible();
 
         // Should show action buttons
-        await expect(page.getByRole("button", { name: "Import as New" })).toBeVisible();
-        await expect(page.getByRole("button", { name: "Replace Existing" })).toBeVisible();
-        await expect(page.getByRole("button", { name: "Cancel" })).toBeVisible();
+        await expect(page.getByRole("alert").getByRole("button", { name: "Import as New" })).toBeVisible();
+        await expect(page.getByRole("alert").getByRole("button", { name: "Replace Existing" })).toBeVisible();
+        await expect(page.getByRole("alert").getByRole("button", { name: "Cancel" })).toBeVisible();
     });
 
     test("Import as New creates second quiz with same title", async ({
         authenticatedPage: page,
     }) => {
         await page.goto("/");
-        await expect(page.getByText("Loading your quiz library...").first()).not.toBeVisible();
+        await expect(page.getByText("Loading your quiz library...").first()).not.toBeVisible({ timeout: E2E_TIMEOUTS.LOADING });
 
         // Open import modal
         await page.getByRole("button", { name: /import/i }).first().click();
@@ -87,10 +88,10 @@ test.describe("Import Duplicate Detection", () => {
 
         await page.getByRole("textbox", { name: /quiz json/i }).fill(duplicateJson);
         await expect(page.getByText(/validation passed/i)).toBeVisible();
-        await page.getByRole("button", { name: "Import Quiz" }).click();
+        await page.getByRole("dialog").getByRole("button", { name: "Import Quiz" }).click();
 
         // Click "Import as New"
-        await page.getByRole("button", { name: "Import as New" }).click();
+        await page.getByRole("alert").getByRole("button", { name: "Import as New" }).click();
 
         // Modal should close and success toast should appear
         await expect(page.getByRole("dialog")).not.toBeVisible();
@@ -101,7 +102,7 @@ test.describe("Import Duplicate Detection", () => {
             return quizzes.filter(q => q.title === "Duplicate Test Quiz" && !q.deleted_at).length;
         }, {
             message: "Should have 2 quizzes with the same title",
-            timeout: 5000,
+            timeout: E2E_TIMEOUTS.LOADING,
         }).toBe(2);
     });
 
@@ -109,7 +110,7 @@ test.describe("Import Duplicate Detection", () => {
         authenticatedPage: page,
     }) => {
         await page.goto("/");
-        await expect(page.getByText("Loading your quiz library...").first()).not.toBeVisible();
+        await expect(page.getByText("Loading your quiz library...").first()).not.toBeVisible({ timeout: E2E_TIMEOUTS.LOADING });
 
         // Get original quiz count
         const originalQuizzes = await getAllQuizzes(page);
@@ -136,10 +137,10 @@ test.describe("Import Duplicate Detection", () => {
 
         await page.getByRole("textbox", { name: /quiz json/i }).fill(duplicateJson);
         await expect(page.getByText(/validation passed/i)).toBeVisible();
-        await page.getByRole("button", { name: "Import Quiz" }).click();
+        await page.getByRole("dialog").getByRole("button", { name: "Import Quiz" }).click();
 
         // Click "Replace Existing"
-        await page.getByRole("button", { name: "Replace Existing" }).click();
+        await page.getByRole("alert").getByRole("button", { name: "Replace Existing" }).click();
 
         // Modal should close and success toast should appear
         await expect(page.getByRole("dialog")).not.toBeVisible();
@@ -151,7 +152,7 @@ test.describe("Import Duplicate Detection", () => {
             return quizzes.filter(q => !q.deleted_at).length;
         }, {
             message: "Quiz count should be unchanged",
-            timeout: 5000,
+            timeout: E2E_TIMEOUTS.LOADING,
         }).toBe(originalCount);
 
         // Verify the quiz was updated with new content
@@ -161,7 +162,7 @@ test.describe("Import Duplicate Detection", () => {
             return updated?.questions[0]?.question;
         }, {
             message: "Quiz should have updated question",
-            timeout: 5000,
+            timeout: E2E_TIMEOUTS.LOADING,
         }).toBe("Replaced question?");
     });
 
@@ -169,7 +170,7 @@ test.describe("Import Duplicate Detection", () => {
         authenticatedPage: page,
     }) => {
         await page.goto("/");
-        await expect(page.getByText("Loading your quiz library...").first()).not.toBeVisible();
+        await expect(page.getByText("Loading your quiz library...").first()).not.toBeVisible({ timeout: E2E_TIMEOUTS.LOADING });
 
         // Get original quiz count
         const originalQuizzes = await getAllQuizzes(page);
@@ -196,17 +197,17 @@ test.describe("Import Duplicate Detection", () => {
 
         await page.getByRole("textbox", { name: /quiz json/i }).fill(duplicateJson);
         await expect(page.getByText(/validation passed/i)).toBeVisible();
-        await page.getByRole("button", { name: "Import Quiz" }).click();
+        await page.getByRole("dialog").getByRole("button", { name: "Import Quiz" }).click();
 
         // Click "Cancel"
-        await page.getByRole("button", { name: "Cancel" }).click();
+        await page.getByRole("alert").getByRole("button", { name: "Cancel" }).click();
 
         // Warning should dismiss but modal stays open
         await expect(page.getByText("Quiz Already Exists")).not.toBeVisible();
         await expect(page.getByRole("dialog")).toBeVisible();
 
         // Close modal
-        await page.getByRole("button", { name: "Cancel" }).last().click();
+        await page.getByRole("dialog").getByRole("button", { name: "Cancel" }).click();
 
         // Verify quiz count is unchanged
         await expect.poll(async () => {
@@ -214,7 +215,7 @@ test.describe("Import Duplicate Detection", () => {
             return quizzes.filter(q => !q.deleted_at).length;
         }, {
             message: "Quiz count should be unchanged after cancel",
-            timeout: 5000,
+            timeout: E2E_TIMEOUTS.LOADING,
         }).toBe(originalCount);
     });
 });
