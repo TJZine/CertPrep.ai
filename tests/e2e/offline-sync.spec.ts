@@ -137,7 +137,7 @@ test.describe("Offline Data Persistence", () => {
 
     await page.goto(`/quiz/${quiz.id}/zen`);
     await expect(page.getByText("What is 2 + 2?")).toBeVisible({
-      timeout: 15000,
+      timeout: E2E_TIMEOUTS.LOADING,
     });
 
     await setOffline(context, page, true);
@@ -187,7 +187,7 @@ test.describe("Offline Data Persistence", () => {
     for (let attempt = 0; attempt < 2; attempt++) {
       await page.goto(`/quiz/${quiz.id}/zen`);
       await expect(page.getByText("What is 2 + 2?")).toBeVisible({
-        timeout: 15000,
+        timeout: E2E_TIMEOUTS.LOADING,
       });
 
       await setOffline(context, page, true);
@@ -257,7 +257,7 @@ test.describe("Offline Mode Behavior", () => {
     await expect(page.getByRole("heading", { level: 1 })).toContainText(
       quiz.title,
       {
-        timeout: 15000,
+        timeout: E2E_TIMEOUTS.LOADING,
       },
     );
 
@@ -288,7 +288,7 @@ test.describe("Offline Mode Behavior", () => {
     // Load quiz page while online
     await page.goto(`/quiz/${quiz.id}/zen`);
     await expect(page.getByText("What is 2 + 2?")).toBeVisible({
-      timeout: 15000,
+      timeout: E2E_TIMEOUTS.LOADING,
     });
 
     // Go offline
@@ -320,7 +320,7 @@ test.describe("Offline Mode Behavior", () => {
     // Load the quiz
     await page.goto(`/quiz/${quiz.id}/zen`);
     await expect(page.getByText("What is 2 + 2?")).toBeVisible({
-      timeout: 15000,
+      timeout: E2E_TIMEOUTS.LOADING,
     });
 
     // Go offline
@@ -354,7 +354,7 @@ test.describe("Sync Request Verification", () => {
 
     await page.goto(`/quiz/${quiz.id}/zen`);
     await expect(page.getByText("What is 2 + 2?")).toBeVisible({
-      timeout: 15000,
+      timeout: E2E_TIMEOUTS.LOADING,
     });
 
     await setOffline(context, page, true);

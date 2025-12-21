@@ -43,7 +43,7 @@ test.describe("Analytics Page", () => {
             // Wait for loading to finish
             await expect(
                 page.getByText(/loading analytics|syncing/i).first(),
-            ).not.toBeVisible({ timeout: 15000 });
+            ).not.toBeVisible({ timeout: E2E_TIMEOUTS.LOADING });
 
             // Verify empty state message
             await expect(page.getByRole("heading", { name: "No Data Yet" })).toBeVisible();
