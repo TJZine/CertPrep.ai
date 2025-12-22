@@ -10,7 +10,7 @@ import { ExamReadinessCard } from "@/components/analytics/ExamReadinessCard";
 import { StreakCard } from "@/components/analytics/StreakCard";
 import { RetryComparisonCard } from "@/components/analytics/RetryComparisonCard";
 import { TopicHeatmap } from "@/components/analytics/TopicHeatmap";
-import { AnalyticsSkeleton, AnalyticsOverviewSkeleton } from "@/components/analytics/AnalyticsSkeleton";
+import { AnalyticsSkeleton } from "@/components/analytics/AnalyticsSkeleton";
 import { EmptyState } from "@/components/common/EmptyState";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -24,7 +24,7 @@ import { useAnalyticsStats } from "@/hooks/useAnalyticsStats";
 import { useAdvancedAnalytics } from "@/hooks/useAdvancedAnalytics";
 import { useCategoryTrends } from "@/hooks/useCategoryTrends";
 import { useSync } from "@/hooks/useSync";
-import { getOverallStats, type OverallStats } from "@/db/results";
+import { type OverallStats } from "@/db/results";
 import { BarChart3, Plus, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
@@ -94,17 +94,15 @@ export default function AnalyticsPage(): React.ReactElement {
   const { isSyncing, hasInitialSyncCompleted } = useSync();
 
   const { isInitialized, error: dbError } = useInitializeDatabase();
-  const { results, isLoading: resultsLoading } = useResults(
-    effectiveUserId ?? undefined,
-  );
-  const { quizzes, isLoading: quizzesLoading, error: quizzesError } = useQuizzes(
-    effectiveUserId ?? undefined,
-  );
-
-  const [overallStats, setOverallStats] = React.useState<OverallStats | null>(
-    null,
-  );
-  const [statsError, setStatsError] = React.useState<string | null>(null);
+  const {
+    results,
+    isLoading: resultsLoading,
+  } = useResults(effectiveUserId ?? undefined);
+  const {
+    quizzes,
+    isLoading: quizzesLoading,
+    error: quizzesError,
+  } = useQuizzes(effectiveUserId ?? undefined, true);
 
   // Date range filter state
   const [dateRange, setDateRange] = React.useState<DateRange>("all");
@@ -159,48 +157,6 @@ export default function AnalyticsPage(): React.ReactElement {
     return labels[dateRange];
   }, [dateRange]);
 
-  React.useEffect((): void | (() => void) => {
-    if (!isInitialized) return undefined;
-
-    let isMounted = true;
-
-    // Debounce the stats calculation to prevent UI freezing during rapid updates (e.g., syncing)
-    const timeoutId = setTimeout(() => {
-      const loadStats = async (): Promise<void> => {
-        try {
-          // Overall stats should probably reflect the filter too?
-          // getOverallStats is likely a DB call.
-          // For now, let's keep overallStats as "All Time" summary or we'd need to refactor getOverallStats to accept a date range.
-          // Given the UI placement (top), overall stats usually implies "Lifetime Stats".
-          // Let's keep it as is for now.
-          const stats = effectiveUserId
-            ? await getOverallStats(effectiveUserId)
-            : null;
-          if (isMounted) {
-            setOverallStats(stats);
-            setStatsError(null);
-          }
-        } catch (error) {
-          console.error("Failed to load overall stats", error);
-          if (isMounted) {
-            setStatsError("Unable to load overall stats right now.");
-          }
-        }
-      };
-
-      loadStats();
-    }, 500);
-
-    return (): void => {
-      isMounted = false;
-      clearTimeout(timeoutId);
-    };
-    // Use results.length to trigger reload when results change without causing
-    // infinite loops from referential identity changes during sync operations.
-  }, [effectiveUserId, isInitialized, results.length]);
-
-
-
   const quizTitles = React.useMemo(() => {
     const map = new Map<string, string>();
     quizzes.forEach((q) =>
@@ -215,9 +171,58 @@ export default function AnalyticsPage(): React.ReactElement {
     isLoading: statsLoading,
   } = useAnalyticsStats(filteredResults, quizzes, daysToTrack);
 
-  // Advanced analytics (Streaks, Readiness) should usually reflect "current state based on history"
-  // Keep using full 'results' for accurate streaks and readiness
-  const advancedAnalytics = useAdvancedAnalytics(results, quizzes);
+  // Advanced analytics split:
+  // 1. All-time for Streaks (streaks rely on continuous history)
+  const allTimeAnalytics = useAdvancedAnalytics(results, quizzes);
+
+  // 2. Filtered for Performance/Readiness (reflects selected time range)
+  const filteredAnalytics = useAdvancedAnalytics(filteredResults, quizzes);
+
+  // Calculate Overall Stats client-side to respect date filters.
+  // This replaces the getOverallStats DB call which was always all-time.
+  const clientOverallStats = React.useMemo((): OverallStats => {
+    const totalAttempts = filteredResults.length;
+    const totalStudyTime = filteredResults.reduce((acc, r) => acc + r.time_taken_seconds, 0);
+
+    // Calculate average score
+    const totalScore = filteredResults.reduce((acc, r) => acc + r.score, 0);
+    const averageScore = totalAttempts > 0 ? Math.round(totalScore / totalAttempts) : 0;
+
+    // Calculate weakest categories using weighted mean.
+    // We weight each session's category score by the number of questions in that category,
+    // so larger sample sizes have more influence. This approximates pooled-totals behavior
+    // while still supporting date filtering (which raw pooled-totals can't do client-side
+    // without re-grading all questions).
+    const categorySums = new Map<string, { weightedSum: number; totalWeight: number }>();
+
+    filteredResults.forEach((r) => {
+      if (!r.category_breakdown) return;
+      Object.entries(r.category_breakdown).forEach(([cat, score]) => {
+        // Use question count as weight if available, otherwise default to 1
+        const weight = r.computed_category_scores?.[cat]?.total ?? 1;
+        const current = categorySums.get(cat) || { weightedSum: 0, totalWeight: 0 };
+        current.weightedSum += score * weight;
+        current.totalWeight += weight;
+        categorySums.set(cat, current);
+      });
+    });
+
+    const weakestCategories = Array.from(categorySums.entries())
+      .map(([category, { weightedSum, totalWeight }]) => ({
+        category,
+        avgScore: totalWeight > 0 ? Math.round(weightedSum / totalWeight) : 0,
+      }))
+      .sort((a, b) => a.avgScore - b.avgScore)
+      .slice(0, 5);
+
+    return {
+      totalQuizzes: quizzes.length,
+      totalAttempts,
+      averageScore,
+      totalStudyTime,
+      weakestCategories,
+    };
+  }, [filteredResults, quizzes.length]);
 
   // Show loading while initializing database or during hydration (effectiveUserId is null).
   // Once hydrated (effectiveUserId assigned for guest or authenticated user), wait for data to load.
@@ -304,28 +309,22 @@ export default function AnalyticsPage(): React.ReactElement {
         <DateRangeFilter value={dateRange} onChange={handleDateRangeChange} />
       </div>
 
-      {statsError && (
-        <p className="mb-4 text-sm text-destructive">
-          {statsError}
-        </p>
-      )}
-
-      {/* Hero: Exam Readiness */}
+      {/* Hero: Exam Readiness (Filtered) */}
       <div className="mb-8">
         <ExamReadinessCard
-          readinessScore={advancedAnalytics.readinessScore}
-          readinessConfidence={advancedAnalytics.readinessConfidence}
-          categoryReadiness={advancedAnalytics.categoryReadiness}
+          readinessScore={filteredAnalytics.readinessScore}
+          readinessConfidence={filteredAnalytics.readinessConfidence}
+          categoryReadiness={filteredAnalytics.categoryReadiness}
         />
       </div>
 
-      {/* Streaks (includes 7-day study activity) */}
+      {/* Streaks (All-time streaks, Filtered study time) */}
       <div className="mb-8">
         <StreakCard
-          currentStreak={advancedAnalytics.currentStreak}
-          longestStreak={advancedAnalytics.longestStreak}
-          consistencyScore={advancedAnalytics.consistencyScore}
-          last7DaysActivity={advancedAnalytics.last7DaysActivity}
+          currentStreak={allTimeAnalytics.currentStreak}
+          longestStreak={allTimeAnalytics.longestStreak}
+          consistencyScore={allTimeAnalytics.consistencyScore}
+          last7DaysActivity={allTimeAnalytics.last7DaysActivity}
           dailyStudyTime={dailyStudyTime}
           studyTimeRangeLabel={dateRangeLabel}
         />
@@ -333,11 +332,7 @@ export default function AnalyticsPage(): React.ReactElement {
 
       {/* AnalyticsOverview slot - always rendered with min-h to prevent CLS */}
       <div className="mb-8 min-h-[88px]">
-        {overallStats ? (
-          <AnalyticsOverview stats={overallStats} />
-        ) : (
-          <AnalyticsOverviewSkeleton />
-        )}
+        <AnalyticsOverview stats={clientOverallStats} />
       </div>
 
       {/* Performance History Chart (full width) */}
@@ -359,17 +354,20 @@ export default function AnalyticsPage(): React.ReactElement {
         <TopicHeatmap results={filteredResults} quizzes={quizzes} userId={effectiveUserId ?? undefined} />
       </div>
 
-      {/* Category Trends Over Time */}
+      {/* Category Trends Over Time - Uses all-time results intentionally.
+          The trend line's value is showing long-term trajectory; filtering to
+          short ranges would eliminate the historical context that makes trends
+          meaningful. Users see dates on the X-axis for reference. */}
       <div className="min-h-[380px]">
-        <CategoryTrendChartSection results={filteredResults} />
+        <CategoryTrendChartSection results={results} />
       </div>
 
-      {/* Retry Comparison */}
+      {/* Retry Comparison (Filtered) */}
       <div className="mb-8">
         <RetryComparisonCard
-          firstAttemptAvg={advancedAnalytics.firstAttemptAvg}
-          retryAvg={advancedAnalytics.retryAvg}
-          avgImprovement={advancedAnalytics.avgImprovement}
+          firstAttemptAvg={filteredAnalytics.firstAttemptAvg}
+          retryAvg={filteredAnalytics.retryAvg}
+          avgImprovement={filteredAnalytics.avgImprovement}
         />
       </div>
     </div>

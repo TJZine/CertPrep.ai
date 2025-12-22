@@ -99,7 +99,7 @@ FROM (
     SELECT 
         r2.id,
         (
-            SELECT jsonb_object_agg(agg.new_category, jsonb_build_object('correct', agg.correct_sum, 'total', agg.total_sum))
+            SELECT jsonb_object_agg(agg.new_category, COALESCE(agg.avg_percentage, 0))
             FROM (
                 SELECT
                     CASE key
@@ -119,6 +119,7 @@ FROM (
                         -- Property & Casualty
                         WHEN 'Property Basics' THEN 'Property and Casualty Insurance Basics'
                         WHEN 'Liability Basics' THEN 'Property and Casualty Insurance Basics'
+                        WHEN 'Liability Insurance' THEN 'Property and Casualty Insurance Basics'
                         WHEN 'Contract Law' THEN 'Property and Casualty Insurance Basics'
                         WHEN 'Property & Casualty Basics' THEN 'Property and Casualty Insurance Basics'
                         WHEN 'Property & Liability Basics' THEN 'Property and Casualty Insurance Basics'
@@ -145,8 +146,18 @@ FROM (
                         -- Keep already-standardized or unknown keys
                         ELSE key
                     END AS new_category,
-                    SUM((value->>'correct')::int) AS correct_sum,
-                    SUM((value->>'total')::int) AS total_sum
+                    -- category_breakdown values are numeric percentages (0-100)
+                    AVG(
+                        CASE 
+                            -- If it is already a number (pristine data)
+                            WHEN jsonb_typeof(value) = 'number' THEN (value)::numeric
+                            -- If it was converted to an object by previous bad migration
+                            WHEN jsonb_typeof(value) = 'object' AND value ? 'correct' AND value ? 'total' THEN
+                                ROUND(((value->>'correct')::numeric / NULLIF((value->>'total')::numeric, 0)) * 100)
+                            -- Fallback for bad tokens or nulls
+                            ELSE 0 
+                        END
+                    ) AS avg_percentage
                 FROM jsonb_each(r2.category_breakdown)
                 GROUP BY 1
             ) agg

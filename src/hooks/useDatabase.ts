@@ -90,35 +90,44 @@ export function useInitializeDatabase(): InitializationState {
 
 /**
  * Retrieves all quizzes (user-owned and public) with live updates.
+ *
+ * @param userId - The user ID to fetch quizzes for
+ * @param includeHidden - If true, includes SRS quizzes (normally hidden from library).
+ *                        Default: false. Used by analytics which needs all quiz data.
  */
-export function useQuizzes(userId: string | undefined): UseQuizzesResponse {
+export function useQuizzes(
+  userId: string | undefined,
+  includeHidden: boolean = false
+): UseQuizzesResponse {
   const [error, setError] = useState<Error | null>(null);
   const quizzes = useLiveQuery(async () => {
     if (!userId) {
-      setError(null);
       return [];
     }
+
     try {
       // Only query for the user's own quizzes.
       // NIL_UUID (orphaned/system data) should not be mixed into the personal library.
-      const results = await db.quizzes
+      let collection = db.quizzes
         .where("user_id")
         .equals(userId)
-        .filter((quiz) => !quiz.deleted_at && !isSRSQuiz(quiz))
-        .toArray();
+        .filter((quiz) => !quiz.deleted_at);
+
+      if (!includeHidden) {
+        collection = collection.filter((quiz) => !isSRSQuiz(quiz));
+      }
+
+      const results = await collection.toArray();
 
       // Stable sort: Newest created first -> Alphabetical by title
       setError(null);
       return sortQuizzesByNewest(results);
-    } catch (err) {
-      const normalizedError =
-        err instanceof Error
-          ? err
-          : new Error("Failed to load quizzes.");
+    } catch (e) {
+      const normalizedError = e instanceof Error ? e : new Error(String(e));
       setError(normalizedError);
       return [];
     }
-  }, [userId]);
+  }, [userId, includeHidden]);
 
   return {
     quizzes: quizzes ?? [],
