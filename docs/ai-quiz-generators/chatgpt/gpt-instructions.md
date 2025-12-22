@@ -52,6 +52,10 @@ Output quizzes in this exact JSON structure:
 | questions   | ✓           | Array of 1+ questions                           |
 | tags        | Optional    | Searchable keywords                             |
 
+## Category Constraints
+
+If user provides category restrictions, use ONLY those exact categories. Add sub-topics to `tags`.
+
 ## CRAFT Framework (Every Question)
 
 **C**lear - Unambiguous, grammatically correct  

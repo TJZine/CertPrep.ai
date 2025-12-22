@@ -91,6 +91,33 @@ All generators produce JSON compatible with CertPrep.ai import:
 
 ---
 
+## 🎯 Using Category Constraints
+
+To improve analytics grouping and ensure generated questions align with official exam domains, use the **"Align with Your Exam"** feature on the [Create page](https://cert-prep-ai.vercel.app/create).
+
+### How It Works
+
+1. Go to the Create page and expand "Align with Your Exam"
+2. Select your certification exam preset (or enter custom categories)
+3. Copy the generated prompt modifier
+4. Paste it into your AI prompt before your source material
+
+### Example Modifier
+
+```text
+IMPORTANT: For the "category" field on each question, use ONLY one of these exact values:
+
+- Domain 1: Design Secure Architectures
+- Domain 2: Design Resilient Architectures
+...
+
+Do not invent new categories. Match each question to the most appropriate category above.
+```
+
+This ensures all generated questions use consistent category names that match your exam blueprint, improving your Topic Heatmap analytics.
+
+---
+
 ## 🛠️ Customizing for Your Needs
 
 ### Creating Domain-Specific Variants
