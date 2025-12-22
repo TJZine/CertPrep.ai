@@ -35,7 +35,7 @@ export interface Result {
   timestamp: number;
   /** Mode the quiz was taken in (e.g., "zen", "proctor"). */
   mode: QuizMode;
-  /** Raw score (number of correct answers). */
+  /** Score as a percentage (0-100). Calculated from Math.round((correct/total) * 100). */
   score: number;
   /** Total duration of the session in seconds. */
   time_taken_seconds: number;

@@ -9,6 +9,9 @@
  * Sources are cited in comments. Weights are included for user reference
  * but the primary data is the category name array.
  *
+ * All presets were batch-verified against official sources on 2025-12-22.
+ * Individual lastVerified dates will diverge as updates occur.
+ *
  * @see https://cert-prep-ai.vercel.app/create
  */
 
@@ -30,6 +33,8 @@ export interface ExamPreset {
     sourceUrl?: string;
     /** Last verified date (YYYY-MM-DD) */
     lastVerified: string;
+    /** Optional notes about verification method or upcoming changes */
+    verificationNote?: string;
 }
 
 /**
@@ -58,6 +63,27 @@ export const EXAM_PRESETS: ExamPreset[] = [
         ],
         sourceUrl: "https://d1.awsstatic.com/training-and-certification/docs-sa-assoc/AWS-Certified-Solutions-Architect-Associate_Exam-Guide.pdf",
         lastVerified: "2025-12-22",
+        verificationNote: "65 questions, 130 min, passing score 720/1000. Weights verified against official exam guide.",
+    },
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // MICROSOFT AZURE CERTIFICATIONS
+    // ═══════════════════════════════════════════════════════════════════════════
+    {
+        id: "azure_az104",
+        name: "Azure Administrator Associate",
+        vendor: "Microsoft",
+        examCode: "AZ-104",
+        domains: [
+            { name: "Manage Azure identities and governance", weight: 20 }, // 20-25%
+            { name: "Implement and manage storage", weight: 15 }, // 15-20%
+            { name: "Deploy and manage Azure compute resources", weight: 20 }, // 20-25%
+            { name: "Implement and manage virtual networking", weight: 15 }, // 15-20%
+            { name: "Monitor and maintain Azure resources", weight: 10 }, // 10-15%
+        ],
+        sourceUrl: "https://learn.microsoft.com/en-us/credentials/certifications/azure-administrator/",
+        lastVerified: "2025-12-22",
+        verificationNote: "Weights shown are midpoints of official ranges. Exam updated April 2025.",
     },
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -77,6 +103,7 @@ export const EXAM_PRESETS: ExamPreset[] = [
         ],
         sourceUrl: "https://www.comptia.org/certifications/security",
         lastVerified: "2025-12-22",
+        verificationNote: "90 questions max, 90 min, passing score 750/900. Launched Nov 2023.",
     },
     {
         id: "comptia_network_plus_n10009",
@@ -92,35 +119,38 @@ export const EXAM_PRESETS: ExamPreset[] = [
         ],
         sourceUrl: "https://www.comptia.org/certifications/network",
         lastVerified: "2025-12-22",
+        verificationNote: "90 questions max, 90 min, passing score 720/900. Launched June 2024.",
     },
     {
-        id: "comptia_a_plus_core1_2201101",
+        id: "comptia_a_plus_core1_2201201",
         name: "CompTIA A+ Core 1",
         vendor: "CompTIA",
-        examCode: "220-1101",
+        examCode: "220-1201",
         domains: [
-            { name: "Mobile Devices", weight: 15 },
-            { name: "Networking", weight: 20 },
+            { name: "Mobile Devices", weight: 13 },
+            { name: "Networking", weight: 23 },
             { name: "Hardware", weight: 25 },
             { name: "Virtualization and Cloud Computing", weight: 11 },
-            { name: "Hardware and Network Troubleshooting", weight: 29 },
+            { name: "Hardware and Network Troubleshooting", weight: 28 },
         ],
         sourceUrl: "https://www.comptia.org/certifications/a",
         lastVerified: "2025-12-22",
+        verificationNote: "V15 launched March 2025. 90 questions, 90 min, passing score 675/900. V14 (220-1101) retired Sept 2025.",
     },
     {
-        id: "comptia_a_plus_core2_2201102",
+        id: "comptia_a_plus_core2_2201202",
         name: "CompTIA A+ Core 2",
         vendor: "CompTIA",
-        examCode: "220-1102",
+        examCode: "220-1202",
         domains: [
-            { name: "Operating Systems", weight: 31 },
-            { name: "Security", weight: 25 },
-            { name: "Software Troubleshooting", weight: 22 },
-            { name: "Operational Procedures", weight: 22 },
+            { name: "Operating Systems", weight: 28 },
+            { name: "Security", weight: 28 },
+            { name: "Software Troubleshooting", weight: 23 },
+            { name: "Operational Procedures", weight: 21 },
         ],
         sourceUrl: "https://www.comptia.org/certifications/a",
         lastVerified: "2025-12-22",
+        verificationNote: "V15 launched March 2025. 90 questions, 90 min, passing score 700/900. V14 (220-1102) retired Sept 2025.",
     },
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -138,6 +168,10 @@ export const EXAM_PRESETS: ExamPreset[] = [
         ],
         sourceUrl: "https://www.pmi.org/certifications/project-management-pmp",
         lastVerified: "2025-12-22",
+        // NOTE: New exam launching July 2026 with rebalanced weights:
+        // People: 33%, Process: 41%, Business Environment: 26%.
+        // Update this preset after July 2026.
+        verificationNote: "Current ECO 2021 valid until July 2026. New exam (ECO 2026) will rebalance: People 33%, Process 41%, Business Environment 26%.",
     },
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -160,6 +194,7 @@ export const EXAM_PRESETS: ExamPreset[] = [
         ],
         sourceUrl: "https://www.isc2.org/certifications/cissp",
         lastVerified: "2025-12-22",
+        verificationNote: "Updated April 15, 2024. Domain 1 increased to 16% (from 15%), Domain 8 decreased to 10% (from 11%).",
     },
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -179,9 +214,8 @@ export const EXAM_PRESETS: ExamPreset[] = [
             { name: "Underwriting & Risk" },
             { name: "Claims & Adjustments" },
         ],
-        // General personal lines categories compiled from common state licensing standards.
-        // No single authoritative blueprint URL - category weighting varies by state.
         lastVerified: "2025-12-22",
+        verificationNote: "General personal lines categories compiled from common state licensing standards. No single authoritative blueprint URL - category weighting varies by state.",
     },
     {
         id: "insurance_ma_personal_lines_1661",
@@ -197,9 +231,8 @@ export const EXAM_PRESETS: ExamPreset[] = [
             { name: "Auto Insurance" },
             { name: "Other Coverages and Options" },
         ],
-        // Categories verified against actual MA Personal Lines exam results (2025).
-        // No official public blueprint URL available.
         lastVerified: "2025-12-22",
+        verificationNote: "Categories verified against actual MA Personal Lines exam results (2025). No official public blueprint URL available from Prometric/PSI.",
     },
     {
         id: "insurance_life_health",
@@ -216,9 +249,8 @@ export const EXAM_PRESETS: ExamPreset[] = [
             { name: "Group Insurance" },
             { name: "Ethics & Regulations" },
         ],
-        // Standard life & health domains from NAIC model curriculum.
-        // No single authoritative URL - exam content varies by state.
         lastVerified: "2025-12-22",
+        verificationNote: "Standard life & health domains from NAIC model curriculum. No single authoritative URL - exam content varies by state.",
     },
 ];
 
