@@ -67,7 +67,7 @@
     "@typescript-eslint/parser": "^8.48.0",
     "@vitest/coverage-v8": "^4.0.14",
     "autoprefixer": "^10.4.20",
-    "baseline-browser-mapping": "^2.9.6",
+    "baseline-browser-mapping": "^2.9.11",
     "eslint": "^9.39.1",
     "eslint-config-next": "16.0.7",
     "fake-indexeddb": "^6.2.5",
