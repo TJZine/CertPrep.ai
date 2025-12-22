@@ -16,14 +16,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Import Duplicate Detection**: Warning when importing a quiz with a matching title, with options to "Import as New" or "Replace Existing".
 - **Session Type Classification**: Explicit `session_type` field (`standard`, `smart_round`, `srs_review`, `topic_study`, `interleaved`) for analytics identification.
 - **Source Map Tracking**: `source_map` field on aggregated results enables "this question came from Quiz X" attribution in results review.
+- **Create Your Own Tests Page**: New `/create` page with step-by-step guide for AI-powered quiz generation, including templates for 4 approaches (study material, style matching, question remix, answer key conversion).
+- **Exam Category Alignment**: Interactive preset selector for aligning AI-generated categories with official exam blueprints (AWS SAA, CompTIA Security+, PMP, CISSP, etc.) to improve Topic Heatmap analytics.
+- **AI Quiz Generator Documentation**: Comprehensive prompts and configurations for Gemini Gems and ChatGPT GPTs in `docs/ai-quiz-generators/`.
+- **Gemini & OpenAI Brand Icons**: SVG icon components with `currentColor` theming for AI tool attribution.
 - **E2E Timeout Constants**: Standardized timeout helpers in `tests/e2e/helpers/timeouts.ts` for consistent CI reliability.
 - **Sentry Lazy Loading**: Replay integration now lazy-loaded after first user interaction to reduce initial bundle by ~150KB.
+- **`useCopyToClipboard` Hook**: Shared clipboard hook with modern Clipboard API and deprecated `execCommand` fallback.
 
 ### Changed
 
 - **Quiz Schema Validation**: Added maximum of 8 options per question for schema validation.
 - **Results Display**: Aggregated sessions now show source quiz attribution and category breakdown.
 - **Settings Navigation**: Back button now returns to entry point (dashboard or results page) based on context.
+- **Test Library Structure**: Reorganized `public/tests/` to use lowercase, hyphenated paths (e.g., `insurance/ma-personal-lines/practice-01.json`).
+- **Aggregated Results**: Hide attempt history timeline for aggregate sessions (SRS/Topic/Interleaved) since each session has a unique question set.
 
 ### Fixed
 

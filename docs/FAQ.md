@@ -151,6 +151,19 @@ See [AI Quiz Generators](/docs/ai-quiz-generators/README.md) for detailed prompt
 
 ---
 
+## How do I align categories with my certification exam?
+
+The **Create page** includes an **Exam Alignment** section to help you:
+
+1. Visit [/create](https://cert-prep-ai.vercel.app/create)
+2. Expand "🎯 Align with Your Exam"
+3. Select your certification (AWS SAA, CompTIA Security+, PMP, CISSP, etc.)
+4. Copy the generated prompt modifier into your AI tool
+
+Using official exam domains as categories improves your Topic Heatmap analytics, making it easier to identify weak areas that match your actual test blueprint.
+
+---
+
 ## What is Quiz Remix (Shuffle)?
 
 Quiz Remix randomizes question and answer order for a fresh experience:

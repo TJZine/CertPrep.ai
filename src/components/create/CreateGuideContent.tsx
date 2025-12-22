@@ -24,6 +24,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { GeminiIcon } from "@/components/icons/GeminiIcon";
 import { OpenAIIcon } from "@/components/icons/OpenAIIcon";
+import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 import {
     EXAM_PRESETS,
     generatePromptModifier,
@@ -129,30 +130,12 @@ const TIPS = [
 ];
 
 function CopyButton({ text }: { text: string }): React.ReactElement {
-    const [copied, setCopied] = React.useState(false);
-
-    const handleCopy = async (): Promise<void> => {
-        try {
-            await navigator.clipboard.writeText(text);
-            setCopied(true);
-            setTimeout(() => setCopied(false), 1500);
-        } catch {
-            // Fallback for older browsers
-            const textarea = document.createElement("textarea");
-            textarea.value = text;
-            document.body.appendChild(textarea);
-            textarea.select();
-            document.execCommand("copy");
-            document.body.removeChild(textarea);
-            setCopied(true);
-            setTimeout(() => setCopied(false), 1500);
-        }
-    };
+    const { copied, copyToClipboard } = useCopyToClipboard();
 
     return (
         <button
             type="button"
-            onClick={handleCopy}
+            onClick={() => copyToClipboard(text)}
             className={cn(
                 "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-all",
                 "bg-primary/10 text-primary hover:bg-primary/20",
@@ -252,7 +235,7 @@ function Collapsible({
 function ExamAlignmentSection(): React.ReactElement {
     const [selectedPreset, setSelectedPreset] = React.useState<string | null>(null);
     const [customCategories, setCustomCategories] = React.useState("");
-    const [copied, setCopied] = React.useState(false);
+    const { copied, copyToClipboard } = useCopyToClipboard();
 
     // Get categories from selected preset or custom input
     const categories = React.useMemo(() => {
@@ -270,25 +253,6 @@ function ExamAlignmentSection(): React.ReactElement {
     }, [selectedPreset, customCategories]);
 
     const promptModifier = generatePromptModifier(categories);
-
-    const handleCopy = async (): Promise<void> => {
-        if (!promptModifier) return;
-        try {
-            await navigator.clipboard.writeText(promptModifier);
-            setCopied(true);
-            setTimeout(() => setCopied(false), 1500);
-        } catch {
-            // Fallback
-            const textarea = document.createElement("textarea");
-            textarea.value = promptModifier;
-            document.body.appendChild(textarea);
-            textarea.select();
-            document.execCommand("copy");
-            document.body.removeChild(textarea);
-            setCopied(true);
-            setTimeout(() => setCopied(false), 1500);
-        }
-    };
 
     // Group presets by vendor for better organization
     const groupedPresets = React.useMemo(() => {
@@ -434,7 +398,7 @@ function ExamAlignmentSection(): React.ReactElement {
                                 <p className="text-sm font-medium">Copy this into your AI prompt:</p>
                                 <button
                                     type="button"
-                                    onClick={handleCopy}
+                                    onClick={() => copyToClipboard(promptModifier)}
                                     className={cn(
                                         "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-all",
                                         "bg-primary/10 text-primary hover:bg-primary/20",

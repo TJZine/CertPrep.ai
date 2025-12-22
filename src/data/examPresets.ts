@@ -57,7 +57,7 @@ export const EXAM_PRESETS: ExamPreset[] = [
             { name: "Domain 4: Design Cost-Optimized Architectures", weight: 20 },
         ],
         sourceUrl: "https://d1.awsstatic.com/training-and-certification/docs-sa-assoc/AWS-Certified-Solutions-Architect-Associate_Exam-Guide.pdf",
-        lastVerified: "2024-12-22",
+        lastVerified: "2025-12-22",
     },
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -76,7 +76,7 @@ export const EXAM_PRESETS: ExamPreset[] = [
             { name: "Security Program Management and Oversight", weight: 20 },
         ],
         sourceUrl: "https://www.comptia.org/certifications/security",
-        lastVerified: "2024-12-22",
+        lastVerified: "2025-12-22",
     },
     {
         id: "comptia_network_plus_n10009",
@@ -91,7 +91,7 @@ export const EXAM_PRESETS: ExamPreset[] = [
             { name: "Network Troubleshooting", weight: 24 },
         ],
         sourceUrl: "https://www.comptia.org/certifications/network",
-        lastVerified: "2024-12-22",
+        lastVerified: "2025-12-22",
     },
     {
         id: "comptia_a_plus_core1_2201101",
@@ -106,7 +106,7 @@ export const EXAM_PRESETS: ExamPreset[] = [
             { name: "Hardware and Network Troubleshooting", weight: 29 },
         ],
         sourceUrl: "https://www.comptia.org/certifications/a",
-        lastVerified: "2024-12-22",
+        lastVerified: "2025-12-22",
     },
     {
         id: "comptia_a_plus_core2_2201102",
@@ -120,7 +120,7 @@ export const EXAM_PRESETS: ExamPreset[] = [
             { name: "Operational Procedures", weight: 22 },
         ],
         sourceUrl: "https://www.comptia.org/certifications/a",
-        lastVerified: "2024-12-22",
+        lastVerified: "2025-12-22",
     },
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -137,7 +137,7 @@ export const EXAM_PRESETS: ExamPreset[] = [
             { name: "Business Environment", weight: 8 },
         ],
         sourceUrl: "https://www.pmi.org/certifications/project-management-pmp",
-        lastVerified: "2024-12-22",
+        lastVerified: "2025-12-22",
     },
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -159,7 +159,7 @@ export const EXAM_PRESETS: ExamPreset[] = [
             { name: "Software Development Security", weight: 10 },
         ],
         sourceUrl: "https://www.isc2.org/certifications/cissp",
-        lastVerified: "2024-12-22",
+        lastVerified: "2025-12-22",
     },
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -179,7 +179,7 @@ export const EXAM_PRESETS: ExamPreset[] = [
             { name: "Underwriting & Risk" },
             { name: "Claims & Adjustments" },
         ],
-        lastVerified: "2024-12-22",
+        lastVerified: "2025-12-22",
     },
     {
         id: "insurance_life_health",
@@ -196,7 +196,7 @@ export const EXAM_PRESETS: ExamPreset[] = [
             { name: "Group Insurance" },
             { name: "Ethics & Regulations" },
         ],
-        lastVerified: "2024-12-22",
+        lastVerified: "2025-12-22",
     },
 ];
 
@@ -220,7 +220,8 @@ Do not invent new categories. Match each question to the most appropriate catego
 }
 
 /**
- * Get preset by ID
+ * Get preset by ID.
+ * @remarks Reserved for future features (e.g., GPT Actions API, preset-specific settings).
  */
 export function getPresetById(id: string): ExamPreset | undefined {
     return EXAM_PRESETS.find((p) => p.id === id);
