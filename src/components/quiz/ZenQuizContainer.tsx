@@ -189,13 +189,20 @@ export function ZenQuizContainer({
             .equals(effectiveUserId)
             .filter((q) => !q.deleted_at)
             .toArray();
-          const sourceMap: Record<string, string> = {};
+
+          const questionToQuizMap = new Map<string, string>();
           for (const q of allQuizzes) {
             for (const question of q.questions) {
-              if (actualQuestionIds.includes(question.id) && !sourceMap[question.id]) {
-                sourceMap[question.id] = q.id;
+              if (!questionToQuizMap.has(question.id)) {
+                questionToQuizMap.set(question.id, q.id);
               }
             }
+          }
+
+          const sourceMap: Record<string, string> = {};
+          for (const qId of actualQuestionIds) {
+            const quizId = questionToQuizMap.get(qId);
+            if (quizId) sourceMap[qId] = quizId;
           }
 
           const result = await createSRSReviewResult({
@@ -266,13 +273,20 @@ export function ZenQuizContainer({
             .equals(effectiveUserId)
             .filter((q) => !q.deleted_at)
             .toArray();
-          const sourceMap: Record<string, string> = {};
+
+          const questionToQuizMap = new Map<string, string>();
           for (const q of allQuizzes) {
             for (const question of q.questions) {
-              if (actualQuestionIds.includes(question.id) && !sourceMap[question.id]) {
-                sourceMap[question.id] = q.id;
+              if (!questionToQuizMap.has(question.id)) {
+                questionToQuizMap.set(question.id, q.id);
               }
             }
+          }
+
+          const sourceMap: Record<string, string> = {};
+          for (const qId of actualQuestionIds) {
+            const quizId = questionToQuizMap.get(qId);
+            if (quizId) sourceMap[qId] = quizId;
           }
 
           const result = await createTopicStudyResult({

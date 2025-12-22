@@ -4,12 +4,12 @@
 User-agent: *
 
 # Block user-specific/session pages (no SEO value, only show skeletons anyway)
-Disallow: /quiz/
-Disallow: /results/
-Disallow: /analytics/
-Disallow: /interleaved/
-Disallow: /study-due/
-Disallow: /settings/
+Disallow: /quiz
+Disallow: /results
+Disallow: /analytics
+Disallow: /interleaved
+Disallow: /study-due
+Disallow: /settings
 
 # Allow indexing (default, but explicit for clarity):
 # /           - Homepage/dashboard

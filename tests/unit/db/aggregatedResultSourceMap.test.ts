@@ -76,6 +76,11 @@ describe("SRS Review and Topic Study source_map", () => {
             const result = await createSRSReviewResult(validInput);
 
             expect(result.source_map).toBeUndefined();
+            expect(mockAdd).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    source_map: undefined,
+                }),
+            );
         });
     });
 
@@ -111,6 +116,11 @@ describe("SRS Review and Topic Study source_map", () => {
             const result = await createTopicStudyResult(validInput);
 
             expect(result.source_map).toBeUndefined();
+            expect(mockAdd).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    source_map: undefined,
+                }),
+            );
         });
     });
 });

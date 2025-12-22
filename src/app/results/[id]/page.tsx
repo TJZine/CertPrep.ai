@@ -14,6 +14,7 @@ import {
 import { deleteResult, isSRSQuiz } from "@/db/results";
 import { useToast } from "@/components/ui/Toast";
 import { ArrowLeft, AlertCircle, AlertTriangle, Trash2, Settings } from "lucide-react";
+import { Modal } from "@/components/ui/Modal";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 import { useSync } from "@/hooks/useSync";
@@ -66,10 +67,10 @@ export default function ResultsPage(): React.ReactElement {
   const [isRestoringQuiz, setIsRestoringQuiz] = React.useState(false);
   const [restoreAttempted, setRestoreAttempted] = React.useState(false);
   const [isDeleting, setIsDeleting] = React.useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = React.useState(false);
 
   const handleDeleteResult = async (): Promise<void> => {
     if (!effectiveUserId || !result) return;
-    if (!confirm("Are you sure you want to delete this result?")) return;
 
     setIsDeleting(true);
     try {
@@ -91,6 +92,7 @@ export default function ResultsPage(): React.ReactElement {
       addToast("error", "Failed to delete result");
     } finally {
       setIsDeleting(false);
+      setIsDeleteModalOpen(false);
     }
   };
 
@@ -330,6 +332,7 @@ export default function ResultsPage(): React.ReactElement {
           allQuizResults={allQuizResults}
           sourceMap={result.source_map}
         />
+        <DeleteConfirmationModal />
       </ErrorBoundary>
     );
   }
@@ -397,7 +400,7 @@ export default function ResultsPage(): React.ReactElement {
           </Button>
           <Button
             variant="danger"
-            onClick={handleDeleteResult}
+            onClick={() => setIsDeleteModalOpen(true)}
             isLoading={isDeleting}
             leftIcon={<Trash2 className="h-4 w-4" aria-hidden="true" />}
           >
@@ -405,7 +408,45 @@ export default function ResultsPage(): React.ReactElement {
           </Button>
         </div>
       </div>
+      <DeleteConfirmationModal />
     </div>
   );
 
+  function DeleteConfirmationModal(): React.ReactElement {
+    return (
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        title="Delete Result"
+        description="Are you sure you want to delete this result? This action cannot be undone."
+        size="md"
+        footer={
+          <div className="flex justify-end gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteModalOpen(false)}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="danger"
+              onClick={handleDeleteResult}
+              isLoading={isDeleting}
+              leftIcon={<Trash2 className="h-4 w-4" aria-hidden="true" />}
+            >
+              Delete
+            </Button>
+          </div>
+        }
+      >
+        <div className="rounded-lg border border-destructive/20 bg-destructive/10 p-4 text-sm text-destructive-foreground">
+          <p className="font-semibold">Warning</p>
+          <p className="mt-1">
+            This will permanently remove this result from your history and analytics.
+          </p>
+        </div>
+      </Modal>
+    );
+  }
 }

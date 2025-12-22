@@ -100,7 +100,20 @@ export function ImportModal({
   React.useEffect(() => {
     categoryRef.current = category;
     subcategoryRef.current = subcategory;
+
   }, [category, subcategory]);
+
+  const importAsNewRef = React.useRef<HTMLButtonElement>(null);
+
+  React.useEffect((): (() => void) | void => {
+    if (showDuplicateWarning) {
+      // Small timeout to allow render
+      const timer = setTimeout(() => {
+        importAsNewRef.current?.focus();
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+  }, [showDuplicateWarning]);
 
   const resetState = (): void => {
     setActiveTab("paste");
@@ -552,6 +565,7 @@ export function ImportModal({
         </p>
         <div className="flex flex-wrap gap-2">
           <Button
+            ref={importAsNewRef}
             size="sm"
             onClick={handleImportAsNew}
             isLoading={isImporting}

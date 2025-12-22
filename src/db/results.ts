@@ -130,41 +130,25 @@ export async function createResult(input: CreateResultInput): Promise<Result> {
   return result;
 }
 
-export interface CreateSRSReviewResultInput {
+interface AggregatedResultValidationInput {
   userId: string;
-  /** The per-user SRS quiz ID (from getOrCreateSRSQuiz) */
   srsQuizId: string;
-  answers: Record<string, string>;
-  flaggedQuestions: string[];
-  timeTakenSeconds: number;
-  /** Question IDs that were part of this review session */
-  questionIds: string[];
-  /** Pre-calculated score (percentage) */
-  score: number;
-  /** Pre-calculated category breakdown (percentages) */
-  categoryBreakdown: Record<string, number>;
-  /** Pre-calculated raw category scores for analytics */
-  categoryScores?: Record<string, { correct: number; total: number }>;
-  /** Maps questionId → sourceQuizId for question attribution */
-  sourceMap?: Record<string, string>;
+  context: "SRS review" | "topic study" | "interleaved";
 }
 
 /**
- * Persists an SRS review result using the per-user SRS quiz.
- *
- * Unlike regular quiz results, SRS sessions aggregate questions from
- * multiple quizzes. The srsQuizId links to a real quiz entity, allowing
- * the result to sync to Supabase normally.
+ * Shared validation logic for all aggregated result types.
+ * Ensures the SRS quiz exists, belongs to the user, and is a valid container.
  */
-export async function createSRSReviewResult(
-  input: CreateSRSReviewResultInput,
-): Promise<Result> {
+async function validateAggregatedResultInput(
+  input: AggregatedResultValidationInput,
+): Promise<void> {
   if (!input.userId) {
     throw new Error("Cannot create result without a user context.");
   }
 
   if (!input.srsQuizId) {
-    throw new Error("srsQuizId is required for SRS review results.");
+    throw new Error(`srsQuizId is required for ${input.context} results.`);
   }
 
   // Validate SRS quiz exists, is owned by user, and not soft-deleted
@@ -181,6 +165,45 @@ export async function createSRSReviewResult(
   if (!isSRSQuiz(quiz.id, input.userId)) {
     throw new Error("Invalid srsQuizId: quiz is not an SRS quiz.");
   }
+}
+
+export interface CreateSRSReviewResultInput {
+  userId: string;
+  /** The per-user SRS quiz ID (from getOrCreateSRSQuiz) */
+  srsQuizId: string;
+  answers: Record<string, string>;
+  flaggedQuestions: string[];
+  timeTakenSeconds: number;
+  /** Question IDs that were part of this review session */
+  questionIds: string[];
+  /** Pre-calculated score (percentage) */
+  score: number;
+  /** Pre-calculated category breakdown (percentages) */
+  categoryBreakdown: Record<string, number>;
+  /** Pre-calculated raw category scores for analytics */
+  categoryScores?: Record<string, { correct: number; total: number }>;
+  /**
+   * Maps questionId → sourceQuizId for question attribution.
+   * Optional because older reviews might not have this map, but recommended for new ones.
+   */
+  sourceMap?: Record<string, string>;
+}
+
+/**
+ * Persists an SRS review result using the per-user SRS quiz.
+ *
+ * Unlike regular quiz results, SRS sessions aggregate questions from
+ * multiple quizzes. The srsQuizId links to a real quiz entity, allowing
+ * the result to sync to Supabase normally.
+ */
+export async function createSRSReviewResult(
+  input: CreateSRSReviewResultInput,
+): Promise<Result> {
+  await validateAggregatedResultInput({
+    userId: input.userId,
+    srsQuizId: input.srsQuizId,
+    context: "SRS review",
+  });
 
   const result: Result = {
     id: generateUUID(),
@@ -219,7 +242,10 @@ export interface CreateTopicStudyResultInput {
   categoryBreakdown: Record<string, number>;
   /** Pre-calculated raw category scores for analytics */
   categoryScores?: Record<string, { correct: number; total: number }>;
-  /** Maps questionId → sourceQuizId for question attribution */
+  /**
+   * Maps questionId → sourceQuizId for question attribution.
+   * Optional for flexibility, though highly recommended for traceability.
+   */
   sourceMap?: Record<string, string>;
 }
 
@@ -233,28 +259,11 @@ export interface CreateTopicStudyResultInput {
 export async function createTopicStudyResult(
   input: CreateTopicStudyResultInput,
 ): Promise<Result> {
-  if (!input.userId) {
-    throw new Error("Cannot create result without a user context.");
-  }
-
-  if (!input.srsQuizId) {
-    throw new Error("srsQuizId is required for topic study results.");
-  }
-
-  // Validate SRS quiz exists, is owned by user, and not soft-deleted
-  const quiz = await db.quizzes.get(input.srsQuizId);
-  if (!quiz || quiz.deleted_at) {
-    throw new Error("SRS quiz not found.");
-  }
-  if (quiz.user_id !== input.userId) {
-    throw new Error(
-      "Security mismatch: SRS quiz does not belong to the current user.",
-    );
-  }
-
-  if (!isSRSQuiz(quiz.id, input.userId)) {
-    throw new Error("Invalid srsQuizId: quiz is not an SRS quiz.");
-  }
+  await validateAggregatedResultInput({
+    userId: input.userId,
+    srsQuizId: input.srsQuizId,
+    context: "topic study",
+  });
 
   const result: Result = {
     id: generateUUID(),
@@ -287,7 +296,7 @@ export interface CreateInterleavedResultInput {
   timeTakenSeconds: number;
   /** Question IDs that were part of this session */
   questionIds: string[];
-  /** Maps questionId → sourceQuizId for attribution */
+  /** Maps questionId → sourceQuizId for attribution (Required for Interleaved) */
   sourceMap: Record<string, string>;
   /** Pre-calculated score (percentage) */
   score: number;
@@ -307,28 +316,11 @@ export interface CreateInterleavedResultInput {
 export async function createInterleavedResult(
   input: CreateInterleavedResultInput,
 ): Promise<Result> {
-  if (!input.userId) {
-    throw new Error("Cannot create result without a user context.");
-  }
-
-  if (!input.srsQuizId) {
-    throw new Error("srsQuizId is required for interleaved results.");
-  }
-
-  // Validate SRS quiz exists, is owned by user, and not soft-deleted
-  const quiz = await db.quizzes.get(input.srsQuizId);
-  if (!quiz || quiz.deleted_at) {
-    throw new Error("SRS quiz not found.");
-  }
-  if (quiz.user_id !== input.userId) {
-    throw new Error(
-      "Security mismatch: SRS quiz does not belong to the current user.",
-    );
-  }
-
-  if (!isSRSQuiz(quiz.id, input.userId)) {
-    throw new Error("Invalid srsQuizId: quiz is not an SRS quiz.");
-  }
+  await validateAggregatedResultInput({
+    userId: input.userId,
+    srsQuizId: input.srsQuizId,
+    context: "interleaved",
+  });
 
   const result: Result = {
     id: generateUUID(),
