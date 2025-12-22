@@ -58,6 +58,10 @@ const ANSWER_KEYS = ["A", "B", "C", "D", "E", "F", "G", "H"] as const;
  * The original question is not mutated. Returns both the remixed question
  * and a key mapping to translate user answers back to original keys.
  *
+ * Handles both explicit correct_answer and hash-only modes:
+ * - If correct_answer is set, uses it directly
+ * - If only correct_answer_hash is set, resolves by hashing each option key
+ *
  * @param question - The question to remix
  * @returns RemixedQuestionResult with shuffled question and key mapping
  */
@@ -66,11 +70,24 @@ export async function remixQuestion(
 ): Promise<RemixedQuestionResult> {
     const originalEntries = Object.entries(question.options);
 
+    // Resolve the original correct answer key.
+    // If correct_answer is set, use it directly.
+    // Otherwise, hash each option key to find which matches correct_answer_hash.
+    let originalCorrectKey: string | undefined = question.correct_answer;
+
+    if (!originalCorrectKey && question.correct_answer_hash) {
+        // Hash-only mode: resolve by comparing hashes
+        for (const [key] of originalEntries) {
+            const keyHash = await hashAnswer(key);
+            if (keyHash === question.correct_answer_hash) {
+                originalCorrectKey = key;
+                break;
+            }
+        }
+    }
+
     // Shuffle the option entries (preserves [key, text] pairs, just reorders)
     const shuffledEntries = shuffle(originalEntries);
-
-    // Find the original correct answer key
-    const originalCorrectKey = question.correct_answer;
 
     // Rebuild options with new keys and track the mapping
     const newOptions: Record<string, string> = {};
@@ -89,11 +106,11 @@ export async function remixQuestion(
         keyMapping[newKey] = originalKey; // Map: new key → original key
 
         // Track where the correct answer ended up using key comparison
-        // (more robust than text comparison for duplicate option texts)
         if (originalKey === originalCorrectKey) {
             newCorrectKey = newKey;
         }
     }
+
 
     // Rehash the new correct answer key
     const newHash = newCorrectKey

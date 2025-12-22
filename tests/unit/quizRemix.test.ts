@@ -76,6 +76,25 @@ describe("quiz-remix", () => {
             expect(result.question.correct_answer).toBeUndefined();
             expect(result.question.correct_answer_hash).toBeUndefined();
         });
+
+        it("should handle hash-only mode (correct_answer undefined)", async () => {
+            // Simulate hash-only mode where correct_answer is not set but hash is
+            const originalHash = await hashAnswer("B"); // B is the correct answer
+            const q = { ...mockQuestion, correct_answer: undefined, correct_answer_hash: originalHash };
+
+            const result = await remixQuestion(q);
+
+            // Should resolve correct answer from hash
+            const newCorrectKey = result.question.correct_answer!;
+            expect(newCorrectKey).toBeDefined();
+
+            // The option at newCorrectKey should be "2" (original B's value)
+            expect(result.question.options[newCorrectKey]).toBe("2");
+
+            // Hash should be updated to match new key
+            const expectedHash = await hashAnswer(newCorrectKey);
+            expect(result.question.correct_answer_hash).toBe(expectedHash);
+        });
     });
 
     describe("remixQuiz", () => {
