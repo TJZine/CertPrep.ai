@@ -58,6 +58,9 @@ vi.mock("@/components/ui/Modal", () => ({
 }));
 
 describe("ImportModal", () => {
+    /** Matches the 500ms debounce in ImportModal + buffer for test stability */
+    const VALIDATION_DEBOUNCE_MS = 1000;
+
     const defaultProps = {
         isOpen: true,
         onClose: vi.fn(),
@@ -97,7 +100,7 @@ describe("ImportModal", () => {
         const validQuiz = { title: "Valid Quiz", questions: [{ id: "1", question: "Q1", options: { A: "Opt 1", B: "Opt 2" }, correct_answer: "A", explanation: "Exp", category: "Test Cat" }] };
         const input = screen.getByPlaceholderText(/My Certification Quiz/);
         fireEvent.change(input, { target: { value: JSON.stringify(validQuiz) } });
-        await act(async () => { vi.advanceTimersByTime(1000); await Promise.resolve(); });
+        await act(async () => { vi.advanceTimersByTime(VALIDATION_DEBOUNCE_MS); await Promise.resolve(); });
         expect(screen.getByText("Validation passed")).toBeInTheDocument();
         expect(screen.getByRole("button", { name: "Import Quiz" })).not.toBeDisabled();
     });
@@ -106,7 +109,7 @@ describe("ImportModal", () => {
         render(<ImportModal {...defaultProps} />);
         const input = screen.getByPlaceholderText(/My Certification Quiz/);
         fireEvent.change(input, { target: { value: "{ invalid json" } });
-        await act(async () => { vi.advanceTimersByTime(1000); await Promise.resolve(); });
+        await act(async () => { vi.advanceTimersByTime(VALIDATION_DEBOUNCE_MS); await Promise.resolve(); });
         expect(screen.getByText("Invalid JSON")).toBeInTheDocument();
         expect(screen.getByRole("button", { name: "Import Quiz" })).toBeDisabled();
     });
@@ -125,7 +128,7 @@ describe("ImportModal", () => {
         const input = screen.getByPlaceholderText(/My Certification Quiz/);
         fireEvent.change(input, { target: { value: JSON.stringify(validQuiz) } });
 
-        await act(async () => { vi.advanceTimersByTime(1000); await Promise.resolve(); });
+        await act(async () => { vi.advanceTimersByTime(VALIDATION_DEBOUNCE_MS); await Promise.resolve(); });
         fireEvent.click(screen.getByRole("button", { name: "Import Quiz" }));
         await act(async () => { await Promise.resolve(); });
 
@@ -158,7 +161,7 @@ describe("ImportModal", () => {
         fireEvent.change(input, { target: { value: JSON.stringify(duplicateQuiz) } });
 
         await act(async () => {
-            vi.advanceTimersByTime(1000);
+            vi.advanceTimersByTime(VALIDATION_DEBOUNCE_MS);
             await Promise.resolve();
         });
 
@@ -189,7 +192,7 @@ describe("ImportModal", () => {
         const input = screen.getByPlaceholderText(/My Certification Quiz/);
         fireEvent.change(input, { target: { value: JSON.stringify(duplicateQuiz) } });
 
-        await act(async () => { vi.advanceTimersByTime(1000); await Promise.resolve(); });
+        await act(async () => { vi.advanceTimersByTime(VALIDATION_DEBOUNCE_MS); await Promise.resolve(); });
 
         expect(screen.getByRole("button", { name: "Import Quiz" })).not.toBeDisabled();
 
@@ -229,7 +232,7 @@ describe("ImportModal", () => {
         const input = screen.getByPlaceholderText(/My Certification Quiz/);
         fireEvent.change(input, { target: { value: JSON.stringify(duplicateQuiz) } });
 
-        await act(async () => { vi.advanceTimersByTime(1000); await Promise.resolve(); });
+        await act(async () => { vi.advanceTimersByTime(VALIDATION_DEBOUNCE_MS); await Promise.resolve(); });
 
         // Click Import -> Triggers warning
         fireEvent.click(screen.getByRole("button", { name: "Import Quiz" }));
