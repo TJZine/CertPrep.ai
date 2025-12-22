@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] - 2025-12-21
+
+### Added
+
+- **Interleaved Practice**: Multi-quiz aggregated sessions with category balancing for mixed practice across all imported quizzes (`/interleaved` page, `InterleavedPracticeCard` component).
+- **Quiz Remix**: Shuffle question and answer order while maintaining answer key integrity for varied practice sessions.
+- **Import Duplicate Detection**: Warning when importing a quiz with a matching title, with options to "Import as New" or "Replace Existing".
+- **Session Type Classification**: Explicit `session_type` field (`standard`, `smart_round`, `srs_review`, `topic_study`, `interleaved`) for analytics identification.
+- **Source Map Tracking**: `source_map` field on aggregated results enables "this question came from Quiz X" attribution in results review.
+- **E2E Timeout Constants**: Standardized timeout helpers in `tests/e2e/helpers/timeouts.ts` for consistent CI reliability.
+- **Sentry Lazy Loading**: Replay integration now lazy-loaded after first user interaction to reduce initial bundle by ~150KB.
+
+### Changed
+
+- **Quiz Schema Validation**: Added maximum of 8 options per question for schema validation.
+- **Results Display**: Aggregated sessions now show source quiz attribution and category breakdown.
+- **Settings Navigation**: Back button now returns to entry point (dashboard or results page) based on context.
+
+### Fixed
+
+- **Quiz Remix Answer Tracking**: Fixed incorrect answer detection when `correct_answer` is undefined (hash-only security mode).
+- **CSP Nonce Hydration**: Replaced `next/script` with native `<script>` elements to prevent hydration mismatch warnings.
+- **Category Banner**: Suppressed misleading "missing category" banner for aggregated sessions which use question-level categories.
+
 ## [1.3.8] - 2025-12-20
 
 ### Added
