@@ -514,7 +514,8 @@ export function ResultsContainer({
               className="mb-8"
             />
 
-            {allQuizResults && allQuizResults.length > 1 && (
+            {/* Hide attempt history for aggregate sessions since each session has a unique question set */}
+            {!isAggregatedResult && allQuizResults && allQuizResults.length > 1 && (
               <AttemptHistoryTimeline
                 currentResultId={result.id}
                 allResults={allQuizResults}

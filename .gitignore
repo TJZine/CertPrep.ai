@@ -25,6 +25,7 @@ supabase/.temp/
 # misc
 .DS_Store
 *.pem
+docs/ai-quiz-generators/private/
 
 # debug
 npm-debug.log*

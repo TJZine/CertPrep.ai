@@ -58,7 +58,7 @@ vi.mock("@/components/ui/Modal", () => ({
 }));
 
 describe("ImportModal", () => {
-    /** Matches the 500ms debounce in ImportModal + buffer for test stability */
+    /** Matches the 500ms debounce in ImportModal + 500ms buffer for test stability */
     const VALIDATION_DEBOUNCE_MS = 1000;
 
     const defaultProps = {

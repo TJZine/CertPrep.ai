@@ -1,0 +1,61 @@
+{
+  "title": "AWS VPC Fundamentals",
+  "description": "Practice questions covering Virtual Private Cloud concepts, subnets, routing, and security groups",
+  "category": "Cloud Computing",
+  "subcategory": "AWS Solutions Architect",
+  "questions": [
+    {
+      "id": "vpc-basics-001",
+      "category": "VPC Fundamentals",
+      "difficulty": "Easy",
+      "question": "What is the primary purpose of an Amazon VPC?",
+      "options": {
+        "A": "To provide a content delivery network for static assets",
+        "B": "To create an isolated virtual network within AWS",
+        "C": "To manage DNS records for your domain",
+        "D": "To store objects with high durability"
+      },
+      "correct_answer": "B",
+      "explanation": "Amazon Virtual Private Cloud (VPC) allows you to provision a logically isolated section of the AWS Cloud where you can launch AWS resources in a virtual network that you define. You have complete control over your virtual networking environment, including IP address ranges, subnets, route tables, and network gateways.",
+      "distractor_logic": "Option A describes CloudFront (CDN). Option C describes Route 53 (DNS). Option D describes S3 (object storage). These are common AWS services that candidates might confuse with VPC if they don't understand the core networking purpose."
+    },
+    {
+      "id": "vpc-subnets-002",
+      "category": "Subnets",
+      "difficulty": "Medium",
+      "question": "A solutions architect needs to design a VPC where web servers can receive traffic from the internet, but database servers should only be accessible from the web servers. Which subnet configuration achieves this?",
+      "options": {
+        "A": "Place both web servers and databases in public subnets with different security groups",
+        "B": "Place web servers in a public subnet and databases in a private subnet",
+        "C": "Place both web servers and databases in private subnets behind a load balancer",
+        "D": "Place web servers in a private subnet with a NAT gateway and databases in a public subnet"
+      },
+      "correct_answer": "B",
+      "explanation": "The correct architecture places internet-facing resources (web servers) in public subnets, which have a route to an Internet Gateway, while placing sensitive resources (databases) in private subnets with no direct internet access. The web servers can communicate with databases via private IP addresses within the VPC. This follows the security best practice of defense in depth.",
+      "distractor_logic": "Option A exposes databases to potential internet access, violating security best practices. Option C would prevent web servers from receiving direct internet traffic. Option D reverses the correct placement, exposing databases while hiding web servers, which is backwards for a typical web application architecture."
+    },
+    {
+      "id": "vpc-routing-003",
+      "category": "Routing",
+      "difficulty": "Hard",
+      "question": "A company has a VPC with CIDR block 10.0.0.0/16. They establish a VPN connection to their on-premises network (192.168.0.0/16) and also set up VPC peering with a partner's VPC (172.16.0.0/16). An EC2 instance needs to reach a server at 172.16.5.20. The route table has these entries:<br><br>• 10.0.0.0/16 → local<br>• 192.168.0.0/16 → vgw-xxxxx<br>• 0.0.0.0/0 → igw-xxxxx<br><br>Why can't the instance reach the partner's server?",
+      "options": {
+        "A": "The security group is blocking outbound traffic to 172.16.0.0/16",
+        "B": "The route table is missing an entry for the peered VPC CIDR",
+        "C": "VPC peering doesn't support transitive routing through the VPN",
+        "D": "The partner's VPC CIDR overlaps with the on-premises network"
+      },
+      "correct_answer": "B",
+      "explanation": "The route table shown has no entry directing traffic to 172.16.0.0/16 (the peered VPC). Without an explicit route, traffic to 172.16.5.20 would match the default route (0.0.0.0/0) and be sent to the Internet Gateway, which cannot route to private IP addresses. A route like '172.16.0.0/16 → pcx-xxxxx' (the peering connection) must be added to both VPCs' route tables for peering to work.",
+      "distractor_logic": "Option A is possible but the question specifically asks about routing, and security groups would produce a different symptom (timeout vs. no route). Option C is true as a general statement but isn't the issue here since there's no transitive routing attempted. Option D is incorrect as the CIDRs shown don't overlap (192.168.x.x vs 172.16.x.x)."
+    }
+  ],
+  "tags": [
+    "AWS",
+    "VPC",
+    "Networking",
+    "Subnets",
+    "Routing",
+    "Cloud Architecture"
+  ]
+}
