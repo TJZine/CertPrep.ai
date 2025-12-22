@@ -195,7 +195,8 @@ export const EXAM_PRESETS: ExamPreset[] = [
             { name: "Auto Insurance" },
             { name: "Other Coverages and Options" },
         ],
-        sourceUrl: "https://www.mass.gov/insurance-producer-licensing",
+        // Categories verified against actual MA Personal Lines exam results (2025).
+        // No official public blueprint URL available.
         lastVerified: "2025-12-22",
     },
     {

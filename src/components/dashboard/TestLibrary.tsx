@@ -238,10 +238,16 @@ export function TestLibrary({
         sorted.sort((a, b) => a.title.localeCompare(b.title));
         break;
       case "category":
-        sorted.sort((a, b) => a.category.localeCompare(b.category));
+        // Secondary sort by title for stable ordering
+        sorted.sort((a, b) =>
+          a.category.localeCompare(b.category) || a.title.localeCompare(b.title)
+        );
         break;
       case "questions":
-        sorted.sort((a, b) => (b.questionCount ?? 0) - (a.questionCount ?? 0));
+        // Secondary sort by title for stable ordering
+        sorted.sort((a, b) =>
+          (b.questionCount ?? 0) - (a.questionCount ?? 0) || a.title.localeCompare(b.title)
+        );
         break;
     }
     return sorted;

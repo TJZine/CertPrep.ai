@@ -2,28 +2,23 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 
-describe("useCopyToClipboard", () => {
-    const originalClipboard = navigator.clipboard;
+// Mock the clipboard utility
+vi.mock("@/lib/clipboard", () => ({
+    copyToClipboard: vi.fn(),
+}));
 
+import { copyToClipboard as copyToClipboardUtil } from "@/lib/clipboard";
+
+describe("useCopyToClipboard", () => {
     beforeEach(() => {
         vi.useFakeTimers();
-        // Mock clipboard API
-        Object.defineProperty(navigator, "clipboard", {
-            value: {
-                writeText: vi.fn().mockResolvedValue(undefined),
-            },
-            writable: true,
-            configurable: true,
-        });
+        vi.clearAllMocks();
+        // Default: successful copy
+        vi.mocked(copyToClipboardUtil).mockResolvedValue(undefined);
     });
 
     afterEach(() => {
         vi.useRealTimers();
-        Object.defineProperty(navigator, "clipboard", {
-            value: originalClipboard,
-            writable: true,
-            configurable: true,
-        });
     });
 
     it("should initialize with copied = false", () => {
@@ -39,7 +34,7 @@ describe("useCopyToClipboard", () => {
         });
 
         expect(result.current.copied).toBe(true);
-        expect(navigator.clipboard.writeText).toHaveBeenCalledWith("test text");
+        expect(copyToClipboardUtil).toHaveBeenCalledWith("test text");
     });
 
     it("should reset copied to false after delay", async () => {
@@ -105,4 +100,43 @@ describe("useCopyToClipboard", () => {
         expect(clearTimeoutSpy).toHaveBeenCalled();
         clearTimeoutSpy.mockRestore();
     });
+
+    it("should not set copied=true when clipboard utility fails", async () => {
+        const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => { });
+        vi.mocked(copyToClipboardUtil).mockRejectedValue(new Error("Clipboard not available"));
+
+        const { result } = renderHook(() => useCopyToClipboard());
+
+        await act(async () => {
+            await result.current.copyToClipboard("test text");
+        });
+
+        expect(result.current.copied).toBe(false);
+        expect(consoleErrorSpy).toHaveBeenCalledWith(
+            "Copy to clipboard failed:",
+            expect.any(Error)
+        );
+
+        consoleErrorSpy.mockRestore();
+    });
+
+    it("should not start timeout when copy fails", async () => {
+        const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => { });
+        vi.mocked(copyToClipboardUtil).mockRejectedValue(new Error("Failed"));
+
+        const { result } = renderHook(() => useCopyToClipboard(1000));
+
+        await act(async () => {
+            await result.current.copyToClipboard("test");
+        });
+
+        // Advance time - should remain false since no timeout was set
+        act(() => {
+            vi.advanceTimersByTime(2000);
+        });
+
+        expect(result.current.copied).toBe(false);
+        consoleErrorSpy.mockRestore();
+    });
 });
+

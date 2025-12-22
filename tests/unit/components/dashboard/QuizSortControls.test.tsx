@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -45,6 +45,10 @@ describe("QuizSortControls", () => {
         categoryFilter: "all",
         onCategoryChange: vi.fn(),
     };
+
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
 
     it("renders search input with correct placeholder", () => {
         render(<QuizSortControls {...defaultProps} />);
