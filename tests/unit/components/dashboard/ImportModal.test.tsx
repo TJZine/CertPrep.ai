@@ -145,7 +145,7 @@ describe("ImportModal", () => {
 
     it("shows warning when processing a duplicate quiz", async () => {
         // Mock finding a duplicate
-        mockFirst.mockResolvedValue({ id: "existing-id", title: "Duplicate Quiz", questions: [1, 2] });
+        mockFirst.mockResolvedValue({ id: "existing-id", title: "Duplicate Quiz", questions: [{}, {}] });
 
         render(<ImportModal {...defaultProps} />);
 
@@ -174,7 +174,7 @@ describe("ImportModal", () => {
 
     it("handles 'Replace Existing' correctly", async () => {
         // 1. Setup duplicate found
-        mockFirst.mockResolvedValue({ id: "existing-id", title: "Duplicate Quiz", questions: [1, 2] });
+        mockFirst.mockResolvedValue({ id: "existing-id", title: "Duplicate Quiz", questions: [{}, {}] });
         // 2. Mock db update and get to confirm success toast
         mockUpdateQuiz.mockResolvedValue(undefined);
         mockGet.mockResolvedValue({ title: "Updated Title" });
@@ -207,5 +207,8 @@ describe("ImportModal", () => {
             expect.objectContaining({ title: "Duplicate Quiz" })
         );
         expect(defaultProps.onClose).toHaveBeenCalled();
+        expect(defaultProps.onImportSuccess).toHaveBeenCalledWith(
+            expect.objectContaining({ title: "Updated Title" })
+        );
     });
 });

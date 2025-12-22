@@ -34,6 +34,62 @@ import { logger } from "@/lib/logger";
 const DEXIE_SETTLE_DELAY_MS = 500;
 
 /**
+ * Props for the delete confirmation modal.
+ */
+interface DeleteConfirmationModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => Promise<void>;
+  isDeleting: boolean;
+}
+
+/**
+ * Modal for confirming result deletion.
+ */
+function DeleteConfirmationModal({
+  isOpen,
+  onClose,
+  onConfirm,
+  isDeleting,
+}: DeleteConfirmationModalProps): React.ReactElement {
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Delete Result"
+      description="Are you sure you want to delete this result? This action cannot be undone."
+      size="md"
+      footer={
+        <div className="flex justify-end gap-3">
+          <Button
+            variant="outline"
+            onClick={onClose}
+            disabled={isDeleting}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="danger"
+            onClick={onConfirm}
+            isLoading={isDeleting}
+            leftIcon={<Trash2 className="h-4 w-4" aria-hidden="true" />}
+          >
+            Delete
+          </Button>
+        </div>
+      }
+    >
+      <div className="rounded-lg border border-destructive/20 bg-destructive/10 p-4 text-sm text-destructive-foreground">
+        <p className="font-semibold">Warning</p>
+        <p className="mt-1">
+          This will permanently remove this result from your history and analytics.
+        </p>
+      </div>
+    </Modal>
+  );
+}
+
+/**
  * Results page integrating analytics and review.
  */
 export default function ResultsPage(): React.ReactElement {
@@ -332,7 +388,12 @@ export default function ResultsPage(): React.ReactElement {
           allQuizResults={allQuizResults}
           sourceMap={result.source_map}
         />
-        <DeleteConfirmationModal />
+        <DeleteConfirmationModal
+          isOpen={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+          onConfirm={handleDeleteResult}
+          isDeleting={isDeleting}
+        />
       </ErrorBoundary>
     );
   }
@@ -408,45 +469,12 @@ export default function ResultsPage(): React.ReactElement {
           </Button>
         </div>
       </div>
-      <DeleteConfirmationModal />
-    </div>
-  );
-
-  function DeleteConfirmationModal(): React.ReactElement {
-    return (
-      <Modal
+      <DeleteConfirmationModal
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
-        title="Delete Result"
-        description="Are you sure you want to delete this result? This action cannot be undone."
-        size="md"
-        footer={
-          <div className="flex justify-end gap-3">
-            <Button
-              variant="outline"
-              onClick={() => setIsDeleteModalOpen(false)}
-              disabled={isDeleting}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="danger"
-              onClick={handleDeleteResult}
-              isLoading={isDeleting}
-              leftIcon={<Trash2 className="h-4 w-4" aria-hidden="true" />}
-            >
-              Delete
-            </Button>
-          </div>
-        }
-      >
-        <div className="rounded-lg border border-destructive/20 bg-destructive/10 p-4 text-sm text-destructive-foreground">
-          <p className="font-semibold">Warning</p>
-          <p className="mt-1">
-            This will permanently remove this result from your history and analytics.
-          </p>
-        </div>
-      </Modal>
-    );
-  }
+        onConfirm={handleDeleteResult}
+        isDeleting={isDeleting}
+      />
+    </div>
+  );
 }

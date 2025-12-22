@@ -18,5 +18,5 @@ Disallow: /settings
 # /signup
 # /forgot-password
 
-# Sitemap (uncomment when you have one)
+# TODO: Uncomment sitemap before SEO launch
 # Sitemap: https://certprep.ai/sitemap.xml

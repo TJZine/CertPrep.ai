@@ -37,6 +37,37 @@ import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 import { useSync } from "@/hooks/useSync";
 import { remixQuiz, buildAnswersRecord } from "@/lib/quiz-remix";
 
+/**
+ * Build a source map from question IDs to their source quiz IDs.
+ * Used for aggregated sessions (SRS Review, Topic Study) to track question origins.
+ */
+async function buildSourceMapFromUserQuizzes(
+  userId: string,
+  questionIds: string[],
+): Promise<Record<string, string>> {
+  const allQuizzes = await db.quizzes
+    .where("user_id")
+    .equals(userId)
+    .filter((q) => !q.deleted_at)
+    .toArray();
+
+  const questionToQuizMap = new Map<string, string>();
+  for (const q of allQuizzes) {
+    for (const question of q.questions) {
+      if (!questionToQuizMap.has(question.id)) {
+        questionToQuizMap.set(question.id, q.id);
+      }
+    }
+  }
+
+  const sourceMap: Record<string, string> = {};
+  for (const qId of questionIds) {
+    const quizId = questionToQuizMap.get(qId);
+    if (quizId) sourceMap[qId] = quizId;
+  }
+  return sourceMap;
+}
+
 interface ZenQuizContainerProps {
   quiz: Quiz;
   isSmartRound?: boolean;
@@ -184,26 +215,7 @@ export function ZenQuizContainer({
           );
 
           // Build source map by querying all user quizzes and mapping question IDs to source quiz IDs
-          const allQuizzes = await db.quizzes
-            .where("user_id")
-            .equals(effectiveUserId)
-            .filter((q) => !q.deleted_at)
-            .toArray();
-
-          const questionToQuizMap = new Map<string, string>();
-          for (const q of allQuizzes) {
-            for (const question of q.questions) {
-              if (!questionToQuizMap.has(question.id)) {
-                questionToQuizMap.set(question.id, q.id);
-              }
-            }
-          }
-
-          const sourceMap: Record<string, string> = {};
-          for (const qId of actualQuestionIds) {
-            const quizId = questionToQuizMap.get(qId);
-            if (quizId) sourceMap[qId] = quizId;
-          }
+          const sourceMap = await buildSourceMapFromUserQuizzes(effectiveUserId, actualQuestionIds);
 
           const result = await createSRSReviewResult({
             userId: effectiveUserId,
@@ -268,26 +280,7 @@ export function ZenQuizContainer({
           );
 
           // Build source map by querying all user quizzes and mapping question IDs to source quiz IDs
-          const allQuizzes = await db.quizzes
-            .where("user_id")
-            .equals(effectiveUserId)
-            .filter((q) => !q.deleted_at)
-            .toArray();
-
-          const questionToQuizMap = new Map<string, string>();
-          for (const q of allQuizzes) {
-            for (const question of q.questions) {
-              if (!questionToQuizMap.has(question.id)) {
-                questionToQuizMap.set(question.id, q.id);
-              }
-            }
-          }
-
-          const sourceMap: Record<string, string> = {};
-          for (const qId of actualQuestionIds) {
-            const quizId = questionToQuizMap.get(qId);
-            if (quizId) sourceMap[qId] = quizId;
-          }
+          const sourceMap = await buildSourceMapFromUserQuizzes(effectiveUserId, actualQuestionIds);
 
           const result = await createTopicStudyResult({
             userId: effectiveUserId,

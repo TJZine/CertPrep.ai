@@ -306,7 +306,10 @@ export function ImportModal({
    * Perform the actual import (create new or replace existing).
    */
   const doImport = async (data: QuizImportInput, replaceExistingId: string | false): Promise<void> => {
-    if (!userId) return;
+    if (!userId) {
+      addToast("error", "You must be signed in to import.");
+      return;
+    }
 
     setIsImporting(true);
     try {
