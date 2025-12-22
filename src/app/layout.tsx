@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import * as React from "react";
 import { headers } from "next/headers";
 import { unstable_noStore as noStore } from "next/cache";
-import Script from "next/script";
+
 import { Inter, Press_Start_2P, Nunito, Roboto_Slab, Space_Grotesk, Playfair_Display, JetBrains_Mono, Courier_Prime, Cormorant_Garamond } from "next/font/google";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -165,18 +165,18 @@ export default async function RootLayout({
         <meta name="theme-color" content="#2563eb" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <Script
+        <script
           id="theme-init"
           nonce={nonce}
-          strategy="beforeInteractive"
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{
             __html: `(function(){try{const stored=localStorage.getItem('theme');const prefersDark=window.matchMedia('(prefers-color-scheme: dark)').matches;const shouldDark=stored==='dark'||(!stored&&prefersDark);const root=document.documentElement;if(shouldDark){root.classList.add('dark');}else{root.classList.remove('dark');}}catch(e){}})();`,
           }}
         />
-        <Script
+        <script
           id="sw-init"
           nonce={nonce}
-          strategy="beforeInteractive"
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{
             __html: `if('serviceWorker'in navigator){navigator.serviceWorker.register('/sw.js',{scope:'/'}).catch(function(e){console.error('[SW] Failed:',e);});}`,
           }}
