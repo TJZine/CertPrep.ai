@@ -15,6 +15,8 @@ import {
     Shuffle,
     FileKey,
     ArrowRight,
+    GraduationCap,
+    Info,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/Button";
@@ -22,6 +24,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { GeminiIcon } from "@/components/icons/GeminiIcon";
 import { OpenAIIcon } from "@/components/icons/OpenAIIcon";
+import {
+    EXAM_PRESETS,
+    generatePromptModifier,
+    type ExamPreset,
+} from "@/data/examPresets";
 
 // External AI tool links
 const GEMINI_GEM_URL =
@@ -241,6 +248,224 @@ function Collapsible({
     );
 }
 
+/** Helps users align AI-generated categories with official exam blueprints */
+function ExamAlignmentSection(): React.ReactElement {
+    const [selectedPreset, setSelectedPreset] = React.useState<string | null>(null);
+    const [customCategories, setCustomCategories] = React.useState("");
+    const [copied, setCopied] = React.useState(false);
+
+    // Get categories from selected preset or custom input
+    const categories = React.useMemo(() => {
+        if (selectedPreset === "custom") {
+            return customCategories
+                .split("\n")
+                .map((line) => line.trim())
+                .filter((line) => line.length > 0);
+        }
+        if (selectedPreset) {
+            const preset = EXAM_PRESETS.find((p) => p.id === selectedPreset);
+            return preset?.domains.map((d) => d.name) ?? [];
+        }
+        return [];
+    }, [selectedPreset, customCategories]);
+
+    const promptModifier = generatePromptModifier(categories);
+
+    const handleCopy = async (): Promise<void> => {
+        if (!promptModifier) return;
+        try {
+            await navigator.clipboard.writeText(promptModifier);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 1500);
+        } catch {
+            // Fallback
+            const textarea = document.createElement("textarea");
+            textarea.value = promptModifier;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand("copy");
+            document.body.removeChild(textarea);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 1500);
+        }
+    };
+
+    // Group presets by vendor for better organization
+    const groupedPresets = React.useMemo(() => {
+        const groups: Record<string, ExamPreset[]> = {};
+        for (const preset of EXAM_PRESETS) {
+            const vendor = preset.vendor;
+            if (!groups[vendor]) groups[vendor] = [];
+            groups[vendor].push(preset);
+        }
+        return groups;
+    }, []);
+
+    return (
+        <section className="mb-16">
+            <Collapsible title="🎯 Align with Your Exam">
+                <div className="space-y-6">
+                    {/* Explanation */}
+                    <div className="flex items-start gap-3 p-4 rounded-lg bg-primary/5 border border-primary/20">
+                        <Info className="h-5 w-5 text-primary mt-0.5 shrink-0" aria-hidden="true" />
+                        <div className="text-sm text-muted-foreground">
+                            <p className="font-medium text-foreground mb-1">
+                                Why categories matter
+                            </p>
+                            <p>
+                                Using consistent category names that match your exam&apos;s official domains
+                                improves your Topic Heatmap analytics and helps identify weak areas.
+                                Select your exam below to generate a prompt modifier.
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Preset Selection */}
+                    <div className="space-y-3">
+                        <label className="text-sm font-medium">Select your certification exam:</label>
+                        <div className="grid grid-cols-1 gap-4">
+                            {Object.entries(groupedPresets).map(([vendor, presets]) => (
+                                <div key={vendor} className="space-y-2">
+                                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                                        {vendor}
+                                    </p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {presets.map((preset) => (
+                                            <button
+                                                key={preset.id}
+                                                type="button"
+                                                onClick={() => setSelectedPreset(preset.id)}
+                                                className={cn(
+                                                    "inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all border",
+                                                    selectedPreset === preset.id
+                                                        ? "bg-primary text-primary-foreground border-primary"
+                                                        : "bg-card text-foreground border-border hover:border-primary/50 hover:bg-muted/50"
+                                                )}
+                                            >
+                                                <GraduationCap className="h-4 w-4" aria-hidden="true" />
+                                                <span>{preset.name}</span>
+                                                {preset.examCode && (
+                                                    <Badge variant="secondary" className="text-xs">
+                                                        {preset.examCode}
+                                                    </Badge>
+                                                )}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                            {/* Custom option */}
+                            <div className="space-y-2">
+                                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                                    Other
+                                </p>
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedPreset("custom")}
+                                    className={cn(
+                                        "inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all border",
+                                        selectedPreset === "custom"
+                                            ? "bg-primary text-primary-foreground border-primary"
+                                            : "bg-card text-foreground border-border hover:border-primary/50 hover:bg-muted/50"
+                                    )}
+                                >
+                                    <FileText className="h-4 w-4" aria-hidden="true" />
+                                    Custom (enter your own)
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Custom input area */}
+                    {selectedPreset === "custom" && (
+                        <div className="space-y-2">
+                            <label htmlFor="custom-categories" className="text-sm font-medium">
+                                Enter your exam categories (one per line):
+                            </label>
+                            <textarea
+                                id="custom-categories"
+                                value={customCategories}
+                                onChange={(e) => setCustomCategories(e.target.value)}
+                                placeholder="Domain 1: Security&#10;Domain 2: Networking&#10;Domain 3: Implementation"
+                                rows={5}
+                                className="w-full rounded-lg border border-border bg-card px-4 py-3 text-sm font-mono placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                            />
+                        </div>
+                    )}
+
+                    {/* Selected preset details */}
+                    {selectedPreset && selectedPreset !== "custom" && ((): React.ReactNode => {
+                        const preset = EXAM_PRESETS.find((p) => p.id === selectedPreset);
+                        if (!preset) return null;
+                        return (
+                            <div className="space-y-2">
+                                <p className="text-sm font-medium">Official domains for {preset.name}:</p>
+                                <div className="flex flex-wrap gap-2">
+                                    {preset.domains.map((domain) => (
+                                        <Badge key={domain.name} variant="outline" className="font-mono text-xs">
+                                            {domain.name}
+                                            {domain.weight && (
+                                                <span className="ml-1 text-muted-foreground">({domain.weight}%)</span>
+                                            )}
+                                        </Badge>
+                                    ))}
+                                </div>
+                                {preset.sourceUrl && (
+                                    <p className="text-xs text-muted-foreground">
+                                        Source:{" "}
+                                        <a
+                                            href={preset.sourceUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-primary hover:underline"
+                                        >
+                                            Official exam guide
+                                        </a>
+                                    </p>
+                                )}
+                            </div>
+                        );
+                    })()}
+
+                    {/* Generated prompt modifier */}
+                    {categories.length > 0 && (
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                                <p className="text-sm font-medium">Copy this into your AI prompt:</p>
+                                <button
+                                    type="button"
+                                    onClick={handleCopy}
+                                    className={cn(
+                                        "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-all",
+                                        "bg-primary/10 text-primary hover:bg-primary/20",
+                                        copied && "bg-success/10 text-success"
+                                    )}
+                                    aria-label={copied ? "Copied!" : "Copy prompt modifier"}
+                                >
+                                    {copied ? (
+                                        <>
+                                            <Check className="h-4 w-4" />
+                                            Copied!
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Copy className="h-4 w-4" />
+                                            Copy
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                            <pre className="overflow-x-auto rounded-lg border-l-4 border-primary bg-card p-4 text-sm font-mono whitespace-pre-wrap break-words">
+                                {promptModifier}
+                            </pre>
+                        </div>
+                    )}
+                </div>
+            </Collapsible>
+        </section>
+    );
+}
+
 export function CreateGuideContent(): React.ReactElement {
     const [activeTab, setActiveTab] = React.useState<keyof typeof TEMPLATES>("material");
 
@@ -400,6 +625,9 @@ export function CreateGuideContent(): React.ReactElement {
                     );
                 })}
             </section>
+
+            {/* Exam Category Alignment */}
+            <ExamAlignmentSection />
 
             {/* JSON Schema Reference */}
             <section className="mb-16">

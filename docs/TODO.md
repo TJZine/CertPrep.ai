@@ -6,6 +6,31 @@
 
 ## 🔴 High Priority
 
+### Verify AI Quiz Generator Prompts Handle Category Restrictions
+
+**Priority**: High | **Effort**: 1-2 hours | **Category**: Prompt Engineering
+
+#### Context
+
+The Create page now includes an "Align with Your Exam" section that generates prompt modifiers for category restrictions. We need to verify that both our Gemini Gem and ChatGPT GPT prompts can properly handle these modifiers.
+
+#### Deliverables
+
+1. Test both AI tools with category restriction prompts from the Create page
+2. Update Gemini Gem prompt (if needed) to respect category constraints
+3. Update ChatGPT GPT prompt (if needed) to respect category constraints
+4. Verify generated JSON uses exact category names from the modifier
+5. Document any limitations in the AI quiz generators README
+
+#### Acceptance Criteria
+
+- [ ] Gemini Gem respects category restrictions when provided
+- [ ] ChatGPT GPT respects category restrictions when provided
+- [ ] Generated questions use exact category values (no paraphrasing)
+- [ ] Both tools gracefully handle edge cases (unknown categories, etc.)
+
+---
+
 ### Enable Question Review for Aggregated Results
 
 **Priority**: High | **Effort**: 3-4 hours | **Category**: Feature Completion
