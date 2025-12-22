@@ -23,7 +23,7 @@ export function useCopyToClipboard(resetDelayMs = 1500): UseCopyToClipboardRetur
     const timeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Cleanup timeout on unmount to prevent memory leaks
-    React.useEffect((): (() => void) => {
+    React.useEffect(() => {
         return (): void => {
             if (timeoutRef.current) clearTimeout(timeoutRef.current);
         };

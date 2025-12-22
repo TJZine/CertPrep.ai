@@ -72,6 +72,7 @@ describe("QuizSortControls", () => {
         expect(onSearchChange).toHaveBeenCalledWith("e");
         expect(onSearchChange).toHaveBeenCalledWith("s");
         expect(onSearchChange).toHaveBeenCalledWith("t");
+        expect(onSearchChange).toHaveBeenCalledTimes(4);
     });
 
     it("renders sort dropdown with correct value", () => {
@@ -150,5 +151,50 @@ describe("QuizSortControls", () => {
         // End should go to last tab
         fireEvent.keyDown(allTab, { key: "End" });
         expect(onCategoryChange).toHaveBeenCalledWith("Firearms");
+    });
+
+    // Focus verification tests (#6)
+    it("moves focus to clicked tab", async () => {
+        render(<QuizSortControls {...defaultProps} />);
+
+        const insuranceTab = screen.getByRole("tab", { name: "Insurance" });
+        await userEvent.click(insuranceTab);
+
+        expect(document.activeElement).toBe(insuranceTab);
+    });
+
+    // Edge case tests (#7)
+    it("displays initial searchTerm value", () => {
+        render(<QuizSortControls {...defaultProps} searchTerm="initial query" />);
+
+        const searchInput = screen.getByPlaceholderText("Search quizzes...");
+        expect(searchInput).toHaveValue("initial query");
+    });
+
+    it("ignores unknown keys in keyboard navigation", () => {
+        const onCategoryChange = vi.fn();
+        render(
+            <QuizSortControls {...defaultProps} onCategoryChange={onCategoryChange} />
+        );
+
+        const allTab = screen.getByRole("tab", { name: "All" });
+        allTab.focus();
+
+        // Tab key should not trigger category change
+        fireEvent.keyDown(allTab, { key: "Tab" });
+        expect(onCategoryChange).not.toHaveBeenCalled();
+
+        // Escape key should not trigger category change
+        fireEvent.keyDown(allTab, { key: "Escape" });
+        expect(onCategoryChange).not.toHaveBeenCalled();
+    });
+
+    it("handles empty categories array without crashing", () => {
+        expect(() =>
+            render(<QuizSortControls {...defaultProps} categories={[]} />)
+        ).not.toThrow();
+
+        // Should not render tablist when no categories
+        expect(screen.queryByRole("tablist")).not.toBeInTheDocument();
     });
 });

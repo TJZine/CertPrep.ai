@@ -179,6 +179,8 @@ export const EXAM_PRESETS: ExamPreset[] = [
             { name: "Underwriting & Risk" },
             { name: "Claims & Adjustments" },
         ],
+        // General personal lines categories compiled from common state licensing standards.
+        // No single authoritative blueprint URL - category weighting varies by state.
         lastVerified: "2025-12-22",
     },
     {
@@ -214,6 +216,8 @@ export const EXAM_PRESETS: ExamPreset[] = [
             { name: "Group Insurance" },
             { name: "Ethics & Regulations" },
         ],
+        // Standard life & health domains from NAIC model curriculum.
+        // No single authoritative URL - exam content varies by state.
         lastVerified: "2025-12-22",
     },
 ];

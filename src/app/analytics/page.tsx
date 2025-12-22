@@ -25,6 +25,7 @@ import { useAdvancedAnalytics } from "@/hooks/useAdvancedAnalytics";
 import { useCategoryTrends } from "@/hooks/useCategoryTrends";
 import { useSync } from "@/hooks/useSync";
 import { type OverallStats } from "@/db/results";
+import { calculateWeakestCategories } from "@/lib/analytics/categoryWeighting";
 import { BarChart3, Plus, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
@@ -188,32 +189,8 @@ export default function AnalyticsPage(): React.ReactElement {
     const totalScore = filteredResults.reduce((acc, r) => acc + r.score, 0);
     const averageScore = totalAttempts > 0 ? Math.round(totalScore / totalAttempts) : 0;
 
-    // Calculate weakest categories using weighted mean.
-    // We weight each session's category score by the number of questions in that category,
-    // so larger sample sizes have more influence. This approximates pooled-totals behavior
-    // while still supporting date filtering (which raw pooled-totals can't do client-side
-    // without re-grading all questions).
-    const categorySums = new Map<string, { weightedSum: number; totalWeight: number }>();
-
-    filteredResults.forEach((r) => {
-      if (!r.category_breakdown) return;
-      Object.entries(r.category_breakdown).forEach(([cat, score]) => {
-        // Use question count as weight if available, otherwise default to 1
-        const weight = r.computed_category_scores?.[cat]?.total ?? 1;
-        const current = categorySums.get(cat) || { weightedSum: 0, totalWeight: 0 };
-        current.weightedSum += score * weight;
-        current.totalWeight += weight;
-        categorySums.set(cat, current);
-      });
-    });
-
-    const weakestCategories = Array.from(categorySums.entries())
-      .map(([category, { weightedSum, totalWeight }]) => ({
-        category,
-        avgScore: totalWeight > 0 ? Math.round(weightedSum / totalWeight) : 0,
-      }))
-      .sort((a, b) => a.avgScore - b.avgScore)
-      .slice(0, 5);
+    // Calculate weakest categories using extracted helper (testable)
+    const weakestCategories = calculateWeakestCategories(filteredResults, 5);
 
     return {
       totalQuizzes: quizzes.length,
