@@ -1,10 +1,10 @@
 {
   "title": "MA Personal Lines Insurance Practice Exam 1",
-  "description": "A 50 Question Practice Exam simulating the Massachusetts Personal Lines Insurance certification. Covers Contract Law, Homeowners, MA Auto, Dwelling, Flood, and State Law.",
+  "description": "Practice Exam simulating the Massachusetts Personal Lines Insurance certification. Covers Contract Law, Homeowners, MA Auto, Dwelling, Flood, and State Law.",
   "questions": [
     {
       "id": "exam-1-q01",
-      "category": "Contract Law",
+      "category": "General Insurance",
       "difficulty": "Easy",
       "question": "Which distinct characteristic of an insurance contract signifies that the contract is drafted by one party (the insurer) and accepted by the other (the applicant), where ambiguities are generally resolved in favor of the insured?",
       "options": {
@@ -19,7 +19,7 @@
     },
     {
       "id": "exam-1-q02",
-      "category": "General Insurance Basics",
+      "category": "General Insurance",
       "difficulty": "Medium",
       "question": "Which of the following is considered a 'morale' hazard?",
       "options": {
@@ -34,7 +34,7 @@
     },
     {
       "id": "exam-1-q03",
-      "category": "Property & Liability Basics",
+      "category": "Property and Casualty Insurance Basics",
       "difficulty": "Easy",
       "question": "In liability insurance, which legal defense generally prevents an injured third party from recovering damages if they were partially responsible for the loss, unless the state uses a comparative negligence standard?",
       "options": {
@@ -49,7 +49,7 @@
     },
     {
       "id": "exam-1-q04",
-      "category": "Dwelling Policies",
+      "category": "Dwelling Policy",
       "difficulty": "Medium",
       "question": "Under a Dwelling Property Basic Form (DP-1), which of the following perils is automatically covered without endorsement?",
       "options": {
@@ -64,7 +64,7 @@
     },
     {
       "id": "exam-1-q05",
-      "category": "Homeowners Section I",
+      "category": "Homeowners Policy",
       "difficulty": "Medium",
       "question": "In a Homeowners policy (HO-3), what is the specific limit of liability for the theft of jewelry, watches, and furs?",
       "options": {
@@ -79,7 +79,7 @@
     },
     {
       "id": "exam-1-q06",
-      "category": "Homeowners Section II",
+      "category": "Homeowners Policy",
       "difficulty": "Easy",
       "question": "Coverage F (Medical Payments to Others) in a Homeowners policy will pay for necessary medical expenses incurred within how many years of an accident?",
       "options": {
@@ -94,7 +94,7 @@
     },
     {
       "id": "exam-1-q07",
-      "category": "MA Personal Auto",
+      "category": "Auto Insurance",
       "difficulty": "Hard",
       "question": "Under Part 2 (Personal Injury Protection) of the MA Auto Policy, if an injured person has private health insurance, how much of the medical expenses will PIP pay before the health insurer must be billed?",
       "options": {
@@ -109,7 +109,7 @@
     },
     {
       "id": "exam-1-q08",
-      "category": "MA Personal Auto",
+      "category": "Auto Insurance",
       "difficulty": "Medium",
       "question": "Which part of the Massachusetts Personal Auto Policy is Compulsory (Mandatory)?",
       "options": {
@@ -124,7 +124,7 @@
     },
     {
       "id": "exam-1-q09",
-      "category": "MA Personal Auto",
+      "category": "Auto Insurance",
       "difficulty": "Medium",
       "question": "If a Massachusetts auto insurer cancels a policy for non-payment of premium, how many days' written notice must be provided?",
       "options": {
@@ -139,7 +139,7 @@
     },
     {
       "id": "exam-1-q10",
-      "category": "Flood Insurance",
+      "category": "Other Coverages and Options",
       "difficulty": "Easy",
       "question": "Under the National Flood Insurance Program (NFIP), what is the standard waiting period for a new policy to become effective?",
       "options": {
@@ -154,7 +154,7 @@
     },
     {
       "id": "exam-1-q11",
-      "category": "MA Insurance Law",
+      "category": "Insurance Regulation",
       "difficulty": "Medium",
       "question": "A Massachusetts resident producer license is valid for what period of time?",
       "options": {
@@ -169,7 +169,7 @@
     },
     {
       "id": "exam-1-q12",
-      "category": "MA Insurance Law",
+      "category": "Insurance Regulation",
       "difficulty": "Medium",
       "question": "If a producer changes their address, they must notify the Division of Insurance within how many days?",
       "options": {
@@ -184,7 +184,7 @@
     },
     {
       "id": "exam-1-q13",
-      "category": "MA Insurance Law",
+      "category": "Insurance Regulation",
       "difficulty": "Easy",
       "question": "An insurer that is chartered in another country but authorized to do business in Massachusetts is referred to as:",
       "options": {
@@ -199,7 +199,7 @@
     },
     {
       "id": "exam-1-q14",
-      "category": "Homeowners Section I",
+      "category": "Homeowners Policy",
       "difficulty": "Hard",
       "question": "Under an unendorsed Homeowners policy, what is the maximum coverage available for watercraft and its trailers?",
       "options": {
@@ -214,7 +214,7 @@
     },
     {
       "id": "exam-1-q15",
-      "category": "Contract Law",
+      "category": "General Insurance",
       "difficulty": "Easy",
       "question": "Which element of a contract involves the exchange of value, such as the insured paying a premium and the insurer promising to pay claims?",
       "options": {
@@ -229,7 +229,7 @@
     },
     {
       "id": "exam-1-q16",
-      "category": "Homeowners Section I",
+      "category": "Homeowners Policy",
       "difficulty": "Medium",
       "question": "If a Homeowners policy (HO-3) insures a home (Coverage A) for $300,000, what is the automatic limit for Coverage B (Other Structures)?",
       "options": {
@@ -244,7 +244,7 @@
     },
     {
       "id": "exam-1-q17",
-      "category": "MA Personal Auto",
+      "category": "Auto Insurance",
       "difficulty": "Hard",
       "question": "Under the Massachusetts Personal Auto Policy, Part 10 (Substitute Transportation) will pay up to what standard daily limit?",
       "options": {
@@ -259,7 +259,7 @@
     },
     {
       "id": "exam-1-q18",
-      "category": "MA Insurance Law",
+      "category": "Insurance Regulation",
       "difficulty": "Medium",
       "question": "A producer who embezzles premiums for personal use may be charged with larceny. The monetary penalty for this specific act is not more than:",
       "options": {
@@ -274,7 +274,7 @@
     },
     {
       "id": "exam-1-q19",
-      "category": "Umbrella Liability",
+      "category": "Other Coverages and Options",
       "difficulty": "Easy",
       "question": "What is the primary purpose of a Self-Insured Retention (SIR) in an Umbrella policy?",
       "options": {
@@ -289,7 +289,7 @@
     },
     {
       "id": "exam-1-q20",
-      "category": "General Insurance Basics",
+      "category": "General Insurance",
       "difficulty": "Medium",
       "question": "Which risk management technique involves purchasing an insurance policy?",
       "options": {
@@ -304,7 +304,7 @@
     },
     {
       "id": "exam-1-q21",
-      "category": "Dwelling Policies",
+      "category": "Dwelling Policy",
       "difficulty": "Hard",
       "question": "Under a DP-2 Broad Form, coverage for the 'Weight of Ice, Snow, or Sleet' generally excludes damage to which of the following?",
       "options": {
@@ -319,7 +319,7 @@
     },
     {
       "id": "exam-1-q22",
-      "category": "MA Insurance Law",
+      "category": "Insurance Regulation",
       "difficulty": "Medium",
       "question": "Making false statements about the financial condition of a competing insurer to damage their reputation is known as:",
       "options": {
@@ -334,7 +334,7 @@
     },
     {
       "id": "exam-1-q23",
-      "category": "MA Personal Auto",
+      "category": "Auto Insurance",
       "difficulty": "Medium",
       "question": "Under the Massachusetts Personal Auto Policy, Part 6 (Medical Payments) excludes expenses incurred more than how many years after the accident?",
       "options": {
@@ -349,7 +349,7 @@
     },
     {
       "id": "exam-1-q24",
-      "category": "MA Insurance Law",
+      "category": "Insurance Regulation",
       "difficulty": "Easy",
       "question": "If an insurer cancels a fire insurance policy in Massachusetts, it must provide the mortgagee with how many days' written notice?",
       "options": {
@@ -364,7 +364,7 @@
     },
     {
       "id": "exam-1-q25",
-      "category": "Homeowners Section I",
+      "category": "Homeowners Policy",
       "difficulty": "Medium",
       "question": "Which Homeowners form is designed specifically for condominium unit owners?",
       "options": {

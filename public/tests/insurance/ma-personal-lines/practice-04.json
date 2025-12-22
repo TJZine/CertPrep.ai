@@ -1,0 +1,763 @@
+{
+  "title": "MAIA Personal Lines Practice Exam 2 (Optimized)",
+  "description": "A second set of 50 distinct practice questions covering the MAIA Personal Lines curriculum, balanced to match the official exam's emphasis on exclusion-based questioning.",
+  "questions": [
+    {
+      "id": "contract-law-051",
+      "category": "General Insurance",
+      "difficulty": "Medium",
+      "question": "Which characteristic of an insurance contract allows a court to interpret ambiguous language in favor of the insured?",
+      "options": {
+        "A": "Aleatory",
+        "B": "Unilateral",
+        "C": "Adhesion",
+        "D": "Conditional"
+      },
+      "correct_answer": "C",
+      "explanation": "Chapter 1-2 states that an insurance policy is a contract of adhesion ('drafted by the insurer'). Therefore, 'any language that is confusing... may be decided by a court in favor of the person who did not draft the language (i.e., the insured).'",
+      "distractor_logic": "Option A refers to unequal value exchange. Option B refers to one party making a promise. Option D refers to contract performance depending on certain conditions."
+    },
+    {
+      "id": "insurers-052",
+      "category": "Property and Casualty Insurance Basics",
+      "difficulty": "Medium",
+      "question": "All of the following statements regarding a Stock Insurer are true EXCEPT:",
+      "options": {
+        "A": "They are owned by stockholders",
+        "B": "They are owned by their policyholders",
+        "C": "They pay dividends to stockholders, not policyholders",
+        "D": "They issue non-participating policies"
+      },
+      "correct_answer": "B",
+      "explanation": "Stock insurers are owned by stockholders. Mutual insurers are the ones owned by policyholders. Therefore, the statement that stock insurers are owned by policyholders is the exception (false statement).",
+      "distractor_logic": "Options A, C, and D are all accurate descriptions of a Stock Insurer. Option B describes a Mutual Insurer."
+    },
+    {
+      "id": "producer-authority-053",
+      "category": "Property and Casualty Insurance Basics",
+      "difficulty": "Medium",
+      "question": "Which of the following is NOT considered one of the three primary types of producer authority?",
+      "options": {
+        "A": "Express Authority",
+        "B": "Implied Authority",
+        "C": "Apparent Authority",
+        "D": "Fiduciary Authority"
+      },
+      "correct_answer": "D",
+      "explanation": "The three types of authority are Express (written), Implied (incidental), and Apparent (perceived). 'Fiduciary Authority' is not a standard category of authority; fiduciary is a type of responsibility or capacity, not a source of authority.",
+      "distractor_logic": "Options A, B, and C are the three recognized legal sources of an agent's authority."
+    },
+    {
+      "id": "risk-management-054",
+      "category": "Property and Casualty Insurance Basics",
+      "difficulty": "Medium",
+      "question": "Installing a sprinkler system to minimize the severity of a fire loss is an example of which risk management technique?",
+      "options": {
+        "A": "Avoidance",
+        "B": "Transfer",
+        "C": "Reduction",
+        "D": "Retention"
+      },
+      "correct_answer": "C",
+      "explanation": "Chapter 2-2 and 2-14 classify installing a sprinkler system as Risk Reduction, which 'lessen[s] the severity of losses' rather than preventing them entirely.",
+      "distractor_logic": "Option A involves avoiding the activity entirely. Option B involves insurance. Option D involves paying for the loss oneself."
+    },
+    {
+      "id": "property-loss-055",
+      "category": "Property and Casualty Insurance Basics",
+      "difficulty": "Medium",
+      "question": "Loss of rental income following a fire damage to an apartment building is best described as what type of loss?",
+      "options": {
+        "A": "Direct loss",
+        "B": "Indirect loss",
+        "C": "Proximate loss",
+        "D": "Physical loss"
+      },
+      "correct_answer": "B",
+      "explanation": "Chapter 2-4 defines Indirect Loss (or consequential loss) as 'associated with a loss of use,' such as 'loss of rent (rental value) or loss of use' resulting from a direct physical loss.",
+      "distractor_logic": "Option A refers to the physical damage itself. Option C refers to the cause. Option D is synonymous with direct loss to tangible property."
+    },
+    {
+      "id": "liability-damages-056",
+      "category": "Property and Casualty Insurance Basics",
+      "difficulty": "Hard",
+      "question": "Which type of damages are awarded to an injured party for intangible losses such as pain and suffering?",
+      "options": {
+        "A": "Special damages",
+        "B": "General damages",
+        "C": "Punitive damages",
+        "D": "Specific damages"
+      },
+      "correct_answer": "B",
+      "explanation": "Chapter 3-4 defines General Damages as 'those awarded for intangible types of loss that are non-economic or non-measurable such as pain and suffering.'",
+      "distractor_logic": "Option A (Special damages) are for tangible economic losses like medical bills. Option C (Punitive damages) are to punish the offender. Option D is not a standard term."
+    },
+    {
+      "id": "liability-vicarious-057",
+      "category": "Property and Casualty Insurance Basics",
+      "difficulty": "Medium",
+      "question": "Liability imposed on a parent for the actions of their minor child is known as:",
+      "options": {
+        "A": "Strict Liability",
+        "B": "Absolute Liability",
+        "C": "Vicarious Liability",
+        "D": "Contributory Liability"
+      },
+      "correct_answer": "C",
+      "explanation": "Chapter 3-5 defines Vicarious Liability as liability where one party is responsible for another, explicitly stating: 'A parent is vicariously liable for damage done by their minor children.'",
+      "distractor_logic": "Options A and B refer to liability without fault for dangerous activities. Option D is a defense against negligence."
+    },
+    {
+      "id": "dwelling-perils-058",
+      "category": "Dwelling Policy",
+      "difficulty": "Hard",
+      "question": "Under the DP-2 Broad Form, the 'Falling Objects' peril covers damage to the interior of a building ONLY if:",
+      "options": {
+        "A": "The object weighs more than 50 pounds",
+        "B": "The exterior of the building is damaged first, creating an opening",
+        "C": "The object is a tree branch",
+        "D": "The insured is not at home"
+      },
+      "correct_answer": "B",
+      "explanation": "Chapter 4-8 states regarding the Falling Objects peril in the DP-2: 'not interior damage unless exterior damage is done to a structure' (i.e., creating an opening).",
+      "distractor_logic": "Options A, C, and D are not conditions found in the policy text for this peril."
+    },
+    {
+      "id": "dwelling-trees-059",
+      "category": "Dwelling Policy",
+      "difficulty": "Medium",
+      "question": "The 'Trees, Shrubs, and Other Plants' coverage in a DP-2 policy provides a maximum per-item limit of:",
+      "options": {
+        "A": "$250",
+        "B": "$500",
+        "C": "$1,000",
+        "D": "$2,500"
+      },
+      "correct_answer": "B",
+      "explanation": "Chapter 4-6 states that the DP-2 trees, shrubs, and plants extension has 'a further limitation of $500 per damaged item.'",
+      "distractor_logic": "Option A is a standard deductible. Option C is the tree removal limit for windstorm in Homeowners. Option D is a limit for business property."
+    },
+    {
+      "id": "dwelling-exclusions-060",
+      "category": "Dwelling Policy",
+      "difficulty": "Medium",
+      "question": "Which of the following is excluded under the Vandalism coverage in a DP-1 policy?",
+      "options": {
+        "A": "Damage to the building exterior",
+        "B": "Damage occurring after 30 days of vacancy",
+        "C": "Glass breakage",
+        "D": "Fire caused by vandals"
+      },
+      "correct_answer": "C",
+      "explanation": "Chapter 4-5 states regarding DP-1 Vandalism: 'V & MM does not cover glass breakage or loss by theft.'",
+      "distractor_logic": "Option B is incorrect; the vacancy exclusion is 60 days. Options A and D are generally covered perils if V&MM is purchased."
+    },
+    {
+      "id": "homeowners-section1-061",
+      "category": "Homeowners Policy",
+      "difficulty": "Medium",
+      "question": "If a Homeowners policy (HO-3) provides $300,000 in coverage on the dwelling, what is the additional amount of insurance available for Debris Removal if the actual damage plus debris removal exceeds the policy limit?",
+      "options": {
+        "A": "No additional amount",
+        "B": "5% of the Coverage A limit",
+        "C": "10% of the Coverage A limit",
+        "D": "$1,000 flat amount"
+      },
+      "correct_answer": "B",
+      "explanation": "Chapter 5-4 states: 'If there were a total loss to the dwelling, the policy will provide debris removal in an additional amount of 5% of the dwelling limit.'",
+      "distractor_logic": "Option A is incorrect because there is an additional amount. Options C and D are incorrect percentages/figures."
+    },
+    {
+      "id": "homeowners-theft-062",
+      "category": "Homeowners Policy",
+      "difficulty": "Medium",
+      "question": "What is the special limit of liability for theft of firearms in a Homeowners policy?",
+      "options": {
+        "A": "$1,500",
+        "B": "$2,000",
+        "C": "$2,500",
+        "D": "$5,000"
+      },
+      "correct_answer": "C",
+      "explanation": "Chapter 5-3 lists the Special Limits of Liability: '$2,500 for loss by theft of firearms.'",
+      "distractor_logic": "Option A ($1,500) is for jewelry/furs. Option D is for grave markers. Option B is not a standard limit."
+    },
+    {
+      "id": "homeowners-settlement-063",
+      "category": "Homeowners Policy",
+      "difficulty": "Easy",
+      "question": "Under the 'Pair and Set' clause, if one earring from a pair valued at $2,000 is lost, and the remaining earring is worth $600, how will the insurer settle the loss (assuming they do not repair/replace)?",
+      "options": {
+        "A": "Pay $2,000",
+        "B": "Pay $1,000",
+        "C": "Pay $1,400",
+        "D": "Pay nothing"
+      },
+      "correct_answer": "C",
+      "explanation": "Chapter 5-6 states the insurer may 'pay the difference between the ACV of the property before and after the loss.' ($2,000 value of set - $600 remaining value = $1,400 loss).",
+      "distractor_logic": "Option A is the full value. Option B assumes a 50/50 split. Option D is incorrect."
+    },
+    {
+      "id": "homeowners-liability-064",
+      "category": "Homeowners Policy",
+      "difficulty": "Medium",
+      "question": "Which of the following would NOT be covered under Section II (Liability) of a Homeowners policy?",
+      "options": {
+        "A": "Injury to a guest who slips on the insured's walkway",
+        "B": "Damage to a neighbor's window caused by the insured's child",
+        "C": "Injury to the named insured caused by falling down their own stairs",
+        "D": "Injury caused by the insured's dog"
+      },
+      "correct_answer": "C",
+      "explanation": "Chapter 5-8 states that Section II coverage 'do[es] not apply to any insured or resident relative.' Liability coverage is for third parties, not the insured.",
+      "distractor_logic": "Options A, B, and D involve third-party losses which are covered."
+    },
+    {
+      "id": "homeowners-medpay-065",
+      "category": "Homeowners Policy",
+      "difficulty": "Easy",
+      "question": "Damage to property of others caused by an insured is covered under the 'Damage to Property of Others' additional coverage up to what amount?",
+      "options": {
+        "A": "$250",
+        "B": "$500",
+        "C": "$1,000",
+        "D": "$2,500"
+      },
+      "correct_answer": "C",
+      "explanation": "Chapter 5-9 states regarding additional coverages: 'Damage to the property of others is also provided for up to $1,000.'",
+      "distractor_logic": "Option B ($500) is the limit for Fire Department Service Charge. Option D ($2,500) is for landlord's furnishings."
+    },
+    {
+      "id": "homeowners-tenants-066",
+      "category": "Homeowners Policy",
+      "difficulty": "Easy",
+      "question": "Which policy form is intended for a tenant renting an apartment?",
+      "options": {
+        "A": "HO-2",
+        "B": "HO-3",
+        "C": "HO-4",
+        "D": "HO-5"
+      },
+      "correct_answer": "C",
+      "explanation": "Chapter 5-14 identifies the HO-4 as the 'Contents Broad Form' or 'Tenants Broad Form,' which provides coverage for a renter's personal property.",
+      "distractor_logic": "Options A, B, and D are forms for owner-occupants of dwellings."
+    },
+    {
+      "id": "homeowners-exclusions-067",
+      "category": "Homeowners Policy",
+      "difficulty": "Medium",
+      "question": "Power failure is excluded under the Homeowners policy unless:",
+      "options": {
+        "A": "The failure occurs on the insured premises",
+        "B": "The failure lasts more than 24 hours",
+        "C": "The failure causes a covered peril (like fire) to occur on the premises",
+        "D": "The insured pays an extra premium"
+      },
+      "correct_answer": "C",
+      "explanation": "Chapter 5-5 lists 'power failure off the premises' as excluded. However, if a power failure off-premises causes a covered peril (such as fire or explosion) to occur on the residence premises, the resulting damage from that covered peril is covered.",
+      "distractor_logic": "Option A is the inverse of the exclusion text (power failure ON premises is generally not a peril in itself, but the exclusion specifically targets OFF premises failure). Option B is a time element not in the text."
+    },
+    {
+      "id": "auto-definitions-068",
+      "category": "Auto Insurance",
+      "difficulty": "Medium",
+      "question": "Under the MA Personal Auto Policy, which vehicle is NOT considered a 'Private Passenger Auto'?",
+      "options": {
+        "A": "A station wagon owned by an individual",
+        "B": "A pickup truck used for delivery of goods in a business",
+        "C": "A van leased for 12 months used for personal transportation",
+        "D": "A jeep owned by two individuals"
+      },
+      "correct_answer": "B",
+      "explanation": "The Auto Policy Definitions section states a pickup or van is excluded if 'used for delivery or transportation of goods or materials unless such use is incidental to the insured's business of installing...'. Regular delivery use disqualifies it.",
+      "distractor_logic": "Options A, C, and D fit the definition of eligible private passenger autos (owned/leased by individuals, personal use)."
+    },
+    {
+      "id": "auto-pip-069",
+      "category": "Auto Insurance",
+      "difficulty": "Medium",
+      "question": "What percentage of lost wages does Personal Injury Protection (PIP) pay?",
+      "options": {
+        "A": "50%",
+        "B": "60%",
+        "C": "75%",
+        "D": "100%"
+      },
+      "correct_answer": "C",
+      "explanation": "The Auto Policy Part II (PIP) section states: 'The policy will pay up to 75% of an injured person's average weekly gross wage.'",
+      "distractor_logic": "Options A, B, and D are incorrect percentages for the lost wage benefit in MA PIP."
+    },
+    {
+      "id": "auto-part3-070",
+      "category": "Auto Insurance",
+      "difficulty": "Hard",
+      "question": "Part 3 (Uninsured Motorist) covers bodily injury caused by a 'hit-and-run' driver only if:",
+      "options": {
+        "A": "The driver is identified within 24 hours",
+        "B": "There is physical contact with the vehicle",
+        "C": "The responsible driver cannot be identified",
+        "D": "The accident occurs on private property"
+      },
+      "correct_answer": "C",
+      "explanation": "The Auto Policy Part III section states: 'Coverage against hit-and-run drivers is provided if the responsible driver cannot be identified.'",
+      "distractor_logic": "Option B (physical contact) is a requirement in some states but the text emphasizes identification. Option A is not a condition. Option D is irrelevant."
+    },
+    {
+      "id": "auto-optional-bi-071",
+      "category": "Auto Insurance",
+      "difficulty": "Medium",
+      "question": "Which optional auto coverage pays for bail bonds if the insured is arrested due to an accident?",
+      "options": {
+        "A": "Part 1 (Bodily Injury to Others)",
+        "B": "Part 5 (Optional Bodily Injury to Others)",
+        "C": "Part 6 (Medical Payments)",
+        "D": "Part 11 (Towing and Labor)"
+      },
+      "correct_answer": "B",
+      "explanation": "The Auto Policy Part V section states: 'Part V also includes coverage for bail bonds up to $250 if the insured or a family member is arrested as a result of an auto accident.'",
+      "distractor_logic": "Part 1 covers premiums for appeal bonds but not bail bonds. Parts 6 and 11 do not cover bonds."
+    },
+    {
+      "id": "auto-medpay-072",
+      "category": "Auto Insurance",
+      "difficulty": "Medium",
+      "question": "Part 6 (Medical Payments) of the MA Auto Policy will NOT pay for expenses incurred:",
+      "options": {
+        "A": "More than two years after the accident",
+        "B": "By a pedestrian struck by the auto",
+        "C": "By a passenger in the auto",
+        "D": "For funeral services"
+      },
+      "correct_answer": "A",
+      "explanation": "The Auto Policy Part VI section states: 'The insurer will not pay for expenses incurred more than two years after the date of the accident.'",
+      "distractor_logic": "Options B, C, and D are all covered under Medical Payments."
+    },
+    {
+      "id": "auto-glass-073",
+      "category": "Auto Insurance",
+      "difficulty": "Easy",
+      "question": "In Massachusetts, the optional deductible for glass damage under Comprehensive coverage is typically:",
+      "options": {
+        "A": "$0",
+        "B": "$100",
+        "C": "$300",
+        "D": "$500"
+      },
+      "correct_answer": "B",
+      "explanation": "The Auto Policy Part IX section states: 'Also, a $100 glass damage deductible is optional.'",
+      "distractor_logic": "Options A, C, and D are other deductible amounts or misconceptions, but $100 is explicitly cited for glass."
+    },
+    {
+      "id": "auto-cancellation-074",
+      "category": "Auto Insurance",
+      "difficulty": "Medium",
+      "question": "After an auto policy has been in effect for 90 days, an insurer can cancel for all of the following reasons EXCEPT:",
+      "options": {
+        "A": "Nonpayment of premium",
+        "B": "Suspension of driver's license",
+        "C": "Failure to pay surcharge for moving violations",
+        "D": "Involvement in two not-at-fault accidents"
+      },
+      "correct_answer": "D",
+      "explanation": "The Auto Policy Cancellation section lists valid reasons after 90 days: nonpayment, license suspension, failure to pay surcharges, and fraud. 'Involvement in two not-at-fault accidents' is NOT a valid reason.",
+      "distractor_logic": "Options A, B, and C are explicitly listed as valid reasons for cancellation."
+    },
+    {
+      "id": "auto-inspection-075",
+      "category": "Auto Insurance",
+      "difficulty": "Medium",
+      "question": "If an insurer requires a pre-insurance inspection for physical damage coverage, it may defer the inspection for how many calendar days?",
+      "options": {
+        "A": "5 days",
+        "B": "7 days",
+        "C": "10 days",
+        "D": "30 days"
+      },
+      "correct_answer": "C",
+      "explanation": "The Auto Policy section on Pre-Insurance Inspections states: 'In some cases the insurer may defer the required inspection of the auto for ten (10) calendar days.'",
+      "distractor_logic": "Options A, B, and D are incorrect timeframes for this specific regulation."
+    },
+    {
+      "id": "auto-comprehensive-076",
+      "category": "Auto Insurance",
+      "difficulty": "Easy",
+      "question": "Under the MA Auto Policy, a collision with a bird or animal is covered under:",
+      "options": {
+        "A": "Part 7 (Collision)",
+        "B": "Part 8 (Limited Collision)",
+        "C": "Part 9 (Comprehensive)",
+        "D": "Part 4 (Property Damage)"
+      },
+      "correct_answer": "C",
+      "explanation": "The Auto Policy Part IX section states: 'The perils covered by this part include... collision with a bird or animal.'",
+      "distractor_logic": "Collision coverage (Part 7) explicitly excludes collision with animals (referring them to Comprehensive)."
+    },
+    {
+      "id": "umbrella-limits-077",
+      "category": "Other Coverages and Options",
+      "difficulty": "Medium",
+      "question": "Before an insurer issues a personal umbrella policy, they will typically require the insured to maintain:",
+      "options": {
+        "A": "A flawless driving record",
+        "B": "Specific underlying liability limits",
+        "C": "A commercial liability policy",
+        "D": "A surety bond"
+      },
+      "correct_answer": "B",
+      "explanation": "Chapter 7-1 states: 'Specific limits of underlying liability insurance must be purchased before an insurer will permit an insured to purchase umbrella coverage.' (e.g., $300,000 auto limits).",
+      "distractor_logic": "Options A and D are not universal requirements mentioned. Option C is for commercial umbrellas."
+    },
+    {
+      "id": "flood-definition-078",
+      "category": "Other Coverages and Options",
+      "difficulty": "Hard",
+      "question": "For a flood to be covered under an NFIP policy, it must affect:",
+      "options": {
+        "A": "Only the insured's property",
+        "B": "Two or more properties or two or more acres of land",
+        "C": "The entire community",
+        "D": "At least 50% of the insured's land"
+      },
+      "correct_answer": "B",
+      "explanation": "Chapter 8-2 defines a covered flood: 'A covered flood must be a general condition... However, two or more properties or two or more acres of land must be affected.'",
+      "distractor_logic": "Option A is incorrect (must be general condition). Option C is too broad. Option D is not the specific threshold."
+    },
+    {
+      "id": "flood-limits-079",
+      "category": "Other Coverages and Options",
+      "difficulty": "Hard",
+      "question": "Under the NFIP Emergency Program, what is the maximum coverage limit for a single-family residential dwelling?",
+      "options": {
+        "A": "$35,000",
+        "B": "$50,000",
+        "C": "$100,000",
+        "D": "$250,000"
+      },
+      "correct_answer": "A",
+      "explanation": "Chapter 8-2, Limits of Coverage table, lists the Emergency Program limit for a Single family residential dwelling as '$35,000'.",
+      "distractor_logic": "Option C ($100,000) is the Emergency limit for non-residential. Option D ($250,000) is the Regular Program limit."
+    },
+    {
+      "id": "ma-law-adjuster-080",
+      "category": "Insurance Regulation",
+      "difficulty": "Medium",
+      "question": "A Public Insurance (Fire) Adjuster represents:",
+      "options": {
+        "A": "The insurer",
+        "B": "The policyholder",
+        "C": "The state",
+        "D": "The contractor"
+      },
+      "correct_answer": "B",
+      "explanation": "Chapter 9-1 defines a Public Insurance Adjuster as 'a person who represents a policyholder in the negotiation of a loss payable by a fire insurance policy.'",
+      "distractor_logic": "Option A is represented by a company adjuster. Options C and D are not the principals."
+    },
+    {
+      "id": "ma-law-temporary-081",
+      "category": "Insurance Regulation",
+      "difficulty": "Medium",
+      "question": "A holder of a temporary license in Massachusetts may do all of the following EXCEPT:",
+      "options": {
+        "A": "Receive renewal commissions",
+        "B": "Service existing policies",
+        "C": "Write new business",
+        "D": "Operate without passing the state exam (for a limited time)"
+      },
+      "correct_answer": "C",
+      "explanation": "Chapter 9-3 explicitly states: 'This license does not allow the holder to write new business but only to receive renewal commissions.'",
+      "distractor_logic": "Options A, B, and D are permitted activities/characteristics of the temporary license."
+    },
+    {
+      "id": "ma-law-reporting-082",
+      "category": "Insurance Regulation",
+      "difficulty": "Medium",
+      "question": "A producer must report any administrative action taken against them in another jurisdiction to the Commissioner within:",
+      "options": {
+        "A": "10 days",
+        "B": "15 days",
+        "C": "30 days",
+        "D": "60 days"
+      },
+      "correct_answer": "C",
+      "explanation": "Chapter 9-6 under Reporting of Actions states: 'A producer must report... within 30 days of a final disposition of the matter.'",
+      "distractor_logic": "Options A, B, and D are incorrect timeframes for this specific report."
+    },
+    {
+      "id": "ma-law-defamation-083",
+      "category": "Insurance Regulation",
+      "difficulty": "Easy",
+      "question": "Making false statements about the financial condition of a competing insurer is an unfair trade practice known as:",
+      "options": {
+        "A": "Twisting",
+        "B": "Coercion",
+        "C": "Defamation",
+        "D": "Boycott"
+      },
+      "correct_answer": "C",
+      "explanation": "Chapter 9-15 defines Defamation as 'making false or untrue statements regarding a competing insurer... regarding the financial condition...'",
+      "distractor_logic": "Option A refers to policy replacement. Options B and D refer to restraint of trade."
+    },
+    {
+      "id": "ma-law-embezzlement-084",
+      "category": "Insurance Regulation",
+      "difficulty": "Medium",
+      "question": "What is the maximum prison sentence for a producer convicted of embezzlement in Massachusetts?",
+      "options": {
+        "A": "1 year",
+        "B": "2 years",
+        "C": "5 years",
+        "D": "10 years"
+      },
+      "correct_answer": "C",
+      "explanation": "Chapter 9-15 states that a producer who embezzles funds 'will be subject to a prison sentence in State prison for a term of up to five (5) years.'",
+      "distractor_logic": "Options A, B, and D are incorrect sentencing limits for this specific crime."
+    },
+    {
+      "id": "ma-law-privacy-085",
+      "category": "Insurance Regulation",
+      "difficulty": "Medium",
+      "question": "Under the Insurance Information and Privacy Protection Act, if an individual requests access to their personal information, the insurer must provide it within:",
+      "options": {
+        "A": "10 days",
+        "B": "20 days",
+        "C": "30 days",
+        "D": "45 days"
+      },
+      "correct_answer": "C",
+      "explanation": "Chapter 9-17 states: 'Once a request is made, the insurance organization must provide the individual with the information... within 30 days.'",
+      "distractor_logic": "Options A, B, and D are incorrect timeframes."
+    },
+    {
+      "id": "ma-law-fire-policy-086",
+      "category": "Insurance Regulation",
+      "difficulty": "Hard",
+      "question": "Which of the following statements regarding the inception of the Massachusetts Standard Fire Policy is FALSE?",
+      "options": {
+        "A": "The policy goes into effect at 12:01 AM",
+        "B": "The policy goes into effect at 12:00 PM (Noon)",
+        "C": "The time refers to standard time at the location of the property",
+        "D": "The policy typically expires at 12:01 AM on the expiration date"
+      },
+      "correct_answer": "B",
+      "explanation": "Chapter 9-18 states: 'Massachusetts standard fire policies will go into effect at 12:01 a.m. on the policy's inception date.' Therefore, the statement that it goes into effect at Noon (which was the old standard) is the FALSE statement.",
+      "distractor_logic": "Options A, C, and D are true statements regarding the policy term."
+    },
+    {
+      "id": "contract-law-087",
+      "category": "General Insurance",
+      "difficulty": "Easy",
+      "question": "Which term describes the 'binding force' of a policy, consisting of the premium and representations?",
+      "options": {
+        "A": "Agreement",
+        "B": "Consideration",
+        "C": "Capacity",
+        "D": "Warranty"
+      },
+      "correct_answer": "B",
+      "explanation": "Chapter 1-1 defines Consideration as the 'binding force of the policy' involving the exchange of value (premium/representations for promise to pay).",
+      "distractor_logic": "Option A is the meeting of minds. Option C is legal ability to contract. Option D is a guaranteed statement."
+    },
+    {
+      "id": "general-insurance-088",
+      "category": "General Insurance",
+      "difficulty": "Medium",
+      "question": "All of the following statements regarding Hazards and Perils are true EXCEPT:",
+      "options": {
+        "A": "A Peril is the actual cause of a loss",
+        "B": "A Hazard increases the likelihood of a loss",
+        "C": "Fire is an example of a Hazard",
+        "D": "Wet leaves on a sidewalk are an example of a Hazard"
+      },
+      "correct_answer": "C",
+      "explanation": "Fire is a Peril (a cause of loss), not a Hazard. A Hazard is a condition that increases the chance of a peril occurring (e.g., faulty wiring). Therefore, classifying Fire as a Hazard is the false statement.",
+      "distractor_logic": "Options A, B, and D are correct definitions and examples."
+    },
+    {
+      "id": "dwelling-exclusions-089",
+      "category": "Dwelling Policy",
+      "difficulty": "Medium",
+      "question": "In a DP-3 Special Form, damage to personal property (Coverage C) is covered on which basis?",
+      "options": {
+        "A": "Open Peril",
+        "B": "Broad Form Named Peril",
+        "C": "Basic Form Named Peril",
+        "D": "Replacement Cost"
+      },
+      "correct_answer": "B",
+      "explanation": "Chapter 4-9 states regarding DP-3: 'Coverage C... is protected on a 'broad form peril' basis.' (Only Coverages A and B are open peril).",
+      "distractor_logic": "Option A applies to the dwelling only. Option C applies to DP-1. Option D applies to settlement, not perils."
+    },
+    {
+      "id": "homeowners-forms-090",
+      "category": "Homeowners Policy",
+      "difficulty": "Medium",
+      "question": "Which Homeowners form provides Open Peril coverage for BOTH the dwelling and personal property?",
+      "options": {
+        "A": "HO-3",
+        "B": "HO-4",
+        "C": "HO-5",
+        "D": "HO-6"
+      },
+      "correct_answer": "C",
+      "explanation": "Chapter 5-14 states: 'The HO-5 policy provides the broadest scope of coverage... since it provides coverage for real and personal property on an open peril basis.'",
+      "distractor_logic": "Option A (HO-3) is open peril on dwelling but named peril on contents. Options B and D are named peril forms."
+    },
+    {
+      "id": "auto-definitions-091",
+      "category": "Auto Insurance",
+      "difficulty": "Easy",
+      "question": "The definition of 'Occupying' in the MA Auto Policy includes all of the following EXCEPT:",
+      "options": {
+        "A": "Being in the auto",
+        "B": "Getting out of the auto",
+        "C": "Repairing the auto in a garage",
+        "D": "Getting into the auto"
+      },
+      "correct_answer": "C",
+      "explanation": "The Auto Policy Definitions section defines Occupying as 'being in or upon, entering in, or getting out of or 'alighting' from the auto.' Repairing in a garage is not included.",
+      "distractor_logic": "Options A, B, and D are explicitly included in the definition."
+    },
+    {
+      "id": "auto-cancellation-092",
+      "category": "Auto Insurance",
+      "difficulty": "Medium",
+      "question": "An insurer may cancel collision coverage if the vehicle is designated as a 'high-theft vehicle' and:",
+      "options": {
+        "A": "Is parked on the street",
+        "B": "Does not have a minimum anti-theft device",
+        "C": "Is more than 5 years old",
+        "D": "Is driven by a youthful operator"
+      },
+      "correct_answer": "B",
+      "explanation": "The Auto Policy Cancellation section allows cancellation for a high-theft vehicle 'which does not have at least a minimum anti-theft or auto recovery device.'",
+      "distractor_logic": "Options A, C, and D are not valid reasons for canceling collision specifically under the high-theft provision."
+    },
+    {
+      "id": "contract-law-093",
+      "category": "General Insurance",
+      "difficulty": "Easy",
+      "question": "All of the following are distinct legal characteristics of an insurance contract EXCEPT:",
+      "options": {
+        "A": "Aleatory",
+        "B": "Adhesion",
+        "C": "Bilateral",
+        "D": "Unilateral"
+      },
+      "correct_answer": "C",
+      "explanation": "Insurance contracts are Unilateral (only the insurer makes an enforceable promise), not Bilateral. Therefore, 'Bilateral' is the exception/false characteristic.",
+      "distractor_logic": "Options A, B, and D are all correct legal characteristics of insurance contracts."
+    },
+    {
+      "id": "ma-law-guaranty-094",
+      "category": "Insurance Regulation",
+      "difficulty": "Medium",
+      "question": "It is an unfair trade practice to advertise that a policy is covered by the:",
+      "options": {
+        "A": "Fair Plan",
+        "B": "Assigned Risk Plan",
+        "C": "Insurance Guaranty Fund",
+        "D": "Division of Insurance"
+      },
+      "correct_answer": "C",
+      "explanation": "Chapter 9-17 states: 'it is also prohibited to unfairly advertise with regard to the Insurance Guaranty Fund.'",
+      "distractor_logic": "Options A, B, and D are not subject to this specific advertising prohibition in the text."
+    },
+    {
+      "id": "ma-law-binder-095",
+      "category": "Insurance Regulation",
+      "difficulty": "Medium",
+      "question": "In Massachusetts property insurance, if there is a delay in issuing a policy, a binder may be extended for up to:",
+      "options": {
+        "A": "10 days",
+        "B": "30 days",
+        "C": "60 days",
+        "D": "90 days"
+      },
+      "correct_answer": "B",
+      "explanation": "Chapter 9-19 states: 'if there is a delay in the issuance of a policy, a binder may be extended for up to 30 days.'",
+      "distractor_logic": "Option C (60 days) is mentioned in general terms in Chapter 2, but the MA specific section says 30 days."
+    },
+    {
+      "id": "auto-salvage-096",
+      "category": "Auto Insurance",
+      "difficulty": "Easy",
+      "question": "The right of the insurer to take title to damaged property after paying a total loss is called:",
+      "options": {
+        "A": "Subrogation",
+        "B": "Salvage",
+        "C": "Abandonment",
+        "D": "Appraisal"
+      },
+      "correct_answer": "B",
+      "explanation": "The Auto Policy section on Salvage states: 'allows the insurer to take title to the damaged property if a total loss is paid... It may sell parts... to recoup part of the amount paid.'",
+      "distractor_logic": "Option A refers to recovering from a third party. Option C is generally prohibited. Option D is for dispute resolution."
+    },
+    {
+      "id": "ma-law-mortgagee-097",
+      "category": "Insurance Regulation",
+      "difficulty": "Medium",
+      "question": "Under MA regulations, how many days notice must an insurer provide to a mortgagee if cancelling a policy?",
+      "options": {
+        "A": "10 days",
+        "B": "20 days",
+        "C": "30 days",
+        "D": "45 days"
+      },
+      "correct_answer": "B",
+      "explanation": "Chapter 9-20 and 9-21 state: 'If an insurer cancels a property insurance policy, it must provide a mortgagee or lienholder with 20 days written notice.'",
+      "distractor_logic": "Option A (10 days) is for non-renewal to mortgagee. Option D (45 days) is non-renewal to insured."
+    },
+    {
+      "id": "auto-part1-098",
+      "category": "Auto Insurance",
+      "difficulty": "Hard",
+      "question": "Part 1 (Bodily Injury to Others) of the MA Auto Policy will pay for injuries to:",
+      "options": {
+        "A": "The driver of the insured auto",
+        "B": "Guest occupants in the insured auto",
+        "C": "Pedestrians struck by the insured auto in Massachusetts",
+        "D": "Employees eligible for Workers' Compensation"
+      },
+      "correct_answer": "C",
+      "explanation": "The Auto Policy Part I section states it will pay damages to people injured by your car in MA, but explicitly excludes: '(1) injuries to the driver or guest occupants... (3) injuries to any employee legally entitled to Workers' Compensation benefits.' Thus, pedestrians are the covered group.",
+      "distractor_logic": "Options A, B, and D are specific exclusions listed in the Part I text."
+    },
+    {
+      "id": "flood-debris-099",
+      "category": "Other Coverages and Options",
+      "difficulty": "Medium",
+      "question": "Does a Flood Insurance policy cover the cost of removing trees and shrubs that have washed up on the insured premises?",
+      "options": {
+        "A": "Yes, under Debris Removal",
+        "B": "Yes, under Property Removed",
+        "C": "No, Debris Removal is limited to covered property",
+        "D": "No, unless endorsed"
+      },
+      "correct_answer": "C",
+      "explanation": "Chapter 8-2 states: 'Debris removal is covered but only for the cost incurred to remove the covered property. This would not include trees, shrubbery and any other materials that 'washed up'.'",
+      "distractor_logic": "Options A and B are incorrect interpretations of the Debris Removal clause in the NFIP policy."
+    },
+    {
+      "id": "auto-aftermarket-100",
+      "category": "Auto Insurance",
+      "difficulty": "Easy",
+      "question": "If an insurer pays for a loss using after-market parts (not made by the original manufacturer), they must:",
+      "options": {
+        "A": "Obtain the insured's written consent",
+        "B": "Provide a discount on the deductible",
+        "C": "Provide notice to the insured in the estimate",
+        "D": "Guarantee the parts for life"
+      },
+      "correct_answer": "C",
+      "explanation": "The Auto Policy section on After Market Parts states: 'it must provide to an insured in an estimate for damage, a notice stating that the repair estimate is based in part on the use of replacement parts...'",
+      "distractor_logic": "Options A, B, and D are not requirements listed in the text."
+    }
+  ],
+  "tags": [
+    "Personal Lines",
+    "Massachusetts",
+    "Insurance Exam",
+    "MAIA",
+    "Practice Test 2"
+  ]
+}

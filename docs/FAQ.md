@@ -155,7 +155,7 @@ See [AI Quiz Generators](/docs/ai-quiz-generators/README.md) for detailed prompt
 
 The **Create page** includes an **Exam Alignment** section to help you:
 
-1. Visit [/create](https://cert-prep-ai.vercel.app/create)
+1. Visit the [Create page](/create)
 2. Expand "🎯 Align with Your Exam"
 3. Select your certification (AWS SAA, CompTIA Security+, PMP, CISSP, etc.)
 4. Copy the generated prompt modifier into your AI tool

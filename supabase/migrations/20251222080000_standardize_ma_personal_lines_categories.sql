@@ -83,4 +83,73 @@ SET questions = (
 -- but given the complexity of 'category_breakdown' values, we assume that has been 
 -- handled by the one-off scripts.
 
+--------------------------------------------------------------------------------
+-- 2. UPDATE RESULTS TABLE (category_breakdown JSONB)
+--------------------------------------------------------------------------------
+-- Remaps legacy category keys to standardized names, aggregating values when
+-- multiple old keys map to the same new key (e.g., "Homeowners Section I" and 
+-- "Homeowners Section II" both become "Homeowners Policy").
+--
+-- Each category_breakdown value has shape: { correct: number, total: number }
+-- We SUM these when merging keys.
+
+UPDATE results
+SET category_breakdown = (
+    SELECT jsonb_object_agg(new_category, jsonb_build_object(
+        'correct', SUM((value->>'correct')::int),
+        'total', SUM((value->>'total')::int)
+    ))
+    FROM (
+        SELECT
+            CASE key
+                -- Homeowners
+                WHEN 'Homeowners Section I' THEN 'Homeowners Policy'
+                WHEN 'Homeowners Section II' THEN 'Homeowners Policy'
+                WHEN 'Homeowners Forms' THEN 'Homeowners Policy'
+                WHEN 'Homeowners Endorsements' THEN 'Homeowners Policy'
+                WHEN 'Homeowners Coverages' THEN 'Homeowners Policy'
+                WHEN 'Homeowners Conditions' THEN 'Homeowners Policy'
+                WHEN 'Homeowners Eligibility' THEN 'Homeowners Policy'
+                WHEN 'Homeowners Liability' THEN 'Homeowners Policy'
+                -- Auto
+                WHEN 'MA Personal Auto' THEN 'Auto Insurance'
+                WHEN 'MA Auto Policy' THEN 'Auto Insurance'
+                WHEN 'Massachusetts Auto Policy' THEN 'Auto Insurance'
+                -- Property & Casualty
+                WHEN 'Property Basics' THEN 'Property and Casualty Insurance Basics'
+                WHEN 'Liability Basics' THEN 'Property and Casualty Insurance Basics'
+                WHEN 'Contract Law' THEN 'Property and Casualty Insurance Basics'
+                WHEN 'Property & Casualty Basics' THEN 'Property and Casualty Insurance Basics'
+                WHEN 'Property & Liability Basics' THEN 'Property and Casualty Insurance Basics'
+                WHEN 'Property and Casualty Basics' THEN 'Property and Casualty Insurance Basics'
+                WHEN 'Insurance Contracts' THEN 'Property and Casualty Insurance Basics'
+                WHEN 'Loss Settlement' THEN 'Property and Casualty Insurance Basics'
+                -- Dwelling
+                WHEN 'Dwelling Policies' THEN 'Dwelling Policy'
+                WHEN 'Dwelling Property' THEN 'Dwelling Policy'
+                -- Regulation
+                WHEN 'MA Insurance Law' THEN 'Insurance Regulation'
+                WHEN 'Producer Authority' THEN 'Insurance Regulation'
+                -- General
+                WHEN 'General Insurance Basics' THEN 'General Insurance'
+                WHEN 'Types of Insurers' THEN 'General Insurance'
+                WHEN 'Risk Management' THEN 'General Insurance'
+                WHEN 'Underwriting' THEN 'General Insurance'
+                WHEN 'General Insurance Concepts' THEN 'General Insurance'
+                -- Other
+                WHEN 'Flood Insurance' THEN 'Other Coverages and Options'
+                WHEN 'Umbrella Liability' THEN 'Other Coverages and Options'
+                WHEN 'Inland Marine' THEN 'Other Coverages and Options'
+                WHEN 'Marine Insurance' THEN 'Other Coverages and Options'
+                -- Keep already-standardized or unknown keys
+                ELSE key
+            END AS new_category,
+            value
+        FROM jsonb_each(category_breakdown)
+    ) AS mapped
+    GROUP BY new_category
+)
+WHERE category_breakdown IS NOT NULL
+  AND category_breakdown != '{}'::jsonb;
+
 COMMIT;

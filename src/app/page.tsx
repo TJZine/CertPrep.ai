@@ -9,6 +9,10 @@ import { getDueCountsByBox } from "@/db/srs";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { StatsBar } from "@/components/dashboard/StatsBar";
 import { QuizGrid } from "@/components/dashboard/QuizGrid";
+import {
+  QuizSortControls,
+  type DashboardSortOption,
+} from "@/components/dashboard/QuizSortControls";
 import { DueQuestionsCard } from "@/components/srs/DueQuestionsCard";
 import { InterleavedPracticeCard } from "@/components/dashboard/InterleavedPracticeCard";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
@@ -59,6 +63,87 @@ export default function DashboardPage(): React.ReactElement {
     attemptCount: number;
   } | null>(null);
   const [isDeleting, setIsDeleting] = React.useState(false);
+
+  // Sort/filter state
+  const [sortBy, setSortBy] = React.useState<DashboardSortOption>(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("dashboard-sort-by");
+      if (stored && ["recent", "added", "title", "performance", "questions"].includes(stored)) {
+        return stored as DashboardSortOption;
+      }
+    }
+    return "recent";
+  });
+  const [searchTerm, setSearchTerm] = React.useState("");
+  const [categoryFilter, setCategoryFilter] = React.useState("all");
+
+  // Persist sort preference
+  React.useEffect(() => {
+    try {
+      localStorage.setItem("dashboard-sort-by", sortBy);
+    } catch {
+      // localStorage may be unavailable
+    }
+  }, [sortBy]);
+
+  // Derive available categories from quizzes
+  const categories = React.useMemo(() => {
+    const unique = new Set<string>();
+    quizzes.forEach((q) => {
+      if (q.category) {
+        unique.add(q.category);
+      }
+    });
+    return ["all", ...Array.from(unique).sort((a, b) => a.localeCompare(b))];
+  }, [quizzes]);
+
+  // Filter and sort quizzes
+  const filteredQuizzes = React.useMemo(() => {
+    let result = [...quizzes];
+
+    // Filter by search term
+    const needle = searchTerm.trim().toLowerCase();
+    if (needle) {
+      result = result.filter((q) => {
+        const haystack = `${q.title} ${q.tags.join(" ")} ${q.category ?? ""}`.toLowerCase();
+        return haystack.includes(needle);
+      });
+    }
+
+    // Filter by category
+    if (categoryFilter !== "all") {
+      result = result.filter((q) => q.category === categoryFilter);
+    }
+
+    // Sort
+    switch (sortBy) {
+      case "recent":
+        result.sort((a, b) => {
+          const aDate = quizStats.get(a.id)?.lastAttemptDate ?? 0;
+          const bDate = quizStats.get(b.id)?.lastAttemptDate ?? 0;
+          return bDate - aDate;
+        });
+        break;
+      case "added":
+        result.sort((a, b) => b.created_at - a.created_at);
+        break;
+      case "title":
+        result.sort((a, b) => a.title.localeCompare(b.title));
+        break;
+      case "performance":
+        result.sort((a, b) => {
+          const aScore = quizStats.get(a.id)?.averageScore ?? 0;
+          const bScore = quizStats.get(b.id)?.averageScore ?? 0;
+          return aScore - bScore; // Weakest first
+        });
+        break;
+      case "questions":
+        result.sort((a, b) => b.questions.length - a.questions.length);
+        break;
+    }
+
+    return result;
+  }, [quizzes, quizStats, searchTerm, categoryFilter, sortBy]);
 
   // SRS due questions state
   const [dueCountsByBox, setDueCountsByBox] = React.useState<Record<LeitnerBox, number>>({
@@ -269,8 +354,24 @@ export default function DashboardPage(): React.ReactElement {
                 Unable to load quizzes: {quizzesError.message}
               </div>
             )}
+            {quizzes.length > 0 && (
+              <QuizSortControls
+                searchTerm={searchTerm}
+                onSearchChange={setSearchTerm}
+                sortBy={sortBy}
+                onSortChange={setSortBy}
+                categories={categories}
+                categoryFilter={categoryFilter}
+                onCategoryChange={setCategoryFilter}
+              />
+            )}
+            {filteredQuizzes.length === 0 && quizzes.length > 0 && searchTerm.trim() && (
+              <p className="text-center text-sm text-muted-foreground py-8">
+                No quizzes match your search. Try a different term.
+              </p>
+            )}
             <QuizGrid
-              quizzes={quizzes}
+              quizzes={filteredQuizzes}
               quizStats={quizStats}
               onStartQuiz={handleStartQuiz}
               onDeleteQuiz={handleDeleteClick}

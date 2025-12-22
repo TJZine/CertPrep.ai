@@ -23,6 +23,14 @@ interface UseCopyToClipboardReturn {
  */
 export function useCopyToClipboard(resetDelayMs = 1500): UseCopyToClipboardReturn {
     const [copied, setCopied] = React.useState(false);
+    const timeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    // Cleanup timeout on unmount to prevent memory leaks
+    React.useEffect((): (() => void) => {
+        return (): void => {
+            if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        };
+    }, []);
 
     const copyToClipboard = React.useCallback(
         async (text: string): Promise<void> => {
@@ -34,6 +42,7 @@ export function useCopyToClipboard(resetDelayMs = 1500): UseCopyToClipboardRetur
                 textarea.value = text;
                 textarea.style.position = "fixed";
                 textarea.style.opacity = "0";
+                textarea.setAttribute("aria-hidden", "true");
                 document.body.appendChild(textarea);
                 textarea.select();
                 document.execCommand("copy");
@@ -41,7 +50,9 @@ export function useCopyToClipboard(resetDelayMs = 1500): UseCopyToClipboardRetur
             }
 
             setCopied(true);
-            setTimeout(() => setCopied(false), resetDelayMs);
+            // Clear any existing timeout before setting new one
+            if (timeoutRef.current) clearTimeout(timeoutRef.current);
+            timeoutRef.current = setTimeout(() => setCopied(false), resetDelayMs);
         },
         [resetDelayMs]
     );

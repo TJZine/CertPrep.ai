@@ -1,9 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { Download, FolderOpen } from "lucide-react";
+import { Download, FolderOpen, FileText } from "lucide-react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { Select, type SelectOption } from "@/components/ui/Select";
 import {
   Card,
   CardContent,
@@ -29,6 +30,7 @@ interface TestManifestEntry {
   description: string;
   category: string;
   subcategory?: string;
+  questionCount?: number;
   path: string;
 }
 
@@ -71,6 +73,32 @@ export function TestLibrary({
   const router = useRouter();
   const pathname = usePathname();
   const tabRefs = React.useRef<(HTMLButtonElement | null)[]>([]);
+
+  // Sort state with localStorage persistence
+  type LibrarySortOption = "title" | "category" | "questions";
+  const SORT_OPTIONS: SelectOption[] = [
+    { value: "title", label: "Title" },
+    { value: "category", label: "Category" },
+    { value: "questions", label: "Most Questions" },
+  ];
+  const [sortBy, setSortBy] = React.useState<LibrarySortOption>(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("library-sort-by");
+      if (stored && ["title", "category", "questions"].includes(stored)) {
+        return stored as LibrarySortOption;
+      }
+    }
+    return "title";
+  });
+
+  // Persist sort preference
+  React.useEffect(() => {
+    try {
+      localStorage.setItem("library-sort-by", sortBy);
+    } catch {
+      // localStorage may be unavailable
+    }
+  }, [sortBy]);
 
   React.useEffect(() => {
     let isMounted = true;
@@ -202,6 +230,23 @@ export function TestLibrary({
     });
   }, [categoryFilter, manifest, searchTerm]);
 
+  // Sort the filtered manifest
+  const sortedManifest = React.useMemo(() => {
+    const sorted = [...filteredManifest];
+    switch (sortBy) {
+      case "title":
+        sorted.sort((a, b) => a.title.localeCompare(b.title));
+        break;
+      case "category":
+        sorted.sort((a, b) => a.category.localeCompare(b.category));
+        break;
+      case "questions":
+        sorted.sort((a, b) => (b.questionCount ?? 0) - (a.questionCount ?? 0));
+        break;
+    }
+    return sorted;
+  }, [filteredManifest, sortBy]);
+
   const handleImport = async (entry: TestManifestEntry): Promise<void> => {
     if (isImported(entry)) {
       addToast("info", `"${entry.title}" is already in your library.`);
@@ -314,6 +359,13 @@ export function TestLibrary({
                 aria-label="Search built-in tests"
               />
               <div className="flex items-center gap-2">
+                <Select
+                  options={SORT_OPTIONS}
+                  value={sortBy}
+                  onChange={(value) => setSortBy(value as LibrarySortOption)}
+                  className="w-40"
+                  aria-label="Sort tests by"
+                />
                 <div
                   role="tablist"
                   className="flex gap-2 overflow-x-auto pb-1"
@@ -351,7 +403,7 @@ export function TestLibrary({
               </p>
             ) : (
               <div className="grid gap-3 md:grid-cols-2">
-                {filteredManifest.map((entry) => {
+                {sortedManifest.map((entry) => {
                   const imported = isImported(entry);
                   return (
                     <div
@@ -380,6 +432,12 @@ export function TestLibrary({
                             {entry.subcategory}
                           </p>
                         ) : null}
+                        {entry.questionCount != null && (
+                          <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                            <FileText className="h-3 w-3" aria-hidden="true" />
+                            {entry.questionCount} questions
+                          </p>
+                        )}
                       </div>
                       <div className="flex items-center justify-between">
                         <span

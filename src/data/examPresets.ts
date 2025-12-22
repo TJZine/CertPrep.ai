@@ -182,6 +182,23 @@ export const EXAM_PRESETS: ExamPreset[] = [
         lastVerified: "2025-12-22",
     },
     {
+        id: "insurance_ma_personal_lines_1661",
+        name: "MA Personal Lines (1661)",
+        vendor: "Massachusetts Division of Insurance",
+        examCode: "1661",
+        domains: [
+            { name: "General Insurance" },
+            { name: "Property and Casualty Insurance Basics" },
+            { name: "Insurance Regulation" },
+            { name: "Homeowners Policy" },
+            { name: "Dwelling Policy" },
+            { name: "Auto Insurance" },
+            { name: "Other Coverages and Options" },
+        ],
+        sourceUrl: "https://www.mass.gov/insurance-producer-licensing",
+        lastVerified: "2025-12-22",
+    },
+    {
         id: "insurance_life_health",
         name: "Insurance - Life & Health",
         vendor: "State Licensing",

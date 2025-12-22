@@ -15,6 +15,7 @@ import {
   TrendingUp,
   Settings,
   AlertTriangle,
+  Calendar,
 } from "lucide-react";
 import {
   Card,
@@ -393,6 +394,12 @@ export function QuizCard({
               Last attempt: {formatDate(lastAttemptDate)}
             </div>
           ) : null}
+
+          {/* Date added footer */}
+          <div className="border-t border-border mt-3 pt-2 text-xs text-muted-foreground flex items-center gap-1.5">
+            <Calendar className="h-3.5 w-3.5" aria-hidden="true" />
+            <span>Added {formatDate(quiz.created_at)}</span>
+          </div>
         </CardContent>
 
         <CardFooter className="pt-0">
