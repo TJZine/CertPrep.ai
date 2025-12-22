@@ -55,10 +55,11 @@ ChatGPT GPTs have an 8,000 character limit for instructions. We moved templates 
 
 ## 🎯 Live Examples
 
-| Platform        | Link                                                                                                          |
-| --------------- | ------------------------------------------------------------------------------------------------------------- |
-| **ChatGPT GPT** | [CertPrep AI Test Creator](https://chatgpt.com/g/g-6948d766074c8191a09e7a8c723bf9b7-certprep-ai-test-creator) |
-| **Gemini Gem**  | [CertPrep Quiz Generator](https://gemini.google.com/gem/1Oi-QnRrxQ_7a18s9SvyKxWX4ak52nPyI)                    |
+| Platform         | Link                                                                                                          |
+| ---------------- | ------------------------------------------------------------------------------------------------------------- |
+| **Create Guide** | [cert-prep-ai.vercel.app/create](https://cert-prep-ai.vercel.app/create)                                      |
+| **ChatGPT GPT**  | [CertPrep AI Test Creator](https://chatgpt.com/g/g-6948d766074c8191a09e7a8c723bf9b7-certprep-ai-test-creator) |
+| **Gemini Gem**   | [CertPrep Quiz Generator](https://gemini.google.com/gem/1Oi-QnRrxQ_7a18s9SvyKxWX4ak52nPyI)                    |
 
 ---
 

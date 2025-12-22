@@ -10,6 +10,7 @@ import {
   Home,
   BarChart3,
   Library,
+  PlusCircle,
   Settings as SettingsIcon,
   User as UserIcon,
 } from "lucide-react";
@@ -28,6 +29,7 @@ const navigation = [
   { name: "Dashboard", href: "/", icon: Home, public: true },
   { name: "Analytics", href: "/analytics", icon: BarChart3, public: true },
   { name: "Library", href: "/library", icon: Library, public: true },
+  { name: "Create", href: "/create", icon: PlusCircle, public: true },
   { name: "Settings", href: "/settings", icon: SettingsIcon, public: false },
 ];
 

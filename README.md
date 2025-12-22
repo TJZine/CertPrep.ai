@@ -278,6 +278,7 @@ src/
 │   ├── auth/                     # Auth callback routes
 │   ├── login/, signup/           # Auth pages
 │   ├── library/                  # Quiz library
+│   ├── create/                   # Create custom quizzes guide
 │   ├── quiz/                     # Quiz flows ([id]/zen, [id]/proctor)
 │   ├── results/                  # Results pages
 │   └── settings/                 # Settings pages

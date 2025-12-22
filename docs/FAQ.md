@@ -133,6 +133,24 @@ This technique improves long-term retention by forcing your brain to switch betw
 
 ---
 
+## How do I create custom quizzes?
+
+CertPrep.ai provides AI-powered tools to generate practice quizzes:
+
+1. Visit the [Create page](/create) for step-by-step guidance
+2. Use our **Gemini Gem** or **ChatGPT GPT** to generate quiz JSON
+3. Copy the output and import it via **Dashboard → Import Quiz**
+
+The AI tools support multiple approaches:
+
+- Generate questions from study notes or PDFs
+- Match the style of existing exam questions
+- Create variations of existing questions for more practice
+
+See [AI Quiz Generators](/docs/ai-quiz-generators/README.md) for detailed prompts and customization.
+
+---
+
 ## What is Quiz Remix (Shuffle)?
 
 Quiz Remix randomizes question and answer order for a fresh experience:
