@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Save, Loader2, Brain } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
@@ -19,12 +19,24 @@ import { updateQuiz } from "@/db/quizzes";
 export default function QuizSettingsPage(): React.ReactElement {
     const params = useParams();
     const router = useRouter();
+    const searchParams = useSearchParams();
     const id = typeof params?.id === "string" ? params.id : "";
     const { user } = useAuth();
     const effectiveUserId = useEffectiveUserId(user?.id);
     const { addToast } = useToast();
 
     const { quiz, isLoading } = useQuiz(id, effectiveUserId ?? undefined);
+
+    // Determine back navigation based on entry point
+    const getBackUrl = React.useCallback((): string => {
+        const from = searchParams?.get("from");
+        const resultId = searchParams?.get("resultId");
+        if (from === "results" && resultId) {
+            return `/results/${resultId}`;
+        }
+        // Default: go to dashboard
+        return "/";
+    }, [searchParams]);
 
     // Form state
     const [title, setTitle] = React.useState("");
@@ -56,7 +68,7 @@ export default function QuizSettingsPage(): React.ReactElement {
             });
             // useLiveQuery auto-updates when Dexie changes, no manual refresh needed
             addToast("success", "Quiz settings saved");
-            router.push(`/quiz/${id}`);
+            router.push(getBackUrl());
         } catch (error) {
             addToast(
                 "error",
@@ -109,11 +121,11 @@ export default function QuizSettingsPage(): React.ReactElement {
                 <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => router.push(`/quiz/${id}`)}
+                    onClick={() => router.push(getBackUrl())}
                     className="mb-4 text-muted-foreground hover:text-foreground"
                     leftIcon={<ArrowLeft className="h-4 w-4" />}
                 >
-                    Back to Quiz
+                    Back
                 </Button>
                 <h1 className="text-2xl font-bold text-foreground">Quiz Settings</h1>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -213,7 +225,7 @@ export default function QuizSettingsPage(): React.ReactElement {
                 <div className="flex justify-end gap-3">
                     <Button
                         variant="outline"
-                        onClick={() => router.push(`/quiz/${id}`)}
+                        onClick={() => router.push(getBackUrl())}
                     >
                         Cancel
                     </Button>

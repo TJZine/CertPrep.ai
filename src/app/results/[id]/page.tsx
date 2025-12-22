@@ -364,8 +364,8 @@ export default function ResultsPage(): React.ReactElement {
           </div>
         }
       >
-        {/* Missing category banner */}
-        {!quiz.category && (
+        {/* Missing category banner - suppress for aggregated sessions which use question-level categories */}
+        {!quiz.category && !result.session_type && (
           <div role="status" className="mx-auto mb-4 flex max-w-4xl items-center gap-3 rounded-lg border border-warning/30 bg-warning/10 px-4 py-3">
             <AlertTriangle className="h-5 w-5 flex-shrink-0 text-warning" aria-hidden="true" />
             <p className="flex-1 text-sm text-foreground">
@@ -374,7 +374,7 @@ export default function ResultsPage(): React.ReactElement {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => router.push(`/quiz/${quiz.id}/settings`)}
+              onClick={() => router.push(`/quiz/${quiz.id}/settings?from=results&resultId=${result.id}`)}
               leftIcon={<Settings className="h-4 w-4" aria-hidden="true" />}
             >
               Add Category

@@ -211,4 +211,41 @@ describe("ImportModal", () => {
             expect.objectContaining({ title: "Updated Title" })
         );
     });
+
+    it("handles 'Import as New' correctly", async () => {
+        // Mock finding a duplicate
+        mockFirst.mockResolvedValue({ id: "existing-id", title: "Duplicate Quiz", questions: [{}, {}] });
+        // Mock createQuiz for new import
+        const mockNewQuiz = { id: "new-quiz-id", title: "Duplicate Quiz" };
+        mockCreateQuiz.mockResolvedValue(mockNewQuiz as unknown as Quiz);
+
+        render(<ImportModal {...defaultProps} />);
+
+        const duplicateQuiz = {
+            title: "Duplicate Quiz",
+            questions: [{ id: "1", question: "Q", options: { A: "1", B: "2" }, correct_answer: "A", category: "Cat", explanation: "Exp" }]
+        };
+
+        const input = screen.getByPlaceholderText(/My Certification Quiz/);
+        fireEvent.change(input, { target: { value: JSON.stringify(duplicateQuiz) } });
+
+        await act(async () => { vi.advanceTimersByTime(1000); await Promise.resolve(); });
+
+        // Click Import -> Triggers warning
+        fireEvent.click(screen.getByRole("button", { name: "Import Quiz" }));
+        await act(async () => { await Promise.resolve(); });
+
+        // Click Import as New
+        fireEvent.click(screen.getByRole("button", { name: "Import as New" }));
+        await act(async () => { await Promise.resolve(); });
+
+        expect(mockCreateQuiz).toHaveBeenCalledWith(
+            expect.objectContaining({ title: "Duplicate Quiz" }),
+            expect.objectContaining({ userId: "test-user-id" })
+        );
+        expect(defaultProps.onImportSuccess).toHaveBeenCalledWith(
+            expect.objectContaining({ id: "new-quiz-id" })
+        );
+        expect(defaultProps.onClose).toHaveBeenCalled();
+    });
 });

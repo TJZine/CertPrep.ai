@@ -36,6 +36,7 @@ import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 import { useSync } from "@/hooks/useSync";
 import { remixQuiz, buildAnswersRecord } from "@/lib/quiz-remix";
+import { logger } from "@/lib/logger";
 
 /**
  * Build a source map from question IDs to their source quiz IDs.
@@ -45,27 +46,37 @@ async function buildSourceMapFromUserQuizzes(
   userId: string,
   questionIds: string[],
 ): Promise<Record<string, string>> {
-  const allQuizzes = await db.quizzes
-    .where("user_id")
-    .equals(userId)
-    .filter((q) => !q.deleted_at)
-    .toArray();
+  try {
+    const allQuizzes = await db.quizzes
+      .where("user_id")
+      .equals(userId)
+      .filter((q) => !q.deleted_at)
+      .toArray();
 
-  const questionToQuizMap = new Map<string, string>();
-  for (const q of allQuizzes) {
-    for (const question of q.questions) {
-      if (!questionToQuizMap.has(question.id)) {
-        questionToQuizMap.set(question.id, q.id);
+    // Warn if quiz count is unexpectedly high (potential perf issue)
+    if (allQuizzes.length > 500) {
+      logger.warn(`High quiz count (${allQuizzes.length}) for user ${userId}`);
+    }
+
+    const questionToQuizMap = new Map<string, string>();
+    for (const q of allQuizzes) {
+      for (const question of q.questions) {
+        if (!questionToQuizMap.has(question.id)) {
+          questionToQuizMap.set(question.id, q.id);
+        }
       }
     }
-  }
 
-  const sourceMap: Record<string, string> = {};
-  for (const qId of questionIds) {
-    const quizId = questionToQuizMap.get(qId);
-    if (quizId) sourceMap[qId] = quizId;
+    const sourceMap: Record<string, string> = {};
+    for (const qId of questionIds) {
+      const quizId = questionToQuizMap.get(qId);
+      if (quizId) sourceMap[qId] = quizId;
+    }
+    return sourceMap;
+  } catch (error) {
+    logger.error("Failed to build source map", { userId, error });
+    return {}; // Fail gracefully - sourceMap is optional for display
   }
-  return sourceMap;
 }
 
 interface ZenQuizContainerProps {
@@ -625,7 +636,7 @@ export function ZenQuizContainer({
         onExit={handleExit}
         mode="zen"
       >
-        <div className="py-12 text-center" aria-busy="true">
+        <div className="py-12 text-center" aria-busy="true" aria-live="polite">
           <p className="text-muted-foreground">Initializing quiz session...</p>
         </div>
       </QuizLayout>
