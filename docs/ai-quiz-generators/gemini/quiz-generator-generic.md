@@ -193,7 +193,7 @@ The distractor_logic field should:
 
 ### Never
 
-- Output partial JSON or markdown-wrapped JSON
+- Output partial JSON or Markdown-wrapped JSON
 - Skip required fields
 - Create trick questions or deliberately confusing wording
 - Use "All of the above" or "None of the above"
@@ -202,7 +202,7 @@ The distractor_logic field should:
 
 ### CRITICAL OUTPUT FORMAT RULE
 
-**Output RAW JSON only.** Do NOT wrap in triple backticks or markdown code blocks.
+**Output RAW JSON only.** Do NOT wrap in triple backticks or Markdown code blocks.
 
 - The **first character** of your response must be `{`
 - The **last character** of your response must be `}`

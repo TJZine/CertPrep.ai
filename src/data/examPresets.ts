@@ -83,7 +83,94 @@ export const EXAM_PRESETS: ExamPreset[] = [
         ],
         sourceUrl: "https://learn.microsoft.com/en-us/credentials/certifications/azure-administrator/",
         lastVerified: "2025-12-22",
-        verificationNote: "Weights shown are midpoints of official ranges. Exam updated April 2025.",
+        verificationNote: "Weights shown are lower bounds of official ranges (e.g., 20-25% shown as 20). Exam updated April 2025.",
+    },
+    {
+        id: "azure_az900",
+        name: "Azure Fundamentals",
+        vendor: "Microsoft",
+        examCode: "AZ-900",
+        domains: [
+            { name: "Describe cloud concepts", weight: 25 }, // 25-30%
+            { name: "Describe Azure architecture and services", weight: 35 }, // 35-40%
+            { name: "Describe Azure management and governance", weight: 30 }, // 30-35%
+        ],
+        sourceUrl: "https://learn.microsoft.com/en-us/credentials/certifications/azure-fundamentals/",
+        lastVerified: "2025-12-22",
+        verificationNote: "Weights shown are lower bounds of official ranges (e.g., 20-25% shown as 20). Entry-level foundational certification.",
+    },
+    {
+        id: "azure_az305",
+        name: "Azure Solutions Architect Expert",
+        vendor: "Microsoft",
+        examCode: "AZ-305",
+        domains: [
+            { name: "Design identity, governance, and monitoring solutions", weight: 25 }, // 25-30%
+            { name: "Design data storage solutions", weight: 20 }, // 20-25%
+            { name: "Design business continuity solutions", weight: 15 }, // 15-20%
+            { name: "Design infrastructure solutions", weight: 30 }, // 30-35%
+        ],
+        sourceUrl: "https://learn.microsoft.com/en-us/credentials/certifications/exams/az-305/",
+        lastVerified: "2025-12-22",
+        verificationNote: "Weights shown are lower bounds of official ranges (e.g., 20-25% shown as 20). Expert-level certification updated October 2024.",
+    },
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // GOOGLE CLOUD CERTIFICATIONS
+    // ═══════════════════════════════════════════════════════════════════════════
+    {
+        id: "gcp_ace",
+        name: "Associate Cloud Engineer",
+        vendor: "Google Cloud",
+        examCode: "ACE",
+        domains: [
+            { name: "Setting up a cloud solution environment" },
+            { name: "Planning and configuring a cloud solution" },
+            { name: "Deploying and implementing a cloud solution" },
+            { name: "Ensuring successful operation of a cloud solution" },
+            { name: "Configuring access and security" },
+        ],
+        sourceUrl: "https://cloud.google.com/learn/certification/cloud-engineer",
+        lastVerified: "2025-12-22",
+        verificationNote: "Google does not publish official domain weights. 50-60 questions, 2 hours. Recommends 6+ months hands-on experience.",
+    },
+    {
+        id: "gcp_pca",
+        name: "Professional Cloud Architect",
+        vendor: "Google Cloud",
+        examCode: "PCA",
+        domains: [
+            { name: "Designing and planning a cloud solution architecture", weight: 25 },
+            { name: "Managing and provisioning a cloud solution infrastructure", weight: 17 },
+            { name: "Designing for security and compliance", weight: 17 },
+            { name: "Analyzing and optimizing technical and business processes", weight: 15 },
+            { name: "Managing implementation", weight: 13 },
+            { name: "Ensuring solution and operations excellence", weight: 13 },
+        ],
+        sourceUrl: "https://cloud.google.com/learn/certification/cloud-architect",
+        lastVerified: "2025-12-22",
+        verificationNote: "Weights are approximate. Case studies comprise 20-30% of exam. Recommends 3+ years industry experience.",
+    },
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // CISCO CERTIFICATIONS
+    // ═══════════════════════════════════════════════════════════════════════════
+    {
+        id: "cisco_ccna",
+        name: "CCNA",
+        vendor: "Cisco",
+        examCode: "200-301",
+        domains: [
+            { name: "Network Fundamentals", weight: 20 },
+            { name: "Network Access", weight: 20 },
+            { name: "IP Connectivity", weight: 25 },
+            { name: "IP Services", weight: 10 },
+            { name: "Security Fundamentals", weight: 15 },
+            { name: "Automation and Programmability", weight: 10 },
+        ],
+        sourceUrl: "https://www.cisco.com/c/en/us/training-events/training-certifications/certifications/associate/ccna.html",
+        lastVerified: "2025-12-22",
+        verificationNote: "Blueprint v1.1 (August 2024) added GenAI/ML topics (<10% of exam). Valid until August 2026.",
     },
 
     // ═══════════════════════════════════════════════════════════════════════════

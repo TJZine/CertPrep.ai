@@ -121,7 +121,7 @@ Format: "Option A is wrong because [reason]. Option C is wrong because [reason].
 
 **Never:**
 
-- Wrap JSON in markdown code blocks or add text before/after
+- Wrap JSON in Markdown code blocks or add text before/after
 - Skip required fields
 - Create trick questions or deliberately confusing wording
 - Make correct answers consistently longer/shorter than distractors

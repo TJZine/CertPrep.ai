@@ -141,4 +141,4 @@ You can create specialized versions for different certification types:
 
 ## 📄 License
 
-These prompts are part of the CertPrep.ai open source project. Feel free to modify and adapt them for your own quiz generation needs.
+These prompts are part of the CertPrep.ai open-source project. Feel free to modify and adapt them for your own quiz generation needs.

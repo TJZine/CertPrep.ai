@@ -232,25 +232,20 @@ function Collapsible({
 }
 
 /** Helps users align AI-generated categories with official exam blueprints */
-function ExamAlignmentSection(): React.ReactElement {
-    const [selectedPreset, setSelectedPreset] = React.useState<string | null>(null);
-    const [customCategories, setCustomCategories] = React.useState("");
+function ExamAlignmentSection({
+    selectedPreset,
+    onPresetChange,
+    customCategories,
+    onCustomCategoriesChange,
+    categories,
+}: {
+    selectedPreset: string | null;
+    onPresetChange: (preset: string | null) => void;
+    customCategories: string;
+    onCustomCategoriesChange: (categories: string) => void;
+    categories: string[];
+}): React.ReactElement {
     const { copied, copyToClipboard } = useCopyToClipboard();
-
-    // Get categories from selected preset or custom input
-    const categories = React.useMemo(() => {
-        if (selectedPreset === "custom") {
-            return customCategories
-                .split("\n")
-                .map((line) => line.trim())
-                .filter((line) => line.length > 0);
-        }
-        if (selectedPreset) {
-            const preset = EXAM_PRESETS.find((p) => p.id === selectedPreset);
-            return preset?.domains.map((d) => d.name) ?? [];
-        }
-        return [];
-    }, [selectedPreset, customCategories]);
 
     const promptModifier = generatePromptModifier(categories);
 
@@ -298,7 +293,7 @@ function ExamAlignmentSection(): React.ReactElement {
                                             <button
                                                 key={preset.id}
                                                 type="button"
-                                                onClick={() => setSelectedPreset(preset.id)}
+                                                onClick={() => onPresetChange(preset.id)}
                                                 className={cn(
                                                     "inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all border",
                                                     selectedPreset === preset.id
@@ -325,7 +320,7 @@ function ExamAlignmentSection(): React.ReactElement {
                                 </p>
                                 <button
                                     type="button"
-                                    onClick={() => setSelectedPreset("custom")}
+                                    onClick={() => onPresetChange("custom")}
                                     className={cn(
                                         "inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all border",
                                         selectedPreset === "custom"
@@ -349,7 +344,7 @@ function ExamAlignmentSection(): React.ReactElement {
                             <textarea
                                 id="custom-categories"
                                 value={customCategories}
-                                onChange={(e) => setCustomCategories(e.target.value)}
+                                onChange={(e) => onCustomCategoriesChange(e.target.value)}
                                 placeholder="Domain 1: Security&#10;Domain 2: Networking&#10;Domain 3: Implementation"
                                 rows={5}
                                 className="w-full rounded-lg border border-border bg-card px-4 py-3 text-sm font-mono placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
@@ -369,7 +364,9 @@ function ExamAlignmentSection(): React.ReactElement {
                                         <Badge key={domain.name} variant="outline" className="font-mono text-xs">
                                             {domain.name}
                                             {domain.weight && (
-                                                <span className="ml-1 text-muted-foreground">({domain.weight}%)</span>
+                                                <span className="ml-1.5 text-[10px] text-muted-foreground/70 font-normal">
+                                                    {domain.weight}%
+                                                </span>
                                             )}
                                         </Badge>
                                     ))}
@@ -432,6 +429,32 @@ function ExamAlignmentSection(): React.ReactElement {
 
 export function CreateGuideContent(): React.ReactElement {
     const [activeTab, setActiveTab] = React.useState<keyof typeof TEMPLATES>("material");
+    const [selectedPreset, setSelectedPreset] = React.useState<string | null>(null);
+    const [customCategories, setCustomCategories] = React.useState("");
+    const { copied: promptCopied, copyToClipboard: copyPromptToClipboard } = useCopyToClipboard();
+
+    // Get categories from selected preset or custom input
+    const categories = React.useMemo(() => {
+        if (selectedPreset === "custom") {
+            return customCategories
+                .split("\n")
+                .map((line) => line.trim())
+                .filter((line) => line.length > 0);
+        }
+        if (selectedPreset) {
+            const preset = EXAM_PRESETS.find((p) => p.id === selectedPreset);
+            return preset?.domains.map((d) => d.name) ?? [];
+        }
+        return [];
+    }, [selectedPreset, customCategories]);
+
+    // Generate combined prompt (template + category modifier)
+    const combinedPrompt = React.useMemo(() => {
+        const template = TEMPLATES[activeTab].template;
+        const modifier = generatePromptModifier(categories);
+        if (!modifier) return template;
+        return `${template}\n\n${modifier}`;
+    }, [activeTab, categories]);
 
     return (
         <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
@@ -588,10 +611,52 @@ export function CreateGuideContent(): React.ReactElement {
                         </div>
                     );
                 })}
+
+                {/* Copy Complete Prompt Button */}
+                <div className="mt-8 flex flex-col items-center gap-4">
+                    <button
+                        type="button"
+                        onClick={() => copyPromptToClipboard(combinedPrompt)}
+                        className={cn(
+                            buttonVariants({ size: "lg" }),
+                            "gap-2 shadow-sm",
+                            promptCopied && "bg-success hover:bg-success/90"
+                        )}
+                        aria-label={promptCopied ? "Copied complete prompt!" : "Copy complete prompt"}
+                    >
+                        {promptCopied ? (
+                            <>
+                                <Check className="h-4 w-4" />
+                                Copied Complete Prompt!
+                            </>
+                        ) : (
+                            <>
+                                <Copy className="h-4 w-4" />
+                                Copy Complete Prompt
+                            </>
+                        )}
+                    </button>
+                    {selectedPreset && (
+                        <p className="text-xs text-muted-foreground text-center max-w-md">
+                            Includes template + category alignment for{" "}
+                            <span className="font-medium text-foreground">
+                                {selectedPreset === "custom"
+                                    ? "custom categories"
+                                    : EXAM_PRESETS.find((p) => p.id === selectedPreset)?.name ?? selectedPreset}
+                            </span>
+                        </p>
+                    )}
+                </div>
             </section>
 
             {/* Exam Category Alignment */}
-            <ExamAlignmentSection />
+            <ExamAlignmentSection
+                selectedPreset={selectedPreset}
+                onPresetChange={setSelectedPreset}
+                customCategories={customCategories}
+                onCustomCategoriesChange={setCustomCategories}
+                categories={categories}
+            />
 
             {/* JSON Schema Reference */}
             <section className="mb-16">
