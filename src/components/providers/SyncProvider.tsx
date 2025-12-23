@@ -217,7 +217,7 @@ export function SyncProvider({
 
         const status: SyncStatus = anyIncomplete ? "partial" : "success";
 
-        // Refresh block info immediately after sync attempts
+        // Refresh block info immediately after sync attempts (fire-and-forget; guards prevent stale updates)
         void computeBlockedInfo();
 
         // Step 3: Instrumentation — log sync duration

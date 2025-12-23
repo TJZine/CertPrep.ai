@@ -5,7 +5,6 @@ interface SlowSyncStats {
     pushed: number;
     pulled: number;
     effectiveType?: string;
-    [key: string]: unknown;
 }
 
 /**
@@ -21,7 +20,7 @@ function getSlowSyncThreshold(): number {
         }
     ).connection;
 
-    if (!connection?.effectiveType) return 300;
+    if (!connection?.effectiveType) return 500;
 
     switch (connection.effectiveType) {
         case "slow-2g":
@@ -63,7 +62,7 @@ export function logNetworkAwareSlowSync(
     };
 
     // Skip logging if under the dynamic threshold
-    if ((stats.duration as number) < threshold) return;
+    if (stats.duration < threshold) return;
 
     if (effectiveType && ["slow-2g", "2g", "3g"].includes(effectiveType)) {
         logger.debug(
