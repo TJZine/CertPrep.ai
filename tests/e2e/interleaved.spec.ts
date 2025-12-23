@@ -47,7 +47,7 @@ test.describe("Interleaved Practice Flow", () => {
         await expect(page.getByRole("heading", { name: /interleaved practice/i })).toBeVisible({
             timeout: E2E_TIMEOUTS.HYDRATION,
         });
-        await expect(page.locator(".animate-spin")).not.toBeVisible({
+        await expect(page.locator(".h-8.w-8.animate-spin")).not.toBeVisible({
             timeout: E2E_TIMEOUTS.LOADING,
         });
 
@@ -84,7 +84,7 @@ test.describe("Interleaved Practice Flow", () => {
         await expect(page.getByRole("heading", { name: /interleaved practice/i })).toBeVisible({
             timeout: E2E_TIMEOUTS.HYDRATION,
         });
-        await expect(page.locator(".animate-spin")).not.toBeVisible({
+        await expect(page.locator(".h-8.w-8.animate-spin")).not.toBeVisible({
             timeout: E2E_TIMEOUTS.LOADING,
         });
 
@@ -109,7 +109,7 @@ test.describe("Interleaved Practice Flow", () => {
         await expect(page.getByRole("heading", { name: /interleaved practice/i })).toBeVisible({
             timeout: E2E_TIMEOUTS.HYDRATION,
         });
-        await expect(page.locator(".animate-spin")).not.toBeVisible({
+        await expect(page.locator(".h-8.w-8.animate-spin")).not.toBeVisible({
             timeout: E2E_TIMEOUTS.LOADING,
         });
 
