@@ -135,6 +135,70 @@ describe("interleavedPractice", () => {
             ).toBe(true);
         });
 
+        it("filters by category case-insensitively", async () => {
+            const quiz = createQuiz("q1", [
+                createQuestion("q1-1", "Math"),
+                createQuestion("q1-2", "MATH"),
+                createQuestion("q1-3", "math"),
+                createQuestion("q1-4", "Science"),
+            ]);
+
+            mockWhere.mockReturnValue({
+                equals: vi.fn().mockReturnValue({
+                    filter: vi.fn().mockReturnValue({
+                        toArray: vi.fn().mockResolvedValue([quiz]),
+                    }),
+                }),
+            });
+
+            const config: InterleavedConfig = {
+                categories: ["MATH"],
+                questionCount: 10,
+                enableRemix: false,
+            };
+
+            const result = await generateInterleavedSession(config, userId);
+
+            expect(result.quiz.questions).toHaveLength(3);
+            expect(
+                result.quiz.questions.every((q) =>
+                    q.category?.toLowerCase() === "math",
+                ),
+            ).toBe(true);
+        });
+
+        it("filters by multiple categories", async () => {
+            const quiz = createQuiz("q1", [
+                createQuestion("q1-1", "Math"),
+                createQuestion("q1-2", "Science"),
+                createQuestion("q1-3", "History"),
+                createQuestion("q1-4", "Art"),
+            ]);
+
+            mockWhere.mockReturnValue({
+                equals: vi.fn().mockReturnValue({
+                    filter: vi.fn().mockReturnValue({
+                        toArray: vi.fn().mockResolvedValue([quiz]),
+                    }),
+                }),
+            });
+
+            const config: InterleavedConfig = {
+                categories: ["Math", "Science"],
+                questionCount: 10,
+                enableRemix: false,
+            };
+
+            const result = await generateInterleavedSession(config, userId);
+
+            expect(result.quiz.questions).toHaveLength(2);
+            const categories = result.quiz.questions.map((q) => q.category);
+            expect(categories).toContain("Math");
+            expect(categories).toContain("Science");
+            expect(categories).not.toContain("History");
+            expect(categories).not.toContain("Art");
+        });
+
         it("filters by tags", async () => {
             const quiz1 = createQuiz("q1", [createQuestion("q1-1", "Math")], ["cert-a"]);
             const quiz2 = createQuiz("q2", [createQuestion("q2-1", "Science")], ["cert-b"]);

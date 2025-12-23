@@ -12,6 +12,7 @@
 
 import { test, expect, TEST_QUIZ } from "./fixtures";
 import { E2E_TIMEOUTS } from "./helpers/timeouts";
+import { SPINNER_SELECTOR } from "./helpers/selectors";
 import type { Quiz } from "../../src/types/quiz";
 
 /**
@@ -47,7 +48,7 @@ test.describe("Interleaved Practice Flow", () => {
         await expect(page.getByRole("heading", { name: /interleaved practice/i })).toBeVisible({
             timeout: E2E_TIMEOUTS.HYDRATION,
         });
-        await expect(page.locator(".h-8.w-8.animate-spin")).not.toBeVisible({
+        await expect(page.locator(SPINNER_SELECTOR)).not.toBeVisible({
             timeout: E2E_TIMEOUTS.LOADING,
         });
 
@@ -84,7 +85,7 @@ test.describe("Interleaved Practice Flow", () => {
         await expect(page.getByRole("heading", { name: /interleaved practice/i })).toBeVisible({
             timeout: E2E_TIMEOUTS.HYDRATION,
         });
-        await expect(page.locator(".h-8.w-8.animate-spin")).not.toBeVisible({
+        await expect(page.locator(SPINNER_SELECTOR)).not.toBeVisible({
             timeout: E2E_TIMEOUTS.LOADING,
         });
 
@@ -109,7 +110,7 @@ test.describe("Interleaved Practice Flow", () => {
         await expect(page.getByRole("heading", { name: /interleaved practice/i })).toBeVisible({
             timeout: E2E_TIMEOUTS.HYDRATION,
         });
-        await expect(page.locator(".h-8.w-8.animate-spin")).not.toBeVisible({
+        await expect(page.locator(SPINNER_SELECTOR)).not.toBeVisible({
             timeout: E2E_TIMEOUTS.LOADING,
         });
 
