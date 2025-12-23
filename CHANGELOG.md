@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.4.0] - 2025-12-21
+## [1.4.0] - 2025-12-22
 
 ### Added
 
@@ -23,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **E2E Timeout Constants**: Standardized timeout helpers in `tests/e2e/helpers/timeouts.ts` for consistent CI reliability.
 - **Sentry Lazy Loading**: Replay integration now lazy-loaded after first user interaction to reduce initial bundle by ~150KB.
 - **`useCopyToClipboard` Hook**: Shared clipboard hook with modern Clipboard API and deprecated `execCommand` fallback.
+- **E2E SRS Review Tests**: New `srs-review.spec.ts` for SRS Review flow validation including seeding, session completion, and result persistence.
+- **E2E Interleaved Practice Tests**: New `interleaved.spec.ts` for multi-category quiz aggregation flow testing.
 
 ### Changed
 
@@ -37,6 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Quiz Remix Answer Tracking**: Fixed incorrect answer detection when `correct_answer` is undefined (hash-only security mode).
 - **CSP Nonce Hydration**: Replaced `next/script` with native `<script>` elements to prevent hydration mismatch warnings.
 - **Category Banner**: Suppressed misleading "missing category" banner for aggregated sessions which use question-level categories.
+- **E2E SRS Test Flakiness**: Fixed intermittent E2E failures caused by SyncProvider pulling real Supabase SRS data during tests. Added mocks for `srs` REST endpoint and `upsert_srs_lww_batch` RPC in E2E fixtures.
 
 ## [1.3.8] - 2025-12-20
 

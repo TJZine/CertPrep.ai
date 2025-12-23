@@ -1,6 +1,7 @@
 import type { Page } from "@playwright/test";
 import type { Result } from "../../../src/types/result";
 import type { Quiz } from "../../../src/types/quiz";
+import type { SRSState } from "../../../src/types/srs";
 import type { CertPrepDatabase } from "../../../src/db";
 
 /**
@@ -33,6 +34,19 @@ async function openIndexedDB(page: Page): Promise<void> {
         resolve();
       };
     });
+  });
+}
+
+/**
+ * Gets the effective user ID from the browser's localStorage.
+ * This matches what useEffectiveUserId hook returns in the app.
+ * 
+ * @param page - Playwright page
+ * @returns The effective user ID or null if not found
+ */
+export async function getEffectiveUserId(page: Page): Promise<string | null> {
+  return page.evaluate(() => {
+    return localStorage.getItem("cp_guest_user_id");
   });
 }
 
@@ -258,6 +272,7 @@ export async function clearDatabase(page: Page): Promise<void> {
         window.__certprepDb.quizzes.clear(),
         window.__certprepDb.results.clear(),
         window.__certprepDb.syncState.clear(),
+        window.__certprepDb.srs.clear(),
       ]);
       return;
     }
@@ -268,7 +283,7 @@ export async function clearDatabase(page: Page): Promise<void> {
       request.onerror = (): void => reject(request.error);
       request.onsuccess = (): void => {
         const db = request.result;
-        const storeNames = ["quizzes", "results", "syncState"];
+        const storeNames = ["quizzes", "results", "syncState", "srs"];
         const availableStores = Array.from(db.objectStoreNames);
 
         const storesToClear = storeNames.filter((s) =>
@@ -376,4 +391,99 @@ export async function resultHasSyncStatus(
 ): Promise<boolean> {
   const result = await getResultById(page, resultId);
   return result?.synced === expectedSynced;
+}
+
+/**
+ * Seeds an SRS state into IndexedDB for testing.
+ * Uses the exposed Dexie instance if available, otherwise uses raw IndexedDB.
+ *
+ * @param page - Playwright page
+ * @param srsState - SRSState object to seed
+ */
+export async function seedSRSState(page: Page, srsState: SRSState): Promise<void> {
+  await page.evaluate(async (state) => {
+    // Try using exposed Dexie first
+    if (window.__certprepDb) {
+      if (!window.__certprepDb.isOpen()) {
+        await window.__certprepDb.open();
+      }
+      await window.__certprepDb.srs.put(state);
+      return;
+    }
+
+    // Fall back to raw IndexedDB
+    return new Promise<void>((resolve, reject) => {
+      const request = indexedDB.open("CertPrepDatabase");
+      request.onerror = (): void => reject(request.error);
+      request.onsuccess = (): void => {
+        const db = request.result;
+        try {
+          const tx = db.transaction("srs", "readwrite");
+          const store = tx.objectStore("srs");
+          const addRequest = store.put(state);
+
+          addRequest.onerror = (): void => {
+            db.close();
+            reject(addRequest.error);
+          };
+          addRequest.onsuccess = (): void => {
+            db.close();
+            resolve();
+          };
+        } catch (err) {
+          db.close();
+          reject(err);
+        }
+      };
+    });
+  }, srsState);
+}
+
+/**
+ * Gets all SRS states for a user from IndexedDB.
+ *
+ * @param page - Playwright page
+ * @param userId - User ID to filter by
+ * @returns Array of SRSState records for the user
+ */
+export async function getSRSStatesByUserId(
+  page: Page,
+  userId: string,
+): Promise<SRSState[]> {
+  return page.evaluate(async (uid) => {
+    // Try using exposed Dexie first
+    if (window.__certprepDb) {
+      if (!window.__certprepDb.isOpen()) {
+        await window.__certprepDb.open();
+      }
+      return window.__certprepDb.srs.where("user_id").equals(uid).toArray();
+    }
+
+    // Fall back to raw IndexedDB
+    return new Promise<SRSState[]>((resolve, reject) => {
+      const request = indexedDB.open("CertPrepDatabase");
+      request.onerror = (): void => reject(request.error);
+      request.onsuccess = (): void => {
+        const db = request.result;
+        try {
+          const tx = db.transaction("srs", "readonly");
+          const store = tx.objectStore("srs");
+          const getAllRequest = store.getAll();
+
+          getAllRequest.onerror = (): void => {
+            db.close();
+            reject(getAllRequest.error);
+          };
+          getAllRequest.onsuccess = (): void => {
+            db.close();
+            const allStates = getAllRequest.result as SRSState[];
+            resolve(allStates.filter((s) => s.user_id === uid));
+          };
+        } catch {
+          db.close();
+          resolve([]);
+        }
+      };
+    });
+  }, userId);
 }

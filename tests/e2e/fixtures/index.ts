@@ -126,6 +126,95 @@ async function setupSupabaseMocks(
     }
   });
 
+  // Mock Supabase REST API - srs endpoint
+  // Prevents pulling real user SRS data (which can overwrite seeded IndexedDB state)
+  // and prevents polluting the real database with test SRS pushes.
+  await context.route("**/rest/v1/srs*", async (route) => {
+    const request = route.request();
+    const method = request.method();
+    const url = request.url();
+
+    if (method === "GET") {
+      // Return empty array for pull sync - no remote SRS to download
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify([]),
+        headers: {
+          "Content-Range": "0-0/0",
+        },
+      });
+      return;
+    }
+
+    if (method === "POST" || method === "PUT" || method === "PATCH") {
+      // Capture the sync request for assertions/debugging
+      try {
+        const body = request.postDataJSON();
+        syncRequests.push({ body, url });
+      } catch {
+        syncRequests.push({ body: request.postData(), url });
+      }
+
+      await route.fulfill({
+        status: 201,
+        contentType: "application/json",
+        body: JSON.stringify([]),
+      });
+      return;
+    }
+
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ success: true }),
+    });
+  });
+
+  // Mock Supabase RPC used by SRS push sync (batch upsert)
+  await context.route("**/rest/v1/rpc/upsert_srs_lww_batch*", async (route) => {
+    const request = route.request();
+    const method = request.method();
+    const url = request.url();
+
+    if (method === "POST") {
+      try {
+        const body = request.postDataJSON() as unknown;
+        syncRequests.push({ body, url });
+
+        const parsed = body as { items?: Array<{ question_id?: string }> };
+        const items = Array.isArray(parsed.items) ? parsed.items : [];
+
+        // Mirror the minimal structured response expected by pushLocalChanges()
+        const response = items
+          .map((item) => item.question_id)
+          .filter((id): id is string => typeof id === "string" && id.length > 0)
+          .map((questionId) => ({ out_question_id: questionId, out_updated: true }));
+
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify(response),
+        });
+      } catch {
+        // Fall back to a generic success response
+        syncRequests.push({ body: request.postData(), url });
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify([]),
+        });
+      }
+      return;
+    }
+
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ success: true }),
+    });
+  });
+
   // Remove the catch-all route that was shadowing the results route
   // If we need to mock other endpoints, we should add specific routes or a careful catch-all
   // For now, let other requests pass through (they will fail if offline, which is correct)

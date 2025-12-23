@@ -6,82 +6,7 @@
 
 ## 🔴 High Priority
 
-### Verify AI Quiz Generator Prompts Handle Category Restrictions
-
-**Priority**: High | **Effort**: 1-2 hours | **Category**: Prompt Engineering
-
-#### Context
-
-The Create page now includes an "Align with Your Exam" section that generates prompt modifiers for category restrictions. We need to verify that both our Gemini Gem and ChatGPT GPT prompts can properly handle these modifiers.
-
-#### Deliverables
-
-1. Test both AI tools with category restriction prompts from the Create page
-2. Update Gemini Gem prompt (if needed) to respect category constraints
-3. Update ChatGPT GPT prompt (if needed) to respect category constraints
-4. Verify generated JSON uses exact category names from the modifier
-5. Document any limitations in the AI quiz generators README
-
-#### Acceptance Criteria
-
-- [ ] Gemini Gem respects category restrictions when provided
-- [ ] ChatGPT GPT respects category restrictions when provided
-- [ ] Generated questions use exact category values (no paraphrasing)
-- [ ] Both tools gracefully handle edge cases (unknown categories, etc.)
-
----
-
-### Enable Question Review for Aggregated Results
-
-**Priority**: High | **Effort**: 3-4 hours | **Category**: Feature Completion
-
-**Dependencies**: `session_type` and `source_map` fields (implemented in Interleaved Practice PR)
-
-#### Motivation
-
-Currently, aggregated results (SRS Review, Topic Study, Interleaved Practice) show a simplified view with just score + category breakdown. Users can't review individual questions like they can with normal quiz results.
-
-#### Current Behavior
-
-- Normal quiz results: Full ResultsContainer with question review, "Review Missed" button
-- Aggregated results: Simplified card (lines 253-325 in results/[id]/page.tsx)
-
-#### Proposed Behavior
-
-Aggregated results should render ResultsContainer with:
-
-- Questions hydrated from `question_ids` + user's quiz library
-- Source quiz attribution via `source_map` ("This question from: Quiz X")
-- Graceful fallback if source quiz was deleted
-
-#### Implementation Notes
-
-Files to modify:
-
-1. `src/app/results/[id]/page.tsx`
-   - Replace simplified view with ResultsContainer when all questions can be hydrated
-   - Keep simplified fallback if hydration fails
-
-2. `src/hooks/useResultWithHydratedQuiz.ts`
-   - Add logic to hydrate questions from `question_ids` when quiz has no questions
-   - Build lookup map from all user quizzes
-
-3. `src/components/results/ResultsContainer.tsx`
-   - Handle empty `quiz.questions` + populated `question_ids`
-   - Show source quiz column when `source_map` is available
-
-#### Edge Cases
-
-- Source quiz deleted → Show "Source unavailable" badge
-- Question modified after result saved → Use stored answers for grading (already works)
-- Large quiz library → Cache question lookup map
-
-#### Acceptance Criteria
-
-- [x] Aggregated results show full question review (like normal results)
-- [x] Source quiz name displayed for each question (when available)
-- [x] Graceful fallback if questions can't be hydrated
-- [x] Tests cover hydration edge cases
+> No high-priority items currently. See Medium Priority section below.
 
 ---
 
@@ -89,7 +14,7 @@ Files to modify:
 
 ### E2E Testing Expansion
 
-**Priority**: Medium | **Effort**: 4-8 hours | **Category**: Test Coverage
+**Priority**: Medium | **Effort**: 4-5 hours | **Category**: Test Coverage
 
 #### Current E2E Coverage
 
@@ -102,23 +27,9 @@ Files to modify:
 | `offline-sync.spec.ts` | Offline mode, sync behavior                    |
 | `settings.spec.ts`     | Settings page                                  |
 
-#### Priority / Effort Matrix
+#### Tests to Add
 
-| Gap                  | Priority  | Effort        | Impact                 |
-| -------------------- | --------- | ------------- | ---------------------- |
-| SRS Review Flow      | 🔴 High   | Medium (2-3h) | Core feature untested  |
-| Auth Edge Cases      | 🔴 High   | Low (1-2h)    | Security-sensitive     |
-| **Interleaved Flow** | 🟡 Medium | Low (1h)      | New feature            |
-| Topic Study Mode     | 🟡 Medium | Low (1h)      | Recently added feature |
-| Smart Round Mode     | 🟡 Medium | Medium (2h)   | Algorithm validation   |
-| Cross-Device Sync    | 🟡 Medium | High (3-4h)   | Complex setup          |
-| Error States         | 🟢 Low    | Low (1h)      | Edge cases             |
-
-#### Gaps & Opportunities
-
-##### 1. **SRS Review Flow** (High Priority)
-
-No E2E coverage for spaced repetition features.
+##### 1. **SRS Review Flow** (2-3h) — Core untested feature
 
 ```typescript
 // tests/e2e/srs-review.spec.ts
@@ -135,135 +46,70 @@ test.describe("SRS Review", () => {
     // Navigate to results by ID
     // Verify special SRS result display
   });
-
-  test("SRS result syncs across devices", async ({ page }) => {
-    // Complete SRS review (authenticated)
-    // Verify result appears in Supabase
-    // Simulate second device login
-    // Verify SRS stats appear
-  });
 });
 ```
 
-##### 2. **Authentication Flows** (High Priority)
-
-Missing coverage for auth edge cases.
-
-```typescript
-// tests/e2e/auth.spec.ts
-test("password reset flow completes successfully");
-test("session recovery after token expiry");
-test("sign out clears local data");
-```
-
-##### 3. **Interleaved Practice Flow** (Medium Priority)
-
-New feature needs basic E2E validation.
+##### 2. **Interleaved Practice Flow** (1h) — Recently shipped feature
 
 ```typescript
 // tests/e2e/interleaved.spec.ts
 test.describe("Interleaved Practice", () => {
-  test("navigates to interleaved page, starts session, completes quiz", async ({
-    page,
-  }) => {
+  test("completes interleaved session and saves result", async ({ page }) => {
     // Seed multiple quizzes
     // Navigate to /interleaved
-    // Configure options (category, count)
-    // Start session
+    // Configure options, start session
     // Answer questions
     // Verify result saved with session_type="interleaved"
-  });
-
-  test("shows source attribution on result page", async ({ page }) => {
-    // Complete interleaved session
-    // Navigate to result
-    // Verify source_map is used for attribution
   });
 });
 ```
 
-##### 4. **Topic Study Mode** (Medium Priority)
-
-Weak area → Topic study navigation tested, but not the full flow.
+##### 3. **Topic Study Mode** (30min) — Single happy path
 
 ```typescript
-test("topic study loads relevant questions");
-test("topic study filters by category");
+// Add to existing quiz-flow.spec.ts or new file
+test("topic study loads and completes with category filter", async ({
+  page,
+}) => {
+  // Navigate to topic study via dashboard
+  // Select category, start session
+  // Verify questions match category
+});
 ```
 
-##### 5. **Smart Round Mode** (Medium Priority)
-
-Smart quiz prioritization not tested.
+##### 4. **Import Modal** (30min) — Core user flow
 
 ```typescript
-test("smart round prioritizes weak categories");
-test("smart round excludes mastered questions");
+// Add to library.spec.ts
+test("imports valid quiz JSON successfully", async ({ page }) => {
+  // Open import modal
+  // Paste valid JSON
+  // Verify validation passes, import succeeds
+  // Verify quiz appears in library
+});
 ```
 
-##### 6. **Cross-Device Sync** (Medium Priority)
+#### Deferred (covered by unit tests or too complex for E2E)
 
-`offline-sync.spec.ts` tests offline → online, but not multi-device.
-
-```typescript
-test("quiz created on device A appears on device B after sync");
-test("result created on device A updates analytics on device B");
-```
-
-##### 7. **Error States & Edge Cases** (Low Priority)
-
-Missing negative path testing.
-
-```typescript
-test("handles network failure during quiz submit gracefully");
-test("handles corrupt IndexedDB gracefully");
-test("displays error when quiz not found");
-```
+- **Topic Study mode** — Uses same `ZenQuizContainer` as SRS; sessionStorage pattern covered by `srs-review.spec.ts`
+- **Auth edge cases** — Session recovery/token expiry better suited for unit tests
+- **Cross-device sync** — High effort (3-4h), complex setup, diminishing returns
+- **Smart round mode** — Algorithm validation via unit tests instead
+- **Error states** — Network failures, corrupt IndexedDB better as integration tests
 
 #### Implementation Notes
 
 - Use `seedTestQuiz` fixture pattern from existing tests
 - Use `waitForDatabase()` helper for Dexie timing
-- Mock Supabase for cross-device tests (or use test accounts)
-- SRS tests need date mocking for `next_review` scheduling
+- SRS tests seed `next_review` in the past to create due questions (no date mocking needed)
 
 #### Acceptance Criteria
 
-- [ ] Add `srs-review.spec.ts` with core SRS flow
-- [ ] Add `interleaved.spec.ts` with basic flow
-- [ ] Add auth edge case tests to existing or new spec
+- [x] Add `srs-review.spec.ts` with core SRS flow (2 tests passing)
+- [x] Add `interleaved.spec.ts` with basic flow (3 tests passing)
+- [x] Add import modal happy path test (covered by `import-duplicate.spec.ts`)
+- [x] Fix SRS test flakiness (root cause: SyncProvider pulled real Supabase SRS data; fix: mock `srs` REST endpoint and `upsert_srs_lww_batch` RPC)
 - [ ] Verify all specs pass in CI
-- [ ] Document any new fixtures in `tests/e2e/README.md`
-
----
-
-### Quiz Format Info Page
-
-**Priority**: Medium | **Effort**: 2-4 hours | **Category**: Documentation / UX
-
-#### Context
-
-Users import custom quizzes and generate them via GPT/Gemini. To ensure quizzes have proper metadata (especially `category` and `subcategory` for analytics grouping), we need a clear info page documenting the expected JSON format.
-
-#### Deliverables
-
-1. Create `/app/help/quiz-format/page.tsx` with:
-   - Complete JSON schema documentation
-   - Example quiz with all recommended fields
-   - Field descriptions including `category` and `subcategory`
-   - Tips for AI-generated quizzes
-
-2. Link from import modal and quiz creation flows
-
-#### User Action Required
-
-Update GPT/Gemini prompts for quiz generation to include `category` and `subcategory` fields.
-
-#### Acceptance Criteria
-
-- [ ] Info page created with clear documentation
-- [ ] Example JSON includes `category` and `subcategory`
-- [ ] Link accessible from import modal
-- [ ] Mobile-responsive layout
 
 ---
 
