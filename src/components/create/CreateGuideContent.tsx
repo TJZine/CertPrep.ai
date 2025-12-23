@@ -174,18 +174,18 @@ function StepCard({
     return (
         <Card
             hoverable
-            className="relative text-center animate-in fade-in slide-in-from-bottom-4"
+            className="relative text-center animate-in fade-in slide-in-from-bottom-4 border-primary/10 bg-card/50 backdrop-blur-sm"
             style={{ animationDelay: `${delay}ms`, animationFillMode: "both" }}
         >
-            <CardContent className="pt-6">
-                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                    <span className="text-lg font-bold">{number}</span>
+            <CardContent className="pt-8 pb-8">
+                <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/20">
+                    <span className="text-xl font-bold font-heading">{number}</span>
                 </div>
-                <div className="mb-2 flex items-center justify-center gap-2">
+                <div className="mb-3 flex items-center justify-center gap-2">
                     <Icon className="h-5 w-5 text-primary" aria-hidden="true" />
                     <h3 className="text-lg font-semibold">{title}</h3>
                 </div>
-                <p className="text-sm text-muted-foreground">{description}</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">{description}</p>
             </CardContent>
         </Card>
     );
@@ -265,13 +265,13 @@ function ExamAlignmentSection({
             <Collapsible title="🎯 Align with Your Exam">
                 <div className="space-y-6">
                     {/* Explanation */}
-                    <div className="flex items-start gap-3 p-4 rounded-lg bg-primary/5 border border-primary/20">
+                    <div className="flex items-start gap-4 p-4 rounded-xl bg-primary/5 border border-primary/10">
                         <Info className="h-5 w-5 text-primary mt-0.5 shrink-0" aria-hidden="true" />
                         <div className="text-sm text-muted-foreground">
-                            <p className="font-medium text-foreground mb-1">
+                            <p className="font-semibold text-foreground mb-1">
                                 Why categories matter
                             </p>
-                            <p>
+                            <p className="leading-relaxed">
                                 Using consistent category names that match your exam&apos;s official domains
                                 improves your Topic Heatmap analytics and helps identify weak areas.
                                 Select your exam below to generate a prompt modifier.
@@ -280,31 +280,39 @@ function ExamAlignmentSection({
                     </div>
 
                     {/* Preset Selection */}
-                    <div className="space-y-3">
-                        <label className="text-sm font-medium">Select your certification exam:</label>
-                        <div className="grid grid-cols-1 gap-4">
+                    <div className="space-y-4">
+                        <label className="text-sm font-semibold">Select your certification exam:</label>
+                        <div className="grid grid-cols-1 gap-6">
                             {Object.entries(groupedPresets).map(([vendor, presets]) => (
-                                <div key={vendor} className="space-y-2">
-                                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                                <div key={vendor} className="space-y-3">
+                                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-1">
                                         {vendor}
                                     </p>
-                                    <div className="flex flex-wrap gap-2">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                                         {presets.map((preset) => (
                                             <button
                                                 key={preset.id}
                                                 type="button"
                                                 onClick={() => onPresetChange(preset.id)}
                                                 className={cn(
-                                                    "inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all border",
+                                                    "relative flex flex-col items-start p-3 rounded-xl border text-left transition-all",
                                                     selectedPreset === preset.id
-                                                        ? "bg-primary text-primary-foreground border-primary"
-                                                        : "bg-card text-foreground border-border hover:border-primary/50 hover:bg-muted/50"
+                                                        ? "bg-primary/5 border-primary ring-1 ring-primary/20"
+                                                        : "bg-card border-border hover:border-primary/50 hover:bg-muted/50"
                                                 )}
                                             >
-                                                <GraduationCap className="h-4 w-4" aria-hidden="true" />
-                                                <span>{preset.name}</span>
+                                                <div className="flex items-center gap-2 w-full mb-1">
+                                                    <GraduationCap className={cn(
+                                                        "h-4 w-4",
+                                                        selectedPreset === preset.id ? "text-primary" : "text-muted-foreground"
+                                                    )} aria-hidden="true" />
+                                                    <span className={cn(
+                                                        "text-sm font-semibold",
+                                                        selectedPreset === preset.id ? "text-primary" : "text-foreground"
+                                                    )}>{preset.name}</span>
+                                                </div>
                                                 {preset.examCode && (
-                                                    <Badge variant="secondary" className="text-xs">
+                                                    <Badge variant="secondary" className="text-[10px] h-5 opacity-80">
                                                         {preset.examCode}
                                                     </Badge>
                                                 )}
@@ -314,22 +322,28 @@ function ExamAlignmentSection({
                                 </div>
                             ))}
                             {/* Custom option */}
-                            <div className="space-y-2">
-                                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                            <div className="space-y-3">
+                                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-1">
                                     Other
                                 </p>
                                 <button
                                     type="button"
                                     onClick={() => onPresetChange("custom")}
                                     className={cn(
-                                        "inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all border",
+                                        "flex items-center gap-3 p-3 rounded-xl border transition-all w-full sm:w-auto",
                                         selectedPreset === "custom"
-                                            ? "bg-primary text-primary-foreground border-primary"
-                                            : "bg-card text-foreground border-border hover:border-primary/50 hover:bg-muted/50"
+                                            ? "bg-primary/5 border-primary ring-1 ring-primary/20"
+                                            : "bg-card border-border hover:border-primary/50 hover:bg-muted/50"
                                     )}
                                 >
-                                    <FileText className="h-4 w-4" aria-hidden="true" />
-                                    Custom (enter your own)
+                                    <FileText className={cn(
+                                        "h-4 w-4",
+                                        selectedPreset === "custom" ? "text-primary" : "text-muted-foreground"
+                                    )} aria-hidden="true" />
+                                    <span className={cn(
+                                        "text-sm font-medium",
+                                        selectedPreset === "custom" ? "text-primary" : "text-foreground"
+                                    )}>Custom (enter your own)</span>
                                 </button>
                             </div>
                         </div>
@@ -457,30 +471,41 @@ export function CreateGuideContent(): React.ReactElement {
     }, [activeTab, categories]);
 
     return (
-        <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+        <main className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8">
             {/* Hero Section */}
-            <section className="text-center pb-12 border-b border-border mb-12">
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
+            <section className="relative text-center pb-16 pt-8 mb-16 border-b border-border/50">
+                {/* Semantic background mesh/gradient */}
+                <div className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80" aria-hidden="true">
+                    <div
+                        className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-primary/30 to-accent/30 opacity-30 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"
+                        style={{
+                            clipPath:
+                                "polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)",
+                        }}
+                    />
+                </div>
+
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-semibold mb-6 ring-1 ring-primary/20">
                     <Sparkles className="h-4 w-4" aria-hidden="true" />
                     AI-Powered Quiz Generation
                 </div>
-                <h1 className="text-4xl font-bold text-foreground mb-4">
-                    Create Your Own Practice Tests
+                <h1 className="text-4xl sm:text-5xl font-extrabold text-foreground mb-6 tracking-tight font-heading">
+                    Create Your Own <span className="text-primary">Practice Tests</span>
                 </h1>
-                <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
+                <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
                     Turn any study material into structured practice quizzes using AI.
                     Generate, import, and start practicing in minutes.
                 </p>
 
                 {/* CTA Buttons */}
-                <div className="inline-flex flex-col sm:flex-row items-center gap-4 p-4 rounded-xl glass">
+                <div className="inline-flex flex-col sm:flex-row items-center gap-4 p-2 rounded-2xl bg-card/60 backdrop-blur-sm shadow-sm ring-1 ring-border">
                     <a
                         href={GEMINI_GEM_URL}
                         target="_blank"
                         rel="noopener noreferrer"
                         className={cn(
                             buttonVariants({ size: "lg" }),
-                            "w-full sm:w-auto gap-2 shadow-sm"
+                            "w-full sm:w-auto gap-2 shadow-lg hover:shadow-primary/25 min-w-[200px]"
                         )}
                     >
                         <GeminiIcon size={20} />
@@ -492,8 +517,8 @@ export function CreateGuideContent(): React.ReactElement {
                         target="_blank"
                         rel="noopener noreferrer"
                         className={cn(
-                            buttonVariants({ variant: "secondary", size: "lg" }),
-                            "w-full sm:w-auto gap-2 shadow-sm"
+                            buttonVariants({ variant: "outline", size: "lg" }),
+                            "w-full sm:w-auto gap-2 border-primary/20 hover:bg-primary/5 min-w-[200px]"
                         )}
                     >
                         <OpenAIIcon size={20} />
@@ -504,50 +529,54 @@ export function CreateGuideContent(): React.ReactElement {
             </section>
 
             {/* How It Works */}
-            <section className="mb-16">
-                <h2 className="text-2xl font-bold text-center mb-8">How It Works</h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <section className="mb-20 relative">
+                <h2 className="text-2xl font-bold text-center mb-10 font-heading">How It Works</h2>
+
+                {/* Connecting line (desktop only) - Absolute positioning to prevent layout shift */}
+                <div className="hidden md:block absolute top-[110px] left-0 w-full h-0.5 pointer-events-none -z-10" aria-hidden="true">
+                    <div className="w-[70%] h-full mx-auto border-t-2 border-dashed border-border/60" />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     <StepCard
                         number={1}
                         icon={Wand2}
                         title="Generate"
-                        description="Use our AI tools to create questions from your study material"
+                        description="Use our custom AI tools to create high-quality questions from your study material"
                         delay={0}
                     />
                     <StepCard
                         number={2}
                         icon={Copy}
                         title="Copy JSON"
-                        description="Copy the generated quiz JSON output from the AI"
-                        delay={200}
+                        description="Review the generated output and copy the raw quiz JSON code"
+                        delay={150}
                     />
                     <StepCard
                         number={3}
                         icon={Import}
                         title="Import"
-                        description="Paste into CertPrep.ai's import dialog and start practicing"
-                        delay={400}
+                        description="Paste into CertPrep.ai's import dialog and start practicing instantly"
+                        delay={300}
                     />
-                </div>
-                {/* Connecting line (desktop only) */}
-                <div className="hidden md:flex justify-center mt-[-80px] mb-8 pointer-events-none">
-                    <div className="w-2/3 border-t-2 border-dashed border-border" />
                 </div>
             </section>
 
             {/* Choose Your Approach */}
             <section className="mb-16">
-                <h2 className="text-2xl font-bold text-center mb-2">
-                    Choose Your Approach
-                </h2>
-                <p className="text-muted-foreground text-center mb-8">
-                    Select the method that best fits your source material
-                </p>
+                <div className="text-center mb-8">
+                    <h2 className="text-2xl font-bold mb-2 font-heading">
+                        Choose Your Approach
+                    </h2>
+                    <p className="text-muted-foreground">
+                        Select the method that best fits your source material
+                    </p>
+                </div>
 
-                {/* Tab Navigation */}
-                <div className="relative mb-8">
+                {/* Tab Navigation - Modern Segmented Control */}
+                <div className="flex justify-center mb-8">
                     <div
-                        className="flex flex-wrap justify-center gap-2"
+                        className="inline-flex p-1.5 rounded-xl bg-muted/60 backdrop-blur-sm border border-border/50"
                         role="tablist"
                         aria-label="Quiz generation approaches"
                     >
@@ -563,13 +592,13 @@ export function CreateGuideContent(): React.ReactElement {
                                     aria-controls={`panel-${key}`}
                                     onClick={() => setActiveTab(key as keyof typeof TEMPLATES)}
                                     className={cn(
-                                        "relative flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all",
+                                        "flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200",
                                         isActive
-                                            ? "bg-primary text-primary-foreground shadow-sm"
-                                            : "bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80"
+                                            ? "bg-background text-foreground shadow-sm ring-1 ring-border"
+                                            : "text-muted-foreground hover:text-foreground hover:bg-muted"
                                     )}
                                 >
-                                    <Icon className="h-4 w-4" aria-hidden="true" />
+                                    <Icon className={cn("h-4 w-4", isActive ? "text-primary" : "opacity-70")} aria-hidden="true" />
                                     <span className="hidden sm:inline">{value.title}</span>
                                     <span className="sm:hidden">{value.title.split(" ")[0]}</span>
                                 </button>
