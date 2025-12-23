@@ -25,6 +25,7 @@ import { E2E_TIMEOUTS } from "./helpers/timeouts";
 
 /**
  * Helper to select an answer option by its letter key.
+ * Verifies selection registered before returning.
  */
 async function selectOption(
   page: import("@playwright/test").Page,
@@ -32,10 +33,18 @@ async function selectOption(
 ): Promise<void> {
   const option = page.getByRole("radio", { name: new RegExp(`^${letter}\\s`) });
   await option.click();
+  // Verify selection registered in UI
+  await expect(option).toHaveAttribute("aria-checked", "true");
+  // Wait for async answer persistence (hash operation ~50-200ms)
+  // This ensures the answer is stored in the answers Map before proceeding
+  await page.waitForTimeout(200);
 }
 
 /**
  * Helper to complete a quiz by answering all questions.
+ * Uses explicit waits to handle auth latency from getUser().
+ * Dismisses offline toast if present to prevent pointer event interception.
+ * Uses HYDRATION timeout for all assertions to handle component re-renders.
  */
 async function completeQuiz(
   page: import("@playwright/test").Page,
@@ -45,16 +54,21 @@ async function completeQuiz(
   });
   const goodButton = page.getByRole("button", { name: /good/i });
 
-  // Answer Question 1
+  // Dismiss offline toast if visible (it blocks clicks at z-50)
+  await dismissOfflineToast(page);
+
+  // Answer Question 1 - Use HYDRATION timeout to handle re-renders
   await selectOption(page, "B");
+  await expect(submitButton).toBeEnabled({ timeout: E2E_TIMEOUTS.HYDRATION });
   await submitButton.click();
-  await expect(goodButton).toBeVisible();
+  await expect(goodButton).toBeVisible({ timeout: E2E_TIMEOUTS.HYDRATION });
   await goodButton.click();
 
   // Answer Question 2
   await selectOption(page, "C");
+  await expect(submitButton).toBeEnabled({ timeout: E2E_TIMEOUTS.HYDRATION });
   await submitButton.click();
-  await expect(goodButton).toBeVisible();
+  await expect(goodButton).toBeVisible({ timeout: E2E_TIMEOUTS.HYDRATION });
   await goodButton.click();
 }
 
@@ -76,6 +90,22 @@ async function setOffline(
     });
     window.dispatchEvent(new Event(isOffline ? "offline" : "online"));
   }, offline);
+}
+
+/**
+ * Helper to dismiss the offline toast that may block button clicks.
+ * The OfflineIndicator component renders at z-50 and can intercept pointer events.
+ */
+async function dismissOfflineToast(
+  page: import("@playwright/test").Page,
+): Promise<void> {
+  const dismissButton = page.getByLabel("Dismiss notification");
+  // Only dismiss if visible (toast may not have appeared yet or already dismissed)
+  if (await dismissButton.isVisible({ timeout: 1000 }).catch(() => false)) {
+    await dismissButton.click();
+    // Wait for toast to animate out
+    await expect(dismissButton).not.toBeVisible({ timeout: 1000 });
+  }
 }
 
 test.describe("Offline Data Persistence", () => {
@@ -192,14 +222,19 @@ test.describe("Offline Data Persistence", () => {
 
       await setOffline(context, page, true);
 
+      // Dismiss offline toast to prevent it blocking button clicks
+      await dismissOfflineToast(page);
+
       await selectOption(page, "A");
+      await expect(submitButton).toBeEnabled({ timeout: E2E_TIMEOUTS.HYDRATION });
       await submitButton.click();
-      await expect(goodButton).toBeVisible();
+      await expect(goodButton).toBeVisible({ timeout: E2E_TIMEOUTS.HYDRATION });
       await goodButton.click();
 
       await selectOption(page, "B");
+      await expect(submitButton).toBeEnabled({ timeout: E2E_TIMEOUTS.HYDRATION });
       await submitButton.click();
-      await expect(goodButton).toBeVisible();
+      await expect(goodButton).toBeVisible({ timeout: E2E_TIMEOUTS.HYDRATION });
       await goodButton.click();
 
       await setOffline(context, page, false);
@@ -326,11 +361,15 @@ test.describe("Offline Mode Behavior", () => {
     // Go offline
     await setOffline(context, page, true);
 
+    // Dismiss offline toast to prevent it blocking button clicks
+    await dismissOfflineToast(page);
+
     // Answer first question
     await selectOption(page, "B");
     const submitButton = page.getByRole("button", {
       name: /check answer|submit/i,
     });
+    await expect(submitButton).toBeEnabled({ timeout: E2E_TIMEOUTS.HYDRATION });
     await submitButton.click();
 
     // Go back online to verify app state
@@ -364,8 +403,11 @@ test.describe("Sync Request Verification", () => {
     await page.goto("/");
     await page.waitForLoadState("domcontentloaded");
 
-    // Wait for sync hook to initialize
-    await page.waitForTimeout(1000);
+    // Wait for sync hook to be exposed (replaces fixed timeout)
+    await page.waitForFunction(
+      () => (window as Window & { __certprepSync?: () => Promise<void> }).__certprepSync !== undefined,
+      { timeout: 5000 }
+    );
 
     // Manually trigger sync to ensure it runs even if auto-sync debouncing interferes
     await page.evaluate(() => {

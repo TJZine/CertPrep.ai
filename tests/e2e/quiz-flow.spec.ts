@@ -8,6 +8,7 @@ import { E2E_TIMEOUTS } from "./helpers/timeouts";
 
 /**
  * Helper to select an answer option by its letter key.
+ * Verifies selection registered before returning.
  */
 async function selectOption(
     page: import("@playwright/test").Page,
@@ -15,6 +16,23 @@ async function selectOption(
 ): Promise<void> {
     const option = page.getByRole("radio", { name: new RegExp(`^${letter}\\s`) });
     await option.click();
+    // Verify selection registered in UI
+    await expect(option).toHaveAttribute("aria-checked", "true");
+    // Wait for async answer persistence (hash operation ~50-200ms)
+    // This ensures the answer is stored in the answers Map before proceeding
+    await page.waitForTimeout(200);
+}
+
+/**
+ * Helper to click the submit/check answer button.
+ * Waits for the button to be enabled before clicking to handle async state updates.
+ */
+async function clickSubmitButton(
+    page: import("@playwright/test").Page,
+): Promise<void> {
+    const submitButton = page.getByRole("button", { name: /check answer|submit/i });
+    await expect(submitButton).toBeEnabled({ timeout: E2E_TIMEOUTS.HYDRATION });
+    await submitButton.click();
 }
 
 test.describe("Quiz Flow Tests", () => {
@@ -45,7 +63,7 @@ test.describe("Quiz Flow Tests", () => {
 
             // 4. Answer Q1 correctly (Test Quiz Q1 is "What is 2 + 2?", Answer B)
             await selectOption(page, "B");
-            await page.getByRole("button", { name: /check answer|submit/i }).click();
+            await clickSubmitButton(page);
 
             // Verify "Correct" feedback
             await expect(page.getByText(/correct/i).first()).toBeVisible();
@@ -55,7 +73,7 @@ test.describe("Quiz Flow Tests", () => {
 
             // 6. Answer Q2 correctly (Test Quiz Q2 is "What color is the sky...?", Answer C)
             await selectOption(page, "C");
-            await page.getByRole("button", { name: /check answer|submit/i }).click();
+            await clickSubmitButton(page);
             await expect(page.getByText(/correct/i).first()).toBeVisible();
 
             // 7. Click "Good" -> quiz completes
@@ -85,7 +103,7 @@ test.describe("Quiz Flow Tests", () => {
 
             // 2. Answer incorrectly (Q1 Correct is B, choose A)
             await selectOption(page, "A");
-            await page.getByRole("button", { name: /check answer|submit/i }).click();
+            await clickSubmitButton(page);
 
             // 3. Verify explanation panel is visible
             await expect(page.getByText(/why is this wrong/i)).toBeVisible();
@@ -108,12 +126,12 @@ test.describe("Quiz Flow Tests", () => {
 
             // Q1: Answer wrong -> Click "Again"
             await selectOption(page, "A"); // Wrong
-            await page.getByRole("button", { name: /check/i }).click();
+            await clickSubmitButton(page);
             await page.getByRole("button", { name: /again/i }).click();
 
             // Q2: Answer correct -> Click "Good"
             await selectOption(page, "C"); // Correct (for Q2)
-            await page.getByRole("button", { name: /check/i }).click();
+            await clickSubmitButton(page);
             await page.getByRole("button", { name: /good/i }).click();
 
             // Wait for any loading state to complete before asserting
@@ -143,11 +161,11 @@ test.describe("Quiz Flow Tests", () => {
 
             // Let's just complete the quiz and check results for flagged items
             await selectOption(page, "B");
-            await page.getByRole("button", { name: /check/i }).click();
+            await clickSubmitButton(page);
             await page.getByRole("button", { name: /good/i }).click();
 
             await selectOption(page, "C");
-            await page.getByRole("button", { name: /check/i }).click();
+            await clickSubmitButton(page);
             await page.getByRole("button", { name: /good/i }).click();
 
             // 4. Verify flagged count in results (if UI shows it)

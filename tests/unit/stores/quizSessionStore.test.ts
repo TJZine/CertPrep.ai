@@ -100,8 +100,10 @@ describe("Quiz Session Store", () => {
         expect(state.showExplanation).toBe(false); // Correct answers don't show explanation
     });
 
-    it("should handle hash failures gracefully", async () => {
+    it("should preserve selectedAnswer on hash failures for retry", async () => {
         const mockHashAnswer = vi.mocked(hashAnswer);
+        // Both retry attempts fail
+        mockHashAnswer.mockRejectedValueOnce(new Error("Hash failed"));
         mockHashAnswer.mockRejectedValueOnce(new Error("Hash failed"));
 
         act(() => {
@@ -113,12 +115,16 @@ describe("Quiz Session Store", () => {
 
         await act(async () => {
             useQuizSessionStore.getState().submitAnswer();
+            // Wait for error to be set (async operation completes)
+            await vi.waitFor(() => useQuizSessionStore.getState().error !== null);
         });
 
         const state = useQuizSessionStore.getState();
-        expect(state.error).toBeDefined();
-        // Depending on store implementation, hasSubmitted might be false or partial.
-        // Assuming optimistic update rolled back or just error set.
+        expect(state.error).toBe("Failed to submit answer. Please try again.");
+        // KEY: selectedAnswer must be preserved so user can retry!
+        expect(state.selectedAnswer).toBe("A");
+        expect(state.isSubmitting).toBe(false);
+        expect(state.hasSubmitted).toBe(false);
     });
 
     it("should show explanation on incorrect answer", async () => {
