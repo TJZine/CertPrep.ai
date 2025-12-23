@@ -228,6 +228,7 @@ export function ProctorQuizContainer({
       questions={navItems}
       currentIndex={currentIndex}
       onNavigate={navigateToQuestion}
+      disabled={isSubmitting}
     />
   );
 
@@ -250,6 +251,7 @@ export function ProctorQuizContainer({
               questions={navItems}
               currentIndex={currentIndex}
               onNavigate={navigateToQuestion}
+              disabled={isSubmitting}
             />
           </div>
 
@@ -278,6 +280,7 @@ export function ProctorQuizContainer({
                   totalQuestions={quiz.questions.length}
                   isFlagged={flaggedQuestions.has(currentQuestion.id)}
                   hasAnswer={hasCurrentAnswer}
+                  isSubmitting={isSubmitting}
                   onPrevious={goToPreviousQuestion}
                   onNext={goToNextQuestion}
                   onToggleFlag={() => toggleFlag(currentQuestion.id)}

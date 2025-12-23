@@ -16,6 +16,7 @@ interface QuestionNavGridProps {
   questions: QuestionNavItem[];
   currentIndex: number;
   onNavigate: (index: number) => void;
+  disabled?: boolean;
   className?: string;
 }
 
@@ -26,6 +27,7 @@ export function QuestionNavGrid({
   questions,
   currentIndex,
   onNavigate,
+  disabled = false,
   className,
 }: QuestionNavGridProps): React.ReactElement {
   const statusStyles: Record<QuestionStatus, string> = {
@@ -101,11 +103,13 @@ export function QuestionNavGrid({
               key={question.id}
               type="button"
               onClick={() => onNavigate(question.index)}
+              disabled={disabled}
               className={cn(
                 "relative flex h-9 w-9 items-center justify-center rounded-md border border-transparent text-sm font-medium transition-all",
                 statusStyles[question.status],
                 isCurrent &&
                 "border-2 border-foreground shadow-sm",
+                disabled && "opacity-50 cursor-not-allowed"
               )}
               aria-label={`Question ${question.index + 1}: ${statusLabels[question.status]}`}
               aria-current={isCurrent ? "step" : undefined}
@@ -179,6 +183,7 @@ interface QuestionNavStripProps {
   questions: QuestionNavItem[];
   currentIndex: number;
   onNavigate: (index: number) => void;
+  disabled?: boolean;
   className?: string;
 }
 
@@ -189,6 +194,7 @@ export function QuestionNavStrip({
   questions,
   currentIndex,
   onNavigate,
+  disabled = false,
   className,
 }: QuestionNavStripProps): React.ReactElement {
   const containerRef = React.useRef<HTMLDivElement>(null);
@@ -232,11 +238,13 @@ export function QuestionNavStrip({
             type="button"
             data-index={question.index}
             onClick={() => onNavigate(question.index)}
+            disabled={disabled}
             className={cn(
               "flex h-8 w-8 flex-shrink-0 items-center justify-center rounded border border-transparent text-xs font-medium transition-all",
               statusStyles[question.status],
               isCurrent &&
               "border-2 border-foreground shadow-sm",
+              disabled && "opacity-50 cursor-not-allowed"
             )}
             aria-current={isCurrent ? "step" : undefined}
           >

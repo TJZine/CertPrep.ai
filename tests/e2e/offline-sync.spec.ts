@@ -32,12 +32,20 @@ async function selectOption(
   letter: string,
 ): Promise<void> {
   const option = page.getByRole("radio", { name: new RegExp(`^${letter}\\s`) });
+
+  // Wait for element to be visible and stable before interacting
+  await expect(option).toBeVisible({ timeout: 5000 });
+
+  // Hover to stabilize element before clicking
+  await option.hover();
+  await page.waitForTimeout(200); // Increased from 100ms for React hydration
   await option.click();
+
   // Verify selection registered in UI
-  await expect(option).toHaveAttribute("aria-checked", "true");
+  await expect(option).toHaveAttribute("aria-checked", "true", { timeout: 3000 });
+
   // Wait for async answer persistence (hash operation ~50-200ms)
-  // This ensures the answer is stored in the answers Map before proceeding
-  await page.waitForTimeout(200);
+  await page.waitForTimeout(300);
 }
 
 /**

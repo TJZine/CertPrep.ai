@@ -53,6 +53,12 @@ export const E2E_TIMEOUTS = {
      * Unchanged - animations don't depend on auth.
      */
     ANIMATION: 3_000,
+
+    /**
+     * Heavy operation timeout.
+     * Covers: Full page reloads, large data processing, complex interactions under load.
+     */
+    SLOW: 15_000,
 } as const;
 
 export type E2ETimeoutKey = keyof typeof E2E_TIMEOUTS;

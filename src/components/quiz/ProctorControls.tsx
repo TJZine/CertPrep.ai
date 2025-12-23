@@ -17,6 +17,7 @@ interface ProctorControlsProps {
   totalQuestions: number;
   isFlagged: boolean;
   hasAnswer: boolean;
+  isSubmitting?: boolean;
   onPrevious: () => void;
   onNext: () => void;
   onToggleFlag: () => void;
@@ -32,6 +33,7 @@ export function ProctorControls({
   totalQuestions,
   isFlagged,
   hasAnswer,
+  isSubmitting = false,
   onPrevious,
   onNext,
   onToggleFlag,
@@ -82,7 +84,7 @@ export function ProctorControls({
         <Button
           variant="outline"
           onClick={onPrevious}
-          disabled={isFirstQuestion}
+          disabled={isFirstQuestion || isSubmitting}
           leftIcon={<ChevronLeft className="h-4 w-4" />}
           aria-label="Previous question"
           className="justify-self-start"
@@ -93,6 +95,7 @@ export function ProctorControls({
         <Button
           variant={isFlagged ? "warning" : "outline"}
           onClick={onToggleFlag}
+          disabled={isSubmitting}
           aria-label={isFlagged ? "Remove flag" : "Flag for review"}
           aria-pressed={isFlagged}
           leftIcon={
@@ -117,7 +120,7 @@ export function ProctorControls({
         <Button
           variant="outline"
           onClick={onNext}
-          disabled={isLastQuestion}
+          disabled={isLastQuestion || isSubmitting}
           rightIcon={<ChevronRight className="h-4 w-4" />}
           aria-label="Next question"
           className="justify-self-end"
@@ -131,6 +134,7 @@ export function ProctorControls({
           variant="default"
           size="lg"
           onClick={onSubmitExam}
+          disabled={isSubmitting}
           className="w-full"
           leftIcon={<Send className="h-4 w-4" />}
           aria-label="Submit exam"
@@ -166,6 +170,7 @@ interface ProctorControlsCompactProps {
   currentIndex: number;
   totalQuestions: number;
   isFlagged: boolean;
+  isSubmitting?: boolean;
   onPrevious: () => void;
   onNext: () => void;
   onToggleFlag: () => void;
@@ -179,6 +184,7 @@ export function ProctorControlsCompact({
   currentIndex,
   totalQuestions,
   isFlagged,
+  isSubmitting = false,
   onPrevious,
   onNext,
   onToggleFlag,
@@ -193,7 +199,7 @@ export function ProctorControlsCompact({
         variant="ghost"
         size="icon"
         onClick={onPrevious}
-        disabled={isFirstQuestion}
+        disabled={isFirstQuestion || isSubmitting}
         aria-label="Previous question"
       >
         <ChevronLeft className="h-5 w-5" />
@@ -203,6 +209,7 @@ export function ProctorControlsCompact({
         variant="ghost"
         size="icon"
         onClick={onToggleFlag}
+        disabled={isSubmitting}
         className={cn(isFlagged && "text-flagged")}
         aria-label={isFlagged ? "Remove flag" : "Flag for review"}
       >
@@ -217,7 +224,7 @@ export function ProctorControlsCompact({
         variant="ghost"
         size="icon"
         onClick={onNext}
-        disabled={isLastQuestion}
+        disabled={isLastQuestion || isSubmitting}
         aria-label="Next question"
       >
         <ChevronRight className="h-5 w-5" />
