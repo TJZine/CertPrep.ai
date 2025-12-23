@@ -12,6 +12,10 @@ const { supabaseMock } = vi.hoisted(() => {
         data: { session: { user: { id: "user-1" } } },
         error: null,
       }),
+      getUser: vi.fn().mockResolvedValue({
+        data: { user: { id: "user-1" } },
+        error: null,
+      }),
     },
   };
 

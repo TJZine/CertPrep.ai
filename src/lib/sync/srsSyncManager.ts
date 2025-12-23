@@ -114,13 +114,13 @@ async function performSRSSync(userId: string): Promise<{ incomplete: boolean }> 
   }
 
   // Validate auth session matches the userId we're syncing for
-  const { data: { session }, error: authError } = await client.auth.getSession();
-  if (authError || !session?.user) {
+  const { data: { user }, error: authError } = await client.auth.getUser();
+  if (authError || !user) {
     logger.warn("SRS sync skipped: No valid auth session", { authError: authError?.message });
     return { incomplete: true };
   }
-  if (session.user.id !== userId) {
-    logger.error("SRS sync aborted: Auth user ID mismatch", { authUserId: session.user.id, syncUserId: userId });
+  if (user.id !== userId) {
+    logger.error("SRS sync aborted: Auth user ID mismatch", { authUserId: user.id, syncUserId: userId });
     return { incomplete: true };
   }
 

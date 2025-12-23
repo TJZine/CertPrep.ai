@@ -62,44 +62,18 @@ Future optimizations to consider if slow sync issues persist after the cursor fi
 
 ### Known Issues
 
-#### Sync Fails with "No valid auth session" (Dev Environment)
+#### ~~Sync Fails with "No valid auth session" (Dev Environment)~~ ✅ FIXED
 
-**Last Seen:** 2025-12-14
+**Fixed in**: v1.3.10  
+**Resolution**: Migrated sync managers from `getSession()` to `getUser()`.
 
-**Symptoms:**
+`getUser()` validates the session with the Supabase server on every call, eliminating stale cache issues that caused "No valid auth session" errors after page refresh. This adds ~50-200ms latency per sync operation but ensures reliable authentication.
 
-- Console: `Sync skipped: No valid auth session { authError: undefined }`
-- User is logged in (UI works, can take quizzes)
-- Sync operations fail, "Unsynced" badge persists
+**Files Changed**:
 
-**Root Cause:**
-Stale browser cookies/localStorage. The `@supabase/ssr` client's `getSession()` reads from local cache which can become out of sync, while `onAuthStateChange` (used by AuthProvider) still works correctly.
-
-**Workaround:**
-
-> [!WARNING]
-> "Clear site data" deletes IndexedDB and will **destroy all offline quizzes, results, and SRS progress** that haven't synced. Only use as a last resort if you have no unsaved work.
-
-**Step 1 — Try safer fixes first:**
-
-1. Sign out via the app UI (Settings → Sign Out)
-2. Hard refresh (`Cmd+Shift+R` / `Ctrl+Shift+R`)
-3. Log back in
-
-**Step 2 — If Step 1 fails, clear only auth cookies:**
-
-1. DevTools → Application → Cookies → Select your domain
-2. Delete cookies starting with `sb-` (e.g., `sb-xxx-auth-token`)
-3. Hard refresh and log back in
-
-**Step 3 — Last resort (data loss risk):**
-
-1. DevTools → Application → Storage → "Clear site data"
-2. Hard refresh (`Cmd+Shift+R` / `Ctrl+Shift+R`)
-3. Log back in
-
-**Permanent Fix (if recurs frequently):**
-Change sync managers (`syncManager.ts`, `quizSyncManager.ts`, `srsSyncManager.ts`) to use `getUser()` instead of `getSession()`. This validates with the server (adds ~50-200ms latency) but is more reliable. See Supabase SSR docs.
+- `src/lib/sync/syncManager.ts`
+- `src/lib/sync/quizSyncManager.ts`
+- `src/lib/sync/srsSyncManager.ts`
 
 ---
 

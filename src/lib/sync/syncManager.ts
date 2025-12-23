@@ -173,13 +173,13 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
     return { incomplete: true, error: "Supabase client unavailable" };
   }
 
-  const { data: { session }, error: authError } = await client.auth.getSession();
-  if (authError || !session?.user) {
+  const { data: { user }, error: authError } = await client.auth.getUser();
+  if (authError || !user) {
     logger.warn("Sync skipped: No valid auth session", { authError: authError?.message });
     return { incomplete: true, error: "Not authenticated", status: "skipped" };
   }
-  if (session.user.id !== userId) {
-    logger.error("Sync aborted: Auth user ID mismatch", { authUserId: session.user.id, syncUserId: userId });
+  if (user.id !== userId) {
+    logger.error("Sync aborted: Auth user ID mismatch", { authUserId: user.id, syncUserId: userId });
     return { incomplete: true, error: "User ID mismatch - please re-login", status: "failed" };
   }
 
