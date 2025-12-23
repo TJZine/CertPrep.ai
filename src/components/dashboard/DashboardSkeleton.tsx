@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { BookOpen } from "lucide-react";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/Card";
 import { DashboardShell } from "./DashboardShell";
@@ -20,13 +21,19 @@ interface DashboardSkeletonProps {
 export function DashboardSkeleton({
     quizCardCount = 6,
 }: DashboardSkeletonProps): React.ReactElement {
-    const cardCount = Math.min(12, Math.max(1, Math.floor(quizCardCount)));
+    // Allow 0 for empty state (LCP optimization), otherwise clamp to 1-12
+    const cardCount = Math.min(12, Math.max(0, Math.floor(quizCardCount)));
 
     return (
         <DashboardShell
             headerSlot={<HeaderSkeleton />}
             statsSlot={<StatsBarSkeleton />}
-            srsSlot={<SRSPlaceholderSkeleton />}
+            srsSlot={
+                <div className="mx-auto grid max-w-2xl gap-4 md:grid-cols-2">
+                    <SRSPlaceholderSkeleton />
+                    <InterleavedPlaceholderSkeleton />
+                </div>
+            }
             contentSlot={<QuizGridSkeleton count={cardCount} />}
             aria-label="Loading dashboard"
             isLoading
@@ -76,13 +83,32 @@ function StatsBarSkeleton(): React.ReactElement {
  */
 function SRSPlaceholderSkeleton(): React.ReactElement {
     return (
-        <div className="flex justify-center" aria-hidden="true">
-            <div className="mx-auto flex w-full max-w-md items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 py-3">
-                <Skeleton className="h-4 w-4 rounded" />
-                <Skeleton className="h-4 w-40" />
-                <Skeleton className="h-4 w-4" />
-            </div>
+        <div className="flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 py-3" aria-hidden="true">
+            <Skeleton className="h-4 w-4 rounded" />
+            <Skeleton className="h-4 w-40" />
+            <Skeleton className="h-4 w-4" />
         </div>
+    );
+}
+
+/**
+ * InterleavedPracticeCard skeleton - matches the card structure
+ * Renders as a Card with header + button placeholder
+ */
+function InterleavedPlaceholderSkeleton(): React.ReactElement {
+    return (
+        <Card className="border-primary/20" aria-hidden="true">
+            <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                    <Skeleton className="h-5 w-5 rounded" />
+                    <Skeleton className="h-5 w-36" />
+                </div>
+                <Skeleton className="mt-1 h-4 w-48" />
+            </CardHeader>
+            <CardContent>
+                <Skeleton className="h-10 w-full rounded-md" />
+            </CardContent>
+        </Card>
     );
 }
 
@@ -119,9 +145,47 @@ function QuizCardSkeleton(): React.ReactElement {
 }
 
 /**
- * QuizGrid skeleton - grid of quiz card skeletons
+ * Empty state skeleton - renders actual text for LCP optimization.
+ * 
+ * The LCP element on the dashboard is the empty state description text.
+ * By rendering this with real text (not skeleton placeholders), we allow
+ * the browser to paint the LCP element immediately during the loading phase,
+ * dramatically improving LCP scores on mobile.
+ */
+function EmptyStateSkeleton(): React.ReactElement {
+    return (
+        <div
+            className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-card px-6 py-10 text-center"
+        >
+            <div
+                className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground"
+                aria-hidden="true"
+            >
+                <BookOpen className="h-6 w-6" aria-hidden="true" />
+            </div>
+            <h3 className="text-lg font-semibold text-foreground">
+                No quizzes yet
+            </h3>
+            <p className="mt-2 max-w-md text-sm text-muted-foreground">
+                Import your first quiz to get started. Upload a JSON file or paste quiz data.
+            </p>
+        </div>
+    );
+}
+
+/**
+ * QuizGrid skeleton - grid of quiz card skeletons or empty state.
+ * 
+ * When count is 0, we render the actual EmptyState structure with real text
+ * to optimize LCP. When count > 0, we render skeleton cards.
  */
 function QuizGridSkeleton({ count }: { count: number }): React.ReactElement {
+    // For new users or when we know there are no quizzes,
+    // render the EmptyState structure immediately for LCP optimization
+    if (count === 0) {
+        return <EmptyStateSkeleton />;
+    }
+
     return (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: count }).map((_, i) => (

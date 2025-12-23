@@ -202,18 +202,18 @@ export function WeakAreasCard({
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-medium text-foreground">
+                    <div className="flex items-center gap-2 flex-wrap gap-y-1">
+                      <h3 className="font-medium text-foreground min-w-0 break-words">
                         {area.category}
                       </h3>
                       {area.recentTrend === "improving" && (
-                        <Badge variant="success" className="gap-1">
+                        <Badge variant="success" className="gap-1 flex-shrink-0">
                           <TrendingUp className="h-3 w-3" aria-hidden="true" />
                           Improving
                         </Badge>
                       )}
                       {area.recentTrend === "declining" && (
-                        <Badge variant="danger" className="gap-1">
+                        <Badge variant="danger" className="gap-1 flex-shrink-0">
                           <TrendingDown className="h-3 w-3" aria-hidden="true" />
                           Declining
                         </Badge>

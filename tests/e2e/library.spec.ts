@@ -3,6 +3,7 @@ import {
     waitForDatabase,
     getAllQuizzes,
 } from "./helpers/db";
+import { E2E_TIMEOUTS } from "./helpers/timeouts";
 
 test.describe("Quiz Library & Dashboard", () => {
     test.beforeEach(async () => {
@@ -310,7 +311,7 @@ test.describe("Quiz Library & Dashboard", () => {
 
 
             // Wait for loading to finish (wait for either content or empty state)
-            await expect(page.getByText("Loading your quiz library...").first()).not.toBeVisible({ timeout: 15000 });
+            await expect(page.getByText("Loading your quiz library...").first()).not.toBeVisible({ timeout: E2E_TIMEOUTS.LOADING });
 
             // 3. Verify empty state
             await expect(page.getByRole("heading", { name: "No quizzes yet" })).toBeVisible();

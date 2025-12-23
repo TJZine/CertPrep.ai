@@ -117,3 +117,59 @@ Topic Study lets you practice questions from weak areas:
 3. Click **Focus here** to start a targeted practice session
 
 Only questions from that category are included, helping you focus on weak areas.
+
+---
+
+## What is Interleaved Practice?
+
+Interleaved Practice mixes questions from multiple quizzes for varied study:
+
+1. Go to the **Dashboard**
+2. Click the **Interleaved Practice** card
+3. Configure question count and optional category filters
+4. Start a session with questions sampled across all your quizzes
+
+This technique improves long-term retention by forcing your brain to switch between topics, strengthening recall pathways.
+
+---
+
+## How do I create custom quizzes?
+
+CertPrep.ai provides AI-powered tools to generate practice quizzes:
+
+1. Visit the [Create page](/create) for step-by-step guidance
+2. Use our **Gemini Gem** or **ChatGPT GPT** to generate quiz JSON
+3. Copy the output and import it via **Dashboard → Import Quiz**
+
+The AI tools support multiple approaches:
+
+- Generate questions from study notes or PDFs
+- Match the style of existing exam questions
+- Create variations of existing questions for more practice
+
+See [AI Quiz Generators](/docs/ai-quiz-generators/README.md) for detailed prompts and customization.
+
+---
+
+## How do I align categories with my certification exam?
+
+The **Create page** includes an **Exam Alignment** section to help you:
+
+1. Visit the [Create page](/create)
+2. Expand "🎯 Align with Your Exam"
+3. Select your certification (AWS SAA, CompTIA Security+, PMP, CISSP, etc.)
+4. Copy the generated prompt modifier into your AI tool
+
+Using official exam domains as categories improves your Topic Heatmap analytics, making it easier to identify weak areas that match your actual test blueprint.
+
+---
+
+## What is Quiz Remix (Shuffle)?
+
+Quiz Remix randomizes question and answer order for a fresh experience:
+
+1. Select a quiz and click **Start Quiz**
+2. Enable **Shuffle** in the quiz lobby
+3. Questions and answer options appear in random order
+
+Your answers are still tracked correctly against the original quiz for accurate analytics — only the presentation changes.

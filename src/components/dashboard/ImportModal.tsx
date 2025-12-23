@@ -7,6 +7,7 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
+  AlertTriangle,
   X,
 } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
@@ -14,7 +15,8 @@ import { Button } from "@/components/ui/Button";
 import { Textarea } from "@/components/ui/Textarea";
 import { useToast } from "@/components/ui/Toast";
 import { cn } from "@/lib/utils";
-import { createQuiz } from "@/db/quizzes";
+import { createQuiz, updateQuiz } from "@/db/quizzes";
+import { db } from "@/db";
 import {
   validateQuizImport,
   formatValidationErrors,
@@ -79,6 +81,9 @@ export function ImportModal({
   const [isValidating, setIsValidating] = React.useState(false);
   const [isImporting, setIsImporting] = React.useState(false);
   const [isDragOver, setIsDragOver] = React.useState(false);
+  // Duplicate detection state
+  const [existingQuiz, setExistingQuiz] = React.useState<{ id: string; title: string; questionCount: number } | null>(null);
+  const [showDuplicateWarning, setShowDuplicateWarning] = React.useState(false);
   // Category fields for analytics grouping (optional)
   const [category, setCategory] = React.useState("");
   const [subcategory, setSubcategory] = React.useState("");
@@ -95,7 +100,20 @@ export function ImportModal({
   React.useEffect(() => {
     categoryRef.current = category;
     subcategoryRef.current = subcategory;
+
   }, [category, subcategory]);
+
+  const importAsNewRef = React.useRef<HTMLButtonElement>(null);
+
+  React.useEffect((): (() => void) | void => {
+    if (showDuplicateWarning) {
+      // Small timeout to allow render
+      const timer = setTimeout(() => {
+        importAsNewRef.current?.focus();
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+  }, [showDuplicateWarning]);
 
   const resetState = (): void => {
     setActiveTab("paste");
@@ -107,6 +125,8 @@ export function ImportModal({
     setIsValidating(false);
     setIsImporting(false);
     setIsDragOver(false);
+    setExistingQuiz(null);
+    setShowDuplicateWarning(false);
     setCategory("");
     setSubcategory("");
   };
@@ -223,6 +243,32 @@ export function ImportModal({
     }
   };
 
+  /**
+   * Check if a quiz with the same title already exists.
+   * Returns the existing quiz if found, null otherwise.
+   */
+  const checkForDuplicate = async (title: string): Promise<{ id: string; title: string; questionCount: number } | null> => {
+    if (!userId) return null;
+
+    const existing = await db.quizzes
+      .where("user_id")
+      .equals(userId)
+      .filter((q) => q.title.toLowerCase() === title.toLowerCase() && !q.deleted_at)
+      .first();
+
+    if (existing) {
+      return {
+        id: existing.id,
+        title: existing.title,
+        questionCount: existing.questions.length,
+      };
+    }
+    return null;
+  };
+
+  /**
+   * Main import handler - checks for duplicates first.
+   */
   const handleImport = async (): Promise<void> => {
     if (!userId) {
       addToast("error", "Unable to import without a user context.");
@@ -244,13 +290,51 @@ export function ImportModal({
       return;
     }
 
+    // Check for duplicate before importing
+    const duplicate = await checkForDuplicate(result.data.title);
+    if (duplicate) {
+      setExistingQuiz(duplicate);
+      setShowDuplicateWarning(true);
+      return;
+    }
+
+    // No duplicate - proceed with import
+    await doImport(result.data, false);
+  };
+
+  /**
+   * Perform the actual import (create new or replace existing).
+   */
+  const doImport = async (data: QuizImportInput, replaceExistingId: string | false): Promise<void> => {
+    if (!userId) {
+      addToast("error", "You must be signed in to import.");
+      return;
+    }
+
     setIsImporting(true);
     try {
-      const quiz = await createQuiz(result.data, {
-        userId,
-        category: category.trim() || undefined,
-        subcategory: subcategory.trim() || undefined,
-      });
+      let quiz;
+      if (replaceExistingId) {
+        // Replace existing quiz
+        await updateQuiz(replaceExistingId, userId, {
+          title: data.title,
+          description: data.description,
+          questions: data.questions,
+          tags: data.tags ?? [],
+          category: category.trim() || undefined,
+          subcategory: subcategory.trim() || undefined,
+        });
+        quiz = await db.quizzes.get(replaceExistingId);
+        if (!quiz) throw new Error("Quiz not found after update");
+        addToast("success", `Replaced "${quiz.title}" with new version`);
+      } else {
+        // Create new quiz
+        quiz = await createQuiz(data, {
+          userId,
+          category: category.trim() || undefined,
+          subcategory: subcategory.trim() || undefined,
+        });
+      }
       onImportSuccess(quiz);
       resetState();
       onClose();
@@ -262,6 +346,28 @@ export function ImportModal({
     } finally {
       setIsImporting(false);
     }
+  };
+
+  /**
+   * Handle "Import as New" - creates a duplicate with different ID.
+   */
+  const handleImportAsNew = async (): Promise<void> => {
+    const { result } = validateJson(jsonText);
+    if (!result?.success || !result.data) return;
+
+    setShowDuplicateWarning(false);
+    await doImport(result.data, false);
+  };
+
+  /**
+   * Handle "Replace Existing" - updates the existing quiz.
+   */
+  const handleReplaceExisting = async (): Promise<void> => {
+    const { result } = validateJson(jsonText);
+    if (!result?.success || !result.data || !existingQuiz) return;
+
+    setShowDuplicateWarning(false);
+    await doImport(result.data, existingQuiz.id);
   };
 
   const handleTabKeyNavigation = (
@@ -437,6 +543,60 @@ export function ImportModal({
             </li>
           ))}
         </ul>
+      </div>
+    );
+  };
+
+  /**
+   * Render duplicate quiz warning with action buttons.
+   */
+  const renderDuplicateWarning = (): React.ReactElement | null => {
+    if (!showDuplicateWarning || !existingQuiz) return null;
+
+    return (
+      <div
+        className="mt-4 rounded-lg border border-warning/50 bg-warning/10 px-4 py-4"
+        role="alert"
+      >
+        <div className="mb-3 flex items-center gap-2 text-warning">
+          <AlertTriangle className="h-5 w-5" aria-hidden="true" />
+          <span className="text-sm font-semibold">Quiz Already Exists</span>
+        </div>
+        <p className="mb-4 text-sm text-foreground">
+          A quiz titled &ldquo;{existingQuiz.title}&rdquo; already exists with{" "}
+          {existingQuiz.questionCount} questions. What would you like to do?
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            ref={importAsNewRef}
+            size="sm"
+            onClick={handleImportAsNew}
+            isLoading={isImporting}
+            disabled={isImporting}
+          >
+            Import as New
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleReplaceExisting}
+            isLoading={isImporting}
+            disabled={isImporting}
+          >
+            Replace Existing
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => {
+              setShowDuplicateWarning(false);
+              setExistingQuiz(null);
+            }}
+            disabled={isImporting}
+          >
+            Cancel
+          </Button>
+        </div>
       </div>
     );
   };
@@ -634,6 +794,7 @@ export function ImportModal({
         )}
 
         {renderWarnings()}
+        {renderDuplicateWarning()}
       </div>
     </Modal>
   );

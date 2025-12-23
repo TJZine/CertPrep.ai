@@ -8,6 +8,17 @@ import type { QuizMode } from "./quiz";
 export type SyncFlag = 0 | 1;
 
 /**
+ * Explicit session type classification.
+ * Used to identify how a quiz result was generated.
+ */
+export type SessionType =
+  | "standard"      // Normal quiz attempt
+  | "smart_round"   // Subset of missed/flagged questions
+  | "srs_review"    // Spaced repetition review session
+  | "topic_study"   // Category-focused study session
+  | "interleaved";  // Multi-quiz aggregated practice
+
+/**
  * Represents the outcome of a completed quiz session.
  *
  * This record is immutable once created, except for the `synced` status
@@ -24,7 +35,7 @@ export interface Result {
   timestamp: number;
   /** Mode the quiz was taken in (e.g., "zen", "proctor"). */
   mode: QuizMode;
-  /** Raw score (number of correct answers). */
+  /** Score as a percentage (0-100). Calculated from Math.round((correct/total) * 100). */
   score: number;
   /** Total duration of the session in seconds. */
   time_taken_seconds: number;
@@ -67,6 +78,17 @@ export interface Result {
    * Maps Question ID → seconds spent before submitting answer.
    */
   time_per_question?: Record<string, number>;
+  /**
+   * Explicit session type classification.
+   * Replaces inference from quiz ID for aggregated sessions.
+   */
+  session_type?: SessionType;
+  /**
+   * Maps question ID to source quiz ID for aggregated sessions.
+   * Enables "this question came from Quiz X" in results review.
+   * Only populated for: srs_review, topic_study, interleaved.
+   */
+  source_map?: Record<string, string>;
 }
 
 /**

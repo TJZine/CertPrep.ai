@@ -12,13 +12,9 @@ if (dsn && !Sentry.getClient()) {
   Sentry.init({
     dsn,
 
-    // Add optional integrations for additional features
-    integrations: [
-      Sentry.replayIntegration({
-        maskAllText: true,
-        blockAllMedia: true,
-      }),
-    ],
+    // Integrations: Start with empty array to reduce initial bundle size.
+    // Replay is lazy-loaded below after first user interaction.
+    integrations: [],
 
     // Define how likely traces are sampled. Adjust this value in production, or use tracesSampler for greater control.
     tracesSampleRate: process.env.NODE_ENV === "production" ? 0.1 : 1.0,
@@ -68,4 +64,57 @@ if (dsn && !Sentry.getClient()) {
       return event;
     },
   });
+
+  // Lazy-load Sentry Replay after first user interaction or timeout
+  // This removes ~150KB from the critical path while still capturing replays
+  // for meaningful user sessions. Early page load (first 5s) is not recorded,
+  // but errors during this period are still captured.
+  if (typeof window !== "undefined") {
+    let replayLoaded = false;
+
+    const loadReplay = (): void => {
+      if (replayLoaded) return;
+      replayLoaded = true;
+
+      // Dynamic import to load replay chunk on demand
+      import("@sentry/nextjs").then((SentryModule) => {
+        const client = SentryModule.getClient();
+        if (client) {
+          client.addIntegration(
+            SentryModule.replayIntegration({
+              maskAllText: true,
+              blockAllMedia: true,
+            }),
+          );
+        }
+      }).catch((error) => {
+        console.warn("[Sentry] Failed to lazy-load Replay integration:", error);
+      });
+    };
+
+    // Trigger replay load on first meaningful interaction
+    const interactionEvents: (keyof WindowEventMap)[] = [
+      "click",
+      "keydown",
+      "scroll",
+      "touchstart",
+    ];
+
+    const handleInteraction = (): void => {
+      interactionEvents.forEach((event) =>
+        window.removeEventListener(event, handleInteraction),
+      );
+      loadReplay();
+    };
+
+    interactionEvents.forEach((event) =>
+      window.addEventListener(event, handleInteraction, {
+        once: true,
+        passive: true,
+      }),
+    );
+
+    // Also load after 5s timeout as fallback for passive viewers
+    setTimeout(loadReplay, 5000);
+  }
 }

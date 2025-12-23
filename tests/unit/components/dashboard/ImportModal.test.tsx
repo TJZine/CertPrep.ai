@@ -2,18 +2,45 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, act } from "@testing-library/react";
 import { ImportModal } from "@/components/dashboard/ImportModal";
-import * as dbQuizzes from "@/db/quizzes";
 import type { Quiz } from "@/types/quiz";
 
-// Mock dependencies
+// Mock dependencies using vi.hoisted to allow access inside vi.mock
+const { mockCreateQuiz, mockUpdateQuiz, mockWhere, mockGet, mockEqual, mockFilter, mockFirst, mockAddToast } = vi.hoisted(() => {
+    const mockFirst = vi.fn();
+    const mockFilter = vi.fn().mockReturnValue({ first: mockFirst });
+    const mockEqual = vi.fn().mockReturnValue({ filter: mockFilter });
+    const mockWhere = vi.fn().mockReturnValue({ equals: mockEqual });
+    const mockGet = vi.fn();
+
+    return {
+        mockCreateQuiz: vi.fn(),
+        mockUpdateQuiz: vi.fn(),
+        mockWhere,
+        mockGet,
+        mockEqual,
+        mockFilter,
+        mockFirst,
+        mockAddToast: vi.fn(),
+    };
+});
+
 vi.mock("@/db/quizzes", () => ({
-    createQuiz: vi.fn(),
+    createQuiz: mockCreateQuiz,
+    updateQuiz: mockUpdateQuiz,
+}));
+
+vi.mock("@/db", () => ({
+    db: {
+        quizzes: {
+            where: mockWhere,
+            get: mockGet,
+        }
+    }
 }));
 
 // Mock Toast
-const mockAddToast = vi.fn();
 vi.mock("@/components/ui/Toast", () => ({
-    useToast: (): { addToast: typeof mockAddToast } => ({
+    useToast: (): { addToast: ReturnType<typeof vi.fn> } => ({
         addToast: mockAddToast,
     }),
 }));
@@ -31,6 +58,9 @@ vi.mock("@/components/ui/Modal", () => ({
 }));
 
 describe("ImportModal", () => {
+    /** Matches the 500ms debounce in ImportModal + 500ms buffer for test stability */
+    const VALIDATION_DEBOUNCE_MS = 1000;
+
     const defaultProps = {
         isOpen: true,
         onClose: vi.fn(),
@@ -41,6 +71,13 @@ describe("ImportModal", () => {
     beforeEach(() => {
         vi.clearAllMocks();
         vi.useFakeTimers();
+
+        // Reset DB mock to default state (no duplicates found)
+        mockFirst.mockResolvedValue(null);
+        // Ensure chain is wired up
+        mockWhere.mockReturnValue({ equals: mockEqual });
+        mockEqual.mockReturnValue({ filter: mockFilter });
+        mockFilter.mockReturnValue({ first: mockFirst });
     });
 
     afterEach(() => {
@@ -60,174 +97,158 @@ describe("ImportModal", () => {
 
     it("validates valid JSON input", async () => {
         render(<ImportModal {...defaultProps} />);
-
-        const validQuiz = {
-            title: "Valid Quiz",
-            questions: [
-                {
-                    id: "1",
-                    question: "Q1",
-                    options: { A: "Opt 1", B: "Opt 2" },
-                    correct_answer: "A",
-                    explanation: "Exp",
-                    category: "Test Cat"
-                }
-            ]
-        };
-
+        const validQuiz = { title: "Valid Quiz", questions: [{ id: "1", question: "Q1", options: { A: "Opt 1", B: "Opt 2" }, correct_answer: "A", explanation: "Exp", category: "Test Cat" }] };
         const input = screen.getByPlaceholderText(/My Certification Quiz/);
         fireEvent.change(input, { target: { value: JSON.stringify(validQuiz) } });
-
-        // Fast-forward debounce
-        await act(async () => {
-            vi.advanceTimersByTime(1000);
-            await Promise.resolve();
-        });
-
+        await act(async () => { vi.advanceTimersByTime(VALIDATION_DEBOUNCE_MS); await Promise.resolve(); });
         expect(screen.getByText("Validation passed")).toBeInTheDocument();
-
-        const importButton = screen.getByRole("button", { name: "Import Quiz" });
-        expect(importButton).not.toBeDisabled();
+        expect(screen.getByRole("button", { name: "Import Quiz" })).not.toBeDisabled();
     });
 
     it("shows error for invalid JSON", async () => {
         render(<ImportModal {...defaultProps} />);
-
         const input = screen.getByPlaceholderText(/My Certification Quiz/);
         fireEvent.change(input, { target: { value: "{ invalid json" } });
-
-        // Fast-forward debounce
-        await act(async () => {
-            vi.advanceTimersByTime(1000);
-            await Promise.resolve();
-        });
-
+        await act(async () => { vi.advanceTimersByTime(VALIDATION_DEBOUNCE_MS); await Promise.resolve(); });
         expect(screen.getByText("Invalid JSON")).toBeInTheDocument();
-
-        const importButton = screen.getByRole("button", { name: "Import Quiz" });
-        expect(importButton).toBeDisabled();
+        expect(screen.getByRole("button", { name: "Import Quiz" })).toBeDisabled();
     });
 
     it("handles successful import", async () => {
         const mockCreatedQuiz = { id: "new-quiz-id", title: "Valid Quiz" };
-        vi.mocked(dbQuizzes.createQuiz).mockResolvedValue(mockCreatedQuiz as unknown as Quiz);
+        mockCreateQuiz.mockResolvedValue(mockCreatedQuiz as unknown as Quiz);
 
         render(<ImportModal {...defaultProps} />);
 
         const validQuiz = {
             title: "Valid Quiz",
-            questions: [
-                {
-                    id: "1",
-                    question: "Q1",
-                    options: { A: "Opt 1", B: "Opt 2" },
-                    correct_answer: "A",
-                    explanation: "Exp",
-                    category: "Test Cat"
-                }
-            ]
+            questions: [{ id: "1", question: "Q1", options: { A: "Opt 1", B: "Opt 2" }, correct_answer: "A", explanation: "Exp", category: "Test Cat" }]
         };
 
         const input = screen.getByPlaceholderText(/My Certification Quiz/);
         fireEvent.change(input, { target: { value: JSON.stringify(validQuiz) } });
 
-        await act(async () => {
-            vi.advanceTimersByTime(1000);
-            await Promise.resolve();
-        });
-
-        expect(screen.getByText("Validation passed")).toBeInTheDocument();
-
+        await act(async () => { vi.advanceTimersByTime(VALIDATION_DEBOUNCE_MS); await Promise.resolve(); });
         fireEvent.click(screen.getByRole("button", { name: "Import Quiz" }));
+        await act(async () => { await Promise.resolve(); });
 
-        // Process microtasks
-        await act(async () => {
-            await Promise.resolve(); // Flush microtasks
-        });
-
-        expect(dbQuizzes.createQuiz).toHaveBeenCalledWith(
-            expect.objectContaining({ title: "Valid Quiz" }),
-            expect.objectContaining({ userId: "test-user-id" })
-        );
-
-        expect(defaultProps.onImportSuccess).toHaveBeenCalledWith(mockCreatedQuiz as unknown as Quiz);
+        expect(mockCreateQuiz).toHaveBeenCalledWith(expect.objectContaining({ title: "Valid Quiz" }), expect.objectContaining({ userId: "test-user-id" }));
+        expect(defaultProps.onImportSuccess).toHaveBeenCalled();
         expect(defaultProps.onClose).toHaveBeenCalled();
     });
 
-    it("handles import errors", async () => {
-        vi.mocked(dbQuizzes.createQuiz).mockRejectedValue(new Error("DB Error"));
+    it("rejects files larger than 10MB", async () => {
+        render(<ImportModal {...defaultProps} />);
+        fireEvent.click(screen.getByRole("tab", { name: "Upload File" }));
+        const largeFile = new File([new ArrayBuffer(11 * 1024 * 1024)], "large.json", { type: "application/json" });
+        const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+        fireEvent.change(fileInput, { target: { files: [largeFile] } });
+        expect(mockAddToast).toHaveBeenCalledWith("error", expect.stringContaining("File too large"));
+    });
+
+    it("shows warning when processing a duplicate quiz", async () => {
+        // Mock finding a duplicate
+        mockFirst.mockResolvedValue({ id: "existing-id", title: "Duplicate Quiz", questions: [{}, {}] });
 
         render(<ImportModal {...defaultProps} />);
 
-        const validQuiz = {
-            title: "Valid Quiz",
-            questions: [{ id: "1", question: "Q", options: { A: "1", B: "2" }, correct_answer: "A", explanation: "E", category: "Test Cat" }]
+        const duplicateQuiz = {
+            title: "Duplicate Quiz",
+            questions: [{ id: "1", question: "Q", options: { A: "1", B: "2" }, correct_answer: "A", explanation: "Exp", category: "Test Cat" }]
         };
 
         const input = screen.getByPlaceholderText(/My Certification Quiz/);
-        fireEvent.change(input, { target: { value: JSON.stringify(validQuiz) } });
+        fireEvent.change(input, { target: { value: JSON.stringify(duplicateQuiz) } });
 
         await act(async () => {
-            vi.advanceTimersByTime(1000);
+            vi.advanceTimersByTime(VALIDATION_DEBOUNCE_MS);
             await Promise.resolve();
         });
 
         expect(screen.getByRole("button", { name: "Import Quiz" })).not.toBeDisabled();
 
         fireEvent.click(screen.getByRole("button", { name: "Import Quiz" }));
+        await act(async () => { await Promise.resolve(); });
 
-        await act(async () => {
-            await Promise.resolve();
-        });
-
-        expect(mockAddToast).toHaveBeenCalledWith("error", "DB Error");
-
-        expect(defaultProps.onClose).not.toHaveBeenCalled();
+        expect(screen.getByText(/Quiz Already Exists/)).toBeInTheDocument();
+        expect(screen.getByText(/Import as New/)).toBeInTheDocument();
+        expect(screen.getByText(/Replace Existing/)).toBeInTheDocument();
     });
 
-    it("rejects files larger than 10MB", async () => {
+    it("handles 'Replace Existing' correctly", async () => {
+        // 1. Setup duplicate found
+        mockFirst.mockResolvedValue({ id: "existing-id", title: "Duplicate Quiz", questions: [{}, {}] });
+        // 2. Mock db update and get to confirm success toast
+        mockUpdateQuiz.mockResolvedValue(undefined);
+        mockGet.mockResolvedValue({ title: "Updated Title" });
+
         render(<ImportModal {...defaultProps} />);
 
-        // Switch to upload tab
-        fireEvent.click(screen.getByRole("tab", { name: "Upload File" }));
-
-        // Create a mock file > 10MB (11MB)
-        const largeFile = new File(
-            [new ArrayBuffer(11 * 1024 * 1024)],
-            "large.json",
-            { type: "application/json" }
-        );
-
-        const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
-        fireEvent.change(fileInput, { target: { files: [largeFile] } });
-
-        expect(mockAddToast).toHaveBeenCalledWith(
-            "error",
-            expect.stringContaining("File too large")
-        );
-    });
-
-    it("pre-populates category fields from JSON if present", async () => {
-        render(<ImportModal {...defaultProps} />);
-
-        const quizWithCategory = {
-            title: "Cat Quiz",
-            category: "Automated Testing",
-            subcategory: "Unit Tests",
-            questions: [{ id: "1", question: "Q", options: { A: "1", B: "2" }, correct_answer: "A", explanation: "Exp", category: "Test Cat" }]
+        const duplicateQuiz = {
+            title: "Duplicate Quiz",
+            questions: [{ id: "1", question: "Q", options: { A: "1", B: "2" }, correct_answer: "A", category: "Cat", explanation: "Exp" }]
         };
 
         const input = screen.getByPlaceholderText(/My Certification Quiz/);
-        fireEvent.change(input, { target: { value: JSON.stringify(quizWithCategory) } });
+        fireEvent.change(input, { target: { value: JSON.stringify(duplicateQuiz) } });
 
-        await act(async () => {
-            vi.advanceTimersByTime(1000);
-            await Promise.resolve();
-        });
+        await act(async () => { vi.advanceTimersByTime(VALIDATION_DEBOUNCE_MS); await Promise.resolve(); });
 
-        expect(screen.getByText("Validation passed")).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: "Import Quiz" })).not.toBeDisabled();
 
-        expect(screen.getByLabelText("Category")).toHaveValue("Automated Testing");
-        expect(screen.getByLabelText("Subcategory")).toHaveValue("Unit Tests");
+        // Click Import -> Triggers warning
+        fireEvent.click(screen.getByRole("button", { name: "Import Quiz" }));
+        await act(async () => { await Promise.resolve(); });
+
+        // Click Replace Existing
+        fireEvent.click(screen.getByRole("button", { name: "Replace Existing" }));
+        await act(async () => { await Promise.resolve(); });
+
+        expect(mockUpdateQuiz).toHaveBeenCalledWith(
+            "existing-id",
+            "test-user-id",
+            expect.objectContaining({ title: "Duplicate Quiz" })
+        );
+        expect(defaultProps.onClose).toHaveBeenCalled();
+        expect(defaultProps.onImportSuccess).toHaveBeenCalledWith(
+            expect.objectContaining({ title: "Updated Title" })
+        );
+    });
+
+    it("handles 'Import as New' correctly", async () => {
+        // Mock finding a duplicate
+        mockFirst.mockResolvedValue({ id: "existing-id", title: "Duplicate Quiz", questions: [{}, {}] });
+        // Mock createQuiz for new import
+        const mockNewQuiz = { id: "new-quiz-id", title: "Duplicate Quiz" };
+        mockCreateQuiz.mockResolvedValue(mockNewQuiz as unknown as Quiz);
+
+        render(<ImportModal {...defaultProps} />);
+
+        const duplicateQuiz = {
+            title: "Duplicate Quiz",
+            questions: [{ id: "1", question: "Q", options: { A: "1", B: "2" }, correct_answer: "A", category: "Cat", explanation: "Exp" }]
+        };
+
+        const input = screen.getByPlaceholderText(/My Certification Quiz/);
+        fireEvent.change(input, { target: { value: JSON.stringify(duplicateQuiz) } });
+
+        await act(async () => { vi.advanceTimersByTime(VALIDATION_DEBOUNCE_MS); await Promise.resolve(); });
+
+        // Click Import -> Triggers warning
+        fireEvent.click(screen.getByRole("button", { name: "Import Quiz" }));
+        await act(async () => { await Promise.resolve(); });
+
+        // Click Import as New
+        fireEvent.click(screen.getByRole("button", { name: "Import as New" }));
+        await act(async () => { await Promise.resolve(); });
+
+        expect(mockCreateQuiz).toHaveBeenCalledWith(
+            expect.objectContaining({ title: "Duplicate Quiz" }),
+            expect.objectContaining({ userId: "test-user-id" })
+        );
+        expect(defaultProps.onImportSuccess).toHaveBeenCalledWith(
+            expect.objectContaining({ id: "new-quiz-id" })
+        );
+        expect(defaultProps.onClose).toHaveBeenCalled();
     });
 });

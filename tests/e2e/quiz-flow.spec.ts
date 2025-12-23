@@ -4,6 +4,7 @@ import {
     waitForDatabase,
     getResultsByUserId,
 } from "./helpers/db";
+import { E2E_TIMEOUTS } from "./helpers/timeouts";
 
 /**
  * Helper to select an answer option by its letter key.
@@ -115,7 +116,9 @@ test.describe("Quiz Flow Tests", () => {
             await page.getByRole("button", { name: /check/i }).click();
             await page.getByRole("button", { name: /good/i }).click();
 
-            // 3. Verify Q1 reappears (Cycle back to Q1)
+            // Wait for any loading state to complete before asserting
+            // Timeout calibrated for CI variability - see helpers/timeouts.ts
+            await expect(page.getByText(/loading/i).first()).not.toBeVisible({ timeout: E2E_TIMEOUTS.ANIMATION });
             await expect(page.getByText(quiz.questions[0]!.question!)).toBeVisible();
         });
 
@@ -210,7 +213,10 @@ test.describe("Quiz Flow Tests", () => {
 
             // 9. Verify redirected to results page
             await expect(page).toHaveURL(new RegExp(`/results`));
-            await expect(page.getByText("100%").first()).toBeVisible();
+            // Wait for all loading states to complete (longer timeout for quiz hydration)
+            await expect(page.getByText(/loading|syncing|building|restoring/i).first()).not.toBeVisible({ timeout: E2E_TIMEOUTS.HYDRATION });
+            // Wait for score animation to complete - the counter animates up to the final value
+            await expect(page.getByText("100%").first()).toBeVisible({ timeout: E2E_TIMEOUTS.LOADING });
         });
 
         test("can navigate between questions freely", async ({

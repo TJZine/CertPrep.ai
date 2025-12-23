@@ -6,7 +6,8 @@
       "description": "Comprehensive practice covering MA personal lines topics including regulations, homeowners, auto, and dwelling policies.",
       "category": "Insurance",
       "subcategory": "Massachusetts Personal Lines",
-      "path": "/tests/Insurance/Massachusetts Personal Lines/Personal Lines Weakness Practice Exam 1.json"
+      "questionCount": 25,
+      "path": "/tests/insurance/ma-personal-lines/remediation-01.json"
     },
     {
       "id": "insurance-personal-lines-2",
@@ -14,7 +15,8 @@
       "description": "30-question practice exam targeting weak areas in General Insurance, P&C Basics, and Regulation from MA Personal Lines material.",
       "category": "Insurance",
       "subcategory": "Massachusetts Personal Lines",
-      "path": "/tests/Insurance/Massachusetts Personal Lines/Personal Lines Weakness Practice Exam 2.json"
+      "questionCount": 30,
+      "path": "/tests/insurance/ma-personal-lines/remediation-02.json"
     },
     {
       "id": "insurance-personal-lines-3",
@@ -22,31 +24,53 @@
       "description": "25-question remediation set focusing on General Insurance, P&C Basics, Regulation, and other coverages for MA personal lines.",
       "category": "Insurance",
       "subcategory": "Massachusetts Personal Lines",
-      "path": "/tests/Insurance/Massachusetts Personal Lines/Personal Lines Weakness Practice Exam 3.json"
+      "questionCount": 25,
+      "path": "/tests/insurance/ma-personal-lines/remediation-03.json"
     },
     {
       "id": "insurance-personal-lines-general-1",
       "title": "MA Personal Lines Insurance Practice Exam 1",
-      "description": "Practice exam simulating the Massachusetts Personal Lines Insurance certification. Covers Contract Law, Homeowners, MA Auto, Dwelling, Flood, and State Law.",
+      "description": "Practice Exam simulating the Massachusetts Personal Lines Insurance certification. Covers Contract Law, Homeowners, MA Auto, Dwelling, Flood, and State Law.",
       "category": "Insurance",
       "subcategory": "Massachusetts Personal Lines",
-      "path": "/tests/Insurance/Massachusetts Personal Lines/Personal Lines General Practice Exam 1.json"
+      "questionCount": 25,
+      "path": "/tests/insurance/ma-personal-lines/practice-01.json"
     },
     {
       "id": "insurance-personal-lines-general-2",
       "title": "MA Personal Lines Insurance Practice Exam 2",
-      "description": "Practice exam 2 simulating the Massachusetts Personal Lines Insurance certification. Covers Contract Law, Homeowners, MA Auto, Dwelling, Flood, and State Law.",
+      "description": "Practice Exam simulating the Massachusetts Personal Lines Insurance certification. Covers Contract Law, Homeowners, MA Auto, Dwelling, Flood, and State Law.",
       "category": "Insurance",
       "subcategory": "Massachusetts Personal Lines",
-      "path": "/tests/Insurance/Massachusetts Personal Lines/Personal Lines General Practice Exam 2.json"
+      "questionCount": 25,
+      "path": "/tests/insurance/ma-personal-lines/practice-02.json"
+    },
+    {
+      "id": "insurance-personal-lines-general-3",
+      "title": "MAIA Personal Lines Comprehensive Practice Exam",
+      "description": "A 50-question practice test modeled after the official Massachusetts Personal Lines licensing exam, covering all chapters from the MAIA study text.",
+      "category": "Insurance",
+      "subcategory": "Massachusetts Personal Lines",
+      "questionCount": 50,
+      "path": "/tests/insurance/ma-personal-lines/practice-03.json"
+    },
+    {
+      "id": "insurance-personal-lines-general-4",
+      "title": "MAIA Personal Lines Practice Exam 2",
+      "description": "A second set of 50 distinct practice questions covering the MAIA Personal Lines curriculum, balanced to match the official exam's emphasis.",
+      "category": "Insurance",
+      "subcategory": "Massachusetts Personal Lines",
+      "questionCount": 50,
+      "path": "/tests/insurance/ma-personal-lines/practice-04.json"
     },
     {
       "id": "insurance-personal-lines-law-1",
       "title": "MA Personal Lines Insurance Law Practice Exam 1",
-      "description": "Practice exam targeting weak performance areas: General Insurance, Property & Casualty Basics, Insurance Regulation, and Other Coverages.",
+      "description": "Practice exam targeting weak performance areas: General Insurance, Property and Casualty Insurance Basics, Insurance Regulation, and Other Coverages.",
       "category": "Insurance",
       "subcategory": "Massachusetts Personal Lines",
-      "path": "/tests/Insurance/Massachusetts Personal Lines/Personal Lines Law Practice Exam 1.json"
+      "questionCount": 25,
+      "path": "/tests/insurance/ma-personal-lines/topic-law-01.json"
     },
     {
       "id": "insurance-personal-lines-law-2",
@@ -54,7 +78,8 @@
       "description": "25-question practice exam targeting General Insurance, P&C Basics, and Insurance Regulation with emphasis on Massachusetts state law.",
       "category": "Insurance",
       "subcategory": "Massachusetts Personal Lines",
-      "path": "/tests/Insurance/Massachusetts Personal Lines/Personal Lines Law Practice Exam 2.json"
+      "questionCount": 25,
+      "path": "/tests/insurance/ma-personal-lines/topic-law-02.json"
     },
     {
       "id": "insurance-personal-lines-law-3",
@@ -62,7 +87,8 @@
       "description": "25-question practice exam targeting critical weaknesses in General Insurance and Regulation, plus P&C Basics and Other Coverages.",
       "category": "Insurance",
       "subcategory": "Massachusetts Personal Lines",
-      "path": "/tests/Insurance/Massachusetts Personal Lines/Personal Lines Law Practice Exam 3.json"
+      "questionCount": 25,
+      "path": "/tests/insurance/ma-personal-lines/topic-law-03.json"
     },
     {
       "id": "firearms-ma-law-mastery-2024",
@@ -70,7 +96,8 @@
       "description": "Comprehensive assessment of MA firearm laws, including licensing, transport, storage, and Modernizing Firearm Laws Act updates.",
       "category": "Firearms",
       "subcategory": "Massachusetts",
-      "path": "/tests/Firearms/Massachusetts/General Massachusetts Firearm Laws Test (10 questions).json"
+      "questionCount": 10,
+      "path": "/tests/firearms/ma/law-mastery-2024.json"
     },
     {
       "id": "firearms-ma-purchase-sale-compliance",
@@ -78,7 +105,8 @@
       "description": "Split-perspective exam on 2024 purchase/sale mandates, dealer protocols, and private transfer limits in Massachusetts.",
       "category": "Firearms",
       "subcategory": "Massachusetts",
-      "path": "/tests/Firearms/Massachusetts/MA Firearm Purchase and Sale Compliance Test.json"
+      "questionCount": 15,
+      "path": "/tests/firearms/ma/purchase-sale-compliance.json"
     }
   ]
 }

@@ -44,6 +44,7 @@ interface ResultsContainerProps {
   quiz: Quiz;
   previousScore?: number | null;
   allQuizResults?: Result[];
+  sourceMap?: Record<string, string>;
 }
 
 /**
@@ -54,6 +55,7 @@ export function ResultsContainer({
   quiz,
   previousScore,
   allQuizResults,
+  sourceMap,
 }: ResultsContainerProps): React.ReactElement {
   const router = useRouter();
   const { addToast } = useToast();
@@ -73,6 +75,26 @@ export function ResultsContainer({
     },
     [result.id],
     result.synced // Default value while loading
+  );
+
+  // Resolve source quiz names for aggregated sessions (SRS, Topic Study, Interleaved)
+  const sourceQuizNames = useLiveQuery(
+    async () => {
+      if (!sourceMap) return {};
+      const quizIds = [...new Set(Object.values(sourceMap))];
+      const quizzes = await Promise.all(
+        quizIds.map((id) => db.quizzes.get(id))
+      );
+      const nameMap: Record<string, string> = {};
+      quizzes.forEach((q) => {
+        if (q) {
+          nameMap[q.id] = q.title;
+        }
+      });
+      return nameMap;
+    },
+    [sourceMap],
+    {} as Record<string, string> // Default empty object while loading
   );
 
   const handleManualSync = async (): Promise<void> => {
@@ -201,8 +223,14 @@ export function ResultsContainer({
       isCorrect: grading.questionStatus[q.id] === true,
       isFlagged: result.flagged_questions.includes(q.id),
       correctAnswer: resolvedAnswers[q.id] || null,
+      sourceQuizName: ((): string | null => {
+        if (!sourceMap || !sourceQuizNames) return null;
+        const sourceQuizId = sourceMap[q.id];
+        if (!sourceQuizId) return null;
+        return sourceQuizNames[sourceQuizId] ?? null;
+      })(),
     }));
-  }, [scopedQuestions, result, grading, resolvedAnswers]);
+  }, [scopedQuestions, result, grading, resolvedAnswers, sourceMap, sourceQuizNames]);
 
   const missedQuestions = React.useMemo(() => {
     if (!grading) return [];
@@ -486,7 +514,8 @@ export function ResultsContainer({
               className="mb-8"
             />
 
-            {allQuizResults && allQuizResults.length > 1 && (
+            {/* Hide attempt history for aggregate sessions since each session has a unique question set */}
+            {!isAggregatedResult && allQuizResults && allQuizResults.length > 1 && (
               <AttemptHistoryTimeline
                 currentResultId={result.id}
                 allResults={allQuizResults}

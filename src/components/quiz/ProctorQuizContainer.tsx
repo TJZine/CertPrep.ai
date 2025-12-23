@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { QuizLayout } from "./QuizLayout";
 import { QuestionDisplay } from "./QuestionDisplay";
 import { ProctorOptionsList } from "./ProctorOptionsList";
@@ -24,6 +24,7 @@ import type { Quiz } from "@/types/quiz";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 import { useExamSubmission } from "@/hooks/useExamSubmission";
+import { remixQuiz } from "@/lib/quiz-remix";
 
 interface ProctorQuizContainerProps {
   quiz: Quiz;
@@ -38,11 +39,10 @@ export function ProctorQuizContainer({
   durationMinutes = TIMER.DEFAULT_EXAM_DURATION_MINUTES,
 }: ProctorQuizContainerProps): React.ReactElement {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { addToast } = useToast();
   const { user } = useAuth();
   const effectiveUserId = useEffectiveUserId(user?.id);
-
-  // Removed unused ref definition
 
   const {
     initializeProctorSession,
@@ -100,6 +100,7 @@ export function ProctorQuizContainer({
   });
 
   const autoSubmitRef = React.useRef<(() => Promise<string | null>) | null>(null);
+  const [isInitializing, setIsInitializing] = React.useState(true);
 
   React.useEffect(() => {
     autoSubmitRef.current = handleAutoSubmit;
@@ -122,20 +123,49 @@ export function ProctorQuizContainer({
   }, [timeRemaining, updateTimeRemaining]);
 
   React.useEffect((): (() => void) => {
-    initializeProctorSession(quiz.id, quiz.questions, durationMinutes);
-    startTimer();
+    let mounted = true;
+    const init = async (): Promise<void> => {
+      setIsInitializing(true);
+
+      if (searchParams?.get("remix") === "true") {
+        try {
+          const { quiz: remixedQuiz, keyMappings } = await remixQuiz(quiz);
+          if (!mounted) return; // Guard against unmount during async
+          initializeProctorSession(
+            quiz.id,
+            remixedQuiz.questions,
+            durationMinutes,
+            keyMappings
+          );
+        } catch (err) {
+          console.error("Failed to remix exam:", err);
+          if (!mounted) return;
+          initializeProctorSession(quiz.id, quiz.questions, durationMinutes);
+        }
+      } else {
+        initializeProctorSession(quiz.id, quiz.questions, durationMinutes);
+      }
+
+      if (!mounted) return;
+      startTimer();
+      setIsInitializing(false);
+    };
+
+    void init();
+
     return () => {
+      mounted = false;
       pauseTimer();
       resetSession();
     };
   }, [
-    quiz.id,
-    quiz.questions,
+    quiz,
     durationMinutes,
     initializeProctorSession,
     startTimer,
     pauseTimer,
     resetSession,
+    searchParams,
   ]);
 
   useKeyboardNav({
@@ -175,7 +205,7 @@ export function ProctorQuizContainer({
     ? answers.has(currentQuestion.id)
     : false;
 
-  if (!currentQuestion) {
+  if (isInitializing || !currentQuestion) {
     return (
       <QuizLayout
         title={quiz.title}
@@ -186,8 +216,8 @@ export function ProctorQuizContainer({
         onExit={handleExit}
         mode="proctor"
       >
-        <div className="py-12 text-center">
-          <p className="text-muted-foreground">Loading question...</p>
+        <div className="py-12 text-center" aria-busy="true">
+          <p className="text-muted-foreground">Initializing exam session...</p>
         </div>
       </QuizLayout>
     );

@@ -3,9 +3,7 @@ import type { Page } from "@playwright/test";
 
 import { seedResult, createTestResult } from "./fixtures/analyticsData";
 import { waitForDatabase } from "./helpers/db";
-
-/** Max timeout for loading states to resolve */
-const LOADING_TIMEOUT = 15000;
+import { E2E_TIMEOUTS } from "./helpers/timeouts";
 
 /**
  * Reloads the page and waits for the IndexedDB database to be ready.
@@ -31,7 +29,7 @@ async function waitForLoadingToComplete(
 ): Promise<void> {
     await expect(
         page.getByText(pattern).first(),
-    ).not.toBeVisible({ timeout: LOADING_TIMEOUT });
+    ).not.toBeVisible({ timeout: E2E_TIMEOUTS.LOADING });
 }
 
 
@@ -61,7 +59,7 @@ test.describe("Results Page", () => {
             await page.goto(`/results/${result.id}`);
 
             // Wait for loading
-            await waitForLoadingToComplete(page, /loading your results/i);
+            await waitForLoadingToComplete(page, /loading|syncing|building|restoring/i);
 
             // Verify score is displayed (use .first() as score appears in multiple places)
             await expect(page.getByText("50%").first()).toBeVisible();
@@ -84,7 +82,7 @@ test.describe("Results Page", () => {
 
             await page.goto(`/results/${result.id}`);
 
-            await waitForLoadingToComplete(page, /loading your results/i);
+            await waitForLoadingToComplete(page, /loading|syncing|building|restoring/i);
 
             // Quiz title should be visible somewhere on the page
             await expect(page.getByText(quiz.title)).toBeVisible();
@@ -110,7 +108,7 @@ test.describe("Results Page", () => {
 
             await page.goto(`/results/${result.id}`);
 
-            await waitForLoadingToComplete(page, /loading your results/i);
+            await waitForLoadingToComplete(page, /loading|syncing|building|restoring/i);
 
             // Find and click retry/retake button
             const retryButton = page.getByRole("button", { name: "Retake Quiz" });

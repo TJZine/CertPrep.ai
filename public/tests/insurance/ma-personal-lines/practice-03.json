@@ -1,0 +1,763 @@
+{
+  "title": "MAIA Personal Lines Comprehensive Practice Exam (v2)",
+  "description": "A 50-question practice test modeled after the official Massachusetts Personal Lines licensing exam, covering all chapters from the MAIA study text. Optimized for psychometric balance.",
+  "questions": [
+    {
+      "id": "contract-law-001",
+      "category": "General Insurance",
+      "difficulty": "Easy",
+      "question": "Which of the following is NOT one of the four elements required for a contract to be legal and enforceable?",
+      "options": {
+        "A": "Notarization",
+        "B": "Competent parties",
+        "C": "Legal purpose",
+        "D": "Consideration"
+      },
+      "correct_answer": "A",
+      "explanation": "According to the Contract Law section in Chapter 1-1, the four elements required for a contract to be legal and enforceable are (1) agreement, (2) consideration, (3) competent parties, and (4) legal purpose. Notarization is not listed as a required element.",
+      "distractor_logic": "Options B, C, and D are explicitly listed in the text as three of the four required elements of a legal contract."
+    },
+    {
+      "id": "contract-law-002",
+      "category": "General Insurance",
+      "difficulty": "Medium",
+      "question": "An insurance contract is considered 'aleatory' because:",
+      "options": {
+        "A": "It is drawn up by one party and accepted by the other",
+        "B": "Both parties must tell the truth and rely on each other's statements",
+        "C": "One party may recover more in value than they have parted with based on an uncertain future event",
+        "D": "The insurer's promise to pay is conditional upon the payment of premiums"
+      },
+      "correct_answer": "C",
+      "explanation": "Chapter 1-2 defines an aleatory contract as one where 'one party may recover more in value than he or she has parted with based upon a possible future event.' It involves an unequal exchange of value (small premium for large coverage).",
+      "distractor_logic": "Option A describes a Contract of Adhesion. Option B describes Utmost Good Faith. Option D describes a Conditional Contract."
+    },
+    {
+      "id": "underwriting-003",
+      "category": "Property and Casualty Insurance Basics",
+      "difficulty": "Medium",
+      "question": "To be classified as 'Fire-Resistive' construction, the materials must generally resist fire for at least how many hours?",
+      "options": {
+        "A": "One hour",
+        "B": "Three hours",
+        "C": "Four hours",
+        "D": "Two hours"
+      },
+      "correct_answer": "D",
+      "explanation": "As stated in Chapter 1-7 under Types of Construction, fire-resistive construction generally 'includes fire walls within the structure... that usually confines or prevents damage for at least two hours.'",
+      "distractor_logic": "Option A (One hour) refers to 'Modified Fire-Resistive' construction. Options B and C are not thresholds mentioned in the source text for this classification."
+    },
+    {
+      "id": "contract-law-004",
+      "category": "General Insurance",
+      "difficulty": "Medium",
+      "question": "Which legal principle prevents an insurer from denying a claim if they have voluntarily relinquished a known right?",
+      "options": {
+        "A": "Waiver",
+        "B": "Estoppel",
+        "C": "Warranty",
+        "D": "Misrepresentation"
+      },
+      "correct_answer": "A",
+      "explanation": "Chapter 1-4 defines Waiver as 'the intentional abandonment or voluntary relinquishment of a known right.' If an insurer waives a right, they cannot later deny a claim based on that right.",
+      "distractor_logic": "Option B (Estoppel) is related but distinct; it prevents a party from re-asserting a right after a false statement was relied upon by another. Option C (Warranty) is a guaranteed statement. Option D (Misrepresentation) is a false statement."
+    },
+    {
+      "id": "general-insurance-005",
+      "category": "General Insurance",
+      "difficulty": "Easy",
+      "question": "Which type of risk involves the possibility of loss only, with no chance for gain?",
+      "options": {
+        "A": "Speculative risk",
+        "B": "Pure risk",
+        "C": "Moral risk",
+        "D": "Fundamental risk"
+      },
+      "correct_answer": "B",
+      "explanation": "Chapter 2-2 states that 'Pure risk provides only for the possibility of a loss.' This is the only type of risk that Property and Casualty insurance protects against.",
+      "distractor_logic": "Option A (Speculative risk) involves the possibility of gain or loss (e.g., gambling). Options C and D are not the primary classifications defined in the text's introduction to risk."
+    },
+    {
+      "id": "general-insurance-006",
+      "category": "General Insurance",
+      "difficulty": "Medium",
+      "question": "A morale hazard is best described as:",
+      "options": {
+        "A": "A physical condition that increases the chance of loss",
+        "B": "Dishonest tendencies of an insured",
+        "C": "Indifferent or careless attitudes of an insured",
+        "D": "A cause of loss"
+      },
+      "correct_answer": "C",
+      "explanation": "Chapter 2-3 defines Morale hazard as resulting from 'the indifferent or careless attitudes of an insured,' such as leaving keys in an unlocked car.",
+      "distractor_logic": "Option A describes a Physical Hazard. Option B describes a Moral Hazard. Option D describes a Peril."
+    },
+    {
+      "id": "general-insurance-007",
+      "category": "General Insurance",
+      "difficulty": "Medium",
+      "question": "Which loss settlement method is defined as replacement cost minus depreciation?",
+      "options": {
+        "A": "Market Value",
+        "B": "Agreed Value",
+        "C": "Functional Replacement Cost",
+        "D": "Actual Cash Value (ACV)"
+      },
+      "correct_answer": "D",
+      "explanation": "Chapter 2-5 explicitly defines Actual Cash Value (ACV) as 'replacement cost minus depreciation.'",
+      "distractor_logic": "Option A (Market Value) is based on what property would sell for. Option B (Agreed Value) is a specific agreed amount. Option C (Functional Replacement Cost) involves replacing with less expensive but working equivalents."
+    },
+    {
+      "id": "liability-basics-008",
+      "category": "Property and Casualty Insurance Basics",
+      "difficulty": "Hard",
+      "question": "Under the defense of Comparative Negligence, how are damages determined?",
+      "options": {
+        "A": "The court apportions negligence to each party and awards damages proportionately",
+        "B": "If the injured party contributed to the loss in any way, they cannot recover damages",
+        "C": "The insured is absolved of liability if the injured party assumed the risk",
+        "D": "The intervening cause automatically negates liability"
+      },
+      "correct_answer": "A",
+      "explanation": "Chapter 3-3 explains that under Comparative Negligence, 'the court determines and apportions the negligence of each party and awards damages proportionately.'",
+      "distractor_logic": "Option B describes Contributory Negligence. Option C describes Assumption of Risk. Option D describes Intervening Cause."
+    },
+    {
+      "id": "liability-basics-009",
+      "category": "Property and Casualty Insurance Basics",
+      "difficulty": "Medium",
+      "question": "Which of the following statements regarding Strict Liability is FALSE?",
+      "options": {
+        "A": "It is often applied to dangerous activities like using explosives",
+        "B": "It requires the injured party to prove negligence by the insured",
+        "C": "It is also known as absolute liability",
+        "D": "It imposes liability without regard to fault"
+      },
+      "correct_answer": "B",
+      "explanation": "Chapter 3-4 defines Strict (or Absolute) Liability as liability imposed 'without regard to fault.' Therefore, the injured party does NOT need to prove negligence. The other statements are true.",
+      "distractor_logic": "Options A, C, and D are all true characteristics of Strict Liability. Option B is false because strict liability removes the burden of proving negligence."
+    },
+    {
+      "id": "dwelling-policies-010",
+      "category": "Dwelling Policy",
+      "difficulty": "Medium",
+      "question": "Under a DP-1 Basic Form, which of the following is NOT automatically included as a covered peril?",
+      "options": {
+        "A": "Fire",
+        "B": "Vandalism",
+        "C": "Lightning",
+        "D": "Internal Explosion"
+      },
+      "correct_answer": "B",
+      "explanation": "Chapter 4-2 states that the DP-1 Basic Form covers 'loss by fire, lightning and internal explosion.' Vandalism must be added by endorsement for an additional premium; it is not automatic.",
+      "distractor_logic": "Options A, C, and D are the three standard perils automatically covered by the unendorsed DP-1 Basic Form."
+    },
+    {
+      "id": "dwelling-policies-011",
+      "category": "Dwelling Policy",
+      "difficulty": "Medium",
+      "question": "Under a Dwelling Property policy, 'Other Structures' (Coverage B) may cover a detached garage up to what percentage of the Coverage A limit?",
+      "options": {
+        "A": "5%",
+        "B": "20%",
+        "C": "10%",
+        "D": "50%"
+      },
+      "correct_answer": "C",
+      "explanation": "Chapter 4-3 states that for Coverage B, 'the named insured may select whatever amount of protection desired up to 10% of the Coverage A limit of liability.'",
+      "distractor_logic": "Option A is the limit for trees/shrubs in some forms. Option B is the limit for fair rental value in some contexts. Option D is the limit for Personal Property (Coverage C) in Homeowners policies."
+    },
+    {
+      "id": "dwelling-policies-012",
+      "category": "Dwelling Policy",
+      "difficulty": "Hard",
+      "question": "In a DP-1 policy, the 'Property Removed' extension provides coverage for property removed from the premises to protect it from a covered peril for up to how many days?",
+      "options": {
+        "A": "10 days",
+        "B": "30 days",
+        "C": "60 days",
+        "D": "5 days"
+      },
+      "correct_answer": "D",
+      "explanation": "Chapter 4-5 states that the DP-1 policy 'will provide coverage under this extension for up to 5 days at any location.'",
+      "distractor_logic": "Option B (30 days) is the limit for Property Removed in the DP-2 and DP-3 forms (Chapter 4-6). Options A and C are incorrect figures for this specific provision."
+    },
+    {
+      "id": "homeowners-eligibility-013",
+      "category": "Homeowners Policy",
+      "difficulty": "Easy",
+      "question": "Which of the following would NOT be eligible for a Homeowners policy?",
+      "options": {
+        "A": "A mobile home",
+        "B": "A seasonal dwelling occupied for 3 months",
+        "C": "A two-family owner-occupied dwelling",
+        "D": "A tenant renting an apartment"
+      },
+      "correct_answer": "A",
+      "explanation": "Chapter 5-1 explicitly lists 'mobilehome' as ineligible for a standard homeowners policy. Mobile homes require a different type of policy.",
+      "distractor_logic": "Options B, C, and D are listed as eligible risks in Chapter 5-1 (Seasonal dwellings, 1-4 family owner-occupied dwellings, and tenants are all eligible)."
+    },
+    {
+      "id": "homeowners-coverages-014",
+      "category": "Homeowners Policy",
+      "difficulty": "Medium",
+      "question": "Under a Homeowners policy (HO-2, HO-3, HO-5), the automatic limit for Coverage C (Personal Property) is what percentage of Coverage A?",
+      "options": {
+        "A": "10%",
+        "B": "50%",
+        "C": "20%",
+        "D": "30%"
+      },
+      "correct_answer": "B",
+      "explanation": "Chapter 5-2 states that 'The policy automatically provides a coverage limit in the amount of 50% of Coverage A' for Coverage C (Unscheduled Personal Property).",
+      "distractor_logic": "Option A is the limit for Coverage B. Option D is the limit for Coverage D (Loss of Use). Option C is not a standard percentage for primary coverages."
+    },
+    {
+      "id": "homeowners-coverages-015",
+      "category": "Homeowners Policy",
+      "difficulty": "Hard",
+      "question": "Which of the following Special Limits of Liability under a Homeowners policy is INCORRECT?",
+      "options": {
+        "A": "$200 for money and bank notes",
+        "B": "$1,500 for loss by theft of jewelry",
+        "C": "$500 for loss by theft of firearms",
+        "D": "$2,500 for business property on the residence premises"
+      },
+      "correct_answer": "C",
+      "explanation": "Chapter 5-3 states the special limit for theft of firearms is $2,500, not $500. The other limits listed are correct.",
+      "distractor_logic": "Options A, B, and D display the correct limits found in the text ($200 money, $1,500 jewelry theft, $2,500 business property). Option C is the false statement."
+    },
+    {
+      "id": "homeowners-liability-016",
+      "category": "Homeowners Policy",
+      "difficulty": "Medium",
+      "question": "Medical Payments to Others (Coverage F) in a Homeowners policy will pay for expenses incurred within how many years of the accident?",
+      "options": {
+        "A": "One year",
+        "B": "Two years",
+        "C": "Five years",
+        "D": "Three years"
+      },
+      "correct_answer": "D",
+      "explanation": "Chapter 5-9 states that Coverage F pays necessary medical expenses 'incurred within three years of an accident causing BI to others.'",
+      "distractor_logic": "Option A is common in other contexts. Option B is the time limit for Suits Against the Insurer. Option C is incorrect."
+    },
+    {
+      "id": "homeowners-endorsements-017",
+      "category": "Homeowners Policy",
+      "difficulty": "Medium",
+      "question": "Which Homeowners endorsement is required to cover business liability for a teacher engaging in business activities outside the home?",
+      "options": {
+        "A": "Business Pursuits",
+        "B": "Home Day Care Business",
+        "C": "Permitted Incidental Occupancies",
+        "D": "Personal Injury"
+      },
+      "correct_answer": "A",
+      "explanation": "Chapter 5-10 describes the Business Pursuits endorsement as allowing coverage for 'liability coverage only arising out of specified business activities,' citing teachers as a common user. It covers employees, not business owners.",
+      "distractor_logic": "Option B is for day care providers. Option C covers business activities incidental to the occupancy (e.g., piano lessons) on the premises. Option D covers libel/slander."
+    },
+    {
+      "id": "homeowners-forms-018",
+      "category": "Homeowners Policy",
+      "difficulty": "Easy",
+      "question": "Which of the following Homeowners forms is INCORRECTLY matched with its intended user?",
+      "options": {
+        "A": "HO-6: Condominium Unit Owner",
+        "B": "HO-2: Tenant/Renter",
+        "C": "HO-4: Tenant/Renter",
+        "D": "HO-5: Homeowner (Comprehensive)"
+      },
+      "correct_answer": "B",
+      "explanation": "The HO-2 is a Broad Form for *homeowners* (who own the building), not tenants. Tenants should use the HO-4. The other pairs are correct.",
+      "distractor_logic": "Option A (HO-6) is correctly for Condo owners. Option C (HO-4) is correctly for Tenants. Option D (HO-5) is correctly the Comprehensive form for owners."
+    },
+    {
+      "id": "auto-compulsory-019",
+      "category": "Auto Insurance",
+      "difficulty": "Medium",
+      "question": "Under the Massachusetts Personal Auto Policy, what are the minimum required limits for Part 1: Bodily Injury to Others?",
+      "options": {
+        "A": "$25,000 per person / $50,000 per accident",
+        "B": "$50,000 per person / $100,000 per accident",
+        "C": "$20,000 per person / $40,000 per accident",
+        "D": "$100,000 per person / $300,000 per accident"
+      },
+      "correct_answer": "C",
+      "explanation": "The Compulsory Insurance section of the Auto Policy chapter states: 'The minimum required limits of liability that must be carried under Part I are $20,000 per person and $40,000 per accident (i.e., 20/40).'",
+      "distractor_logic": "Option A corresponds to limits in some other states but not MA Part 1. Options B and D are higher optional limits, not the statutory minimums."
+    },
+    {
+      "id": "auto-pip-020",
+      "category": "Auto Insurance",
+      "difficulty": "Hard",
+      "question": "If an injured person has health insurance, Personal Injury Protection (PIP) in Massachusetts will pay up to how much for medical expenses before the health insurer must be billed?",
+      "options": {
+        "A": "$500",
+        "B": "$5,000",
+        "C": "$8,000",
+        "D": "$2,000"
+      },
+      "correct_answer": "D",
+      "explanation": "The Auto Policy section on Part II (PIP) states: 'If an injured person is covered by health insurance... PIP will pay up to $2,000 of medical expenses... It will also pay medical expenses in excess of $2,000... if such expenses are not paid by a health plan.'",
+      "distractor_logic": "Option C ($8,000) is the total maximum PIP benefit, not the initial threshold for health insurance coordination. Options A and B are incorrect figures for this threshold."
+    },
+    {
+      "id": "auto-coverage-021",
+      "category": "Auto Insurance",
+      "difficulty": "Medium",
+      "question": "Which Part of the Massachusetts Auto Policy covers damage to the insured's own vehicle caused by hitting a tree?",
+      "options": {
+        "A": "Part 7",
+        "B": "Part 4",
+        "C": "Part 8",
+        "D": "Part 9"
+      },
+      "correct_answer": "A",
+      "explanation": "The Auto Policy section defines Part 7 (Collision) as paying for 'direct and accidental damage to the covered auto caused by a collision,' such as hitting a tree.",
+      "distractor_logic": "Option B (Part 4) is Property Damage to Others. Option C (Part 8) is Limited Collision (which usually requires the insured to be not at-fault). Option D (Part 9) is Comprehensive (non-collision damage)."
+    },
+    {
+      "id": "auto-endorsements-022",
+      "category": "Auto Insurance",
+      "difficulty": "Medium",
+      "question": "The 'Substitute Transportation' coverage (Part 10) provides reimbursement for rental costs up to a standard limit of:",
+      "options": {
+        "A": "$30 per day / $900 maximum",
+        "B": "$15 per day / $450 maximum",
+        "C": "$50 per day / $1,500 maximum",
+        "D": "$100 per day / $3,000 maximum"
+      },
+      "correct_answer": "B",
+      "explanation": "The Auto Policy section states for Part 10: 'The policy will pay $15 per day to a maximum of $450.' Higher limits are available, but this is the standard cited.",
+      "distractor_logic": "Options A, C, and D are higher limits that might be purchased optionally, but B is the specific figure cited in the text description of the coverage."
+    },
+    {
+      "id": "umbrella-023",
+      "category": "Other Coverages and Options",
+      "difficulty": "Easy",
+      "question": "All of the following statements regarding Personal Umbrella Policies are true EXCEPT:",
+      "options": {
+        "A": "They provide coverage in excess of underlying policy limits",
+        "B": "They may cover some gaps excluded by primary policies, subject to an SIR",
+        "C": "They completely replace the need for an underlying Auto or Homeowners policy",
+        "D": "They generally require the insured to maintain minimum underlying limits"
+      },
+      "correct_answer": "C",
+      "explanation": "Umbrella policies are excess liability policies. They do NOT replace underlying coverage; they sit on top of it. The insured is required to maintain the underlying policies (Home/Auto) to handle the first layer of loss.",
+      "distractor_logic": "Options A, B, and D are true characteristics of Umbrella policies. Option C is false because an Umbrella is not a standalone substitute for primary insurance."
+    },
+    {
+      "id": "flood-insurance-024",
+      "category": "Other Coverages and Options",
+      "difficulty": "Hard",
+      "question": "What is the standard waiting period for a new National Flood Insurance Program (NFIP) policy to become effective?",
+      "options": {
+        "A": "5 days",
+        "B": "14 days",
+        "C": "60 days",
+        "D": "30 days"
+      },
+      "correct_answer": "D",
+      "explanation": "Chapter 8-3 states: 'A policy issued after the initial thirty day period will become effective after an additional thirty (30) day waiting period once the application is presented to the NFIP.'",
+      "distractor_logic": "Option A (5 days) is the waiting period for MA Fair Plan coverage. Option B (14 days) is a common misconception. Option C is related to vacancy clauses."
+    },
+    {
+      "id": "ma-law-producer-025",
+      "category": "Insurance Regulation",
+      "difficulty": "Easy",
+      "question": "To obtain a producer's license in Massachusetts, an applicant must be at least what age?",
+      "options": {
+        "A": "18 years old",
+        "B": "16 years old",
+        "C": "21 years old",
+        "D": "25 years old"
+      },
+      "correct_answer": "A",
+      "explanation": "Chapter 9-3 lists the qualifications for a license, stating the applicant 'Must be 18 years of age or older.'",
+      "distractor_logic": "Option C (21 years old) is the age requirement for a Public Insurance (Fire) Adjuster (Chapter 9-1). Options B and D are incorrect."
+    },
+    {
+      "id": "ma-law-ce-026",
+      "category": "Insurance Regulation",
+      "difficulty": "Medium",
+      "question": "After the first three years of licensure, how many continuing education (CE) credit hours must a Massachusetts producer complete every 36 months?",
+      "options": {
+        "A": "15 credits",
+        "B": "45 credits",
+        "C": "30 credits",
+        "D": "60 credits"
+      },
+      "correct_answer": "B",
+      "explanation": "Chapter 9-7 states: 'During the next 3 years and each subsequent 36 month period, the licensee must complete 45 credit hours of approved C.E.'",
+      "distractor_logic": "Option D (60 credits) is the requirement for the *first* 3 years. Option A (15 credits) is the annual requirement for Public Adjusters. Option C is a common requirement in other states but incorrect here."
+    },
+    {
+      "id": "ma-law-unfair-practices-027",
+      "category": "Insurance Regulation",
+      "difficulty": "Medium",
+      "question": "Offering a prospective client a special favor or valuable consideration not specified in the contract to induce them to buy insurance is known as:",
+      "options": {
+        "A": "Twisting",
+        "B": "Defamation",
+        "C": "Rebating",
+        "D": "Coercion"
+      },
+      "correct_answer": "C",
+      "explanation": "Chapter 9-14 defines Rebating as 'Any valuable consideration or special favor not stated in a policy of insurance which is used to induce an applicant to buy insurance.'",
+      "distractor_logic": "Option A (Twisting) involves misleading comparisons to force a lapse. Option B (Defamation) involves false statements about a competitor. Option D (Coercion) involves force or intimidation."
+    },
+    {
+      "id": "ma-law-cancellation-028",
+      "category": "Insurance Regulation",
+      "difficulty": "Hard",
+      "question": "If an insurer cancels a property insurance policy for non-payment of premium, how many days written notice must be provided to the insured?",
+      "options": {
+        "A": "5 days",
+        "B": "20 days",
+        "C": "45 days",
+        "D": "10 days"
+      },
+      "correct_answer": "D",
+      "explanation": "Chapter 9-19 states: 'For non-payment of premium, 10 days written notice of cancellation must be provided to the insured by the insurer.'",
+      "distractor_logic": "Option A (5 days) applies if the policy has been in effect less than 60 days. Option B (20 days) is the notice required to the mortgagee. Option C (45 days) is for non-renewal."
+    },
+    {
+      "id": "ma-law-larceny-029",
+      "category": "Insurance Regulation",
+      "difficulty": "Medium",
+      "question": "A producer who ignores a written demand for premiums due to an insurer may be charged with larceny. The monetary penalty for larceny is:",
+      "options": {
+        "A": "Not more than $1,000",
+        "B": "Not more than $500",
+        "C": "Not more than $100",
+        "D": "Not more than $5,000"
+      },
+      "correct_answer": "A",
+      "explanation": "Chapter 9-12 under the Larceny section states: 'The monetary penalty for larceny is not more than $1,000.'",
+      "distractor_logic": "Option B is the penalty for sharing commissions with unlicensed persons. Option D is the fine for driving without insurance. Option C is the minimum fine for impersonation."
+    },
+    {
+      "id": "ma-law-adviser-030",
+      "category": "Insurance Regulation",
+      "difficulty": "Medium",
+      "question": "An insurance adviser's license must be renewed every three years. What is the renewal fee?",
+      "options": {
+        "A": "$75",
+        "B": "$200",
+        "C": "$100",
+        "D": "$225"
+      },
+      "correct_answer": "B",
+      "explanation": "Chapter 9-6 states regarding the Adviser license: 'The non-refundable license fee of an adviser must be paid to the Commonwealth every three years and is $200.'",
+      "distractor_logic": "Option D ($225) is the triennial fee for a Producer's license (Chapter 9-5). Option A ($75) is the renewal fee per member for a Business Entity."
+    },
+    {
+      "id": "contract-law-031",
+      "category": "General Insurance",
+      "difficulty": "Easy",
+      "question": "A contract where only one party makes an enforceable promise is called a:",
+      "options": {
+        "A": "Bilateral contract",
+        "B": "Conditional contract",
+        "C": "Unilateral contract",
+        "D": "Personal contract"
+      },
+      "correct_answer": "C",
+      "explanation": "Chapter 1-2 defines a Unilateral contract as one where 'only one party must perform (i.e., the insurer makes the promise).' The insured pays a premium (an act), but makes no legally enforceable promise to continue doing so.",
+      "distractor_logic": "Option A involves promises by both parties. Option B means the contract depends on uncertain events. Option D means the contract insures a person, not property directly."
+    },
+    {
+      "id": "general-insurance-032",
+      "category": "General Insurance",
+      "difficulty": "Medium",
+      "question": "Which of the following is NOT a characteristic of the principle of Indemnity?",
+      "options": {
+        "A": "It aims to restore the insured to their prior financial condition",
+        "B": "It prevents the insured from profiting from a loss",
+        "C": "It reimburses the insured to the extent of their loss",
+        "D": "It allows the insured to make a profit if the item had sentimental value"
+      },
+      "correct_answer": "D",
+      "explanation": "Chapter 2-5 defines Indemnity as restoring the insured to the same financial condition as before the loss. A key purpose is to PREVENT profit. Therefore, allowing profit (Option D) is NOT a characteristic of indemnity.",
+      "distractor_logic": "Options A, B, and C are true definitions of the principle of indemnity. Option D violates the principle."
+    },
+    {
+      "id": "liability-basics-033",
+      "category": "Property and Casualty Insurance Basics",
+      "difficulty": "Hard",
+      "question": "If an insured is found 20% at fault and the injured party 80% at fault, how much would the injured party recover under Comparative Negligence if damages were $10,000?",
+      "options": {
+        "A": "$2,000",
+        "B": "$0",
+        "C": "$8,000",
+        "D": "$10,000"
+      },
+      "correct_answer": "A",
+      "explanation": "Chapter 3-3 explains Comparative Negligence: 'The court determines and apportions the negligence... and awards damages proportionately.' If the injured party is 80% at fault, they can only recover the remaining 20% from the insured. 20% of $10,000 is $2,000.",
+      "distractor_logic": "Option B would be the result under Contributory Negligence. Option C reverses the percentages. Option D ignores the injured party's fault."
+    },
+    {
+      "id": "dwelling-policies-034",
+      "category": "Dwelling Policy",
+      "difficulty": "Medium",
+      "question": "Which coverage is NOT automatically included in the DP-1 Basic Form but is included in DP-2 and DP-3?",
+      "options": {
+        "A": "Coverage D - Fair Rental Value",
+        "B": "Coverage E - Additional Living Expenses",
+        "C": "Coverage C - Personal Property",
+        "D": "Debris Removal"
+      },
+      "correct_answer": "B",
+      "explanation": "Chapter 4-2 states: 'The DP-2 and DP-3 forms automatically include another coverage part, Coverage E- Additional Living Expenses. Coverage E, however, may be added to the DP-1 by endorsement.'",
+      "distractor_logic": "Options A, C, and D are available/included in the DP-1 (Debris Removal is under 'Other Coverages')."
+    },
+    {
+      "id": "homeowners-property-035",
+      "category": "Homeowners Policy",
+      "difficulty": "Medium",
+      "question": "Under Homeowners Coverage C, what is the special limit for business property located ON the residence premises?",
+      "options": {
+        "A": "$500",
+        "B": "$1,500",
+        "C": "$2,500",
+        "D": "$5,000"
+      },
+      "correct_answer": "C",
+      "explanation": "Chapter 5-3 lists the Special Limits of Liability, specifying '$2,500 for loss of business property on the residence premises.'",
+      "distractor_logic": "Option B ($1,500) is the limit for business property OFF the premises. Option A ($500) is an older limit not cited in this text for this specific item. Option D is not a standard sublimit for business property."
+    },
+    {
+      "id": "homeowners-liability-036",
+      "category": "Homeowners Policy",
+      "difficulty": "Medium",
+      "question": "Which of the following watercraft is EXCLUDED from liability coverage under an unendorsed Homeowners policy?",
+      "options": {
+        "A": "A kayak",
+        "B": "A rented rowboat",
+        "C": "A sailboat less than 26 feet in length",
+        "D": "A 30-foot sailboat owned by the insured"
+      },
+      "correct_answer": "D",
+      "explanation": "Homeowners liability excludes watercraft owned by the insured if they are sailboats 26 feet or longer (Chapter 5-9/5-11). The policy does cover smaller sailboats and non-motorized craft like kayaks and rowboats.",
+      "distractor_logic": "Options A, B, and C describe watercraft that ARE covered (not excluded) because they fall under the size/type exceptions."
+    },
+    {
+      "id": "auto-compulsory-037",
+      "category": "Auto Insurance",
+      "difficulty": "Hard",
+      "question": "Compulsory Part 4 (Damage to Someone Else's Property) will pay a maximum of what amount for damage caused during a speed contest?",
+      "options": {
+        "A": "$5,000",
+        "B": "$0 (Excluded)",
+        "C": "$10,000",
+        "D": "The policy limit"
+      },
+      "correct_answer": "A",
+      "explanation": "The Auto Policy section states: '$5,000 is the most an insurer will pay for property damage caused by an auto covered under this Part... being used in any prearranged or organized racing, speed, stunting or demolition contest.'",
+      "distractor_logic": "Option B is incorrect because Part 4 compulsory coverage provides a minimal amount ($5,000) rather than a total exclusion for this specific compulsory part. Option D is incorrect because it is capped at $5,000 regardless of the policy limit."
+    },
+    {
+      "id": "ma-law-general-038",
+      "category": "Insurance Regulation",
+      "difficulty": "Easy",
+      "question": "An insurer chartered in Vermont but authorized to do business in Massachusetts is classified in Massachusetts as a:",
+      "options": {
+        "A": "Domestic insurer",
+        "B": "Foreign insurer",
+        "C": "Alien insurer",
+        "D": "Unauthorized insurer"
+      },
+      "correct_answer": "B",
+      "explanation": "Chapter 9-18 defines a Foreign Insurer as 'one which is authorized in this State but its charter and principal office is located in another State.'",
+      "distractor_logic": "Option A (Domestic) is chartered in MA. Option C (Alien) is chartered in another country. Option D (Unauthorized) is not permitted to do business."
+    },
+    {
+      "id": "ma-law-fair-plan-039",
+      "category": "Insurance Regulation",
+      "difficulty": "Medium",
+      "question": "Which of the following makes a property ineligible for the Massachusetts FAIR Plan?",
+      "options": {
+        "A": "It is located in an urban area",
+        "B": "It is an owner-occupied dwelling",
+        "C": "It has vacancy of more than 65%",
+        "D": "It has been rejected by two standard insurers"
+      },
+      "correct_answer": "C",
+      "explanation": "Chapter 9-21 lists ineligible properties for the FAIR Plan, including 'a property which is more than 65% vacancy or unoccupied.'",
+      "distractor_logic": "Option A is the target market for the FAIR Plan. Option D is a condition for application, not a disqualifier."
+    },
+    {
+      "id": "flood-coverage-040",
+      "category": "Other Coverages and Options",
+      "difficulty": "Medium",
+      "question": "Under a standard Flood Insurance policy (NFIP), which of the following items is NOT covered when located in a basement?",
+      "options": {
+        "A": "Clothes washers",
+        "B": "Food freezers",
+        "C": "Clothes dryers",
+        "D": "Finished walls"
+      },
+      "correct_answer": "D",
+      "explanation": "Chapter 8-3 states that coverage in a basement is very limited. It COVERS 'clothes washers and dryers; and food freezers.' It EXCLUDES finished walls, floors, and furniture. Therefore, finished walls are NOT covered.",
+      "distractor_logic": "Options A, B, and C are explicitly listed as covered items in a basement under Coverage B."
+    },
+    {
+      "id": "ma-law-claims-041",
+      "category": "Insurance Regulation",
+      "difficulty": "Medium",
+      "question": "Which of the following timelines regarding Massachusetts fire claim payments is FALSE?",
+      "options": {
+        "A": "The insurer must pay the claim within 5 days of receiving the proof of loss",
+        "B": "The insurer must pay the claim within 30 days of receiving the proof of loss",
+        "C": "The insurer must give notice of its intention to repair or replace within 15 days",
+        "D": "The insurer must acknowledge receipt of the claim notice"
+      },
+      "correct_answer": "A",
+      "explanation": "Chapter 9-20 states that once an insurer receives a written proof of loss, it must pay the claim 'within thirty (30) days.' The 5-day limit is incorrect and false.",
+      "distractor_logic": "Options B and C reflect the correct statutory timelines found in Chapter 9-20 (30 days to pay, 15 days to choose repair/replace)."
+    },
+    {
+      "id": "ma-law-hearing-042",
+      "category": "Insurance Regulation",
+      "difficulty": "Medium",
+      "question": "When the Commissioner issues a notice of hearing regarding an unfair trade practice, the hearing must be held not less than how many days after the notice?",
+      "options": {
+        "A": "10 days",
+        "B": "21 days",
+        "C": "14 days",
+        "D": "30 days"
+      },
+      "correct_answer": "B",
+      "explanation": "Chapter 9-8 states: 'The hearing to be held shall not be less than twenty-one (21) days following the notice.'",
+      "distractor_logic": "Option A (10 days) is a cancellation notice period. Option D (30 days) is often used for appeal windows."
+    },
+    {
+      "id": "auto-optional-043",
+      "category": "Auto Insurance",
+      "difficulty": "Medium",
+      "question": "Under Optional Part 9 (Comprehensive), coverage for transportation expenses after a theft begins:",
+      "options": {
+        "A": "Immediately",
+        "B": "24 hours after the loss",
+        "C": "48 hours after the loss",
+        "D": "72 hours after the loss"
+      },
+      "correct_answer": "C",
+      "explanation": "The Auto Policy section on Part IX Comprehensive Coverage states: 'Transportation expenses are included when the car is stolen... but will only be paid by the insurer after the first 48 hours following the loss.'",
+      "distractor_logic": "Option B (24 hours) applies to Substitute Transportation (Part 10) for other covered losses. Option A is incorrect for theft."
+    },
+    {
+      "id": "dwelling-endorsements-044",
+      "category": "Dwelling Policy",
+      "difficulty": "Medium",
+      "question": "To get 'Automatic Increase in Insurance' (Inflation Guard) on a Dwelling policy, the insured must:",
+      "options": {
+        "A": "Purchase a DP-3 form",
+        "B": "Pay a higher deductible",
+        "C": "Have the home inspected annually",
+        "D": "Add it by endorsement"
+      },
+      "correct_answer": "D",
+      "explanation": "Chapter 4-10 lists endorsements, stating: 'An automatic increase in coverage for the structure may only be added by endorsement.' It is not automatic in the base forms.",
+      "distractor_logic": "Option A is incorrect; even the DP-3 requires the endorsement. Options B and C are not related to this provision."
+    },
+    {
+      "id": "homeowners-section1-045",
+      "category": "Homeowners Policy",
+      "difficulty": "Easy",
+      "question": "Which of the following structures would NOT be covered under Coverage B (Other Structures)?",
+      "options": {
+        "A": "An attached garage",
+        "B": "A detached storage shed",
+        "C": "A swimming pool",
+        "D": "A detached garage"
+      },
+      "correct_answer": "A",
+      "explanation": "Coverage B is specifically for 'Other Structures' that are DETACHED. An attached garage is part of the dwelling itself and is covered under Coverage A. Therefore, it is excluded from Coverage B.",
+      "distractor_logic": "Options B, C, and D are all examples of detached structures that ARE covered under Coverage B."
+    },
+    {
+      "id": "general-insurance-046",
+      "category": "General Insurance",
+      "difficulty": "Easy",
+      "question": "The tendency of poorer risks to seek insurance is known as:",
+      "options": {
+        "A": "Moral hazard",
+        "B": "Adverse selection",
+        "C": "Risk retention",
+        "D": "Estoppel"
+      },
+      "correct_answer": "B",
+      "explanation": "Chapter 1-6 defines Adverse Selection as 'the tendency of poorer risks to seek insurance.' Underwriters try to minimize this.",
+      "distractor_logic": "Option A is a character flaw. Option C is a risk management technique. Option D is a legal principle regarding rights."
+    },
+    {
+      "id": "ma-law-producer-047",
+      "category": "Insurance Regulation",
+      "difficulty": "Medium",
+      "question": "A temporary producer license may be issued to a surviving spouse for a period of:",
+      "options": {
+        "A": "90 days",
+        "B": "One year",
+        "C": "180 days",
+        "D": "Three years"
+      },
+      "correct_answer": "C",
+      "explanation": "Chapter 9-3 regarding Temporary Licenses states: 'The period for which this type of license is issued is 180 days.'",
+      "distractor_logic": "Options A, B, and D are incorrect durations for this specific temporary license type."
+    },
+    {
+      "id": "contract-law-048",
+      "category": "General Insurance",
+      "difficulty": "Medium",
+      "question": "Which authority is explicitly defined in the agent's contract?",
+      "options": {
+        "A": "Implied Authority",
+        "B": "Apparent Authority",
+        "C": "Presumed Authority",
+        "D": "Express Authority"
+      },
+      "correct_answer": "D",
+      "explanation": "Chapter 1-8 defines Actual or Express Authority as 'the type of authority an agent possesses which is defined or contained in the agent contract or agreement.'",
+      "distractor_logic": "Option A (Implied) is unwritten but assumed. Option B (Apparent) is what the public perceives. Option C is not a standard legal term in this context."
+    },
+    {
+      "id": "ma-law-auto-049",
+      "category": "Auto Insurance",
+      "difficulty": "Medium",
+      "question": "Under the Massachusetts Safe Driver Insurance Plan (SDIP), the 'experience period' for determining credits is:",
+      "options": {
+        "A": "Six years",
+        "B": "Five years",
+        "C": "Three years",
+        "D": "Seven years"
+      },
+      "correct_answer": "A",
+      "explanation": "The Auto Policy section states regarding the SDIP: 'The experience period for credits is six years.' (Note: Surcharges look back 5 years).",
+      "distractor_logic": "Option B (Five years) is for surcharged incidents. Option C (Three years) is for certain cancellation reasons. Option D is incorrect."
+    },
+    {
+      "id": "homeowners-liability-050",
+      "category": "Homeowners Policy",
+      "difficulty": "Hard",
+      "question": "Under Homeowners Section II (Liability), which of the following is considered an 'insured location'?",
+      "options": {
+        "A": "Farmland owned by the insured",
+        "B": "Land owned by the insured where they are building a new home",
+        "C": "A business property owned by the insured",
+        "D": "A premise rented to the insured for business purposes"
+      },
+      "correct_answer": "B",
+      "explanation": "Chapter 5-9 defines 'insured location' to include 'vacant land other than farmland' and 'any premises acquired... used for nonbusiness purposes.' Land where a new home is being built for the insured is typically covered.",
+      "distractor_logic": "Option A is explicitly excluded ('other than farmland'). Options C and D involve business purposes, which are generally excluded."
+    }
+  ],
+  "tags": [
+    "Personal Lines",
+    "Massachusetts",
+    "Insurance Exam",
+    "MAIA",
+    "Practice Test"
+  ]
+}

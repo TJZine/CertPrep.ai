@@ -1,10 +1,10 @@
 {
   "title": "MA Personal Lines Insurance Law Practice Exam 1",
-  "description": "Practice exam 1, specifically targeting weak performance areas: General Insurance, Property & Casualty Basics, Insurance Regulation, and Other Coverages.",
+  "description": "Practice exam 1, specifically targeting weak performance areas: General Insurance, Property and Casualty Insurance Basics, Insurance Regulation, and Other Coverages and Options.",
   "questions": [
     {
       "id": "exam-3-q01",
-      "category": "General Insurance Basics",
+      "category": "General Insurance",
       "difficulty": "Easy",
       "question": "Which type of risk involves the possibility of loss only, with no opportunity for gain, and is generally the only type of risk that is insurable?",
       "options": {
@@ -19,7 +19,7 @@
     },
     {
       "id": "exam-3-q02",
-      "category": "Property & Casualty Basics",
+      "category": "Property and Casualty Insurance Basics",
       "difficulty": "Medium",
       "question": "Which section of an insurance policy personalizes the contract by identifying the named insured, the address of the property, the coverage limits, and the premium amount?",
       "options": {
@@ -34,7 +34,7 @@
     },
     {
       "id": "exam-3-q03",
-      "category": "MA Insurance Law",
+      "category": "Insurance Regulation",
       "difficulty": "Medium",
       "question": "Under Massachusetts law, a producer who pays a commission or fee to an unlicensed person for selling insurance is subject to a fine of:",
       "options": {
@@ -49,7 +49,7 @@
     },
     {
       "id": "exam-3-q04",
-      "category": "General Insurance Basics",
+      "category": "General Insurance",
       "difficulty": "Easy",
       "question": "A dishonest character of an insured, such as someone who intentionally damages their own property to file a claim, is classified as what type of hazard?",
       "options": {
@@ -79,7 +79,7 @@
     },
     {
       "id": "exam-3-q06",
-      "category": "Property & Casualty Basics",
+      "category": "Property and Casualty Insurance Basics",
       "difficulty": "Hard",
       "question": "Which legal defense against negligence asserts that an intervening cause interrupted the chain of events, thereby relieving the defendant of liability?",
       "options": {
@@ -94,7 +94,7 @@
     },
     {
       "id": "exam-3-q07",
-      "category": "MA Insurance Law",
+      "category": "Insurance Regulation",
       "difficulty": "Medium",
       "question": "When an insurer pays a property claim in Massachusetts, within how many days must they pay the claim after receiving the written proof of loss?",
       "options": {
@@ -109,7 +109,7 @@
     },
     {
       "id": "exam-3-q08",
-      "category": "General Insurance Basics",
+      "category": "General Insurance",
       "difficulty": "Medium",
       "question": "Which method of handling risk involves a group of people agreeing to assume a specific portion of a loss, such as a partnership?",
       "options": {
@@ -124,7 +124,7 @@
     },
     {
       "id": "exam-3-q09",
-      "category": "Property & Casualty Basics",
+      "category": "Property and Casualty Insurance Basics",
       "difficulty": "Medium",
       "question": "A 'Binder' provides temporary coverage while the actual policy is being produced. What is the typical maximum duration for a binder in Massachusetts fire/property insurance?",
       "options": {
@@ -139,7 +139,7 @@
     },
     {
       "id": "exam-3-q10",
-      "category": "MA Insurance Law",
+      "category": "Insurance Regulation",
       "difficulty": "Easy",
       "question": "Which entity establishes the Safe Driver Insurance Plan (SDIP) in Massachusetts to modify premium rates based on driving records?",
       "options": {
@@ -154,7 +154,7 @@
     },
     {
       "id": "exam-3-q11",
-      "category": "General Insurance Basics",
+      "category": "General Insurance",
       "difficulty": "Medium",
       "question": "Which type of insurer is owned by its policyholders and issues participating policies that may pay dividends?",
       "options": {
@@ -184,7 +184,7 @@
     },
     {
       "id": "exam-3-q13",
-      "category": "Property & Casualty Basics",
+      "category": "Property and Casualty Insurance Basics",
       "difficulty": "Medium",
       "question": "What is the primary difference between a 'Direct Loss' and an 'Indirect Loss'?",
       "options": {
@@ -199,7 +199,7 @@
     },
     {
       "id": "exam-3-q14",
-      "category": "MA Insurance Law",
+      "category": "Insurance Regulation",
       "difficulty": "Hard",
       "question": "If an insurer in Massachusetts wishes to non-renew a Homeowners policy, how many days' written notice must be provided to the insured?",
       "options": {
@@ -229,7 +229,7 @@
     },
     {
       "id": "exam-3-q16",
-      "category": "General Insurance Basics",
+      "category": "General Insurance",
       "difficulty": "Medium",
       "question": "Under the Law of Agency, the 'Principal' refers to which party?",
       "options": {
@@ -244,7 +244,7 @@
     },
     {
       "id": "exam-3-q17",
-      "category": "MA Insurance Law",
+      "category": "Insurance Regulation",
       "difficulty": "Easy",
       "question": "Which of the following acts is considered 'Coercion' under Massachusetts unfair trade practice laws?",
       "options": {
@@ -259,7 +259,7 @@
     },
     {
       "id": "exam-3-q18",
-      "category": "Property & Casualty Basics",
+      "category": "Property and Casualty Insurance Basics",
       "difficulty": "Medium",
       "question": "Which type of loss valuation pays the cost to repair or replace damaged property without deduction for depreciation?",
       "options": {
@@ -274,7 +274,7 @@
     },
     {
       "id": "exam-3-q19",
-      "category": "MA Insurance Law",
+      "category": "Insurance Regulation",
       "difficulty": "Medium",
       "question": "The Massachusetts Insurance Commissioner has the power to do all of the following EXCEPT:",
       "options": {
@@ -304,7 +304,7 @@
     },
     {
       "id": "exam-3-q21",
-      "category": "Property & Casualty Basics",
+      "category": "Property and Casualty Insurance Basics",
       "difficulty": "Easy",
       "question": "In a liability claim, 'Vicarious Liability' refers to:",
       "options": {
@@ -319,7 +319,7 @@
     },
     {
       "id": "exam-3-q22",
-      "category": "MA Insurance Law",
+      "category": "Insurance Regulation",
       "difficulty": "Medium",
       "question": "According to continuing education requirements, how many credit hours in 'ethics' must a Massachusetts producer complete during each renewal cycle?",
       "options": {
@@ -334,7 +334,7 @@
     },
     {
       "id": "exam-3-q23",
-      "category": "Flood Insurance",
+      "category": "Other Coverages and Options",
       "difficulty": "Medium",
       "question": "How is 'Flood' defined in a standard flood policy regarding the area affected?",
       "options": {
@@ -349,7 +349,7 @@
     },
     {
       "id": "exam-3-q24",
-      "category": "General Insurance Basics",
+      "category": "General Insurance",
       "difficulty": "Easy",
       "question": "Which of the following describes 'Reinsurance'?",
       "options": {
@@ -364,7 +364,7 @@
     },
     {
       "id": "exam-3-q25",
-      "category": "MA Insurance Law",
+      "category": "Insurance Regulation",
       "difficulty": "Medium",
       "question": "Once a Massachusetts auto policy has been in effect for 90 days, the insurer may cancel it for all of the following reasons EXCEPT:",
       "options": {

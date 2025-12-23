@@ -14,11 +14,80 @@ import {
 import { deleteResult, isSRSQuiz } from "@/db/results";
 import { useToast } from "@/components/ui/Toast";
 import { ArrowLeft, AlertCircle, AlertTriangle, Trash2, Settings } from "lucide-react";
+import { Modal } from "@/components/ui/Modal";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 import { useSync } from "@/hooks/useSync";
 import { syncQuizzes } from "@/lib/sync/quizSyncManager";
 import { logger } from "@/lib/logger";
+
+/**
+ * Debounce delay before attempting quiz restoration.
+ * 
+ * useLiveQuery needs a brief moment to subscribe and return cached data
+ * after navigation. This prevents a race condition where we'd attempt
+ * restoration before Dexie has a chance to return the quiz from cache.
+ * 
+ * 500ms is empirically chosen to be long enough for subscription setup
+ * but short enough to not noticeably delay the UI.
+ */
+const DEXIE_SETTLE_DELAY_MS = 500;
+
+/**
+ * Props for the delete confirmation modal.
+ */
+interface DeleteConfirmationModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => Promise<void>;
+  isDeleting: boolean;
+}
+
+/**
+ * Modal for confirming result deletion.
+ */
+function DeleteConfirmationModal({
+  isOpen,
+  onClose,
+  onConfirm,
+  isDeleting,
+}: DeleteConfirmationModalProps): React.ReactElement {
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Delete Result"
+      description="Are you sure you want to delete this result? This action cannot be undone."
+      size="md"
+      footer={
+        <div className="flex justify-end gap-3">
+          <Button
+            variant="outline"
+            onClick={onClose}
+            disabled={isDeleting}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="danger"
+            onClick={onConfirm}
+            isLoading={isDeleting}
+            leftIcon={<Trash2 className="h-4 w-4" aria-hidden="true" />}
+          >
+            Delete
+          </Button>
+        </div>
+      }
+    >
+      <div className="rounded-lg border border-destructive/20 bg-destructive/10 p-4 text-sm text-destructive-foreground">
+        <p className="font-semibold">Warning</p>
+        <p className="mt-1">
+          This will permanently remove this result from your history and analytics.
+        </p>
+      </div>
+    </Modal>
+  );
+}
 
 /**
  * Results page integrating analytics and review.
@@ -54,10 +123,10 @@ export default function ResultsPage(): React.ReactElement {
   const [isRestoringQuiz, setIsRestoringQuiz] = React.useState(false);
   const [restoreAttempted, setRestoreAttempted] = React.useState(false);
   const [isDeleting, setIsDeleting] = React.useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = React.useState(false);
 
   const handleDeleteResult = async (): Promise<void> => {
     if (!effectiveUserId || !result) return;
-    if (!confirm("Are you sure you want to delete this result?")) return;
 
     setIsDeleting(true);
     try {
@@ -79,6 +148,7 @@ export default function ResultsPage(): React.ReactElement {
       addToast("error", "Failed to delete result");
     } finally {
       setIsDeleting(false);
+      setIsDeleteModalOpen(false);
     }
   };
 
@@ -102,6 +172,14 @@ export default function ResultsPage(): React.ReactElement {
     return null;
   }, [allQuizResults, result]);
 
+  // Debounce restore effect to allow useLiveQuery to settle after navigation
+  const [initialLoadComplete, setInitialLoadComplete] = React.useState(false);
+  React.useEffect(() => {
+    // Give Dexie's useLiveQuery a moment to subscribe and return cached data
+    const timer = setTimeout((): void => setInitialLoadComplete(true), DEXIE_SETTLE_DELAY_MS);
+    return (): void => clearTimeout(timer);
+  }, []);
+
   React.useEffect(() => {
     let isMounted = true;
     // Attempt restore if:
@@ -109,13 +187,15 @@ export default function ResultsPage(): React.ReactElement {
     // 2. Quiz is MISSING (not even empty, but undefined) and NOT hydrating
     // 3. We haven't tried yet
     // 4. We are not currently loading
+    // 5. Initial load delay has passed (avoids race with useLiveQuery)
     if (
       !result ||
       quiz ||
       isHydrating ||
       dataLoading ||
       !effectiveUserId ||
-      restoreAttempted
+      restoreAttempted ||
+      !initialLoadComplete
     ) {
       return undefined;
     }
@@ -146,6 +226,7 @@ export default function ResultsPage(): React.ReactElement {
     restoreAttempted,
     isHydrating,
     dataLoading,
+    initialLoadComplete,
   ]);
 
   if (dbError) {
@@ -236,144 +317,164 @@ export default function ResultsPage(): React.ReactElement {
     );
   }
 
-  if (!quiz) {
-    if (isRestoringQuiz) {
-      return (
-        <div className="flex min-h-screen items-center justify-center bg-background p-4">
-          <div className="flex flex-col items-center gap-3 rounded-lg border border-border bg-card p-6 text-center shadow-sm">
-            <LoadingSpinner size="lg" text="Restoring quiz..." />
-            <p className="text-sm text-muted-foreground">
-              We&apos;re attempting to restore the quiz linked to this result.
-            </p>
-          </div>
-        </div>
-      );
-    }
-
-    // Special handling for SRS Review / Topic Study results (both use SRS quiz)
-    const isAggregatedResult = isSRSQuiz(
-      result.quiz_id,
-      effectiveUserId,
-    );
-
+  // Show restoring state first
+  if (isRestoringQuiz) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background p-4">
-        <div className="max-w-md rounded-lg border border-border bg-card p-6 text-center shadow-sm">
-          <div
-            className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full ${isAggregatedResult ? "bg-success/20" : "bg-warning/20"
-              }`}
-          >
-            {isAggregatedResult ? (
-              <span className="text-2xl">🎯</span>
-            ) : (
-              <AlertCircle
-                className="h-8 w-8 text-warning"
-                aria-hidden="true"
-              />
-            )}
-          </div>
-          <h1 className="mt-4 text-xl font-semibold text-foreground">
-            {isAggregatedResult ? "Study Session Complete" : "Quiz Not Found"}
-          </h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {isAggregatedResult
-              ? "Great job on your focused study session!"
-              : "The quiz linked to this result isn't available right now."}
+        <div className="flex flex-col items-center gap-3 rounded-lg border border-border bg-card p-6 text-center shadow-sm">
+          <LoadingSpinner size="lg" text="Restoring quiz..." />
+          <p className="text-sm text-muted-foreground">
+            We&apos;re attempting to restore the quiz linked to this result.
           </p>
-
-          {/* Score Display */}
-          <div className="mt-4 rounded-lg bg-muted p-4">
-            <p className="text-3xl font-bold text-foreground">
-              {result.score}%
-            </p>
-            <p className="text-sm text-muted-foreground">
-              {isAggregatedResult ? "Session Score" : "Your score"}
-            </p>
-          </div>
-
-          {/* Category Breakdown for aggregated results */}
-          {isAggregatedResult && result.category_breakdown && Object.keys(result.category_breakdown).length > 0 && (
-            <div className="mt-4 space-y-2 text-left">
-              <h2 className="text-sm font-medium text-foreground">Category Breakdown</h2>
-              {Object.entries(result.category_breakdown).map(([category, score]) => (
-                <div key={category} className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">{category}</span>
-                  <span className="font-medium text-foreground">{score}%</span>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div className="mt-6 flex justify-center gap-4">
-            <Button
-              onClick={() => router.push(isAggregatedResult ? "/analytics" : "/")}
-              leftIcon={<ArrowLeft className="h-4 w-4" aria-hidden="true" />}
-            >
-              {isAggregatedResult ? "Back to Analytics" : "Back to Dashboard"}
-            </Button>
-            <Button
-              variant="danger"
-              onClick={handleDeleteResult}
-              isLoading={isDeleting}
-              leftIcon={<Trash2 className="h-4 w-4" aria-hidden="true" />}
-            >
-              Delete Result
-            </Button>
-          </div>
         </div>
       </div>
     );
   }
 
-  return (
-    <ErrorBoundary
-      fallback={
-        <div className="flex min-h-screen items-center justify-center bg-background p-4">
-          <div className="max-w-md rounded-lg border border-destructive/50 bg-card p-6 text-center shadow-sm">
-            <AlertCircle
-              className="mx-auto h-12 w-12 text-destructive"
-              aria-hidden="true"
-            />
-            <h1 className="mt-4 text-xl font-semibold text-foreground">
-              Something Went Wrong
-            </h1>
-            <p className="mt-2 text-sm text-muted-foreground">
-              An error occurred while displaying your results.
+  // Render priority:
+  // 1. Quiz with questions → Full ResultsContainer with question review
+  // 2. No quiz or empty quiz → Simplified fallback card (hydration failed, orphaned)
+
+  // Quiz exists and has questions (hydrated successfully or is a regular quiz)
+  // Render full ResultsContainer
+  if (quiz && quiz.questions.length > 0) {
+    return (
+      <ErrorBoundary
+        fallback={
+          <div className="flex min-h-screen items-center justify-center bg-background p-4">
+            <div className="max-w-md rounded-lg border border-destructive/50 bg-card p-6 text-center shadow-sm">
+              <AlertCircle
+                className="mx-auto h-12 w-12 text-destructive"
+                aria-hidden="true"
+              />
+              <h1 className="mt-4 text-xl font-semibold text-foreground">
+                Something Went Wrong
+              </h1>
+              <p className="mt-2 text-sm text-muted-foreground">
+                An error occurred while displaying your results.
+              </p>
+              <Button
+                className="mt-6"
+                onClick={() => router.push("/")}
+                leftIcon={<ArrowLeft className="h-4 w-4" aria-hidden="true" />}
+              >
+                Back to Dashboard
+              </Button>
+            </div>
+          </div>
+        }
+      >
+        {/* Missing category banner - suppress for aggregated sessions which use question-level categories */}
+        {!quiz.category && !result.session_type && (
+          <div role="status" className="mx-auto mb-4 flex max-w-4xl items-center gap-3 rounded-lg border border-warning/30 bg-warning/10 px-4 py-3">
+            <AlertTriangle className="h-5 w-5 flex-shrink-0 text-warning" aria-hidden="true" />
+            <p className="flex-1 text-sm text-foreground">
+              This quiz is missing category metadata and won&apos;t appear in grouped analytics.
             </p>
             <Button
-              className="mt-6"
-              onClick={() => router.push("/")}
-              leftIcon={<ArrowLeft className="h-4 w-4" aria-hidden="true" />}
+              variant="ghost"
+              size="sm"
+              onClick={() => router.push(`/quiz/${quiz.id}/settings?from=results&resultId=${result.id}`)}
+              leftIcon={<Settings className="h-4 w-4" aria-hidden="true" />}
             >
-              Back to Dashboard
+              Add Category
             </Button>
           </div>
+        )}
+        <ResultsContainer
+          result={result}
+          quiz={quiz}
+          previousScore={previousScore}
+          allQuizResults={allQuizResults}
+          sourceMap={result.source_map}
+        />
+        <DeleteConfirmationModal
+          isOpen={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+          onConfirm={handleDeleteResult}
+          isDeleting={isDeleting}
+        />
+      </ErrorBoundary>
+    );
+  }
+
+  // Fallback: No quiz or quiz has no questions (hydration failed, orphaned result)
+  const isAggregatedResult = isSRSQuiz(
+    result.quiz_id,
+    effectiveUserId,
+  );
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background p-4">
+      <div className="max-w-md rounded-lg border border-border bg-card p-6 text-center shadow-sm">
+        <div
+          className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full ${isAggregatedResult ? "bg-success/20" : "bg-warning/20"
+            }`}
+        >
+          {isAggregatedResult ? (
+            <span className="text-2xl">🎯</span>
+          ) : (
+            <AlertCircle
+              className="h-8 w-8 text-warning"
+              aria-hidden="true"
+            />
+          )}
         </div>
-      }
-    >
-      {/* Missing category banner */}
-      {quiz && !quiz.category && (
-        <div role="status" className="mx-auto mb-4 flex max-w-4xl items-center gap-3 rounded-lg border border-warning/30 bg-warning/10 px-4 py-3">
-          <AlertTriangle className="h-5 w-5 flex-shrink-0 text-warning" aria-hidden="true" />
-          <p className="flex-1 text-sm text-foreground">
-            This quiz is missing category metadata and won&apos;t appear in grouped analytics.
+        <h1 className="mt-4 text-xl font-semibold text-foreground">
+          {isAggregatedResult ? "Study Session Complete" : "Quiz Not Found"}
+        </h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          {isAggregatedResult
+            ? "Great job on your focused study session!"
+            : "The quiz linked to this result isn't available right now."}
+        </p>
+
+        {/* Score Display */}
+        <div className="mt-4 rounded-lg bg-muted p-4">
+          <p className="text-3xl font-bold text-foreground">
+            {result.score}%
           </p>
+          <p className="text-sm text-muted-foreground">
+            {isAggregatedResult ? "Session Score" : "Your score"}
+          </p>
+        </div>
+
+        {/* Category Breakdown for aggregated results */}
+        {isAggregatedResult && result.category_breakdown && Object.keys(result.category_breakdown).length > 0 && (
+          <div className="mt-4 space-y-2 text-left">
+            <h2 className="text-sm font-medium text-foreground">Category Breakdown</h2>
+            {Object.entries(result.category_breakdown).map(([category, score]) => (
+              <div key={category} className="flex justify-between text-sm">
+                <span className="text-muted-foreground">{category}</span>
+                <span className="font-medium text-foreground">{score}%</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="mt-6 flex justify-center gap-4">
           <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => router.push(`/quiz/${quiz.id}/settings`)}
-            leftIcon={<Settings className="h-4 w-4" aria-hidden="true" />}
+            onClick={() => router.push(isAggregatedResult ? "/analytics" : "/")}
+            leftIcon={<ArrowLeft className="h-4 w-4" aria-hidden="true" />}
           >
-            Add Category
+            {isAggregatedResult ? "Back to Analytics" : "Back to Dashboard"}
+          </Button>
+          <Button
+            variant="danger"
+            onClick={() => setIsDeleteModalOpen(true)}
+            isLoading={isDeleting}
+            leftIcon={<Trash2 className="h-4 w-4" aria-hidden="true" />}
+          >
+            Delete Result
           </Button>
         </div>
-      )}
-      <ResultsContainer
-        result={result}
-        quiz={quiz}
-        previousScore={previousScore}
-        allQuizResults={allQuizResults}
+      </div>
+      <DeleteConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDeleteResult}
+        isDeleting={isDeleting}
       />
-    </ErrorBoundary>
+    </div>
   );
 }

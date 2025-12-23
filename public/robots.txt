@@ -1,0 +1,22 @@
+# CertPrep.ai robots.txt
+# Allows indexing of public content, blocks user-specific pages
+
+User-agent: *
+
+# Block user-specific/session pages (no SEO value, only show skeletons anyway)
+Disallow: /quiz
+Disallow: /results
+Disallow: /analytics
+Disallow: /interleaved
+Disallow: /study-due
+Disallow: /settings
+
+# Allow indexing (default, but explicit for clarity):
+# /           - Homepage/dashboard
+# /library    - Public quiz catalog
+# /login      - Auth pages
+# /signup
+# /forgot-password
+
+# TODO: Uncomment sitemap before SEO launch
+# Sitemap: https://certprep.ai/sitemap.xml

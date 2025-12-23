@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import * as React from "react";
 import { headers } from "next/headers";
 import { unstable_noStore as noStore } from "next/cache";
-import Script from "next/script";
+
 import { Inter, Press_Start_2P, Nunito, Roboto_Slab, Space_Grotesk, Playfair_Display, JetBrains_Mono, Courier_Prime, Cormorant_Garamond } from "next/font/google";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -34,6 +34,7 @@ const nunito = Nunito({
   display: "swap",
   variable: "--font-nunito",
   fallback: ["system-ui", "sans-serif"],
+  preload: false, // Vapor theme only - reduces initial font download
 });
 
 const robotoSlab = Roboto_Slab({
@@ -41,6 +42,7 @@ const robotoSlab = Roboto_Slab({
   display: "swap",
   variable: "--font-roboto-slab",
   fallback: ["serif"],
+  preload: false, // Classic theme only - reduces initial font download
 });
 
 const spaceGrotesk = Space_Grotesk({
@@ -48,6 +50,7 @@ const spaceGrotesk = Space_Grotesk({
   display: "swap",
   variable: "--font-space",
   fallback: ["sans-serif"],
+  preload: false, // Midnight theme only - reduces initial font download
 });
 
 const playfairDisplay = Playfair_Display({
@@ -71,6 +74,7 @@ const courierPrime = Courier_Prime({
   display: "swap",
   variable: "--font-courier",
   fallback: ["Courier New", "monospace"],
+  preload: false, // Retro theme code blocks only - reduces initial font download
 });
 
 const cormorantGaramond = Cormorant_Garamond({
@@ -79,6 +83,7 @@ const cormorantGaramond = Cormorant_Garamond({
   display: "swap",
   variable: "--font-cormorant",
   fallback: ["serif"],
+  preload: false, // Academic theme only - reduces initial font download
 });
 
 
@@ -160,18 +165,18 @@ export default async function RootLayout({
         <meta name="theme-color" content="#2563eb" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <Script
+        <script
           id="theme-init"
           nonce={nonce}
-          strategy="beforeInteractive"
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{
             __html: `(function(){try{const stored=localStorage.getItem('theme');const prefersDark=window.matchMedia('(prefers-color-scheme: dark)').matches;const shouldDark=stored==='dark'||(!stored&&prefersDark);const root=document.documentElement;if(shouldDark){root.classList.add('dark');}else{root.classList.remove('dark');}}catch(e){}})();`,
           }}
         />
-        <Script
+        <script
           id="sw-init"
           nonce={nonce}
-          strategy="beforeInteractive"
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{
             __html: `if('serviceWorker'in navigator){navigator.serviceWorker.register('/sw.js',{scope:'/'}).catch(function(e){console.error('[SW] Failed:',e);});}`,
           }}

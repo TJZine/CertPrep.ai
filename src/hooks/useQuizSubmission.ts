@@ -10,6 +10,7 @@ import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 import { clearSmartRoundState } from "@/lib/smartRoundStorage";
 import { logger } from "@/lib/logger";
+import { buildAnswersRecord } from "@/lib/quiz-remix";
 
 interface UseQuizSubmissionProps {
   quizId: string;
@@ -52,7 +53,8 @@ export function useQuizSubmission({
   const { sync } = useSync();
   const { user } = useAuth();
   const effectiveUserId = useEffectiveUserId(user?.id);
-  const { answers, flaggedQuestions, questions } = useQuizSessionStore();
+  const { answers, flaggedQuestions, questions, keyMappings } =
+    useQuizSessionStore();
 
   const [saveError, setSaveError] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -74,10 +76,7 @@ export function useQuizSubmission({
       setSaveError(false);
 
       try {
-        const answersRecord: Record<string, string> = {};
-        answers.forEach((record, questionId) => {
-          answersRecord[questionId] = record.selectedAnswer;
-        });
+        const answersRecord = buildAnswersRecord(answers, keyMappings);
 
         if (!effectiveUserId) {
           setSaveError(true);
@@ -102,7 +101,9 @@ export function useQuizSubmission({
         const quiz = await db.quizzes.get(quizId);
         if (quiz) {
           void initializeSRSForResult(result, quiz).catch((srsErr) => {
-            logger.warn("Failed to initialize SRS state (background)", { error: srsErr });
+            logger.warn("Failed to initialize SRS state (background)", {
+              error: srsErr,
+            });
           });
         }
 
@@ -110,7 +111,6 @@ export function useQuizSubmission({
         void sync().catch((syncErr) => {
           console.warn("Background sync failed after local save:", syncErr);
         });
-
 
         if (!isMountedRef.current) return;
 
@@ -147,6 +147,7 @@ export function useQuizSubmission({
       sync,
       questions,
       effectiveUserId,
+      keyMappings,
     ],
   );
 

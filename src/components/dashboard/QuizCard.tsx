@@ -1,6 +1,5 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -16,6 +15,7 @@ import {
   TrendingUp,
   Settings,
   AlertTriangle,
+  Calendar,
 } from "lucide-react";
 import {
   Card,
@@ -89,7 +89,6 @@ export function QuizCard({
   const menuItemRefs = React.useRef<(HTMLButtonElement | null)[]>([]);
   const menuButtonRef = React.useRef<HTMLButtonElement>(null);
   const { addToast } = useToast();
-  const shouldReduceMotion = useReducedMotion();
 
   useClickOutside(menuRef, showMenu, () => setShowMenu(false));
   useClickOutside(tagsPopoverRef, showTagsPopover, () =>
@@ -211,10 +210,15 @@ export function QuizCard({
   };
 
   return (
-    <motion.div
-      whileHover={shouldReduceMotion ? {} : { y: -5, scale: 1.02 }}
-      transition={shouldReduceMotion ? {} : { type: "spring", stiffness: 300, damping: 20 }}
-      className="h-full"
+    <div
+      className={cn(
+        "h-full transition-transform duration-300",
+        // Spring-like cubic-bezier for premium hover feel
+        "[transition-timing-function:cubic-bezier(0.34,1.56,0.64,1)]",
+        "hover:-translate-y-1 hover:scale-[1.02]",
+        // Respect user's reduced motion preference
+        "motion-reduce:transform-none motion-reduce:transition-none"
+      )}
     >
       <Card className="group relative flex h-full flex-col overflow-hidden border border-border shadow-sm transition-colors hover:shadow-md">
         {/* Stats are displayed in the always-visible grid below for accessibility */}
@@ -390,6 +394,12 @@ export function QuizCard({
               Last attempt: {formatDate(lastAttemptDate)}
             </div>
           ) : null}
+
+          {/* Date added footer */}
+          <div className="border-t border-border mt-3 pt-2 text-xs text-muted-foreground flex items-center gap-1.5">
+            <Calendar className="h-3.5 w-3.5" aria-hidden="true" />
+            <span>Added {formatDate(quiz.created_at)}</span>
+          </div>
         </CardContent>
 
         <CardFooter className="pt-0">
@@ -402,7 +412,7 @@ export function QuizCard({
           </Button>
         </CardFooter>
       </Card>
-    </motion.div>
+    </div>
   );
 }
 

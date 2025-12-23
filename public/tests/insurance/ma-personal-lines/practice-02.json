@@ -1,10 +1,10 @@
 {
   "title": "MA Personal Lines Insurance Practice Exam 2",
-  "description": "Practice exam 2 simulating the Massachusetts Personal Lines Insurance certification. Covers Contract Law, Homeowners, MA Auto, Dwelling, Flood, and State Law.",
+  "description": "Practice Exam simulating the Massachusetts Personal Lines Insurance certification. Covers Contract Law, Homeowners, MA Auto, Dwelling, Flood, and State Law.",
   "questions": [
     {
       "id": "exam-2-q01",
-      "category": "Contract Law",
+      "category": "General Insurance",
       "difficulty": "Easy",
       "question": "An insurance contract is described as 'aleatory'. What does this mean?",
       "options": {
@@ -19,7 +19,7 @@
     },
     {
       "id": "exam-2-q02",
-      "category": "General Insurance Basics",
+      "category": "General Insurance",
       "difficulty": "Medium",
       "question": "Which principle states that an insured should be restored to the same financial condition they were in prior to the loss, without profiting?",
       "options": {
@@ -34,7 +34,7 @@
     },
     {
       "id": "exam-2-q03",
-      "category": "MA Personal Auto",
+      "category": "Auto Insurance",
       "difficulty": "Medium",
       "question": "Under the Massachusetts Personal Auto Policy, what is the standard deductible for Part 7 (Collision)?",
       "options": {
@@ -49,7 +49,7 @@
     },
     {
       "id": "exam-2-q04",
-      "category": "Homeowners Section I",
+      "category": "Homeowners Policy",
       "difficulty": "Hard",
       "question": "In a Homeowners policy, Coverage D (Loss of Use) is automatically provided at what percentage of the Coverage A limit for HO-2, HO-3, and HO-5 forms?",
       "options": {
@@ -64,7 +64,7 @@
     },
     {
       "id": "exam-2-q05",
-      "category": "MA Insurance Law",
+      "category": "Insurance Regulation",
       "difficulty": "Medium",
       "question": "During the first three years of licensure, a Massachusetts resident producer must complete how many credit hours of continuing education?",
       "options": {
@@ -79,7 +79,7 @@
     },
     {
       "id": "exam-2-q06",
-      "category": "Property & Liability Basics",
+      "category": "Property and Casualty Insurance Basics",
       "difficulty": "Easy",
       "question": "What type of liability is imposed without regard to fault, often applied to dangerous activities or products?",
       "options": {
@@ -94,7 +94,7 @@
     },
     {
       "id": "exam-2-q07",
-      "category": "Homeowners Section I",
+      "category": "Homeowners Policy",
       "difficulty": "Medium",
       "question": "Under the Homeowners Additional Coverages, what is the specific limit for 'Credit Card, Fund Transfer and Forgery'?",
       "options": {
@@ -109,7 +109,7 @@
     },
     {
       "id": "exam-2-q08",
-      "category": "MA Personal Auto",
+      "category": "Auto Insurance",
       "difficulty": "Medium",
       "question": "Which optional part of the MA Auto Policy provides coverage for Bodily Injury to others when the accident occurs outside of Massachusetts?",
       "options": {
@@ -124,7 +124,7 @@
     },
     {
       "id": "exam-2-q09",
-      "category": "MA Insurance Law",
+      "category": "Insurance Regulation",
       "difficulty": "Medium",
       "question": "Offering something of value not specified in the insurance policy to induce a customer to purchase insurance is an illegal practice known as:",
       "options": {
@@ -139,7 +139,7 @@
     },
     {
       "id": "exam-2-q10",
-      "category": "Dwelling Policies",
+      "category": "Dwelling Policy",
       "difficulty": "Medium",
       "question": "Which Dwelling Policy form provides 'Open Peril' (All-Risk) coverage on the dwelling/structures and 'Broad Form' (Named Peril) coverage on personal property?",
       "options": {
@@ -154,7 +154,7 @@
     },
     {
       "id": "exam-2-q11",
-      "category": "MA Personal Auto",
+      "category": "Auto Insurance",
       "difficulty": "Easy",
       "question": "Under the MA Auto Policy, Part 3 (Uninsured Motorist) protects an insured if they are struck by:",
       "options": {
@@ -169,7 +169,7 @@
     },
     {
       "id": "exam-2-q12",
-      "category": "General Insurance Basics",
+      "category": "General Insurance",
       "difficulty": "Medium",
       "question": "When an agent or producer knows of adverse information about an applicant but submits the application without revealing it, they have engaged in:",
       "options": {
@@ -184,7 +184,7 @@
     },
     {
       "id": "exam-2-q13",
-      "category": "Homeowners Section I",
+      "category": "Homeowners Policy",
       "difficulty": "Hard",
       "question": "The Homeowners policy 'Special Limit of Liability' for money, bank notes, and bullion is:",
       "options": {
@@ -199,7 +199,7 @@
     },
     {
       "id": "exam-2-q14",
-      "category": "MA Insurance Law",
+      "category": "Insurance Regulation",
       "difficulty": "Easy",
       "question": "An insurer that is chartered in another state (e.g., Vermont) but authorized to do business in Massachusetts is called a:",
       "options": {
@@ -214,7 +214,7 @@
     },
     {
       "id": "exam-2-q15",
-      "category": "Homeowners Section I",
+      "category": "Homeowners Policy",
       "difficulty": "Medium",
       "question": "Which Homeowners form is intended for tenants (renters) and covers personal property but not the building structure?",
       "options": {
@@ -229,7 +229,7 @@
     },
     {
       "id": "exam-2-q16",
-      "category": "MA Insurance Law",
+      "category": "Insurance Regulation",
       "difficulty": "Medium",
       "question": "A person who falsely represents themselves as a licensed producer when they are not licensed is guilty of impersonation and subject to a fine of:",
       "options": {
@@ -244,7 +244,7 @@
     },
     {
       "id": "exam-2-q17",
-      "category": "MA Personal Auto",
+      "category": "Auto Insurance",
       "difficulty": "Easy",
       "question": "In Massachusetts, a Senior Citizen Discount is available on auto policies for individuals age:",
       "options": {
@@ -259,7 +259,7 @@
     },
     {
       "id": "exam-2-q18",
-      "category": "Property & Liability Basics",
+      "category": "Property and Casualty Insurance Basics",
       "difficulty": "Medium",
       "question": "Which term describes the 'efficient cause' of a loss, or the event that sets in motion an unbroken chain of events leading to the loss?",
       "options": {
@@ -274,7 +274,7 @@
     },
     {
       "id": "exam-2-q19",
-      "category": "Dwelling Policies",
+      "category": "Dwelling Policy",
       "difficulty": "Hard",
       "question": "Under a Dwelling Policy (DP-1), coverage for Vandalism is excluded if the building has been vacant for more than how many consecutive days immediately before the loss?",
       "options": {
@@ -289,7 +289,7 @@
     },
     {
       "id": "exam-2-q20",
-      "category": "MA Insurance Law",
+      "category": "Insurance Regulation",
       "difficulty": "Medium",
       "question": "A producer must report any administrative action taken against them in another jurisdiction to the Commissioner within how many days of the final disposition?",
       "options": {
@@ -304,7 +304,7 @@
     },
     {
       "id": "exam-2-q21",
-      "category": "Homeowners Section I",
+      "category": "Homeowners Policy",
       "difficulty": "Medium",
       "question": "Under the Homeowners Additional Coverages, the policy will pay up to what amount for the removal of any *one* tree felled by a covered peril (like windstorm) if it damages a covered structure?",
       "options": {
@@ -319,7 +319,7 @@
     },
     {
       "id": "exam-2-q22",
-      "category": "MA Personal Auto",
+      "category": "Auto Insurance",
       "difficulty": "Hard",
       "question": "Under the MA Auto Policy, Part 11 (Towing and Labor) pays up to what standard limit per disablement (unless increased)?",
       "options": {
@@ -334,7 +334,7 @@
     },
     {
       "id": "exam-2-q23",
-      "category": "MA Insurance Law",
+      "category": "Insurance Regulation",
       "difficulty": "Medium",
       "question": "How often must the Commissioner of Insurance examine the financial condition of a Domestic Insurer?",
       "options": {
@@ -349,7 +349,7 @@
     },
     {
       "id": "exam-2-q24",
-      "category": "Flood Insurance",
+      "category": "Other Coverages and Options",
       "difficulty": "Medium",
       "question": "How does the National Flood Insurance Program (NFIP) policy define a 'flood'?",
       "options": {
@@ -364,7 +364,7 @@
     },
     {
       "id": "exam-2-q25",
-      "category": "General Insurance Basics",
+      "category": "General Insurance",
       "difficulty": "Easy",
       "question": "Which legal doctrine prevents an insurer from denying a claim if its producer knowingly made a false statement that the insured relied upon to their detriment?",
       "options": {

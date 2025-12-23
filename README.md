@@ -214,12 +214,13 @@ For code-level examples (auth, quizzes, results, and sync), see the dedicated [A
 
 ### Quiz Modes
 
-| Mode           | Description                        | Best For            |
-| -------------- | ---------------------------------- | ------------------- |
-| 🎯 **Proctor** | Timed, monitored quiz environment  | Assessments, exams  |
-| 🧘 **Zen**     | Relaxed, self-paced learning       | Practice, study     |
-| 🧠 **SRS**     | Spaced repetition review (Leitner) | Long-term retention |
-| 📚 **Topic**   | Targeted category practice         | Weak area improv.   |
+| Mode               | Description                        | Best For            |
+| ------------------ | ---------------------------------- | ------------------- |
+| 🎯 **Proctor**     | Timed, monitored quiz environment  | Assessments, exams  |
+| 🧘 **Zen**         | Relaxed, self-paced learning       | Practice, study     |
+| 🧠 **SRS**         | Spaced repetition review (Leitner) | Long-term retention |
+| 📚 **Topic**       | Targeted category practice         | Weak area improv.   |
+| 🔀 **Interleaved** | Mixed questions from all quizzes   | Varied practice     |
 
 <details>
 <summary>View mode comparison</summary>
@@ -278,6 +279,7 @@ src/
 │   ├── auth/                     # Auth callback routes
 │   ├── login/, signup/           # Auth pages
 │   ├── library/                  # Quiz library
+│   ├── create/                   # Create custom quizzes guide
 │   ├── quiz/                     # Quiz flows ([id]/zen, [id]/proctor)
 │   ├── results/                  # Results pages
 │   └── settings/                 # Settings pages

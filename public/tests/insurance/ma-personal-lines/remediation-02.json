@@ -64,7 +64,7 @@
     },
     {
       "id": "pc-basics-005",
-      "category": "Property and Casualty Basics",
+      "category": "Property and Casualty Insurance Basics",
       "difficulty": "Medium",
       "question": "Under the principle of negligence, all of the following elements must be present to prove legal liability EXCEPT:",
       "options": {
@@ -79,7 +79,7 @@
     },
     {
       "id": "pc-basics-006",
-      "category": "Property and Casualty Basics",
+      "category": "Property and Casualty Insurance Basics",
       "difficulty": "Hard",
       "question": "A parent is held legally responsible for damage caused by their minor child. This is an example of:",
       "options": {
@@ -94,7 +94,7 @@
     },
     {
       "id": "pc-basics-007",
-      "category": "Property and Casualty Basics",
+      "category": "Property and Casualty Insurance Basics",
       "difficulty": "Medium",
       "question": "Which valuation method pays the cost to repair or replace damaged property without a deduction for depreciation?",
       "options": {
@@ -109,7 +109,7 @@
     },
     {
       "id": "pc-basics-008",
-      "category": "Property and Casualty Basics",
+      "category": "Property and Casualty Insurance Basics",
       "difficulty": "Medium",
       "question": "A building is considered vacant if it has been empty or unfurnished for how many consecutive days immediately before a loss?",
       "options": {
@@ -124,7 +124,7 @@
     },
     {
       "id": "pc-basics-009",
-      "category": "Property and Casualty Basics",
+      "category": "Property and Casualty Insurance Basics",
       "difficulty": "Medium",
       "question": "Which defense against negligence prevents an injured party from recovering any damages if they were in any way responsible for the loss?",
       "options": {
@@ -139,7 +139,7 @@
     },
     {
       "id": "pc-basics-010",
-      "category": "Property and Casualty Basics",
+      "category": "Property and Casualty Insurance Basics",
       "difficulty": "Hard",
       "question": "John has a fire policy with a $200,000 limit. He suffers a $60,000 loss. The cost to remove the debris is $5,000. How much will the policy pay?",
       "options": {
@@ -439,7 +439,7 @@
     },
     {
       "id": "pc-basics-030",
-      "category": "Property and Casualty Basics",
+      "category": "Property and Casualty Insurance Basics",
       "difficulty": "Hard",
       "question": "If an insurer and insured disagree on the amount of a property loss, either party may make a written demand for:",
       "options": {

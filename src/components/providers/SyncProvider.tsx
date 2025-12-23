@@ -54,6 +54,8 @@ export function SyncProvider({
   const [initialSyncError, setInitialSyncError] = useState<Error | null>(null);
   const [syncBlocked, setSyncBlocked] = useState<SyncBlockedInfo | null>(null);
   const initialSyncAttemptedRef = useRef<string | null>(null);
+  // Ref-based debounce guard for synchronous protection against overlapping syncs
+  const syncInProgressRef = useRef(false);
 
   // Refs for async guard pattern (prevents stale updates on user switch/unmount)
   const currentUserIdRef = useRef<string | null>(null);
@@ -181,12 +183,32 @@ export function SyncProvider({
 
   const sync = useCallback(async (): Promise<SyncOutcome> => {
     if (userId) {
+      // Step 1: Debounce guard — prevent overlapping sync calls (ref for sync check)
+      if (syncInProgressRef.current) {
+        logger.debug("[Sync] Sync already in progress, skipping");
+        return { status: "partial", success: false, error: "Sync in progress" };
+      }
+      syncInProgressRef.current = true;
+
       setIsSyncing(true);
+      const syncStart = performance.now();
+
       try {
-        // Run syncs sequentially
-        const quizzesOutcome = await syncQuizzes(userId);
-        const resultsOutcome = await syncResults(userId);
-        const srsOutcome = await syncSRS(userId);
+        // Step 2: Run syncs in parallel instead of sequentially
+        // Each sync manager has its own Web Lock, so they are safe to run concurrently
+        const settlements = await Promise.allSettled([
+          syncQuizzes(userId),
+          syncResults(userId),
+          syncSRS(userId),
+        ]);
+
+        // Extract outcomes, treating rejections as incomplete
+        const outcomes = settlements.map(
+          (s) => (s.status === "fulfilled" ? s.value : { incomplete: true })
+        );
+        const quizzesOutcome = outcomes[0] ?? { incomplete: true };
+        const resultsOutcome = outcomes[1] ?? { incomplete: true };
+        const srsOutcome = outcomes[2] ?? { incomplete: true };
 
         const anyIncomplete =
           quizzesOutcome.incomplete ||
@@ -195,8 +217,17 @@ export function SyncProvider({
 
         const status: SyncStatus = anyIncomplete ? "partial" : "success";
 
-        // Refresh block info immediately after sync attempts
+        // Refresh block info immediately after sync attempts (fire-and-forget; guards prevent stale updates)
         void computeBlockedInfo();
+
+        // Step 3: Instrumentation — log sync duration
+        const duration = performance.now() - syncStart;
+        logger.info(`[Sync] Total sync completed in ${duration.toFixed(0)}ms`, {
+          status,
+          quizzes: quizzesOutcome.incomplete,
+          results: resultsOutcome.incomplete,
+          srs: srsOutcome.incomplete,
+        });
 
         return {
           status,
@@ -215,6 +246,7 @@ export function SyncProvider({
           error,
         };
       } finally {
+        syncInProgressRef.current = false;
         setIsSyncing(false);
       }
     }

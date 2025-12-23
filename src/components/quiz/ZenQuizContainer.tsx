@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { QuizLayout } from "./QuizLayout";
 import { QuestionDisplay } from "./QuestionDisplay";
 import { OptionsList } from "./OptionsList";
@@ -26,13 +26,58 @@ import { useQuizSubmission } from "@/hooks/useQuizSubmission";
 import { clearSmartRoundState } from "@/lib/smartRoundStorage";
 import { clearSRSReviewState } from "@/lib/srsReviewStorage";
 import { clearTopicStudyState } from "@/lib/topicStudyStorage";
+import { clearInterleavedState } from "@/lib/interleavedStorage";
 import { updateSRSState } from "@/db/srs";
-import { createSRSReviewResult, createTopicStudyResult } from "@/db/results";
+import { createSRSReviewResult, createTopicStudyResult, createInterleavedResult } from "@/db/results";
 import { getOrCreateSRSQuiz } from "@/db/quizzes";
+import { db } from "@/db";
 import { calculatePercentage } from "@/lib/utils";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 import { useSync } from "@/hooks/useSync";
+import { remixQuiz, buildAnswersRecord } from "@/lib/quiz-remix";
+import { logger } from "@/lib/logger";
+
+/**
+ * Build a source map from question IDs to their source quiz IDs.
+ * Used for aggregated sessions (SRS Review, Topic Study) to track question origins.
+ */
+async function buildSourceMapFromUserQuizzes(
+  userId: string,
+  questionIds: string[],
+): Promise<Record<string, string>> {
+  try {
+    const allQuizzes = await db.quizzes
+      .where("user_id")
+      .equals(userId)
+      .filter((q) => !q.deleted_at)
+      .toArray();
+
+    // Warn if quiz count is unexpectedly high (potential perf issue)
+    if (allQuizzes.length > 500) {
+      logger.warn(`High quiz count (${allQuizzes.length}) for user ${userId}`);
+    }
+
+    const questionToQuizMap = new Map<string, string>();
+    for (const q of allQuizzes) {
+      for (const question of q.questions) {
+        if (!questionToQuizMap.has(question.id)) {
+          questionToQuizMap.set(question.id, q.id);
+        }
+      }
+    }
+
+    const sourceMap: Record<string, string> = {};
+    for (const qId of questionIds) {
+      const quizId = questionToQuizMap.get(qId);
+      if (quizId) sourceMap[qId] = quizId;
+    }
+    return sourceMap;
+  } catch (error) {
+    logger.error("Failed to build source map", { userId, error });
+    return {}; // Fail gracefully - sourceMap is optional for display
+  }
+}
 
 interface ZenQuizContainerProps {
   quiz: Quiz;
@@ -41,6 +86,12 @@ interface ZenQuizContainerProps {
   isSRSReview?: boolean;
   /** When true, this is a Topic Study session (aggregates questions across quizzes). */
   isTopicStudy?: boolean;
+  /** When true, this is an Interleaved Practice session. */
+  isInterleaved?: boolean;
+  /** Maps questionId → sourceQuizId for interleaved sessions. */
+  interleavedSourceMap?: Map<string, string> | null;
+  /** Key mappings for answer translation in remixed interleaved sessions. */
+  interleavedKeyMappings?: Map<string, Record<string, string>> | null;
 }
 
 /**
@@ -51,8 +102,12 @@ export function ZenQuizContainer({
   isSmartRound = false,
   isSRSReview = false,
   isTopicStudy = false,
+  isInterleaved = false,
+  interleavedSourceMap = null,
+  interleavedKeyMappings = null,
 }: ZenQuizContainerProps): React.ReactElement {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { addToast } = useToast();
   const {
     saveError,
@@ -75,7 +130,6 @@ export function ZenQuizContainer({
   const { sync } = useSync();
 
   // Reset SRS tracking when session context changes (user OR quiz change)
-  // This ensures that retaking the same quiz or starting a new session clears the cache.
   React.useEffect(() => {
     srsUpdatedQuestionsRef.current.clear();
   }, [quiz.id, effectiveUserId, isSRSReview]);
@@ -117,6 +171,8 @@ export function ZenQuizContainer({
     "Your quiz progress will be lost. Are you sure?",
   );
 
+  const [isInitializing, setIsInitializing] = React.useState(true);
+
   React.useEffect(() => {
     if (error) {
       addToast("error", error);
@@ -133,16 +189,11 @@ export function ZenQuizContainer({
 
   const handleSessionComplete = React.useCallback(
     async (timeTakenSeconds: number): Promise<void> => {
-      // SRS review sessions save results differently - no quiz lookup needed
+      // SRS review sessions save results differently
       if (isSRSReview && effectiveUserId) {
         try {
-          // Ensure SRS quiz exists for this user (creates if needed)
           const srsQuiz = await getOrCreateSRSQuiz(effectiveUserId);
-
-          // Build question map for O(1) lookups
           const questionMap = new Map(questions.map((q) => [q.id, q]));
-
-          // Calculate score and category breakdown from answers
           let correctCount = 0;
           const categoryTotals: Record<string, { correct: number; total: number }> = {};
           const answersRecord: Record<string, string> = {};
@@ -174,6 +225,9 @@ export function ZenQuizContainer({
             ]),
           );
 
+          // Build source map by querying all user quizzes and mapping question IDs to source quiz IDs
+          const sourceMap = await buildSourceMapFromUserQuizzes(effectiveUserId, actualQuestionIds);
+
           const result = await createSRSReviewResult({
             userId: effectiveUserId,
             srsQuizId: srsQuiz.id,
@@ -183,12 +237,11 @@ export function ZenQuizContainer({
             questionIds: actualQuestionIds,
             score,
             categoryBreakdown,
+            sourceMap,
           });
 
           clearSRSReviewState();
           addToast("success", "SRS Review complete! Keep up the great work.");
-          // Fire-and-forget sync: offline-first means local is source of truth,
-          // but when online we want the Unsynced badge to clear automatically.
           void sync().catch((syncErr) => {
             console.warn("Background sync failed after SRS review save:", syncErr);
           });
@@ -204,13 +257,8 @@ export function ZenQuizContainer({
 
       if (isTopicStudy && effectiveUserId) {
         try {
-          // Reuse SRS quiz for FK compliance (both aggregate questions across quizzes)
           const srsQuiz = await getOrCreateSRSQuiz(effectiveUserId);
-
-          // Build question map for O(1) lookups
           const questionMap = new Map(questions.map((q) => [q.id, q]));
-
-          // Calculate score and category breakdown from answers
           let correctCount = 0;
           const categoryTotals: Record<string, { correct: number; total: number }> = {};
           const answersRecord: Record<string, string> = {};
@@ -242,6 +290,9 @@ export function ZenQuizContainer({
             ]),
           );
 
+          // Build source map by querying all user quizzes and mapping question IDs to source quiz IDs
+          const sourceMap = await buildSourceMapFromUserQuizzes(effectiveUserId, actualQuestionIds);
+
           const result = await createTopicStudyResult({
             userId: effectiveUserId,
             srsQuizId: srsQuiz.id,
@@ -251,6 +302,7 @@ export function ZenQuizContainer({
             questionIds: actualQuestionIds,
             score,
             categoryBreakdown,
+            sourceMap,
           });
 
           clearTopicStudyState();
@@ -268,30 +320,128 @@ export function ZenQuizContainer({
         return;
       }
 
+      // Handle Interleaved Practice session completion
+      if (isInterleaved && effectiveUserId) {
+        try {
+          const srsQuiz = await getOrCreateSRSQuiz(effectiveUserId);
+          const questionMap = new Map(questions.map((q) => [q.id, q]));
+          let correctCount = 0;
+          const categoryTotals: Record<string, { correct: number; total: number }> = {};
+          // Translate remixed keys to original keys for consistent analytics
+          const answersRecord = buildAnswersRecord(answers, interleavedKeyMappings);
+          const actualQuestionIds: string[] = [];
+
+          Object.keys(answersRecord).forEach((questionId) => {
+            const question = questionMap.get(questionId);
+            if (!question) return;
+
+            actualQuestionIds.push(questionId);
+            const category = question.category || "Uncategorized";
+            if (!categoryTotals[category]) {
+              categoryTotals[category] = { correct: 0, total: 0 };
+            }
+            categoryTotals[category].total += 1;
+
+            // Get isCorrect from original answers Map
+            const answerRecord = answers.get(questionId);
+            if (answerRecord?.isCorrect) {
+              correctCount += 1;
+              categoryTotals[category].correct += 1;
+            }
+          });
+
+          const score = calculatePercentage(correctCount, answers.size);
+          const categoryBreakdown = Object.fromEntries(
+            Object.entries(categoryTotals).map(([category, { correct, total }]) => [
+              category,
+              calculatePercentage(correct, total),
+            ]),
+          );
+
+          // Convert sourceMap to plain object
+          // Note: Map.forEach iterates as (value, key), not (key, value)
+          const sourceMapObject: Record<string, string> = {};
+          interleavedSourceMap?.forEach((sourceQuizId, questionIdKey) => {
+            sourceMapObject[questionIdKey] = sourceQuizId;
+          });
+
+          const result = await createInterleavedResult({
+            userId: effectiveUserId,
+            srsQuizId: srsQuiz.id,
+            answers: answersRecord,
+            flaggedQuestions: Array.from(flaggedQuestions),
+            timeTakenSeconds,
+            questionIds: actualQuestionIds,
+            sourceMap: sourceMapObject,
+            score,
+            categoryBreakdown,
+            categoryScores: categoryTotals,
+          });
+
+          clearInterleavedState();
+          addToast("success", "Interleaved Practice complete! Great job.");
+          void sync().catch((syncErr) => {
+            console.warn("Background sync failed after Interleaved save:", syncErr);
+          });
+          router.push(`/results/${result.id}`);
+        } catch (err) {
+          console.error("Failed to save interleaved result:", err);
+          addToast("error", "Failed to save result. You can still continue studying.");
+          clearInterleavedState();
+          router.push("/interleaved");
+        }
+        return;
+      }
+
       await submitQuiz(timeTakenSeconds);
     },
-    [isSRSReview, isTopicStudy, effectiveUserId, answers, questions, flaggedQuestions, addToast, router, submitQuiz, sync],
+    [isSRSReview, isTopicStudy, isInterleaved, effectiveUserId, answers, questions, flaggedQuestions, interleavedSourceMap, interleavedKeyMappings, addToast, router, submitQuiz, sync],
   );
 
   const retrySave = React.useCallback((): void => {
     const elapsedSeconds = completionTimeRef.current;
-    if (elapsedSeconds === null) {
-      return;
-    }
-    // Don't set hasSavedResultRef.current = true here;
-    // let the hook manage success or set it in a callback if needed.
+    if (elapsedSeconds === null) return;
     retrySaveAction(elapsedSeconds);
   }, [retrySaveAction]);
 
   React.useEffect(() => {
-    hasSavedResultRef.current = false;
-    initializeSession(quiz.id, "zen", quiz.questions);
-    startTimer();
+    let mounted = true;
+    const init = async (): Promise<void> => {
+      setIsInitializing(true);
+      hasSavedResultRef.current = false;
+
+      if (searchParams?.get("remix") === "true") {
+        try {
+          const { quiz: remixedQuiz, keyMappings } = await remixQuiz(quiz);
+          if (!mounted) return; // Guard against unmount during async
+          initializeSession(
+            quiz.id,
+            "zen",
+            remixedQuiz.questions,
+            keyMappings
+          );
+        } catch (err) {
+          console.error("Failed to remix quiz:", err);
+          if (!mounted) return;
+          initializeSession(quiz.id, "zen", quiz.questions);
+        }
+      } else {
+        initializeSession(quiz.id, "zen", quiz.questions);
+      }
+
+      if (!mounted) return;
+      startTimer();
+      setIsInitializing(false);
+    };
+
+    void init();
+
     return (): void => {
+      mounted = false;
       resetSession();
       hasSavedResultRef.current = false;
     };
-  }, [quiz.id, quiz.questions, initializeSession, startTimer, resetSession]);
+  }, [quiz, initializeSession, startTimer, resetSession, searchParams]);
 
   React.useEffect(() => {
     if (isComplete && !hasSavedResultRef.current) {
@@ -334,9 +484,7 @@ export function ZenQuizContainer({
 
   const handleExit = React.useCallback((): void => {
     resetSession();
-    if (isSmartRound) {
-      clearSmartRoundState();
-    }
+    if (isSmartRound) clearSmartRoundState();
     if (isSRSReview) {
       clearSRSReviewState();
       router.push("/study-due");
@@ -347,8 +495,13 @@ export function ZenQuizContainer({
       router.push("/analytics");
       return;
     }
+    if (isInterleaved) {
+      clearInterleavedState();
+      router.push("/interleaved");
+      return;
+    }
     router.push("/");
-  }, [resetSession, isSmartRound, isSRSReview, isTopicStudy, router]);
+  }, [resetSession, isSmartRound, isSRSReview, isTopicStudy, isInterleaved, router]);
 
   const isCurrentAnswerCorrect = React.useMemo(() => {
     if (!currentQuestion || !hasSubmitted) return false;
@@ -374,33 +527,19 @@ export function ZenQuizContainer({
     }
   }, [hasSubmitted, isCurrentAnswerCorrect, addToast]);
 
-  // Update SRS state after each answer when in SRS review mode
+  // Update SRS state after each answer
   React.useEffect(() => {
-    if (!isSRSReview || !hasSubmitted || !currentQuestion || !effectiveUserId) {
-      return;
-    }
-
-    // Prevent duplicate updates for the same question
-    if (srsUpdatedQuestionsRef.current.has(currentQuestion.id)) {
-      return;
-    }
-
+    if (!isSRSReview || !hasSubmitted || !currentQuestion || !effectiveUserId) return;
+    if (srsUpdatedQuestionsRef.current.has(currentQuestion.id)) return;
     const answerRecord = answers.get(currentQuestion.id);
-    if (!answerRecord) {
-      return;
-    }
-
-    // Mark as updated before async call to prevent race conditions
+    if (!answerRecord) return;
     srsUpdatedQuestionsRef.current.add(currentQuestion.id);
-
-    // Fire-and-forget SRS update (don't block UI)
     void updateSRSState(
       currentQuestion.id,
       effectiveUserId,
       answerRecord.isCorrect,
     ).catch((err) => {
       console.warn("Failed to update SRS state:", err);
-      // Remove from set so retry is possible if user goes back
       srsUpdatedQuestionsRef.current.delete(currentQuestion.id);
     });
   }, [isSRSReview, hasSubmitted, currentQuestion, effectiveUserId, answers]);
@@ -488,7 +627,7 @@ export function ZenQuizContainer({
     </div>
   );
 
-  if (!currentQuestion) {
+  if (isInitializing || !currentQuestion) {
     return (
       <QuizLayout
         title={quiz.title}
@@ -497,8 +636,8 @@ export function ZenQuizContainer({
         onExit={handleExit}
         mode="zen"
       >
-        <div className="py-12 text-center">
-          <p className="text-muted-foreground">Loading question...</p>
+        <div className="py-12 text-center" aria-busy="true" aria-live="polite">
+          <p className="text-muted-foreground">Initializing quiz session...</p>
         </div>
       </QuizLayout>
     );
