@@ -339,27 +339,6 @@ export default function DashboardClient(): React.ReactElement {
         return <DashboardSkeleton quizCardCount={quizCardCount} />;
     }
 
-    if (dbError) {
-        return (
-            <div
-                className="mx-auto max-w-7xl px-4 py-8"
-                role="alert"
-                aria-live="assertive"
-            >
-                <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
-                    <h2 className="text-lg font-semibold text-destructive">
-                        Failed to initialize database
-                    </h2>
-                    <p className="mt-2 text-destructive">{dbError.message}</p>
-                    <p className="mt-4 text-sm text-destructive">
-                        Please ensure your browser supports IndexedDB and try refreshing the
-                        page.
-                    </p>
-                </div>
-            </div>
-        );
-    }
-
     return (
         <>
             <DashboardShell
