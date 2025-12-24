@@ -1,5 +1,5 @@
 export const APP_NAME = "CertPrep.ai";
-export const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || "1.4.0";
+export const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || "1.4.1";
 
 export const NIL_UUID = "00000000-0000-0000-0000-000000000000";
 

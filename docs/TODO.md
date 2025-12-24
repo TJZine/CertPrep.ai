@@ -6,7 +6,59 @@
 
 ## 🔴 High Priority
 
-> No high-priority items currently. See Medium Priority section below.
+### E2E Test Stability: Remove Fixed `waitForTimeout` Calls
+
+**Priority**: High | **Effort**: 4-6 hours | **Category**: Test Infrastructure
+
+#### Context
+
+After migrating sync managers from `getSession()` to `getUser()` (v1.4.1), E2E tests required significant stabilization work. The current solution uses fixed `waitForTimeout()` calls to handle async answer persistence:
+
+```typescript
+// tests/e2e/quiz-flow.spec.ts, tests/e2e/offline-sync.spec.ts
+await option.click();
+await page.waitForTimeout(200); // React hydration
+await expect(option).toHaveAttribute("aria-checked", "true");
+await page.waitForTimeout(500); // Hash operation persistence
+```
+
+#### Problem
+
+Fixed waits are inherently flaky:
+
+- Too short → intermittent failures on slow CI runners
+- Too long → slow test suite
+- No feedback loop on actual operation completion
+
+#### Proposed Solution
+
+Expose test hooks that resolve when persistence completes:
+
+```typescript
+// Option A: Wait for store state
+await page.waitForFunction(
+  () => window.__certprepStore?.getState().isSubmitting === false,
+);
+
+// Option B: Wait for network idle after hash
+await page.waitForLoadState("networkidle");
+
+// Option C: Add data-testid that appears after persistence
+await expect(page.getByTestId("answer-persisted")).toBeVisible();
+```
+
+#### Files to Review
+
+- `tests/e2e/quiz-flow.spec.ts` — `selectOption()` helper
+- `tests/e2e/offline-sync.spec.ts` — `selectOption()` helper
+- `src/stores/quizSessionStore.ts` — expose test hooks if needed
+
+#### Acceptance Criteria
+
+- [ ] Remove all `waitForTimeout()` calls from E2E option selection
+- [ ] Replace with condition-based waits
+- [ ] Run E2E suite 5+ times to verify stability
+- [ ] Document the approach in `docs/E2E_DEBUGGING_REFERENCE.md`
 
 ---
 
