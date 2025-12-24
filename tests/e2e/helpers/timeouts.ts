@@ -59,6 +59,27 @@ export const E2E_TIMEOUTS = {
      * Covers: Full page reloads, large data processing, complex interactions under load.
      */
     SLOW: 15_000,
+
+    /**
+     * Short wait for React hydration/re-render.
+     * Used when we know a state update has occurred but UI might lag slightly.
+     * Previous: page.waitForTimeout(200)
+     */
+    REACT_HYDRATION: 200,
+
+    /**
+     * Wait for answer persistence (hash operation).
+     * Used when we need to ensure local IDB write has likely completed.
+     * Previous: page.waitForTimeout(500)
+     */
+    ANSWER_PERSIST: 500,
+
+    /**
+     * Buffer for hydration stability.
+     * Used in library tests for list rendering.
+     * Previous: page.waitForTimeout(300)
+     */
+    HYDRATION_BUFFER: 300,
 } as const;
 
 export type E2ETimeoutKey = keyof typeof E2E_TIMEOUTS;

@@ -114,19 +114,6 @@ Future optimizations to consider if slow sync issues persist after the cursor fi
 
 ### Known Issues
 
-#### ~~Sync Fails with "No valid auth session" (Dev Environment)~~ ✅ FIXED
-
-**Fixed in**: v1.3.10  
-**Resolution**: Migrated sync managers from `getSession()` to `getUser()`.
-
-`getUser()` validates the session with the Supabase server on every call, eliminating stale cache issues that caused "No valid auth session" errors after page refresh. This adds ~50-200ms latency per sync operation but ensures reliable authentication.
-
-**Files Changed**:
-
-- `src/lib/sync/syncManager.ts`
-- `src/lib/sync/quizSyncManager.ts`
-- `src/lib/sync/srsSyncManager.ts`
-
 ---
 
 ### Technical Debt: Playwright `--disable-web-security` Flag
@@ -458,3 +445,18 @@ export const createClient = () => createSupabaseClient<Database>(url, key);
 - Adding more RPC functions
 - Onboarding new developers who would benefit from autocompletion
 - Schema changes become frequent (to catch drift early)
+
+---
+
+### Code Review Cleanups
+
+**Priority**: Low | **Effort**: 2-4 hours | **Category**: Technical Debt
+
+#### Performance Optimizations
+
+- [ ] **CLS Fix**: `CategoryBreakdown` skeleton height in `ResultsContainer.tsx` is fixed at 200px, but content varies. Make it dynamic or use `min-h`.
+- [ ] **E2E Timeouts**: Review `quiz-flow.spec.ts` 15s timeout once performance improves.
+
+#### Test Cleanups
+
+- [ ] **Investigation**: Why does `library.spec.ts` need `force: true` for clicks? Investigate potential overlay/z-index issues.

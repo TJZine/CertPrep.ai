@@ -288,7 +288,7 @@ describe("DashboardClient", () => {
         mockStatsMap.set("q3", { lastAttemptDate: 300, averageScore: 70 });
 
         beforeEach((): void => {
-            (useQuizzes as Mock).mockReturnValue({ quizzes: mockQuizzes, isLoading: false });
+            (useQuizzes as Mock).mockReturnValue({ quizzes: mockQuizzes, isLoading: false, error: null });
             (useDashboardStats as Mock).mockReturnValue({
                 quizStats: mockStatsMap,
                 overallStats: { totalQuizzes: 3 },

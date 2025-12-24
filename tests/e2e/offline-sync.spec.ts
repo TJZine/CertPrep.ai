@@ -38,14 +38,14 @@ async function selectOption(
 
   // Hover to stabilize element before clicking
   await option.hover();
-  await page.waitForTimeout(200); // Increased from 100ms for React hydration
+  await page.waitForTimeout(E2E_TIMEOUTS.REACT_HYDRATION); // Increased from 100ms for React hydration
   await option.click();
 
   // Verify selection registered in UI
   await expect(option).toHaveAttribute("aria-checked", "true", { timeout: 3000 });
 
   // Wait for async answer persistence (hash operation ~50-200ms)
-  await page.waitForTimeout(300);
+  await page.waitForTimeout(E2E_TIMEOUTS.ANSWER_PERSIST);
 }
 
 /**

@@ -15,4 +15,4 @@
  *
  * @see src/app/interleaved/page.tsx line 166 - Loading spinner component
  */
-export const SPINNER_SELECTOR = ".h-8.w-8.animate-spin";
+export const SPINNER_SELECTOR = "[data-testid='loading-spinner']";

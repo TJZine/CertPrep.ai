@@ -73,6 +73,12 @@ export default function DashboardClient(): React.ReactElement {
     } | null>(null);
     const [isDeleting, setIsDeleting] = React.useState(false);
 
+    // Unmount guard
+    const isMounted = React.useRef(true);
+    React.useEffect(() => {
+        return (): void => { isMounted.current = false; };
+    }, []);
+
     // Sort/filter state
     const [sortBy, setSortBy] = React.useState<DashboardSortOption>(() => {
         if (typeof window !== "undefined") {
@@ -247,13 +253,19 @@ export default function DashboardClient(): React.ReactElement {
         setIsDeleting(true);
         try {
             await deleteQuiz(deleteContext.quiz.id, effectiveUserId);
-            addToast("success", `Deleted "${deleteContext.quiz.title}"`);
-            setDeleteContext(null);
+            if (isMounted.current) {
+                addToast("success", `Deleted "${deleteContext.quiz.title}"`);
+                setDeleteContext(null);
+            }
         } catch (error) {
             console.error("Failed to delete quiz", error);
-            addToast("error", "Failed to delete quiz. Please try again.");
+            if (isMounted.current) {
+                addToast("error", "Failed to delete quiz. Please try again.");
+            }
         } finally {
-            setIsDeleting(false);
+            if (isMounted.current) {
+                setIsDeleting(false);
+            }
         }
     };
 

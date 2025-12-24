@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
-import { DashboardLoader } from "@/components/dashboard/DashboardLoader";
+import DashboardLoader from "@/components/dashboard/DashboardLoader";
 
 /**
  * Dashboard Page - Optimized for LCP

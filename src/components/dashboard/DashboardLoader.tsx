@@ -22,8 +22,6 @@ const DashboardClient = dynamic(
     }
 );
 
-export function DashboardLoader(): React.ReactElement {
+export default function DashboardLoader(): React.ReactElement {
     return <DashboardClient />;
 }
-
-export default DashboardLoader;

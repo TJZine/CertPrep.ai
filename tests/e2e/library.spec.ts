@@ -280,7 +280,7 @@ test.describe("Quiz Library & Dashboard", () => {
             // Wait for loading to finish - robust check for App hydration
             await expect(page.getByText("Loading your quiz library...").first()).not.toBeVisible({ timeout: E2E_TIMEOUTS.LOADING });
             // Add a small buffer for list rendering (hydration)
-            await page.waitForTimeout(300);
+            await page.waitForTimeout(E2E_TIMEOUTS.HYDRATION_BUFFER);
 
             // 3. Verify both quiz cards are visible
             await expect(page.getByRole("heading", { name: "Quiz One", exact: true })).toBeVisible();

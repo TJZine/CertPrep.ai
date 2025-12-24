@@ -66,10 +66,6 @@ const {
     order: vi.fn().mockReturnThis(),
     limit: vi.fn().mockResolvedValue({ data: [], error: null }),
     auth: {
-      getSession: vi.fn().mockResolvedValue({
-        data: { session: { user: { id: "user-1" } } },
-        error: null,
-      }),
       getUser: vi.fn().mockResolvedValue({
         data: { user: { id: "user-1" } },
         error: null,

@@ -288,11 +288,17 @@ function ExamAlignmentSection({
                                     <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-1">
                                         {vendor}
                                     </p>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                                    <div
+                                        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3"
+                                        role="radiogroup"
+                                        aria-label={`${vendor} certification exams`}
+                                    >
                                         {presets.map((preset) => (
                                             <button
                                                 key={preset.id}
                                                 type="button"
+                                                role="radio"
+                                                aria-checked={selectedPreset === preset.id}
                                                 onClick={() => onPresetChange(preset.id)}
                                                 className={cn(
                                                     "relative flex flex-col items-start p-3 rounded-xl border text-left transition-all",
@@ -328,6 +334,8 @@ function ExamAlignmentSection({
                                 </p>
                                 <button
                                     type="button"
+                                    role="radio"
+                                    aria-checked={selectedPreset === "custom"}
                                     onClick={() => onPresetChange("custom")}
                                     className={cn(
                                         "flex items-center gap-3 p-3 rounded-xl border transition-all w-full sm:w-auto",
@@ -477,7 +485,7 @@ export function CreateGuideContent(): React.ReactElement {
                 {/* Semantic background mesh/gradient */}
                 <div className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80" aria-hidden="true">
                     <div
-                        className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-primary/30 to-accent/30 opacity-30 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"
+                        className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-primary/10 to-accent/10 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"
                         style={{
                             clipPath:
                                 "polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)",
@@ -533,7 +541,7 @@ export function CreateGuideContent(): React.ReactElement {
                 <h2 className="text-2xl font-bold text-center mb-10 font-heading">How It Works</h2>
 
                 {/* Connecting line (desktop only) - Absolute positioning to prevent layout shift */}
-                <div className="hidden md:block absolute top-[110px] left-0 w-full h-0.5 pointer-events-none -z-10" aria-hidden="true">
+                <div className="hidden md:block absolute top-28 left-0 w-full h-0.5 pointer-events-none -z-10" aria-hidden="true">
                     <div className="w-[70%] h-full mx-auto border-t-2 border-dashed border-border/60" />
                 </div>
 
