@@ -287,7 +287,7 @@ export default function DashboardClient(): React.ReactElement {
     if (
         authLoading ||
         effectiveUserId === null ||
-        !isInitialized ||
+        (!isInitialized && !dbError) ||
         quizzesLoading ||
         statsLoading ||
         isDueCountsLoading
