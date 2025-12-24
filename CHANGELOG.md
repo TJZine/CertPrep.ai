@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Sync Auth Reliability**: Migrated sync managers from `getSession()` to `getUser()` to fix stale auth session errors. This validates sessions with the Supabase server on every sync, eliminating "No valid auth session" failures after page refresh.
 - **Quiz Submission State**: Preserved `selectedAnswer` on hash failures so users can retry without re-selecting their answer.
 - **Create Page Spacing**: Fixed layout overlap issues and improved visual design.
+- **DB Init Error Handling**: Fixed a bug where database initialization errors were masked by the dashboard loading skeleton.
+- **Analytics Mobile Layout**: Fixed horizontal overflow issues and enforced consistent mobile responsiveness across all Analytics dashboard cards.
 
 ### Added
 
@@ -21,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Browserslist Config**: Added `.browserslistrc` targeting modern browsers only, reducing polyfill bundle by ~30-50KB.
 - **E2E Test Selectors**: Extracted spinner selector to shared constant for maintainability.
 - **Interleaved Category Tests**: Added unit tests for case-insensitive and multi-category filtering.
+- **Dashboard Tests**: Added comprehensive unit tests for `DashboardClient` covering loading, sorting, filtering, and interactions (~85% coverage).
 
 ### Changed
 

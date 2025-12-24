@@ -92,13 +92,13 @@ export function CategoryTrendChart({
     // Always render full Card structure for stable height
     return (
         <Card className={className}>
-            <CardHeader>
+            <CardHeader className="p-4 sm:p-6">
                 <CardTitle className="flex items-center gap-2">
                     <TrendingUp className="h-5 w-5" aria-hidden="true" />
                     Category Trends
                 </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
                 <div ref={containerRef} className="h-[300px] w-full">
                     {isEmpty || needsMoreData ? (
                         // Empty state - same height as chart
