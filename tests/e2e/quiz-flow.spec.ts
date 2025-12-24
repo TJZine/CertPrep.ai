@@ -14,7 +14,7 @@ async function selectOption(
     page: import("@playwright/test").Page,
     letter: string,
 ): Promise<void> {
-    const option = page.getByRole("radio", { name: new RegExp(`^${letter}\\s`) });
+    const option = page.getByRole("radio", { name: new RegExp(`^[${letter}]\\s`) });
 
     // Wait for element to be visible and stable before interacting
     await expect(option).toBeVisible({ timeout: 5000 });

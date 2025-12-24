@@ -18,6 +18,7 @@ import { InterleavedPracticeCard } from "@/components/dashboard/InterleavedPract
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { useToast } from "@/components/ui/Toast";
+import { LOCAL_STORAGE_KEYS } from "@/lib/constants";
 import { prefetchOnIdle } from "@/lib/prefetch";
 import type { Quiz } from "@/types/quiz";
 import type { LeitnerBox } from "@/types/srs";
@@ -40,10 +41,10 @@ const DeleteConfirmModal = dynamic(
 
 /**
  * DashboardClient - Client-side dashboard content.
- * 
+ *
  * This component is dynamically imported in page.tsx with ssr:false
  * to allow the server to render a skeleton immediately for better LCP.
- * 
+ *
  * All client-only features (auth, IndexedDB, localStorage) are safe here
  * since this component only runs in the browser.
  */
@@ -76,13 +77,16 @@ export default function DashboardClient(): React.ReactElement {
     // Unmount guard
     const isMounted = React.useRef(true);
     React.useEffect(() => {
-        return (): void => { isMounted.current = false; };
+        isMounted.current = true;
+        return (): void => {
+            isMounted.current = false;
+        };
     }, []);
 
     // Sort/filter state
     const [sortBy, setSortBy] = React.useState<DashboardSortOption>(() => {
         if (typeof window !== "undefined") {
-            const stored = localStorage.getItem("dashboard-sort-by");
+            const stored = localStorage.getItem(LOCAL_STORAGE_KEYS.DASHBOARD_SORT_BY);
             if (stored && ["recent", "added", "title", "performance", "questions"].includes(stored)) {
                 return stored as DashboardSortOption;
             }
@@ -95,7 +99,7 @@ export default function DashboardClient(): React.ReactElement {
     // Persist sort preference
     React.useEffect(() => {
         try {
-            localStorage.setItem("dashboard-sort-by", sortBy);
+            localStorage.setItem(LOCAL_STORAGE_KEYS.DASHBOARD_SORT_BY, sortBy);
         } catch {
             // localStorage may be unavailable
         }
@@ -166,9 +170,10 @@ export default function DashboardClient(): React.ReactElement {
     });
     const [dueCountsStatus, setDueCountsStatus] = React.useState<"idle" | "loading" | "ready" | "error">("idle");
     const totalDue = Object.values(dueCountsByBox).reduce((sum, count) => sum + count, 0);
-    const shouldLoadDueCounts = Boolean(effectiveUserId) && isInitialized;
-    // Show loading state only while actively loading (not on error or ready)
-    const isDueCountsLoading = shouldLoadDueCounts && dueCountsStatus === "loading";
+    // SRS Status Logic
+    const shouldLoadDueCounts = !!effectiveUserId;
+    const isDueCountsLoading =
+        shouldLoadDueCounts && (dueCountsStatus === "loading" || dueCountsStatus === "idle");
 
     // Fetch SRS due counts
     React.useEffect(() => {
@@ -179,13 +184,13 @@ export default function DashboardClient(): React.ReactElement {
             setDueCountsStatus("loading");
             try {
                 const counts = await getDueCountsByBox(effectiveUserId);
-                if (!cancelled) {
+                if (!cancelled && isMounted.current) { // Check isMounted.current here
                     setDueCountsByBox(counts);
                     setDueCountsStatus("ready");
                 }
             } catch (err) {
                 console.warn("Failed to load SRS due counts:", err);
-                if (!cancelled) {
+                if (!cancelled && isMounted.current) { // Check isMounted.current here
                     setDueCountsStatus("error");
                 }
             }
@@ -193,7 +198,7 @@ export default function DashboardClient(): React.ReactElement {
 
         void loadDueCounts();
         return (): void => { cancelled = true; };
-    }, [effectiveUserId, isInitialized]);
+    }, [effectiveUserId, isInitialized, isMounted]); // Add isMounted to dependencies
 
     // Persist quiz count for skeleton size caching (CLS optimization)
     // User-scoped to prevent cross-account cache pollution
@@ -296,6 +301,28 @@ export default function DashboardClient(): React.ReactElement {
 
     // Loading: auth/user context and DB/data fetches.
     // Keep a single skeleton visible until all dynamic sections (including SRS due counts) are ready.
+    // Error state - specific DB initialization failure
+    if (dbError) {
+        return (
+            <div
+                className="mx-auto max-w-7xl px-4 py-8"
+                role="alert"
+                aria-live="assertive"
+            >
+                <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
+                    <h2 className="text-lg font-semibold text-destructive">
+                        Failed to initialize database
+                    </h2>
+                    <p className="mt-2 text-destructive">{dbError.message}</p>
+                    <p className="mt-4 text-sm text-destructive">
+                        Please ensure your browser supports IndexedDB and try refreshing the
+                        page.
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
     if (
         authLoading ||
         effectiveUserId === null ||
@@ -314,7 +341,11 @@ export default function DashboardClient(): React.ReactElement {
 
     if (dbError) {
         return (
-            <div className="mx-auto max-w-7xl px-4 py-8">
+            <div
+                className="mx-auto max-w-7xl px-4 py-8"
+                role="alert"
+                aria-live="assertive"
+            >
                 <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
                     <h2 className="text-lg font-semibold text-destructive">
                         Failed to initialize database

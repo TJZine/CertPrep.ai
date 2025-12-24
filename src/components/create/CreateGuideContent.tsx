@@ -518,7 +518,7 @@ export function CreateGuideContent(): React.ReactElement {
                     >
                         <GeminiIcon size={20} />
                         Open Gemini Gem
-                        <ExternalLink className="h-4 w-4 opacity-60" aria-hidden="true" />
+                        <ExternalLink className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                     </a>
                     <a
                         href={CHATGPT_GPT_URL}
@@ -531,7 +531,7 @@ export function CreateGuideContent(): React.ReactElement {
                     >
                         <OpenAIIcon size={20} />
                         Open ChatGPT GPT
-                        <ExternalLink className="h-4 w-4 opacity-60" aria-hidden="true" />
+                        <ExternalLink className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                     </a>
                 </div>
             </section>
@@ -606,7 +606,7 @@ export function CreateGuideContent(): React.ReactElement {
                                             : "text-muted-foreground hover:text-foreground hover:bg-muted"
                                     )}
                                 >
-                                    <Icon className={cn("h-4 w-4", isActive ? "text-primary" : "opacity-70")} aria-hidden="true" />
+                                    <Icon className={cn("h-4 w-4", isActive ? "text-primary" : "text-muted-foreground")} aria-hidden="true" />
                                     <span className="hidden sm:inline">{value.title}</span>
                                     <span className="sm:hidden">{value.title.split(" ")[0]}</span>
                                 </button>

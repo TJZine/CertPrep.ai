@@ -7,9 +7,8 @@
  */
 
 /**
- * Loading spinner selector.
+ * Top-level loading spinner (uses data-testid="loading-spinner")
  *
- * Uses Tailwind utility classes because the spinner component lacks a data-testid.
  * The specific combination (h-8 w-8 animate-spin) is required for Playwright
  * strict mode to avoid matching multiple spinners of different sizes.
  *

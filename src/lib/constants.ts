@@ -28,3 +28,9 @@ export const THEME = {
     flagged: "bg-flagged/10 border-flagged",
   },
 } as const;
+
+export const LOCAL_STORAGE_KEYS = {
+  DASHBOARD_SORT_BY: "dashboard-sort-by",
+  DASHBOARD_QUIZ_COUNT_PREFIX: "dashboard_",
+  DASHBOARD_HAS_SRS_DUES_PREFIX: "dashboard_",
+} as const;
