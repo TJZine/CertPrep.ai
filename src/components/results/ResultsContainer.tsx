@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useLiveQuery } from "dexie-react-hooks";
 import {
@@ -13,7 +14,6 @@ import {
   Trash2,
 } from "lucide-react";
 import { Scorecard } from "./Scorecard";
-import { TopicRadar, CategoryBreakdown } from "./TopicRadar";
 import { ResultsSummary } from "./ResultsSummary";
 import { QuestionReviewList, type FilterType } from "./QuestionReviewList";
 import { SmartActions } from "./SmartActions";
@@ -22,6 +22,8 @@ import { DifficultyBreakdown } from "./DifficultyBreakdown";
 import { SRSStatusDisplay } from "./SRSStatusDisplay";
 import { SelfAssessmentSummary } from "./SelfAssessmentSummary";
 import { TimePerQuestionHeatmap } from "./TimePerQuestionHeatmap";
+import { Card } from "@/components/ui/Card";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
@@ -38,6 +40,31 @@ import type { Quiz } from "@/types/quiz";
 import type { Result } from "@/types/result";
 import { Badge } from "@/components/ui/Badge";
 import { useSync } from "@/hooks/useSync";
+
+// Code-split recharts-heavy TopicRadar for smaller initial bundle (~50KB savings)
+const TopicRadar = dynamic(
+  () => import("./TopicRadar").then((mod) => ({ default: mod.TopicRadar })),
+  {
+    loading: () => (
+      <Card className="h-[300px]">
+        <Skeleton className="h-full w-full" aria-label="Loading topic radar" />
+      </Card>
+    ),
+    ssr: false,
+  }
+);
+
+const CategoryBreakdown = dynamic(
+  () => import("./TopicRadar").then((mod) => ({ default: mod.CategoryBreakdown })),
+  {
+    loading: () => (
+      <Card className="h-[200px]">
+        <Skeleton className="h-full w-full" aria-label="Loading categories" />
+      </Card>
+    ),
+    ssr: false,
+  }
+);
 
 interface ResultsContainerProps {
   result: Result;

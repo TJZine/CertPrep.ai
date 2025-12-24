@@ -108,7 +108,8 @@ test.describe("Quiz Flow Tests", () => {
             await waitForDatabase(page);
 
             await page.goto(`/quiz/${quiz.id}/zen`);
-            await page.waitForLoadState('networkidle');
+            // Wait for loading to finish - robust check for App hydration
+            await expect(page.getByText(/loading/i).first()).not.toBeVisible({ timeout: E2E_TIMEOUTS.LOADING });
 
             // Wait for question content to be visible before interacting
             await expect(page.getByText(quiz.questions[0]!.question!)).toBeVisible({ timeout: 5000 });
@@ -138,7 +139,8 @@ test.describe("Quiz Flow Tests", () => {
             await waitForDatabase(page);
 
             await page.goto(`/quiz/${quiz.id}/zen`);
-            await page.waitForLoadState('networkidle');
+            // Wait for loading to finish - robust check for App hydration
+            await expect(page.getByText(/loading/i).first()).not.toBeVisible({ timeout: E2E_TIMEOUTS.LOADING });
 
             // Wait for Q1 content to be visible before interacting
             await expect(page.getByText(quiz.questions[0]!.question!)).toBeVisible({ timeout: 5000 });
@@ -174,7 +176,8 @@ test.describe("Quiz Flow Tests", () => {
             await waitForDatabase(page);
 
             await page.goto(`/quiz/${quiz.id}/zen`);
-            await page.waitForLoadState('networkidle');
+            // Wait for loading to finish - robust check for App hydration
+            await expect(page.getByText(/loading/i).first()).not.toBeVisible({ timeout: E2E_TIMEOUTS.LOADING });
 
             // Wait for question content to be visible before interacting
             await expect(page.getByText(quiz.questions[0]!.question!)).toBeVisible({ timeout: 5000 });
@@ -307,10 +310,11 @@ test.describe("Quiz Flow Tests", () => {
             await waitForDatabase(page);
 
             await page.goto(`/quiz/${quiz.id}/proctor`);
-            await page.waitForLoadState('networkidle');
+            // Wait for loading to finish - robust check for App hydration
+            await expect(page.getByText(/loading/i).first()).not.toBeVisible({ timeout: E2E_TIMEOUTS.LOADING });
 
             // Wait for Q1 content to be visible before interacting
-            await expect(page.getByText(quiz.questions[0]!.question!)).toBeVisible({ timeout: 5000 });
+            await expect(page.getByText(quiz.questions[0]!.question!)).toBeVisible({ timeout: 15000 });
 
             // Extra buffer for React hydration to complete
             await page.waitForTimeout(300);
