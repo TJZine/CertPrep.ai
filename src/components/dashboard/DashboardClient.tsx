@@ -198,7 +198,7 @@ export default function DashboardClient(): React.ReactElement {
 
         void loadDueCounts();
         return (): void => { cancelled = true; };
-    }, [effectiveUserId, isInitialized, isMounted]); // Add isMounted to dependencies
+    }, [effectiveUserId, isInitialized]);
 
     // Persist quiz count for skeleton size caching (CLS optimization)
     // User-scoped to prevent cross-account cache pollution

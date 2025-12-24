@@ -301,7 +301,7 @@ function ExamAlignmentSection({
                                                 aria-checked={selectedPreset === preset.id}
                                                 onClick={() => onPresetChange(preset.id)}
                                                 className={cn(
-                                                    "relative flex flex-col items-start p-3 rounded-xl border text-left transition-all",
+                                                    "relative flex flex-col items-start p-3 rounded-xl border text-left transition-all focus:outline-none focus:ring-2 focus:ring-primary/50",
                                                     selectedPreset === preset.id
                                                         ? "bg-primary/5 border-primary ring-1 ring-primary/20"
                                                         : "bg-card border-border hover:border-primary/50 hover:bg-muted/50"
@@ -338,7 +338,7 @@ function ExamAlignmentSection({
                                     aria-checked={selectedPreset === "custom"}
                                     onClick={() => onPresetChange("custom")}
                                     className={cn(
-                                        "flex items-center gap-3 p-3 rounded-xl border transition-all w-full sm:w-auto",
+                                        "flex items-center gap-3 p-3 rounded-xl border transition-all w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-primary/50",
                                         selectedPreset === "custom"
                                             ? "bg-primary/5 border-primary ring-1 ring-primary/20"
                                             : "bg-card border-border hover:border-primary/50 hover:bg-muted/50"

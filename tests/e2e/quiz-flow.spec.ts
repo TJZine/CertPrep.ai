@@ -314,6 +314,11 @@ test.describe("Quiz Flow Tests", () => {
             await expect(page.getByText(/loading/i).first()).not.toBeVisible({ timeout: E2E_TIMEOUTS.LOADING });
 
             // Wait for Q1 content to be visible before interacting
+            // NOTE: Proctor mode initial load uses SLOW (15s) vs LOADING (6s) because:
+            // - Timer component initialization
+            // - Quiz metadata loading + validation
+            // - Full React hydration of exam UI
+            // Subsequent navigation (lines 326, 330) only switches question content.
             await expect(page.getByText(quiz.questions[0]!.question!)).toBeVisible({ timeout: E2E_TIMEOUTS.SLOW });
 
             // Extra buffer for React hydration to complete
