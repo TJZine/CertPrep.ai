@@ -18,7 +18,7 @@ import { InterleavedPracticeCard } from "@/components/dashboard/InterleavedPract
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { useToast } from "@/components/ui/Toast";
-import { LOCAL_STORAGE_KEYS } from "@/lib/constants";
+import { LOCAL_STORAGE_KEYS, buildDashboardCacheKey } from "@/lib/constants";
 import { prefetchOnIdle } from "@/lib/prefetch";
 import type { Quiz } from "@/types/quiz";
 import type { LeitnerBox } from "@/types/srs";
@@ -205,7 +205,7 @@ export default function DashboardClient(): React.ReactElement {
     React.useEffect(() => {
         if (!quizzesLoading && effectiveUserId) {
             try {
-                localStorage.setItem(`dashboard_${effectiveUserId}_quiz_count`, String(quizzes.length));
+                localStorage.setItem(buildDashboardCacheKey(effectiveUserId, "quiz_count"), String(quizzes.length));
             } catch {
                 // localStorage may be unavailable in private browsing
             }
@@ -217,7 +217,7 @@ export default function DashboardClient(): React.ReactElement {
     React.useEffect(() => {
         if (dueCountsStatus === "ready" && effectiveUserId) {
             try {
-                localStorage.setItem(`dashboard_${effectiveUserId}_has_srs_dues`, totalDue > 0 ? "1" : "0");
+                localStorage.setItem(buildDashboardCacheKey(effectiveUserId, "has_srs_dues"), totalDue > 0 ? "1" : "0");
             } catch {
                 // localStorage may be unavailable in private browsing
             }
@@ -284,7 +284,7 @@ export default function DashboardClient(): React.ReactElement {
         // Otherwise, read user-scoped cached count from localStorage
         if (typeof window !== "undefined" && effectiveUserId) {
             try {
-                const cached = localStorage.getItem(`dashboard_${effectiveUserId}_quiz_count`);
+                const cached = localStorage.getItem(buildDashboardCacheKey(effectiveUserId, "quiz_count"));
                 if (cached !== null) {
                     const count = Number(cached);
                     if (Number.isFinite(count) && count >= 0) {

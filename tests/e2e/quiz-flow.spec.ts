@@ -17,18 +17,18 @@ async function selectOption(
     const option = page.getByRole("radio", { name: new RegExp(`^[${letter}]\\s`) });
 
     // Wait for element to be visible and stable before interacting
-    await expect(option).toBeVisible({ timeout: 5000 });
+    await expect(option).toBeVisible({ timeout: E2E_TIMEOUTS.LOADING });
 
     // Hover to stabilize element before clicking
     await option.hover();
-    await page.waitForTimeout(200); // Increased from 100ms for React hydration
+    await page.waitForTimeout(E2E_TIMEOUTS.REACT_HYDRATION);
     await option.click();
 
     // Verify selection registered in UI
-    await expect(option).toHaveAttribute("aria-checked", "true", { timeout: 3000 });
+    await expect(option).toHaveAttribute("aria-checked", "true", { timeout: E2E_TIMEOUTS.ANIMATION });
 
     // Wait for async answer persistence (hash operation ~50-200ms)
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(E2E_TIMEOUTS.ANSWER_PERSIST);
 }
 
 /**
@@ -112,10 +112,10 @@ test.describe("Quiz Flow Tests", () => {
             await expect(page.getByText(/loading/i).first()).not.toBeVisible({ timeout: E2E_TIMEOUTS.LOADING });
 
             // Wait for question content to be visible before interacting
-            await expect(page.getByText(quiz.questions[0]!.question!)).toBeVisible({ timeout: 5000 });
+            await expect(page.getByText(quiz.questions[0]!.question!)).toBeVisible({ timeout: E2E_TIMEOUTS.LOADING });
 
             // Extra buffer for React hydration to complete
-            await page.waitForTimeout(300);
+            await page.waitForTimeout(E2E_TIMEOUTS.HYDRATION_BUFFER);
 
             // 2. Answer incorrectly (Q1 Correct is B, choose A)
             await selectOption(page, "A");
@@ -143,10 +143,10 @@ test.describe("Quiz Flow Tests", () => {
             await expect(page.getByText(/loading/i).first()).not.toBeVisible({ timeout: E2E_TIMEOUTS.LOADING });
 
             // Wait for Q1 content to be visible before interacting
-            await expect(page.getByText(quiz.questions[0]!.question!)).toBeVisible({ timeout: 5000 });
+            await expect(page.getByText(quiz.questions[0]!.question!)).toBeVisible({ timeout: E2E_TIMEOUTS.LOADING });
 
             // Extra buffer for React hydration to complete
-            await page.waitForTimeout(300);
+            await page.waitForTimeout(E2E_TIMEOUTS.HYDRATION_BUFFER);
 
             // Q1: Answer wrong -> Click "Again"
             await selectOption(page, "A"); // Wrong
@@ -154,7 +154,7 @@ test.describe("Quiz Flow Tests", () => {
             await page.getByRole("button", { name: /again/i }).click();
 
             // Wait for Q2 content to be visible before interacting
-            await expect(page.getByText(quiz.questions[1]!.question!)).toBeVisible({ timeout: 5000 });
+            await expect(page.getByText(quiz.questions[1]!.question!)).toBeVisible({ timeout: E2E_TIMEOUTS.LOADING });
 
             // Q2: Answer correct -> Click "Good"
             await selectOption(page, "C"); // Correct (for Q2)
@@ -180,24 +180,24 @@ test.describe("Quiz Flow Tests", () => {
             await expect(page.getByText(/loading/i).first()).not.toBeVisible({ timeout: E2E_TIMEOUTS.LOADING });
 
             // Wait for question content to be visible before interacting
-            await expect(page.getByText(quiz.questions[0]!.question!)).toBeVisible({ timeout: 5000 });
+            await expect(page.getByText(quiz.questions[0]!.question!)).toBeVisible({ timeout: E2E_TIMEOUTS.LOADING });
 
             // Extra buffer for React hydration to complete
-            await page.waitForTimeout(300);
+            await page.waitForTimeout(E2E_TIMEOUTS.HYDRATION_BUFFER);
 
             // 1. Click flag button
             const flagButton = page.getByRole("button", { name: /flag/i });
             // Wait for element to be visible and stable before interacting
-            await expect(flagButton).toBeVisible({ timeout: 5000 });
-            await expect(flagButton).toBeEnabled({ timeout: 5000 });
+            await expect(flagButton).toBeVisible({ timeout: E2E_TIMEOUTS.LOADING });
+            await expect(flagButton).toBeEnabled({ timeout: E2E_TIMEOUTS.LOADING });
             // Stabilize before clicking (same pattern as selectOption)
             await flagButton.hover();
-            await page.waitForTimeout(200); // Increased from 100ms for React hydration
+            await page.waitForTimeout(E2E_TIMEOUTS.REACT_HYDRATION);
             await flagButton.click();
             // Verify flag state changed (aria-pressed indicates toggle state)
-            await expect(flagButton).toHaveAttribute("aria-pressed", "true", { timeout: 3000 });
+            await expect(flagButton).toHaveAttribute("aria-pressed", "true", { timeout: E2E_TIMEOUTS.ANIMATION });
             // Wait for async state persistence
-            await page.waitForTimeout(500);
+            await page.waitForTimeout(E2E_TIMEOUTS.ANSWER_PERSIST);
 
             // 2. Verify flag icon changes state (visually or via aria-pressed if implemented)
             // Assuming the button toggles 'aria-pressed' or similar, or we can check visually if there's a text change
@@ -217,7 +217,7 @@ test.describe("Quiz Flow Tests", () => {
             // This depends on the Result
 
             // Wait for redirection to ensure result is saved
-            await expect(page).toHaveURL(/\/results/, { timeout: 10000 });
+            await expect(page).toHaveURL(/\/results/, { timeout: E2E_TIMEOUTS.HYDRATION });
 
             // 5. Verify result
             // Check UI first (most robust for both Auth and No-Auth)
@@ -314,20 +314,20 @@ test.describe("Quiz Flow Tests", () => {
             await expect(page.getByText(/loading/i).first()).not.toBeVisible({ timeout: E2E_TIMEOUTS.LOADING });
 
             // Wait for Q1 content to be visible before interacting
-            await expect(page.getByText(quiz.questions[0]!.question!)).toBeVisible({ timeout: 15000 });
+            await expect(page.getByText(quiz.questions[0]!.question!)).toBeVisible({ timeout: E2E_TIMEOUTS.SLOW });
 
             // Extra buffer for React hydration to complete
-            await page.waitForTimeout(300);
+            await page.waitForTimeout(E2E_TIMEOUTS.HYDRATION_BUFFER);
 
             // 2. Answer Q1, navigate to Q2
             await selectOption(page, "B");
-            await page.waitForTimeout(200); // Wait for hash/persist before navigating
+            await page.waitForTimeout(E2E_TIMEOUTS.REACT_HYDRATION); // Wait for hash/persist before navigating
             await page.getByRole("button", { name: "Next question" }).click();
-            await expect(page.getByText(quiz.questions[1]!.question!)).toBeVisible({ timeout: 5000 });
+            await expect(page.getByText(quiz.questions[1]!.question!)).toBeVisible({ timeout: E2E_TIMEOUTS.LOADING });
 
             // 3. Navigate back to Q1 (Previous button)
             await page.getByRole("button", { name: /previous|back/i }).click();
-            await expect(page.getByText(quiz.questions[0]!.question!)).toBeVisible({ timeout: 5000 });
+            await expect(page.getByText(quiz.questions[0]!.question!)).toBeVisible({ timeout: E2E_TIMEOUTS.LOADING });
 
             // 4. Verify answer is preserved
             const optionB = page.getByRole("radio", { name: /^B\s/ });

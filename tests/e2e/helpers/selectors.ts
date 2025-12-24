@@ -9,9 +9,9 @@
 /**
  * Top-level loading spinner (uses data-testid="loading-spinner")
  *
- * The specific combination (h-8 w-8 animate-spin) is required for Playwright
- * strict mode to avoid matching multiple spinners of different sizes.
+ * This data-testid is unique to the top-level spinner component,
+ * which renders with h-8 w-8 animate-spin classes for visual distinction.
  *
- * @see src/app/interleaved/page.tsx line 166 - Loading spinner component
+ * @see src/app/interleaved/page.tsx - Loading spinner component
  */
 export const SPINNER_SELECTOR = "[data-testid='loading-spinner']";
