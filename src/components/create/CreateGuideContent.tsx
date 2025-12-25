@@ -369,6 +369,8 @@ function ExamAlignmentSection({
                                     type="button"
                                     role="radio"
                                     aria-checked={selectedPreset === "custom"}
+                                    data-preset-id="custom"
+                                    tabIndex={selectedPreset === "custom" ? 0 : -1}
                                     onClick={() => onPresetChange("custom")}
                                     className={cn(
                                         "flex items-center gap-3 p-3 rounded-xl border transition-all w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-primary/50",

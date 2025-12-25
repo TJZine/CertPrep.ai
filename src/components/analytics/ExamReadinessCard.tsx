@@ -248,12 +248,12 @@ export function ExamReadinessCard({
                         )}
                     </div>
 
-                    <div className="space-y-3">
+                    <div className="space-y-3" id="category-breakdown-list">
                         <div className="flex items-center justify-between">
                             <h4 className="font-semibold text-foreground">
                                 Category Breakdown
                             </h4>
-                            {categoryReadiness.size > INITIAL_DISPLAY && (
+                            {hasMore && (
                                 <span className="text-xs text-muted-foreground">
                                     {isExpanded ? `Showing all ${categoryReadiness.size}` : `Showing ${displayCount} of ${categoryReadiness.size}`}
                                 </span>
@@ -285,6 +285,7 @@ export function ExamReadinessCard({
                                 onClick={() => setIsExpanded(!isExpanded)}
                                 className="w-full py-2 text-sm text-primary hover:text-primary/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors rounded-md"
                                 aria-expanded={isExpanded}
+                                aria-controls="category-breakdown-list"
                             >
                                 {isExpanded
                                     ? `Show less`
