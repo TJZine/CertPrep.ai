@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import {
     Sparkles,
     Wand2,
@@ -17,6 +18,7 @@ import {
     ArrowRight,
     GraduationCap,
     Info,
+    Target,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/Button";
@@ -25,11 +27,140 @@ import { Badge } from "@/components/ui/Badge";
 import { GeminiIcon } from "@/components/icons/GeminiIcon";
 import { OpenAIIcon } from "@/components/icons/OpenAIIcon";
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
+import { useTheme } from "@/components/common/ThemeProvider";
 import {
     EXAM_PRESETS,
     generatePromptModifier,
     type ExamPreset,
 } from "@/data/examPresets";
+
+// Themes that have their own custom animations/effects - don't add extra animations
+const THEMES_WITH_CUSTOM_EFFECTS = [
+    "midnight", "brutalist", "retro", "retro-dark", "swiss",
+    "vapor", "holiday", "blossom", "riso"
+] as const;
+
+/** Hook to determine if we should use enhanced animations */
+function useEnhancedAnimations(): boolean {
+    const { resolvedTheme, comfortMode } = useTheme();
+    const [prefersReducedMotion, setPrefersReducedMotion] = React.useState(false);
+
+    React.useEffect(() => {
+        const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+        setPrefersReducedMotion(mediaQuery.matches);
+        const handler = (e: MediaQueryListEvent): void => setPrefersReducedMotion(e.matches);
+        mediaQuery.addEventListener("change", handler);
+        return (): void => { mediaQuery.removeEventListener("change", handler); };
+    }, []);
+
+    // Disable enhanced animations if:
+    // 1. User prefers reduced motion
+    // 2. Comfort mode is enabled
+    // 3. Theme has its own custom effects
+    if (prefersReducedMotion || comfortMode) return false;
+    if ((THEMES_WITH_CUSTOM_EFFECTS as readonly string[]).includes(resolvedTheme)) return false;
+    return true;
+}
+
+/** Animated mesh gradient background - theme-aware */
+function AnimatedMeshGradient(): React.ReactElement {
+    const enhancedAnimations = useEnhancedAnimations();
+
+    if (!enhancedAnimations) {
+        // Fallback: simple static gradient for themes with custom effects
+        return (
+            <div className="absolute inset-0 -z-10 overflow-hidden" aria-hidden="true">
+                <div
+                    className="absolute inset-0 opacity-20"
+                    style={{
+                        background: `
+                            radial-gradient(ellipse at 30% 20%, hsl(var(--primary) / 0.3) 0px, transparent 50%),
+                            radial-gradient(ellipse at 70% 60%, hsl(var(--accent) / 0.2) 0px, transparent 50%)
+                        `,
+                    }}
+                />
+            </div>
+        );
+    }
+
+    return (
+        <div className="absolute inset-0 -z-10 overflow-hidden" aria-hidden="true">
+            {/* Multi-layer mesh gradient with subtle animation */}
+            <motion.div
+                className="absolute inset-0 opacity-30"
+                animate={{
+                    background: [
+                        `radial-gradient(ellipse at 30% 20%, hsl(var(--primary) / 0.4) 0px, transparent 50%),
+                         radial-gradient(ellipse at 70% 60%, hsl(var(--accent) / 0.25) 0px, transparent 50%),
+                         radial-gradient(ellipse at 50% 80%, hsl(var(--primary) / 0.15) 0px, transparent 40%)`,
+                        `radial-gradient(ellipse at 35% 25%, hsl(var(--primary) / 0.4) 0px, transparent 50%),
+                         radial-gradient(ellipse at 65% 55%, hsl(var(--accent) / 0.25) 0px, transparent 50%),
+                         radial-gradient(ellipse at 45% 75%, hsl(var(--primary) / 0.15) 0px, transparent 40%)`,
+                        `radial-gradient(ellipse at 30% 20%, hsl(var(--primary) / 0.4) 0px, transparent 50%),
+                         radial-gradient(ellipse at 70% 60%, hsl(var(--accent) / 0.25) 0px, transparent 50%),
+                         radial-gradient(ellipse at 50% 80%, hsl(var(--primary) / 0.15) 0px, transparent 40%)`,
+                    ],
+                }}
+                transition={{
+                    duration: 8,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                }}
+            />
+
+            {/* Floating decorative elements */}
+            <motion.div
+                className="absolute top-16 right-[15%] text-primary/15"
+                animate={{ y: [0, -15, 0], rotate: [0, 8, 0] }}
+                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+            >
+                <Sparkles className="h-10 w-10" />
+            </motion.div>
+            <motion.div
+                className="absolute top-32 left-[10%] text-accent/10"
+                animate={{ y: [0, 12, 0], rotate: [0, -5, 0] }}
+                transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+            >
+                <Wand2 className="h-8 w-8" />
+            </motion.div>
+            <motion.div
+                className="absolute bottom-24 right-[25%] text-primary/10"
+                animate={{ y: [0, -10, 0], x: [0, 5, 0] }}
+                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+            >
+                <Target className="h-6 w-6" />
+            </motion.div>
+        </div>
+    );
+}
+
+/** Shimmer badge with sparkles animation */
+function ShimmerBadge({ children }: { children: React.ReactNode }): React.ReactElement {
+    const enhancedAnimations = useEnhancedAnimations();
+
+    return (
+        <motion.div
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full 
+                       bg-primary/10 text-primary text-sm font-semibold
+                       ring-1 ring-primary/20 backdrop-blur-sm"
+            initial={enhancedAnimations ? { opacity: 0, y: 10 } : false}
+            animate={enhancedAnimations ? { opacity: 1, y: 0 } : undefined}
+            transition={{ delay: 0.1, duration: 0.4 }}
+        >
+            {enhancedAnimations ? (
+                <motion.span
+                    animate={{ rotate: [0, 12, 0] }}
+                    transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+                >
+                    <Sparkles className="h-4 w-4" aria-hidden="true" />
+                </motion.span>
+            ) : (
+                <Sparkles className="h-4 w-4" aria-hidden="true" />
+            )}
+            {children}
+        </motion.div>
+    );
+}
 
 // External AI tool links
 const GEMINI_GEM_URL =
@@ -129,65 +260,133 @@ const TIPS = [
     },
 ];
 
-function CopyButton({ text }: { text: string }): React.ReactElement {
-    const { copied, copyToClipboard } = useCopyToClipboard();
-
-    return (
-        <button
-            type="button"
-            onClick={() => copyToClipboard(text)}
-            className={cn(
-                "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-all",
-                "bg-primary/10 text-primary hover:bg-primary/20",
-                copied && "bg-success/10 text-success"
-            )}
-            aria-label={copied ? "Copied!" : "Copy template"}
-        >
-            {copied ? (
-                <>
-                    <Check className="h-4 w-4" />
-                    Copied!
-                </>
-            ) : (
-                <>
-                    <Copy className="h-4 w-4" />
-                    Copy
-                </>
-            )}
-        </button>
-    );
-}
 
 function StepCard({
     number,
     icon: Icon,
     title,
     description,
-    delay,
 }: {
     number: number;
     icon: React.ElementType;
     title: string;
     description: string;
-    delay: number;
 }): React.ReactElement {
-    return (
+    const enhancedAnimations = useEnhancedAnimations();
+
+    const cardContent = (
         <Card
             hoverable
-            className="relative text-center animate-in fade-in slide-in-from-bottom-4 border-primary/10 bg-card/50 backdrop-blur-sm"
-            style={{ animationDelay: `${delay}ms`, animationFillMode: "both" }}
+            className="relative text-center border-primary/10 bg-card/80 backdrop-blur-sm"
         >
-            <CardContent className="pt-8 pb-8">
-                <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/20">
-                    <span className="text-xl font-bold font-heading">{number}</span>
+            <CardContent className="pt-6 pb-6">
+                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <Icon className="h-6 w-6" aria-hidden="true" />
                 </div>
-                <div className="mb-3 flex items-center justify-center gap-2">
-                    <Icon className="h-5 w-5 text-primary" aria-hidden="true" />
-                    <h3 className="text-lg font-semibold">{title}</h3>
-                </div>
+                <h3 className="text-lg font-semibold mb-2">{title}</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">{description}</p>
             </CardContent>
         </Card>
+    );
+
+    if (!enhancedAnimations) {
+        return (
+            <div className="relative">
+                {/* Step number badge */}
+                <div className="relative z-10 mx-auto mb-3 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground font-bold text-sm shadow-md ring-4 ring-background">
+                    {number}
+                </div>
+                {cardContent}
+            </div>
+        );
+    }
+
+    return (
+        <motion.div
+            className="relative"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ delay: number * 0.1, duration: 0.4 }}
+        >
+            {/* Step number badge with pulse animation */}
+            <motion.div
+                className="relative z-10 mx-auto mb-3 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground font-bold text-sm shadow-md ring-4 ring-background"
+                initial={{ scale: 0 }}
+                whileInView={{ scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: number * 0.1 + 0.2, type: "spring", stiffness: 400, damping: 15 }}
+            >
+                {number}
+            </motion.div>
+            {cardContent}
+        </motion.div>
+    );
+}
+
+/** Highlight [PLACEHOLDERS] in code templates */
+function highlightPlaceholders(text: string): React.ReactNode {
+    const parts = text.split(/(\[.*?\])/g);
+    return parts.map((part, i) =>
+        part.startsWith('[') && part.endsWith(']')
+            ? <span key={i} className="text-accent font-semibold">{part}</span>
+            : part
+    );
+}
+
+/** Interactive code block with line numbers and hover states */
+function InteractiveCodeBlock({ code, title }: { code: string; title?: string }): React.ReactElement {
+    const lines = code.split('\n');
+    const { copied, copyToClipboard } = useCopyToClipboard();
+
+    return (
+        <div className="relative group rounded-xl border bg-card overflow-hidden">
+            {/* Header bar */}
+            <div className="flex items-center justify-between px-4 py-2.5 border-b bg-muted/30">
+                <span className="text-xs font-medium text-muted-foreground">
+                    {title ?? 'Prompt Template'}
+                </span>
+                <button
+                    type="button"
+                    onClick={() => copyToClipboard(code)}
+                    className={cn(
+                        "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-all",
+                        "bg-primary/10 text-primary hover:bg-primary/20",
+                        copied && "bg-success/10 text-success"
+                    )}
+                    aria-label={copied ? "Copied!" : "Copy template"}
+                >
+                    {copied ? (
+                        <>
+                            <Check className="h-3 w-3" />
+                            Copied!
+                        </>
+                    ) : (
+                        <>
+                            <Copy className="h-3 w-3" />
+                            Copy
+                        </>
+                    )}
+                </button>
+            </div>
+
+            {/* Code with line numbers */}
+            <pre className="overflow-x-auto p-0 text-sm font-mono">
+                {lines.map((line, i) => (
+                    <div
+                        key={i}
+                        className="flex hover:bg-primary/5 transition-colors"
+                    >
+                        <span className="select-none w-10 py-0.5 text-right pr-3 text-muted-foreground/40 text-xs border-r border-border/50">
+                            {i + 1}
+                        </span>
+                        <code className="flex-1 py-0.5 pl-3 pr-4 whitespace-pre-wrap break-words">
+                            {highlightPlaceholders(line)}
+                        </code>
+                    </div>
+                ))}
+            </pre>
+        </div>
     );
 }
 
@@ -521,21 +720,12 @@ export function CreateGuideContent(): React.ReactElement {
         <main className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8">
             {/* Hero Section */}
             <section className="relative text-center pb-16 pt-8 mb-16 border-b border-border/50">
-                {/* Semantic background mesh/gradient */}
-                <div className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80" aria-hidden="true">
-                    <div
-                        className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-primary/10 to-accent/10 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"
-                        style={{
-                            clipPath:
-                                "polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)",
-                        }}
-                    />
-                </div>
+                {/* Theme-aware animated mesh gradient */}
+                <AnimatedMeshGradient />
 
-                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-semibold mb-6 ring-1 ring-primary/20">
-                    <Sparkles className="h-4 w-4" aria-hidden="true" />
+                <ShimmerBadge>
                     AI-Powered Quiz Generation
-                </div>
+                </ShimmerBadge>
                 <h1 className="text-4xl sm:text-5xl font-extrabold text-foreground mb-6 tracking-tight font-heading">
                     Create Your Own <span className="text-primary">Practice Tests</span>
                 </h1>
@@ -590,21 +780,18 @@ export function CreateGuideContent(): React.ReactElement {
                         icon={Wand2}
                         title="Generate"
                         description="Use our custom AI tools to create high-quality questions from your study material"
-                        delay={0}
                     />
                     <StepCard
                         number={2}
                         icon={Copy}
                         title="Copy JSON"
                         description="Review the generated output and copy the raw quiz JSON code"
-                        delay={150}
                     />
                     <StepCard
                         number={3}
                         icon={Import}
                         title="Import"
                         description="Paste into CertPrep.ai's import dialog and start practicing instantly"
-                        delay={300}
                     />
                 </div>
             </section>
@@ -674,14 +861,10 @@ export function CreateGuideContent(): React.ReactElement {
                                     <p className="text-muted-foreground">{value.description}</p>
                                 </CardHeader>
                                 <CardContent>
-                                    <div className="relative">
-                                        <pre className="overflow-x-auto rounded-lg border-l-4 border-primary bg-card p-4 text-sm font-mono whitespace-pre-wrap break-words">
-                                            {value.template}
-                                        </pre>
-                                        <div className="absolute top-2 right-2">
-                                            <CopyButton text={value.template} />
-                                        </div>
-                                    </div>
+                                    <InteractiveCodeBlock
+                                        code={value.template}
+                                        title={value.title}
+                                    />
                                 </CardContent>
                             </Card>
                         </div>
