@@ -149,7 +149,7 @@ export function PerformanceHistory({
       className={cn("h-[348px] [contain:layout]", className)}
       data-testid="performance-history-card"
     >
-      <CardHeader>
+      <CardHeader className="p-4 sm:p-6">
         <div className="flex items-center justify-between">
           <div>
             <CardTitle>Performance History</CardTitle>
@@ -182,7 +182,7 @@ export function PerformanceHistory({
           )}
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
         <div ref={containerRef} className="relative h-[250px]">
           {/* Spinner - always in DOM, hidden when ready */}
           <div

@@ -69,7 +69,7 @@ export function RetryComparisonCard({
     if (!hasData) {
         return (
             <Card className={className}>
-                <CardHeader>
+                <CardHeader className="p-4 sm:p-6">
                     <CardTitle className="flex items-center gap-2">
                         <RotateCcw className="h-5 w-5 text-info" aria-hidden="true" />
                         Retry Performance
@@ -113,7 +113,7 @@ export function RetryComparisonCard({
 
     return (
         <Card className={className}>
-            <CardHeader>
+            <CardHeader className="p-4 sm:p-6">
                 <div className="flex items-center justify-between">
                     <div>
                         <CardTitle className="flex items-center gap-2">
@@ -127,7 +127,7 @@ export function RetryComparisonCard({
                     {getImprovementBadge()}
                 </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
                 <div className="space-y-4">
                     <StatBar
                         label="First Attempt Average"

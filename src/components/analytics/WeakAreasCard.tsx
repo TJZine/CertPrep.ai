@@ -176,7 +176,7 @@ export function WeakAreasCard({
   return (
     <>
       <Card className={className}>
-        <CardHeader>
+        <CardHeader className="p-4 sm:p-6">
           <CardTitle className="flex items-center gap-2">
             <AlertTriangle
               className="h-5 w-5 text-warning"
@@ -188,7 +188,7 @@ export function WeakAreasCard({
             Categories where you scored below average
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
           {quizzesError && (
             <p className="mb-4 text-sm text-destructive">
               Quiz titles may be incomplete: {quizzesError.message}

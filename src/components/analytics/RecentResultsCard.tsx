@@ -69,7 +69,7 @@ export function RecentResultsCard({
 
     return (
         <Card className={className}>
-            <CardHeader className="pb-3">
+            <CardHeader className="p-4 pb-3 sm:p-6 sm:pb-3">
                 <CardTitle className="flex items-center gap-2 text-lg">
                     <History className="h-5 w-5" aria-hidden="true" />
                     Recent Results
@@ -78,7 +78,7 @@ export function RecentResultsCard({
                     Your latest quiz attempts
                 </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
                 <div className="space-y-4">
                     {displayedResults.map((result) => {
                         const quiz = quizMap.get(result.quiz_id);
