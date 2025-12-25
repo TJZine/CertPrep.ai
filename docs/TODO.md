@@ -6,7 +6,87 @@
 
 ## 🔴 High Priority
 
-> No high-priority items currently. See Medium Priority section below.
+### Category Display UX: Investigate Improved Presentation Options
+
+**Priority**: High | **Effort**: 2-4 hours | **Category**: UX / Analytics
+
+#### Context
+
+The Exam Readiness card shows categories with a "show more" button. Currently shows 6 initially, clicking expands to show all. With quizzes that have many categories (10+), the UI can become long.
+
+#### Options to Investigate
+
+1. **Scrollable Container** — Fixed height (~300px) with smooth scroll and visual fade at bottom
+2. **Accordion/Collapsible Groups** — Group categories logically (Core Coverage, Supplemental, Regulatory)
+3. **Toggle View Modes** — Compact (6) / Full (scrollable grid) / Chart (radar/bar visualization)
+4. **Keep Current** — Current "show all" is simple and functional
+
+#### Files
+
+- `src/components/analytics/ExamReadinessCard.tsx`
+
+#### Acceptance Criteria
+
+- [ ] Review each option with mockups or prototypes
+- [ ] Consider mobile responsiveness for each approach
+- [ ] Evaluate accessibility (keyboard navigation, screen readers)
+- [ ] Choose approach based on user testing or stakeholder feedback
+
+---
+
+### E2E Test Stability: Remove Fixed `waitForTimeout` Calls
+
+**Priority**: High | **Effort**: 4-6 hours | **Category**: Test Infrastructure
+
+#### Context
+
+After migrating sync managers from `getSession()` to `getUser()` (v1.4.1), E2E tests required significant stabilization work. The current solution uses fixed `waitForTimeout()` calls to handle async answer persistence:
+
+```typescript
+// tests/e2e/quiz-flow.spec.ts, tests/e2e/offline-sync.spec.ts
+await option.click();
+await page.waitForTimeout(200); // React hydration
+await expect(option).toHaveAttribute("aria-checked", "true");
+await page.waitForTimeout(500); // Hash operation persistence
+```
+
+#### Problem
+
+Fixed waits are inherently flaky:
+
+- Too short → intermittent failures on slow CI runners
+- Too long → slow test suite
+- No feedback loop on actual operation completion
+
+#### Proposed Solution
+
+Expose test hooks that resolve when persistence completes:
+
+```typescript
+// Option A: Wait for store state
+await page.waitForFunction(
+  () => window.__certprepStore?.getState().isSubmitting === false,
+);
+
+// Option B: Wait for network idle after hash
+await page.waitForLoadState("networkidle");
+
+// Option C: Add data-testid that appears after persistence
+await expect(page.getByTestId("answer-persisted")).toBeVisible();
+```
+
+#### Files to Review
+
+- `tests/e2e/quiz-flow.spec.ts` — `selectOption()` helper
+- `tests/e2e/offline-sync.spec.ts` — `selectOption()` helper
+- `src/stores/quizSessionStore.ts` — expose test hooks if needed
+
+#### Acceptance Criteria
+
+- [ ] Remove all `waitForTimeout()` calls from E2E option selection
+- [ ] Replace with condition-based waits
+- [ ] Run E2E suite 5+ times to verify stability
+- [ ] Document the approach in `docs/E2E_DEBUGGING_REFERENCE.md`
 
 ---
 
@@ -61,45 +141,6 @@ Future optimizations to consider if slow sync issues persist after the cursor fi
 ## 🟢 Low Priority
 
 ### Known Issues
-
-#### Sync Fails with "No valid auth session" (Dev Environment)
-
-**Last Seen:** 2025-12-14
-
-**Symptoms:**
-
-- Console: `Sync skipped: No valid auth session { authError: undefined }`
-- User is logged in (UI works, can take quizzes)
-- Sync operations fail, "Unsynced" badge persists
-
-**Root Cause:**
-Stale browser cookies/localStorage. The `@supabase/ssr` client's `getSession()` reads from local cache which can become out of sync, while `onAuthStateChange` (used by AuthProvider) still works correctly.
-
-**Workaround:**
-
-> [!WARNING]
-> "Clear site data" deletes IndexedDB and will **destroy all offline quizzes, results, and SRS progress** that haven't synced. Only use as a last resort if you have no unsaved work.
-
-**Step 1 — Try safer fixes first:**
-
-1. Sign out via the app UI (Settings → Sign Out)
-2. Hard refresh (`Cmd+Shift+R` / `Ctrl+Shift+R`)
-3. Log back in
-
-**Step 2 — If Step 1 fails, clear only auth cookies:**
-
-1. DevTools → Application → Cookies → Select your domain
-2. Delete cookies starting with `sb-` (e.g., `sb-xxx-auth-token`)
-3. Hard refresh and log back in
-
-**Step 3 — Last resort (data loss risk):**
-
-1. DevTools → Application → Storage → "Clear site data"
-2. Hard refresh (`Cmd+Shift+R` / `Ctrl+Shift+R`)
-3. Log back in
-
-**Permanent Fix (if recurs frequently):**
-Change sync managers (`syncManager.ts`, `quizSyncManager.ts`, `srsSyncManager.ts`) to use `getUser()` instead of `getSession()`. This validates with the server (adds ~50-200ms latency) but is more reliable. See Supabase SSR docs.
 
 ---
 
@@ -432,3 +473,18 @@ export const createClient = () => createSupabaseClient<Database>(url, key);
 - Adding more RPC functions
 - Onboarding new developers who would benefit from autocompletion
 - Schema changes become frequent (to catch drift early)
+
+---
+
+### Code Review Cleanups
+
+**Priority**: Low | **Effort**: 2-4 hours | **Category**: Technical Debt
+
+#### Performance Optimizations
+
+- [ ] **CLS Fix**: `CategoryBreakdown` skeleton height in `ResultsContainer.tsx` is fixed at 200px, but content varies. Make it dynamic or use `min-h`.
+- [ ] **E2E Timeouts**: Review `quiz-flow.spec.ts` 15s timeout once performance improves.
+
+#### Test Cleanups
+
+- [ ] **Investigation**: Why does `library.spec.ts` need `force: true` for clicks? Investigate potential overlay/z-index issues.

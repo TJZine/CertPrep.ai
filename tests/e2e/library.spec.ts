@@ -190,12 +190,21 @@ test.describe("Quiz Library & Dashboard", () => {
             authenticatedPage: page,
         }) => {
             await page.goto("/library");
+            // Wait for loading to complete explicitly instead of generic network idle
+            // which can be flaky if background polls exist
+            await expect(page.getByText("Loading your quiz library...").first()).not.toBeVisible({ timeout: E2E_TIMEOUTS.LOADING });
 
             // 2. Find a quiz card with "Import" button
             const importButton = page.getByRole("button", { name: "Import" }).first();
 
             // It should be visible now that we mocked it
             await expect(importButton).toBeVisible();
+            await expect(importButton).toBeEnabled();
+
+            // Stabilize before interaction
+            await importButton.hover();
+            await page.waitForTimeout(200);
+
             await importButton.click();
 
             // 4. Verify success toast appears
@@ -229,10 +238,16 @@ test.describe("Quiz Library & Dashboard", () => {
             authenticatedPage: page,
         }) => {
             await page.goto("/library");
+            await expect(page.getByText("Loading your quiz library...").first()).not.toBeVisible({ timeout: E2E_TIMEOUTS.LOADING });
 
             // Import once
             const importButton = page.getByRole("button", { name: "Import" }).first();
             await expect(importButton).toBeVisible();
+            await expect(importButton).toBeEnabled();
+
+            await importButton.hover();
+            await page.waitForTimeout(200);
+
             await importButton.click();
             await expect(page.getByText(/imported successfully/i)).toBeVisible();
 
@@ -262,8 +277,10 @@ test.describe("Quiz Library & Dashboard", () => {
 
             await page.goto("/");
 
-            // Wait for loading to finish
-            await expect(page.getByText("Loading your quiz library...").first()).not.toBeVisible();
+            // Wait for loading to finish - robust check for App hydration
+            await expect(page.getByText("Loading your quiz library...").first()).not.toBeVisible({ timeout: E2E_TIMEOUTS.LOADING });
+            // Add a small buffer for list rendering (hydration)
+            await page.waitForTimeout(E2E_TIMEOUTS.HYDRATION_BUFFER);
 
             // 3. Verify both quiz cards are visible
             await expect(page.getByRole("heading", { name: "Quiz One", exact: true })).toBeVisible();
@@ -282,15 +299,20 @@ test.describe("Quiz Library & Dashboard", () => {
             await page.goto("/");
 
             // Wait for loading to finish
-            await expect(page.getByText("Loading your quiz library...").first()).not.toBeVisible();
+            await expect(page.getByText("Loading your quiz library...").first()).not.toBeVisible({ timeout: E2E_TIMEOUTS.LOADING });
+            await page.waitForTimeout(300);
 
             // 3. Click the Start Quiz button
             await expect(page.getByRole("heading", { name: quiz.title })).toBeVisible();
 
-            await page
-                .getByRole("button", { name: /start quiz/i })
-                .first()
-                .click({ force: true });
+            const startButton = page.getByRole("button", { name: /start quiz/i }).first();
+            await expect(startButton).toBeVisible();
+            await expect(startButton).toBeEnabled();
+
+            await startButton.hover();
+            await page.waitForTimeout(200);
+
+            await startButton.click({ force: true });
 
             // 4. Verify Mode Selection Modal appears
             await expect(page.getByRole("dialog")).toBeVisible();
@@ -308,7 +330,6 @@ test.describe("Quiz Library & Dashboard", () => {
         }) => {
             // DB is cleared by beforeEach
             await page.goto("/");
-
 
             // Wait for loading to finish (wait for either content or empty state)
             await expect(page.getByText("Loading your quiz library...").first()).not.toBeVisible({ timeout: E2E_TIMEOUTS.LOADING });

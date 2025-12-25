@@ -22,6 +22,7 @@ interface ExamReadinessCardProps {
 }
 
 const PASSING_THRESHOLD = 70;
+const INITIAL_DISPLAY = 6;
 
 /**
  * Circular gauge component for exam readiness score.
@@ -168,13 +169,19 @@ export function ExamReadinessCard({
     passingThreshold = PASSING_THRESHOLD,
     className,
 }: ExamReadinessCardProps): React.ReactElement {
+    const [isExpanded, setIsExpanded] = React.useState(false);
+
+
+
     const categories = useMemo(
         () =>
             Array.from(categoryReadiness.entries())
-                .sort((a, b) => a[1] - b[1]) // Sort by score ascending (weakest first)
-                .slice(0, 6), // Show top 6 categories
+                .sort((a, b) => a[1] - b[1]), // Sort by score ascending (weakest first)
         [categoryReadiness],
     );
+
+    const displayCount = isExpanded ? categories.length : Math.min(INITIAL_DISPLAY, categories.length);
+    const hasMore = categories.length > INITIAL_DISPLAY;
 
     const isPassing = readinessScore >= passingThreshold;
 
@@ -206,7 +213,7 @@ export function ExamReadinessCard({
     // Always render full Card structure for stable height
     return (
         <Card className={className} data-testid="exam-readiness-card">
-            <CardHeader>
+            <CardHeader className="p-4 sm:p-6">
                 <div className="flex items-center justify-between">
                     <div>
                         <CardTitle className="flex items-center gap-2">
@@ -223,7 +230,7 @@ export function ExamReadinessCard({
                     {!isEmpty && getConfidenceBadge(readinessConfidence)}
                 </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
                 <div className="grid gap-8 md:grid-cols-2">
                     <div className="flex items-center justify-center">
                         {isEmpty ? (
@@ -241,34 +248,50 @@ export function ExamReadinessCard({
                         )}
                     </div>
 
-                    <div className="space-y-3">
-                        <h4 className="font-semibold text-foreground">
-                            Category Breakdown
-                        </h4>
-                        {/* Always render 6 rows for stable height */}
-                        {Array.from({ length: 6 }).map((_, index) => {
-                            const category = categories[index];
-                            if (category) {
-                                return (
-                                    <CategoryBar
-                                        key={category[0]}
-                                        category={category[0]}
-                                        score={category[1]}
-                                        threshold={passingThreshold}
-                                    />
-                                );
-                            }
-                            // Placeholder for missing categories
-                            return (
-                                <div key={`placeholder-${index}`} className="space-y-1">
-                                    <div className="flex items-center justify-between text-sm">
-                                        <div className="h-4 w-24 animate-pulse rounded bg-muted" />
-                                        <div className="h-4 w-8 animate-pulse rounded bg-muted" />
-                                    </div>
-                                    <div className="h-2 w-full rounded-full bg-secondary" />
+                    <div className="space-y-3" id="category-breakdown-list">
+                        <div className="flex items-center justify-between">
+                            <h4 className="font-semibold text-foreground">
+                                Category Breakdown
+                            </h4>
+                            {hasMore && (
+                                <span className="text-xs text-muted-foreground">
+                                    {isExpanded ? `Showing all ${categoryReadiness.size}` : `Showing ${displayCount} of ${categoryReadiness.size}`}
+                                </span>
+                            )}
+                        </div>
+                        {/* Render visible categories */}
+                        {categories.slice(0, displayCount).map((category) => (
+                            <CategoryBar
+                                key={category[0]}
+                                category={category[0]}
+                                score={category[1]}
+                                threshold={passingThreshold}
+                            />
+                        ))}
+                        {/* Show placeholder rows if less than INITIAL_DISPLAY */}
+                        {isEmpty && Array.from({ length: INITIAL_DISPLAY }).map((_, index) => (
+                            <div key={`placeholder-${index}`} className="space-y-1">
+                                <div className="flex items-center justify-between text-sm">
+                                    <div className="h-4 w-24 animate-pulse rounded bg-muted" />
+                                    <div className="h-4 w-8 animate-pulse rounded bg-muted" />
                                 </div>
-                            );
-                        })}
+                                <div className="h-2 w-full rounded-full bg-secondary" />
+                            </div>
+                        ))}
+                        {/* Expand/Collapse button */}
+                        {hasMore && (
+                            <button
+                                type="button"
+                                onClick={() => setIsExpanded(!isExpanded)}
+                                className="w-full py-2 text-sm text-primary hover:text-primary/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors rounded-md"
+                                aria-expanded={isExpanded}
+                                aria-controls="category-breakdown-list"
+                            >
+                                {isExpanded
+                                    ? `Show less`
+                                    : `Show ${categories.length - INITIAL_DISPLAY} more categories`}
+                            </button>
+                        )}
                     </div>
                 </div>
             </CardContent>

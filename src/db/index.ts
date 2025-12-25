@@ -179,6 +179,116 @@ export class CertPrepDatabase extends Dexie {
     // This version bump ensures Dexie re-evaluates the schema after the type changed.
     this.version(14).stores({});
 
+    // Version 15: Normalize legacy category names to official 7 categories.
+    // Migrates: quizzes.questions[].category, results.category_breakdown, results.computed_category_scores
+    this.version(15)
+      .stores({})
+      .upgrade(async (tx) => {
+        const CATEGORY_MAP: Record<string, string> = {
+          // Homeowners
+          "Homeowners Section I": "Homeowners Policy",
+          "Homeowners Section II": "Homeowners Policy",
+          "Homeowners Forms": "Homeowners Policy",
+          "Homeowners Endorsements": "Homeowners Policy",
+          "Homeowners Coverages": "Homeowners Policy",
+          "Homeowners Conditions": "Homeowners Policy",
+          "Homeowners Eligibility": "Homeowners Policy",
+          "Homeowners Liability": "Homeowners Policy",
+          // Auto
+          "MA Personal Auto": "Auto Insurance",
+          "MA Auto Policy": "Auto Insurance",
+          "Massachusetts Auto Policy": "Auto Insurance",
+          // Property & Casualty
+          "Property Basics": "Property and Casualty Insurance Basics",
+          "Liability Basics": "Property and Casualty Insurance Basics",
+          "Contract Law": "Property and Casualty Insurance Basics",
+          "Property & Casualty Basics": "Property and Casualty Insurance Basics",
+          "Property & Liability Basics": "Property and Casualty Insurance Basics",
+          "Property and Casualty Basics": "Property and Casualty Insurance Basics",
+          "Insurance Contracts": "Property and Casualty Insurance Basics",
+          "Loss Settlement": "Property and Casualty Insurance Basics",
+          "Liability Insurance": "Property and Casualty Insurance Basics",
+          // Dwelling
+          "Dwelling Policies": "Dwelling Policy",
+          "Dwelling Property": "Dwelling Policy",
+          // Regulation
+          "MA Insurance Law": "Insurance Regulation",
+          "Producer Authority": "Insurance Regulation",
+          // General
+          "General Insurance Basics": "General Insurance",
+          "Types of Insurers": "General Insurance",
+          "Risk Management": "General Insurance",
+          "Underwriting": "General Insurance",
+          "General Insurance Concepts": "General Insurance",
+          // Other
+          "Flood Insurance": "Other Coverages and Options",
+          "Umbrella Liability": "Other Coverages and Options",
+          "Inland Marine": "Other Coverages and Options",
+          "Marine Insurance": "Other Coverages and Options",
+        };
+
+        // Helper to remap keys in a Record
+        const remapKeys = <T>(
+          obj: Record<string, T> | undefined,
+          aggregate?: (a: T, b: T) => T,
+        ): Record<string, T> | undefined => {
+          if (!obj) return obj;
+          const result: Record<string, T> = {};
+          for (const [key, value] of Object.entries(obj)) {
+            const newKey = CATEGORY_MAP[key] ?? key;
+            if (aggregate && result[newKey] !== undefined) {
+              result[newKey] = aggregate(result[newKey], value);
+            } else {
+              result[newKey] = value;
+            }
+          }
+          return result;
+        };
+
+        // Migrate quizzes: questions[].category
+        const quizzesTable = tx.table<Quiz, string>("quizzes");
+        await quizzesTable.toCollection().modify((quiz: Quiz) => {
+          let modified = false;
+          quiz.questions.forEach((q) => {
+            if (q.category && CATEGORY_MAP[q.category]) {
+              q.category = CATEGORY_MAP[q.category]!;
+              modified = true;
+            }
+          });
+          if (modified) {
+            quiz.version = (quiz.version || 1) + 1;
+            quiz.updated_at = Date.now();
+          }
+        });
+
+        // Migrate results: category_breakdown and computed_category_scores
+        const resultsTable = tx.table<Result, string>("results");
+        await resultsTable.toCollection().modify((result: Result) => {
+          // Remap category_breakdown (numeric values - average when aggregating)
+          if (result.category_breakdown) {
+            const remapped = remapKeys(
+              result.category_breakdown,
+              (a, b) => Math.round((a + b) / 2), // Average percentages
+            );
+            if (remapped) result.category_breakdown = remapped;
+          }
+
+          // Remap computed_category_scores (object values - sum when aggregating)
+          if (result.computed_category_scores) {
+            const remapped = remapKeys(
+              result.computed_category_scores,
+              (a, b) => ({
+                correct: a.correct + b.correct,
+                total: a.total + b.total,
+              }),
+            );
+            if (remapped) result.computed_category_scores = remapped;
+          }
+        });
+
+        logger.info("[DB Upgrade v15] Category normalization complete");
+      });
+
     // Note: Quiz.category and Quiz.subcategory are now indexed as of version 13,
     // enabling optimized filtering by category in the library view.
 

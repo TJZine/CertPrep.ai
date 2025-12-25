@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.1] - 2025-12-24
+
+### Fixed
+
+- **Sync Auth Reliability**: Migrated sync managers from `getSession()` to `getUser()` to fix stale auth session errors. This validates sessions with the Supabase server on every sync, eliminating "No valid auth session" failures after page refresh.
+- **Quiz Submission State**: Preserved `selectedAnswer` on hash failures so users can retry without re-selecting their answer.
+- **Create Page Spacing**: Fixed layout overlap issues and improved visual design.
+- **DB Init Error Handling**: Fixed a bug where database initialization errors were masked by the dashboard loading skeleton.
+- **Analytics Mobile Layout**: Fixed horizontal overflow issues and enforced consistent mobile responsiveness across all Analytics dashboard cards.
+
+### Added
+
+- **Bundle Analyzer**: Added `@next/bundle-analyzer` for performance profiling (`ANALYZE=true npm run build`).
+- **Browserslist Config**: Added `.browserslistrc` targeting modern browsers only, reducing polyfill bundle by ~30-50KB.
+- **E2E Test Selectors**: Extracted spinner selector to shared constant for maintainability.
+- **Interleaved Category Tests**: Added unit tests for case-insensitive and multi-category filtering.
+- **Dashboard Tests**: Added comprehensive unit tests for `DashboardClient` covering loading, sorting, filtering, and interactions (~85% coverage).
+
+### Changed
+
+- **Code-Split Dashboard**: Lazy-load `DashboardClient` with `ssr: false` for faster initial page load.
+- **Code-Split TopicRadar**: Lazy-load recharts-heavy components on results page (~50KB savings).
+- **Quiz Navigation**: Disabled navigation controls during submission to prevent double-submit.
+- **E2E Timeouts**: Increased timeout thresholds to account for `getUser()` auth latency (~50-200ms).
+- **Playwright Retries**: Added 1 local retry as safety net for timing-sensitive tests.
+
 ## [1.4.0] - 2025-12-22
 
 ### Added

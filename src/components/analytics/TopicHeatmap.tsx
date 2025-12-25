@@ -638,7 +638,7 @@ export function TopicHeatmap({
 
     return (
         <Card className={cn("min-h-[300px] [contain:layout]", className)}>
-            <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0">
+            <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0 p-4 sm:p-6">
                 <div className="flex-1">
                     <CardTitle>Topic Mastery Over Time</CardTitle>
                     <CardDescription className="flex flex-wrap items-center gap-2">
@@ -712,7 +712,7 @@ export function TopicHeatmap({
                     )}
                 </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
                 {/* Scrollable container for mobile */}
                 <div className="-mx-2 overflow-x-auto px-2 pb-2" style={{ WebkitOverflowScrolling: "touch" }}>
                     {/* Table with header row and category data rows */}

@@ -149,7 +149,7 @@ export function PerformanceHistory({
       className={cn("h-[348px] [contain:layout]", className)}
       data-testid="performance-history-card"
     >
-      <CardHeader>
+      <CardHeader className="p-4 sm:p-6">
         <div className="flex items-center justify-between">
           <div>
             <CardTitle>Performance History</CardTitle>
@@ -182,7 +182,7 @@ export function PerformanceHistory({
           )}
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
         <div ref={containerRef} className="relative h-[250px]">
           {/* Spinner - always in DOM, hidden when ready */}
           <div
@@ -207,7 +207,7 @@ export function PerformanceHistory({
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
                 data={chartData}
-                margin={{ top: 10, right: 10, bottom: 10, left: 10 }}
+                margin={{ top: 10, right: 10, bottom: 10, left: -10 }}
               >
                 <CartesianGrid
                   strokeDasharray="3 3"
@@ -223,6 +223,8 @@ export function PerformanceHistory({
                   tick={{ fill: colors.muted, fontSize: 12 }}
                   tickLine={false}
                   axisLine={false}
+                  width={35}
+                  tickFormatter={(value: number) => `${value}`}
                 />
                 <Tooltip content={<PerformanceHistoryTooltip />} />
                 <ReferenceLine

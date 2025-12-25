@@ -22,6 +22,15 @@ updates:
         update-types:
           - "minor"
           - "patch"
+    # Ignore unstable major versions that require significant rewrites
+    ignore:
+      # Tailwind v4 requires full config rewrite (new CSS-first config, PostCSS changes)
+      # See: https://tailwindcss.com/docs/v4-beta
+      - dependency-name: "tailwindcss"
+        versions: [">=4.0.0"]
+      # @types/node v22+ drops Node 18 support (we require >=20.9.0 but v22 types are bleeding edge)
+      - dependency-name: "@types/node"
+        versions: [">=22.0.0"]
 
   # Maintain dependencies for GitHub Actions
   - package-ecosystem: "github-actions"

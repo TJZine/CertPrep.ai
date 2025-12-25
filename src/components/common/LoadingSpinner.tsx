@@ -32,6 +32,7 @@ export function LoadingSpinner({
         "flex items-center gap-2 text-sm font-medium text-muted-foreground",
         className,
       )}
+      data-testid="loading-spinner"
       role="status"
       aria-live="polite"
     >

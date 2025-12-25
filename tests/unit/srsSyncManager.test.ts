@@ -66,8 +66,8 @@ const {
     order: vi.fn().mockReturnThis(),
     limit: vi.fn().mockResolvedValue({ data: [], error: null }),
     auth: {
-      getSession: vi.fn().mockResolvedValue({
-        data: { session: { user: { id: "user-1" } } },
+      getUser: vi.fn().mockResolvedValue({
+        data: { user: { id: "user-1" } },
         error: null,
       }),
     },
@@ -112,8 +112,8 @@ describe("srsSyncManager", () => {
     supabaseMock.or.mockReturnThis();
     supabaseMock.order.mockReturnThis();
     supabaseMock.limit.mockResolvedValue({ data: [], error: null });
-    supabaseMock.auth.getSession.mockResolvedValue({
-      data: { session: { user: { id: "user-1" } } },
+    supabaseMock.auth.getUser.mockResolvedValue({
+      data: { user: { id: "user-1" } },
       error: null,
     });
 
@@ -263,8 +263,8 @@ describe("srsSyncManager", () => {
   });
 
   it("skips sync when no valid auth session", async () => {
-    supabaseMock.auth.getSession.mockResolvedValueOnce({
-      data: { session: null },
+    supabaseMock.auth.getUser.mockResolvedValueOnce({
+      data: { user: null },
       error: null,
     });
 

@@ -22,6 +22,7 @@ import {
     getResultsByUserId,
     getEffectiveUserId,
 } from "./helpers/db";
+import { SPINNER_SELECTOR } from "./helpers/selectors";
 import { E2E_TIMEOUTS } from "./helpers/timeouts";
 import type { SRSState } from "../../src/types/srs";
 
@@ -80,7 +81,7 @@ test.describe("SRS Review Flow", () => {
         });
 
         // Wait for loading to complete
-        await expect(page.locator(".h-8.w-8.animate-spin")).not.toBeVisible({
+        await expect(page.locator(SPINNER_SELECTOR)).not.toBeVisible({
             timeout: E2E_TIMEOUTS.LOADING,
         });
 
@@ -138,7 +139,7 @@ test.describe("SRS Review Flow", () => {
         await expect(page.getByRole("heading", { name: /spaced repetition review/i })).toBeVisible({
             timeout: E2E_TIMEOUTS.HYDRATION,
         });
-        await expect(page.locator(".animate-spin")).not.toBeVisible({
+        await expect(page.locator(SPINNER_SELECTOR)).not.toBeVisible({
             timeout: E2E_TIMEOUTS.LOADING,
         });
 

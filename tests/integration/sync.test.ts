@@ -28,6 +28,10 @@ const { supabaseMock, mockFrom, createChain } = vi.hoisted(() => {
         data: { session: { user: { id: "test-user-123" } } },
         error: null,
       }),
+      getUser: vi.fn().mockResolvedValue({
+        data: { user: { id: "test-user-123" } },
+        error: null,
+      }),
     },
     from: mockFrom,
   };

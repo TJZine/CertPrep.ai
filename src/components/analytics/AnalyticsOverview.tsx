@@ -54,7 +54,7 @@ export function AnalyticsOverview({
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {statCards.map((stat) => (
           <Card key={stat.label}>
-            <CardContent className="flex items-center gap-4 p-4">
+            <CardContent className="flex items-center gap-4 p-4 pt-4">
               <div className={cn("rounded-full p-3", stat.bgColor)}>
                 <stat.icon
                   className={cn("h-6 w-6", stat.color)}

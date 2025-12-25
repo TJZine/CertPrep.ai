@@ -393,7 +393,7 @@ export function ZenQuizContainer({
         return;
       }
 
-      await submitQuiz(timeTakenSeconds);
+      await submitQuiz(timeTakenSeconds, answers, flaggedQuestions);
     },
     [isSRSReview, isTopicStudy, isInterleaved, effectiveUserId, answers, questions, flaggedQuestions, interleavedSourceMap, interleavedKeyMappings, addToast, router, submitQuiz, sync],
   );

@@ -439,9 +439,7 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
           set((draft) => {
             draft.hasSubmitted = false;
             draft.isSubmitting = false;
-            if (draft.questionQueue[draft.currentIndex] === questionId) {
-              draft.selectedAnswer = null;
-            }
+            // Preserve selectedAnswer so user can retry without re-selecting
             draft.error = "Failed to submit answer. Please try again.";
           });
         }
@@ -533,10 +531,7 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
           );
           set((draft) => {
             draft.isSubmitting = false;
-            // Clear selection to avoid implying the answer was saved
-            if (draft.questionQueue[draft.currentIndex] === questionId) {
-              draft.selectedAnswer = null;
-            }
+            // Preserve selectedAnswer so user can retry without re-selecting
             draft.error = "We could not save your answer. Please try again.";
           });
         }

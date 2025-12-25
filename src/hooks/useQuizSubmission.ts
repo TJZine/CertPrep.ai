@@ -27,8 +27,14 @@ export interface UseQuizSubmissionReturn {
    * Redirects to the results page on success.
    *
    * @param timeTakenSeconds - The total duration of the quiz session.
+   * @param answers - Current answers map.
+   * @param flaggedQuestions - Current flagged questions set.
    */
-  submitQuiz: (timeTakenSeconds: number) => Promise<void>;
+  submitQuiz: (
+    timeTakenSeconds: number,
+    answers: Map<string, { selectedAnswer: string; isCorrect?: boolean }>,
+    flaggedQuestions: Set<string>
+  ) => Promise<void>;
   /**
    * Retries the submission logic (wrapper around submitQuiz).
    *
@@ -69,14 +75,18 @@ export function useQuizSubmission({
   }, []);
 
   const submitQuiz = useCallback(
-    async (timeTakenSeconds: number): Promise<void> => {
+    async (
+      timeTakenSeconds: number,
+      currentAnswers: Map<string, { selectedAnswer: string; isCorrect?: boolean }>,
+      currentFlaggedQuestions: Set<string>
+    ): Promise<void> => {
       if (isSavingRef.current) return;
       isSavingRef.current = true;
       setIsSaving(true);
       setSaveError(false);
 
       try {
-        const answersRecord = buildAnswersRecord(answers, keyMappings);
+        const answersRecord = buildAnswersRecord(currentAnswers, keyMappings);
 
         if (!effectiveUserId) {
           setSaveError(true);
@@ -92,7 +102,7 @@ export function useQuizSubmission({
           userId: effectiveUserId,
           mode: "zen",
           answers: answersRecord,
-          flaggedQuestions: Array.from(flaggedQuestions),
+          flaggedQuestions: Array.from(currentFlaggedQuestions),
           timeTakenSeconds,
           activeQuestionIds: questions.map((q) => q.id), // Pass active questions for accurate scoring (e.g. Smart Round)
         });
@@ -139,8 +149,6 @@ export function useQuizSubmission({
     },
     [
       addToast,
-      answers,
-      flaggedQuestions,
       isSmartRound,
       quizId,
       router,
@@ -153,12 +161,13 @@ export function useQuizSubmission({
 
   const retrySave = useCallback(
     (timeTakenSeconds: number) => {
-      void submitQuiz(timeTakenSeconds).catch(() => {
+      // On retry, we use the current store state
+      void submitQuiz(timeTakenSeconds, answers, flaggedQuestions).catch(() => {
         // submitQuiz already updates saveError and shows a toast;
         // suppress the rejection to avoid unhandled promise errors.
       });
     },
-    [submitQuiz],
+    [submitQuiz, answers, flaggedQuestions],
   );
 
   return {

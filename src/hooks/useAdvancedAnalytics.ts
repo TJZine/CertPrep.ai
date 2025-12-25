@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import type { Result } from "@/types/result";
 import type { Quiz } from "@/types/quiz";
 
+
 import { type TrendDirection, calculateCategoryTrends } from "@/lib/analytics/trends";
 export type ConfidenceLevel = "low" | "medium" | "high";
 
@@ -70,6 +71,8 @@ function calculateReadiness(
             categoryScores.set(category, existing);
         }
     }
+
+
 
     const categoryReadiness = new Map<string, number>();
     let totalWeightedScore = 0;
