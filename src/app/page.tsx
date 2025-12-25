@@ -1,4 +1,4 @@
-import { Suspense } from "react";
+import { Suspense, type ReactElement } from "react";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import DashboardLoader from "@/components/dashboard/DashboardLoader";
 
@@ -20,7 +20,7 @@ import DashboardLoader from "@/components/dashboard/DashboardLoader";
  * LCP Element: The skeleton's EmptyState text is rendered server-side,
  * painting immediately vs waiting for ~500KB JS to parse/execute.
  */
-export default function DashboardPage(): React.ReactElement {
+export default function DashboardPage(): ReactElement {
   return (
     <Suspense fallback={<DashboardSkeleton quizCardCount={0} />}>
       <DashboardLoader />
