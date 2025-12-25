@@ -9,7 +9,7 @@ We take the security of CertPrep.ai seriously. If you believe you have found a s
 
 ### How to Report
 
-**Email:** [security@certprep.ai](mailto:security@certprep.ai)
+**Email:** [garbagemantree@gmail.com](mailto:garbagemantree@gmail.com)
 
 **Security.txt:** We publish a [security.txt](https://certprep.ai/.well-known/security.txt) file for automated discovery of our security policy and contact information.
 
