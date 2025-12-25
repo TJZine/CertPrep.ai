@@ -207,7 +207,7 @@ export function PerformanceHistory({
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
                 data={chartData}
-                margin={{ top: 10, right: 10, bottom: 10, left: 10 }}
+                margin={{ top: 10, right: 10, bottom: 10, left: -10 }}
               >
                 <CartesianGrid
                   strokeDasharray="3 3"
@@ -223,6 +223,8 @@ export function PerformanceHistory({
                   tick={{ fill: colors.muted, fontSize: 12 }}
                   tickLine={false}
                   axisLine={false}
+                  width={35}
+                  tickFormatter={(value: number) => `${value}`}
                 />
                 <Tooltip content={<PerformanceHistoryTooltip />} />
                 <ReferenceLine

@@ -319,8 +319,9 @@ export default function AnalyticsPage(): React.ReactElement {
 
       {/* Recent Results + Focus to Improve (side-by-side) */}
       <div className="mb-8 grid gap-8 lg:grid-cols-2">
-        <RecentResultsCard results={filteredResults} quizzes={quizzes} quizTitles={quizTitles} />
+        <RecentResultsCard className="min-w-0 overflow-hidden" results={filteredResults} quizzes={quizzes} quizTitles={quizTitles} />
         <WeakAreasCard
+          className="min-w-0 overflow-hidden"
           weakAreas={weakAreas}
           userId={effectiveUserId ?? undefined}
         />

@@ -6,6 +6,34 @@
 
 ## 🔴 High Priority
 
+### Category Display UX: Investigate Improved Presentation Options
+
+**Priority**: High | **Effort**: 2-4 hours | **Category**: UX / Analytics
+
+#### Context
+
+The Exam Readiness card shows categories with a "show more" button. Currently shows 6 initially, clicking expands to show all. With quizzes that have many categories (10+), the UI can become long.
+
+#### Options to Investigate
+
+1. **Scrollable Container** — Fixed height (~300px) with smooth scroll and visual fade at bottom
+2. **Accordion/Collapsible Groups** — Group categories logically (Core Coverage, Supplemental, Regulatory)
+3. **Toggle View Modes** — Compact (6) / Full (scrollable grid) / Chart (radar/bar visualization)
+4. **Keep Current** — Current "show all" is simple and functional
+
+#### Files
+
+- `src/components/analytics/ExamReadinessCard.tsx`
+
+#### Acceptance Criteria
+
+- [ ] Review each option with mockups or prototypes
+- [ ] Consider mobile responsiveness for each approach
+- [ ] Evaluate accessibility (keyboard navigation, screen readers)
+- [ ] Choose approach based on user testing or stakeholder feedback
+
+---
+
 ### E2E Test Stability: Remove Fixed `waitForTimeout` Calls
 
 **Priority**: High | **Effort**: 4-6 hours | **Category**: Test Infrastructure
