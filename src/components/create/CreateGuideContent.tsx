@@ -484,7 +484,7 @@ function ExamAlignmentSection({
                     )}
                 </div>
             </Collapsible>
-        </section >
+        </section>
     );
 }
 
