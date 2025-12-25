@@ -206,7 +206,7 @@ export function ExamReadinessCard({
     // Always render full Card structure for stable height
     return (
         <Card className={className} data-testid="exam-readiness-card">
-            <CardHeader className="p-4 sm:p-6">
+            <CardHeader>
                 <div className="flex items-center justify-between">
                     <div>
                         <CardTitle className="flex items-center gap-2">
@@ -223,7 +223,7 @@ export function ExamReadinessCard({
                     {!isEmpty && getConfidenceBadge(readinessConfidence)}
                 </div>
             </CardHeader>
-            <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
+            <CardContent>
                 <div className="grid gap-8 md:grid-cols-2">
                     <div className="flex items-center justify-center">
                         {isEmpty ? (

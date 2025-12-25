@@ -225,7 +225,7 @@ export function StreakCard({
     // Always render full Card shell for stable height, toggle only inner content
     return (
         <Card className={className} data-testid="streak-card">
-            <CardHeader className="p-4 sm:p-6">
+            <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <Flame className="h-5 w-5 text-warning" aria-hidden="true" />
                     Study Streak
@@ -238,7 +238,7 @@ export function StreakCard({
                             : "Stay consistent to build your streak"}
                 </CardDescription>
             </CardHeader>
-            <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
+            <CardContent>
                 {isEmpty ? (
                     // Empty state content (same structure height as full content)
                     <div className="grid gap-6 sm:grid-cols-2">
