@@ -201,6 +201,7 @@ function Collapsible({
     defaultOpen?: boolean;
 }): React.ReactElement {
     const [isOpen, setIsOpen] = React.useState(defaultOpen);
+    const contentId = React.useId();
 
     return (
         <div className="rounded-lg border border-border">
@@ -209,6 +210,7 @@ function Collapsible({
                 onClick={() => setIsOpen(!isOpen)}
                 className="flex w-full items-center justify-between p-4 text-left font-medium hover:bg-muted/50 transition-colors"
                 aria-expanded={isOpen}
+                aria-controls={contentId}
             >
                 <span>{title}</span>
                 <ChevronDown
@@ -220,6 +222,7 @@ function Collapsible({
                 />
             </button>
             <div
+                id={contentId}
                 className={cn(
                     "overflow-hidden transition-all duration-200",
                     isOpen ? "max-h-[2000px] opacity-100" : "max-h-0 opacity-0"
@@ -372,6 +375,7 @@ function ExamAlignmentSection({
                                     data-preset-id="custom"
                                     tabIndex={selectedPreset === "custom" ? 0 : -1}
                                     onClick={() => onPresetChange("custom")}
+                                    onKeyDown={(e) => handleRadioKeyDown(e, ["custom"])}
                                     className={cn(
                                         "flex items-center gap-3 p-3 rounded-xl border transition-all w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-primary/50",
                                         selectedPreset === "custom"
@@ -480,7 +484,7 @@ function ExamAlignmentSection({
                     )}
                 </div>
             </Collapsible>
-        </section>
+        </section >
     );
 }
 
