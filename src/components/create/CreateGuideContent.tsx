@@ -260,6 +260,36 @@ function ExamAlignmentSection({
         return groups;
     }, []);
 
+    // Arrow key navigation for radiogroup (WAI-ARIA pattern)
+    const handleRadioKeyDown = React.useCallback(
+        (e: React.KeyboardEvent<HTMLButtonElement>, presetIds: string[]) => {
+            const currentIndex = presetIds.indexOf(selectedPreset ?? "");
+            if (currentIndex === -1) return;
+
+            let nextIndex = currentIndex;
+            if (e.key === "ArrowDown" || e.key === "ArrowRight") {
+                e.preventDefault();
+                nextIndex = (currentIndex + 1) % presetIds.length;
+            } else if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
+                e.preventDefault();
+                nextIndex = (currentIndex - 1 + presetIds.length) % presetIds.length;
+            } else {
+                return;
+            }
+
+            const nextId = presetIds[nextIndex];
+            if (nextId) {
+                onPresetChange(nextId);
+                // Focus the next radio button
+                const nextButton = e.currentTarget
+                    .closest('[role="radiogroup"]')
+                    ?.querySelector(`[data-preset-id="${nextId}"]`) as HTMLButtonElement | null;
+                nextButton?.focus();
+            }
+        },
+        [selectedPreset, onPresetChange]
+    );
+
     return (
         <section className="mb-16">
             <Collapsible title="🎯 Align with Your Exam">
@@ -299,7 +329,10 @@ function ExamAlignmentSection({
                                                 type="button"
                                                 role="radio"
                                                 aria-checked={selectedPreset === preset.id}
+                                                data-preset-id={preset.id}
+                                                tabIndex={selectedPreset === preset.id ? 0 : -1}
                                                 onClick={() => onPresetChange(preset.id)}
+                                                onKeyDown={(e) => handleRadioKeyDown(e, presets.map(p => p.id))}
                                                 className={cn(
                                                     "relative flex flex-col items-start p-3 rounded-xl border text-left transition-all focus:outline-none focus:ring-2 focus:ring-primary/50",
                                                     selectedPreset === preset.id

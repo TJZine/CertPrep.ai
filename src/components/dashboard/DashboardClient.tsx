@@ -9,10 +9,11 @@ import { getDueCountsByBox } from "@/db/srs";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { StatsBar } from "@/components/dashboard/StatsBar";
 import { QuizGrid } from "@/components/dashboard/QuizGrid";
-import {
-    QuizSortControls,
-    type DashboardSortOption,
-} from "@/components/dashboard/QuizSortControls";
+import { QuizSortControls } from "@/components/dashboard/QuizSortControls";
+
+// Sort options as const array for type-safe validation
+const DASHBOARD_SORT_OPTIONS = ["recent", "added", "title", "performance", "questions"] as const;
+type DashboardSortOption = (typeof DASHBOARD_SORT_OPTIONS)[number];
 import { DueQuestionsCard } from "@/components/srs/DueQuestionsCard";
 import { InterleavedPracticeCard } from "@/components/dashboard/InterleavedPracticeCard";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
@@ -87,7 +88,7 @@ export default function DashboardClient(): React.ReactElement {
     const [sortBy, setSortBy] = React.useState<DashboardSortOption>(() => {
         if (typeof window !== "undefined") {
             const stored = localStorage.getItem(LOCAL_STORAGE_KEYS.DASHBOARD_SORT_BY);
-            if (stored && ["recent", "added", "title", "performance", "questions"].includes(stored)) {
+            if (stored && (DASHBOARD_SORT_OPTIONS as readonly string[]).includes(stored)) {
                 return stored as DashboardSortOption;
             }
         }
@@ -307,7 +308,6 @@ export default function DashboardClient(): React.ReactElement {
             <div
                 className="mx-auto max-w-7xl px-4 py-8"
                 role="alert"
-                aria-live="assertive"
             >
                 <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
                     <h2 className="text-lg font-semibold text-destructive">
@@ -359,7 +359,7 @@ export default function DashboardClient(): React.ReactElement {
                             totalStudyTime={overallStats.totalStudyTime}
                         />
                     ) : (
-                        <div data-testid="stats-bar-empty" className="grid min-h-[100px] grid-cols-1 place-items-center lg:grid-cols-1">
+                        <div data-testid="stats-bar-empty" role="status" className="grid min-h-[100px] grid-cols-1 place-items-center lg:grid-cols-1">
                             <p className="text-sm text-muted-foreground">
                                 Complete quizzes to see your stats here
                             </p>

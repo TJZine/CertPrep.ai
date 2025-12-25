@@ -1,9 +1,8 @@
 -- Migration: Normalize computed_category_scores keys
 -- Date: 2025-12-25
 -- Description: Maps legacy category keys to official 7 categories in computed_category_scores JSONB.
--- Scope: Only affects 4 results with legacy keys (verified via backup_20251225.json)
+-- Scope: Only affects 4 results with legacy keys (verified via backup)
 --
--- BACKUP: /Users/tristan/Software/CertPrep.ai/backup_20251225.json
 -- RUN THIS IN SUPABASE SQL EDITOR - DO NOT USE AS MIGRATION FILE
 
 BEGIN;

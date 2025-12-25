@@ -22,6 +22,7 @@ interface ExamReadinessCardProps {
 }
 
 const PASSING_THRESHOLD = 70;
+const INITIAL_DISPLAY = 6;
 
 /**
  * Circular gauge component for exam readiness score.
@@ -170,7 +171,7 @@ export function ExamReadinessCard({
 }: ExamReadinessCardProps): React.ReactElement {
     const [isExpanded, setIsExpanded] = React.useState(false);
 
-    const INITIAL_DISPLAY = 6;
+
 
     const categories = useMemo(
         () =>
@@ -282,7 +283,7 @@ export function ExamReadinessCard({
                             <button
                                 type="button"
                                 onClick={() => setIsExpanded(!isExpanded)}
-                                className="w-full py-2 text-sm text-primary hover:text-primary/80 transition-colors"
+                                className="w-full py-2 text-sm text-primary hover:text-primary/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors rounded-md"
                                 aria-expanded={isExpanded}
                             >
                                 {isExpanded
