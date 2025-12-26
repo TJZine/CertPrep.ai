@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { Brain, Clock, Check, Zap } from "lucide-react";
+import { Brain, Clock, Check, Zap, Layers } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -50,6 +50,18 @@ const modeOptions: ModeOption[] = [
       "Full results at end",
     ],
   },
+  {
+    id: "flashcard",
+    name: "Flashcards",
+    description: "Active recall with flip cards",
+    icon: <Layers className="h-8 w-8" aria-hidden="true" />,
+    features: [
+      "Two-sided flip cards",
+      "Self-rate difficulty",
+      "Spaced repetition",
+      "Keyboard shortcuts",
+    ],
+  },
 ];
 
 /**
@@ -88,7 +100,7 @@ export function ModeSelectModal({
         leftIcon={<Zap className="h-4 w-4" aria-hidden="true" />}
         disabled={!quiz}
       >
-        Start {selectedMode === "zen" ? "Study" : "Exam"}
+        Start {selectedMode === "flashcard" ? "Flashcards" : selectedMode === "zen" ? "Study" : "Exam"}
       </Button>
     </div>
   );

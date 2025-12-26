@@ -16,6 +16,7 @@ const DASHBOARD_SORT_OPTIONS = ["recent", "added", "title", "performance", "ques
 type DashboardSortOption = (typeof DASHBOARD_SORT_OPTIONS)[number];
 import { DueQuestionsCard } from "@/components/srs/DueQuestionsCard";
 import { InterleavedPracticeCard } from "@/components/dashboard/InterleavedPracticeCard";
+import { FlashcardPracticeCard } from "@/components/dashboard/FlashcardPracticeCard";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { useToast } from "@/components/ui/Toast";
@@ -367,12 +368,13 @@ export default function DashboardClient(): React.ReactElement {
                     )
                 }
                 srsSlot={
-                    <div className="mx-auto grid max-w-2xl gap-4 md:grid-cols-2">
+                    <div className="mx-auto grid max-w-3xl gap-4 md:grid-cols-3">
                         <DueQuestionsCard
                             dueCountsByBox={dueCountsByBox}
                             totalDue={totalDue}
                         />
                         <InterleavedPracticeCard />
+                        <FlashcardPracticeCard dueCount={totalDue} />
                     </div>
                 }
                 contentSlot={

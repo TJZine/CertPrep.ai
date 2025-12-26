@@ -1,0 +1,170 @@
+.cardContainer {
+  perspective: 1000px;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.card {
+  position: relative;
+  width: 100%;
+  min-height: 300px;
+  cursor: pointer;
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.flipped {
+  transform: rotateY(180deg);
+}
+
+.face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  border-radius: var(--radius-lg, 12px);
+  border: 1px solid var(--border);
+  background-color: var(--card);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  overflow: auto;
+}
+
+.front {
+  z-index: 1;
+}
+
+.back {
+  transform: rotateY(180deg);
+  z-index: 0;
+}
+
+.categoryBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  background-color: var(--muted);
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 1rem;
+  width: fit-content;
+}
+
+.questionText {
+  flex: 1;
+  font-size: 1.125rem;
+  line-height: 1.6;
+  color: var(--foreground);
+}
+
+.flipHint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+}
+
+.flipHint kbd {
+  padding: 0.125rem 0.375rem;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background-color: var(--muted);
+  font-family: inherit;
+  font-size: 0.75rem;
+}
+
+/* Back face styles */
+.answerSection {
+  margin-bottom: 1rem;
+}
+
+.answerLabel {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: hsl(var(--correct));
+}
+
+.answerText {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--foreground);
+  padding: 0.75rem;
+  border-radius: var(--radius-md, 8px);
+  background-color: hsl(var(--correct) / 0.1);
+  border: 1px solid hsl(var(--correct));
+}
+
+.explanationSection {
+  flex: 1;
+}
+
+.explanationLabel {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted-foreground);
+}
+
+.explanationText {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--muted-foreground);
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    transition: none;
+  }
+
+  .flipped {
+    transform: none;
+  }
+
+  /* For reduced motion, we'll handle visibility differently */
+  .card:not(.flipped) .back {
+    display: none;
+  }
+
+  .card.flipped .front {
+    display: none;
+  }
+
+  .card.flipped .back {
+    transform: none;
+  }
+}
+
+/* Mobile adjustments */
+@media (max-width: 640px) {
+  .card {
+    min-height: 250px;
+  }
+
+  .face {
+    padding: 1rem;
+  }
+
+  .questionText {
+    font-size: 1rem;
+  }
+}
