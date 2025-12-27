@@ -24,13 +24,13 @@ describe("SRS Database Operations", () => {
     });
 
     describe("updateSRSState", () => {
-        it("should create new state for first-time correct answer", async () => {
+        it("should create new state for first-time Good (3) rating", async () => {
             const now = Date.now();
-            await updateSRSState("q1", testUserId, true, now);
+            await updateSRSState("q1", testUserId, 3, now);
 
             const state = await getSRSState("q1", testUserId);
             expect(state).toBeDefined();
-            expect(state?.box).toBe(2); // First correct → box 2
+            expect(state?.box).toBe(2); // First Good → box 2
             expect(state?.consecutive_correct).toBe(1);
             expect(state?.last_reviewed).toBe(now);
             // Sync-facing fields that sync manager depends on
@@ -38,23 +38,23 @@ describe("SRS Database Operations", () => {
             expect(state?.updated_at).toBe(now);
         });
 
-        it("should create new state for first-time incorrect answer", async () => {
+        it("should create new state for first-time Again (1) rating", async () => {
             const now = Date.now();
-            await updateSRSState("q1", testUserId, false, now);
+            await updateSRSState("q1", testUserId, 1, now);
 
             const state = await getSRSState("q1", testUserId);
             expect(state).toBeDefined();
-            expect(state?.box).toBe(1); // First incorrect → box 1
+            expect(state?.box).toBe(1); // First Again → box 1
             expect(state?.consecutive_correct).toBe(0);
             // Verify sync fields
             expect(state?.synced).toBe(0);
             expect(state?.updated_at).toBe(now);
         });
 
-        it("should promote box on subsequent correct answer", async () => {
+        it("should promote box on subsequent Good (3) rating", async () => {
             const now = Date.now();
-            await updateSRSState("q1", testUserId, true, now);
-            await updateSRSState("q1", testUserId, true, now + 1000);
+            await updateSRSState("q1", testUserId, 3, now);
+            await updateSRSState("q1", testUserId, 3, now + 1000);
 
             const state = await getSRSState("q1", testUserId);
             expect(state?.box).toBe(3); // 2 → 3
@@ -64,13 +64,13 @@ describe("SRS Database Operations", () => {
             expect(state?.synced).toBe(0);
         });
 
-        it("should demote box to 1 on incorrect answer", async () => {
+        it("should demote box to 1 on Again (1) rating", async () => {
             const now = Date.now();
             // Build up to box 3
-            await updateSRSState("q1", testUserId, true, now);
-            await updateSRSState("q1", testUserId, true, now + 1000);
+            await updateSRSState("q1", testUserId, 3, now);
+            await updateSRSState("q1", testUserId, 3, now + 1000);
             // Then fail
-            await updateSRSState("q1", testUserId, false, now + 2000);
+            await updateSRSState("q1", testUserId, 1, now + 2000);
 
             const state = await getSRSState("q1", testUserId);
             expect(state?.box).toBe(1);
@@ -78,6 +78,19 @@ describe("SRS Database Operations", () => {
             // Verify sync fields after demotion
             expect(state?.updated_at).toBe(now + 2000);
             expect(state?.synced).toBe(0);
+        });
+
+        it("should keep box on Hard (2) rating", async () => {
+            const now = Date.now();
+            // Build up to box 3
+            await updateSRSState("q1", testUserId, 3, now);
+            await updateSRSState("q1", testUserId, 3, now + 1000);
+            // Then rate Hard
+            await updateSRSState("q1", testUserId, 2, now + 2000);
+
+            const state = await getSRSState("q1", testUserId);
+            expect(state?.box).toBe(3); // Stays at box 3
+            expect(state?.consecutive_correct).toBe(0); // Resets streak
         });
     });
 

@@ -3,7 +3,7 @@ import { db } from "@/db";
 import type { Quiz } from "@/types/quiz";
 import type { Result } from "@/types/result";
 import type { LeitnerBox, SRSState } from "@/types/srs";
-import { calculateNextReview, promoteBox } from "@/lib/srs";
+import { calculateNextReview, promoteBox, booleanToRating, type FlashcardSRSRating } from "@/lib/srs";
 import { evaluateAnswer } from "@/lib/grading";
 
 /**
@@ -59,38 +59,41 @@ export async function getSRSState(
 }
 
 /**
- * Updates the SRS state for a question based on answer correctness.
+ * Updates the SRS state for a question based on flashcard rating.
  * Creates a new state if one doesn't exist.
  *
  * @param questionId - The question's ID.
  * @param userId - The user's ID.
- * @param wasCorrect - Whether the question was answered correctly.
+ * @param rating - Flashcard rating (1=Again, 2=Hard, 3=Good).
  * @param now - Current timestamp (ms). Defaults to Date.now().
  */
 export async function updateSRSState(
     questionId: string,
     userId: string,
-    wasCorrect: boolean,
+    rating: FlashcardSRSRating,
     now: number = Date.now(),
 ): Promise<void> {
     const existing = await getSRSState(questionId, userId);
 
     if (existing) {
-        const newBox = promoteBox(existing.box, wasCorrect);
-        const nextReview = calculateNextReview(newBox, wasCorrect, now);
+        const newBox = promoteBox(existing.box, rating);
+        const nextReview = calculateNextReview(newBox, now);
 
+        // Only increment consecutive_correct for "Good" rating
+        const isGood = rating === 3;
         await db.srs.update([questionId, userId], {
             box: newBox,
             last_reviewed: now,
             next_review: nextReview,
-            consecutive_correct: wasCorrect ? existing.consecutive_correct + 1 : 0,
+            consecutive_correct: isGood ? existing.consecutive_correct + 1 : 0,
             synced: 0,
             updated_at: now,
         });
     } else {
-        // First time seeing this question - start at box 1 or 2 depending on correctness
-        const initialBox: LeitnerBox = wasCorrect ? 2 : 1;
-        const nextReview = calculateNextReview(initialBox, wasCorrect, now);
+        // First time seeing this question
+        // Good = start at box 2, Hard/Again = start at box 1
+        const initialBox: LeitnerBox = rating === 3 ? 2 : 1;
+        const nextReview = calculateNextReview(initialBox, now);
 
         const newState: SRSState = {
             question_id: questionId,
@@ -98,7 +101,7 @@ export async function updateSRSState(
             box: initialBox,
             last_reviewed: now,
             next_review: nextReview,
-            consecutive_correct: wasCorrect ? 1 : 0,
+            consecutive_correct: rating === 3 ? 1 : 0,
             synced: 0,
             updated_at: now,
         };
@@ -132,7 +135,7 @@ export async function initializeSRSForResult(
             if (!userAnswer) return; // Skip unanswered questions
 
             const { isCorrect } = await evaluateAnswer(question, userAnswer);
-            await updateSRSState(question.id, result.user_id, isCorrect, now);
+            await updateSRSState(question.id, result.user_id, booleanToRating(isCorrect), now);
         }),
     );
 

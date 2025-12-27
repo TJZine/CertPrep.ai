@@ -28,6 +28,7 @@ import { clearSRSReviewState } from "@/lib/srsReviewStorage";
 import { clearTopicStudyState } from "@/lib/topicStudyStorage";
 import { clearInterleavedState } from "@/lib/interleavedStorage";
 import { updateSRSState } from "@/db/srs";
+import { booleanToRating } from "@/lib/srs";
 import { createSRSReviewResult, createTopicStudyResult, createInterleavedResult } from "@/db/results";
 import { getOrCreateSRSQuiz } from "@/db/quizzes";
 import { db } from "@/db";
@@ -537,7 +538,7 @@ export function ZenQuizContainer({
     void updateSRSState(
       currentQuestion.id,
       effectiveUserId,
-      answerRecord.isCorrect,
+      booleanToRating(answerRecord.isCorrect),
     ).catch((err) => {
       console.warn("Failed to update SRS state:", err);
       srsUpdatedQuestionsRef.current.delete(currentQuestion.id);

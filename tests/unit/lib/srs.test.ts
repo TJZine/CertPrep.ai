@@ -19,23 +19,31 @@ describe("SRS Leitner Algorithm", () => {
     });
 
     describe("promoteBox", () => {
-        it("should move to next box on correct answer", () => {
-            expect(promoteBox(1, true)).toBe(2);
-            expect(promoteBox(2, true)).toBe(3);
-            expect(promoteBox(3, true)).toBe(4);
-            expect(promoteBox(4, true)).toBe(5);
+        it("should move to next box on Good (3) rating", () => {
+            expect(promoteBox(1, 3)).toBe(2);
+            expect(promoteBox(2, 3)).toBe(3);
+            expect(promoteBox(3, 3)).toBe(4);
+            expect(promoteBox(4, 3)).toBe(5);
         });
 
-        it("should stay at box 5 when already mastered", () => {
-            expect(promoteBox(5, true)).toBe(5);
+        it("should stay at box 5 when already mastered with Good rating", () => {
+            expect(promoteBox(5, 3)).toBe(5);
         });
 
-        it("should return to box 1 on incorrect answer", () => {
-            expect(promoteBox(1, false)).toBe(1);
-            expect(promoteBox(2, false)).toBe(1);
-            expect(promoteBox(3, false)).toBe(1);
-            expect(promoteBox(4, false)).toBe(1);
-            expect(promoteBox(5, false)).toBe(1);
+        it("should stay in current box on Hard (2) rating", () => {
+            expect(promoteBox(1, 2)).toBe(1);
+            expect(promoteBox(2, 2)).toBe(2);
+            expect(promoteBox(3, 2)).toBe(3);
+            expect(promoteBox(4, 2)).toBe(4);
+            expect(promoteBox(5, 2)).toBe(5);
+        });
+
+        it("should return to box 1 on Again (1) rating", () => {
+            expect(promoteBox(1, 1)).toBe(1);
+            expect(promoteBox(2, 1)).toBe(1);
+            expect(promoteBox(3, 1)).toBe(1);
+            expect(promoteBox(4, 1)).toBe(1);
+            expect(promoteBox(5, 1)).toBe(1);
         });
     });
 
@@ -43,28 +51,22 @@ describe("SRS Leitner Algorithm", () => {
         const fixedNow = new Date("2025-01-01T00:00:00Z").getTime();
         const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
-        it("should calculate correct next review for box 1 (correct answer)", () => {
-            // Correct from box 1 → box 2 → pass updated box 2 → 3 days interval
-            const nextReview = calculateNextReview(2, true, fixedNow);
+        it("should calculate correct next review for box 2 (3 days interval)", () => {
+            // Box 2 has 3 day interval
+            const nextReview = calculateNextReview(2, fixedNow);
             expect(nextReview).toBe(fixedNow + 3 * MS_PER_DAY);
         });
 
-        it("should calculate correct next review for box 1 (incorrect answer)", () => {
-            // Incorrect from box 1 → stays box 1 → 1 day interval
-            const nextReview = calculateNextReview(1, false, fixedNow);
+        it("should calculate correct next review for box 1 (1 day interval)", () => {
+            // Box 1 has 1 day interval
+            const nextReview = calculateNextReview(1, fixedNow);
             expect(nextReview).toBe(fixedNow + 1 * MS_PER_DAY);
         });
 
-        it("should calculate correct next review for box 5 (correct answer)", () => {
-            // Correct from box 5 → stays box 5 → 30 days interval
-            const nextReview = calculateNextReview(5, true, fixedNow);
+        it("should calculate correct next review for box 5 (30 days interval)", () => {
+            // Box 5 has 30 day interval
+            const nextReview = calculateNextReview(5, fixedNow);
             expect(nextReview).toBe(fixedNow + 30 * MS_PER_DAY);
-        });
-
-        it("should calculate correct next review for box 5 (incorrect answer)", () => {
-            // Incorrect from box 5 → goes to box 1 → pass updated box 1 → 1 day interval
-            const nextReview = calculateNextReview(1, false, fixedNow);
-            expect(nextReview).toBe(fixedNow + 1 * MS_PER_DAY);
         });
     });
 

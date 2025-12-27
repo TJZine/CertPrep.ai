@@ -80,7 +80,7 @@ export interface Quiz {
   subcategory?: string;
 }
 
-export const QUIZ_MODES = ["zen", "proctor"] as const;
+export const QUIZ_MODES = ["zen", "proctor", "flashcard"] as const;
 export type QuizMode = (typeof QUIZ_MODES)[number];
 
 export interface QuizSessionState {
