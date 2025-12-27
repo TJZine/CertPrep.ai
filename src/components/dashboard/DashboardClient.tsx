@@ -16,7 +16,7 @@ const DASHBOARD_SORT_OPTIONS = ["recent", "added", "title", "performance", "ques
 type DashboardSortOption = (typeof DASHBOARD_SORT_OPTIONS)[number];
 import { DueQuestionsCard } from "@/components/srs/DueQuestionsCard";
 import { InterleavedPracticeCard } from "@/components/dashboard/InterleavedPracticeCard";
-import { FlashcardPracticeCard } from "@/components/dashboard/FlashcardPracticeCard";
+
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { useToast } from "@/components/ui/Toast";
@@ -38,6 +38,10 @@ const ModeSelectModal = dynamic(
 );
 const DeleteConfirmModal = dynamic(
     () => import("@/components/dashboard/DeleteConfirmModal").then((mod) => ({ default: mod.DeleteConfirmModal })),
+    { ssr: false }
+);
+const ReviewModeModal = dynamic(
+    () => import("@/components/srs/ReviewModeModal").then((mod) => ({ default: mod.ReviewModeModal })),
     { ssr: false }
 );
 
@@ -75,6 +79,7 @@ export default function DashboardClient(): React.ReactElement {
         attemptCount: number;
     } | null>(null);
     const [isDeleting, setIsDeleting] = React.useState(false);
+    const [isReviewModeModalOpen, setIsReviewModeModalOpen] = React.useState(false);
 
     // Unmount guard
     const isMounted = React.useRef(true);
@@ -232,6 +237,7 @@ export default function DashboardClient(): React.ReactElement {
             { key: 'ImportModal', load: (): Promise<typeof import('@/components/dashboard/ImportModal')> => import('@/components/dashboard/ImportModal') },
             { key: 'ModeSelectModal', load: (): Promise<typeof import('@/components/dashboard/ModeSelectModal')> => import('@/components/dashboard/ModeSelectModal') },
             { key: 'DeleteConfirmModal', load: (): Promise<typeof import('@/components/dashboard/DeleteConfirmModal')> => import('@/components/dashboard/DeleteConfirmModal') },
+            { key: 'ReviewModeModal', load: (): Promise<typeof import('@/components/srs/ReviewModeModal')> => import('@/components/srs/ReviewModeModal') },
         ]);
     }, []);
 
@@ -368,13 +374,13 @@ export default function DashboardClient(): React.ReactElement {
                     )
                 }
                 srsSlot={
-                    <div className="mx-auto grid max-w-3xl gap-4 md:grid-cols-3">
+                    <div className="mx-auto grid max-w-3xl gap-4 md:grid-cols-2">
                         <DueQuestionsCard
                             dueCountsByBox={dueCountsByBox}
                             totalDue={totalDue}
+                            onStartReview={() => setIsReviewModeModalOpen(true)}
                         />
                         <InterleavedPracticeCard />
-                        <FlashcardPracticeCard dueCount={totalDue} />
                     </div>
                 }
                 contentSlot={
@@ -428,6 +434,14 @@ export default function DashboardClient(): React.ReactElement {
                     quiz={modeSelectQuiz}
                     isOpen
                     onClose={() => setModeSelectQuiz(null)}
+                />
+            )}
+
+            {isReviewModeModalOpen && (
+                <ReviewModeModal
+                    isOpen
+                    onClose={() => setIsReviewModeModalOpen(false)}
+                    dueCount={totalDue}
                 />
             )}
 

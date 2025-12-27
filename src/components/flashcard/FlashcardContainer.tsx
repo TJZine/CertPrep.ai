@@ -13,6 +13,7 @@ import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { clearFlashcardSession } from "@/lib/flashcardStorage";
 import { cn } from "@/lib/utils";
+import { useResolveCorrectAnswers } from "@/hooks/useResolveCorrectAnswers";
 import type { Quiz } from "@/types/quiz";
 
 export interface FlashcardContainerProps {
@@ -41,6 +42,9 @@ export function FlashcardContainer({
     const [ratings, setRatings] = React.useState<Record<string, FlashcardRating>>({});
     const [isComplete, setIsComplete] = React.useState(false);
     const [isUpdating, setIsUpdating] = React.useState(false);
+
+    // Resolve correct answers from hashes
+    const { resolvedAnswers } = useResolveCorrectAnswers(quiz.questions);
 
     const questions = quiz.questions;
     const currentQuestion = questions[currentIndex];
@@ -138,6 +142,7 @@ export function FlashcardContainer({
                 question={currentQuestion}
                 isFlipped={isFlipped}
                 onFlip={handleFlip}
+                correctAnswerKey={resolvedAnswers[currentQuestion.id]}
             />
 
             {/* Controls - only show when flipped */}

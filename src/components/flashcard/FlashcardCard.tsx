@@ -13,6 +13,8 @@ export interface FlashcardCardProps {
     isFlipped: boolean;
     /** Callback when the card is clicked/flipped */
     onFlip: () => void;
+    /** The resolved correct answer key (e.g., "A", "B") from hash resolution */
+    correctAnswerKey?: string;
     /** Optional class name */
     className?: string;
 }
@@ -32,15 +34,17 @@ export function FlashcardCard({
     question,
     isFlipped,
     onFlip,
+    correctAnswerKey,
     className,
 }: FlashcardCardProps): React.ReactElement {
     const cardRef = React.useRef<HTMLDivElement>(null);
 
-    // Get the correct answer text - options is Record<string, string>
+    // Get the correct answer text - use resolved key first, fall back to correct_answer
     const correctAnswerText = React.useMemo(() => {
-        if (!question.correct_answer) return null;
-        return question.options[question.correct_answer] ?? null;
-    }, [question.options, question.correct_answer]);
+        const answerKey = correctAnswerKey ?? question.correct_answer;
+        if (!answerKey) return null;
+        return question.options[answerKey] ?? null;
+    }, [question.options, question.correct_answer, correctAnswerKey]);
 
     // Handle keyboard navigation
     const handleKeyDown = React.useCallback(
