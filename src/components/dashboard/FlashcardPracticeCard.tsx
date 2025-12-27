@@ -10,7 +10,7 @@ import {
     CardTitle,
     CardDescription,
 } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
+import { buttonVariants } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/utils";
 
@@ -52,14 +52,15 @@ export function FlashcardPracticeCard({
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                <Link href="/flashcards/review" className="block">
-                    <Button
-                        className="w-full"
-                        variant={hasDue ? "default" : "outline"}
-                        rightIcon={<ArrowRight className="h-4 w-4" aria-hidden="true" />}
-                    >
-                        {hasDue ? "Start Review" : "Browse Flashcards"}
-                    </Button>
+                <Link
+                    href="/flashcards/review"
+                    className={cn(
+                        buttonVariants({ variant: hasDue ? "default" : "outline" }),
+                        "w-full"
+                    )}
+                >
+                    {hasDue ? "Start Review" : "Browse Flashcards"}
+                    <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
                 </Link>
             </CardContent>
         </Card>

@@ -79,10 +79,9 @@ export function FlashcardContainer({
                     [currentQuestion.id]: rating,
                 }));
 
-                // Update SRS state
+                // Update SRS state with the raw rating
                 // Rating 1 (Again) = reset to box 1, Rating 2 (Hard) = stay in box, Rating 3 (Good) = promote
-                const wasCorrect = rating === 3;
-                await updateSRSState(currentQuestion.id, effectiveUserId, wasCorrect);
+                await updateSRSState(currentQuestion.id, effectiveUserId, rating);
 
                 // Check if still mounted before updating state
                 if (!isMountedRef.current) return;
