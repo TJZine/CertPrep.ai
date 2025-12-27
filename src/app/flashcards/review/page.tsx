@@ -40,6 +40,8 @@ export default function FlashcardReviewPage(): React.ReactElement {
     React.useEffect(() => {
         if (!isInitialized || !effectiveUserId) return;
 
+        let isMounted = true;
+
         const loadQuestions = async (): Promise<void> => {
             try {
                 // SSR guard
@@ -55,8 +57,10 @@ export default function FlashcardReviewPage(): React.ReactElement {
                     // Load due questions directly
                     const dueStates = await getDueQuestions(effectiveUserId);
                     if (dueStates.length === 0) {
-                        setLoadError("No flashcards due for review. Great job, you're all caught up!");
-                        setIsLoading(false);
+                        if (isMounted) {
+                            setLoadError("No flashcards due for review. Great job, you're all caught up!");
+                            setIsLoading(false);
+                        }
                         return;
                     }
                     questionIds = dueStates.map((s) => s.question_id);
@@ -85,8 +89,10 @@ export default function FlashcardReviewPage(): React.ReactElement {
                 }
 
                 if (orderedQuestions.length === 0) {
-                    setLoadError("Could not find the requested questions. They may have been deleted.");
-                    setIsLoading(false);
+                    if (isMounted) {
+                        setLoadError("Could not find the requested questions. They may have been deleted.");
+                        setIsLoading(false);
+                    }
                     return;
                 }
 
@@ -102,16 +108,24 @@ export default function FlashcardReviewPage(): React.ReactElement {
                     version: 1,
                 };
 
-                setAggregatedQuiz(syntheticQuiz);
-                setIsLoading(false);
+                if (isMounted) {
+                    setAggregatedQuiz(syntheticQuiz);
+                    setIsLoading(false);
+                }
             } catch (err) {
                 logger.error("Failed to load flashcard review questions", { error: err });
-                setLoadError("Failed to load review session. Please try again.");
-                setIsLoading(false);
+                if (isMounted) {
+                    setLoadError("Failed to load review session. Please try again.");
+                    setIsLoading(false);
+                }
             }
         };
 
         void loadQuestions();
+
+        return (): void => {
+            isMounted = false;
+        };
     }, [isInitialized, effectiveUserId]);
 
     // Loading states

@@ -41,7 +41,11 @@ export function getFlashcardSession(): string[] | null {
         if (!stored) return null;
         const parsed = JSON.parse(stored) as unknown;
         if (!Array.isArray(parsed)) return null;
-        return parsed as string[];
+        // Validate all elements are strings
+        if (!parsed.every((item): item is string => typeof item === "string")) {
+            return null;
+        }
+        return parsed;
     } catch (error) {
         logger.warn("Failed to get flashcard session from sessionStorage", error);
         return null;

@@ -56,7 +56,7 @@ export function FlashcardPracticeCard({
                     <Button
                         className="w-full"
                         variant={hasDue ? "default" : "outline"}
-                        rightIcon={<ArrowRight className="h-4 w-4" />}
+                        rightIcon={<ArrowRight className="h-4 w-4" aria-hidden="true" />}
                     >
                         {hasDue ? "Start Review" : "Browse Flashcards"}
                     </Button>

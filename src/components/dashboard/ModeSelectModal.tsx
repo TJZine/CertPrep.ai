@@ -24,6 +24,13 @@ interface ModeOption {
   recommended?: boolean;
 }
 
+/** Labels for the Start button based on selected mode */
+const MODE_LABELS: Record<QuizMode, string> = {
+  zen: "Study",
+  proctor: "Exam",
+  flashcard: "Flashcards",
+};
+
 const modeOptions: ModeOption[] = [
   {
     id: "zen",
@@ -100,7 +107,7 @@ export function ModeSelectModal({
         leftIcon={<Zap className="h-4 w-4" aria-hidden="true" />}
         disabled={!quiz}
       >
-        Start {selectedMode === "flashcard" ? "Flashcards" : selectedMode === "zen" ? "Study" : "Exam"}
+        Start {MODE_LABELS[selectedMode]}
       </Button>
     </div>
   );

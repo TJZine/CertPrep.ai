@@ -46,10 +46,10 @@ export function FlashcardCard({
         return question.options[answerKey] ?? null;
     }, [question.options, question.correct_answer, correctAnswerKey]);
 
-    // Handle keyboard navigation
+    // Handle keyboard navigation (Space is handled natively by button)
     const handleKeyDown = React.useCallback(
         (event: React.KeyboardEvent): void => {
-            if (event.key === " " || event.key === "Enter") {
+            if (event.key === "Enter") {
                 event.preventDefault();
                 onFlip();
             }
@@ -66,9 +66,12 @@ export function FlashcardCard({
                 onKeyDown={handleKeyDown}
                 role="button"
                 tabIndex={0}
-                aria-label={isFlipped ? "Flashcard showing answer. Press space to flip back." : "Flashcard showing question. Press space to reveal answer."}
-                aria-live="polite"
+                aria-label={isFlipped ? "Flashcard showing answer. Press Enter to flip back." : "Flashcard showing question. Press Enter to reveal answer."}
             >
+                {/* Separate live region for reliable screen reader announcements */}
+                <span className="sr-only" aria-live="polite">
+                    {isFlipped ? "Showing answer" : "Showing question"}
+                </span>
                 {/* Front - Question */}
                 <div className={cn(styles.face, styles.front)} aria-hidden={isFlipped}>
                     {question.category && (

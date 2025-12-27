@@ -37,6 +37,14 @@ export function FlashcardContainer({
     const { user } = useAuth();
     const effectiveUserId = useEffectiveUserId(user?.id);
 
+    // Mount guard for async operations
+    const isMountedRef = React.useRef(true);
+    React.useEffect(() => {
+        return (): void => {
+            isMountedRef.current = false;
+        };
+    }, []);
+
     const [currentIndex, setCurrentIndex] = React.useState(0);
     const [isFlipped, setIsFlipped] = React.useState(false);
     const [ratings, setRatings] = React.useState<Record<string, FlashcardRating>>({});
@@ -72,9 +80,12 @@ export function FlashcardContainer({
                 }));
 
                 // Update SRS state
-                // Rating 1 (Again) = incorrect, Rating 2-3 = correct for SRS purposes
-                const wasCorrect = rating >= 2;
+                // Rating 1 (Again) = reset to box 1, Rating 2 (Hard) = stay in box, Rating 3 (Good) = promote
+                const wasCorrect = rating === 3;
                 await updateSRSState(currentQuestion.id, effectiveUserId, wasCorrect);
+
+                // Check if still mounted before updating state
+                if (!isMountedRef.current) return;
 
                 // Move to next card or complete
                 if (currentIndex < totalCards - 1) {
@@ -86,7 +97,9 @@ export function FlashcardContainer({
                     setIsComplete(true);
                 }
             } finally {
-                setIsUpdating(false);
+                if (isMountedRef.current) {
+                    setIsUpdating(false);
+                }
             }
         },
         [currentQuestion, effectiveUserId, currentIndex, totalCards, isUpdating]
