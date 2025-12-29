@@ -33,7 +33,7 @@
     "dexie-react-hooks": "^4.2.0",
     "framer-motion": "^12.23.25",
     "immer": "^11.0.0",
-    "isomorphic-dompurify": "^2.33.0",
+    "isomorphic-dompurify": "^2.35.0",
     "lucide-react": "^0.562.0",
     "next": "^16.1.1",
     "react": "^19.2.1",
