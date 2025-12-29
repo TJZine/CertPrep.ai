@@ -55,6 +55,7 @@ GEMINI.md
 .gemini
 .agent/workflows/*
 !.agent/rules/
+.mcp_sequential_thinking
 
 # Sentry Config File
 .env.sentry-build-plugin
