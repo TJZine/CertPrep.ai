@@ -98,6 +98,9 @@
 
     /* Default Shadow */
     --shadow-color: 220 40% 2%;
+
+    /* Flashcard Dimensions */
+    --flashcard-min-height: 300px;
   }
 
 

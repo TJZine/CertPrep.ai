@@ -36,16 +36,22 @@ export default function FlashcardReviewPage(): React.ReactElement {
     const [aggregatedQuiz, setAggregatedQuiz] = React.useState<Quiz | null>(null);
     const [loadError, setLoadError] = React.useState<string | null>(null);
 
+    // Request ID for canceling stale async requests
+    const requestId = React.useRef(0);
+
     // Load questions - either from sessionStorage or directly from due questions
     React.useEffect(() => {
         if (!isInitialized || !effectiveUserId) return;
 
+        const currentRequest = ++requestId.current;
         let isMounted = true;
 
         const loadQuestions = async (): Promise<void> => {
             try {
                 // SSR guard
                 if (typeof window === "undefined") return;
+                // Stale request guard
+                if (currentRequest !== requestId.current) return;
 
                 let questionIds: string[];
 
