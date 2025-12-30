@@ -76,10 +76,12 @@ export default function FlashcardReviewPage(): React.ReactElement {
                 const allQuizzes = await db.quizzes.toArray();
 
                 // Build a map of question ID -> question
+                // Use Set for O(1) lookup instead of O(n) .includes()
+                const questionIdSet = new Set(questionIds);
                 const questionMap = new Map<string, { question: Question; quiz: Quiz }>();
                 for (const quiz of allQuizzes) {
                     for (const question of quiz.questions) {
-                        if (questionIds.includes(question.id)) {
+                        if (questionIdSet.has(question.id)) {
                             questionMap.set(question.id, { question, quiz });
                         }
                     }
