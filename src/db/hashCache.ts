@@ -45,7 +45,7 @@ export async function getCachedHash(answer: string): Promise<string> {
         const hash = await hashAnswer(answer);
 
         // Store in cache (fire and forget - don't block on write)
-        db.hashCache.put({ answer, hash }).catch((err) => {
+        db.hashCache.put({ answer, hash, created_at: Date.now() }).catch((err) => {
             logger.warn("Failed to cache hash", err);
         });
 
@@ -85,16 +85,16 @@ export async function getCachedHashBatch(
 
         // Compute missing hashes
         if (uncached.length > 0) {
-            const newEntries: Array<{ answer: string; hash: string }> = [];
+            const newEntries: Array<{ answer: string; hash: string; created_at: number }> = [];
 
             const hashPromises = uncached.map(async (answer) => {
                 const hash = await hashAnswer(answer);
-                return { answer, hash };
+                return { answer, hash, created_at: Date.now() };
             });
             const computed = await Promise.all(hashPromises);
-            for (const { answer, hash } of computed) {
+            for (const { answer, hash, created_at } of computed) {
                 results.set(answer, hash);
-                newEntries.push({ answer, hash });
+                newEntries.push({ answer, hash, created_at });
             }
 
             // Batch store new entries (fire and forget)

@@ -23,6 +23,8 @@ export interface HashCacheEntry {
   answer: string;
   /** The SHA-256 hash of the answer. */
   hash: string;
+  /** Timestamp when this entry was created (for FIFO eviction). */
+  created_at: number;
 }
 
 export class CertPrepDatabase extends Dexie {
