@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.3] - 2025-12-30
+
+### Fixed
+
+- **Schema Drift Safe-Guards**: Added runtime type-casting and documentation to handle database enum mismatches (e.g., `quiz_mode` lacking "flashcard").
+- **E2E Stability**: Replaced brittle hard-coded `waitForTimeout` calls with standardization constants in `library.spec.ts`.
+
+### Changed
+
+- **Developer Experience**: Added `npm run supabase:types` script for generating strict TypeScript definitions from the Supabase project.
+- **Sync Reliability**: Updated `client.ts` and sync managers to use strict `Database` generated types, preventing future type regression.
+- **Performance**: Added Sentry performance spans (`quiz.sync.push`, `srs.sync.pull`, etc.) to sync managers for APM observability.
+- **Analytics UX**: Increased `ExamReadinessCard` initial category display to 10 items with scrollable expansion.
+
+## [1.4.2] - 2025-12-30
+
+### Added
+
+- **Flashcard Study Mode**: Interactive 3D flip cards, keyboard shortcuts, rating buttons, progress bar, and end-of-session summary.
+- **Unified SRS Review**: Review Mode selector and dashboard practice entry for unified SRS review across quizzes.
+- **Dashboard**: New card and modal to start review sessions.
+- **Tests**: New unit and end-to-end tests for flashcard flows and storage.
+
+### Changed
+
+- **Style**: Theme-aware animated visuals and interactive code/template blocks with copy & line-number support.
+- **Chores**: Minor version bump and housekeeping updates.
+
 ## [1.4.1] - 2025-12-24
 
 ### Fixed

@@ -15,6 +15,24 @@ On shared or public devices, use **Settings → Data Management → Reset** to c
 
 ---
 
+## How do I use Flashcard Study Mode?
+
+v1.4.2 introduced an interactive Flashcard mode for self-paced study:
+
+1. Open any quiz and select **Flashcard Mode**.
+2. **Controls**:
+   - `Space` or `Enter`: Flip card
+   - `1`: Rate as "Again" (Reset progress)
+   - `2`: Rate as "Hard" (Maintain progress)
+   - `3`: Rate as "Good" (Advance progress)
+   - `← / →`: Navigate cards
+3. **Progress**: Completion updates your **SRS (Spaced Repetition)** status, ensuring difficult cards appear more often in future [Study Due](/study-due) sessions.
+
+> [!NOTE]
+> Flashcard sessions do **not** generate records in your history or analytics results. They only update your long-term spaced repetition state.
+
+---
+
 ## What do I need to self‑host this project?
 
 At a minimum:
@@ -23,6 +41,9 @@ At a minimum:
 - A Supabase project with:
   - `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
   - Tables and RLS policies as described in [docs/ARCHITECTURE.md](./ARCHITECTURE.md#supabase-database-schema).
+
+> [!WARNING]
+> **Schema Drift**: The application supports a `flashcard` mode that is runtime-only. If you use the provided generated types, you may see a mismatch with the `quiz_mode` enum (`zen`, `proctor`). This is expected and handled safely by the application—you do **not** need to add `flashcard` to your database enum.
 
 Then:
 

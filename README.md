@@ -413,6 +413,7 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 | `npm run lint`           | Run ESLint                |
 | `npm test`               | Run the test suite        |
 | `npm run security-check` | Run basic secret scanning |
+| `npm run supabase:types` | Generate DB types         |
 
 ---
 
