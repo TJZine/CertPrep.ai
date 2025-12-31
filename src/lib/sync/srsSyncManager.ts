@@ -1,5 +1,6 @@
 "use client";
 
+import * as Sentry from "@sentry/nextjs";
 import { db } from "@/db";
 import {
   getSRSSyncCursor,
@@ -142,14 +143,21 @@ async function performSRSSync(userId: string): Promise<{ incomplete: boolean }> 
       return { incomplete: true };
     }
 
-    incomplete =
-      (await pushLocalChanges(userId, startTime, stats, client)) || incomplete;
+    // Push phase - wrapped in Sentry span for performance monitoring
+    incomplete = await Sentry.startSpan(
+      { name: "srs.sync.push", op: "db.sync" },
+      async () => (await pushLocalChanges(userId, startTime, stats, client)) || incomplete
+    );
 
     if (Date.now() - startTime > TIME_BUDGET_MS) {
       return { incomplete: true };
     }
 
-    const pullResult = await pullRemoteChanges(userId, startTime, stats, client);
+    // Pull phase - wrapped in Sentry span for performance monitoring
+    const pullResult = await Sentry.startSpan(
+      { name: "srs.sync.pull", op: "db.sync" },
+      async () => await pullRemoteChanges(userId, startTime, stats, client)
+    );
     incomplete = pullResult.incomplete || incomplete;
 
     if (pullResult.hardFailure) {

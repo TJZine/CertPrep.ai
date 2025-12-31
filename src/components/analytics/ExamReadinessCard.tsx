@@ -22,7 +22,8 @@ interface ExamReadinessCardProps {
 }
 
 const PASSING_THRESHOLD = 70;
-const INITIAL_DISPLAY = 6;
+const INITIAL_DISPLAY = 10;
+const SCROLL_CONTAINER_MAX_HEIGHT = 400; // px - for expanded view with many categories
 
 /**
  * Circular gauge component for exam readiness score.
@@ -259,15 +260,25 @@ export function ExamReadinessCard({
                                 </span>
                             )}
                         </div>
-                        {/* Render visible categories */}
-                        {categories.slice(0, displayCount).map((category) => (
-                            <CategoryBar
-                                key={category[0]}
-                                category={category[0]}
-                                score={category[1]}
-                                threshold={passingThreshold}
-                            />
-                        ))}
+                        {/* Render visible categories in scrollable container when expanded */}
+                        <div
+                            className={cn(
+                                "space-y-3",
+                                isExpanded && categories.length > INITIAL_DISPLAY &&
+                                "max-h-[var(--scroll-height)] overflow-y-auto pr-2 scroll-smooth"
+                            )}
+                            style={{ "--scroll-height": `${SCROLL_CONTAINER_MAX_HEIGHT}px` } as React.CSSProperties}
+                        >
+                            {categories.slice(0, displayCount).map((category) => (
+                                <CategoryBar
+                                    key={category[0]}
+                                    category={category[0]}
+                                    score={category[1]}
+                                    threshold={passingThreshold}
+                                />
+                            ))}
+                        </div>
+
                         {/* Show placeholder rows if less than INITIAL_DISPLAY */}
                         {isEmpty && Array.from({ length: INITIAL_DISPLAY }).map((_, index) => (
                             <div key={`placeholder-${index}`} className="space-y-1">
