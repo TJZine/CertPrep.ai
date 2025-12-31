@@ -1,12 +1,13 @@
 import { logger } from "@/lib/logger";
 import { createClient } from "@/lib/supabase/client";
 import type { RemoteQuizInput, RemoteQuizRow } from "./quizDomain";
+import type { Database } from "@/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { NIL_UUID } from "@/lib/constants";
 
-let supabaseInstance: SupabaseClient | undefined;
+let supabaseInstance: SupabaseClient<Database> | undefined;
 
-function getSupabaseClient(): SupabaseClient | undefined {
+function getSupabaseClient(): SupabaseClient<Database> | undefined {
   if (!supabaseInstance) {
     supabaseInstance = createClient();
   }
@@ -73,7 +74,7 @@ export async function fetchUserQuizzes({
     return { data: [], error };
   }
 
-  return { data: data ?? [], error: null };
+  return { data: (data as unknown as RemoteQuizRow[]) ?? [], error: null };
 }
 
 export async function upsertQuizzes(
@@ -92,7 +93,7 @@ export async function upsertQuizzes(
   const payload = quizzes.map((quiz) => ({
     ...quiz,
     user_id: quiz.user_id ?? userId,
-  }));
+  })) as unknown as Database["public"]["Tables"]["quizzes"]["Insert"][];
 
   const { error } = await client
     .from("quizzes")

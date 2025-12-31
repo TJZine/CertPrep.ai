@@ -1,9 +1,10 @@
+import type { Database } from "@/types/database.types";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { logger } from "@/lib/logger";
 
 export const createClient = async (): Promise<
-  ReturnType<typeof createServerClient>
+  ReturnType<typeof createServerClient<Database>>
 > => {
   const cookieStore = await cookies();
   const sharedCookieOptions: Pick<

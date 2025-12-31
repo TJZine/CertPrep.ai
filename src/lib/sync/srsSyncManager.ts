@@ -13,12 +13,13 @@ import { logNetworkAwareSlowSync } from "@/lib/sync/syncLogging";
 import { createClient } from "@/lib/supabase/client";
 import { safeMark, safeMeasure } from "@/lib/perfMarks";
 import { z } from "zod";
+import type { Database } from "@/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { SRSState } from "@/types/srs";
 
-let supabaseInstance: SupabaseClient | undefined;
+let supabaseInstance: SupabaseClient<Database> | undefined;
 
-function getSupabaseClient(): SupabaseClient | undefined {
+function getSupabaseClient(): SupabaseClient<Database> | undefined {
   if (!supabaseInstance) {
     supabaseInstance = createClient();
   }
@@ -217,7 +218,7 @@ async function pushLocalChanges(
   userId: string,
   startTime: number,
   stats: { pushed: number },
-  client: SupabaseClient,
+  client: SupabaseClient<Database>,
 ): Promise<boolean> {
   let incomplete = false;
 
@@ -353,7 +354,7 @@ async function pullRemoteChanges(
   userId: string,
   startTime: number,
   stats: { pulled: number },
-  client: SupabaseClient,
+  client: SupabaseClient<Database>,
 ): Promise<{ incomplete: boolean; hardFailure: boolean }> {
   let incomplete = false;
   let hardFailure = false;
@@ -464,6 +465,10 @@ async function pullRemoteChanges(
     // Force advance cursor if all invalid (schema drift prevention)
     if (remoteItems.length > 0 && validRecordsInBatch === 0) {
       const lastItem = remoteItems[remoteItems.length - 1];
+      if (!lastItem) {
+        // Should logically never happen if length > 0, but satisfies TS
+        break;
+      }
       logger.error(
         "Batch of SRS records all failed validation. Force-advancing cursor.",
         { lastId: lastItem.question_id }

@@ -24,11 +24,12 @@ import type { Quiz } from "@/types/quiz";
 import { QuestionSchema } from "@/validators/quizSchema";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/client";
+import type { Database } from "@/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-let supabaseInstance: SupabaseClient | undefined;
+let supabaseInstance: SupabaseClient<Database> | undefined;
 
-function getSupabaseClient(): SupabaseClient | undefined {
+function getSupabaseClient(): SupabaseClient<Database> | undefined {
   if (!supabaseInstance) {
     supabaseInstance = createClient();
   }

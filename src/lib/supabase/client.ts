@@ -1,8 +1,9 @@
+import type { Database } from "@/types/database.types";
 import { createBrowserClient } from "@supabase/ssr";
 import { logger } from "@/lib/logger";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-let client: SupabaseClient | undefined;
+let client: SupabaseClient<Database> | undefined;
 
 // SECURITY: Default timeout for Supabase API calls (30 seconds)
 const SUPABASE_TIMEOUT_MS = 30000;
@@ -40,7 +41,7 @@ function fetchWithTimeout(
   }).finally(() => clearTimeout(timeoutId));
 }
 
-export const createClient = (): SupabaseClient | undefined => {
+export const createClient = (): SupabaseClient<Database> | undefined => {
   if (client) return client;
 
   let supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -57,7 +58,7 @@ export const createClient = (): SupabaseClient | undefined => {
       supabaseUrl = `https://${supabaseUrl}`;
     }
 
-    client = createBrowserClient(supabaseUrl, supabaseKey, {
+    client = createBrowserClient<Database>(supabaseUrl, supabaseKey, {
       global: {
         fetch: fetchWithTimeout,
       },
