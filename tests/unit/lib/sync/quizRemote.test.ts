@@ -170,7 +170,22 @@ describe("quizRemote", () => {
             expect((mockBuilder as any).from).toHaveBeenCalledWith("quizzes");
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             expect((mockBuilder as any).upsert).toHaveBeenCalledWith(
-                expect.arrayContaining([expect.objectContaining({ user_id: "user-1" })]),
+                [{
+                    id: "q1",
+                    user_id: "user-1",
+                    title: "Test Quiz",
+                    description: null,
+                    tags: [],  // Note: adapter uses [] not null for empty arrays
+                    version: 1,
+                    questions: [],
+                    quiz_hash: null,
+                    source_id: null,
+                    created_at: null,  // null if not provided in input
+                    updated_at: null,  // null if not provided in input
+                    deleted_at: null,
+                    category: null,
+                    subcategory: null,
+                }],
                 { onConflict: "id" }
             );
         });

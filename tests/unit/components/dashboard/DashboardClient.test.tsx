@@ -1,7 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import DashboardClient from "@/components/dashboard/DashboardClient";
-import React from 'react';
 
 // Define mocks outside to ensure hoisting compatibility
 const mocks = vi.hoisted(() => ({
@@ -92,6 +91,11 @@ describe("DashboardClient", () => {
         await waitFor(() => {
             expect(screen.getByTestId("dashboard-header")).toBeInTheDocument();
         });
+
+        // Verify hooks were called with correct arguments
+        expect(mocks.useEffectiveUserId).toHaveBeenCalledWith("test-user");
+        expect(mocks.useQuizzes).toHaveBeenCalledWith("test-user");
+        expect(mocks.useDashboardStats).toHaveBeenCalledWith("test-user");
     });
 
     it("lazy loads and opens ImportModal when requested", async () => {
