@@ -135,7 +135,7 @@ export default function FlashcardPage(): React.ReactElement {
 
     return (
         <main className="min-h-screen bg-background py-6">
-            <FlashcardContainer quiz={quiz} />
+            <FlashcardContainer quiz={quiz} effectiveUserId={effectiveUserId} />
         </main>
     );
 }

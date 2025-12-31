@@ -203,7 +203,7 @@ export default function FlashcardReviewPage(): React.ReactElement {
 
     return (
         <main className="min-h-screen bg-background py-6">
-            <FlashcardContainer quiz={aggregatedQuiz} isSRSReview={true} />
+            <FlashcardContainer quiz={aggregatedQuiz} effectiveUserId={effectiveUserId} isSRSReview={true} />
         </main>
     );
 }
