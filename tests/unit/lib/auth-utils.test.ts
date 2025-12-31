@@ -6,6 +6,9 @@ import { logger } from "@/lib/logger";
 // Mock logger to avoid console spam and verify calls
 vi.mock("@/lib/logger", () => ({
     logger: {
+        log: vi.fn(),
+        info: vi.fn(),
+        debug: vi.fn(),
         warn: vi.fn(),
         error: vi.fn(),
     },

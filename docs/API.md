@@ -23,9 +23,8 @@ Creates a new user account.
 
 ```typescript
 import { createClient } from "@/lib/supabase/client";
-import type { Database } from "@/types/database.types";
 
-// Client is now strictly typed with your database schema
+// Client is strictly typed with your database schema
 const supabase = createClient();
 
 const { data, error } = await supabase.auth.signUp({

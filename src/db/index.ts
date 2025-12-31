@@ -291,6 +291,22 @@ export class CertPrepDatabase extends Dexie {
         logger.info("[DB Upgrade v15] Category normalization complete");
       });
 
+    // Version 16: Add created_at index to hashCache for FIFO eviction ordering.
+    // Previously eviction used insertion order which is unreliable under concurrent writes.
+    this.version(16)
+      .stores({
+        hashCache: "&answer, created_at",
+      })
+      .upgrade(async (tx) => {
+        const table = tx.table<{ answer: string; hash: string; created_at?: number }, string>("hashCache");
+        await table.toCollection().modify((entry) => {
+          if (entry.created_at === undefined) {
+            entry.created_at = Date.now();
+          }
+        });
+        logger.info("[DB Upgrade v16] hashCache created_at backfill complete");
+      });
+
     // Note: Quiz.category and Quiz.subcategory are now indexed as of version 13,
     // enabling optimized filtering by category in the library view.
 

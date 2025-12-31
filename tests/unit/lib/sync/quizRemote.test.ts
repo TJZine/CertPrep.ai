@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { fetchUserQuizzes, upsertQuizzes, softDeleteQuizzes } from "@/lib/sync/quizRemote";
+import { fetchUserQuizzes, upsertQuizzes, softDeleteQuizzes, DEFAULT_FETCH_LIMIT } from "@/lib/sync/quizRemote";
 import { logger } from "@/lib/logger";
 import { NIL_UUID } from "@/lib/constants";
 import type { RemoteQuizInput } from "@/lib/sync/quizDomain";
@@ -63,7 +63,7 @@ describe("quizRemote", () => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             expect((mockBuilder as any).from).toHaveBeenCalledWith("quizzes");
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            expect((mockBuilder as any).limit).toHaveBeenCalledWith(50);
+            expect((mockBuilder as any).limit).toHaveBeenCalledWith(DEFAULT_FETCH_LIMIT);
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             expect((mockBuilder as any).in).toHaveBeenCalledWith("user_id", ["user-1", NIL_UUID]);
         });
@@ -116,7 +116,13 @@ describe("quizRemote", () => {
         });
 
         it("upserts mapped payload", async (): Promise<void> => {
-            const quizzes = [{ id: "q1", title: "Test" }] as RemoteQuizInput[];
+            const quizzes: RemoteQuizInput[] = [{
+                id: "q1",
+                user_id: "user-1",
+                title: "Test Quiz",
+                version: 1,
+                questions: [],
+            }];
             await upsertQuizzes("user-1", quizzes);
 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -132,7 +138,13 @@ describe("quizRemote", () => {
             const error = { message: "Upsert failed" };
             mockBuilder.then = (resolve): void => { resolve({ error, data: null }); };
 
-            const quizzes = [{ id: "q1", title: "Test" }] as RemoteQuizInput[];
+            const quizzes: RemoteQuizInput[] = [{
+                id: "q1",
+                user_id: "user-1",
+                title: "Test Quiz",
+                version: 1,
+                questions: [],
+            }];
             await upsertQuizzes("user-1", quizzes);
 
             expect(logger.error).toHaveBeenCalledWith(

@@ -265,9 +265,12 @@ export function ExamReadinessCard({
                             className={cn(
                                 "space-y-3",
                                 isExpanded && categories.length > INITIAL_DISPLAY &&
-                                "max-h-[var(--scroll-height)] overflow-y-auto pr-2 scroll-smooth"
+                                "max-h-[var(--scroll-height)] overflow-y-auto scroll-smooth [scrollbar-gutter:stable]"
                             )}
                             style={{ "--scroll-height": `${SCROLL_CONTAINER_MAX_HEIGHT}px` } as React.CSSProperties}
+                            tabIndex={isExpanded && categories.length > INITIAL_DISPLAY ? 0 : undefined}
+                            role={isExpanded && categories.length > INITIAL_DISPLAY ? "region" : undefined}
+                            aria-label={isExpanded && categories.length > INITIAL_DISPLAY ? "Category breakdown list" : undefined}
                         >
                             {categories.slice(0, displayCount).map((category) => (
                                 <CategoryBar

@@ -9,7 +9,7 @@ const EVICTION_TARGET = 8_000;
 
 /**
  * Evict old cache entries if the cache exceeds MAX_CACHE_ENTRIES.
- * Uses FIFO approximation (oldest entries by insertion order).
+ * Uses FIFO ordering (oldest entries by created_at timestamp).
  * Fire-and-forget — errors are logged but don't interrupt caller.
  */
 async function maybeEvictCache(): Promise<void> {
@@ -17,7 +17,10 @@ async function maybeEvictCache(): Promise<void> {
         const count = await db.hashCache.count();
         if (count > MAX_CACHE_ENTRIES) {
             const toDelete = count - EVICTION_TARGET;
-            const keys = await db.hashCache.limit(toDelete).primaryKeys();
+            const keys = await db.hashCache
+                .orderBy("created_at")
+                .limit(toDelete)
+                .primaryKeys();
             await db.hashCache.bulkDelete(keys);
             logger.debug("Hash cache evicted entries", { deleted: keys.length, remaining: EVICTION_TARGET });
         }

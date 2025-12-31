@@ -467,6 +467,10 @@ async function pullRemoteChanges(
       const lastItem = remoteItems[remoteItems.length - 1];
       if (!lastItem) {
         // Should logically never happen if length > 0, but satisfies TS
+        logger.error("Unexpected: remoteItems has length but lastItem is undefined", {
+          userId,
+          remoteItemsLength: remoteItems.length,
+        });
         break;
       }
       logger.error(
