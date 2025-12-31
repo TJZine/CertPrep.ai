@@ -10,6 +10,7 @@ vi.mock("@/lib/logger", () => ({
         error: vi.fn(),
         warn: vi.fn(),
         info: vi.fn(),
+        debug: vi.fn(),
     },
 }));
 
@@ -21,6 +22,7 @@ type MockBuilder = {
     [key: string]: unknown;
 };
 
+// biome-ignore lint/suspicious/noThenProperty: Intentionally mocking Supabase's thenable query builder pattern
 const mockBuilder: MockBuilder = {
     then: (resolve) => resolve({ data: [], error: null }),
 };

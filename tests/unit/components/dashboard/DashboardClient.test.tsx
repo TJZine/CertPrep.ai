@@ -36,9 +36,7 @@ vi.mock("@/components/ui/Toast", () => ({
     useToast: mocks.useToast,
 }));
 
-vi.mock("@/db/quizzes", () => ({
-    deleteQuiz: vi.fn(),
-}));
+// Note: deleteQuiz mock removed - add to mocks object when delete flow tests are added
 
 vi.mock("@/db/srs", () => ({
     getDueCountsByBox: mocks.getDueCountsByBox,

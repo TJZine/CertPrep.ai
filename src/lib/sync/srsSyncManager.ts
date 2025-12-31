@@ -145,10 +145,11 @@ async function performSRSSync(userId: string): Promise<{ incomplete: boolean }> 
     }
 
     // Push phase - wrapped in Sentry span for performance monitoring
-    incomplete = await Sentry.startSpan(
+    const pushIncomplete = await Sentry.startSpan(
       { name: "srs.sync.push", op: "db.sync" },
-      async () => (await pushLocalChanges(userId, startTime, stats, client)) || incomplete
+      async () => await pushLocalChanges(userId, startTime, stats, client)
     );
+    incomplete = pushIncomplete || incomplete;
 
     if (Date.now() - startTime > TIME_BUDGET_MS) {
       return { incomplete: true };

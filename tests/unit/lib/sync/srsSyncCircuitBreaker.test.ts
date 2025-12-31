@@ -79,17 +79,20 @@ describe("SRS Sync Circuit Breaker", () => {
     });
 
     it("triggers circuit breaker after MAX_INVALID_BATCHES", async () => {
+        // This test relies on implicit looping behavior:
+        // - mockLimit returns 50 invalid items (BATCH_SIZE)
+        // - 50 === BATCH_SIZE keeps hasMore = true
+        // - Loop iterates 3 times (MAX_INVALID_BATCHES) before circuit breaker triggers
         const invalidItem = {
             question_id: "q-bad",
             user_id: "user-1",
             updated_at: "2024-01-01T00:00:00.000Z"
-            // Missing required fields
+            // Missing required fields: box, next_review, synced
         };
 
         // Construct a batch of 50 (BATCH_SIZE) invalid items to force 'hasMore = true'
         const fullInvalidBatch = Array(50).fill(invalidItem);
 
-        // Iteration 1: 50 invalid items -> invalid batch #1 -> hasMore=true
         mockLimit.mockResolvedValue({
             data: fullInvalidBatch,
             error: null

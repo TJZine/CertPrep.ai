@@ -5,8 +5,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 let client: SupabaseClient<Database> | undefined;
 
-// SECURITY: Default timeout for Supabase API calls (30 seconds)
-const SUPABASE_TIMEOUT_MS = 30000;
+/** Default timeout for Supabase API calls (30 seconds). Exported for test usage. */
+export const SUPABASE_TIMEOUT_MS = 30000;
 
 /**
  * Fetch wrapper that adds timeout to all Supabase requests.

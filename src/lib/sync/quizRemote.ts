@@ -25,6 +25,15 @@ export const DEFAULT_FETCH_LIMIT = 50;
 function toRemoteQuizRow(
   row: Database["public"]["Tables"]["quizzes"]["Row"],
 ): RemoteQuizRow {
+  // Warn if timestamps are missing — may indicate DB integrity issue
+  if (!row.created_at || !row.updated_at) {
+    logger.warn("Quiz row missing timestamp(s), using fallback", {
+      quizId: row.id,
+      hasCreatedAt: !!row.created_at,
+      hasUpdatedAt: !!row.updated_at,
+    });
+  }
+
   return {
     id: row.id,
     user_id: row.user_id,

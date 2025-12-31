@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
-import { createClient } from "@/lib/supabase/client";
+import { createClient, SUPABASE_TIMEOUT_MS } from "@/lib/supabase/client";
 import { logger } from "@/lib/logger";
 
 // Mock logger
@@ -72,7 +72,7 @@ describe("Supabase Client", () => {
 
             await capturedFetch("https://example.com", { method: "GET" });
 
-            expect(timeoutSpy).toHaveBeenCalledWith(30000);
+            expect(timeoutSpy).toHaveBeenCalledWith(SUPABASE_TIMEOUT_MS);
             expect(mockFetch).toHaveBeenCalledWith(
                 "https://example.com",
                 expect.objectContaining({ signal: mockTimeoutSignal })
@@ -102,6 +102,59 @@ describe("Supabase Client", () => {
                 "https://example.com",
                 expect.objectContaining({ signal: "controller-signal" })
             );
+        });
+
+        it("calls setTimeout with SUPABASE_TIMEOUT_MS in fallback path", async () => {
+            const mockFetch = vi.fn().mockResolvedValue(new Response("ok"));
+            vi.stubGlobal("fetch", mockFetch);
+            vi.stubGlobal("AbortSignal", {}); // No timeout method
+
+            const setTimeoutSpy = vi.spyOn(global, "setTimeout");
+            const clearTimeoutSpy = vi.spyOn(global, "clearTimeout");
+
+            const abortSpy = vi.fn();
+            const MockControllerClass = class {
+                signal = "controller-signal";
+                abort = abortSpy;
+            };
+            vi.stubGlobal("AbortController", MockControllerClass);
+
+            await capturedFetch("https://example.com", {});
+
+            expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function), SUPABASE_TIMEOUT_MS);
+            expect(clearTimeoutSpy).toHaveBeenCalled(); // Cleanup after fetch resolves
+
+            setTimeoutSpy.mockRestore();
+            clearTimeoutSpy.mockRestore();
+        });
+
+        it("aborts when timeout fires before fetch completes", async () => {
+            vi.useFakeTimers();
+
+            try {
+                const abortSpy = vi.fn();
+                const MockControllerClass = class {
+                    signal = "controller-signal";
+                    abort = abortSpy;
+                };
+                vi.stubGlobal("AbortController", MockControllerClass);
+                vi.stubGlobal("AbortSignal", {}); // No timeout method
+
+                // Never-resolving fetch to simulate slow/hanging response
+                const mockFetch = vi.fn().mockReturnValue(new Promise<Response>(() => { }));
+                vi.stubGlobal("fetch", mockFetch);
+
+                // Start fetch but don't await — it simulates a hanging request
+                void capturedFetch("https://example.com", {});
+
+                // Advance timers past the timeout threshold
+                await vi.advanceTimersByTimeAsync(SUPABASE_TIMEOUT_MS + 1);
+
+                // Controller.abort() should have been called when timeout fired
+                expect(abortSpy).toHaveBeenCalled();
+            } finally {
+                vi.useRealTimers();
+            }
         });
     });
 });
