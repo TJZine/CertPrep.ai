@@ -81,6 +81,14 @@ export interface Quiz {
 }
 
 export const QUIZ_MODES = ["zen", "proctor", "flashcard"] as const;
+
+/**
+ * Supported quiz modes.
+ *
+ * NOTE: "flashcard" is a runtime-only mode. Flashcard sessions persist data to the
+ * `srs` table (via updateSRSState) but do NOT create `Result` records.
+ * Thus, the DB `quiz_mode` enum for the `results` table does not entail "flashcard".
+ */
 export type QuizMode = (typeof QUIZ_MODES)[number];
 
 export interface QuizSessionState {

@@ -637,6 +637,16 @@ CREATE POLICY "Users can update own results" ON results
 
 ---
 
+### Runtime-Only Modes (Flashcards)
+
+While the default behavior for most modes (Zen, Proctor) is to generate a `Result` record upon completion, **Flashcard Mode** is an exception:
+
+- **No Results**: Completing a flashcard session does **not** create a `Result` record in Dexie or Supabase.
+- **SRS Updates**: Instead, it directly updates the `srs` table via `updateSRSState()`.
+- **Schema Implication**: The `quiz_mode` database enum only includes `'zen'` and `'proctor'`. The application internally supports `'flashcard'`, but because no results are ever saved with this mode, the schema mismatch is harmless.
+
+---
+
 ## Further Reading
 
 - [Next.js Documentation](https://nextjs.org/docs)

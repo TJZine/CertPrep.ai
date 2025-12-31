@@ -203,7 +203,7 @@ test.describe("Quiz Library & Dashboard", () => {
 
             // Stabilize before interaction
             await importButton.hover();
-            await page.waitForTimeout(200);
+            await page.waitForTimeout(E2E_TIMEOUTS.HYDRATION_BUFFER);
 
             await importButton.click();
 
@@ -246,7 +246,7 @@ test.describe("Quiz Library & Dashboard", () => {
             await expect(importButton).toBeEnabled();
 
             await importButton.hover();
-            await page.waitForTimeout(200);
+            await page.waitForTimeout(E2E_TIMEOUTS.HYDRATION_BUFFER);
 
             await importButton.click();
             await expect(page.getByText(/imported successfully/i)).toBeVisible();

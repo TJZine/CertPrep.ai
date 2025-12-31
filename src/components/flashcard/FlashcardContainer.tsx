@@ -9,16 +9,17 @@ import { FlashcardProgress } from "./FlashcardProgress";
 import { FlashcardSummary } from "./FlashcardSummary";
 import { Button, buttonVariants } from "@/components/ui/Button";
 import { updateSRSState } from "@/db/srs";
-import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
-import { useAuth } from "@/components/providers/AuthProvider";
-import { clearFlashcardSession } from "@/lib/flashcardStorage";
-import { cn } from "@/lib/utils";
 import { useResolveCorrectAnswers } from "@/hooks/useResolveCorrectAnswers";
+import { clearFlashcardSession } from "@/lib/flashcardStorage";
+import { logger } from "@/lib/logger";
+import { cn } from "@/lib/utils";
 import type { Quiz } from "@/types/quiz";
 
 export interface FlashcardContainerProps {
     /** The quiz containing questions to study */
     quiz: Quiz;
+    /** The effective user ID for SRS updates */
+    effectiveUserId: string;
     /** Whether this is an aggregated SRS review session */
     isSRSReview?: boolean;
     /** Optional class name */
@@ -31,11 +32,10 @@ export interface FlashcardContainerProps {
  */
 export function FlashcardContainer({
     quiz,
+    effectiveUserId,
     isSRSReview = false,
     className,
 }: FlashcardContainerProps): React.ReactElement {
-    const { user } = useAuth();
-    const effectiveUserId = useEffectiveUserId(user?.id);
 
     // Mount guard for async operations
     const isMountedRef = React.useRef(true);
@@ -49,7 +49,7 @@ export function FlashcardContainer({
     const [isFlipped, setIsFlipped] = React.useState(false);
     const [ratings, setRatings] = React.useState<Record<string, FlashcardRating>>({});
     const [isComplete, setIsComplete] = React.useState(false);
-    const [isUpdating, setIsUpdating] = React.useState(false);
+    const [updatingQuestionId, setUpdatingQuestionId] = React.useState<string | null>(null);
 
     // Resolve correct answers from hashes
     const { resolvedAnswers } = useResolveCorrectAnswers(quiz.questions);
@@ -68,9 +68,10 @@ export function FlashcardContainer({
     // Handle rating selection
     const handleRate = React.useCallback(
         async (rating: FlashcardRating): Promise<void> => {
-            if (!currentQuestion || !effectiveUserId || isUpdating) return;
+            if (!currentQuestion || !effectiveUserId) return;
+            if (updatingQuestionId === currentQuestion.id) return;
 
-            setIsUpdating(true);
+            setUpdatingQuestionId(currentQuestion.id);
 
             try {
                 // Store the rating
@@ -78,13 +79,6 @@ export function FlashcardContainer({
                     ...prev,
                     [currentQuestion.id]: rating,
                 }));
-
-                // Update SRS state with the raw rating
-                // Rating 1 (Again) = reset to box 1, Rating 2 (Hard) = stay in box, Rating 3 (Good) = promote
-                await updateSRSState(currentQuestion.id, effectiveUserId, rating);
-
-                // Check if still mounted before updating state
-                if (!isMountedRef.current) return;
 
                 // Move to next card or complete
                 if (currentIndex < totalCards - 1) {
@@ -95,13 +89,26 @@ export function FlashcardContainer({
                     clearFlashcardSession();
                     setIsComplete(true);
                 }
+
+                // Update SRS state with the raw rating
+                // Rating 1 (Again) = reset to box 1, Rating 2 (Hard) = stay in box, Rating 3 (Good) = promote
+                await updateSRSState(currentQuestion.id, effectiveUserId, rating);
+            } catch (error) {
+                logger.error("[Flashcard] Failed to update SRS state", {
+                    questionId: currentQuestion.id,
+                    userId: effectiveUserId,
+                    rating,
+                    error,
+                });
             } finally {
                 if (isMountedRef.current) {
-                    setIsUpdating(false);
+                    setUpdatingQuestionId((prev) =>
+                        prev === currentQuestion.id ? null : prev
+                    );
                 }
             }
         },
-        [currentQuestion, effectiveUserId, currentIndex, totalCards, isUpdating]
+        [currentQuestion, effectiveUserId, currentIndex, totalCards, updatingQuestionId]
     );
 
     // Show summary when complete
@@ -159,7 +166,10 @@ export function FlashcardContainer({
 
             {/* Controls - only show when flipped */}
             {isFlipped && (
-                <FlashcardControls onRate={handleRate} disabled={isUpdating} />
+                <FlashcardControls
+                    onRate={handleRate}
+                    disabled={updatingQuestionId === currentQuestion.id}
+                />
             )}
 
             {/* Flip prompt when not flipped */}

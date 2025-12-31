@@ -1,5 +1,6 @@
 "use client";
 
+import * as Sentry from "@sentry/nextjs";
 import { db } from "@/db";
 import { NIL_UUID } from "@/lib/constants";
 import {
@@ -23,11 +24,12 @@ import type { Quiz } from "@/types/quiz";
 import { QuestionSchema } from "@/validators/quizSchema";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/client";
+import type { Database } from "@/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-let supabaseInstance: SupabaseClient | undefined;
+let supabaseInstance: SupabaseClient<Database> | undefined;
 
-function getSupabaseClient(): SupabaseClient | undefined {
+function getSupabaseClient(): SupabaseClient<Database> | undefined {
   if (!supabaseInstance) {
     supabaseInstance = createClient();
   }
@@ -178,15 +180,23 @@ async function performQuizSync(
       return { incomplete: true };
     }
 
-    incomplete =
-      (await pushLocalChanges(userId, startTime, stats)) || incomplete;
+    // Push phase - wrapped in Sentry span for performance monitoring
+    incomplete = await Sentry.startSpan(
+      { name: "quiz.sync.push", op: "db.sync" },
+      async () => (await pushLocalChanges(userId, startTime, stats)) || incomplete
+    );
 
     if (Date.now() - startTime > TIME_BUDGET_MS) {
       return { incomplete: true };
     }
 
-    const pullResult = await pullRemoteChanges(userId, startTime, stats);
+    // Pull phase - wrapped in Sentry span for performance monitoring
+    const pullResult = await Sentry.startSpan(
+      { name: "quiz.sync.pull", op: "db.sync" },
+      async () => await pullRemoteChanges(userId, startTime, stats)
+    );
     incomplete = pullResult.incomplete || incomplete;
+
 
     if (pullResult.hardFailure) {
       // Schema drift is a hard failure that requires intervention, so we treat it differently.

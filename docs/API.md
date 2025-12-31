@@ -24,6 +24,7 @@ Creates a new user account.
 ```typescript
 import { createClient } from "@/lib/supabase/client";
 
+// Client is strictly typed with your database schema
 const supabase = createClient();
 
 const { data, error } = await supabase.auth.signUp({
@@ -133,8 +134,15 @@ interface Quiz {
   questions: Question[];
   tags: string[];
   version: number;
+  // added in v1.3.5
+  category?: string;
+  subcategory?: string;
+  quiz_hash?: string;
 }
 ```
+
+> [!TIP]
+> Use `category` and `subcategory` to enable advanced analytics like the Topic Heatmap.
 
 ### List Quizzes
 
@@ -241,8 +249,13 @@ Manually triggers result synchronization.
 
 ```typescript
 import { syncResults } from "@/lib/sync/syncManager";
+import { syncQuizzes } from "@/lib/sync/quizSyncManager";
+import { syncSRS } from "@/lib/sync/srsSyncManager";
 
+// All sync functions now use strictly typed clients internally
 await syncResults(userId);
+await syncQuizzes(userId);
+await syncSRS(userId);
 ```
 
 ---

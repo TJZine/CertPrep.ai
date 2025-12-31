@@ -44,7 +44,7 @@ function FlashcardSkeleton(): React.ReactElement {
 export default function FlashcardPage(): React.ReactElement {
     const params = useParams();
     const router = useRouter();
-    const quizId = params.id as string;
+    const quizId = Array.isArray(params.id) ? params.id[0] : params.id;
 
     const { user } = useAuth();
     const effectiveUserId = useEffectiveUserId(user?.id);
@@ -135,7 +135,7 @@ export default function FlashcardPage(): React.ReactElement {
 
     return (
         <main className="min-h-screen bg-background py-6">
-            <FlashcardContainer quiz={quiz} />
+            <FlashcardContainer quiz={quiz} effectiveUserId={effectiveUserId} />
         </main>
     );
 }

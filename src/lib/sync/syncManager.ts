@@ -9,11 +9,12 @@ import { safeMark, safeMeasure } from "@/lib/perfMarks";
 import { QUIZ_MODES, type QuizMode } from "@/types/quiz";
 import type { Result, SessionType } from "@/types/result";
 import { z } from "zod";
+import type { Database } from "@/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-let supabaseInstance: SupabaseClient | undefined;
+let supabaseInstance: SupabaseClient<Database> | undefined;
 
-function getSupabaseClient(): SupabaseClient | undefined {
+function getSupabaseClient(): SupabaseClient<Database> | undefined {
   if (!supabaseInstance) {
     supabaseInstance = createClient();
   }
@@ -28,6 +29,8 @@ const RemoteResultSchema = z.object({
   id: z.string(),
   quiz_id: z.string(),
   timestamp: z.coerce.number(), // Coerce string (from Postgres bigint) to number
+  // NOTE: "flashcard" is valid in QuizMode but effectively runtime-only;
+  // flashcard sessions do not produce Result records, so we don't expect it here.
   mode: z.enum(QUIZ_MODES).transform((val) => val as QuizMode),
   score: z.coerce.number().int().min(0),
   time_taken_seconds: z.coerce.number().min(0),
@@ -462,7 +465,7 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
   };
 }
 
-export function buildSyncPayload(batch: Result[], userId: string): Record<string, unknown>[] {
+export function buildSyncPayload(batch: Result[], userId: string): Database["public"]["Tables"]["results"]["Insert"][] {
   return batch.map((r) => ({
     id: r.id,
     user_id: userId,
@@ -482,5 +485,5 @@ export function buildSyncPayload(batch: Result[], userId: string): Record<string
     source_map: r.source_map,
     // Only include deleted_at if set (prevents resurrecting remotely deleted records)
     ...(r.deleted_at && { deleted_at: new Date(r.deleted_at).toISOString() }),
-  }));
+  })) as unknown as Database["public"]["Tables"]["results"]["Insert"][];
 }

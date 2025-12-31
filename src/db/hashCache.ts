@@ -9,7 +9,7 @@ const EVICTION_TARGET = 8_000;
 
 /**
  * Evict old cache entries if the cache exceeds MAX_CACHE_ENTRIES.
- * Uses FIFO approximation (oldest entries by insertion order).
+ * Uses FIFO ordering (oldest entries by created_at timestamp).
  * Fire-and-forget — errors are logged but don't interrupt caller.
  */
 async function maybeEvictCache(): Promise<void> {
@@ -17,7 +17,10 @@ async function maybeEvictCache(): Promise<void> {
         const count = await db.hashCache.count();
         if (count > MAX_CACHE_ENTRIES) {
             const toDelete = count - EVICTION_TARGET;
-            const keys = await db.hashCache.limit(toDelete).primaryKeys();
+            const keys = await db.hashCache
+                .orderBy("created_at")
+                .limit(toDelete)
+                .primaryKeys();
             await db.hashCache.bulkDelete(keys);
             logger.debug("Hash cache evicted entries", { deleted: keys.length, remaining: EVICTION_TARGET });
         }
@@ -45,7 +48,7 @@ export async function getCachedHash(answer: string): Promise<string> {
         const hash = await hashAnswer(answer);
 
         // Store in cache (fire and forget - don't block on write)
-        db.hashCache.put({ answer, hash }).catch((err) => {
+        db.hashCache.put({ answer, hash, created_at: Date.now() }).catch((err) => {
             logger.warn("Failed to cache hash", err);
         });
 
@@ -85,16 +88,16 @@ export async function getCachedHashBatch(
 
         // Compute missing hashes
         if (uncached.length > 0) {
-            const newEntries: Array<{ answer: string; hash: string }> = [];
+            const newEntries: Array<{ answer: string; hash: string; created_at: number }> = [];
 
             const hashPromises = uncached.map(async (answer) => {
                 const hash = await hashAnswer(answer);
-                return { answer, hash };
+                return { answer, hash, created_at: Date.now() };
             });
             const computed = await Promise.all(hashPromises);
-            for (const { answer, hash } of computed) {
+            for (const { answer, hash, created_at } of computed) {
                 results.set(answer, hash);
-                newEntries.push({ answer, hash });
+                newEntries.push({ answer, hash, created_at });
             }
 
             // Batch store new entries (fire and forget)
