@@ -108,6 +108,45 @@ describe("quizRemote", () => {
                 expect.objectContaining({ error })
             );
         });
+
+        it("warns when fetched quiz has missing timestamps", async (): Promise<void> => {
+            // Override then to return data with null timestamps
+            mockBuilder.then = (resolve): void => {
+                resolve({
+                    data: [{
+                        id: "q1",
+                        user_id: "user-1",
+                        title: "Test",
+                        description: null,
+                        tags: [],
+                        version: 1,
+                        questions: [],
+                        quiz_hash: null,
+                        source_id: null,
+                        created_at: null, // Missing timestamp
+                        updated_at: null, // Missing timestamp
+                        deleted_at: null,
+                        category: null,
+                        subcategory: null,
+                    }],
+                    error: null,
+                });
+            };
+
+            const result = await fetchUserQuizzes({ userId: "user-1" });
+
+            expect(result.data).toHaveLength(1);
+            expect(logger.warn).toHaveBeenCalledWith(
+                "Quiz row missing timestamp(s), using fallback",
+                expect.objectContaining({
+                    quizId: "q1",
+                    hasCreatedAt: false,
+                    hasUpdatedAt: false,
+                })
+            );
+            // Verify fallback timestamps are consistent (same value)
+            expect(result.data[0]?.created_at).toBe(result.data[0]?.updated_at);
+        });
     });
 
     describe("upsertQuizzes", () => {

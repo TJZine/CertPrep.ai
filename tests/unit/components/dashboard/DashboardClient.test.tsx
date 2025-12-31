@@ -85,7 +85,7 @@ describe("DashboardClient", () => {
         mocks.getDueCountsByBox.mockResolvedValue({ 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 });
     });
 
-    it("renders the dashboard shell", async () => {
+    it("renders dashboard header after initialization", async () => {
         render(<DashboardClient />);
 
         // Check if loading state resolves

@@ -26,13 +26,17 @@ function toRemoteQuizRow(
   row: Database["public"]["Tables"]["quizzes"]["Row"],
 ): RemoteQuizRow {
   // Warn if timestamps are missing — may indicate DB integrity issue
-  if (!row.created_at || !row.updated_at) {
+  const hasMissingTimestamp = !row.created_at || !row.updated_at;
+  if (hasMissingTimestamp) {
     logger.warn("Quiz row missing timestamp(s), using fallback", {
       quizId: row.id,
       hasCreatedAt: !!row.created_at,
       hasUpdatedAt: !!row.updated_at,
     });
   }
+
+  // Use consistent fallback if either timestamp missing
+  const fallbackTimestamp = hasMissingTimestamp ? new Date().toISOString() : "";
 
   return {
     id: row.id,
@@ -44,8 +48,8 @@ function toRemoteQuizRow(
     questions: row.questions as unknown as Question[], // DB stores as Json, app expects Question[]
     quiz_hash: row.quiz_hash,
     source_id: row.source_id,
-    created_at: row.created_at ?? new Date().toISOString(),
-    updated_at: row.updated_at ?? new Date().toISOString(),
+    created_at: row.created_at ?? fallbackTimestamp,
+    updated_at: row.updated_at ?? fallbackTimestamp,
     deleted_at: row.deleted_at,
     category: row.category,
     subcategory: row.subcategory,
