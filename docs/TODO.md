@@ -36,57 +36,8 @@ The Exam Readiness card shows categories with a "show more" button. Currently sh
 
 ### E2E Test Stability: Remove Fixed `waitForTimeout` Calls
 
-**Priority**: High | **Effort**: 4-6 hours | **Category**: Test Infrastructure
-
-#### Context
-
-After migrating sync managers from `getSession()` to `getUser()` (v1.4.1), E2E tests required significant stabilization work. The current solution uses fixed `waitForTimeout()` calls to handle async answer persistence:
-
-```typescript
-// tests/e2e/quiz-flow.spec.ts, tests/e2e/offline-sync.spec.ts
-await option.click();
-await page.waitForTimeout(200); // React hydration
-await expect(option).toHaveAttribute("aria-checked", "true");
-await page.waitForTimeout(500); // Hash operation persistence
-```
-
-#### Problem
-
-Fixed waits are inherently flaky:
-
-- Too short → intermittent failures on slow CI runners
-- Too long → slow test suite
-- No feedback loop on actual operation completion
-
-#### Proposed Solution
-
-Expose test hooks that resolve when persistence completes:
-
-```typescript
-// Option A: Wait for store state
-await page.waitForFunction(
-  () => window.__certprepStore?.getState().isSubmitting === false,
-);
-
-// Option B: Wait for network idle after hash
-await page.waitForLoadState("networkidle");
-
-// Option C: Add data-testid that appears after persistence
-await expect(page.getByTestId("answer-persisted")).toBeVisible();
-```
-
-#### Files to Review
-
-- `tests/e2e/quiz-flow.spec.ts` — `selectOption()` helper
-- `tests/e2e/offline-sync.spec.ts` — `selectOption()` helper
-- `src/stores/quizSessionStore.ts` — expose test hooks if needed
-
-#### Acceptance Criteria
-
-- [ ] Remove all `waitForTimeout()` calls from E2E option selection
-- [ ] Replace with condition-based waits
-- [ ] Run E2E suite 5+ times to verify stability
-- [ ] Document the approach in `docs/E2E_DEBUGGING_REFERENCE.md`
+**Status**: ✅ **Completed** (v1.4.3)
+Moved to completed archive.
 
 ---
 
@@ -132,7 +83,7 @@ Future optimizations to consider if slow sync issues persist after the cursor fi
 
 #### Monitoring
 
-- [ ] Add Sentry performance spans for each sync phase
+- [x] Add Sentry performance spans for each sync phase (Implemented in v1.4.3)
 - [ ] Track sync duration percentiles (p50, p95, p99)
 - [ ] Alert on sync duration regression
 
@@ -344,135 +295,8 @@ export async function cleanOrphanedSRSStates(userId: string): Promise<number> {
 
 ### Supabase Generated Types
 
-**Priority**: Low-Medium | **Effort**: 1-2 hours | **Category**: Developer Experience / Type Safety
-
-#### Context
-
-Supabase client calls currently use the untyped `SupabaseClient` type, meaning table names, column names, and RPC function signatures are **magic strings** validated only at runtime.
-
-#### Current State
-
-**3 files with untyped Supabase data operations:**
-
-| File                | Tables    | Operations             |
-| ------------------- | --------- | ---------------------- |
-| `syncManager.ts`    | `results` | select, upsert, delete |
-| `quizRemote.ts`     | `quizzes` | select, upsert, update |
-| `srsSyncManager.ts` | `srs`     | **rpc**, select        |
-
-**8 additional files** use Supabase for auth-only (no data queries—no benefit from generated types).
-
-#### Problem
-
-Without generated types:
-
-- Typos in column names (e.g., `quzi_id`) are not caught until runtime
-- RPC function names and signatures are magic strings
-- No IDE autocompletion for Supabase queries
-- Must maintain parallel Zod schemas for basic shape validation
-
-#### Proposed Solution
-
-Generate TypeScript types from the Supabase schema:
-
-```bash
-# Add to package.json scripts
-"supabase:types": "supabase gen types typescript --linked > src/types/database.types.ts"
-```
-
-Then type the client:
-
-```typescript
-// src/lib/supabase/client.ts
-import type { Database } from "@/types/database.types";
-import { createClient as createSupabaseClient } from "@supabase/supabase-js";
-
-export const createClient = () => createSupabaseClient<Database>(url, key);
-```
-
-#### Benefits
-
-| Benefit                    | Impact                                     |
-| -------------------------- | ------------------------------------------ |
-| **Build-time errors**      | Catch typos in table/column names          |
-| **Typed RPC calls**        | `upsert_srs_lww_batch` signature validated |
-| **IDE autocompletion**     | Better DX for all Supabase queries         |
-| **Single source of truth** | Schema → Types, no duplicated shapes       |
-
-#### Trade-offs
-
-| Consideration           | Notes                                                  |
-| ----------------------- | ------------------------------------------------------ |
-| **CI integration**      | Must regenerate types when schema changes              |
-| **Generated file size** | ~500-1000 LoC (negligible for bundle, dev-only import) |
-| **Migration effort**    | ~1-2 hours to set up and update 3 sync files           |
-
-#### Implementation Steps
-
-1. [ ] Install/verify `supabase` CLI is available in dev dependencies
-2. [ ] Pin CLI version in `package.json` for reproducibility:
-
-   ```json
-   "devDependencies": {
-     "supabase": "1.145.0"
-   }
-   ```
-
-3. [ ] Add `supabase:types` script to `package.json`:
-
-   ```bash
-   # For local development (no auth needed)
-   "supabase:types": "supabase gen types typescript --local > src/types/database.types.ts"
-   # OR for CI/linked projects (requires SUPABASE_ACCESS_TOKEN, SUPABASE_PROJECT_ID secrets)
-   "supabase:types:ci": "supabase gen types typescript --project-id $SUPABASE_PROJECT_ID > src/types/database.types.ts"
-   ```
-
-   > [!NOTE]
-   > For CI usage, ensure `SUPABASE_PROJECT_ID` and `SUPABASE_ACCESS_TOKEN` are set as repository secrets.
-
-4. [ ] Generate initial `src/types/database.types.ts`
-5. [ ] Create separate typed client helpers for browser and server:
-
-   ```typescript
-   // src/lib/supabase/client.ts (browser - uses NEXT_PUBLIC_ vars only)
-   import type { Database } from "@/types/database.types";
-   import { createBrowserClient } from "@supabase/ssr";
-   export const createClient = () =>
-     createBrowserClient<Database>(
-       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-     );
-
-   // src/lib/supabase/server.ts (server - can use service role if needed)
-   import type { Database } from "@/types/database.types";
-   import { createServerClient } from "@supabase/ssr";
-   // NEVER expose SUPABASE_SERVICE_ROLE_KEY to browser code
-   ```
-
-6. [ ] Update sync files to use typed client (IDE will flag any mismatches)
-7. [ ] Add CI step to regenerate types and fail on divergence:
-
-   ```yaml
-   - run: npm run supabase:types:ci
-   - run: git diff --exit-code src/types/database.types.ts
-   ```
-
-8. [ ] Consider removing redundant Zod schemas where generated types suffice (keep Zod for coercion)
-
-#### Acceptance Criteria
-
-- [ ] `npm run supabase:types` generates valid TypeScript
-- [ ] All `.rpc()`, `.from()`, `.select()`, `.upsert()` calls are typed
-- [ ] Build passes with strict TypeScript
-- [ ] IDE provides autocompletion for column names
-
-#### Decision
-
-**Deferred** — Current Zod-based runtime validation is sufficient. Prioritize when:
-
-- Adding more RPC functions
-- Onboarding new developers who would benefit from autocompletion
-- Schema changes become frequent (to catch drift early)
+**Status**: ✅ **Completed** (v1.4.3)
+Moved to completed archive.
 
 ---
 

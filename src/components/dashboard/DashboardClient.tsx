@@ -30,19 +30,19 @@ import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 // Code-split modals - loaded on demand, not in initial bundle
 const ImportModal = dynamic(
     () => import("@/components/dashboard/ImportModal").then((mod) => ({ default: mod.ImportModal })),
-    { ssr: false }
+    { ssr: false, loading: () => null }
 );
 const ModeSelectModal = dynamic(
     () => import("@/components/dashboard/ModeSelectModal").then((mod) => ({ default: mod.ModeSelectModal })),
-    { ssr: false }
+    { ssr: false, loading: () => null }
 );
 const DeleteConfirmModal = dynamic(
     () => import("@/components/dashboard/DeleteConfirmModal").then((mod) => ({ default: mod.DeleteConfirmModal })),
-    { ssr: false }
+    { ssr: false, loading: () => null }
 );
 const ReviewModeModal = dynamic(
     () => import("@/components/srs/ReviewModeModal").then((mod) => ({ default: mod.ReviewModeModal })),
-    { ssr: false }
+    { ssr: false, loading: () => null }
 );
 
 /**

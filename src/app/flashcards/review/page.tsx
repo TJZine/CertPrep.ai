@@ -36,16 +36,22 @@ export default function FlashcardReviewPage(): React.ReactElement {
     const [aggregatedQuiz, setAggregatedQuiz] = React.useState<Quiz | null>(null);
     const [loadError, setLoadError] = React.useState<string | null>(null);
 
+    // Request ID for canceling stale async requests
+    const requestId = React.useRef(0);
+
     // Load questions - either from sessionStorage or directly from due questions
     React.useEffect(() => {
         if (!isInitialized || !effectiveUserId) return;
 
+        const currentRequest = ++requestId.current;
         let isMounted = true;
 
         const loadQuestions = async (): Promise<void> => {
             try {
                 // SSR guard
                 if (typeof window === "undefined") return;
+                // Stale request guard
+                if (currentRequest !== requestId.current) return;
 
                 let questionIds: string[];
 
@@ -70,10 +76,12 @@ export default function FlashcardReviewPage(): React.ReactElement {
                 const allQuizzes = await db.quizzes.toArray();
 
                 // Build a map of question ID -> question
+                // Use Set for O(1) lookup instead of O(n) .includes()
+                const questionIdSet = new Set(questionIds);
                 const questionMap = new Map<string, { question: Question; quiz: Quiz }>();
                 for (const quiz of allQuizzes) {
                     for (const question of quiz.questions) {
-                        if (questionIds.includes(question.id)) {
+                        if (questionIdSet.has(question.id)) {
                             questionMap.set(question.id, { question, quiz });
                         }
                     }
@@ -195,7 +203,7 @@ export default function FlashcardReviewPage(): React.ReactElement {
 
     return (
         <main className="min-h-screen bg-background py-6">
-            <FlashcardContainer quiz={aggregatedQuiz} isSRSReview={true} />
+            <FlashcardContainer quiz={aggregatedQuiz} effectiveUserId={effectiveUserId} isSRSReview={true} />
         </main>
     );
 }

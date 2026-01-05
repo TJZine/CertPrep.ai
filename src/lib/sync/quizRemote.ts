@@ -1,16 +1,85 @@
 import { logger } from "@/lib/logger";
 import { createClient } from "@/lib/supabase/client";
 import type { RemoteQuizInput, RemoteQuizRow } from "./quizDomain";
+import type { Database } from "@/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Question } from "@/types/quiz";
 import { NIL_UUID } from "@/lib/constants";
 
-let supabaseInstance: SupabaseClient | undefined;
+let supabaseInstance: SupabaseClient<Database> | undefined;
 
-function getSupabaseClient(): SupabaseClient | undefined {
+function getSupabaseClient(): SupabaseClient<Database> | undefined {
   if (!supabaseInstance) {
     supabaseInstance = createClient();
   }
   return supabaseInstance;
+}
+
+/** Default fetch limit for quiz sync pagination. Exported for test usage. */
+export const DEFAULT_FETCH_LIMIT = 50;
+
+/**
+ * Adapter: Convert Supabase Row type to RemoteQuizRow.
+ * Handles type differences between DB Json and app Question[].
+ */
+function toRemoteQuizRow(
+  row: Database["public"]["Tables"]["quizzes"]["Row"],
+): RemoteQuizRow {
+  // Warn if timestamps are missing — may indicate DB integrity issue
+  const hasMissingTimestamp = !row.created_at || !row.updated_at;
+  if (hasMissingTimestamp) {
+    logger.warn("Quiz row missing timestamp(s), using fallback", {
+      quizId: row.id,
+      hasCreatedAt: !!row.created_at,
+      hasUpdatedAt: !!row.updated_at,
+    });
+  }
+
+  // Use consistent fallback if either timestamp missing
+  const fallbackTimestamp = hasMissingTimestamp ? new Date().toISOString() : "";
+
+  return {
+    id: row.id,
+    user_id: row.user_id,
+    title: row.title,
+    description: row.description,
+    tags: row.tags ?? [],
+    version: row.version,
+    questions: row.questions as unknown as Question[], // DB stores as Json, app expects Question[]
+    quiz_hash: row.quiz_hash,
+    source_id: row.source_id,
+    created_at: row.created_at ?? fallbackTimestamp,
+    updated_at: row.updated_at ?? fallbackTimestamp,
+    deleted_at: row.deleted_at,
+    category: row.category,
+    subcategory: row.subcategory,
+  };
+}
+
+/**
+ * Adapter: Convert RemoteQuizInput to Supabase Insert type.
+ * Ensures proper null handling and type coercion for DB insertion.
+ */
+function toQuizInsert(
+  quiz: RemoteQuizInput,
+  userId: string,
+): Database["public"]["Tables"]["quizzes"]["Insert"] {
+  return {
+    id: quiz.id,
+    user_id: quiz.user_id ?? userId,
+    title: quiz.title,
+    description: quiz.description ?? null,
+    tags: quiz.tags ?? [],
+    version: quiz.version,
+    questions: quiz.questions as unknown as Database["public"]["Tables"]["quizzes"]["Insert"]["questions"],
+    quiz_hash: quiz.quiz_hash ?? null,
+    source_id: quiz.source_id ?? null,
+    created_at: quiz.created_at ?? null,
+    updated_at: quiz.updated_at ?? null,
+    deleted_at: quiz.deleted_at ?? null,
+    category: quiz.category ?? null,
+    subcategory: quiz.subcategory ?? null,
+  };
 }
 
 interface FetchUserQuizzesParams {
@@ -24,7 +93,7 @@ export async function fetchUserQuizzes({
   userId,
   updatedAfter,
   lastId,
-  limit = 50,
+  limit = DEFAULT_FETCH_LIMIT,
 }: FetchUserQuizzesParams): Promise<{
   data: RemoteQuizRow[];
   error: unknown | null;
@@ -73,7 +142,7 @@ export async function fetchUserQuizzes({
     return { data: [], error };
   }
 
-  return { data: data ?? [], error: null };
+  return { data: (data ?? []).map(toRemoteQuizRow), error: null };
 }
 
 export async function upsertQuizzes(
@@ -89,10 +158,7 @@ export async function upsertQuizzes(
     return { error: { message: "Supabase client unavailable" } };
   }
 
-  const payload = quizzes.map((quiz) => ({
-    ...quiz,
-    user_id: quiz.user_id ?? userId,
-  }));
+  const payload = quizzes.map((quiz) => toQuizInsert(quiz, userId));
 
   const { error } = await client
     .from("quizzes")
