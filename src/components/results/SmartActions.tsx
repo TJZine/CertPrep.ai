@@ -218,7 +218,7 @@ export function SmartActions({
                 />
               </div>
               <h3 className="font-semibold text-foreground">
-                Review Missed
+                View Missed Answers
               </h3>
               <p className="mt-1 text-sm text-muted-foreground">
                 {hasMissedQuestions
@@ -283,7 +283,7 @@ export function SmartActions({
               </h3>
               <p className="mt-1 text-sm text-muted-foreground">
                 {smartRoundQuestionIds.length > 0
-                  ? `Practice ${smartRoundQuestionIds.length} questions`
+                  ? `Start new practice with ${smartRoundQuestionIds.length} items`
                   : "No questions to retry!"}
               </p>
             </button>

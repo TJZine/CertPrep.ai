@@ -4,7 +4,7 @@ import * as React from "react";
 import { enableMapSet } from "immer";
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
-import { SPACED_REPETITION, TIMER } from "@/lib/constants";
+import { TIMER } from "@/lib/constants";
 import { hashAnswer } from "@/lib/utils";
 import type { Question, QuizMode } from "@/types/quiz";
 
@@ -12,11 +12,7 @@ enableMapSet();
 
 const HASH_RETRY_ATTEMPTS = 2;
 
-// Spaced repetition queue item
-interface QueuedQuestion {
-  questionId: string;
-  reappearAt: number;
-}
+
 
 // Answer record for a single question
 interface AnswerRecord {
@@ -40,7 +36,7 @@ interface QuizSessionState {
   hasSubmitted: boolean;
   showExplanation: boolean;
   questionQueue: string[];
-  reappearQueue: QueuedQuestion[];
+
   hardQuestions: Set<string>;
   flaggedQuestions: Set<string>;
   startTime: number | null;
@@ -123,7 +119,7 @@ const createInitialState = (): QuizSessionState => ({
   hasSubmitted: false,
   showExplanation: false,
   questionQueue: [],
-  reappearQueue: [],
+
   hardQuestions: new Set<string>(),
   flaggedQuestions: new Set<string>(),
   startTime: null,
@@ -253,18 +249,7 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
 
       set((state) => {
         const nextIndex = state.currentIndex + 1;
-        const dueQuestions = state.reappearQueue.filter(
-          (item) => item.reappearAt <= nextIndex,
-        );
-        if (dueQuestions.length > 0) {
-          const remaining = state.reappearQueue.filter(
-            (item) => item.reappearAt > nextIndex,
-          );
-          const insertAt = Math.min(nextIndex, state.questionQueue.length);
-          const questionIds = dueQuestions.map((item) => item.questionId);
-          state.questionQueue.splice(insertAt, 0, ...questionIds);
-          state.reappearQueue = remaining;
-        }
+
 
         if (nextIndex >= state.questionQueue.length) {
           state.isComplete = true;
@@ -548,9 +533,7 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
       }
 
       set((draft) => {
-        const reappearAt =
-          draft.currentIndex + SPACED_REPETITION.AGAIN_REAPPEAR_TURNS;
-        draft.reappearQueue.push({ questionId, reappearAt });
+
 
         const existing = draft.answers.get(questionId);
         if (existing) {
