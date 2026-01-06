@@ -125,11 +125,11 @@ test.describe("Quiz Flow Tests", () => {
             await expect(page.getByText(/why is this wrong/i)).toBeVisible();
             await expect(page.getByText(quiz.questions[0]!.explanation!)).toBeVisible();
 
-            // 4. Verify "Again" button is visible
-            await expect(page.getByRole("button", { name: /again/i })).toBeVisible();
+            // 4. Verify "Forgot" button is visible
+            await expect(page.getByRole("button", { name: /forgot/i })).toBeVisible();
         });
 
-        test("spaced repetition re-queues incorrect questions", async ({
+        test("spaced repetition does not re-queue incorrect questions", async ({
             authenticatedPage: page,
             seedTestQuiz,
         }) => {
@@ -148,10 +148,10 @@ test.describe("Quiz Flow Tests", () => {
             // Extra buffer for React hydration to complete
             await page.waitForTimeout(E2E_TIMEOUTS.HYDRATION_BUFFER);
 
-            // Q1: Answer wrong -> Click "Again"
+            // Q1: Answer wrong -> Click "Forgot"
             await selectOption(page, "A"); // Wrong
             await clickSubmitButton(page);
-            await page.getByRole("button", { name: /again/i }).click();
+            await page.getByRole("button", { name: /forgot/i }).click();
 
             // Wait for Q2 content to be visible before interacting
             await expect(page.getByText(quiz.questions[1]!.question!)).toBeVisible({ timeout: E2E_TIMEOUTS.LOADING });
@@ -159,12 +159,13 @@ test.describe("Quiz Flow Tests", () => {
             // Q2: Answer correct -> Click "Good"
             await selectOption(page, "C"); // Correct (for Q2)
             await clickSubmitButton(page);
-            await page.getByRole("button", { name: /good/i }).click();
+            await page.getByRole("button", { name: /good|finish/i }).click();
 
-            // Wait for any loading state to complete before asserting
-            // Timeout calibrated for CI variability - see helpers/timeouts.ts
-            await expect(page.getByText(/loading/i).first()).not.toBeVisible({ timeout: E2E_TIMEOUTS.ANIMATION });
-            await expect(page.getByText(quiz.questions[0]!.question!)).toBeVisible();
+            // Verify redirected to results page (No re-queueing of Q1)
+            await expect(page).toHaveURL(new RegExp(`/results`));
+
+            // Wait for loading to finish
+            await expect(page.getByText(/loading|syncing/i).first()).not.toBeVisible({ timeout: E2E_TIMEOUTS.HYDRATION });
         });
 
         test("can flag questions for review", async ({

@@ -41,7 +41,7 @@ test.describe("Flashcard Study Mode", () => {
         });
 
         // 7. Verify rating buttons are visible
-        await expect(page.getByRole("button", { name: /again/i })).toBeVisible();
+        await expect(page.getByRole("button", { name: /forgot/i })).toBeVisible();
         await expect(page.getByRole("button", { name: /hard/i })).toBeVisible();
         await expect(page.getByRole("button", { name: /good/i })).toBeVisible();
 
@@ -75,7 +75,7 @@ test.describe("Flashcard Study Mode", () => {
         await expect(page.getByRole("button", { name: /back to dashboard/i })).toBeVisible();
     });
 
-    test("handles 'Again' rating correctly", async ({
+    test("handles 'Forgot' rating correctly", async ({
         authenticatedPage: page,
         seedTestQuiz,
     }) => {
@@ -91,9 +91,9 @@ test.describe("Flashcard Study Mode", () => {
             timeout: E2E_TIMEOUTS.LOADING,
         });
 
-        // Flip and rate as "Again"
+        // Flip and rate as "Forgot"
         await page.getByRole("button", { name: "Reveal Answer", exact: true }).click();
-        await page.getByRole("button", { name: /again/i }).click();
+        await page.getByRole("button", { name: /forgot/i }).click();
 
         // Move to second card
         await expect(page.getByText(quiz.questions[1]!.question!)).toBeVisible({
@@ -109,7 +109,7 @@ test.describe("Flashcard Study Mode", () => {
             timeout: E2E_TIMEOUTS.LOADING,
         });
 
-        // Should show 1 "Again" and 1 "Good"
+        // Should show 1 "Forgot" and 1 "Good"
         // The summary displays counts in colored boxes
         await expect(page.getByText(/mastery rate/i)).toBeVisible();
         await expect(page.getByText("50%")).toBeVisible(); // 1/2 = 50%

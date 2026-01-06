@@ -3,10 +3,7 @@ export const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || "1.4.1";
 
 export const NIL_UUID = "00000000-0000-0000-0000-000000000000";
 
-export const SPACED_REPETITION = {
-  AGAIN_REAPPEAR_TURNS: 3,
-  HARD_FLAG: "needs_review",
-} as const;
+
 
 export const TIMER = {
   WARNING_THRESHOLD_SECONDS: 300,

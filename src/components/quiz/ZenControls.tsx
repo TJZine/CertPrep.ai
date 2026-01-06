@@ -37,11 +37,12 @@ export function ZenControls({
             "flex-1 justify-center border-destructive/50 text-destructive hover:bg-destructive/10 hover:text-destructive",
             "sm:flex-initial sm:min-w-[120px]",
           )}
-          aria-label="Again - show this question again soon"
+          aria-label="Forgot - reset progress (score 1)"
+          title="I didn't know this (Resets progress)"
         >
           <span className="flex items-center gap-2">
             <RotateCcw className="h-4 w-4" aria-hidden="true" />
-            Again
+            Forgot
           </span>
         </Button>
 
@@ -85,7 +86,7 @@ export function ZenControls({
         <kbd className="rounded bg-muted px-1 py-0.5 font-mono text-foreground">
           1
         </kbd>{" "}
-        Again,{" "}
+        Forgot,{" "}
         <kbd className="rounded bg-muted px-1 py-0.5 font-mono text-foreground">
           2
         </kbd>{" "}

@@ -163,6 +163,42 @@ describe("Quiz Session Store", () => {
         expect(state.endTime).toBeDefined();
     });
 
+    it("should handle markAgain correctly (no re-queueing)", async () => {
+        act(() => {
+            useQuizSessionStore
+                .getState()
+                .initializeSession("quiz-1", "zen", mockQuestions);
+        });
+
+        // 1. Answer first question
+        act(() => {
+            useQuizSessionStore.getState().selectAnswer("A");
+        });
+        await act(async () => {
+            useQuizSessionStore.getState().submitAnswer();
+        });
+
+        const initialQueueLength = useQuizSessionStore.getState().questions.length;
+
+        // 2. Mark Again
+        act(() => {
+            useQuizSessionStore.getState().markAgain();
+        });
+
+        const state = useQuizSessionStore.getState();
+
+        // Verify navigation
+        expect(state.currentIndex).toBe(1);
+
+        // Verify NO re-queueing (length should be same)
+        expect(state.questions.length).toBe(initialQueueLength);
+        expect(state.questionQueue.length).toBe(initialQueueLength);
+
+        // Verify difficulty marked
+        const answer = state.answers.get("q1");
+        expect(answer?.difficulty).toBe("again");
+    });
+
     it("should handle Proctor Mode specific logic", () => {
         act(() => {
             useQuizSessionStore

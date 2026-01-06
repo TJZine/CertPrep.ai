@@ -18,11 +18,11 @@ export interface FlashcardControlsProps {
 
 /**
  * Rating buttons shown after revealing a flashcard answer.
- * Again (1) = Demote to box 1
+ * Forgot (1) = Demote to box 1
  * Hard (2) = Stay in current box
  * Good (3) = Promote one box
  *
- * Keyboard shortcuts: 1/2/3 or A/H/G
+ * Keyboard shortcuts: 1/2/3 or F/H/G
  */
 export function FlashcardControls({
     onRate,
@@ -36,7 +36,8 @@ export function FlashcardControls({
 
             switch (event.key.toLowerCase()) {
                 case "1":
-                case "a":
+                case "a": // Legacy support
+                case "f":
                     event.preventDefault();
                     onRate(1);
                     break;
@@ -75,10 +76,10 @@ export function FlashcardControls({
                     onClick={() => onRate(1)}
                     disabled={disabled}
                     className="flex-col h-auto py-3 border-destructive/50 hover:bg-destructive/10 hover:border-destructive focus-visible:ring-destructive"
-                    aria-label="Again - I didn't know this, review again soon"
+                    aria-label="Forgot - I failed this, reset progress"
                 >
                     <RotateCcw className="h-5 w-5 mb-1 text-destructive" aria-hidden="true" />
-                    <span className="font-medium text-destructive">Again</span>
+                    <span className="font-medium text-destructive">Forgot</span>
                     <kbd className="text-[10px] text-muted-foreground mt-1 opacity-70">1</kbd>
                 </Button>
 
