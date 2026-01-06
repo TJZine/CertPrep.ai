@@ -154,13 +154,6 @@ export function useAnalyticsStats(
                 let isCorrect = false;
 
                 if (userAnswer) {
-                  // If we have an answer, verify it.
-                  // For legacy data where multiple answers might exist (though here we only have the final map),
-                  // verify integrity. The result.answers is a Record<string, string>, so it already de-duplicates by questionId.
-                  // The issue might be in how result.answers was populated in old loop logic (last write wins).
-                  // With the new logic (no loop), this is safe.
-                  // We just need to ensure we don't count questions multiple times if sessionQuestions has duplicates (it shouldn't).
-
                   const userHash = await hashAnswer(userAnswer);
                   if (userHash === question.correct_answer_hash) {
                     isCorrect = true;
