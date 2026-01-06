@@ -18,11 +18,11 @@ export interface FlashcardControlsProps {
 
 /**
  * Rating buttons shown after revealing a flashcard answer.
- * Again (1) = Demote to box 1
+ * Forgot (1) = Demote to box 1
  * Hard (2) = Stay in current box
  * Good (3) = Promote one box
  *
- * Keyboard shortcuts: 1/2/3 or A/H/G
+ * Keyboard shortcuts: 1/2/3 or F/H/G
  */
 export function FlashcardControls({
     onRate,
@@ -36,7 +36,8 @@ export function FlashcardControls({
 
             switch (event.key.toLowerCase()) {
                 case "1":
-                case "a":
+                case "a": // Legacy support
+                case "f":
                     event.preventDefault();
                     onRate(1);
                     break;

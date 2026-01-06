@@ -12,8 +12,6 @@ enableMapSet();
 
 const HASH_RETRY_ATTEMPTS = 2;
 
-
-
 // Answer record for a single question
 interface AnswerRecord {
   questionId: string;
@@ -249,7 +247,6 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
 
       set((state) => {
         const nextIndex = state.currentIndex + 1;
-
 
         if (nextIndex >= state.questionQueue.length) {
           state.isComplete = true;
@@ -533,8 +530,6 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
       }
 
       set((draft) => {
-
-
         const existing = draft.answers.get(questionId);
         if (existing) {
           existing.difficulty = "again";

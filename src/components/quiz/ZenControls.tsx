@@ -86,7 +86,7 @@ export function ZenControls({
         <kbd className="rounded bg-muted px-1 py-0.5 font-mono text-foreground">
           1
         </kbd>{" "}
-        Again,{" "}
+        Forgot,{" "}
         <kbd className="rounded bg-muted px-1 py-0.5 font-mono text-foreground">
           2
         </kbd>{" "}
