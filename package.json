@@ -65,7 +65,7 @@
     "@types/react-dom": "^19",
     "@vitest/coverage-v8": "^4.0.14",
     "autoprefixer": "^10.4.20",
-    "baseline-browser-mapping": "^2.9.11",
+    "baseline-browser-mapping": "^2.9.14",
     "eslint": "^9.39.1",
     "eslint-config-next": "^16.1.1",
     "fake-indexeddb": "^6.2.5",
