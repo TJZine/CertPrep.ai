@@ -357,6 +357,75 @@ describe("smart merge import", () => {
     expect(result.quizzesMerged).toBe(0);
     expect(result.resultsImported).toBe(1);
   });
+
+  it("deduplicates identical results within the same import batch", async () => {
+    // Two results with different IDs but same signature (quiz_id, timestamp, mode, score, time)
+    const result1: Result = {
+      ...sampleResult,
+      id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+    };
+    const result2: Result = {
+      ...sampleResult,
+      id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+    };
+
+    const importPayload: ExportData = {
+      version: "1.0",
+      exportedAt: new Date().toISOString(),
+      quizzes: [sampleQuiz],
+      results: [result1, result2],
+    };
+
+    const result = await importData(importPayload, TEST_USER_ID, "smart");
+
+    expect(result.quizzesImported).toBe(1);
+    expect(result.resultsImported).toBe(1);
+    expect(result.resultsDeduplicated).toBe(1);
+
+    const storedResults = await db.results
+      .where("user_id")
+      .equals(TEST_USER_ID)
+      .toArray();
+    expect(storedResults).toHaveLength(1);
+  });
+
+  it("uses title fallback when imported quiz has no hash and existing quiz has no hash", async () => {
+    // Existing quiz without hash
+    const existingQuiz: Quiz = {
+      ...sampleQuiz,
+      id: "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee",
+      quiz_hash: null,
+    };
+    await db.quizzes.put(existingQuiz);
+
+    // Import quiz with different ID but same title, also no hash
+    const importedQuiz: Quiz = {
+      ...sampleQuiz,
+      id: "ffffffff-ffff-4fff-8fff-ffffffffffff",
+      quiz_hash: null, // No hash - should trigger title fallback
+    };
+
+    const importPayload: ExportData = {
+      version: "1.0",
+      exportedAt: new Date().toISOString(),
+      quizzes: [importedQuiz],
+      results: [],
+    };
+
+    const result = await importData(importPayload, TEST_USER_ID, "smart");
+
+    // Should match by title since both have no hash
+    expect(result.quizzesImported).toBe(0);
+    expect(result.quizzesMerged).toBe(1);
+
+    // Verify only the original quiz exists
+    const storedQuizzes = await db.quizzes
+      .where("user_id")
+      .equals(TEST_USER_ID)
+      .toArray();
+    expect(storedQuizzes).toHaveLength(1);
+    expect(storedQuizzes[0]?.id).toBe(existingQuiz.id);
+  });
 });
 
 describe("deleted items stats and purge", () => {

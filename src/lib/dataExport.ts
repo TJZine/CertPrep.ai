@@ -143,7 +143,7 @@ export async function* generateJSONExport(
             quiz.id,
             error,
           );
-          quizHash = quiz.id;
+          // Leave quizHash as null; smart import will use title fallback
         }
       }
       const { user_id: _omitUserId, ...rest } = {
@@ -396,12 +396,12 @@ export async function importData(
   return { quizzesImported, resultsImported };
 }
 
-async function findMatchingQuiz(
+function findMatchingQuiz(
   importedQuiz: Quiz,
   existingByHash: Map<string, Quiz>,
   existingByTitle: Map<string, Quiz[]>,
   allowTitleFallback: boolean,
-): Promise<Quiz | null> {
+): Quiz | null {
   if (importedQuiz.quiz_hash) {
     const hashMatch = existingByHash.get(importedQuiz.quiz_hash);
     if (hashMatch) {
@@ -525,7 +525,7 @@ export async function importDataSmart(
       const allowTitleFallback =
         !hashComputationFailed.has(quiz.id) &&
         missingHashInImport.has(quiz.id);
-      const match = await findMatchingQuiz(
+      const match = findMatchingQuiz(
         quiz,
         isDeletedImport ? deletedByHash : activeByHash,
         isDeletedImport ? deletedByTitle : activeByTitle,

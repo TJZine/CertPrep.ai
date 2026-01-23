@@ -153,12 +153,23 @@ export function DataManagement(): React.ReactElement {
     setIsImporting(true);
     try {
       const result = await importData(importFile, effectiveUserId, importMode);
-      let message = `Imported ${result.quizzesImported} quizzes and ${result.resultsImported} results!`;
-      if (result.quizzesMerged) {
-        message += ` (${result.quizzesMerged} quizzes matched existing)`;
+
+      // Build user-friendly import message based on results
+      const totalQuizzesProcessed = result.quizzesImported + (result.quizzesMerged ?? 0);
+      let message: string;
+
+      if (result.quizzesMerged && result.quizzesImported === 0) {
+        // All quizzes matched existing - emphasize successful matching
+        message = `Processed ${totalQuizzesProcessed} ${totalQuizzesProcessed === 1 ? "quiz" : "quizzes"} (all matched existing), imported ${result.resultsImported} new ${result.resultsImported === 1 ? "result" : "results"}.`;
+      } else if (result.quizzesMerged) {
+        // Mixed: some new, some matched
+        message = `Imported ${result.quizzesImported} new ${result.quizzesImported === 1 ? "quiz" : "quizzes"}, matched ${result.quizzesMerged} existing, and added ${result.resultsImported} ${result.resultsImported === 1 ? "result" : "results"}.`;
+      } else {
+        // No merges (merge/replace mode or no matches found)
+        message = `Imported ${result.quizzesImported} ${result.quizzesImported === 1 ? "quiz" : "quizzes"} and ${result.resultsImported} ${result.resultsImported === 1 ? "result" : "results"}!`;
       }
       if (result.resultsDeduplicated) {
-        message += ` (${result.resultsDeduplicated} duplicate results skipped)`;
+        message += ` (${result.resultsDeduplicated} duplicate ${result.resultsDeduplicated === 1 ? "result" : "results"} skipped)`;
       }
       addToast("success", message);
       setShowImportModal(false);
