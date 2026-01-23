@@ -50,9 +50,9 @@ export function DataManagement(): React.ReactElement {
   const [isClearingLocal, setIsClearingLocal] = React.useState(false);
   const [showImportModal, setShowImportModal] = React.useState(false);
   const [importFile, setImportFile] = React.useState<ExportData | null>(null);
-  const [importMode, setImportMode] = React.useState<"merge" | "replace">(
-    "merge",
-  );
+  const [importMode, setImportMode] = React.useState<
+    "merge" | "replace" | "smart"
+  >("smart");
   const [deleteConfirmation, setDeleteConfirmation] = React.useState("");
   const [deletedStats, setDeletedStats] = React.useState<{
     deletedQuizCount: number;
@@ -153,10 +153,25 @@ export function DataManagement(): React.ReactElement {
     setIsImporting(true);
     try {
       const result = await importData(importFile, effectiveUserId, importMode);
-      addToast(
-        "success",
-        `Imported ${result.quizzesImported} quizzes and ${result.resultsImported} results!`,
-      );
+
+      // Build user-friendly import message based on results
+      const totalQuizzesProcessed = result.quizzesImported + (result.quizzesMerged ?? 0);
+      let message: string;
+
+      if (result.quizzesMerged && result.quizzesImported === 0) {
+        // All quizzes matched existing - emphasize successful matching
+        message = `Processed ${totalQuizzesProcessed} ${totalQuizzesProcessed === 1 ? "quiz" : "quizzes"} (all matched existing), imported ${result.resultsImported} new ${result.resultsImported === 1 ? "result" : "results"}.`;
+      } else if (result.quizzesMerged) {
+        // Mixed: some new, some matched
+        message = `Imported ${result.quizzesImported} new ${result.quizzesImported === 1 ? "quiz" : "quizzes"}, matched ${result.quizzesMerged} existing, and added ${result.resultsImported} ${result.resultsImported === 1 ? "result" : "results"}.`;
+      } else {
+        // No merges (merge/replace mode or no matches found)
+        message = `Imported ${result.quizzesImported} ${result.quizzesImported === 1 ? "quiz" : "quizzes"} and ${result.resultsImported} ${result.resultsImported === 1 ? "result" : "results"}!`;
+      }
+      if (result.resultsDeduplicated) {
+        message += ` (${result.resultsDeduplicated} duplicate ${result.resultsDeduplicated === 1 ? "result" : "results"} skipped)`;
+      }
+      addToast("success", message);
       setShowImportModal(false);
       setImportFile(null);
       await refreshStats();
@@ -471,6 +486,24 @@ export function DataManagement(): React.ReactElement {
                 Import Mode
               </label>
               <div className="space-y-2">
+                <label className="flex items-start gap-2">
+                  <input
+                    type="radio"
+                    name="importMode"
+                    value="smart"
+                    checked={importMode === "smart"}
+                    onChange={() => setImportMode("smart")}
+                    className="mt-0.5 h-4 w-4 accent-primary"
+                  />
+                  <div>
+                    <span className="text-sm font-medium text-foreground">
+                      Smart Merge (recommended)
+                    </span>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      Match quizzes by content and deduplicate results.
+                    </p>
+                  </div>
+                </label>
                 <label className="flex items-center gap-2">
                   <input
                     type="radio"
