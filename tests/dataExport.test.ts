@@ -212,6 +212,153 @@ describe("data export/import", () => {
   });
 });
 
+describe("smart merge import", () => {
+  const sampleQuiz: Quiz = {
+    id: "11111111-1111-4111-8111-111111111111",
+    user_id: TEST_USER_ID,
+    title: "Smart Merge Quiz",
+    description: "Test quiz for smart merge.",
+    created_at: 1_700_000_000_000,
+    updated_at: 1_700_000_000_000,
+    questions: [
+      {
+        id: "q1",
+        category: "Test",
+        question: "What is 2+2?",
+        options: { A: "3", B: "4" },
+        correct_answer: "B",
+        correct_answer_hash: "hash-1",
+        explanation: "Basic math.",
+      },
+    ],
+    tags: [],
+    version: 1,
+    deleted_at: null,
+    quiz_hash: "abc123hash",
+    last_synced_at: null,
+    last_synced_version: null,
+  };
+
+  const sampleResult: Result = {
+    id: "22222222-2222-4222-8222-222222222222",
+    quiz_id: sampleQuiz.id,
+    user_id: TEST_USER_ID,
+    timestamp: 1_700_000_100_000,
+    mode: "zen",
+    score: 80,
+    time_taken_seconds: 120,
+    answers: { q1: "B" },
+    flagged_questions: [],
+    category_breakdown: { Test: 1 },
+  };
+
+  beforeEach(async () => {
+    await resetDatabase();
+  });
+
+  it("matches quizzes by quiz_hash and remaps results", async () => {
+    await db.quizzes.put(sampleQuiz);
+
+    const importPayload: ExportData = {
+      version: "1.0",
+      exportedAt: new Date().toISOString(),
+      quizzes: [
+        {
+          ...sampleQuiz,
+          id: "99999999-9999-4999-8999-999999999999",
+          quiz_hash: "abc123hash",
+        },
+      ],
+      results: [
+        {
+          ...sampleResult,
+          id: "33333333-3333-4333-8333-333333333333",
+          quiz_id: "99999999-9999-4999-8999-999999999999",
+        },
+      ],
+    };
+
+    const result = await importData(importPayload, TEST_USER_ID, "smart");
+
+    expect(result.quizzesImported).toBe(0);
+    expect(result.quizzesMerged).toBe(1);
+    expect(result.resultsImported).toBe(1);
+
+    const storedResults = await db.results
+      .where("user_id")
+      .equals(TEST_USER_ID)
+      .toArray();
+    expect(storedResults).toHaveLength(1);
+    expect(storedResults[0]?.quiz_id).toBe(sampleQuiz.id);
+  });
+
+  it("matches quizzes by title when hash is missing", async () => {
+    await db.quizzes.put({ ...sampleQuiz, quiz_hash: null });
+
+    const importPayload: ExportData = {
+      version: "1.0",
+      exportedAt: new Date().toISOString(),
+      quizzes: [
+        {
+          ...sampleQuiz,
+          id: "88888888-8888-4888-8888-888888888888",
+          quiz_hash: null,
+          title: "Smart Merge Quiz",
+        },
+      ],
+      results: [],
+    };
+
+    const result = await importData(importPayload, TEST_USER_ID, "smart");
+
+    expect(result.quizzesImported).toBe(0);
+    expect(result.quizzesMerged).toBe(1);
+  });
+
+  it("deduplicates results by signature", async () => {
+    await db.quizzes.put(sampleQuiz);
+    await db.results.put(sampleResult);
+
+    const duplicateResult: Result = {
+      ...sampleResult,
+      id: "44444444-4444-4444-8444-444444444444",
+    };
+
+    const importPayload: ExportData = {
+      version: "1.0",
+      exportedAt: new Date().toISOString(),
+      quizzes: [sampleQuiz],
+      results: [duplicateResult],
+    };
+
+    const result = await importData(importPayload, TEST_USER_ID, "smart");
+
+    expect(result.resultsImported).toBe(0);
+    expect(result.resultsDeduplicated).toBe(1);
+
+    const storedResults = await db.results
+      .where("user_id")
+      .equals(TEST_USER_ID)
+      .toArray();
+    expect(storedResults).toHaveLength(1);
+  });
+
+  it("creates new quiz when no match found", async () => {
+    const importPayload: ExportData = {
+      version: "1.0",
+      exportedAt: new Date().toISOString(),
+      quizzes: [sampleQuiz],
+      results: [sampleResult],
+    };
+
+    const result = await importData(importPayload, TEST_USER_ID, "smart");
+
+    expect(result.quizzesImported).toBe(1);
+    expect(result.quizzesMerged).toBe(0);
+    expect(result.resultsImported).toBe(1);
+  });
+});
+
 describe("deleted items stats and purge", () => {
   const sampleQuiz: Quiz = {
     id: "11111111-1111-4111-8111-111111111111",

@@ -1,6 +1,7 @@
 import { db } from "@/db";
-import { sanitizeQuestions } from "@/db/quizzes";
+import { isSRSQuiz, sanitizeQuestions } from "@/db/quizzes";
 import { sanitizeQuestionText } from "@/lib/sanitize";
+import { computeQuizHash } from "@/lib/sync/quizDomain";
 import { QUIZ_MODES, type Quiz } from "@/types/quiz";
 import type { Result } from "@/types/result";
 import { QuizSchema } from "@/validators/quizSchema";
@@ -12,6 +13,15 @@ export interface ExportData {
   exportedAt: string;
   quizzes: Quiz[];
   results: Result[];
+}
+
+export type ImportMode = "merge" | "replace" | "smart";
+
+export interface ImportResult {
+  quizzesImported: number;
+  resultsImported: number;
+  quizzesMerged?: number;
+  resultsDeduplicated?: number;
 }
 
 const ResultImportSchema = z.object({
@@ -123,7 +133,23 @@ export async function* generateJSONExport(
     for (const quiz of batch) {
       if (!quiz) continue;
       if (!isFirstQuiz) yield ",";
-      const { user_id: _omitUserId, ...rest } = quiz;
+      let quizHash = quiz.quiz_hash ?? null;
+      if (!quizHash) {
+        try {
+          quizHash = await computeQuizHash(quiz);
+        } catch (error) {
+          console.warn(
+            "Failed to compute quiz hash during export:",
+            quiz.id,
+            error,
+          );
+          quizHash = quiz.id;
+        }
+      }
+      const { user_id: _omitUserId, ...rest } = {
+        ...quiz,
+        quiz_hash: quizHash,
+      };
       void _omitUserId;
       yield JSON.stringify(rest);
       isFirstQuiz = false;
@@ -237,8 +263,12 @@ export function validateImportData(data: unknown): data is ExportData {
 export async function importData(
   data: ExportData,
   userId: string,
-  mode: "merge" | "replace" = "merge",
-): Promise<{ quizzesImported: number; resultsImported: number }> {
+  mode: ImportMode = "merge",
+): Promise<ImportResult> {
+  if (mode === "smart") {
+    return importDataSmart(data, userId);
+  }
+
   const sanitizedQuizzes: Quiz[] = [];
   const quizIds = new Set<string>();
 
@@ -364,6 +394,262 @@ export async function importData(
   });
 
   return { quizzesImported, resultsImported };
+}
+
+async function findMatchingQuiz(
+  importedQuiz: Quiz,
+  existingByHash: Map<string, Quiz>,
+  existingByTitle: Map<string, Quiz[]>,
+  allowTitleFallback: boolean,
+): Promise<Quiz | null> {
+  if (importedQuiz.quiz_hash) {
+    const hashMatch = existingByHash.get(importedQuiz.quiz_hash);
+    if (hashMatch) {
+      return hashMatch;
+    }
+  }
+
+  if (!allowTitleFallback || !importedQuiz.title) return null;
+
+  const normalizedTitle = normalizeTitle(importedQuiz.title);
+  if (!normalizedTitle) return null;
+
+  const candidates = existingByTitle.get(normalizedTitle) ?? [];
+  if (candidates.length === 0) return null;
+
+  const importedQuestionCount = importedQuiz.questions.length;
+  const importedTags = normalizeTags(importedQuiz.tags);
+
+  return (
+    candidates.find((quiz) => {
+      if (isSRSQuiz(quiz, quiz.user_id)) return false;
+      if (quiz.questions.length !== importedQuestionCount) return false;
+      const quizTags = normalizeTags(quiz.tags);
+      return haveEqualTags(importedTags, quizTags);
+    }) ?? null
+  );
+}
+
+function computeResultSignature(result: Result): string {
+  return [
+    result.quiz_id,
+    result.timestamp,
+    result.mode,
+    result.score,
+    result.time_taken_seconds,
+    result.session_type ?? "",
+  ].join(":");
+}
+
+export async function importDataSmart(
+  data: ExportData,
+  userId: string,
+): Promise<ImportResult> {
+  const sanitizedQuizzes: Quiz[] = [];
+  const quizIds = new Set<string>();
+  const hashComputationFailed = new Set<string>();
+  const missingHashInImport = new Set<string>();
+
+  for (const quiz of data.quizzes) {
+    const sanitizedQuiz = await sanitizeQuizRecord(quiz, userId);
+    if (!sanitizedQuiz) continue;
+    if (quizIds.has(sanitizedQuiz.id)) {
+      console.warn(
+        "Skipped duplicate quiz id during import:",
+        sanitizedQuiz.id,
+      );
+      continue;
+    }
+
+    if (!sanitizedQuiz.quiz_hash) {
+      missingHashInImport.add(sanitizedQuiz.id);
+      try {
+        sanitizedQuiz.quiz_hash = await computeQuizHash(sanitizedQuiz);
+      } catch (error) {
+        hashComputationFailed.add(sanitizedQuiz.id);
+        console.warn(
+          "Failed to compute quiz hash during smart import:",
+          sanitizedQuiz.id,
+          error,
+        );
+      }
+    }
+
+    sanitizedQuizzes.push(sanitizedQuiz);
+    quizIds.add(sanitizedQuiz.id);
+  }
+
+  const sanitizedResults: Result[] = [];
+  const resultIds = new Set<string>();
+
+  for (const result of data.results) {
+    const sanitizedResult = sanitizeResultRecord(result, userId);
+    if (!sanitizedResult) continue;
+    if (resultIds.has(sanitizedResult.id)) {
+      console.warn(
+        "Skipped duplicate result id during import:",
+        sanitizedResult.id,
+      );
+      continue;
+    }
+    sanitizedResults.push(sanitizedResult);
+    resultIds.add(sanitizedResult.id);
+  }
+
+  let quizzesImported = 0;
+  let quizzesMerged = 0;
+  let resultsImported = 0;
+  let resultsDeduplicated = 0;
+
+  await db.transaction("rw", db.quizzes, db.results, async () => {
+    const quizzesInDb = await db.quizzes
+      .where("user_id")
+      .equals(userId)
+      .toArray();
+    const quizIdMap = new Map<string, string>();
+    const quizzesToAdd: Quiz[] = [];
+    const activeExisting = quizzesInDb.filter(
+      (quiz) => quiz.deleted_at === null || quiz.deleted_at === undefined,
+    );
+    const deletedExisting = quizzesInDb.filter(
+      (quiz) => quiz.deleted_at !== null && quiz.deleted_at !== undefined,
+    );
+    const activeByHash = indexByHash(activeExisting);
+    const deletedByHash = indexByHash(deletedExisting);
+    const activeByTitle = indexByTitle(activeExisting);
+    const deletedByTitle = indexByTitle(deletedExisting);
+
+    for (const quiz of sanitizedQuizzes) {
+      const isDeletedImport =
+        quiz.deleted_at !== null && quiz.deleted_at !== undefined;
+      const allowTitleFallback =
+        !hashComputationFailed.has(quiz.id) &&
+        missingHashInImport.has(quiz.id);
+      const match = await findMatchingQuiz(
+        quiz,
+        isDeletedImport ? deletedByHash : activeByHash,
+        isDeletedImport ? deletedByTitle : activeByTitle,
+        allowTitleFallback,
+      );
+      if (match) {
+        quizIdMap.set(quiz.id, match.id);
+        quizzesMerged += 1;
+        continue;
+      }
+      quizIdMap.set(quiz.id, quiz.id);
+      quizzesToAdd.push(quiz);
+    }
+
+    if (quizzesToAdd.length > 0) {
+      await db.quizzes.bulkPut(quizzesToAdd);
+      quizzesImported = quizzesToAdd.length;
+      quizzesInDb.push(...quizzesToAdd);
+    }
+
+    const allowedQuizIds = new Set<string>(
+      quizzesInDb.map((quiz) => quiz.id),
+    );
+
+    const resultsInDb = await db.results
+      .where("user_id")
+      .equals(userId)
+      .toArray();
+    const existingResultIds = new Set<string>(
+      resultsInDb.map((result) => result.id),
+    );
+    const existingSignatures = new Set<string>(
+      resultsInDb.map((result) => computeResultSignature(result)),
+    );
+    const seenSignatures = new Set<string>();
+    const resultsToAdd: Result[] = [];
+
+    for (const result of sanitizedResults) {
+      const mappedQuizId = quizIdMap.get(result.quiz_id) ?? result.quiz_id;
+      if (!allowedQuizIds.has(mappedQuizId)) {
+        console.warn(
+          "Skipped result referencing missing quiz during smart import:",
+          result.id,
+        );
+        continue;
+      }
+
+      const remappedResult: Result = {
+        ...result,
+        quiz_id: mappedQuizId,
+      };
+      const signature = computeResultSignature(remappedResult);
+
+      if (existingResultIds.has(remappedResult.id)) {
+        resultsDeduplicated += 1;
+        continue;
+      }
+
+      if (existingSignatures.has(signature) || seenSignatures.has(signature)) {
+        resultsDeduplicated += 1;
+        continue;
+      }
+
+      seenSignatures.add(signature);
+      resultsToAdd.push(remappedResult);
+    }
+
+    if (resultsToAdd.length > 0) {
+      await db.results.bulkPut(resultsToAdd);
+      resultsImported = resultsToAdd.length;
+    }
+  });
+
+  return {
+    quizzesImported,
+    quizzesMerged,
+    resultsImported,
+    resultsDeduplicated,
+  };
+}
+
+function normalizeTitle(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function normalizeTags(tags: string[] | undefined | null): string[] {
+  if (!tags) return [];
+  return tags
+    .map((tag) => tag.trim().toLowerCase())
+    .filter(Boolean)
+    .sort();
+}
+
+function haveEqualTags(a: string[], b: string[]): boolean {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i += 1) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
+}
+
+function indexByHash(quizzes: Quiz[]): Map<string, Quiz> {
+  const map = new Map<string, Quiz>();
+  for (const quiz of quizzes) {
+    if (quiz.quiz_hash) {
+      map.set(quiz.quiz_hash, quiz);
+    }
+  }
+  return map;
+}
+
+function indexByTitle(quizzes: Quiz[]): Map<string, Quiz[]> {
+  const map = new Map<string, Quiz[]>();
+  for (const quiz of quizzes) {
+    if (!quiz.title) continue;
+    const key = normalizeTitle(quiz.title);
+    const existing = map.get(key);
+    if (existing) {
+      existing.push(quiz);
+    } else {
+      map.set(key, [quiz]);
+    }
+  }
+  return map;
 }
 
 /**

@@ -24,6 +24,7 @@ supabase/.temp/
 
 # misc
 .DS_Store
+.DS_Store.*
 *.pem
 docs/ai-quiz-generators/private/
 

@@ -50,9 +50,9 @@ export function DataManagement(): React.ReactElement {
   const [isClearingLocal, setIsClearingLocal] = React.useState(false);
   const [showImportModal, setShowImportModal] = React.useState(false);
   const [importFile, setImportFile] = React.useState<ExportData | null>(null);
-  const [importMode, setImportMode] = React.useState<"merge" | "replace">(
-    "merge",
-  );
+  const [importMode, setImportMode] = React.useState<
+    "merge" | "replace" | "smart"
+  >("smart");
   const [deleteConfirmation, setDeleteConfirmation] = React.useState("");
   const [deletedStats, setDeletedStats] = React.useState<{
     deletedQuizCount: number;
@@ -153,10 +153,14 @@ export function DataManagement(): React.ReactElement {
     setIsImporting(true);
     try {
       const result = await importData(importFile, effectiveUserId, importMode);
-      addToast(
-        "success",
-        `Imported ${result.quizzesImported} quizzes and ${result.resultsImported} results!`,
-      );
+      let message = `Imported ${result.quizzesImported} quizzes and ${result.resultsImported} results!`;
+      if (result.quizzesMerged) {
+        message += ` (${result.quizzesMerged} quizzes matched existing)`;
+      }
+      if (result.resultsDeduplicated) {
+        message += ` (${result.resultsDeduplicated} duplicate results skipped)`;
+      }
+      addToast("success", message);
       setShowImportModal(false);
       setImportFile(null);
       await refreshStats();
@@ -471,6 +475,24 @@ export function DataManagement(): React.ReactElement {
                 Import Mode
               </label>
               <div className="space-y-2">
+                <label className="flex items-start gap-2">
+                  <input
+                    type="radio"
+                    name="importMode"
+                    value="smart"
+                    checked={importMode === "smart"}
+                    onChange={() => setImportMode("smart")}
+                    className="mt-0.5 h-4 w-4 accent-primary"
+                  />
+                  <div>
+                    <span className="text-sm font-medium text-foreground">
+                      Smart Merge (recommended)
+                    </span>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      Match quizzes by content and deduplicate results.
+                    </p>
+                  </div>
+                </label>
                 <label className="flex items-center gap-2">
                   <input
                     type="radio"
