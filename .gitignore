@@ -55,6 +55,7 @@ GEMINI.md
 .vscode
 .gemini
 .agent/workflows/*
+.agent/skills/*
 !.agent/rules/
 .mcp_sequential_thinking
 
