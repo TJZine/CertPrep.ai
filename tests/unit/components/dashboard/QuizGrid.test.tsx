@@ -1,10 +1,10 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi, afterEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { QuizGrid } from "@/components/dashboard/QuizGrid";
 import type { Quiz } from "@/types/quiz";
 import type { QuizStats } from "@/db/quizzes";
 
-const quizCardSpy = vi.fn();
+const { quizCardSpy } = vi.hoisted(() => ({ quizCardSpy: vi.fn() }));
 
 vi.mock("@/components/dashboard/QuizCard", () => ({
   QuizCard: (props: { isHero?: boolean; quiz: { id: string } }): React.JSX.Element => {
@@ -29,8 +29,11 @@ const quizzes: Quiz[] = [makeQuiz("q1", "Quiz 1"), makeQuiz("q2", "Quiz 2")];
 const quizStats = new Map<string, QuizStats>();
 
 describe("QuizGrid hero layout", () => {
-  it("marks only the first quiz card as hero", () => {
+  afterEach(() => {
     quizCardSpy.mockClear();
+  });
+
+  it("marks only the first quiz card as hero", () => {
 
     render(
       <QuizGrid

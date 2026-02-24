@@ -17,7 +17,8 @@ export function DashboardEmptyState({
     return (
         <div
             data-testid={testId}
-            role="status"
+            role="region"
+            aria-label={title}
             className={cn(
                 "rounded-xl border-2 border-border bg-card/80 px-6 py-8 text-center shadow-[6px_6px_0_0_hsl(var(--border))]",
                 "motion-reduce:transform-none",

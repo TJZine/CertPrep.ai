@@ -405,7 +405,7 @@ export default function DashboardClient(): React.ReactElement {
                                 onCategoryChange={setCategoryFilter}
                             />
                         )}
-                        {filteredQuizzes.length === 0 && quizzes.length > 0 && searchTerm.trim() && (
+                        {filteredQuizzes.length === 0 && quizzes.length > 0 && (searchTerm.trim() || categoryFilter !== "all") && (
                             <DashboardEmptyState
                                 testId="search-empty-state"
                                 title="No quizzes match this filter"

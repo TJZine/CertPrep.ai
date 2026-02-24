@@ -58,18 +58,38 @@ vi.mock("@/components/dashboard/QuizSortControls", () => ({
     QuizSortControls: ({
         searchTerm,
         onSearchChange,
+        categoryFilter,
+        onCategoryChange,
+        categories,
     }: {
         searchTerm: string;
         onSearchChange: (value: string) => void;
+        categoryFilter: string;
+        onCategoryChange: (value: string) => void;
+        categories: string[];
     }): React.JSX.Element => (
-        <label>
-            Search quizzes
-            <input
-                aria-label="Search quizzes"
-                value={searchTerm}
-                onChange={(event) => onSearchChange(event.target.value)}
-            />
-        </label>
+        <div>
+            <label>
+                Search quizzes
+                <input
+                    aria-label="Search quizzes"
+                    value={searchTerm}
+                    onChange={(event) => onSearchChange(event.target.value)}
+                />
+            </label>
+            <label>
+                Category
+                <select
+                    aria-label="Filter by category"
+                    value={categoryFilter}
+                    onChange={(event) => onCategoryChange(event.target.value)}
+                >
+                    {categories?.map((cat) => (
+                        <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                </select>
+            </label>
+        </div>
     ),
 }));
 
@@ -141,6 +161,35 @@ describe("DashboardClient empty states", () => {
 
         const input = await screen.findByRole("textbox", { name: /search quizzes/i });
         fireEvent.change(input, { target: { value: "GCP" } });
+
+        await waitFor(() => {
+            expect(screen.getByTestId("search-empty-state")).toBeInTheDocument();
+            expect(screen.getByText("No quizzes match this filter")).toBeInTheDocument();
+        });
+    });
+
+    it("renders styled search empty state when category filter hides all quizzes", async () => {
+        mocks.useQuizzes.mockReturnValue({
+            quizzes: [{ ...makeQuiz("q1", "AWS Foundations"), category: "aws" }],
+            isLoading: false,
+            error: null,
+        });
+
+        mocks.useDashboardStats.mockReturnValue({
+            quizStats: new Map(),
+            overallStats: {
+                totalQuizzes: 1,
+                totalAttempts: 0,
+                averageScore: 0,
+                totalStudyTime: 0,
+            },
+            isLoading: false,
+        });
+
+        render(<DashboardClient />);
+
+        const select = await screen.findByRole("combobox", { name: /filter by category/i });
+        fireEvent.change(select, { target: { value: "gcp" } });
 
         await waitFor(() => {
             expect(screen.getByTestId("search-empty-state")).toBeInTheDocument();

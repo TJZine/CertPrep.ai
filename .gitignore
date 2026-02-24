@@ -54,9 +54,10 @@ GEMINI.md
 .codannaignore
 .vscode
 .gemini
-.agent/workflows/*
-.agent/skills/*
+.agent/workflows/**
+.agent/skills/**
 !.agent/rules/
+.agents/
 .mcp_sequential_thinking
 
 # Sentry Config File
