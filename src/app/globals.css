@@ -3566,6 +3566,27 @@
   }
 }
 
+/* Dashboard-specific theme polish */
+[data-theme="midnight"] .dashboard-hero-card {
+  border-color: hsla(186, 100%, 60%, 0.4);
+  box-shadow:
+    0 0 28px hsla(186, 100%, 50%, 0.25),
+    0 0 52px hsla(270, 80%, 60%, 0.14);
+}
+
+[data-theme="brutalist"] .dashboard-card,
+[data-theme="retro"] .dashboard-card {
+  box-shadow: 4px 4px 0 0 hsl(var(--foreground));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-card,
+  .dashboard-hero-card {
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
 @media print {
   body {
     background: white;
