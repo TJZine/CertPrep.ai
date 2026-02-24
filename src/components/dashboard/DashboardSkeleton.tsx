@@ -119,7 +119,7 @@ function HeroQuizCardSkeleton(): React.ReactElement {
     return (
         <Card
             data-testid="dashboard-skeleton-hero-card"
-            className="flex h-full flex-col sm:col-span-2 lg:col-span-2 lg:row-span-2"
+            className="dashboard-card dashboard-hero-card flex h-full flex-col sm:col-span-2 lg:col-span-2 lg:row-span-2"
         >
             <CardHeader className="pb-4">
                 <Skeleton className="h-8 w-3/4" />
@@ -137,7 +137,7 @@ function HeroQuizCardSkeleton(): React.ReactElement {
 
 function QuizCardSkeleton(): React.ReactElement {
     return (
-        <Card data-testid="dashboard-skeleton-card" className="flex h-full flex-col">
+        <Card data-testid="dashboard-skeleton-card" className="dashboard-card flex h-full flex-col">
             <CardHeader className="pb-4">
                 <div className="space-y-2">
                     <Skeleton className="h-6 w-3/4" />
