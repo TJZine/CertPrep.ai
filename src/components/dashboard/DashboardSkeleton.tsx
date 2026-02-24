@@ -115,9 +115,29 @@ function InterleavedPlaceholderSkeleton(): React.ReactElement {
 /**
  * Quiz card skeleton - matches QuizCard layout
  */
+function HeroQuizCardSkeleton(): React.ReactElement {
+    return (
+        <Card
+            data-testid="dashboard-skeleton-hero-card"
+            className="flex h-full flex-col sm:col-span-2 lg:col-span-2 lg:row-span-2"
+        >
+            <CardHeader className="pb-4">
+                <Skeleton className="h-8 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+            </CardHeader>
+            <CardContent className="flex-1 space-y-4">
+                <Skeleton className="h-40 w-full rounded-lg" />
+            </CardContent>
+            <CardFooter className="pt-0">
+                <Skeleton className="h-10 w-full" />
+            </CardFooter>
+        </Card>
+    );
+}
+
 function QuizCardSkeleton(): React.ReactElement {
     return (
-        <Card className="flex h-full flex-col">
+        <Card data-testid="dashboard-skeleton-card" className="flex h-full flex-col">
             <CardHeader className="pb-4">
                 <div className="space-y-2">
                     <Skeleton className="h-6 w-3/4" />
@@ -187,9 +207,12 @@ function QuizGridSkeleton({ count }: { count: number }): React.ReactElement {
     }
 
     return (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div
+            data-testid="dashboard-skeleton-grid"
+            className="grid gap-6 auto-rows-[minmax(140px,auto)] sm:grid-cols-2 lg:grid-cols-3"
+        >
             {Array.from({ length: count }).map((_, i) => (
-                <QuizCardSkeleton key={i} />
+                i === 0 ? <HeroQuizCardSkeleton key={i} /> : <QuizCardSkeleton key={i} />
             ))}
         </div>
     );
