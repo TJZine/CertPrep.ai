@@ -169,8 +169,12 @@ describe("DashboardClient empty states", () => {
     });
 
     it("renders styled search empty state when category filter hides all quizzes", async () => {
+        // Supply two distinct categories so the dropdown has real option elements
         mocks.useQuizzes.mockReturnValue({
-            quizzes: [{ ...makeQuiz("q1", "AWS Foundations"), category: "aws" }],
+            quizzes: [
+                { ...makeQuiz("q1", "AWS Foundations"), category: "aws" },
+                { ...makeQuiz("q2", "Azure Basics"), category: "azure" }
+            ],
             isLoading: false,
             error: null,
         });
@@ -178,7 +182,7 @@ describe("DashboardClient empty states", () => {
         mocks.useDashboardStats.mockReturnValue({
             quizStats: new Map(),
             overallStats: {
-                totalQuizzes: 1,
+                totalQuizzes: 2,
                 totalAttempts: 0,
                 averageScore: 0,
                 totalStudyTime: 0,
@@ -188,8 +192,30 @@ describe("DashboardClient empty states", () => {
 
         render(<DashboardClient />);
 
+        // We trigger the empty state by selecting 'azure' but simulating a state
+        // where the grid becomes empty (e.g. by interacting with search as well)
+        // Actually, the reviewer suggestion is simpler: if we select 'azure', 
+        // it filters OUT the 'aws' quiz. If we want it to be *completely* empty,
+        // we need a scenario where a category is selected but *no* quizzes match
+        // both the category AND the search term.
+        // Wait, the reviewer specifically said: "change the selected value to an existing 
+        // option (e.g., 'aws') and instead provide a second quiz with a different category
+        // so selecting 'aws' hides that other quiz". But to trigger the *empty state*, 
+        // 0 quizzes must be rendered. If 'aws' is selected, the 'aws' quiz IS rendered,
+        // thus no empty state. Let's provide an 'aws' quiz, then type 'missing' in search,
+        // AND select the 'aws' category, so both are active, leading to 0 results.
+
+        // Wait, looking at the logic: `filteredQuizzes.length === 0 && quizzes.length > 0 && (searchTerm.trim() || categoryFilter !== "all")`
+        // We can just type in the search box to make length === 0, while category is active.
+        // OR we can supply a quiz that gets filtered out.
+
         const select = await screen.findByRole("combobox", { name: /filter by category/i });
-        fireEvent.change(select, { target: { value: "gcp" } });
+        // 'aws' is a valid rendered <option> now.
+        fireEvent.change(select, { target: { value: "aws" } });
+
+        const input = await screen.findByRole("textbox", { name: /search quizzes/i });
+        // 'azure' doesn't match 'AWS Foundations', so 0 results.
+        fireEvent.change(input, { target: { value: "azure" } });
 
         await waitFor(() => {
             expect(screen.getByTestId("search-empty-state")).toBeInTheDocument();
