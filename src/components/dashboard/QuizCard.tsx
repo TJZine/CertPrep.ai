@@ -36,6 +36,7 @@ export interface QuizCardProps {
   stats: QuizStats | null;
   onStart: (quiz: Quiz) => void;
   onDelete: (quiz: Quiz) => void;
+  isHero?: boolean;
 }
 
 function useClickOutside(
@@ -79,6 +80,7 @@ export function QuizCard({
   stats,
   onStart,
   onDelete,
+  isHero = false,
 }: QuizCardProps): React.ReactElement {
   const router = useRouter();
   const [showMenu, setShowMenu] = React.useState(false);
@@ -217,7 +219,9 @@ export function QuizCard({
         "[transition-timing-function:cubic-bezier(0.34,1.56,0.64,1)]",
         "hover:-translate-y-1 hover:scale-[1.02]",
         // Respect user's reduced motion preference
-        "motion-reduce:transform-none motion-reduce:transition-none"
+        "motion-reduce:transform-none motion-reduce:transition-none",
+        "dashboard-card",
+        isHero && "sm:col-span-2 lg:col-span-2 lg:row-span-2 dashboard-hero-card",
       )}
     >
       <Card className="group relative flex h-full flex-col overflow-hidden border border-border shadow-sm transition-colors hover:shadow-md">

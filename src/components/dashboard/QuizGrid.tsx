@@ -45,14 +45,18 @@ export function QuizGrid({
   }
 
   return (
-    <div data-testid="quiz-grid" className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-      {quizzes.map((quiz) => (
+    <div
+      data-testid="quiz-grid"
+      className="grid gap-6 auto-rows-[minmax(140px,auto)] sm:grid-cols-2 lg:grid-cols-3"
+    >
+      {quizzes.map((quiz, index) => (
         <QuizCard
           key={quiz.id}
           quiz={quiz}
           stats={quizStats.get(quiz.id) ?? null}
           onStart={onStartQuiz}
           onDelete={onDeleteQuiz}
+          isHero={index === 0}
         />
       ))}
     </div>

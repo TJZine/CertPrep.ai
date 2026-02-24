@@ -10,7 +10,7 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { StatsBar } from "@/components/dashboard/StatsBar";
 import { QuizGrid } from "@/components/dashboard/QuizGrid";
 import { QuizSortControls } from "@/components/dashboard/QuizSortControls";
-
+import { DashboardEmptyState } from "@/components/dashboard/DashboardEmptyState";
 // Sort options as const array for type-safe validation
 const DASHBOARD_SORT_OPTIONS = ["recent", "added", "title", "performance", "questions"] as const;
 type DashboardSortOption = (typeof DASHBOARD_SORT_OPTIONS)[number];
@@ -366,11 +366,12 @@ export default function DashboardClient(): React.ReactElement {
                             totalStudyTime={overallStats.totalStudyTime}
                         />
                     ) : (
-                        <div data-testid="stats-bar-empty" role="status" className="grid min-h-[100px] grid-cols-1 place-items-center lg:grid-cols-1">
-                            <p className="text-sm text-muted-foreground">
-                                Complete quizzes to see your stats here
-                            </p>
-                        </div>
+                        <DashboardEmptyState
+                            testId="stats-empty-state"
+                            title="Performance insights appear here"
+                            description="Complete quizzes to unlock progress trends, averages, and study-time signals."
+                            className="min-h-[100px] grid place-items-center"
+                        />
                     )
                 }
                 srsSlot={
@@ -404,10 +405,13 @@ export default function DashboardClient(): React.ReactElement {
                                 onCategoryChange={setCategoryFilter}
                             />
                         )}
-                        {filteredQuizzes.length === 0 && quizzes.length > 0 && searchTerm.trim() && (
-                            <p className="text-center text-sm text-muted-foreground py-8">
-                                No quizzes match your search. Try a different term.
-                            </p>
+                        {filteredQuizzes.length === 0 && quizzes.length > 0 && (searchTerm.trim() || categoryFilter !== "all") && (
+                            <DashboardEmptyState
+                                testId="search-empty-state"
+                                title="No quizzes match this filter"
+                                description="Try a broader keyword, or clear filters to see all quizzes."
+                                className="py-10"
+                            />
                         )}
                         <QuizGrid
                             quizzes={filteredQuizzes}
