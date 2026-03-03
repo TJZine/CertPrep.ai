@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { BuilderControls } from "./BuilderControls";
 import { PromptOutput } from "./PromptOutput";
 import { type BuilderState, INITIAL_BUILDER_STATE } from "@/types/create";
@@ -17,10 +18,17 @@ export function CreateBuilder(): React.ReactElement {
 
     // Derived prompt state
     const categories = React.useMemo(() => {
+        if (state.presetId === "custom") {
+            return state.customCategories
+                .split("\n")
+                .map((line) => line.trim())
+                .filter((line) => line.length > 0);
+        }
+
         if (!state.presetId) return [];
-        const preset = EXAM_PRESETS.find(p => p.id === state.presetId);
+        const preset = EXAM_PRESETS.find((p) => p.id === state.presetId);
         return preset ? preset.domains.map(d => d.name) : [];
-    }, [state.presetId]);
+    }, [state.presetId, state.customCategories]);
 
     const prompt = React.useMemo(() => generatePrompt(state, categories), [state, categories]);
 
@@ -36,6 +44,7 @@ export function CreateBuilder(): React.ReactElement {
                 {/* Mode Switcher */}
                 <div className="inline-flex bg-muted/50 p-1 rounded-xl border border-border/50">
                     <button
+                        type="button"
                         onClick={() => setMode("ai")}
                         className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${mode === "ai" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}
                     >
@@ -43,6 +52,7 @@ export function CreateBuilder(): React.ReactElement {
                     </button>
                     {/* The Import logic is already handled globally or via /import route usually, but keeping tab for future */}
                     <button
+                        type="button"
                         onClick={() => setMode("import")}
                         className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${mode === "import" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}
                     >
@@ -64,8 +74,16 @@ export function CreateBuilder(): React.ReactElement {
                     </div>
                 </div>
             ) : (
-                <div className="py-20 text-center border mt-8 rounded-2xl bg-card border-dashed">
-                    <p className="text-muted-foreground">Import JSON functionality to be ported here or trigger global modal.</p>
+                <div className="py-20 text-center border mt-8 rounded-2xl bg-card border-dashed space-y-4 px-4">
+                    <p className="text-muted-foreground">
+                        Import is available from the dashboard import modal.
+                    </p>
+                    <Link
+                        href="/"
+                        className="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+                    >
+                        Open Dashboard Import
+                    </Link>
                 </div>
             )}
         </main>

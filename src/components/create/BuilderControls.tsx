@@ -65,6 +65,7 @@ export function BuilderControls({ state, onChange }: BuilderControlsProps): Reac
                     {STRATEGIES.map((s) => (
                         <button
                             key={s.id}
+                            type="button"
                             onClick={() => onChange({ strategy: s.id })}
                             className={cn(
                                 "flex flex-col items-start p-3 rounded-xl border text-left transition-all",
@@ -87,8 +88,9 @@ export function BuilderControls({ state, onChange }: BuilderControlsProps): Reac
                 {state.strategy === "material" && (
                     <div className="space-y-4">
                         <div className="space-y-1.5">
-                            <label className="text-sm font-medium">Topic</label>
+                            <label htmlFor="builder-topic" className="text-sm font-medium">Topic</label>
                             <input
+                                id="builder-topic"
                                 type="text"
                                 value={state.topic}
                                 onChange={(e) => onChange({ topic: e.target.value })}
@@ -98,8 +100,9 @@ export function BuilderControls({ state, onChange }: BuilderControlsProps): Reac
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-1.5">
-                                <label className="text-sm font-medium">Questions</label>
+                                <label htmlFor="builder-question-count" className="text-sm font-medium">Questions</label>
                                 <input
+                                    id="builder-question-count"
                                     type="number"
                                     value={state.questionCount}
                                     onChange={(e) => onChange({ questionCount: parseInt(e.target.value) || 10 })}
@@ -107,8 +110,9 @@ export function BuilderControls({ state, onChange }: BuilderControlsProps): Reac
                                 />
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-sm font-medium">Difficulty</label>
+                                <label htmlFor="builder-difficulty" className="text-sm font-medium">Difficulty</label>
                                 <select
+                                    id="builder-difficulty"
                                     value={state.difficulty}
                                     onChange={(e) => onChange({ difficulty: e.target.value })}
                                     className="w-full px-3 py-2 rounded-lg border bg-card text-sm focus:ring-1 focus:ring-primary outline-none"
@@ -121,8 +125,9 @@ export function BuilderControls({ state, onChange }: BuilderControlsProps): Reac
                             </div>
                         </div>
                         <div className="space-y-1.5">
-                            <label className="text-sm font-medium">Paste Material</label>
+                            <label htmlFor="builder-material-text" className="text-sm font-medium">Paste Material</label>
                             <textarea
+                                id="builder-material-text"
                                 value={state.materialText}
                                 onChange={(e) => onChange({ materialText: e.target.value })}
                                 rows={6}
@@ -135,8 +140,9 @@ export function BuilderControls({ state, onChange }: BuilderControlsProps): Reac
 
                 {state.strategy === "match" && (
                     <div className="space-y-1.5">
-                        <label className="text-sm font-medium">Paste Example Questions & Answers</label>
+                        <label htmlFor="builder-example-questions" className="text-sm font-medium">Paste Example Questions & Answers</label>
                         <textarea
+                            id="builder-example-questions"
                             value={state.exampleQuestions}
                             onChange={(e) => onChange({ exampleQuestions: e.target.value })}
                             rows={8}
@@ -147,8 +153,9 @@ export function BuilderControls({ state, onChange }: BuilderControlsProps): Reac
 
                 {state.strategy === "remix" && (
                     <div className="space-y-1.5">
-                        <label className="text-sm font-medium">Paste Questions to Remix</label>
+                        <label htmlFor="builder-remix-questions" className="text-sm font-medium">Paste Questions to Remix</label>
                         <textarea
+                            id="builder-remix-questions"
                             value={state.remixQuestions}
                             onChange={(e) => onChange({ remixQuestions: e.target.value })}
                             rows={8}
@@ -159,8 +166,9 @@ export function BuilderControls({ state, onChange }: BuilderControlsProps): Reac
 
                 {state.strategy === "convert" && (
                     <div className="space-y-1.5">
-                        <label className="text-sm font-medium">Paste Answer Key</label>
+                        <label htmlFor="builder-answer-key" className="text-sm font-medium">Paste Answer Key</label>
                         <textarea
+                            id="builder-answer-key"
                             value={state.answerKeyText}
                             onChange={(e) => onChange({ answerKeyText: e.target.value })}
                             rows={8}
@@ -187,19 +195,22 @@ export function BuilderControls({ state, onChange }: BuilderControlsProps): Reac
                                     role="radiogroup"
                                     aria-label={`${vendor} certification exams`}
                                 >
-                                    {presets.map((preset) => (
+                                    {presets.map((preset, index) => {
+                                        const isSelected = state.presetId === preset.id;
+                                        const hasSelectionInGroup = presets.some((p) => p.id === state.presetId);
+                                        return (
                                         <button
                                             key={preset.id}
                                             type="button"
                                             role="radio"
-                                            aria-checked={state.presetId === preset.id}
+                                            aria-checked={isSelected}
                                             data-preset-id={preset.id}
-                                            tabIndex={state.presetId === preset.id ? 0 : -1}
+                                            tabIndex={isSelected || (!hasSelectionInGroup && index === 0) ? 0 : -1}
                                             onClick={() => onChange({ presetId: state.presetId === preset.id ? null : preset.id })}
                                             onKeyDown={(e) => handleRadioKeyDown(e, presets.map(p => p.id))}
                                             className={cn(
                                                 "flex flex-col items-start p-3 rounded-xl border text-left transition-all",
-                                                state.presetId === preset.id
+                                                isSelected
                                                     ? "bg-primary/5 border-primary ring-1 ring-primary/20"
                                                     : "bg-card hover:border-primary/50"
                                             )}
@@ -207,10 +218,52 @@ export function BuilderControls({ state, onChange }: BuilderControlsProps): Reac
                                             <span className="font-semibold text-xs leading-tight">{preset.name}</span>
                                             <span className="text-[10px] text-muted-foreground mt-1">{preset.examCode}</span>
                                         </button>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             </div>
                         ))}
+                        <div className="space-y-2">
+                            <div
+                                className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+                                role="radiogroup"
+                                aria-label="Custom certification exam categories"
+                            >
+                                <button
+                                    type="button"
+                                    role="radio"
+                                    aria-checked={state.presetId === "custom"}
+                                    data-preset-id="custom"
+                                    tabIndex={state.presetId === "custom" ? 0 : -1}
+                                    onClick={() => onChange({ presetId: state.presetId === "custom" ? null : "custom" })}
+                                    className={cn(
+                                        "flex flex-col items-start p-3 rounded-xl border text-left transition-all",
+                                        state.presetId === "custom"
+                                            ? "bg-primary/5 border-primary ring-1 ring-primary/20"
+                                            : "bg-card hover:border-primary/50"
+                                    )}
+                                >
+                                    <span className="font-semibold text-xs leading-tight">Custom Categories</span>
+                                    <span className="text-[10px] text-muted-foreground mt-1">Use your own domain names</span>
+                                </button>
+                            </div>
+
+                            {state.presetId === "custom" && (
+                                <div className="space-y-1.5">
+                                    <label htmlFor="builder-custom-categories" className="text-sm font-medium">
+                                        Enter your exam categories
+                                    </label>
+                                    <textarea
+                                        id="builder-custom-categories"
+                                        value={state.customCategories}
+                                        onChange={(e) => onChange({ customCategories: e.target.value })}
+                                        rows={5}
+                                        placeholder="Domain 1: Security&#10;Domain 2: Networking&#10;Domain 3: Operations"
+                                        className="w-full p-3 rounded-lg border bg-card text-sm focus:ring-1 focus:ring-primary outline-none resize-y font-mono"
+                                    />
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </section>
