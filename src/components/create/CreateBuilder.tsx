@@ -5,6 +5,7 @@ import { BuilderControls } from "./BuilderControls";
 import { PromptOutput } from "./PromptOutput";
 import { type BuilderState, INITIAL_BUILDER_STATE } from "@/types/create";
 import { generatePrompt } from "@/lib/create/promptGenerator";
+import { EXAM_PRESETS } from "@/data/examPresets";
 
 export function CreateBuilder(): React.ReactElement {
     const [state, setState] = React.useState<BuilderState>(INITIAL_BUILDER_STATE);
@@ -15,7 +16,13 @@ export function CreateBuilder(): React.ReactElement {
     };
 
     // Derived prompt state
-    const prompt = React.useMemo(() => generatePrompt(state, []), [state]);
+    const categories = React.useMemo(() => {
+        if (!state.presetId) return [];
+        const preset = EXAM_PRESETS.find(p => p.id === state.presetId);
+        return preset ? preset.domains.map(d => d.name) : [];
+    }, [state.presetId]);
+
+    const prompt = React.useMemo(() => generatePrompt(state, categories), [state, categories]);
 
     return (
         <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 min-h-[calc(100vh-var(--header-height))]">
