@@ -10,7 +10,7 @@
 
 ---
 
-### Task 1: Create the Types and State Definitions
+## Task 1: Create the Types and State Definitions
 
 **Files:**
 
@@ -60,7 +60,7 @@ git commit -m "feat: add builder state types"
 
 ---
 
-### Task 2: Create the Prompt Generator Utility
+## Task 2: Create the Prompt Generator Utility
 
 **Files:**
 
@@ -175,7 +175,7 @@ git commit -m "feat: add prompt generator utility"
 
 ---
 
-### Task 3: Create the Output Panel Component
+## Task 3: Create the Output Panel Component
 
 **Files:**
 
@@ -275,7 +275,7 @@ git commit -m "feat: add prompt output panel"
 
 ---
 
-### Task 4: Create the Controls Panel Component
+## Task 4: Create the Controls Panel Component
 
 **Files:**
 
@@ -473,7 +473,7 @@ git commit -m "feat: add builder controls panel"
 
 ---
 
-### Task 5: Create the Main Builder Shell
+## Task 5: Create the Main Builder Shell
 
 **Files:**
 
@@ -566,7 +566,7 @@ git commit -m "feat: add main builder shell layout"
 
 ---
 
-### Task 6: Replace the Page Content
+## Task 6: Replace the Page Content
 
 **Files:**
 

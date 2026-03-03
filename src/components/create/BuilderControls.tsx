@@ -18,6 +18,8 @@ const STRATEGIES: { id: GenerationStrategy; label: string; icon: React.ElementTy
     { id: "convert", label: "Convert Key", icon: FileKey, desc: "From answer key" },
 ];
 
+const PRESET_IDS_WITH_CUSTOM = [...EXAM_PRESETS.map(p => p.id), "custom"];
+
 export function BuilderControls({ state, onChange }: BuilderControlsProps): React.ReactElement {
     const groupedPresets = React.useMemo(() => {
         const groups: Record<string, ExamPreset[]> = {};
@@ -75,7 +77,28 @@ export function BuilderControls({ state, onChange }: BuilderControlsProps): Reac
                             role="radio"
                             aria-checked={state.strategy === s.id}
                             aria-label={s.label}
+                            tabIndex={state.strategy === s.id || (!state.strategy && STRATEGIES[0] && s.id === STRATEGIES[0].id) ? 0 : -1}
                             onClick={() => onChange({ strategy: s.id })}
+                            onKeyDown={(e) => {
+                                const currentIndex = STRATEGIES.findIndex(strat => strat.id === (state.strategy || STRATEGIES[0]?.id));
+                                let nextIndex = currentIndex !== -1 ? currentIndex : 0;
+
+                                if (e.key === "ArrowDown" || e.key === "ArrowRight") {
+                                    e.preventDefault();
+                                    nextIndex = (nextIndex + 1) % STRATEGIES.length;
+                                } else if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
+                                    e.preventDefault();
+                                    nextIndex = (nextIndex - 1 + STRATEGIES.length) % STRATEGIES.length;
+                                } else {
+                                    return;
+                                }
+
+                                const nextId = STRATEGIES[nextIndex]?.id;
+                                if (nextId) {
+                                    onChange({ strategy: nextId });
+                                    (e.currentTarget.parentElement?.children[nextIndex] as HTMLElement | undefined)?.focus();
+                                }
+                            }}
                             className={cn(
                                 "flex flex-col items-start p-3 rounded-xl border text-left transition-all",
                                 state.strategy === s.id
@@ -218,7 +241,7 @@ export function BuilderControls({ state, onChange }: BuilderControlsProps): Reac
                                                 data-preset-id={preset.id}
                                                 tabIndex={isSelected || (!state.presetId && isFirstOverall) ? 0 : -1}
                                                 onClick={() => onChange({ presetId: state.presetId === preset.id ? null : preset.id })}
-                                                onKeyDown={(e) => handleRadioKeyDown(e, [...EXAM_PRESETS.map(p => p.id), "custom"])}
+                                                onKeyDown={(e) => handleRadioKeyDown(e, PRESET_IDS_WITH_CUSTOM)}
                                                 className={cn(
                                                     "flex flex-col items-start p-3 rounded-xl border text-left transition-all",
                                                     isSelected
@@ -243,7 +266,7 @@ export function BuilderControls({ state, onChange }: BuilderControlsProps): Reac
                                     data-preset-id="custom"
                                     tabIndex={state.presetId === "custom" ? 0 : -1}
                                     onClick={() => onChange({ presetId: state.presetId === "custom" ? null : "custom" })}
-                                    onKeyDown={(e) => handleRadioKeyDown(e, [...EXAM_PRESETS.map(p => p.id), "custom"])}
+                                    onKeyDown={(e) => handleRadioKeyDown(e, PRESET_IDS_WITH_CUSTOM)}
                                     className={cn(
                                         "flex flex-col items-start p-3 rounded-xl border text-left transition-all",
                                         state.presetId === "custom"
