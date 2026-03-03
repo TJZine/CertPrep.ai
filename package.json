@@ -82,6 +82,6 @@
   },
   "overrides": {
     "lodash-es": "4.17.23",
-    "serialize-javascript": "^7.0.4"
+    "serialize-javascript": "7.0.4"
   }
 }

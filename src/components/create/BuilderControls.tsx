@@ -67,11 +67,14 @@ export function BuilderControls({ state, onChange }: BuilderControlsProps): Reac
         <div className="space-y-8">
             <section className="space-y-3">
                 <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">1. Choose Strategy</h2>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-3" role="radiogroup" aria-label="Generation Strategy">
                     {STRATEGIES.map((s) => (
                         <button
                             key={s.id}
                             type="button"
+                            role="radio"
+                            aria-checked={state.strategy === s.id}
+                            aria-label={s.label}
                             onClick={() => onChange({ strategy: s.id })}
                             className={cn(
                                 "flex flex-col items-start p-3 rounded-xl border text-left transition-all",
