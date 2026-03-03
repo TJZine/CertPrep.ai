@@ -9,7 +9,7 @@ describe('promptGenerator', () => {
             strategy: "material" as const,
             topic: "AWS S3",
             questionCount: 5,
-            difficulty: "Hard",
+            difficulty: "Hard" as const,
             materialText: "S3 is a storage service."
         };
         const prompt = generatePrompt(state, []);
@@ -29,5 +29,52 @@ describe('promptGenerator', () => {
         expect(prompt).toContain('IMPORTANT: For the "category" field on each question, use ONLY one of these exact values');
         expect(prompt).toContain('- Domain 1: Security');
         expect(prompt).toContain('- Domain 2: Compute');
+    });
+
+    it('generates a match prompt correctly', () => {
+        const state = {
+            ...INITIAL_BUILDER_STATE,
+            strategy: "match" as const,
+            exampleQuestions: "Q: What is 2+2? A: 4",
+            questionCount: 3
+        };
+        const prompt = generatePrompt(state, []);
+        expect(prompt).toContain("Here are example questions that represent the style and difficulty I want");
+        expect(prompt).toContain("Q: What is 2+2? A: 4");
+        expect(prompt).toContain("Create 3 NEW questions");
+    });
+
+    it('generates a remix prompt correctly', () => {
+        const state = {
+            ...INITIAL_BUILDER_STATE,
+            strategy: "remix" as const,
+            remixQuestions: "1. Explain closures in JS",
+        };
+        const prompt = generatePrompt(state, []);
+        expect(prompt).toContain("Remix these questions to create variations");
+        expect(prompt).toContain("1. Explain closures in JS");
+    });
+
+    it('generates a convert prompt correctly', () => {
+        const state = {
+            ...INITIAL_BUILDER_STATE,
+            strategy: "convert" as const,
+            answerKeyText: "1. A, 2. B, 3. C",
+        };
+        const prompt = generatePrompt(state, []);
+        expect(prompt).toContain("Convert this answer key into full CertPrep.ai format questions");
+        expect(prompt).toContain("1. A, 2. B, 3. C");
+    });
+
+    it('falls back to placeholders when material is empty', () => {
+        const state = {
+            ...INITIAL_BUILDER_STATE,
+            strategy: "material" as const,
+            materialText: "",
+            topic: "",
+        };
+        const prompt = generatePrompt(state, []);
+        expect(prompt).toContain("[PASTE YOUR MATERIAL HERE]");
+        expect(prompt).toContain("[TOPIC]");
     });
 });

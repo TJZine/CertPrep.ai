@@ -31,7 +31,13 @@ export function BuilderControls({ state, onChange }: BuilderControlsProps): Reac
 
     const handleRadioKeyDown = React.useCallback(
         (e: React.KeyboardEvent<HTMLButtonElement>, presetIds: string[]) => {
-            const currentIndex = presetIds.indexOf(state.presetId ?? "");
+            const focusTargetId = e.currentTarget.getAttribute('data-preset-id');
+            let currentIndex = presetIds.indexOf(focusTargetId ?? "");
+
+            if (currentIndex === -1) {
+                currentIndex = presetIds.indexOf(state.presetId ?? "");
+            }
+
             if (currentIndex === -1) return;
 
             let nextIndex = currentIndex;
@@ -105,7 +111,11 @@ export function BuilderControls({ state, onChange }: BuilderControlsProps): Reac
                                     id="builder-question-count"
                                     type="number"
                                     value={state.questionCount}
-                                    onChange={(e) => onChange({ questionCount: parseInt(e.target.value) || 10 })}
+                                    onChange={(e) => {
+                                        const val = parseInt(e.target.value);
+                                        const safeVal = Number.isNaN(val) ? 10 : Math.min(Math.max(val, 1), 50);
+                                        onChange({ questionCount: safeVal });
+                                    }}
                                     className="w-full px-3 py-2 rounded-lg border bg-card text-sm focus:ring-1 focus:ring-primary outline-none"
                                 />
                             </div>
@@ -114,7 +124,7 @@ export function BuilderControls({ state, onChange }: BuilderControlsProps): Reac
                                 <select
                                     id="builder-difficulty"
                                     value={state.difficulty}
-                                    onChange={(e) => onChange({ difficulty: e.target.value })}
+                                    onChange={(e) => onChange({ difficulty: e.target.value as import("@/types/create").DifficultyLevel })}
                                     className="w-full px-3 py-2 rounded-lg border bg-card text-sm focus:ring-1 focus:ring-primary outline-none"
                                 >
                                     <option>Mixed</option>
@@ -184,51 +194,45 @@ export function BuilderControls({ state, onChange }: BuilderControlsProps): Reac
                     <p className="text-xs text-muted-foreground leading-relaxed">
                         Selecting an exam ensures the AI uses official domain names for question categories.
                     </p>
-                    <div className="grid grid-cols-1 gap-6">
+                    <div className="grid grid-cols-1 gap-6" role="radiogroup" aria-label="Exam categories">
                         {Object.entries(groupedPresets).map(([vendor, presets]) => (
                             <div key={vendor} className="space-y-3">
                                 <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-1">
                                     {vendor}
                                 </p>
-                                <div
-                                    className="grid grid-cols-1 sm:grid-cols-2 gap-3"
-                                    role="radiogroup"
-                                    aria-label={`${vendor} certification exams`}
-                                >
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     {presets.map((preset, index) => {
                                         const isSelected = state.presetId === preset.id;
-                                        const hasSelectionInGroup = presets.some((p) => p.id === state.presetId);
+                                        // Allow first item to be focusable if nothing is selected overall
+                                        const isFirstOverall = vendor === Object.keys(groupedPresets)[0] && index === 0;
+
                                         return (
-                                        <button
-                                            key={preset.id}
-                                            type="button"
-                                            role="radio"
-                                            aria-checked={isSelected}
-                                            data-preset-id={preset.id}
-                                            tabIndex={isSelected || (!hasSelectionInGroup && index === 0) ? 0 : -1}
-                                            onClick={() => onChange({ presetId: state.presetId === preset.id ? null : preset.id })}
-                                            onKeyDown={(e) => handleRadioKeyDown(e, presets.map(p => p.id))}
-                                            className={cn(
-                                                "flex flex-col items-start p-3 rounded-xl border text-left transition-all",
-                                                isSelected
-                                                    ? "bg-primary/5 border-primary ring-1 ring-primary/20"
-                                                    : "bg-card hover:border-primary/50"
-                                            )}
-                                        >
-                                            <span className="font-semibold text-xs leading-tight">{preset.name}</span>
-                                            <span className="text-[10px] text-muted-foreground mt-1">{preset.examCode}</span>
-                                        </button>
+                                            <button
+                                                key={preset.id}
+                                                type="button"
+                                                role="radio"
+                                                aria-checked={isSelected}
+                                                data-preset-id={preset.id}
+                                                tabIndex={isSelected || (!state.presetId && isFirstOverall) ? 0 : -1}
+                                                onClick={() => onChange({ presetId: state.presetId === preset.id ? null : preset.id })}
+                                                onKeyDown={(e) => handleRadioKeyDown(e, [...EXAM_PRESETS.map(p => p.id), "custom"])}
+                                                className={cn(
+                                                    "flex flex-col items-start p-3 rounded-xl border text-left transition-all",
+                                                    isSelected
+                                                        ? "bg-primary/5 border-primary ring-1 ring-primary/20"
+                                                        : "bg-card hover:border-primary/50"
+                                                )}
+                                            >
+                                                <span className="font-semibold text-xs leading-tight">{preset.name}</span>
+                                                <span className="text-[10px] text-muted-foreground mt-1">{preset.examCode}</span>
+                                            </button>
                                         );
                                     })}
                                 </div>
                             </div>
                         ))}
                         <div className="space-y-2">
-                            <div
-                                className="grid grid-cols-1 sm:grid-cols-2 gap-3"
-                                role="radiogroup"
-                                aria-label="Custom certification exam categories"
-                            >
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <button
                                     type="button"
                                     role="radio"
@@ -236,6 +240,7 @@ export function BuilderControls({ state, onChange }: BuilderControlsProps): Reac
                                     data-preset-id="custom"
                                     tabIndex={state.presetId === "custom" ? 0 : -1}
                                     onClick={() => onChange({ presetId: state.presetId === "custom" ? null : "custom" })}
+                                    onKeyDown={(e) => handleRadioKeyDown(e, [...EXAM_PRESETS.map(p => p.id), "custom"])}
                                     className={cn(
                                         "flex flex-col items-start p-3 rounded-xl border text-left transition-all",
                                         state.presetId === "custom"

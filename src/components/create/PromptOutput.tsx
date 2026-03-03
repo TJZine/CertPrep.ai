@@ -22,7 +22,11 @@ export function PromptOutput({ prompt }: PromptOutputProps): React.ReactElement 
             <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/30">
                 <span className="text-sm font-semibold">Generated Prompt</span>
                 <button
-                    onClick={() => copyToClipboard(prompt)}
+                    type="button"
+                    onClick={() => {
+                        if (!prompt?.trim()) return;
+                        copyToClipboard(prompt);
+                    }}
                     className={cn(
                         "inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors",
                         copied ? "bg-success/10 text-success" : "bg-primary text-primary-foreground hover:bg-primary/90"
