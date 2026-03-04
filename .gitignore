@@ -71,3 +71,4 @@ tests/e2e/.auth/
 e2e-stability.log
 backup_*.json
 docs/GPT_ACTIONS_ROADMAP.md
+.worktrees/
