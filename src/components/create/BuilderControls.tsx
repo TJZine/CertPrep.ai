@@ -18,7 +18,26 @@ const STRATEGIES: { id: GenerationStrategy; label: string; icon: React.ElementTy
     { id: "convert", label: "Convert Key", icon: FileKey, desc: "From answer key" },
 ];
 
-const PRESET_IDS_WITH_CUSTOM = [...EXAM_PRESETS.map(p => p.id), "custom"];
+const navigateRadioByArrowKey = (
+    e: React.KeyboardEvent<HTMLButtonElement>,
+    optionsListLength: number,
+    currentIndex: number,
+    onNavigate: (nextIndex: number) => void
+): void => {
+    let nextIndex = currentIndex !== -1 ? currentIndex : 0;
+
+    if (e.key === "ArrowDown" || e.key === "ArrowRight") {
+        e.preventDefault();
+        nextIndex = (nextIndex + 1) % optionsListLength;
+    } else if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
+        e.preventDefault();
+        nextIndex = (nextIndex - 1 + optionsListLength) % optionsListLength;
+    } else {
+        return;
+    }
+
+    onNavigate(nextIndex);
+};
 
 export function BuilderControls({ state, onChange }: BuilderControlsProps): React.ReactElement {
     const groupedPresets = React.useMemo(() => {
@@ -31,38 +50,36 @@ export function BuilderControls({ state, onChange }: BuilderControlsProps): Reac
         return groups;
     }, []);
 
+    const presetIdsInVisualOrder = React.useMemo(() => {
+        return [
+            ...Object.values(groupedPresets).flatMap(group => group.map(p => p.id)),
+            "custom"
+        ];
+    }, [groupedPresets]);
+
     const handleRadioKeyDown = React.useCallback(
-        (e: React.KeyboardEvent<HTMLButtonElement>, presetIds: string[]) => {
+        (e: React.KeyboardEvent<HTMLButtonElement>) => {
             const focusTargetId = e.currentTarget.getAttribute('data-preset-id');
-            let currentIndex = presetIds.indexOf(focusTargetId ?? "");
+            let currentIndex = presetIdsInVisualOrder.indexOf(focusTargetId ?? "");
 
             if (currentIndex === -1) {
-                currentIndex = presetIds.indexOf(state.presetId ?? "");
+                currentIndex = presetIdsInVisualOrder.indexOf(state.presetId ?? "");
             }
 
             if (currentIndex === -1) return;
 
-            let nextIndex = currentIndex;
-            if (e.key === "ArrowDown" || e.key === "ArrowRight") {
-                e.preventDefault();
-                nextIndex = (currentIndex + 1) % presetIds.length;
-            } else if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
-                e.preventDefault();
-                nextIndex = (currentIndex - 1 + presetIds.length) % presetIds.length;
-            } else {
-                return;
-            }
-
-            const nextId = presetIds[nextIndex];
-            if (nextId) {
-                onChange({ presetId: nextId });
-                const nextButton = e.currentTarget
-                    .closest('[role="radiogroup"]')
-                    ?.querySelector(`[data-preset-id="${nextId}"]`) as HTMLButtonElement | null;
-                nextButton?.focus();
-            }
+            navigateRadioByArrowKey(e, presetIdsInVisualOrder.length, currentIndex, (nextIndex) => {
+                const nextId = presetIdsInVisualOrder[nextIndex];
+                if (nextId) {
+                    onChange({ presetId: nextId });
+                    const nextButton = e.currentTarget
+                        .closest('[role="radiogroup"]')
+                        ?.querySelector(`[data-preset-id="${nextId}"]`) as HTMLButtonElement | null;
+                    nextButton?.focus();
+                }
+            });
         },
-        [state.presetId, onChange]
+        [state.presetId, presetIdsInVisualOrder, onChange]
     );
 
     return (
@@ -81,23 +98,13 @@ export function BuilderControls({ state, onChange }: BuilderControlsProps): Reac
                             onClick={() => onChange({ strategy: s.id })}
                             onKeyDown={(e) => {
                                 const currentIndex = STRATEGIES.findIndex(strat => strat.id === (state.strategy || STRATEGIES[0]?.id));
-                                let nextIndex = currentIndex !== -1 ? currentIndex : 0;
-
-                                if (e.key === "ArrowDown" || e.key === "ArrowRight") {
-                                    e.preventDefault();
-                                    nextIndex = (nextIndex + 1) % STRATEGIES.length;
-                                } else if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
-                                    e.preventDefault();
-                                    nextIndex = (nextIndex - 1 + STRATEGIES.length) % STRATEGIES.length;
-                                } else {
-                                    return;
-                                }
-
-                                const nextId = STRATEGIES[nextIndex]?.id;
-                                if (nextId) {
-                                    onChange({ strategy: nextId });
-                                    (e.currentTarget.parentElement?.children[nextIndex] as HTMLElement | undefined)?.focus();
-                                }
+                                navigateRadioByArrowKey(e, STRATEGIES.length, currentIndex, (nextIndex) => {
+                                    const nextId = STRATEGIES[nextIndex]?.id;
+                                    if (nextId) {
+                                        onChange({ strategy: nextId });
+                                        (e.currentTarget.parentElement?.children[nextIndex] as HTMLElement | undefined)?.focus();
+                                    }
+                                });
                             }}
                             className={cn(
                                 "flex flex-col items-start p-3 rounded-xl border text-left transition-all",
@@ -241,7 +248,7 @@ export function BuilderControls({ state, onChange }: BuilderControlsProps): Reac
                                                 data-preset-id={preset.id}
                                                 tabIndex={isSelected || (!state.presetId && isFirstOverall) ? 0 : -1}
                                                 onClick={() => onChange({ presetId: state.presetId === preset.id ? null : preset.id })}
-                                                onKeyDown={(e) => handleRadioKeyDown(e, PRESET_IDS_WITH_CUSTOM)}
+                                                onKeyDown={handleRadioKeyDown}
                                                 className={cn(
                                                     "flex flex-col items-start p-3 rounded-xl border text-left transition-all",
                                                     isSelected
@@ -266,7 +273,7 @@ export function BuilderControls({ state, onChange }: BuilderControlsProps): Reac
                                     data-preset-id="custom"
                                     tabIndex={state.presetId === "custom" ? 0 : -1}
                                     onClick={() => onChange({ presetId: state.presetId === "custom" ? null : "custom" })}
-                                    onKeyDown={(e) => handleRadioKeyDown(e, PRESET_IDS_WITH_CUSTOM)}
+                                    onKeyDown={handleRadioKeyDown}
                                     className={cn(
                                         "flex flex-col items-start p-3 rounded-xl border text-left transition-all",
                                         state.presetId === "custom"
