@@ -57,13 +57,23 @@ export function BuilderControls({ state, onChange }: BuilderControlsProps): Reac
         ];
     }, [groupedPresets]);
 
+    const validatedStrategyId = React.useMemo(() => {
+        const isValid = STRATEGIES.some(s => s.id === state.strategy);
+        return isValid ? state.strategy : STRATEGIES[0]?.id;
+    }, [state.strategy]);
+
+    const validatedPresetId = React.useMemo(() => {
+        const isValid = presetIdsInVisualOrder.includes(state.presetId ?? "");
+        return isValid ? state.presetId : presetIdsInVisualOrder[0];
+    }, [state.presetId, presetIdsInVisualOrder]);
+
     const handleRadioKeyDown = React.useCallback(
         (e: React.KeyboardEvent<HTMLButtonElement>) => {
             const focusTargetId = e.currentTarget.getAttribute('data-preset-id');
             let currentIndex = presetIdsInVisualOrder.indexOf(focusTargetId ?? "");
 
             if (currentIndex === -1) {
-                currentIndex = presetIdsInVisualOrder.indexOf(state.presetId ?? "");
+                currentIndex = presetIdsInVisualOrder.indexOf(validatedPresetId ?? "");
             }
 
             if (currentIndex === -1) return;
@@ -79,7 +89,7 @@ export function BuilderControls({ state, onChange }: BuilderControlsProps): Reac
                 }
             });
         },
-        [state.presetId, presetIdsInVisualOrder, onChange]
+        [validatedPresetId, presetIdsInVisualOrder, onChange]
     );
 
     return (
@@ -94,10 +104,10 @@ export function BuilderControls({ state, onChange }: BuilderControlsProps): Reac
                             role="radio"
                             aria-checked={state.strategy === s.id}
                             aria-label={s.label}
-                            tabIndex={state.strategy === s.id || (!state.strategy && STRATEGIES[0] && s.id === STRATEGIES[0].id) ? 0 : -1}
+                            tabIndex={validatedStrategyId === s.id ? 0 : -1}
                             onClick={() => onChange({ strategy: s.id })}
                             onKeyDown={(e) => {
-                                const currentIndex = STRATEGIES.findIndex(strat => strat.id === (state.strategy || STRATEGIES[0]?.id));
+                                const currentIndex = STRATEGIES.findIndex(strat => strat.id === validatedStrategyId);
                                 navigateRadioByArrowKey(e, STRATEGIES.length, currentIndex, (nextIndex) => {
                                     const nextId = STRATEGIES[nextIndex]?.id;
                                     if (nextId) {
@@ -234,10 +244,8 @@ export function BuilderControls({ state, onChange }: BuilderControlsProps): Reac
                                     {vendor}
                                 </p>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    {presets.map((preset, index) => {
+                                    {presets.map((preset) => {
                                         const isSelected = state.presetId === preset.id;
-                                        // Allow first item to be focusable if nothing is selected overall
-                                        const isFirstOverall = vendor === Object.keys(groupedPresets)[0] && index === 0;
 
                                         return (
                                             <button
@@ -246,7 +254,7 @@ export function BuilderControls({ state, onChange }: BuilderControlsProps): Reac
                                                 role="radio"
                                                 aria-checked={isSelected}
                                                 data-preset-id={preset.id}
-                                                tabIndex={isSelected || (!state.presetId && isFirstOverall) ? 0 : -1}
+                                                tabIndex={validatedPresetId === preset.id ? 0 : -1}
                                                 onClick={() => onChange({ presetId: state.presetId === preset.id ? null : preset.id })}
                                                 onKeyDown={handleRadioKeyDown}
                                                 className={cn(
@@ -271,7 +279,7 @@ export function BuilderControls({ state, onChange }: BuilderControlsProps): Reac
                                     role="radio"
                                     aria-checked={state.presetId === "custom"}
                                     data-preset-id="custom"
-                                    tabIndex={state.presetId === "custom" ? 0 : -1}
+                                    tabIndex={validatedPresetId === "custom" ? 0 : -1}
                                     onClick={() => onChange({ presetId: state.presetId === "custom" ? null : "custom" })}
                                     onKeyDown={handleRadioKeyDown}
                                     className={cn(
