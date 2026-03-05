@@ -56,6 +56,7 @@ vi.mock("@/db", () => ({
             where: vi.fn().mockReturnThis(),
             equals: vi.fn().mockReturnThis(),
             filter: vi.fn().mockReturnThis(),
+            sortBy: vi.fn(),
 
             get: vi.fn(),
             bulkAdd: vi.fn(),
@@ -74,6 +75,12 @@ vi.mock("@/db/quizzes", () => ({
 vi.mock("@/db/aggregatedQuiz", () => ({
     hydrateAggregatedQuiz: vi.fn(),
 }));
+
+const mockedResultsTable = db.results as unknown as {
+    where: Mock;
+    equals: Mock;
+    sortBy: Mock;
+};
 
 describe("useDatabase hooks (Unit Layer)", () => {
     beforeEach(() => {
@@ -219,14 +226,17 @@ describe("useDatabase hooks (Unit Layer)", () => {
 
     describe("useResults", () => {
         it("fetches ordered results for user", async () => {
-            const mockResults = [{ id: "r1", user_id: "user1" }];
-            (db.results.orderBy as Mock).mockReturnValue({ reverse: vi.fn().mockReturnThis(), toArray: vi.fn().mockResolvedValue(mockResults) });
+            const orderedResults = [{ id: "older", user_id: "user1" }, { id: "newer", user_id: "user1" }];
+            mockedResultsTable.sortBy.mockResolvedValue([...orderedResults]);
 
             const { result } = renderHook(() => useResults("user1"));
 
             await waitFor(() => {
-                expect(result.current.results).toEqual([...mockResults].reverse());
+                expect(result.current.results).toEqual([...orderedResults].reverse());
             });
+            expect(mockedResultsTable.where).toHaveBeenCalledWith("user_id");
+            expect(mockedResultsTable.equals).toHaveBeenCalledWith("user1");
+            expect(mockedResultsTable.sortBy).toHaveBeenCalledWith("timestamp");
         });
     });
 
@@ -269,14 +279,20 @@ describe("useDatabase hooks (Unit Layer)", () => {
 
     describe("useQuizResults", () => {
         it("fetches results for a specific quiz", async () => {
-            const mockResults = [{ id: "r1", user_id: "user1", quiz_id: "q1" }];
-            (db.results.orderBy as Mock).mockReturnValue({ reverse: vi.fn().mockReturnThis(), toArray: vi.fn().mockResolvedValue(mockResults) });
+            const orderedResults = [
+                { id: "older", user_id: "user1", quiz_id: "q1" },
+                { id: "newer", user_id: "user1", quiz_id: "q1" },
+            ];
+            mockedResultsTable.sortBy.mockResolvedValue([...orderedResults]);
 
             const { result } = renderHook(() => useQuizResults("q1", "user1"));
 
             await waitFor(() => {
-                expect(result.current.results).toEqual([...mockResults].reverse());
+                expect(result.current.results).toEqual([...orderedResults].reverse());
             });
+            expect(mockedResultsTable.where).toHaveBeenCalledWith("[user_id+quiz_id]");
+            expect(mockedResultsTable.equals).toHaveBeenCalledWith(["user1", "q1"]);
+            expect(mockedResultsTable.sortBy).toHaveBeenCalledWith("timestamp");
         });
     });
 
@@ -363,6 +379,7 @@ describe("useDatabase hooks (Unit Layer)", () => {
 
             (isSRSQuiz as unknown as Mock).mockReturnValue(true);
             (hydrateAggregatedQuiz as unknown as Mock).mockRejectedValue(new Error("Failed"));
+            const suppressError = vi.spyOn(console, "error").mockImplementation(() => { });
 
             const { result } = renderHook(() => useResultWithHydratedQuiz("r1", "user1"));
 
@@ -370,6 +387,8 @@ describe("useDatabase hooks (Unit Layer)", () => {
                 expect(result.current.quiz).toEqual(mockBaseQuiz as unknown as Quiz);
                 expect(result.current.isHydrating).toBe(false);
             });
+            expect(suppressError).toHaveBeenCalledWith("Failed to hydrate quiz", expect.any(Error));
+            suppressError.mockRestore();
         });
     });
 });
