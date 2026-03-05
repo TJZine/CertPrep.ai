@@ -103,6 +103,7 @@ describe("Quiz Session Store", () => {
 
     it("should preserve selectedAnswer on hash failures for retry", async () => {
         const mockHashAnswer = vi.mocked(hashAnswer);
+        const suppressError = vi.spyOn(console, "error").mockImplementation(() => { });
         // Both retry attempts fail
         mockHashAnswer.mockRejectedValueOnce(new Error("Hash failed"));
         mockHashAnswer.mockRejectedValueOnce(new Error("Hash failed"));
@@ -116,8 +117,9 @@ describe("Quiz Session Store", () => {
 
         await act(async () => {
             useQuizSessionStore.getState().submitAnswer();
-            // Wait for error to be set (async operation completes)
-            await vi.waitFor(() => useQuizSessionStore.getState().error !== null);
+        });
+        await vi.waitFor(() => {
+            expect(useQuizSessionStore.getState().error).not.toBeNull();
         });
 
         const state = useQuizSessionStore.getState();
@@ -126,6 +128,8 @@ describe("Quiz Session Store", () => {
         expect(state.selectedAnswer).toBe("A");
         expect(state.isSubmitting).toBe(false);
         expect(state.hasSubmitted).toBe(false);
+        expect(suppressError).toHaveBeenCalled();
+        suppressError.mockRestore();
     });
 
     it("should show explanation on incorrect answer", async () => {
@@ -232,8 +236,8 @@ describe("Quiz Session Store", () => {
         expect(state.isSubmitting).toBe(true);
         expect(state.selectedAnswer).toBe("A");
 
-        await act(async () => {
-            await vi.waitFor(() => useQuizSessionStore.getState().isSubmitting === false);
+        await vi.waitFor(() => {
+            expect(useQuizSessionStore.getState().isSubmitting).toBe(false);
         });
 
         const finalState = useQuizSessionStore.getState();
@@ -247,6 +251,7 @@ describe("Quiz Session Store", () => {
 
     it("should handle error in selectAnswerProctor", async () => {
         const mockHashAnswer = vi.mocked(hashAnswer);
+        const suppressError = vi.spyOn(console, "error").mockImplementation(() => { });
         mockHashAnswer.mockRejectedValueOnce(new Error("Hash failed"));
         mockHashAnswer.mockRejectedValueOnce(new Error("Hash failed"));
 
@@ -257,13 +262,15 @@ describe("Quiz Session Store", () => {
             useQuizSessionStore.getState().selectAnswerProctor("A");
         });
 
-        await act(async () => {
-            await vi.waitFor(() => useQuizSessionStore.getState().error !== null);
+        await vi.waitFor(() => {
+            expect(useQuizSessionStore.getState().error).not.toBeNull();
         });
 
         const state = useQuizSessionStore.getState();
         expect(state.error).toBe("We could not save your answer. Please try again.");
         expect(state.isSubmitting).toBe(false);
+        expect(suppressError).toHaveBeenCalled();
+        suppressError.mockRestore();
     });
 
     it("should markHard and markGood correctly", async () => {
@@ -355,7 +362,7 @@ describe("Quiz Session Store", () => {
         expect(useQuizSessionStore.getState().flaggedQuestions.has("q1")).toBe(false);
     });
 
-    it("should run getters and selectors correctly", async () => {
+    it("should compute getters for answered and flagged states", async () => {
         act(() => {
             useQuizSessionStore.getState().initializeSession("quiz-1", "zen", mockQuestions);
         });
@@ -392,6 +399,17 @@ describe("Quiz Session Store", () => {
             useQuizSessionStore.getState().toggleFlag("q2"); // Unflag
         });
         expect(useQuizSessionStore.getState().getQuestionStatus("q2")).toBe("seen");
+
+    });
+
+    it("should compute progress/session duration and clear errors", async () => {
+        act(() => {
+            useQuizSessionStore.getState().initializeSession("quiz-1", "zen", mockQuestions);
+            useQuizSessionStore.getState().selectAnswer("A");
+        });
+        await act(async () => {
+            useQuizSessionStore.getState().submitAnswer();
+        });
 
         expect(useQuizSessionStore.getState().getProgress().percentage).toBe(50);
         expect(useQuizSessionStore.getState().getSessionDuration()).toBeGreaterThanOrEqual(0);

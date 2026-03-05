@@ -31,9 +31,9 @@ describe("logger", () => {
             vi.stubEnv("NODE_ENV", "development");
         });
 
-        it("should call console.info for logger.log", () => {
+        it("should call console.log for logger.log", () => {
             logger.log("test log");
-            expect(console.info).toHaveBeenCalledWith("test log");
+            expect(console.log).toHaveBeenCalledWith("test log");
             expect(Sentry.addBreadcrumb).not.toHaveBeenCalled();
         });
 
@@ -56,9 +56,9 @@ describe("logger", () => {
             expect(Sentry.captureException).not.toHaveBeenCalled();
         });
 
-        it("should call console.info for logger.debug", () => {
+        it("should call console.debug for logger.debug", () => {
             logger.debug("test debug");
-            expect(console.info).toHaveBeenCalledWith("test debug");
+            expect(console.debug).toHaveBeenCalledWith("test debug");
         });
     });
 
