@@ -273,7 +273,6 @@ describe("Quiz Session Store", () => {
         expect(state.error).toBe("We could not save your answer. Please try again.");
         expect(state.isSubmitting).toBe(false);
         expect(suppressError).toHaveBeenCalled();
-        suppressError.mockRestore();
     });
 
     it("should markHard and markGood correctly", async () => {

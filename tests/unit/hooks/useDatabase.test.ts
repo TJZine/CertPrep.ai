@@ -18,8 +18,7 @@ vi.mock("dexie-react-hooks", () => ({
                 });
 
             return (): void => { isMounted = false; };
-            // eslint-disable-next-line react-hooks/exhaustive-deps
-        }, deps);
+        }, [querier, deps]);
 
         return data;
     }),
@@ -402,7 +401,6 @@ describe("useDatabase hooks (Unit Layer)", () => {
                 expect(result.current.isHydrating).toBe(false);
             });
             expect(suppressError).toHaveBeenCalledWith("Failed to hydrate quiz", expect.any(Error));
-            suppressError.mockRestore();
         });
     });
 });

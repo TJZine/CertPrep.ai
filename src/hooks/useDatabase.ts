@@ -206,7 +206,7 @@ export function useResults(userId: string | undefined): UseResultsResponse {
     [userId],
   );
   return {
-    results: results ? results.reverse() : [],
+    results: results ? [...results].reverse() : [],
     isLoading: !userId ? true : results === undefined,
   };
 }
@@ -248,7 +248,7 @@ export function useQuizResults(
       .equals([userId, quizId])
       .filter((r) => !r.deleted_at)
       .sortBy("timestamp");
-    return ordered.reverse();
+    return [...ordered].reverse();
   }, [quizId, userId]);
 
   return {

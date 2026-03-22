@@ -42,9 +42,17 @@ export function generatePrompt(state: BuilderState, categories: string[]): strin
     case "remix":
       base = `Remix these questions to create variations for additional practice:\n\n${state.remixQuestions?.trim() || "[PASTE QUESTIONS TO REMIX]"}\n\nFor each question, create variations that test the same concept but use different scenarios.`;
       break;
-    case "convert":
-      base = `Convert this answer key into full CertPrep.ai format questions:\n\n${state.answerKeyText?.trim() || "[PASTE ANSWER KEY]"}\n\nUse these original questions as context for the stems and options:\n\n${state.sourceQuestions?.trim() || "[PASTE ORIGINAL QUESTIONS HERE]"}\n\nAdd detailed explanations for each correct answer and distractor logic.`;
+    case "convert": {
+      const answerKey = state.answerKeyText?.trim();
+      const sourceQuestions = state.sourceQuestions?.trim();
+
+      if (!answerKey || !sourceQuestions) {
+        throw new Error("Missing required fields: Both Answer Key and Source Questions are required for conversion strategy.");
+      }
+
+      base = `Convert this answer key into full CertPrep.ai format questions:\n\n${answerKey}\n\nUse these original questions as context for the stems and options:\n\n${sourceQuestions}\n\nAdd detailed explanations for each correct answer and distractor logic.`;
       break;
+    }
     default: {
       const _exhaustiveCheck: never = state.strategy;
       throw new Error(`Unhandled strategy: ${_exhaustiveCheck}`);

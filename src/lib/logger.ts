@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 import * as Sentry from "@sentry/nextjs";
 
-const isProduction = process.env.NODE_ENV === "production";
+const getIsProduction = (): boolean => process.env.NODE_ENV === "production";
 
 /**
  * Sanitizes log arguments by removing or redacting sensitive patterns.
@@ -32,8 +32,9 @@ const sanitizeForSentry = (args: unknown[]): string => {
       /\b(token|key|password|pwd|secret|api[_-]?key|apikey)\b\s*["']?[:=]\s*["']?[^"'\r\n,]+["']?/gi,
       "$1=[REDACTED]",
     )
-    // Match "Bearer <token>" format (if not already matched by a key)
-    .replace(/\bBearer\s+[A-Za-z0-9._~+/-]+\b/gi, "Bearer=[REDACTED]")
+    // Match "Bearer <token>" format and prose-style "token <token>"
+    .replace(/\bBearer\s+[A-Za-z0-9._~+/-]+\b/gi, "Bearer [REDACTED]")
+    .replace(/\btoken\s+[A-Za-z0-9._~+/-]+\b/gi, "token [REDACTED]")
     .replace(
       /\b(ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9_]{36,}\b/g,
       "[GH_TOKEN_REDACTED]",
@@ -57,7 +58,7 @@ export const logger = {
    * @param args - The message(s) or object(s) to log.
    */
   log: (...args: unknown[]): void => {
-    if (!isProduction) {
+    if (!getIsProduction()) {
       console.log(...args);
     } else {
       // Add breadcrumbs for debugging context without logging to console
@@ -79,7 +80,7 @@ export const logger = {
    * @param args - The warning message(s) or object(s).
    */
   warn: (...args: unknown[]): void => {
-    if (!isProduction) {
+    if (!getIsProduction()) {
       console.warn(...args);
     } else {
       Sentry.captureMessage(sanitizeForSentry(args), "warning");
@@ -97,12 +98,12 @@ export const logger = {
    * @param args - The error object(s) or message(s).
    */
   error: (...args: unknown[]): void => {
-    if (!isProduction) {
+    if (!getIsProduction()) {
       console.error(...args);
     }
 
     // In production, send to Sentry
-    if (isProduction) {
+    if (getIsProduction()) {
       const errorObj =
         args.find((arg) => arg instanceof Error) ||
         new Error(sanitizeForSentry(args));
@@ -129,7 +130,7 @@ export const logger = {
    * @param args - The message(s) to log.
    */
   info: (...args: unknown[]): void => {
-    if (!isProduction) {
+    if (!getIsProduction()) {
       console.info(...args);
     } else {
       Sentry.addBreadcrumb({
@@ -150,7 +151,7 @@ export const logger = {
    * @param args - Debugging data.
    */
   debug: (...args: unknown[]): void => {
-    if (!isProduction) {
+    if (!getIsProduction()) {
       console.debug(...args);
     }
   },
