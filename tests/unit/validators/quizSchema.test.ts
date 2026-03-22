@@ -27,12 +27,11 @@ describe("quizSchema validators", () => {
             const invalidQ = { ...validQuestion, correct_answer: "c" };
             const result = QuestionSchema.safeParse(invalidQ);
             expect(result.success).toBe(false);
-            if (!result.success) {
-                const hasSpecificError = result.error.issues.some(
-                    issue => issue.message === "Correct answer must match one of the option keys"
-                );
-                expect(hasSpecificError).toBe(true);
-            }
+            if (result.success) return;
+            const hasSpecificError = result.error.issues.some(
+                issue => issue.message === "Correct answer must match one of the option keys"
+            );
+            expect(hasSpecificError).toBe(true);
         });
 
         it("should accept correct_answer_hash if correct_answer is omitted", () => {
@@ -55,12 +54,11 @@ describe("quizSchema validators", () => {
 
             const result = QuestionSchema.safeParse(missingQ);
             expect(result.success).toBe(false);
-            if (!result.success) {
-                const hasSpecificError = result.error.issues.some(
-                    issue => issue.message === "Either correct_answer or correct_answer_hash must be provided"
-                );
-                expect(hasSpecificError).toBe(true);
-            }
+            if (result.success) return;
+            const hasSpecificError = result.error.issues.some(
+                issue => issue.message === "Either correct_answer or correct_answer_hash must be provided"
+            );
+            expect(hasSpecificError).toBe(true);
         });
 
         it("should reject if less than 2 options", () => {
@@ -70,6 +68,8 @@ describe("quizSchema validators", () => {
             };
             const result = QuestionSchema.safeParse(lessOptionsQ);
             expect(result.success).toBe(false);
+            if (result.success) return;
+            expect(result.error!.issues[0]!.path).toContain("options");
         });
 
         it("should reject if more than 8 options", () => {
@@ -79,6 +79,8 @@ describe("quizSchema validators", () => {
             };
             const result = QuestionSchema.safeParse(tooManyOptionsQ);
             expect(result.success).toBe(false);
+            if (result.success) return;
+            expect(result.error!.issues[0]!.path).toContain("options");
         });
 
         it("should cast number id to string", () => {

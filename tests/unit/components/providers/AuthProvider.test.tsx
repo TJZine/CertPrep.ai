@@ -1,9 +1,10 @@
 import { describe, expect, it, vi, beforeEach, afterEach, type Mock } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import React from "react";
 import { AuthProvider, useAuth } from "@/components/providers/AuthProvider";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import { clearDatabase } from "@/db";
 
 // Mock dependencies
 vi.mock("@/lib/supabase/client");
@@ -187,5 +188,32 @@ describe("AuthProvider", () => {
 
         unmount();
         expect(mockSubscription.unsubscribe).toHaveBeenCalledTimes(1);
+    });
+
+    it("clears local database before calling supabase signOut", async () => {
+        const mockSession = { user: { id: "test-user-1" } };
+        mockSupabase.auth.getSession.mockResolvedValue({ data: { session: mockSession }, error: null });
+        mockSupabase.auth.onAuthStateChange.mockReturnValue({ data: { subscription: mockSubscription } });
+
+        render(
+            <AuthProvider>
+                <TestComponent />
+            </AuthProvider>
+        );
+
+        await waitFor(() => {
+            expect(screen.getByTestId("is-loading").textContent).toBe("false");
+        });
+
+        // Click sign out
+        const signOutBtn = screen.getByTestId("sign-out-btn");
+        fireEvent.click(signOutBtn);
+
+        await waitFor(() => {
+            // Verify clearDatabase was called
+            expect(clearDatabase).toHaveBeenCalled();
+            // Verify supabase signOut was called
+            expect(mockSupabase.auth.signOut).toHaveBeenCalled();
+        });
     });
 });

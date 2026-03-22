@@ -1,5 +1,5 @@
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { useQuizSessionStore, useCurrentQuestion, useProgress, useIsAnswered, useProctorStatus, useQuestionStatuses } from "@/stores/quizSessionStore";
 import { renderHook } from "@testing-library/react";
 import { act } from "@testing-library/react";
@@ -35,6 +35,10 @@ describe("Quiz Session Store", () => {
         act(() => {
             useQuizSessionStore.getState().resetSession();
         });
+    });
+
+    afterEach(() => {
+        vi.restoreAllMocks();
     });
 
     it("should initialize session correctly", () => {
@@ -129,7 +133,6 @@ describe("Quiz Session Store", () => {
         expect(state.isSubmitting).toBe(false);
         expect(state.hasSubmitted).toBe(false);
         expect(suppressError).toHaveBeenCalled();
-        suppressError.mockRestore();
     });
 
     it("should show explanation on incorrect answer", async () => {

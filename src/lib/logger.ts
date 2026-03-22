@@ -27,10 +27,13 @@ const sanitizeForSentry = (args: unknown[]): string => {
   // Redact common sensitive patterns (emails, tokens, etc.)
   return serialized
     .replace(/\b[\w.%+-]+@[\w.-]+\.[A-Z]{2,}\b/gi, "[EMAIL_REDACTED]")
+    // Match keys in JSON or strings: "password": "...", password=..., password: ...
     .replace(
-      /\b(Bearer|token|key|password|pwd|secret)\s*[:=]\s*\S+/gi,
+      /\b(token|key|password|pwd|secret|api[_-]?key|apikey)\b\s*["']?[:=]\s*["']?[^"'\r\n,]+["']?/gi,
       "$1=[REDACTED]",
     )
+    // Match "Bearer <token>" format (if not already matched by a key)
+    .replace(/\bBearer\s+[A-Za-z0-9._~+/-]+\b/gi, "Bearer=[REDACTED]")
     .replace(
       /\b(ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9_]{36,}\b/g,
       "[GH_TOKEN_REDACTED]",
@@ -40,8 +43,7 @@ const sanitizeForSentry = (args: unknown[]): string => {
       /\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b/g,
       "[JWT_REDACTED]",
     )
-    .replace(/\b(AKIA|ASIA)[A-Z0-9]{16}\b/g, "[AWS_KEY_REDACTED]")
-    .replace(/\b(api[_-]?key|apikey)\s*[:=]\s*\S+/gi, "$1=[REDACTED]");
+    .replace(/\b(AKIA|ASIA)[A-Z0-9]{16}\b/g, "[AWS_KEY_REDACTED]");
 };
 
 export const logger = {

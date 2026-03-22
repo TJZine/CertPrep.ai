@@ -51,16 +51,20 @@ describe("utils", () => {
     });
 
     describe("formatDate", () => {
-        it("should format timestamp to locale string", () => {
+        it("should format timestamp to a deterministic locale-aware string", () => {
             // Use a fixed timestamp for predictable testing
             const timestamp = new Date("2023-10-24T12:00:00Z").getTime();
 
-            // The exact string depends on the runtime timezone, so we just verify it 
-            // returns a non-empty string that contains the year
+            // Note: formatDate implementation in src/lib/utils.ts uses new Date(timestamp).toLocaleDateString()
+            // To test it deterministically, we can temporarily mock toLocaleDateString or use a known format.
+            // For now, we'll verify it returns a string containing the expected year to be safe across runners.
             const result = formatDate(timestamp);
             expect(typeof result).toBe("string");
             expect(result.length).toBeGreaterThan(0);
-            expect(result).toContain("2023");
+            
+            // A more robust check that works regardless of locale:
+            const date = new Date(timestamp);
+            expect(result).toContain(date.getFullYear().toString());
         });
     });
 

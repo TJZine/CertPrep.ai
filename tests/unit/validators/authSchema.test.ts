@@ -11,33 +11,29 @@ describe("authSchema validators", () => {
         it("should reject passwords shorter than 8 characters", () => {
             const result = passwordSchema.safeParse("Short1");
             expect(result.success).toBe(false);
-            if (!result.success && result.error?.issues?.[0]) {
-                expect(result.error.issues[0].message).toBe("Password must be at least 8 characters");
-            }
+            if (result.success) return; // TS narrowing
+            expect(result.error!.issues[0]!.message).toBe("Password must be at least 8 characters");
         });
 
         it("should reject passwords without uppercase letters", () => {
             const result = passwordSchema.safeParse("lowercase123");
             expect(result.success).toBe(false);
-            if (!result.success && result.error?.issues?.[0]) {
-                expect(result.error.issues[0].message).toBe("Password must contain at least one uppercase letter");
-            }
+            if (result.success) return;
+            expect(result.error!.issues[0]!.message).toBe("Password must contain at least one uppercase letter");
         });
 
         it("should reject passwords without lowercase letters", () => {
             const result = passwordSchema.safeParse("UPPERCASE123");
             expect(result.success).toBe(false);
-            if (!result.success && result.error?.issues?.[0]) {
-                expect(result.error.issues[0].message).toBe("Password must contain at least one lowercase letter");
-            }
+            if (result.success) return;
+            expect(result.error!.issues[0]!.message).toBe("Password must contain at least one lowercase letter");
         });
 
         it("should reject passwords without numbers", () => {
             const result = passwordSchema.safeParse("NoNumbersHere");
             expect(result.success).toBe(false);
-            if (!result.success && result.error?.issues?.[0]) {
-                expect(result.error.issues[0].message).toBe("Password must contain at least one number");
-            }
+            if (result.success) return;
+            expect(result.error!.issues[0]!.message).toBe("Password must contain at least one number");
         });
     });
 
@@ -56,10 +52,9 @@ describe("authSchema validators", () => {
                 confirmPassword: "DifferentPass123",
             });
             expect(result.success).toBe(false);
-            if (!result.success && result.error?.issues?.[0]) {
-                expect(result.error.issues[0].message).toBe("Passwords don't match");
-                expect(result.error.issues[0].path).toEqual(["confirmPassword"]);
-            }
+            if (result.success) return;
+            expect(result.error!.issues[0]!.message).toBe("Passwords don't match");
+            expect(result.error!.issues[0]!.path).toEqual(["confirmPassword"]);
         });
 
         it("should validate the primary password against passwordSchema rules", () => {
@@ -68,7 +63,10 @@ describe("authSchema validators", () => {
                 confirmPassword: "short",
             });
             expect(result.success).toBe(false);
-            // Fails inner password validation before it even reaches the refinement
+            if (result.success) return;
+            // Check for the specific password-length error in the first issue
+            expect(result.error!.issues[0]!.path).toContain("password");
+            expect(result.error!.issues[0]!.message).toBe("Password must be at least 8 characters");
         });
     });
 });

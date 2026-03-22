@@ -177,6 +177,20 @@ describe("useDatabase hooks (Unit Layer)", () => {
             });
         });
 
+        it("returns quiz if it is a public system quiz (NIL_UUID)", async () => {
+            const NIL_UUID = "00000000-0000-0000-0000-000000000000";
+            const mockQuiz = { id: "q1", user_id: NIL_UUID };
+            (db.quizzes.get as Mock).mockResolvedValue(mockQuiz);
+
+            // Requesting with a different user-id
+            const { result } = renderHook(() => useQuiz("q1", "different-user"));
+
+            await waitFor(() => {
+                expect(result.current.quiz).toEqual(mockQuiz as unknown as Quiz);
+                expect(result.current.isLoading).toBe(false);
+            });
+        });
+
         it("returns undefined if quiz is marked deleted", async () => {
             const mockQuiz = { id: "q1", user_id: "user1", deleted_at: "some-date" };
             (db.quizzes.get as Mock).mockResolvedValue(mockQuiz);
