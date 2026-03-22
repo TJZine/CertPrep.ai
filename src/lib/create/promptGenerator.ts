@@ -43,12 +43,8 @@ export function generatePrompt(state: BuilderState, categories: string[]): strin
       base = `Remix these questions to create variations for additional practice:\n\n${state.remixQuestions?.trim() || "[PASTE QUESTIONS TO REMIX]"}\n\nFor each question, create variations that test the same concept but use different scenarios.`;
       break;
     case "convert": {
-      const answerKey = state.answerKeyText?.trim();
-      const sourceQuestions = state.sourceQuestions?.trim();
-
-      if (!answerKey || !sourceQuestions) {
-        throw new Error("Missing required fields: Both Answer Key and Source Questions are required for conversion strategy.");
-      }
+      const answerKey = state.answerKeyText?.trim() || "[PASTE ANSWER KEY]";
+      const sourceQuestions = state.sourceQuestions?.trim() || "[PASTE ORIGINAL QUESTIONS HERE]";
 
       base = `Convert this answer key into full CertPrep.ai format questions:\n\n${answerKey}\n\nUse these original questions as context for the stems and options:\n\n${sourceQuestions}\n\nAdd detailed explanations for each correct answer and distractor logic.`;
       break;

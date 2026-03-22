@@ -32,9 +32,9 @@ const sanitizeForSentry = (args: unknown[]): string => {
       /\b(token|key|password|pwd|secret|api[_-]?key|apikey)\b\s*["']?[:=]\s*["']?[^"'\r\n,]+["']?/gi,
       "$1=[REDACTED]",
     )
-    // Match "Bearer <token>" format and prose-style "token <token>"
-    .replace(/\bBearer\s+[A-Za-z0-9._~+/-]+\b/gi, "Bearer [REDACTED]")
-    .replace(/\btoken\s+[A-Za-z0-9._~+/-]+\b/gi, "token [REDACTED]")
+    // Match "Bearer <token>" format and prose-style "token <token>" (include '=' for base64)
+    .replace(/\bBearer\s+[A-Za-z0-9._~+/-=]+\b/gi, "Bearer [REDACTED]")
+    .replace(/\btoken\s+[A-Za-z0-9._~+/-=]+\b/gi, "token [REDACTED]")
     .replace(
       /\b(ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9_]{36,}\b/g,
       "[GH_TOKEN_REDACTED]",
@@ -98,17 +98,28 @@ export const logger = {
    * @param args - The error object(s) or message(s).
    */
   error: (...args: unknown[]): void => {
-    if (!getIsProduction()) {
+    const isProd = getIsProduction();
+
+    if (!isProd) {
       console.error(...args);
-    }
+    } else {
+      // In production, send to Sentry with sanitized message
+      const originalError = args.find((arg) => arg instanceof Error) as
+        | Error
+        | undefined;
 
-    // In production, send to Sentry
-    if (getIsProduction()) {
-      const errorObj =
-        args.find((arg) => arg instanceof Error) ||
-        new Error(sanitizeForSentry(args));
-      const extras = args.filter((arg) => arg !== errorObj);
+      let errorObj: Error;
+      if (originalError) {
+        // Sanitize the message and create a new Error to preserve privacy
+        const sanitizedMsg = sanitizeForSentry([originalError.message]);
+        errorObj = new Error(sanitizedMsg);
+        errorObj.name = originalError.name;
+        errorObj.stack = originalError.stack;
+      } else {
+        errorObj = new Error(sanitizeForSentry(args));
+      }
 
+      const extras = args.filter((arg) => arg !== originalError);
       const normalizedExtras = extras.map((extra) =>
         typeof extra === "object" && extra !== null ? extra : { value: extra },
       );

@@ -100,11 +100,11 @@ describe("logger", () => {
         it("should call Sentry.captureException for logger.error and NOT call console.error", () => {
             const err = new Error("test error");
             prodLogger.error(err, "extra context");
-            
+
             // Note: logger.error in production still doesn't call console.error 
-            // per its implementation: if (!isProduction) { console.error(...args); }
+            // per its implementation: if (!getIsProduction()) { console.error(...args); }
             expect(console.error).not.toHaveBeenCalled();
-            expect(Sentry.captureException).toHaveBeenCalledWith(err, expect.objectContaining({
+            expect(Sentry.captureException).toHaveBeenCalledWith(expect.any(Error), expect.objectContaining({
                 extra: expect.any(Object)
             }));
         });

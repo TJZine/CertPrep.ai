@@ -18,7 +18,8 @@ vi.mock("dexie-react-hooks", () => ({
                 });
 
             return (): void => { isMounted = false; };
-        }, [querier, deps]);
+            // eslint-disable-next-line react-hooks/exhaustive-deps
+        }, [JSON.stringify(deps)]);
 
         return data;
     }),
@@ -212,7 +213,15 @@ describe("useDatabase hooks (Unit Layer)", () => {
 
         it("returns stats attached to quiz", async () => {
             const mockQuiz = { id: "q1", user_id: "user1" };
-            const mockStats = { played: 5 };
+            const mockStats = {
+                quizId: "q1",
+                attemptCount: 5,
+                lastAttemptScore: 80,
+                lastAttemptDate: "2026-03-22",
+                averageScore: 75,
+                bestScore: 90,
+                totalStudyTime: 3600
+            };
             (db.quizzes.get as Mock).mockResolvedValue(mockQuiz);
             (getQuizStats as unknown as Mock).mockResolvedValue(mockStats);
 
@@ -362,7 +371,11 @@ describe("useDatabase hooks (Unit Layer)", () => {
             (db.quizzes.get as Mock).mockResolvedValue(mockBaseQuiz);
 
             (isSRSQuiz as unknown as Mock).mockReturnValue(true);
-            (hydrateAggregatedQuiz as unknown as Mock).mockResolvedValue({ syntheticQuiz: mockSyntheticQuiz });
+            (hydrateAggregatedQuiz as unknown as Mock).mockResolvedValue({
+                syntheticQuiz: mockSyntheticQuiz,
+                sourceQuizByQuestionId: {},
+                missingQuestionIds: []
+            });
 
             const { result } = renderHook(() => useResultWithHydratedQuiz("r1", "user1"));
 

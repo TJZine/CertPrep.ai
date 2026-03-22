@@ -195,18 +195,19 @@ export function useQuizWithStats(
  */
 export function useResults(userId: string | undefined): UseResultsResponse {
   const results = useLiveQuery(
-    () =>
-      userId
-        ? db.results
-          .where("user_id")
-          .equals(userId)
-          .filter((r) => !r.deleted_at)
-          .sortBy("timestamp")
-        : [],
+    async () => {
+      if (!userId) return [];
+      const raw = await db.results
+        .where("user_id")
+        .equals(userId)
+        .filter((r) => !r.deleted_at)
+        .sortBy("timestamp");
+      return [...raw].reverse();
+    },
     [userId],
   );
   return {
-    results: results ? [...results].reverse() : [],
+    results: results ?? [],
     isLoading: !userId ? true : results === undefined,
   };
 }
