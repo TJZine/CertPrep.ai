@@ -66,6 +66,21 @@ describe('promptGenerator', () => {
         expect(prompt).toContain("[PASTE ORIGINAL QUESTIONS HERE]");
     });
 
+    it('generates a convert prompt with data when fields are non-empty', () => {
+        const state = {
+            ...INITIAL_BUILDER_STATE,
+            strategy: "convert" as const,
+            answerKeyText: "1. A\n2. B",
+            sourceQuestions: "Q1\nQ2"
+        };
+        const prompt = generatePrompt(state, []);
+        expect(prompt).toContain("Convert this answer key into full CertPrep.ai format questions");
+        expect(prompt).toContain("1. A\n2. B");
+        expect(prompt).toContain("Q1\nQ2");
+        expect(prompt).not.toContain("[PASTE ANSWER KEY]");
+        expect(prompt).not.toContain("[PASTE ORIGINAL QUESTIONS HERE]");
+    });
+
     it('falls back to placeholders when material is empty', () => {
         const state = {
             ...INITIAL_BUILDER_STATE,

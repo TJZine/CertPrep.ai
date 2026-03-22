@@ -33,8 +33,8 @@ const sanitizeForSentry = (args: unknown[]): string => {
       "$1=[REDACTED]",
     )
     // Match "Bearer <token>" format and prose-style "token <token>" (include '=' for base64)
-    .replace(/\bBearer\s+[A-Za-z0-9._~+/\-=]+\b/gi, "Bearer [REDACTED]")
-    .replace(/\btoken\s+[A-Za-z0-9._~+/\-=]+\b/gi, "token [REDACTED]")
+    .replace(/\bBearer\s+[A-Za-z0-9._~+/-=]+/gi, "Bearer [REDACTED]")
+    .replace(/\btoken\s+[A-Za-z0-9._~+/-=]+/gi, "token [REDACTED]")
     .replace(
       /\b(ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9_]{36,}\b/g,
       "[GH_TOKEN_REDACTED]",
@@ -114,7 +114,10 @@ export const logger = {
         const sanitizedMsg = sanitizeForSentry([originalError.message]);
         errorObj = new Error(sanitizedMsg);
         errorObj.name = originalError.name;
-        errorObj.stack = originalError.stack;
+        // Sanitize stack if present to prevent secret leakage in traces
+        errorObj.stack = originalError.stack
+          ? sanitizeForSentry([originalError.stack])
+          : undefined;
       } else {
         errorObj = new Error(sanitizeForSentry(args));
       }
