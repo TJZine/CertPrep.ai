@@ -60,10 +60,22 @@ describe('promptGenerator', () => {
             ...INITIAL_BUILDER_STATE,
             strategy: "convert" as const,
             answerKeyText: "1. A, 2. B, 3. C",
+            sourceQuestions: "1. What is A?, 2. What is B?, 3. What is C?"
         };
         const prompt = generatePrompt(state, []);
         expect(prompt).toContain("Convert this answer key into full CertPrep.ai format questions");
         expect(prompt).toContain("1. A, 2. B, 3. C");
+        expect(prompt).toContain("1. What is A?, 2. What is B?, 3. What is C?");
+    });
+
+    it('throws validation error when convert strategy is missing required fields', () => {
+        const state = {
+            ...INITIAL_BUILDER_STATE,
+            strategy: "convert" as const,
+            answerKeyText: "1. A, 2. B, 3. C",
+            sourceQuestions: "" // Missing
+        };
+        expect(() => generatePrompt(state, [])).toThrow("Missing required fields");
     });
 
     it('falls back to placeholders when material is empty', () => {
