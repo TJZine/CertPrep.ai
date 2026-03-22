@@ -147,12 +147,12 @@ describe("logger", () => {
             expect(call.message).toContain("apiKey=[REDACTED]");
         });
 
-        it("should redact standalone Bearer token", () => {
-            prodLogger.log("Authorization: Bearer mySecretToken123==");
+        it("should redact standalone Bearer token but NOT include invalid characters like comma", () => {
+            prodLogger.log("Authorization: Bearer mySecretToken123==, extra context");
             
             const call = vi.mocked(Sentry.addBreadcrumb).mock.calls[0]?.[0];
             if (!call) return;
-            expect(call.message).toBe("Authorization: Bearer [REDACTED]");
+            expect(call.message).toBe("Authorization: Bearer [REDACTED], extra context");
         });
     });
 });

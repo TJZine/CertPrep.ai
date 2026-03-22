@@ -33,8 +33,8 @@ const sanitizeForSentry = (args: unknown[]): string => {
       "$1=[REDACTED]",
     )
     // Match "Bearer <token>" format and prose-style "token <token>" (include '=' for base64)
-    .replace(/\bBearer\s+[A-Za-z0-9._~+/-=]+/gi, "Bearer [REDACTED]")
-    .replace(/\btoken\s+[A-Za-z0-9._~+/-=]+/gi, "token [REDACTED]")
+    .replace(/\bBearer\s+[A-Za-z0-9._~+/\-=]+/gi, "Bearer [REDACTED]")
+    .replace(/\btoken\s+[A-Za-z0-9._~+/\-=]+/gi, "token [REDACTED]")
     .replace(
       /\b(ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9_]{36,}\b/g,
       "[GH_TOKEN_REDACTED]",
