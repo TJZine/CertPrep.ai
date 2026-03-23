@@ -1,6 +1,6 @@
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "@/db";
-import { calculatePercentage } from "@/lib/utils";
+import { calculatePercentage } from "@/lib/math";;
 import type { QuizStats } from "@/db/quizzes";
 import type { OverallStats } from "@/db/results";
 import type { Result } from "@/types/result";

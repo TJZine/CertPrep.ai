@@ -5,7 +5,7 @@ import { enableMapSet } from "immer";
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { TIMER } from "@/lib/constants";
-import { hashAnswer } from "@/lib/utils";
+import { hashAnswer } from "@/lib/core/crypto";;
 import type { Question, QuizMode } from "@/types/quiz";
 
 enableMapSet();

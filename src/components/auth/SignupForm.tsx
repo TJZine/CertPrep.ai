@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import Link from "next/link";
 import { useToast } from "@/components/ui/Toast";
-import { getAuthErrorMessage } from "@/lib/auth-utils";
+import { getAuthErrorMessage } from "@/lib/auth/authUtils";
 import { logger } from "@/lib/logger";
 import HCaptcha from "@hcaptcha/react-hcaptcha";
 

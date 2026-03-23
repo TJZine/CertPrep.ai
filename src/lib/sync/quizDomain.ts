@@ -1,5 +1,7 @@
 import { logger } from "@/lib/logger";
 import { sanitizeQuestionText } from "@/lib/sanitize";
+import { NIL_UUID } from "@/lib/constants";
+import { computeQuizHash } from "@/lib/core/crypto";
 import type { Question, Quiz } from "@/types/quiz";
 
 export type QuizId = string;
@@ -49,58 +51,6 @@ export interface RemoteQuizInput {
   subcategory?: string | null;
 }
 
-let cachedSubtleCrypto: SubtleCrypto | null = null;
-
-async function getSubtleCrypto(): Promise<SubtleCrypto> {
-  if (cachedSubtleCrypto) return cachedSubtleCrypto;
-
-  if (typeof crypto !== "undefined" && crypto.subtle) {
-    cachedSubtleCrypto = crypto.subtle;
-    return cachedSubtleCrypto;
-  }
-
-  const nodeCrypto = await import("crypto");
-  if (nodeCrypto.webcrypto?.subtle) {
-    cachedSubtleCrypto = nodeCrypto.webcrypto.subtle as unknown as SubtleCrypto;
-    return cachedSubtleCrypto;
-  }
-
-  throw new Error("SubtleCrypto is not available in this environment.");
-}
-
-function normalizeForStableSerialization(value: unknown): unknown {
-  if (value === null || typeof value !== "object") {
-    return value;
-  }
-
-  if (Array.isArray(value)) {
-    return value.map((item) => normalizeForStableSerialization(item));
-  }
-
-  const record = value as Record<string, unknown>;
-  return Object.keys(record)
-    .sort()
-    .reduce<Record<string, unknown>>((acc, key) => {
-      acc[key] = normalizeForStableSerialization(record[key]);
-      return acc;
-    }, {});
-}
-
-async function hashString(value: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(value);
-  const subtle = await getSubtleCrypto();
-  const digest = await subtle.digest("SHA-256", data);
-  const bytes = Array.from(new Uint8Array(digest));
-  return bytes.map((byte) => byte.toString(16).padStart(2, "0")).join("");
-}
-
-export async function computeQuizHash(core: QuizCore): Promise<string> {
-  const normalized = normalizeForStableSerialization(core);
-  const serialized = JSON.stringify(normalized);
-  return hashString(serialized);
-}
-
 export async function toRemoteQuiz(
   userId: string,
   local: Quiz,
@@ -132,8 +82,6 @@ export async function toRemoteQuiz(
     subcategory: local.subcategory ?? null,
   };
 }
-
-import { NIL_UUID } from "@/lib/constants";
 
 export function toLocalQuiz(remote: RemoteQuizRow): Quiz {
   return {

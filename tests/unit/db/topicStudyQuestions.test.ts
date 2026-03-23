@@ -54,6 +54,7 @@ const { quizzesData, resultsData, dbMock } = vi.hoisted(() => {
 });
 
 vi.mock("@/db", () => ({ db: dbMock }));
+vi.mock("@/db/dbInstance", () => ({ db: dbMock }));
 
 vi.mock("@/lib/utils", () => ({
     hashAnswer: vi.fn(async (answer: string) => `hash-${answer}`),

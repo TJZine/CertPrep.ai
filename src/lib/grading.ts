@@ -1,4 +1,4 @@
-import { hashAnswer } from "@/lib/utils";
+import { hashAnswer } from "@/lib/core/crypto";;
 import type { Question } from "@/types/quiz";
 
 export interface GradingResult {

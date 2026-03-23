@@ -1,4 +1,4 @@
-import { db } from "@/db";
+import { db } from "./dbInstance";
 import { NIL_UUID } from "@/lib/constants";
 import { logger } from "@/lib/logger";
 

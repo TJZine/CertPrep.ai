@@ -6,7 +6,8 @@ import { ChevronDown, ChevronUp, History, TrendingUp, TrendingDown, Minus } from
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { cn, formatDate, formatTime } from "@/lib/utils";
+import { formatDate, formatTime } from "@/lib/date";
+import { cn } from "@/lib/utils";
 import type { Result } from "@/types/result";
 
 interface AttemptHistoryTimelineProps {
@@ -158,4 +159,4 @@ export function AttemptHistoryTimeline({
     );
 }
 
-export default AttemptHistoryTimeline;
+

@@ -3,10 +3,10 @@ import {
     createInterleavedResult,
     type CreateInterleavedResultInput,
 } from "@/db/results";
-import { db } from "@/db";
+import { db } from "@/db/dbInstance";
 
 // Mock db
-vi.mock("@/db", () => ({
+vi.mock("@/db/dbInstance", () => ({
     db: {
         quizzes: {
             get: vi.fn(),

@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Button, buttonVariants } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/Input";
-import { getAuthErrorMessage } from "@/lib/auth-utils";
+import { getAuthErrorMessage } from "@/lib/auth/authUtils";
 import Link from "next/link";
 import { useToast } from "@/components/ui/Toast";
 import HCaptcha from "@hcaptcha/react-hcaptcha";

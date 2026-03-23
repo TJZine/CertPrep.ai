@@ -11,7 +11,8 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { cn, formatTime } from "@/lib/utils";
+import { formatTime } from "@/lib/date";
+import { cn } from "@/lib/utils";
 import type { QuizMode } from "@/types/quiz";
 
 interface ResultsSummaryProps {
@@ -152,4 +153,4 @@ export function ResultsSummary(props: ResultsSummaryProps): React.ReactElement {
   );
 }
 
-export default ResultsSummary;
+

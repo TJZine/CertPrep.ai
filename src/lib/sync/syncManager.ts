@@ -10,16 +10,9 @@ import { QUIZ_MODES, type QuizMode } from "@/types/quiz";
 import type { Result, SessionType } from "@/types/result";
 import { z } from "zod";
 import type { Database } from "@/types/database.types";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import { createSupabaseClientGetter, toErrorMessage, toSafeCursorTimestamp } from "./shared";
 
-let supabaseInstance: SupabaseClient<Database> | undefined;
-
-function getSupabaseClient(): SupabaseClient<Database> | undefined {
-  if (!supabaseInstance) {
-    supabaseInstance = createClient();
-  }
-  return supabaseInstance;
-}
+const getSupabaseClient = createSupabaseClientGetter(() => createClient());
 const BATCH_SIZE = 50;
 const TIME_BUDGET_MS = 5000;
 
@@ -59,57 +52,6 @@ export type SyncResultsOutcome = {
   status?: "synced" | "skipped" | "failed";
   shouldRetry?: boolean;
 };
-
-function toErrorMessage(error: unknown): string {
-  if (error instanceof Error) return error.message;
-  if (typeof error === "string") return error;
-
-  // Handle Supabase PostgrestError objects (properties may not serialize with JSON.stringify)
-  if (typeof error === "object" && error !== null) {
-    const e = error as Record<string, unknown>;
-    // PostgrestError has: code, message, details, hint
-    if (e.message || e.code) {
-      const parts: string[] = [];
-      if (e.code) parts.push(`[${e.code}]`);
-      if (e.message) parts.push(String(e.message));
-      if (e.details) parts.push(`Details: ${e.details}`);
-      if (e.hint) parts.push(`Hint: ${e.hint}`);
-      if (parts.length > 0) return parts.join(" ");
-    }
-  }
-
-  try {
-    const serialized = JSON.stringify(error);
-    // If JSON.stringify returns "{}", the object has no enumerable properties
-    if (serialized === "{}") return "Unknown error (empty error object)";
-    return serialized;
-  } catch {
-    return "Unknown error";
-  }
-}
-
-function toSafeCursorTimestamp(
-  candidate: unknown,
-  fallback: string,
-  context: Record<string, unknown>,
-): string {
-  if (typeof candidate === "string" && !Number.isNaN(Date.parse(candidate))) {
-    return new Date(candidate).toISOString();
-  }
-
-  if (!Number.isNaN(Date.parse(fallback))) {
-    logger.warn("Invalid cursor timestamp encountered, using fallback", {
-      ...context,
-      fallback,
-    });
-    return new Date(fallback).toISOString();
-  }
-
-  logger.error("Invalid cursor timestamp and fallback; defaulting to epoch", {
-    ...context,
-  });
-  return "1970-01-01T00:00:00.000Z";
-}
 
 export async function syncResults(userId: string): Promise<SyncResultsOutcome> {
   if (!userId) return { incomplete: false };

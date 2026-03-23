@@ -1,6 +1,6 @@
 "use client";
 
-import { hashAnswer } from "@/lib/utils";
+import { hashAnswer } from "@/lib/core/crypto";;
 import type { Question, Quiz } from "@/types/quiz";
 
 /**

@@ -147,4 +147,4 @@ export function DifficultyBreakdown({
     );
 }
 
-export default DifficultyBreakdown;
+

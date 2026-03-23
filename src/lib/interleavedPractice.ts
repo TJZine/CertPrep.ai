@@ -1,7 +1,7 @@
 "use client";
 
 import { db } from "@/db";
-import { remixQuiz } from "@/lib/quiz-remix";
+import { remixQuiz } from "@/lib/quiz/quizRemix";
 import { logger } from "@/lib/logger";
 import type { Quiz, Question } from "@/types/quiz";
 

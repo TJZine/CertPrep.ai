@@ -20,7 +20,7 @@ vi.mock("@/db", () => ({
 }));
 
 // Mock remixQuiz
-vi.mock("@/lib/quiz-remix", () => ({
+vi.mock("@/lib/quiz/quizRemix", () => ({
     remixQuiz: vi.fn().mockImplementation(async (quiz) => ({
         quiz,
         keyMappings: new Map(),
@@ -404,4 +404,3 @@ describe("interleavedPractice", () => {
         });
     });
 });
-

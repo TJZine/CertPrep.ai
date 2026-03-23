@@ -1,6 +1,6 @@
 "use client";
 import * as React from "react";
-import { formatTime } from "@/lib/utils";
+import { formatTime } from "@/lib/date";;
 import { TIMER } from "@/lib/constants";
 
 export interface TimerProps {

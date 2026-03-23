@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach } from "vitest";
-import { db, clearDatabase } from "@/db/index";
+import { db, clearDatabase } from "@/db";
 import {
   createQuiz,
   updateQuiz,
@@ -7,10 +7,10 @@ import {
   getAllQuizzes,
   getSRSQuizId,
   isSRSQuiz,
-  getOrCreateSRSQuiz,
+  ensureSRSQuizExists,
   LEGACY_SRS_QUIZ_ID_PREFIX,
 } from "@/db/quizzes";
-import { hashAnswer } from "@/lib/utils";
+import { hashAnswer } from "@/lib/core/crypto";;
 import type { QuizImportInput } from "@/validators/quizSchema";
 import { validate as uuidValidate, version as uuidVersion } from "uuid";
 
@@ -209,9 +209,9 @@ describe("SRS Quiz Utilities", () => {
     });
   });
 
-  describe("getOrCreateSRSQuiz", () => {
+  describe("ensureSRSQuizExists", () => {
     it("should create new quiz if none exists", async () => {
-      const quiz = await getOrCreateSRSQuiz(userId);
+      const quiz = await ensureSRSQuizExists(userId);
 
       expect(quiz).toBeDefined();
       expect(quiz.id).toBe(getSRSQuizId(userId));
@@ -223,8 +223,8 @@ describe("SRS Quiz Utilities", () => {
     });
 
     it("should return existing quiz on second call", async () => {
-      const quiz1 = await getOrCreateSRSQuiz(userId);
-      const quiz2 = await getOrCreateSRSQuiz(userId);
+      const quiz1 = await ensureSRSQuizExists(userId);
+      const quiz2 = await ensureSRSQuizExists(userId);
 
       expect(quiz1.id).toBe(quiz2.id);
       expect(quiz1.created_at).toBe(quiz2.created_at);
@@ -236,8 +236,8 @@ describe("SRS Quiz Utilities", () => {
     });
 
     it("should create separate SRS quizzes for different users", async () => {
-      const quiz1 = await getOrCreateSRSQuiz("user-a");
-      const quiz2 = await getOrCreateSRSQuiz("user-b");
+      const quiz1 = await ensureSRSQuizExists("user-a");
+      const quiz2 = await ensureSRSQuizExists("user-b");
 
       expect(quiz1.id).not.toBe(quiz2.id);
       expect(quiz1.user_id).toBe("user-a");
@@ -279,7 +279,7 @@ describe("SRS Quiz Utilities", () => {
         synced: 0,
       });
 
-      const migratedQuiz = await getOrCreateSRSQuiz(userId);
+      const migratedQuiz = await ensureSRSQuizExists(userId);
       expect(migratedQuiz.id).toBe(getSRSQuizId(userId));
 
       const legacyQuizAfter = await db.quizzes.get(legacyId);
@@ -315,7 +315,7 @@ describe("SRS Quiz Utilities", () => {
       });
 
       // Create an SRS quiz
-      await getOrCreateSRSQuiz(userId);
+      await ensureSRSQuizExists(userId);
 
       // getAllQuizzes at DB level includes both
       const quizzes = await getAllQuizzes(userId);
@@ -326,7 +326,7 @@ describe("SRS Quiz Utilities", () => {
     });
 
     it("should still be accessible via direct DB query", async () => {
-      const srsQuiz = await getOrCreateSRSQuiz(userId);
+      const srsQuiz = await ensureSRSQuizExists(userId);
 
       // Direct access should work
       const retrieved = await db.quizzes.get(srsQuiz.id);

@@ -1,7 +1,7 @@
 
 import { describe, it, expect, vi } from "vitest";
 import { evaluateAnswer } from "@/lib/grading";
-import { hashAnswer } from "@/lib/utils";
+import { hashAnswer } from "@/lib/core/crypto";;
 import type { Question } from "@/types/quiz";
 
 // Mock hashAnswer for deterministic testing

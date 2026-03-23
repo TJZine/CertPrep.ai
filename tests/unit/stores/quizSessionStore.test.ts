@@ -4,7 +4,7 @@ import { useQuizSessionStore, useCurrentQuestion, useProgress, useIsAnswered, us
 import { renderHook } from "@testing-library/react";
 import { act } from "@testing-library/react";
 import type { Question } from "@/types/quiz";
-import { hashAnswer } from "@/lib/utils";
+import { hashAnswer } from "@/lib/core/crypto";;
 
 // Mock utils
 vi.mock("@/lib/utils", () => ({

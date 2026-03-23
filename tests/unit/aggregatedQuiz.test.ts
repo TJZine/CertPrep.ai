@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { hydrateAggregatedQuiz } from "@/db/aggregatedQuiz";
-import { db } from "@/db";
+import { db } from "@/db/dbInstance";
 
 // Mock Dexie
-vi.mock("@/db", () => ({
+vi.mock("@/db/dbInstance", () => ({
   db: {
     quizzes: {
       where: vi.fn(),

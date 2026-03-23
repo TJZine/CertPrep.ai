@@ -24,7 +24,7 @@ import type { Quiz } from "@/types/quiz";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 import { useExamSubmission } from "@/hooks/useExamSubmission";
-import { remixQuiz } from "@/lib/quiz-remix";
+import { remixQuiz } from "@/lib/quiz/quizRemix";
 
 interface ProctorQuizContainerProps {
   quiz: Quiz;

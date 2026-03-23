@@ -15,7 +15,8 @@ import {
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { cn, formatTime, formatDate } from "@/lib/utils";
+import { formatTime, formatDate } from "@/lib/date";
+import { cn } from "@/lib/utils";
 import type { QuizMode } from "@/types/quiz";
 
 interface ScorecardProps {
@@ -375,4 +376,4 @@ export function ScorecardCompact({
   );
 }
 
-export default Scorecard;
+

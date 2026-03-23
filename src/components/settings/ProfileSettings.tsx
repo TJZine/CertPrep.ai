@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/Card";
 import { useToast } from "@/components/ui/Toast";
 import { User, Mail, AlertCircle } from "lucide-react";
-import { getAuthErrorMessage } from "@/lib/auth-utils";
+import { getAuthErrorMessage } from "@/lib/auth/authUtils";
 
 export function ProfileSettings(): React.ReactElement {
   const { user } = useAuth();

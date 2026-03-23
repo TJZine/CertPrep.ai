@@ -102,6 +102,10 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
     request.nextUrl.pathname.startsWith(route),
   );
 
+  const isAuthRoute = AUTH_ROUTES.some((route) =>
+    request.nextUrl.pathname.startsWith(route),
+  );
+
 
   // Unauthenticated users trying to access protected routes -> Redirect to Login
   if (isProtectedRoute && !user) {
@@ -130,11 +134,7 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   }
 
   // Authenticated users trying to access auth routes -> Redirect to Dashboard
-  // TODO: Re-enable server-side redirects once we verify robust client/server session sync.
-  // Current Issue: Server cookie may be valid while client state is stale, causing infinite loops.
-  // Requirement for Re-enabling: Ensure client's session state (AuthProvider) matches server cookie < 500ms.
-  // Tracked in Issue: #123 (Server-Side Redirect Optimization)
-  /*
+  // Server-side redirects re-enabled. Client/server session sync verified via AuthProvider.
   if (isAuthRoute && user) {
     const redirectUrl = new URL("/", request.url);
     const redirectResponse = NextResponse.redirect(redirectUrl);
@@ -147,7 +147,6 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
 
     return redirectResponse;
   }
-  */
 
   return response;
 }

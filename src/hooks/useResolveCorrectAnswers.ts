@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { hashAnswer } from "@/lib/utils";
+import { hashAnswer } from "@/lib/core/crypto";;
 import type { Question } from "@/types/quiz";
 
 /**

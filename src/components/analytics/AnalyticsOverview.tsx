@@ -3,7 +3,8 @@
 import * as React from "react";
 import { BookOpen, Clock, Target, Award } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/Card";
-import { cn, formatTime } from "@/lib/utils";
+import { formatTime } from "@/lib/date";
+import { cn } from "@/lib/utils";
 import type { OverallStats } from "@/db/results";
 
 interface AnalyticsOverviewProps {

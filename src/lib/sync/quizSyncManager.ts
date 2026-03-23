@@ -12,8 +12,8 @@ import {
   setSyncBlockState,
 } from "@/db/syncState";
 import { logger } from "@/lib/logger";
+import { computeQuizHash } from "@/lib/core/crypto";
 import {
-  computeQuizHash,
   resolveQuizConflict,
   toLocalQuiz,
   toRemoteQuiz,
@@ -24,17 +24,9 @@ import type { Quiz } from "@/types/quiz";
 import { QuestionSchema } from "@/validators/quizSchema";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/client";
-import type { Database } from "@/types/database.types";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import { createSupabaseClientGetter } from "./shared";
 
-let supabaseInstance: SupabaseClient<Database> | undefined;
-
-function getSupabaseClient(): SupabaseClient<Database> | undefined {
-  if (!supabaseInstance) {
-    supabaseInstance = createClient();
-  }
-  return supabaseInstance;
-}
+const getSupabaseClient = createSupabaseClientGetter(() => createClient());
 
 async function ensureQuizHash(
   quiz: Quiz,
