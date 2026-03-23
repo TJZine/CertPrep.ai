@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 import * as Sentry from "@sentry/nextjs";
 
-const isProduction = process.env.NODE_ENV === "production";
+const getIsProduction = (): boolean => process.env.NODE_ENV === "production";
 
 /**
  * Sanitizes log arguments by removing or redacting sensitive patterns.
@@ -27,10 +27,14 @@ const sanitizeForSentry = (args: unknown[]): string => {
   // Redact common sensitive patterns (emails, tokens, etc.)
   return serialized
     .replace(/\b[\w.%+-]+@[\w.-]+\.[A-Z]{2,}\b/gi, "[EMAIL_REDACTED]")
+    // Match keys in JSON or strings: "password": "...", password=..., password: ...
     .replace(
-      /\b(Bearer|token|key|password|pwd|secret)\s*[:=]\s*\S+/gi,
+      /\b(token|key|password|pwd|secret|api[_-]?key|apikey)\b\s*["']?[:=]\s*["']?[^"'\r\n,]+["']?/gi,
       "$1=[REDACTED]",
     )
+    // Match "Bearer <token>" format and prose-style "token <token>" (include '=' for base64)
+    .replace(/\bBearer\s+[A-Za-z0-9._~+/\-=]+/gi, "Bearer [REDACTED]")
+    .replace(/\btoken\s+[A-Za-z0-9._~+/\-=]+/gi, "token [REDACTED]")
     .replace(
       /\b(ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9_]{36,}\b/g,
       "[GH_TOKEN_REDACTED]",
@@ -40,8 +44,7 @@ const sanitizeForSentry = (args: unknown[]): string => {
       /\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b/g,
       "[JWT_REDACTED]",
     )
-    .replace(/\b(AKIA|ASIA)[A-Z0-9]{16}\b/g, "[AWS_KEY_REDACTED]")
-    .replace(/\b(api[_-]?key|apikey)\s*[:=]\s*\S+/gi, "$1=[REDACTED]");
+    .replace(/\b(AKIA|ASIA)[A-Z0-9]{16}\b/g, "[AWS_KEY_REDACTED]");
 };
 
 export const logger = {
@@ -55,7 +58,7 @@ export const logger = {
    * @param args - The message(s) or object(s) to log.
    */
   log: (...args: unknown[]): void => {
-    if (!isProduction) {
+    if (!getIsProduction()) {
       console.log(...args);
     } else {
       // Add breadcrumbs for debugging context without logging to console
@@ -77,7 +80,7 @@ export const logger = {
    * @param args - The warning message(s) or object(s).
    */
   warn: (...args: unknown[]): void => {
-    if (!isProduction) {
+    if (!getIsProduction()) {
       console.warn(...args);
     } else {
       Sentry.captureMessage(sanitizeForSentry(args), "warning");
@@ -95,17 +98,31 @@ export const logger = {
    * @param args - The error object(s) or message(s).
    */
   error: (...args: unknown[]): void => {
-    if (!isProduction) {
+    const isProd = getIsProduction();
+
+    if (!isProd) {
       console.error(...args);
-    }
+    } else {
+      // In production, send to Sentry with sanitized message
+      const originalError = args.find((arg) => arg instanceof Error) as
+        | Error
+        | undefined;
 
-    // In production, send to Sentry
-    if (isProduction) {
-      const errorObj =
-        args.find((arg) => arg instanceof Error) ||
-        new Error(sanitizeForSentry(args));
-      const extras = args.filter((arg) => arg !== errorObj);
+      let errorObj: Error;
+      if (originalError) {
+        // Sanitize the message and create a new Error to preserve privacy
+        const sanitizedMsg = sanitizeForSentry([originalError.message]);
+        errorObj = new Error(sanitizedMsg);
+        errorObj.name = originalError.name;
+        // Sanitize stack if present to prevent secret leakage in traces
+        errorObj.stack = originalError.stack
+          ? sanitizeForSentry([originalError.stack])
+          : undefined;
+      } else {
+        errorObj = new Error(sanitizeForSentry(args));
+      }
 
+      const extras = args.filter((arg) => arg !== originalError);
       const normalizedExtras = extras.map((extra) =>
         typeof extra === "object" && extra !== null ? extra : { value: extra },
       );
@@ -127,7 +144,7 @@ export const logger = {
    * @param args - The message(s) to log.
    */
   info: (...args: unknown[]): void => {
-    if (!isProduction) {
+    if (!getIsProduction()) {
       console.info(...args);
     } else {
       Sentry.addBreadcrumb({
@@ -148,7 +165,7 @@ export const logger = {
    * @param args - Debugging data.
    */
   debug: (...args: unknown[]): void => {
-    if (!isProduction) {
+    if (!getIsProduction()) {
       console.debug(...args);
     }
   },

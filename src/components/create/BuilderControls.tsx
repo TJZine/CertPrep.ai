@@ -192,15 +192,28 @@ export function BuilderControls({ state, onChange }: BuilderControlsProps): Reac
                 )}
 
                 {state.strategy === "match" && (
-                    <div className="space-y-1.5">
-                        <label htmlFor="builder-example-questions" className="text-sm font-medium">Paste Example Questions & Answers</label>
-                        <textarea
-                            id="builder-example-questions"
-                            value={state.exampleQuestions}
-                            onChange={(e) => onChange({ exampleQuestions: e.target.value })}
-                            rows={8}
-                            className="w-full p-3 rounded-lg border bg-card text-sm focus:ring-1 focus:ring-primary outline-none resize-y"
-                        />
+                    <div className="space-y-4">
+                        <div className="space-y-1.5">
+                            <label htmlFor="builder-topic" className="text-sm font-medium">Topics to Cover</label>
+                            <input
+                                id="builder-topic"
+                                type="text"
+                                value={state.topic}
+                                onChange={(e) => onChange({ topic: e.target.value })}
+                                placeholder="e.g., AWS IAM, VPC, S3"
+                                className="w-full p-3 rounded-lg border bg-card text-sm focus:ring-1 focus:ring-primary outline-none"
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label htmlFor="builder-example-questions" className="text-sm font-medium">Paste Example Questions & Answers</label>
+                            <textarea
+                                id="builder-example-questions"
+                                value={state.exampleQuestions}
+                                onChange={(e) => onChange({ exampleQuestions: e.target.value })}
+                                rows={8}
+                                className="w-full p-3 rounded-lg border bg-card text-sm focus:ring-1 focus:ring-primary outline-none resize-y"
+                            />
+                        </div>
                     </div>
                 )}
 
@@ -218,15 +231,29 @@ export function BuilderControls({ state, onChange }: BuilderControlsProps): Reac
                 )}
 
                 {state.strategy === "convert" && (
-                    <div className="space-y-1.5">
-                        <label htmlFor="builder-answer-key" className="text-sm font-medium">Paste Answer Key</label>
-                        <textarea
-                            id="builder-answer-key"
-                            value={state.answerKeyText}
-                            onChange={(e) => onChange({ answerKeyText: e.target.value })}
-                            rows={8}
-                            className="w-full p-3 rounded-lg border bg-card text-sm focus:ring-1 focus:ring-primary outline-none resize-y"
-                        />
+                    <div className="space-y-4">
+                        <div className="space-y-1.5">
+                            <label htmlFor="builder-source-questions" className="text-sm font-medium">Paste Original Questions</label>
+                            <textarea
+                                id="builder-source-questions"
+                                value={state.sourceQuestions}
+                                onChange={(e) => onChange({ sourceQuestions: e.target.value })}
+                                rows={8}
+                                placeholder="Paste the questions here (the AI needs them to create full CertPrep format)..."
+                                className="w-full p-3 rounded-lg border bg-card text-sm focus:ring-1 focus:ring-primary outline-none resize-y"
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label htmlFor="builder-answer-key" className="text-sm font-medium">Paste Answer Key</label>
+                            <textarea
+                                id="builder-answer-key"
+                                value={state.answerKeyText}
+                                onChange={(e) => onChange({ answerKeyText: e.target.value })}
+                                rows={8}
+                                placeholder="e.g., 1. A, 2. B..."
+                                className="w-full p-3 rounded-lg border bg-card text-sm focus:ring-1 focus:ring-primary outline-none resize-y"
+                            />
+                        </div>
                     </div>
                 )}
             </section>

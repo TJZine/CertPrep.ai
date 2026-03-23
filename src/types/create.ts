@@ -12,6 +12,7 @@ export interface BuilderState {
     exampleQuestions: string;
     remixQuestions: string;
     answerKeyText: string;
+    sourceQuestions: string;
 }
 
 export const INITIAL_BUILDER_STATE: BuilderState = {
@@ -25,4 +26,5 @@ export const INITIAL_BUILDER_STATE: BuilderState = {
     exampleQuestions: "",
     remixQuestions: "",
     answerKeyText: "",
+    sourceQuestions: "",
 };

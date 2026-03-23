@@ -37,14 +37,18 @@ export function generatePrompt(state: BuilderState, categories: string[]): strin
       base = `Create ${state.questionCount ?? 10} questions about ${state.topic?.trim() || "[TOPIC]"} from the following material:\n\n${state.materialText?.trim() || "[PASTE YOUR MATERIAL HERE]"}\n\nRequirements:\n- Difficulty mix: ${state.difficulty || "Mixed"}`;
       break;
     case "match":
-      base = `Here are example questions that represent the style and difficulty I want:\n\n${state.exampleQuestions?.trim() || "[PASTE EXAMPLE QUESTIONS WITH ANSWERS]"}\n\nCreate ${state.questionCount ?? 10} NEW questions in the same style covering the specified topics.\nMatch the tone, difficulty, and question structure exactly.`;
+      base = `Here are example questions that represent the style and difficulty I want:\n\n${state.exampleQuestions?.trim() || "[PASTE EXAMPLE QUESTIONS WITH ANSWERS]"}\n\nCreate ${state.questionCount ?? 10} NEW questions in the same style covering these topics: ${state.topic?.trim() || "all related concepts"}.\nMatch the tone, difficulty, and question structure exactly.`;
       break;
     case "remix":
       base = `Remix these questions to create variations for additional practice:\n\n${state.remixQuestions?.trim() || "[PASTE QUESTIONS TO REMIX]"}\n\nFor each question, create variations that test the same concept but use different scenarios.`;
       break;
-    case "convert":
-      base = `Convert this answer key into full CertPrep.ai format questions:\n\n${state.answerKeyText?.trim() || "[PASTE ANSWER KEY]"}\n\nAdd detailed explanations for each correct answer and distractor logic.`;
+    case "convert": {
+      const answerKey = state.answerKeyText?.trim() || "[PASTE ANSWER KEY]";
+      const sourceQuestions = state.sourceQuestions?.trim() || "[PASTE ORIGINAL QUESTIONS HERE]";
+
+      base = `Convert this answer key into full CertPrep.ai format questions:\n\n${answerKey}\n\nUse these original questions as context for the stems and options:\n\n${sourceQuestions}\n\nAdd detailed explanations for each correct answer and distractor logic.`;
       break;
+    }
     default: {
       const _exhaustiveCheck: never = state.strategy;
       throw new Error(`Unhandled strategy: ${_exhaustiveCheck}`);
