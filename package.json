@@ -63,7 +63,7 @@
     "@types/node": "^22.19.7",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@vitest/coverage-v8": "^4.0.18",
+    "@vitest/coverage-v8": "^4.1.0",
     "autoprefixer": "^10.4.27",
     "baseline-browser-mapping": "^2.10.0",
     "eslint": "^9.39.3",
