@@ -1,11 +1,11 @@
 
 import { describe, it, expect, vi } from "vitest";
 import { evaluateAnswer } from "@/lib/grading";
-import { hashAnswer } from "@/lib/core/crypto";;
+import { hashAnswer } from "@/lib/core/crypto";
 import type { Question } from "@/types/quiz";
 
 // Mock hashAnswer for deterministic testing
-vi.mock("@/lib/utils", () => ({
+vi.mock("@/lib/core/crypto", () => ({
     hashAnswer: vi.fn(async (input: string) => `hashed_${input}`),
 }));
 
@@ -48,8 +48,7 @@ describe("Grading Logic (Pure)", () => {
 
     it("should default category to 'Uncategorized' if missing", async () => {
         const noCatQuestion = { ...mockQuestion, category: undefined };
-        // @ts-expect-error - testing runtime behavior for optional field
-        const result = await evaluateAnswer(noCatQuestion, "A");
+        const result = await evaluateAnswer(noCatQuestion as unknown as Question, "A");
         expect(result.category).toBe("Uncategorized");
     });
 });

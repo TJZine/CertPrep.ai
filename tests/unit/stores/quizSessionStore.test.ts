@@ -4,11 +4,17 @@ import { useQuizSessionStore, useCurrentQuestion, useProgress, useIsAnswered, us
 import { renderHook } from "@testing-library/react";
 import { act } from "@testing-library/react";
 import type { Question } from "@/types/quiz";
-import { hashAnswer } from "@/lib/core/crypto";;
+import { hashAnswer } from "@/lib/core/crypto";
 
-// Mock utils
-vi.mock("@/lib/utils", () => ({
+// Mock crypto
+vi.mock("@/lib/core/crypto", () => ({
     hashAnswer: vi.fn(async (input: string) => `hashed_${input}`),
+    generateUUID: vi.fn(() => "mock-uuid"),
+}));
+
+// We can still mock other utils if needed, but hashAnswer is now in crypto
+vi.mock("@/lib/utils", () => ({
+    cn: vi.fn((...args: string[]) => args.join(" ")),
 }));
 
 describe("Quiz Session Store", () => {
