@@ -111,7 +111,7 @@ export async function sanitizeQuestions(
     throw new Error(`Invalid questions data: ${errorMsg}`);
   }
 
-  return Promise.all(
+  return await Promise.all(
     parsedQuestions.data.map(async (q) => {
       // We can trust the shape now, but we still want to sanitize text fields for XSS prevention
       const options = q.options;
