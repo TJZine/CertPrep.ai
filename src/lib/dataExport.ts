@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { isSRSQuiz, sanitizeQuestions } from "@/db/quizzes";
-import { sanitizeQuestionText } from "@/lib/sanitize";
+import { sanitizeQuestionText } from "@/lib/utils/sanitize";
 import { computeQuizHash } from "@/lib/core/crypto";
 import { QUIZ_MODES, type Quiz } from "@/types/quiz";
 import type { Result } from "@/types/result";

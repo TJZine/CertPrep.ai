@@ -12,7 +12,7 @@ import { useInitializeDatabase } from "@/hooks/useDatabase";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 import { db } from "@/db/index";
-import { clearSRSReviewState, SRS_REVIEW_QUESTIONS_KEY } from "@/lib/srsReviewStorage";
+import { clearSRSReviewState, SRS_REVIEW_QUESTIONS_KEY } from "@/lib/storage/srsReviewStorage";
 import { logger } from "@/lib/logger";
 import type { Quiz, Question } from "@/types/quiz";
 

@@ -1,7 +1,7 @@
 import { Dexie } from "dexie";
 import { db } from "./dbInstance";
 import { NIL_UUID } from "@/lib/constants";
-import { sanitizeQuestionText } from "@/lib/sanitize";
+import { sanitizeQuestionText } from "@/lib/utils/sanitize";
 import { generateUUID, hashAnswer } from "@/lib/core/crypto";;
 import type { Question, Quiz } from "@/types/quiz";
 import { computeQuizHash } from "@/lib/core/crypto";

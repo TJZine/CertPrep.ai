@@ -28,7 +28,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { formatDate } from "@/lib/date";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import type { Quiz } from "@/types/quiz";
 import type { QuizStats } from "@/db/quizzes";
 

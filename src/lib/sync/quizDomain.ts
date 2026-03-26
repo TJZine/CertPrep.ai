@@ -1,5 +1,5 @@
 import { logger } from "@/lib/logger";
-import { sanitizeQuestionText } from "@/lib/sanitize";
+import { sanitizeQuestionText } from "@/lib/utils/sanitize";
 import { NIL_UUID } from "@/lib/constants";
 import { computeQuizHash } from "@/lib/core/crypto";
 import type { Question, Quiz } from "@/types/quiz";

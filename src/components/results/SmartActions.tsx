@@ -20,14 +20,14 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import {
   SMART_ROUND_QUESTIONS_KEY,
   SMART_ROUND_QUIZ_ID_KEY,
   SMART_ROUND_ALL_QUESTIONS_KEY,
   SMART_ROUND_MISSED_COUNT_KEY,
   SMART_ROUND_FLAGGED_COUNT_KEY,
-} from "@/lib/smartRoundStorage";
+} from "@/lib/storage/smartRoundStorage";
 import type { Question } from "@/types/quiz";
 
 interface MissedQuestion {

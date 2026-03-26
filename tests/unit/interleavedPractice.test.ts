@@ -6,7 +6,7 @@ import {
     getMatchingQuestionCount,
     NoQuestionsError,
     type InterleavedConfig,
-} from "@/lib/interleavedPractice";
+} from "@/lib/quiz/interleavedPractice";
 import { db } from "@/db";
 import type { Quiz, Question } from "@/types/quiz";
 

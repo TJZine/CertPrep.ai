@@ -5,18 +5,18 @@ import { useSync } from "@/hooks/useSync";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useQuizSubmission } from "@/hooks/useQuizSubmission";
-import { clearSmartRoundState } from "@/lib/smartRoundStorage";
-import { clearSRSReviewState } from "@/lib/srsReviewStorage";
-import { clearTopicStudyState } from "@/lib/topicStudyStorage";
-import { clearInterleavedState } from "@/lib/interleavedStorage";
+import { clearSmartRoundState } from "@/lib/storage/smartRoundStorage";
+import { clearSRSReviewState } from "@/lib/storage/srsReviewStorage";
+import { clearTopicStudyState } from "@/lib/storage/topicStudyStorage";
+import { clearInterleavedState } from "@/lib/storage/interleavedStorage";
 import { ensureSRSQuizExists } from "@/db/quizzes";
 import { createSRSReviewResult, createTopicStudyResult, createInterleavedResult } from "@/db/results";
-import { calculatePercentage } from "@/lib/math";
+import { calculatePercentage } from "@/lib/utils/math";
 import { buildAnswersRecord } from "@/lib/quiz/quizRemix";
 import { db } from "@/db";
 import { logger } from "@/lib/logger";
 
-import type { Question } from "@/types/quiz";
+import type { Question, QuizSessionConfig } from "@/types/quiz";
 
 /**
  * Build a source map from question IDs to their source quiz IDs.
@@ -60,26 +60,14 @@ async function buildSourceMapFromUserQuizzes(
 }
 
 interface UseQuizPersistenceProps {
-  quizId: string;
-  isSmartRound: boolean;
-  isSRSReview: boolean;
-  isTopicStudy: boolean;
-  isInterleaved: boolean;
-  interleavedSourceMap: Map<string, string> | null;
-  interleavedKeyMappings: Map<string, Record<string, string>> | null;
+  config: QuizSessionConfig;
   questions: Question[];
   answers: Map<string, { selectedAnswer: string; isCorrect: boolean }>;
   flaggedQuestions: Set<string>;
 }
 
 export function useQuizPersistence({
-  quizId,
-  isSmartRound,
-  isSRSReview,
-  isTopicStudy,
-  isInterleaved,
-  interleavedSourceMap,
-  interleavedKeyMappings,
+  config,
   questions,
   answers,
   flaggedQuestions,
@@ -90,6 +78,16 @@ export function useQuizPersistence({
   clearSessionStorage: () => void;
   effectiveUserId: string | null;
 } {
+  const {
+    quizId,
+    isSmartRound = false,
+    isSRSReview = false,
+    isTopicStudy = false,
+    isInterleaved = false,
+    sourceMap: configSourceMap = null,
+    keyMappings: configKeyMappings = null,
+  } = config;
+
   const router = useRouter();
   const { addToast } = useToast();
   const { sync } = useSync();
@@ -169,6 +167,7 @@ export function useQuizPersistence({
           addToast("error", "Failed to save result. You can still continue studying.");
           clearSRSReviewState();
           router.push("/study-due");
+          return;
         }
         return;
       }
@@ -234,6 +233,7 @@ export function useQuizPersistence({
           addToast("error", "Failed to save result. You can still continue studying.");
           clearTopicStudyState();
           router.push("/analytics");
+          return;
         }
         return;
       }
@@ -246,7 +246,7 @@ export function useQuizPersistence({
           let correctCount = 0;
           const categoryTotals: Record<string, { correct: number; total: number }> = {};
           // Translate remixed keys to original keys for consistent analytics
-          const answersRecord = buildAnswersRecord(answers, interleavedKeyMappings);
+          const answersRecord = buildAnswersRecord(answers, configKeyMappings);
           const actualQuestionIds: string[] = [];
 
           Object.keys(answersRecord).forEach((questionId) => {
@@ -278,7 +278,7 @@ export function useQuizPersistence({
 
           // Convert sourceMap to plain object
           const sourceMapObject: Record<string, string> = {};
-          interleavedSourceMap?.forEach((sourceQuizId, questionIdKey) => {
+          configSourceMap?.forEach((sourceQuizId: string, questionIdKey: string) => {
             sourceMapObject[questionIdKey] = sourceQuizId;
           });
 
@@ -306,6 +306,7 @@ export function useQuizPersistence({
           addToast("error", "Failed to save result. You can still continue studying.");
           clearInterleavedState();
           router.push("/interleaved");
+          return;
         }
         return;
       }
@@ -320,8 +321,8 @@ export function useQuizPersistence({
       answers,
       questions,
       flaggedQuestions,
-      interleavedSourceMap,
-      interleavedKeyMappings,
+      configSourceMap,
+      configKeyMappings,
       addToast,
       router,
       submitQuiz,

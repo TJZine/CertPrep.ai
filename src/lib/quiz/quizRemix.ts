@@ -1,6 +1,7 @@
 "use client";
 
-import { hashAnswer } from "@/lib/core/crypto";;
+import { hashAnswer } from "@/lib/core/crypto";
+import { shuffle } from "@/lib/utils/array";
 import type { Question, Quiz } from "@/types/quiz";
 
 /**
@@ -29,24 +30,6 @@ export interface RemixedQuizResult {
      * Used to translate user answers back to original keys for storage.
      */
     keyMappings: Map<string, Record<string, string>>;
-}
-
-/**
- * Fisher-Yates shuffle algorithm.
- * Pure function - does not mutate input array.
- *
- * @param array - Array to shuffle
- * @returns New array with elements in random order
- */
-function shuffle<T>(array: readonly T[]): T[] {
-    const result = [...array];
-    for (let i = result.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        const temp = result[i];
-        result[i] = result[j] as T;
-        result[j] = temp as T;
-    }
-    return result;
 }
 
 /** Standard answer key labels (A-H supports up to 8 options) */
@@ -143,7 +126,7 @@ export async function remixQuiz(quiz: Quiz): Promise<RemixedQuizResult> {
 
     // Remix each question's options
     const remixResults = await Promise.all(
-        shuffledQuestionOrder.map((q) => remixQuestion(q)),
+        shuffledQuestionOrder.map((q: Question) => remixQuestion(q)),
     );
 
     // Build the key mappings map

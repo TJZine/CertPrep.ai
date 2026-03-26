@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Modal } from "@/components/ui/Modal";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import { useToast } from "@/components/ui/Toast";
 import { getTopicStudyQuestions, type TopicStudyData } from "@/db/results";
 import {
@@ -21,7 +21,7 @@ import {
   TOPIC_STUDY_CATEGORY_KEY,
   TOPIC_STUDY_MISSED_COUNT_KEY,
   TOPIC_STUDY_FLAGGED_COUNT_KEY,
-} from "@/lib/topicStudyStorage";
+} from "@/lib/storage/topicStudyStorage";
 import { logger } from "@/lib/logger";
 import { useQuizzes } from "@/hooks/useDatabase";
 import { EmptyCardState } from "@/components/analytics/EmptyCardState";

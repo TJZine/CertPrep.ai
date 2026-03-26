@@ -3,7 +3,7 @@
 import { useState, useRef, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Button, buttonVariants } from "@/components/ui/Button";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import { Input } from "@/components/ui/Input";
 import { getAuthErrorMessage } from "@/lib/auth/authUtils";
 import Link from "next/link";

@@ -2,6 +2,7 @@
 
 import { db } from "@/db";
 import { remixQuiz } from "@/lib/quiz/quizRemix";
+import { shuffle } from "@/lib/utils/array";
 import { logger } from "@/lib/logger";
 import type { Quiz, Question } from "@/types/quiz";
 
@@ -41,20 +42,6 @@ export class NoQuestionsError extends Error {
         super(message);
         this.name = "NoQuestionsError";
     }
-}
-
-/**
- * Fisher-Yates shuffle for random sampling.
- */
-function shuffle<T>(array: T[]): T[] {
-    const result = [...array];
-    for (let i = result.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        const temp = result[i];
-        result[i] = result[j] as T;
-        result[j] = temp as T;
-    }
-    return result;
 }
 
 /**

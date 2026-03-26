@@ -1,5 +1,5 @@
 import { db } from "./dbInstance";
-import { calculatePercentage } from "@/lib/math";;
+import { calculatePercentage } from "@/lib/utils/math";;
 import type { Result } from "@/types/result";
 
 export interface QuizStats {

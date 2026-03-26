@@ -18,7 +18,7 @@ import {
     TOPIC_STUDY_CATEGORY_KEY,
     TOPIC_STUDY_MISSED_COUNT_KEY,
     TOPIC_STUDY_FLAGGED_COUNT_KEY,
-} from "@/lib/topicStudyStorage";
+} from "@/lib/storage/topicStudyStorage";
 import { logger } from "@/lib/logger";
 import type { Quiz, Question } from "@/types/quiz";
 

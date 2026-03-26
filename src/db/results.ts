@@ -1,7 +1,7 @@
 import { db } from "./dbInstance";
 import { isSRSQuiz } from "./srsQuiz";
 import { NIL_UUID } from "@/lib/constants";
-import { calculatePercentage } from "@/lib/math";
+import { calculatePercentage } from "@/lib/utils/math";
 import { generateUUID } from "@/lib/core/crypto";;
 import { logger } from "@/lib/logger";
 import type { CategoryPerformance, Result } from "@/types/result";

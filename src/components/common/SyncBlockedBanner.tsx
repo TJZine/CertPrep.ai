@@ -4,7 +4,7 @@ import * as React from "react";
 import { AlertTriangle, RefreshCw, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useSync } from "@/hooks/useSync";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 
 /**
  * Shows a banner when sync is blocked due to schema drift or other hard failures.

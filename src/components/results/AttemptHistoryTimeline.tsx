@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { formatDate, formatTime } from "@/lib/date";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import type { Result } from "@/types/result";
 
 interface AttemptHistoryTimelineProps {

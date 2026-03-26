@@ -15,7 +15,7 @@ import type { LeitnerBox, SRSState } from "@/types/srs";
 import type { Quiz, Question } from "@/types/quiz";
 import {
     SRS_REVIEW_QUESTIONS_KEY,
-} from "@/lib/srsReviewStorage";
+} from "@/lib/storage/srsReviewStorage";
 import { logger } from "@/lib/logger";
 import {
     Card,
@@ -23,7 +23,7 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/Card";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 
 interface CategoryGroup {
     category: string;

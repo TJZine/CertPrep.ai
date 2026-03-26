@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { calculatePercentage } from "@/lib/math";
+import { calculatePercentage } from "@/lib/utils/math";
 
 describe("math utils", () => {
     describe("calculatePercentage", () => {

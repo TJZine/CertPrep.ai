@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Copy, ExternalLink, Check } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 import { GeminiIcon } from "@/components/icons/GeminiIcon";
 import { OpenAIIcon } from "@/components/icons/OpenAIIcon";

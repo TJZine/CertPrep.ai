@@ -12,7 +12,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { formatTime } from "@/lib/date";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import type { QuizMode } from "@/types/quiz";
 
 interface ResultsSummaryProps {

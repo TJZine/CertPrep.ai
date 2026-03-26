@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { BookOpen, FileText, Shuffle, FileKey } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import type { BuilderState, GenerationStrategy } from "@/types/create";
 import { EXAM_PRESETS, type ExamPreset } from "@/data/examPresets";
 

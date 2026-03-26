@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { formatDateKey, formatMonthDayLabel } from "@/lib/date";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import type { Result } from "@/types/result";
 import type { Quiz, Question } from "@/types/quiz";
 import { getCachedHash } from "@/db/hashCache";
@@ -23,7 +23,7 @@ import {
     TOPIC_STUDY_CATEGORY_KEY,
     TOPIC_STUDY_MISSED_COUNT_KEY,
     TOPIC_STUDY_FLAGGED_COUNT_KEY,
-} from "@/lib/topicStudyStorage";
+} from "@/lib/storage/topicStudyStorage";
 import { logger } from "@/lib/logger";
 import { EmptyCardState } from "@/components/analytics/EmptyCardState";
 

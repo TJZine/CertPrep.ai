@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { sanitizeHTML } from "@/lib/sanitize";
+import { sanitizeHTML } from "@/lib/utils/sanitize";
 
 describe("sanitizeHTML", () => {
   it("strips script tags", () => {

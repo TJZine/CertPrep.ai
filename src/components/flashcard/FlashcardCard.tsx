@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Tag } from "lucide-react";
 import type { Question } from "@/types/quiz";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import styles from "./FlashcardCard.module.css";
 
 export interface FlashcardCardProps {

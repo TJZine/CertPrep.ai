@@ -14,7 +14,7 @@ import {
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import { TrendingUp, TrendingDown, Target } from "lucide-react";
 import { useChartColors } from "@/hooks/useChartColors";
 import { useChartDimensions } from "@/hooks/useChartDimensions";

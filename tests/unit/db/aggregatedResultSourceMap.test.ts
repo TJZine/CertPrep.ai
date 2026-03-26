@@ -25,7 +25,7 @@ vi.mock("@/db/quizzes", () => ({
 }));
 
 // Mock generateUUID
-vi.mock("@/lib/utils", () => ({
+vi.mock("@/lib/utils/cn", () => ({
     generateUUID: vi.fn().mockReturnValue("test-result-id"),
     calculatePercentage: vi.fn((a, b) => (b === 0 ? 0 : Math.round((a / b) * 100))),
 }));

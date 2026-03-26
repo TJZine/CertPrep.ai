@@ -38,18 +38,17 @@ vi.mock("@/components/ui/Toast", () => ({
   }),
 }));
 
-// Mock hcaptcha
-const HCaptchaMock = React.forwardRef((props: { onVerify: (token: string) => void }, ref: React.Ref<unknown>) => {
-  React.useImperativeHandle(ref, () => ({
-    resetCaptcha: vi.fn(),
-  }));
-  return <div data-testid="mock-hcaptcha" onClick={() => props.onVerify("mock-token")} />;
+// Mock hcaptcha (use require within the factory to avoid hoisting issues)
+vi.mock("@hcaptcha/react-hcaptcha", () => {
+  const React = require("react");
+  const Mock = React.forwardRef(function HCaptchaMock(props: { onVerify: (token: string) => void }, ref: React.Ref<unknown>) {
+    React.useImperativeHandle(ref, () => ({
+      resetCaptcha: vi.fn(),
+    }));
+    return <div data-testid="mock-hcaptcha" onClick={() => props.onVerify("mock-token")} />;
+  });
+  return { default: Mock };
 });
-HCaptchaMock.displayName = "HCaptchaMock";
-
-vi.mock("@hcaptcha/react-hcaptcha", () => ({
-  default: HCaptchaMock,
-}));
 
 import LoginForm from "@/components/auth/LoginForm";
 
@@ -80,7 +79,7 @@ describe("LoginForm", () => {
   it("shows error if captcha is enabled but not completed", async () => {
     render(<LoginForm />);
     
-    // Check if captcha is present (depends on env var being picked up)
+    // Check if captcha is present
     if (screen.queryByTestId("mock-hcaptcha")) {
       fireEvent.change(screen.getByLabelText(/Email/i), { target: { value: "test@example.com" } });
       fireEvent.change(screen.getByLabelText(/Password/i), { target: { value: "password123" } });
@@ -88,9 +87,6 @@ describe("LoginForm", () => {
       fireEvent.click(screen.getByRole("button", { name: /Sign In/i }));
 
       expect(screen.getByText(/Please complete the captcha/i)).toBeInTheDocument();
-    } else {
-      // Fallback if env var still not picked up - skip this specific assertion
-      console.warn("Captcha disabled in test environment - skipping captcha error check");
     }
   });
 

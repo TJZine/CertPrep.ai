@@ -4,8 +4,8 @@ import * as React from "react";
 import { Flag, FlagOff } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { sanitizeHTML } from "@/lib/sanitize";
-import { cn } from "@/lib/utils";
+import { sanitizeHTML } from "@/lib/utils/sanitize";
+import { cn } from "@/lib/utils/cn";
 import type { Question } from "@/types/quiz";
 
 interface QuestionDisplayProps {

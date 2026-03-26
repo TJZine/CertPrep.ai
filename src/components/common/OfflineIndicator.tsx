@@ -3,7 +3,7 @@
 import * as React from "react";
 import { WifiOff, Wifi, X } from "lucide-react";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 
 /**
  * Shows a banner when the user goes offline.

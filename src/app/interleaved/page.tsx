@@ -16,9 +16,9 @@ import {
     getAvailableCategories,
     getMatchingQuestionCount,
     NoQuestionsError,
-} from "@/lib/interleavedPractice";
-import { saveInterleavedState } from "@/lib/interleavedStorage";
-import { cn } from "@/lib/utils";
+} from "@/lib/quiz/interleavedPractice";
+import { saveInterleavedState } from "@/lib/storage/interleavedStorage";
+import { cn } from "@/lib/utils/cn";
 
 const QUESTION_COUNTS = [10, 20, 50] as const;
 

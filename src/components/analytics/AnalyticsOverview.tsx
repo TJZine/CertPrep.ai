@@ -4,7 +4,7 @@ import * as React from "react";
 import { BookOpen, Clock, Target, Award } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/Card";
 import { formatTime } from "@/lib/date";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import type { OverallStats } from "@/db/results";
 
 interface AnalyticsOverviewProps {

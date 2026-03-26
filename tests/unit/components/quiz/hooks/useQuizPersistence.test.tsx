@@ -27,10 +27,10 @@ vi.mock("@/hooks/useQuizSubmission", () => ({
   useQuizSubmission: vi.fn(),
 }));
 
-vi.mock("@/lib/smartRoundStorage", () => ({ clearSmartRoundState: vi.fn() }));
-vi.mock("@/lib/srsReviewStorage", () => ({ clearSRSReviewState: vi.fn() }));
-vi.mock("@/lib/topicStudyStorage", () => ({ clearTopicStudyState: vi.fn() }));
-vi.mock("@/lib/interleavedStorage", () => ({ clearInterleavedState: vi.fn() }));
+vi.mock("@/lib/storage/smartRoundStorage", () => ({ clearSmartRoundState: vi.fn() }));
+vi.mock("@/lib/storage/srsReviewStorage", () => ({ clearSRSReviewState: vi.fn() }));
+vi.mock("@/lib/storage/topicStudyStorage", () => ({ clearTopicStudyState: vi.fn() }));
+vi.mock("@/lib/storage/interleavedStorage", () => ({ clearInterleavedState: vi.fn() }));
 
 describe("useQuizPersistence", () => {
   const mockSubmitQuiz = vi.fn();
@@ -46,13 +46,15 @@ describe("useQuizPersistence", () => {
   });
 
   const defaultProps = {
-    quizId: "quiz-1",
-    isSmartRound: false,
-    isSRSReview: false,
-    isTopicStudy: false,
-    isInterleaved: false,
-    interleavedSourceMap: null,
-    interleavedKeyMappings: null,
+    config: {
+      quizId: "quiz-1",
+      isSmartRound: false,
+      isSRSReview: false,
+      isTopicStudy: false,
+      isInterleaved: false,
+      sourceMap: null,
+      keyMappings: null,
+    },
     questions: [],
     answers: new Map(),
     flaggedQuestions: new Set<string>(),

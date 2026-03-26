@@ -13,7 +13,7 @@ vi.mock("@/lib/core/crypto", () => ({
 }));
 
 // We can still mock other utils if needed, but hashAnswer is now in crypto
-vi.mock("@/lib/utils", () => ({
+vi.mock("@/lib/utils/cn", () => ({
     cn: vi.fn((...args: string[]) => args.join(" ")),
 }));
 
