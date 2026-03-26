@@ -1,9 +1,10 @@
 import * as React from "react";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import { TopicHeatmap } from "@/components/analytics/TopicHeatmap";
 import type { Result } from "@/types/result";
 import type { Quiz, Question } from "@/types/quiz";
+import { waitForElementToBeRemoved } from "@testing-library/react";
 
 const mockPush = vi.fn();
 vi.mock("next/navigation", () => ({
@@ -23,6 +24,11 @@ vi.mock("@/components/ui/Toast", () => ({
 vi.mock("@/lib/core/crypto", () => ({
   hashAnswer: vi.fn(async (val: string) => `hash-${val}`),
   getCachedHash: vi.fn(async (val: string) => `hash-${val}`),
+}));
+
+const mockGetTopicStudyQuestions = vi.fn();
+vi.mock("@/db/results", () => ({
+  getTopicStudyQuestions: vi.fn(() => mockGetTopicStudyQuestions()),
 }));
 
 describe("TopicHeatmap", () => {
@@ -110,6 +116,7 @@ describe("TopicHeatmap", () => {
 
   it("renders the heatmap with categories", async () => {
     render(<TopicHeatmap results={mockResults} quizzes={mockQuizzes} />);
+    await waitForElementToBeRemoved(() => screen.queryByTestId("heatmap-skeleton"));
     
     // The component calculates data asynchronously in useEffect
     await waitFor(() => {
@@ -121,6 +128,7 @@ describe("TopicHeatmap", () => {
 
   it("handles sorting menu trigger", async () => {
     render(<TopicHeatmap results={mockResults} quizzes={mockQuizzes} />);
+    await waitForElementToBeRemoved(() => screen.queryByTestId("heatmap-skeleton"));
     
     // Wait for load
     await waitFor(() => {
@@ -138,5 +146,77 @@ describe("TopicHeatmap", () => {
       <TopicHeatmap results={mockResults} quizzes={mockQuizzes} className="custom-heatmap-class" />
     );
     expect(container.firstChild).toHaveClass("custom-heatmap-class");
+  });
+
+  it("sorts by Best First", async () => {
+    render(<TopicHeatmap results={mockResults} quizzes={mockQuizzes} />);
+    await waitForElementToBeRemoved(() => screen.queryByTestId("heatmap-skeleton"));
+    
+    const sortBtn = screen.getByRole("button", { name: /Change sort order/i });
+    fireEvent.click(sortBtn);
+    
+    const bestOption = screen.getByRole("option", { name: /Strongest First/i });
+    fireEvent.click(bestOption);
+
+    // Wait for sort to apply
+    await waitFor(() => {
+      const rows = screen.getAllByRole("rowheader");
+      expect(rows[0]).toHaveTextContent("Frontend"); // Frontend/Backend both 100 in mock, but Frontend created first
+    });
+  });
+
+  it("groups by quiz category when in By Quiz Category mode", async () => {
+    render(<TopicHeatmap results={mockResults} quizzes={mockQuizzes} />);
+    await waitForElementToBeRemoved(() => screen.queryByTestId("heatmap-skeleton"));
+    
+    const sortBtn = screen.getByRole("button", { name: /Change sort order/i });
+    fireEvent.click(sortBtn);
+    
+    const groupOption = screen.getByRole("option", { name: /By Quiz Category/i });
+    fireEvent.click(groupOption);
+
+    await waitFor(() => {
+      // Group header for "Development"
+      expect(screen.getByText("Development")).toBeInTheDocument();
+      expect(screen.getByText(/2 topics/i)).toBeInTheDocument();
+    });
+  });
+
+  it("toggles group collapse", async () => {
+    render(<TopicHeatmap results={mockResults} quizzes={mockQuizzes} />);
+    await waitForElementToBeRemoved(() => screen.queryByTestId("heatmap-skeleton"));
+    
+    const sortBtn = screen.getByRole("button", { name: /Change sort order/i });
+    fireEvent.click(sortBtn);
+    fireEvent.click(screen.getByRole("option", { name: /By Quiz Category/i }));
+
+    await waitFor(() => screen.getByText("Development"));
+    
+    const groupToggle = screen.getByRole("button", { name: /Development/i });
+    expect(groupToggle).toHaveAttribute("aria-expanded", "true");
+    
+    fireEvent.click(groupToggle);
+    expect(groupToggle).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("handles 'Study This Category' focus navigation", async () => {
+    mockGetTopicStudyQuestions.mockResolvedValue({
+      questionIds: ["q-1"],
+      totalUniqueCount: 1,
+      missedCount: 0,
+      flaggedCount: 0,
+    });
+
+    render(<TopicHeatmap results={mockResults} quizzes={mockQuizzes} userId="user-1" />);
+    await waitForElementToBeRemoved(() => screen.queryByTestId("heatmap-skeleton"));
+    
+    await waitFor(() => screen.getByText("Frontend"));
+    
+    const studyBtn = screen.getByRole("button", { name: /Study Frontend/i });
+    fireEvent.click(studyBtn);
+
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith("/quiz/topic-review");
+    });
   });
 });

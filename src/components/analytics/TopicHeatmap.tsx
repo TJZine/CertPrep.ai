@@ -154,7 +154,7 @@ function getTrendColor(trend: "up" | "down" | "stable" | null): string {
  */
 function HeatmapSkeleton({ className }: { className?: string }): React.ReactElement {
     return (
-        <Card className={cn("min-h-[400px] [contain:layout]", className)}>
+        <Card className={cn("min-h-[400px] [contain:layout]", className)} data-testid="heatmap-skeleton">
             <CardHeader>
                 <div className="h-6 w-48 animate-pulse rounded bg-muted" />
                 <div className="mt-1 h-4 w-72 animate-pulse rounded bg-muted" />
