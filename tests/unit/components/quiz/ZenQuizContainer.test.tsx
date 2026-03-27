@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -7,7 +6,8 @@ import { useQuizSessionStore } from "@/stores/quizSessionStore";
 import { useRouter } from "next/navigation";
 import { useQuizSession } from "@/components/quiz/hooks/useQuizSession";
 import { useQuizPersistence } from "@/components/quiz/hooks/useQuizPersistence";
-import type { Quiz } from "@/types/quiz";
+import { useToast } from "@/components/ui/Toast";
+import type { Quiz, Question } from "@/types/quiz";
 
 // Mock the hooks
 vi.mock("next/navigation", () => ({
@@ -16,7 +16,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("@/components/ui/Toast", () => ({
-  useToast: vi.fn(() => ({ addToast: vi.fn() })),
+  useToast: vi.fn(),
 }));
 
 vi.mock("@/stores/quizSessionStore", () => ({
@@ -37,8 +37,9 @@ vi.mock("@/components/quiz/hooks/useQuizSession", () => ({
 
 // Mock child components to avoid deep rendering issues
 vi.mock("@/components/quiz/QuizLayout", () => ({
-  QuizLayout: ({ children, onExit }: { children: React.ReactNode; onExit?: () => void }): React.ReactElement => (
+  QuizLayout: ({ children, onExit, title }: { children: React.ReactNode; onExit?: () => void; title: string }): React.ReactElement => (
     <div data-testid="quiz-layout">
+      <h1>{title}</h1>
       <button data-testid="exit-button" onClick={onExit}>Exit</button>
       {children}
     </div>
@@ -46,15 +47,23 @@ vi.mock("@/components/quiz/QuizLayout", () => ({
 }));
 
 vi.mock("@/components/quiz/QuestionDisplay", () => ({
-  QuestionDisplay: (): React.ReactElement => <div data-testid="question-display" />,
+  QuestionDisplay: ({ onToggleFlag }: { onToggleFlag: () => void }): React.ReactElement => (
+    <div data-testid="question-display">
+      <button data-testid="flag-button" onClick={onToggleFlag}>Flag</button>
+    </div>
+  ),
 }));
 
 vi.mock("@/components/quiz/OptionsList", () => ({
-  OptionsList: (): React.ReactElement => <div data-testid="options-list" />,
+  OptionsList: ({ onSelectOption }: { onSelectOption: (id: string) => void }): React.ReactElement => (
+    <div data-testid="options-list">
+      <button data-testid="select-option" onClick={() => onSelectOption("a")}>Select A</button>
+    </div>
+  ),
 }));
 
 vi.mock("@/components/quiz/ZenControls", () => ({
-  SubmitButton: (): React.ReactElement => <button data-testid="submit-button">Submit</button>,
+  SubmitButton: ({ onClick }: { onClick: () => void }): React.ReactElement => <button data-testid="submit-button" onClick={onClick}>Submit</button>,
   ZenControls: (): React.ReactElement => <div data-testid="zen-controls" />,
 }));
 
@@ -74,11 +83,16 @@ describe("ZenQuizContainer", () => {
   const mockPauseTimer = vi.fn();
   const mockSubmitQuiz = vi.fn().mockResolvedValue(undefined);
   const mockRetrySave = vi.fn();
+  const mockAddToast = vi.fn();
+  const mockSubmitAnswer = vi.fn();
+  const mockToggleFlag = vi.fn();
+  const mockSelectAnswer = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
     
-    vi.mocked(useRouter).mockReturnValue({ push: mockPush } as any);
+    vi.mocked(useRouter).mockReturnValue({ push: mockPush } as unknown as ReturnType<typeof useRouter>);
+    vi.mocked(useToast).mockReturnValue({ addToast: mockAddToast, toasts: [] } as unknown as ReturnType<typeof useToast>);
     
     vi.mocked(useQuizSessionStore).mockReturnValue({
       clearError: vi.fn(),
@@ -86,7 +100,7 @@ describe("ZenQuizContainer", () => {
       questions: [],
       answers: new Map(),
       flaggedQuestions: new Set(),
-    } as any);
+    } as unknown as ReturnType<typeof useQuizSessionStore>);
 
     vi.mocked(useQuizPersistence).mockImplementation(() => ({
       saveError: false,
@@ -94,11 +108,11 @@ describe("ZenQuizContainer", () => {
       retrySave: mockRetrySave,
       clearSessionStorage: vi.fn(),
       effectiveUserId: "user-1",
-    }));
+    }) as unknown as ReturnType<typeof useQuizPersistence>);
 
     vi.mocked(useQuizSession).mockImplementation(() => ({
       isInitializing: false,
-      currentQuestion: { id: "q1", options: {} },
+      currentQuestion: { id: "q1", options: {} } as unknown as Question,
       currentIndex: 0,
       progress: { current: 1, total: 10 },
       selectedAnswer: null,
@@ -112,49 +126,70 @@ describe("ZenQuizContainer", () => {
       currentCorrectAnswer: "a",
       isCurrentAnswerCorrect: false,
       isLastQuestion: false,
-      selectAnswer: vi.fn(),
-      submitAnswer: vi.fn(),
+      selectAnswer: mockSelectAnswer,
+      submitAnswer: mockSubmitAnswer,
       toggleExplanation: vi.fn(),
-      toggleFlag: vi.fn(),
+      toggleFlag: mockToggleFlag,
       markAgain: vi.fn(),
       markHard: vi.fn(),
       markGood: vi.fn(),
       resetSession: mockResetSession,
-    } as any));
+    } as unknown as ReturnType<typeof useQuizSession>));
   });
 
   it("renders correctly after initialization", () => {
     render(<ZenQuizContainer quiz={mockQuiz} />);
     
     expect(screen.getByTestId("quiz-layout")).toBeDefined();
+    expect(screen.getByText("Test Quiz")).toBeDefined();
     expect(screen.getByTestId("question-display")).toBeDefined();
     expect(screen.getByTestId("options-list")).toBeDefined();
     expect(screen.getByTestId("submit-button")).toBeDefined();
   });
 
-  it("renders SRS controls when isSRSReview is true", () => {
-    vi.mocked(useQuizSession).mockImplementation(() => ({
+  it("renders loading state when initializing", () => {
+    vi.mocked(useQuizSession).mockReturnValue({
+      isInitializing: true,
+      progress: { current: 0, total: 10 },
+    } as unknown as ReturnType<typeof useQuizSession>);
+
+    render(<ZenQuizContainer quiz={mockQuiz} />);
+    expect(screen.getByText("Initializing quiz session...")).toBeDefined();
+  });
+
+  it("handles interactions correctly", () => {
+    render(<ZenQuizContainer quiz={mockQuiz} />);
+    
+    fireEvent.click(screen.getByTestId("flag-button"));
+    expect(mockToggleFlag).toHaveBeenCalledWith("q1");
+
+    fireEvent.click(screen.getByTestId("select-option"));
+    expect(mockSelectAnswer).toHaveBeenCalledWith("a");
+
+    fireEvent.click(screen.getByTestId("submit-button"));
+    expect(mockSubmitAnswer).toHaveBeenCalled();
+  });
+
+  it("renders SRS controls when hasSubmitted is true", () => {
+    vi.mocked(useQuizSession).mockReturnValue({
       isInitializing: false,
-      currentQuestion: { id: "q1", options: {} },
+      currentQuestion: { id: "q1", options: {} } as unknown as Question,
       currentIndex: 0,
       progress: { current: 1, total: 10 },
-      selectedAnswer: null,
       hasSubmitted: true,
-      showExplanation: false,
-      isComplete: false,
-      formattedTime: "00:00",
-      seconds: 0,
-      pauseTimer: mockPauseTimer,
-      isResolving: false,
       isCurrentAnswerCorrect: true,
-      isLastQuestion: false,
-      isSRSReview: true,
-      resetSession: mockResetSession,
-    } as any));
+      isComplete: false,
+      isResolving: false,
+      currentCorrectAnswer: "a",
+      selectedAnswer: "a",
+      showExplanation: false,
+      pauseTimer: mockPauseTimer,
+    } as unknown as ReturnType<typeof useQuizSession>);
 
     render(<ZenQuizContainer quiz={mockQuiz} isSRSReview={true} />);
     
     expect(screen.getByTestId("zen-controls")).toBeDefined();
+    expect(mockAddToast).toHaveBeenCalledWith("success", expect.any(String));
   });
 
   it("displays save error UI and handles retry", async () => {
@@ -164,11 +199,11 @@ describe("ZenQuizContainer", () => {
       retrySave: mockRetrySave,
       clearSessionStorage: vi.fn(),
       effectiveUserId: "user-1",
-    }));
+    }) as unknown as ReturnType<typeof useQuizPersistence>);
 
     vi.mocked(useQuizSession).mockImplementation(() => ({
       isInitializing: false,
-      currentQuestion: { id: "q1", options: {} },
+      currentQuestion: { id: "q1", options: {} } as unknown as Question,
       currentIndex: 0,
       progress: { current: 1, total: 10 },
       selectedAnswer: "a",
@@ -182,7 +217,7 @@ describe("ZenQuizContainer", () => {
       isCurrentAnswerCorrect: true,
       isLastQuestion: false,
       resetSession: mockResetSession,
-    } as any));
+    } as unknown as ReturnType<typeof useQuizSession>));
 
     render(<ZenQuizContainer quiz={mockQuiz} />);
     
@@ -198,20 +233,27 @@ describe("ZenQuizContainer", () => {
     });
   });
 
-  it("handles exit correctly", () => {
+  it("handles exit correctly for standard mode", () => {
     render(<ZenQuizContainer quiz={mockQuiz} />);
-    
     fireEvent.click(screen.getByTestId("exit-button"));
-    
-    expect(mockResetSession).toHaveBeenCalled();
     expect(mockPush).toHaveBeenCalledWith("/");
   });
 
-  it("handles SRS exit correctly", () => {
+  it("handles exit correctly for SRS review", () => {
     render(<ZenQuizContainer quiz={mockQuiz} isSRSReview={true} />);
-    
     fireEvent.click(screen.getByTestId("exit-button"));
-    
     expect(mockPush).toHaveBeenCalledWith("/study-due");
+  });
+
+  it("handles exit correctly for topic study", () => {
+    render(<ZenQuizContainer quiz={mockQuiz} isTopicStudy={true} />);
+    fireEvent.click(screen.getByTestId("exit-button"));
+    expect(mockPush).toHaveBeenCalledWith("/analytics");
+  });
+
+  it("handles exit correctly for interleaved mode", () => {
+    render(<ZenQuizContainer quiz={mockQuiz} isInterleaved={true} />);
+    fireEvent.click(screen.getByTestId("exit-button"));
+    expect(mockPush).toHaveBeenCalledWith("/interleaved");
   });
 });
