@@ -14,7 +14,7 @@ import type { Result } from "@/types/result";
 
 // Mock dependencies
 vi.mock("@/db/dbInstance", () => {
-  const mockTable = {
+  const createMockTable = (): Record<string, unknown> => ({
     get: vi.fn(),
     where: vi.fn().mockReturnThis(),
     equals: vi.fn().mockReturnThis(),
@@ -23,12 +23,12 @@ vi.mock("@/db/dbInstance", () => {
     toArray: vi.fn(),
     add: vi.fn(),
     update: vi.fn(),
-  };
+  });
 
   return {
     db: {
-      quizzes: { ...mockTable },
-      results: { ...mockTable },
+      quizzes: createMockTable(),
+      results: createMockTable(),
     },
   };
 });

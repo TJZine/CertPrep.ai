@@ -18,7 +18,7 @@ const TIME_BUDGET_MS = 5000;
 
 // Schema for validating remote result data structure
 // Using .passthrough() to preserve unknown fields from newer schema versions
-const RemoteResultSchema = z.object({
+export const RemoteResultSchema = z.object({
   id: z.string(),
   quiz_id: z.string(),
   timestamp: z.coerce.number(), // Coerce string (from Postgres bigint) to number
@@ -314,6 +314,7 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
           synced: 1,
         });
 
+        // Track the last valid record for cursor advancement
         lastRecordUpdatedAt = toSafeCursorTimestamp(r.updated_at, cursor.timestamp, {
           userId,
           resultId: r.id,
