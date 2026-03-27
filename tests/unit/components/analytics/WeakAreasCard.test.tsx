@@ -2,6 +2,7 @@ import * as React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import { WeakAreasCard } from "@/components/analytics/WeakAreasCard";
+// Remove unused useQuizzes to satisfy lint
 
 // Mock next/navigation
 const mockPush = vi.fn();
@@ -26,13 +27,15 @@ vi.mock("@/db/results", () => ({
 }));
 
 // Mock useQuizzes
+const mockUseQuizzes = vi.fn(() => ({
+  quizzes: [
+    { id: "quiz-1", title: "React Fundamentals" },
+  ],
+  error: null as Error | null,
+}));
 vi.mock("@/hooks/useDatabase", () => ({
-  useQuizzes: (): { quizzes: unknown[]; error: null } => ({
-    quizzes: [
-      { id: "quiz-1", title: "React Fundamentals" },
-    ],
-    error: null,
-  }),
+  useQuizzes: (): { quizzes: unknown[]; error: Error | null } =>
+    mockUseQuizzes() as unknown as { quizzes: unknown[]; error: Error | null },
 }));
 
 describe("WeakAreasCard", () => {
@@ -112,5 +115,27 @@ describe("WeakAreasCard", () => {
     await waitFor(() => {
       expect(mockAddToast).toHaveBeenCalledWith("info", expect.stringContaining("No active questions found"));
     });
+  });
+
+  it("renders trend badges correctly", () => {
+    const areasWithTrends = [
+      { category: "React", avgScore: 40, totalQuestions: 10, recentTrend: "improving" as const },
+      { category: "TypeScript", avgScore: 65, totalQuestions: 5, recentTrend: "declining" as const },
+    ];
+    render(<WeakAreasCard weakAreas={areasWithTrends} />);
+
+    expect(screen.getByText("Improving")).toBeInTheDocument();
+    expect(screen.getByText("Declining")).toBeInTheDocument();
+  });
+
+  it("renders error message when quizzes fail to load", () => {
+    mockUseQuizzes.mockReturnValue({
+      quizzes: [],
+      error: new Error("Database connection failed"),
+    });
+
+    render(<WeakAreasCard weakAreas={mockWeakAreas} userId="user-1" />);
+
+    expect(screen.getByText(/Quiz titles may be incomplete: Database connection failed/i)).toBeInTheDocument();
   });
 });

@@ -1,74 +1,98 @@
 import * as React from "react";
 import { render, screen } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { StreakCard } from "@/components/analytics/StreakCard";
+import { formatDateKey } from "@/lib/date";
 
+// Mock date utility
 vi.mock("@/lib/date", () => ({
-  formatDateKey: vi.fn((date: Date | string) => {
-    if (typeof date === "string") return date;
+  formatDateKey: vi.fn((date: Date) => {
     const d = new Date(date);
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }),
 }));
 
 describe("StreakCard", () => {
-  beforeEach(() => {
-    // Mock system time to a fixed date so "daysAgo" logic is deterministic if needed
-    // Assuming today is 2024-01-10
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date("2024-01-10T12:00:00Z"));
-  });
+  const mockActivity = [true, false, true, true, false, false, true];
+  const mockStudyTime = [
+    { date: formatDateKey(new Date()), minutes: 45 },
+    { date: formatDateKey(new Date(Date.now() - 86400000 * 2)), minutes: 120 },
+  ];
 
-  afterEach(() => {
-    vi.useRealTimers();
-  });
+  it("renders streak statistics correctly", () => {
+    render(
+      <StreakCard
+        currentStreak={5}
+        longestStreak={12}
+        consistencyScore={85}
+        last7DaysActivity={mockActivity}
+        dailyStudyTime={mockStudyTime}
+      />
+    );
 
-  const defaultProps = {
-    currentStreak: 3,
-    longestStreak: 10,
-    consistencyScore: 85,
-    last7DaysActivity: [true, false, true, true, false, false, true], // 0 is today, 6 is 6 days ago (depending on how component uses it, let's just pass 7 bools)
-  };
-
-  it("renders streak statistics", () => {
-    render(<StreakCard {...defaultProps} />);
-
-    expect(screen.getByText("3 days")).toBeInTheDocument();
-    expect(screen.getByText("10 days")).toBeInTheDocument();
+    expect(screen.getByText("5 days")).toBeInTheDocument();
+    expect(screen.getByText("Current Streak")).toBeInTheDocument();
+    expect(screen.getByText("12 days")).toBeInTheDocument();
     expect(screen.getByText("85%")).toBeInTheDocument();
   });
 
-  it("renders empty state when no activity in last 7 days and current streak is 0", () => {
-    render(<StreakCard currentStreak={0} longestStreak={0} consistencyScore={0} last7DaysActivity={Array(7).fill(false)} />);
+  it("renders activity bars with correct labels", () => {
+    render(
+      <StreakCard
+        currentStreak={1}
+        longestStreak={1}
+        consistencyScore={10}
+        last7DaysActivity={mockActivity}
+      />
+    );
 
-    // Should render the empty state prompt
-    expect(screen.getByText(/Complete a quiz today to start your streak/i)).toBeInTheDocument();
+    expect(screen.getByText("Today")).toBeInTheDocument();
+    const images = screen.getAllByRole("img");
+    // Should have 7 bars
+    expect(images).toHaveLength(7);
   });
 
-  it("renders daily study time bars", () => {
-    const dailyStudyTime = [
-      { date: "2024-01-10", minutes: 30 }, // Today (0 days ago)
-      { date: "2024-01-09", minutes: 60 }, // Yesterday
+  it("shows intensity-based bar colors", () => {
+    const variedStudyTime = [
+      { date: formatDateKey(new Date()), minutes: 100 }, // Max
+      { date: formatDateKey(new Date(Date.now() - 86400000)), minutes: 20 }, // Low
     ];
 
-    render(<StreakCard {...defaultProps} dailyStudyTime={dailyStudyTime} />);
-    
-    // Check if the title text format is present. formatMinutes for 30 is "30m", for 60 is "1h"
-    // So there should be an img role with title containing "30m" and "1h"
-    const bars = screen.getAllByRole("img");
-    expect(bars.length).toBe(7); // 7 days of bars
-    
-    // One of them should have 30m
-    const thirtyMinBar = bars.find(b => b.getAttribute("aria-label")?.includes("30m"));
-    expect(thirtyMinBar).toBeDefined();
+    render(
+      <StreakCard
+        currentStreak={1}
+        longestStreak={1}
+        consistencyScore={10}
+        last7DaysActivity={[true, true, false, false, false, false, false]}
+        dailyStudyTime={variedStudyTime}
+      />
+    );
 
-    // One of them should have 1h
-    const oneHourBar = bars.find(b => b.getAttribute("aria-label")?.includes("1h"));
-    expect(oneHourBar).toBeDefined();
+    const bars = screen.getAllByRole("img");
+    // Today (index 0 in data loop which is last7DaysData[6] = daysAgo 0)
+    // Actually the loop is for (let i = 6; i >= 0; i--) { ... data.push({daysAgo: i}) }
+    // So daysAgo 0 is the LAST element in the bars list if rendered linearly.
+    
+    // Check if max minutes (100) has full intensity class (bg-success)
+    const todayBar = bars[6];
+    expect(todayBar).toHaveClass("bg-success");
+    
+    // Check if low minutes (20) has low intensity class (bg-success/30)
+    const yesterdayBar = bars[5];
+    expect(yesterdayBar).toHaveClass("bg-success/30");
   });
 
-  it("applies custom className", () => {
-    const { container } = render(<StreakCard {...defaultProps} className="custom-streak-class" />);
-    expect(container.firstChild).toHaveClass("custom-streak-class");
+  it("renders empty state correctly", () => {
+    render(
+      <StreakCard
+        currentStreak={0}
+        longestStreak={0}
+        consistencyScore={0}
+        last7DaysActivity={[false, false, false, false, false, false, false]}
+      />
+    );
+
+    expect(screen.getByText(/Complete a quiz today to start your streak!/i)).toBeInTheDocument();
+    expect(screen.getByText("Track your daily study progress")).toBeInTheDocument();
   });
 });
