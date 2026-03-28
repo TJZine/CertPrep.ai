@@ -4,7 +4,7 @@ import * as React from "react";
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { ZenQuizContainer } from "@/components/quiz/ZenQuizContainer";
-import { loadInterleavedState, clearInterleavedState } from "@/lib/interleavedStorage";
+import { loadInterleavedState, clearInterleavedState } from "@/lib/storage/interleavedStorage";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 

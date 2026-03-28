@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Gauge } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import type { Question } from "@/types/quiz";
 
 interface DifficultyBreakdownProps {
@@ -147,4 +147,4 @@ export function DifficultyBreakdown({
     );
 }
 
-export default DifficultyBreakdown;
+

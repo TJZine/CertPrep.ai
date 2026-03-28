@@ -41,9 +41,9 @@ const { quizzesData, resultsData, dbMock } = vi.hoisted(() => {
   };
 });
 
-vi.mock("@/db", () => ({ db: dbMock }));
+vi.mock("@/db/dbInstance", () => ({ db: dbMock }));
 
-vi.mock("@/lib/utils", () => ({
+vi.mock("@/lib/utils/cn", () => ({
   hashAnswer: vi.fn(async (answer: string) => `hash-${answer}`),
   calculatePercentage: (correct: number, total: number): number =>
     total === 0 ? 0 : Math.round((correct / total) * 100),

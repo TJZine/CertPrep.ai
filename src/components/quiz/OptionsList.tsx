@@ -2,8 +2,8 @@
 
 import * as React from "react";
 import { Check, X } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { sanitizeHTML } from "@/lib/sanitize";
+import { cn } from "@/lib/utils/cn";
+import { sanitizeHTML } from "@/lib/utils/sanitize";
 
 interface OptionsListProps {
   options: Record<string, string>;

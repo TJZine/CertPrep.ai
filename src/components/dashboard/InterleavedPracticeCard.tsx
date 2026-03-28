@@ -11,7 +11,7 @@ import {
     CardDescription,
 } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 
 interface InterleavedPracticeCardProps {
     /** Optional class name for styling. */

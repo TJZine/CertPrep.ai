@@ -4,7 +4,7 @@ import * as React from "react";
 import { Bot, Check, Copy, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import { useCorrectAnswer } from "@/hooks/useCorrectAnswer";
 import type { Question } from "@/types/quiz";
 

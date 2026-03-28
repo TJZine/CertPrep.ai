@@ -162,6 +162,27 @@ describe("data export/import", () => {
     expect(storedResults[0]?.id).toBe(sampleResult.id);
   });
 
+  it("returns warnings for invalid quiz/result rows during import", async () => {
+    const invalidQuiz = { id: "not-a-uuid" } as unknown as Quiz;
+    const invalidResult = { id: "not-a-uuid" } as unknown as Result;
+
+    const exported: ExportData = {
+      version: "1.0",
+      exportedAt: new Date().toISOString(),
+      quizzes: [sampleQuiz, invalidQuiz],
+      results: [sampleResult, invalidResult],
+    };
+
+    const result = await importData(exported, TEST_USER_ID, "replace");
+
+    expect(result.warnings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: "invalid_quiz", count: 1 }),
+        expect.objectContaining({ code: "invalid_result", count: 1 }),
+      ]),
+    );
+  });
+
   it("scopes merge dedupe to the active user", async () => {
     const otherUserId = "user-other";
     const sharedQuizId = "12345678-1234-4123-8123-1234567890ab";

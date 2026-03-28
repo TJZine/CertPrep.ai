@@ -10,7 +10,7 @@ import {
   Send,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 
 interface ProctorControlsProps {
   currentIndex: number;

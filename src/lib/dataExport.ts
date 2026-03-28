@@ -1,11 +1,12 @@
 import { db } from "@/db";
 import { isSRSQuiz, sanitizeQuestions } from "@/db/quizzes";
-import { sanitizeQuestionText } from "@/lib/sanitize";
-import { computeQuizHash } from "@/lib/sync/quizDomain";
+import { sanitizeQuestionText } from "@/lib/utils/sanitize";
+import { computeQuizHash } from "@/lib/core/crypto";
 import { QUIZ_MODES, type Quiz } from "@/types/quiz";
 import type { Result } from "@/types/result";
 import { QuizSchema } from "@/validators/quizSchema";
 import { requestServiceWorkerCacheClear } from "@/lib/serviceWorkerClient";
+import { logger } from "@/lib/logger";
 import { z } from "zod";
 
 export interface ExportData {
@@ -22,6 +23,42 @@ export interface ImportResult {
   resultsImported: number;
   quizzesMerged?: number;
   resultsDeduplicated?: number;
+  warnings?: ImportWarning[];
+}
+
+export type ImportWarning = {
+  code: string;
+  message: string;
+  count: number;
+  sampleIds?: string[];
+};
+
+type ImportWarningAccumulator = Map<string, ImportWarning>;
+
+function recordImportWarning(
+  warnings: ImportWarningAccumulator,
+  code: string,
+  message: string,
+  id?: string,
+): void {
+  const existing = warnings.get(code);
+  if (!existing) {
+    warnings.set(code, {
+      code,
+      message,
+      count: 1,
+      sampleIds: id ? [id] : undefined,
+    });
+    return;
+  }
+
+  existing.count += 1;
+  if (id) {
+    existing.sampleIds ??= [];
+    if (existing.sampleIds.length < 5) {
+      existing.sampleIds.push(id);
+    }
+  }
 }
 
 const ResultImportSchema = z.object({
@@ -48,16 +85,22 @@ const QuizBackupSchema = QuizSchema.extend({
 async function sanitizeQuizRecord(
   quiz: unknown,
   userId: string,
+  warnings: ImportWarningAccumulator,
 ): Promise<Quiz | null> {
   const parsed = QuizBackupSchema.safeParse(quiz);
 
   if (!parsed.success) {
     const maybeQuiz = quiz as { id?: string };
-    console.error(
-      "Skipped invalid quiz during import:",
+    recordImportWarning(
+      warnings,
+      "invalid_quiz",
+      "Skipped invalid quiz during import.",
       maybeQuiz.id,
-      parsed.error,
     );
+    logger.warn("Skipped invalid quiz during import", {
+      quizId: maybeQuiz.id,
+      error: parsed.error,
+    });
     return null;
   }
 
@@ -82,16 +125,25 @@ async function sanitizeQuizRecord(
   };
 }
 
-function sanitizeResultRecord(result: unknown, userId: string): Result | null {
+function sanitizeResultRecord(
+  result: unknown,
+  userId: string,
+  warnings: ImportWarningAccumulator,
+): Result | null {
   const parsed = ResultImportSchema.safeParse(result);
 
   if (!parsed.success) {
     const maybeResult = result as { id?: string };
-    console.error(
-      "Skipped invalid result during import:",
+    recordImportWarning(
+      warnings,
+      "invalid_result",
+      "Skipped invalid result during import.",
       maybeResult.id,
-      parsed.error,
     );
+    logger.warn("Skipped invalid result during import", {
+      resultId: maybeResult.id,
+      error: parsed.error,
+    });
     return null;
   }
 
@@ -138,11 +190,10 @@ export async function* generateJSONExport(
         try {
           quizHash = await computeQuizHash(quiz);
         } catch (error) {
-          console.warn(
-            "Failed to compute quiz hash during export:",
-            quiz.id,
+          logger.warn("Failed to compute quiz hash during export", {
+            quizId: quiz.id,
             error,
-          );
+          });
           // Leave quizHash as null; smart import will use title fallback
         }
       }
@@ -265,21 +316,27 @@ export async function importData(
   userId: string,
   mode: ImportMode = "merge",
 ): Promise<ImportResult> {
+  const warnings: ImportWarningAccumulator = new Map();
   if (mode === "smart") {
-    return importDataSmart(data, userId);
+    return importDataSmart(data, userId, warnings);
   }
 
   const sanitizedQuizzes: Quiz[] = [];
   const quizIds = new Set<string>();
 
   for (const quiz of data.quizzes) {
-    const sanitizedQuiz = await sanitizeQuizRecord(quiz, userId);
+    const sanitizedQuiz = await sanitizeQuizRecord(quiz, userId, warnings);
     if (!sanitizedQuiz) continue;
     if (quizIds.has(sanitizedQuiz.id)) {
-      console.warn(
-        "Skipped duplicate quiz id during import:",
+      recordImportWarning(
+        warnings,
+        "duplicate_quiz_id",
+        "Skipped duplicate quiz id during import.",
         sanitizedQuiz.id,
       );
+      logger.warn("Skipped duplicate quiz id during import", {
+        quizId: sanitizedQuiz.id,
+      });
       continue;
     }
     sanitizedQuizzes.push(sanitizedQuiz);
@@ -300,20 +357,31 @@ export async function importData(
   const resultIds = new Set<string>();
 
   for (const result of data.results) {
-    const sanitizedResult = sanitizeResultRecord(result, userId);
+    const sanitizedResult = sanitizeResultRecord(result, userId, warnings);
     if (!sanitizedResult) continue;
     if (!allowedQuizIds.has(sanitizedResult.quiz_id)) {
-      console.warn(
-        "Skipped result referencing missing quiz during import:",
+      recordImportWarning(
+        warnings,
+        "result_missing_quiz",
+        "Skipped result referencing missing quiz during import.",
         sanitizedResult.id,
       );
+      logger.warn("Skipped result referencing missing quiz during import", {
+        resultId: sanitizedResult.id,
+        quizId: sanitizedResult.quiz_id,
+      });
       continue;
     }
     if (resultIds.has(sanitizedResult.id)) {
-      console.warn(
-        "Skipped duplicate result id during import:",
+      recordImportWarning(
+        warnings,
+        "duplicate_result_id",
+        "Skipped duplicate result id during import.",
         sanitizedResult.id,
       );
+      logger.warn("Skipped duplicate result id during import", {
+        resultId: sanitizedResult.id,
+      });
       continue;
     }
     sanitizedResults.push(sanitizedResult);
@@ -353,7 +421,11 @@ export async function importData(
       },
     );
 
-    return { quizzesImported, resultsImported };
+    return {
+      quizzesImported,
+      resultsImported,
+      warnings: Array.from(warnings.values()),
+    };
   }
 
   await db.transaction("rw", db.quizzes, db.results, async () => {
@@ -393,7 +465,7 @@ export async function importData(
     }
   });
 
-  return { quizzesImported, resultsImported };
+  return { quizzesImported, resultsImported, warnings: Array.from(warnings.values()) };
 }
 
 function findMatchingQuiz(
@@ -444,6 +516,7 @@ function computeResultSignature(result: Result): string {
 export async function importDataSmart(
   data: ExportData,
   userId: string,
+  warnings: ImportWarningAccumulator,
 ): Promise<ImportResult> {
   const sanitizedQuizzes: Quiz[] = [];
   const quizIds = new Set<string>();
@@ -451,13 +524,18 @@ export async function importDataSmart(
   const missingHashInImport = new Set<string>();
 
   for (const quiz of data.quizzes) {
-    const sanitizedQuiz = await sanitizeQuizRecord(quiz, userId);
+    const sanitizedQuiz = await sanitizeQuizRecord(quiz, userId, warnings);
     if (!sanitizedQuiz) continue;
     if (quizIds.has(sanitizedQuiz.id)) {
-      console.warn(
-        "Skipped duplicate quiz id during import:",
+      recordImportWarning(
+        warnings,
+        "duplicate_quiz_id",
+        "Skipped duplicate quiz id during import.",
         sanitizedQuiz.id,
       );
+      logger.warn("Skipped duplicate quiz id during import", {
+        quizId: sanitizedQuiz.id,
+      });
       continue;
     }
 
@@ -467,11 +545,16 @@ export async function importDataSmart(
         sanitizedQuiz.quiz_hash = await computeQuizHash(sanitizedQuiz);
       } catch (error) {
         hashComputationFailed.add(sanitizedQuiz.id);
-        console.warn(
-          "Failed to compute quiz hash during smart import:",
+        recordImportWarning(
+          warnings,
+          "quiz_hash_compute_failed",
+          "Failed to compute quiz hash during smart import.",
           sanitizedQuiz.id,
-          error,
         );
+        logger.warn("Failed to compute quiz hash during smart import", {
+          quizId: sanitizedQuiz.id,
+          error,
+        });
       }
     }
 
@@ -483,13 +566,18 @@ export async function importDataSmart(
   const resultIds = new Set<string>();
 
   for (const result of data.results) {
-    const sanitizedResult = sanitizeResultRecord(result, userId);
+    const sanitizedResult = sanitizeResultRecord(result, userId, warnings);
     if (!sanitizedResult) continue;
     if (resultIds.has(sanitizedResult.id)) {
-      console.warn(
-        "Skipped duplicate result id during import:",
+      recordImportWarning(
+        warnings,
+        "duplicate_result_id",
+        "Skipped duplicate result id during import.",
         sanitizedResult.id,
       );
+      logger.warn("Skipped duplicate result id during import", {
+        resultId: sanitizedResult.id,
+      });
       continue;
     }
     sanitizedResults.push(sanitizedResult);
@@ -566,10 +654,16 @@ export async function importDataSmart(
     for (const result of sanitizedResults) {
       const mappedQuizId = quizIdMap.get(result.quiz_id) ?? result.quiz_id;
       if (!allowedQuizIds.has(mappedQuizId)) {
-        console.warn(
-          "Skipped result referencing missing quiz during smart import:",
+        recordImportWarning(
+          warnings,
+          "result_missing_quiz",
+          "Skipped result referencing missing quiz during smart import.",
           result.id,
         );
+        logger.warn("Skipped result referencing missing quiz during smart import", {
+          resultId: result.id,
+          quizId: mappedQuizId,
+        });
         continue;
       }
 
@@ -604,6 +698,7 @@ export async function importDataSmart(
     quizzesMerged,
     resultsImported,
     resultsDeduplicated,
+    warnings: Array.from(warnings.values()),
   };
 }
 

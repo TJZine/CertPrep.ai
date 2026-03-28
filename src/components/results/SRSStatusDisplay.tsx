@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { db } from "@/db";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import type { SRSState, LeitnerBox } from "@/types/srs";
 
 interface SRSStatusDisplayProps {
@@ -181,4 +181,4 @@ export function SRSStatusDisplay({
     );
 }
 
-export default SRSStatusDisplay;
+

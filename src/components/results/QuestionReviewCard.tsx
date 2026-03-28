@@ -14,8 +14,8 @@ import {
 import { Card, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { AITutorButton } from "@/components/quiz/AITutorButton";
-import { cn } from "@/lib/utils";
-import { sanitizeHTML } from "@/lib/sanitize";
+import { cn } from "@/lib/utils/cn";
+import { sanitizeHTML } from "@/lib/utils/sanitize";
 import type { Question } from "@/types/quiz";
 
 interface QuestionReviewCardProps {
@@ -335,4 +335,4 @@ export function QuestionReviewCard({
   );
 }
 
-export default QuestionReviewCard;
+

@@ -14,7 +14,7 @@ import {
   Settings as SettingsIcon,
   User as UserIcon,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import { lockBodyScroll, unlockBodyScroll } from "@/lib/bodyScrollLock";
 import { ThemePalette } from "@/components/common/ThemePalette";
 import { useAuth } from "@/components/providers/AuthProvider";

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { remixQuestion, remixQuiz, translateToOriginalKey, buildAnswersRecord } from "@/lib/quiz-remix";
-import { hashAnswer } from "@/lib/utils";
+import { remixQuestion, remixQuiz, translateToOriginalKey, buildAnswersRecord } from "@/lib/quiz/quizRemix";
+import { hashAnswer } from "@/lib/core/crypto";;
 import type { Question, Quiz } from "@/types/quiz";
 
 describe("quiz-remix", () => {

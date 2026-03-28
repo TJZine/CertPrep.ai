@@ -19,6 +19,7 @@ import { clearDatabase } from "@/db";
 import { requestServiceWorkerCacheClear } from "@/lib/serviceWorkerClient";
 import { syncQuizzes } from "@/lib/sync/quizSyncManager";
 import { syncResults } from "@/lib/sync/syncManager";
+import { logger } from "@/lib/logger";
 
 type AuthContextType = {
   user: User | null;
@@ -52,17 +53,50 @@ export async function performSignOut({
   // Attempt to flush local changes to server before clearing DB
   if (userId) {
     try {
-      // We give the sync 3 seconds to finish. If it takes longer, we proceed anyway
-      // to avoid trapping the user in a "signing out..." limbo.
+      // Refuse to sign out while we can't confirm sync success; clearing local DB
+      // after a failed/partial sync risks data loss.
       const syncPromise = Promise.allSettled([
         syncQuizzes(userId),
         syncResults(userId),
       ]);
-      const timeoutPromise = new Promise((resolve) => setTimeout(resolve, 3000));
-      await Promise.race([syncPromise, timeoutPromise]);
+      const timeoutPromise = new Promise<"timeout">((resolve) =>
+        setTimeout(() => resolve("timeout"), 3000),
+      );
+      const raceResult = await Promise.race([syncPromise, timeoutPromise]);
+
+      if (raceResult === "timeout") {
+        logger.warn("Pre-logout sync timed out", { userId });
+        return {
+          success: false,
+          error:
+            "Sync is still in progress. Please check your connection and try again.",
+        };
+      }
+
+      const outcomes = raceResult;
+      const failed = outcomes.some((result) => {
+        if (result.status === "rejected") return true;
+        return Boolean(result.value.incomplete);
+      });
+
+      if (failed) {
+        logger.warn("Pre-logout sync failed or incomplete", {
+          userId,
+          outcomes,
+        });
+        return {
+          success: false,
+          error:
+            "Unable to sync changes before signing out. Please try again.",
+        };
+      }
     } catch (error) {
-      console.warn("Pre-logout sync failed or timed out:", error);
-      // We intentionally ignore errors here to ensure signOut proceeds
+      logger.warn("Pre-logout sync threw unexpectedly", error);
+      return {
+        success: false,
+        error:
+          "Unable to sync changes before signing out. Please try again.",
+      };
     }
   }
 
@@ -70,7 +104,7 @@ export async function performSignOut({
     void requestServiceWorkerCacheClear();
     await clearDb();
   } catch (error) {
-    console.error("Failed to clear local database during sign out:", error);
+    logger.error("Failed to clear local database during sign out", error);
     dbClearError = "Local data could not be cleared.";
   }
 
@@ -84,7 +118,7 @@ export async function performSignOut({
     // Navigation is handled by the onAuthStateChange listener to support cross-tab signouts
     return { success: true, error: dbClearError };
   } catch (error) {
-    console.error("Error signing out:", error);
+    logger.error("Error signing out", error);
     return { success: false, error: "Sign out failed. Please try again." };
   }
 }
@@ -121,7 +155,7 @@ export function AuthProvider({
         setSession(session);
         setUser(session?.user ?? null);
       } catch (error) {
-        console.error("Failed to get session:", error);
+        logger.error("Failed to get session", error);
         // Fallback to cleared state
         if (!isMounted) return;
         setSession(null);

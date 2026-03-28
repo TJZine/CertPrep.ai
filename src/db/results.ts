@@ -1,7 +1,8 @@
-import { db } from "@/db";
-import { isSRSQuiz } from "./quizzes";
+import { db } from "./dbInstance";
+import { isSRSQuiz } from "./srsQuiz";
 import { NIL_UUID } from "@/lib/constants";
-import { calculatePercentage, generateUUID } from "@/lib/utils";
+import { calculatePercentage } from "@/lib/utils/math";
+import { generateUUID } from "@/lib/core/crypto";
 import { logger } from "@/lib/logger";
 import type { CategoryPerformance, Result } from "@/types/result";
 import type { Quiz, Question, QuizMode } from "@/types/quiz";
@@ -169,7 +170,7 @@ async function validateAggregatedResultInput(
 
 export interface CreateSRSReviewResultInput {
   userId: string;
-  /** The per-user SRS quiz ID (from getOrCreateSRSQuiz) */
+  /** The per-user SRS quiz ID (from ensureSRSQuizExists) */
   srsQuizId: string;
   answers: Record<string, string>;
   flaggedQuestions: string[];
@@ -507,6 +508,7 @@ export async function getOverallStats(userId: string): Promise<OverallStats> {
   // source quiz is empty, but the questions exist in other user quizzes.
   const allQuestionsMap = new Map<string, { question: Question; quizId: string }>();
   quizzes.forEach((q) => {
+    if (!q.questions) return;
     q.questions.forEach((question) => {
       allQuestionsMap.set(question.id, { question, quizId: q.id });
     });

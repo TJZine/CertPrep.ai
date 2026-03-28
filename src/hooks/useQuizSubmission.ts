@@ -8,9 +8,9 @@ import { useSync } from "@/hooks/useSync";
 import { useQuizSessionStore } from "@/stores/quizSessionStore";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
-import { clearSmartRoundState } from "@/lib/smartRoundStorage";
+import { clearSmartRoundState } from "@/lib/storage/smartRoundStorage";
 import { logger } from "@/lib/logger";
-import { buildAnswersRecord } from "@/lib/quiz-remix";
+import { buildAnswersRecord } from "@/lib/quiz/quizRemix";
 
 interface UseQuizSubmissionProps {
   quizId: string;

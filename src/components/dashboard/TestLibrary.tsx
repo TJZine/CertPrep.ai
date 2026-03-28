@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Download, FolderOpen, FileText } from "lucide-react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import { Select, type SelectOption } from "@/components/ui/Select";
 import {
   Card,

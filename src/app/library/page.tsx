@@ -7,7 +7,7 @@ import { useQuizzes, useInitializeDatabase } from "@/hooks/useDatabase";
 import { TestLibrary } from "@/components/dashboard/TestLibrary";
 import { LibrarySkeleton } from "@/components/library/LibrarySkeleton";
 import { buttonVariants } from "@/components/ui/Button";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 

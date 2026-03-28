@@ -19,7 +19,7 @@ import {
   SMART_ROUND_QUIZ_ID_KEY,
   SMART_ROUND_MISSED_COUNT_KEY,
   SMART_ROUND_FLAGGED_COUNT_KEY,
-} from "@/lib/smartRoundStorage";
+} from "@/lib/storage/smartRoundStorage";
 import {
   clearTopicStudyState,
   TOPIC_STUDY_QUESTIONS_KEY,
@@ -27,7 +27,7 @@ import {
   TOPIC_STUDY_CATEGORY_KEY,
   TOPIC_STUDY_MISSED_COUNT_KEY,
   TOPIC_STUDY_FLAGGED_COUNT_KEY,
-} from "@/lib/topicStudyStorage";
+} from "@/lib/storage/topicStudyStorage";
 
 type StudyMode = "smart" | "topic" | null;
 

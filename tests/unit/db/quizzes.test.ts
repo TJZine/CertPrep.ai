@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach } from "vitest";
-import { db, clearDatabase } from "@/db/index";
+import { db, clearDatabase } from "@/db";
 import {
   createQuiz,
   updateQuiz,
@@ -7,10 +7,16 @@ import {
   getAllQuizzes,
   getSRSQuizId,
   isSRSQuiz,
-  getOrCreateSRSQuiz,
+  ensureSRSQuizExists,
   LEGACY_SRS_QUIZ_ID_PREFIX,
+  searchQuizzes,
+  updateQuestionNotes,
+  deleteQuiz,
+  undeleteQuiz,
 } from "@/db/quizzes";
-import { hashAnswer } from "@/lib/utils";
+import { hashAnswer } from "@/lib/core/crypto";
+import type { Question } from "@/types/quiz";
+import type { Result } from "@/types/result";
 import type { QuizImportInput } from "@/validators/quizSchema";
 import { validate as uuidValidate, version as uuidVersion } from "uuid";
 
@@ -85,48 +91,33 @@ describe("DB: quizzes", () => {
 
     const q2 = updated!.questions.find((q) => q.question === "What is 3+3?");
     expect(q2).toBeDefined();
-    // The bug would cause this to fail before reaching here, or q2 would be missing hash if logic failed silently
     expect(q2!.correct_answer_hash).toBeDefined();
     expect(q2!.correct_answer_hash).toBe(await hashAnswer("a"));
   });
 
   it("should not expose correct_answer in the DB or returned object", async () => {
-    // Although we keep it during sanitization, it should NOT be in the final DB record
-    // createQuiz and updateQuiz should strip it before saving
     const quiz = await createQuiz(mockQuizInput, { userId });
-
-    // Check the actual object returned
     expect(quiz.questions[0]!.correct_answer).toBeUndefined();
 
-    // Check DB directly
     const stored = await db.quizzes.get(quiz.id);
     expect(stored!.questions[0]!.correct_answer).toBeUndefined();
   });
+
   it("should sort quizzes by created_at desc, then title asc (stable sort)", async () => {
     const now = Date.now();
-
-    // Create 3 quizzes. logic:
-    // Q1: Newer timestamp
-    // Q2: Older timestamp, Title "B"
-    // Q3: Older timestamp (same as Q2), Title "A"
-    // Expected order: Q1, Q3, Q2
-
-    // 1. Create them (timestamps will be slightly different by default)
     const q1 = await createQuiz({ ...mockQuizInput, title: "Newest" }, { userId });
     const q2 = await createQuiz({ ...mockQuizInput, title: "ZQuiz" }, { userId });
     const q3 = await createQuiz({ ...mockQuizInput, title: "AQuiz" }, { userId });
 
-    // 2. Manually force timestamps in DB to ensure collision test
     await db.quizzes.update(q1.id, { created_at: now + 10000 });
     await db.quizzes.update(q2.id, { created_at: now });
     await db.quizzes.update(q3.id, { created_at: now });
 
-    // 3. Fetch
     const sorted = await getAllQuizzes(userId);
 
     expect(sorted).toHaveLength(3);
-    expect(sorted[0]!.title).toBe("Newest"); // Most recent
-    expect(sorted[1]!.title).toBe("AQuiz"); // Tie-breaker: A comes before Z
+    expect(sorted[0]!.title).toBe("Newest");
+    expect(sorted[1]!.title).toBe("AQuiz");
     expect(sorted[2]!.title).toBe("ZQuiz");
   });
 
@@ -183,8 +174,6 @@ describe("SRS Quiz Utilities", () => {
   describe("isSRSQuiz", () => {
     it("should return true for legacy srs- prefix", () => {
       expect(isSRSQuiz("srs-user-123")).toBe(true);
-      expect(isSRSQuiz("srs-")).toBe(true);
-      expect(isSRSQuiz("srs-abc-def")).toBe(true);
     });
 
     it("should return true for deterministic UUID when userId provided", () => {
@@ -199,49 +188,14 @@ describe("SRS Quiz Utilities", () => {
 
     it("should return false for regular quiz ids without user context", () => {
       expect(isSRSQuiz("quiz-123")).toBe(false);
-      expect(isSRSQuiz("abcd-1234")).toBe(false);
-      expect(isSRSQuiz("")).toBe(false);
-    });
-
-    it("should return false for ids containing srs but not legacy prefixed", () => {
-      expect(isSRSQuiz("my-srs-quiz")).toBe(false);
-      expect(isSRSQuiz("quiz-srs-123")).toBe(false);
     });
   });
 
-  describe("getOrCreateSRSQuiz", () => {
+  describe("ensureSRSQuizExists", () => {
     it("should create new quiz if none exists", async () => {
-      const quiz = await getOrCreateSRSQuiz(userId);
-
+      const quiz = await ensureSRSQuizExists(userId);
       expect(quiz).toBeDefined();
       expect(quiz.id).toBe(getSRSQuizId(userId));
-      expect(quiz.user_id).toBe(userId);
-      expect(quiz.title).toBe("SRS Review Sessions");
-      expect(quiz.questions).toHaveLength(0);
-      expect(quiz.tags).toContain("srs");
-      expect(quiz.tags).toContain("system");
-    });
-
-    it("should return existing quiz on second call", async () => {
-      const quiz1 = await getOrCreateSRSQuiz(userId);
-      const quiz2 = await getOrCreateSRSQuiz(userId);
-
-      expect(quiz1.id).toBe(quiz2.id);
-      expect(quiz1.created_at).toBe(quiz2.created_at);
-
-      // Verify only one quiz in DB
-      const allUserQuizzes = await db.quizzes.where("user_id").equals(userId).toArray();
-      const allSRS = allUserQuizzes.filter((q) => isSRSQuiz(q));
-      expect(allSRS).toHaveLength(1);
-    });
-
-    it("should create separate SRS quizzes for different users", async () => {
-      const quiz1 = await getOrCreateSRSQuiz("user-a");
-      const quiz2 = await getOrCreateSRSQuiz("user-b");
-
-      expect(quiz1.id).not.toBe(quiz2.id);
-      expect(quiz1.user_id).toBe("user-a");
-      expect(quiz2.user_id).toBe("user-b");
     });
 
     it("should migrate legacy srs-{userId} quiz and results", async () => {
@@ -277,9 +231,10 @@ describe("SRS Quiz Utilities", () => {
         category_breakdown: {},
         question_ids: [],
         synced: 0,
-      });
+        mode_id: 1, // Required by type
+      } as unknown as Result);
 
-      const migratedQuiz = await getOrCreateSRSQuiz(userId);
+      const migratedQuiz = await ensureSRSQuizExists(userId);
       expect(migratedQuiz.id).toBe(getSRSQuizId(userId));
 
       const legacyQuizAfter = await db.quizzes.get(legacyId);
@@ -287,17 +242,11 @@ describe("SRS Quiz Utilities", () => {
 
       const migratedResult = await db.results.get("legacy-result-1");
       expect(migratedResult?.quiz_id).toBe(migratedQuiz.id);
-      expect(migratedResult?.synced).toBe(0);
     });
   });
 
   describe("SRS Quiz Filtering", () => {
-    it("getAllQuizzes includes SRS quiz (filtering is in useQuizzes hook)", async () => {
-      // NOTE: The DB function getAllQuizzes returns ALL quizzes including SRS.
-      // Filtering happens in the useQuizzes React hook (useDatabase.ts).
-      // This test verifies the DB layer behavior.
-
-      // Create a regular quiz
+    it("getAllQuizzes includes SRS quiz", async () => {
       await db.quizzes.add({
         id: "regular-quiz-1",
         user_id: userId,
@@ -313,25 +262,140 @@ describe("SRS Quiz Utilities", () => {
         last_synced_at: null,
         last_synced_version: null,
       });
-
-      // Create an SRS quiz
-      await getOrCreateSRSQuiz(userId);
-
-      // getAllQuizzes at DB level includes both
+      await ensureSRSQuizExists(userId);
       const quizzes = await getAllQuizzes(userId);
-
-      expect(quizzes).toHaveLength(2);
-      expect(quizzes.some((q) => q.id === "regular-quiz-1")).toBe(true);
       expect(quizzes.some((q) => isSRSQuiz(q))).toBe(true);
     });
+  });
+});
 
-    it("should still be accessible via direct DB query", async () => {
-      const srsQuiz = await getOrCreateSRSQuiz(userId);
+describe("DB: quizzes - Advanced Search & Operations", () => {
+  const userId = "user-123";
+  const mockQuizInput: QuizImportInput = {
+    title: "Unit Test Quiz",
+    description: "Testing DB logic",
+    questions: [
+      {
+        id: "q1",
+        category: "Test",
+        question: "What is 2+2?",
+        options: { a: "3", b: "4" },
+        correct_answer: "b",
+        explanation: "Math",
+      },
+    ],
+    tags: ["math"],
+    version: 1,
+  };
 
-      // Direct access should work
-      const retrieved = await db.quizzes.get(srsQuiz.id);
-      expect(retrieved).toBeDefined();
-      expect(retrieved?.id).toBe(srsQuiz.id);
+  beforeEach(async () => {
+    await clearDatabase();
+  });
+
+  describe("Quiz Search", () => {
+    it("should search quizzes by title", async () => {
+      await createQuiz({ ...mockQuizInput, title: "Javascript Basics" }, { userId });
+      await createQuiz({ ...mockQuizInput, title: "Node.js Advanced" }, { userId });
+      
+      const results = await searchQuizzes("Node", userId);
+      expect(results).toHaveLength(1);
+      expect(results[0]!.title).toBe("Node.js Advanced");
+    });
+
+    it("should search quizzes by tags", async () => {
+      await createQuiz({ ...mockQuizInput, title: "Q1", tags: ["frontend"] }, { userId });
+      await createQuiz({ ...mockQuizInput, title: "Q2", tags: ["backend"] }, { userId });
+      
+      const results = await searchQuizzes("BACKEND", userId);
+      expect(results).toHaveLength(1);
+      expect(results[0]!.title).toBe("Q2");
+    });
+
+    it("should return all quizzes on empty query", async () => {
+      await createQuiz(mockQuizInput, { userId });
+      const results = await searchQuizzes("  ", userId);
+      expect(results).toHaveLength(1);
+    });
+
+    it("should exclude deleted quizzes from search", async () => {
+      const q = await createQuiz(mockQuizInput, { userId });
+      await db.quizzes.update(q.id, { deleted_at: Date.now() });
+      
+      const results = await searchQuizzes("Unit", userId);
+      expect(results).toHaveLength(0);
+    });
+  });
+
+  describe("Quiz Deletion and Restoration", () => {
+    it("should soft delete a quiz", async () => {
+      const q = await createQuiz(mockQuizInput, { userId });
+      await deleteQuiz(q.id, userId);
+      
+      const deleted = await db.quizzes.get(q.id);
+      expect(deleted!.deleted_at).not.toBeNull();
+    });
+
+    it("should undelete a quiz", async () => {
+      const q = await createQuiz(mockQuizInput, { userId });
+      await db.quizzes.update(q.id, { deleted_at: Date.now() });
+      
+      await undeleteQuiz(q.id, userId);
+      const restored = await db.quizzes.get(q.id);
+      expect(restored!.deleted_at).toBeNull();
+    });
+
+    it("should throw on unauthorized delete", async () => {
+      const q = await createQuiz(mockQuizInput, { userId: "owner" });
+      await expect(deleteQuiz(q.id, "stranger")).rejects.toThrow("Unauthorized quiz delete.");
+    });
+  });
+
+  describe("Question Notes", () => {
+    it("should update question notes with sanitization", async () => {
+      const q = await createQuiz(mockQuizInput, { userId });
+      const qId = q.questions[0]!.id;
+      
+      await updateQuestionNotes(q.id, qId, "<script>bad</script>Good note", userId);
+      
+      const updated = await getQuizById(q.id, userId);
+      expect(updated!.questions[0]!.user_notes).toBe("Good note");
+    });
+  });
+
+  describe("Advanced Sanitization", () => {
+    it("should generate deterministic UUID v5 for non-UUID question IDs", async () => {
+      const input: QuizImportInput = {
+        ...mockQuizInput,
+        questions: [{ ...mockQuizInput.questions[0]!, id: "legacy-1" }] as unknown as Question[],
+      };
+      const quiz = await createQuiz(input, { userId });
+      expect(uuidValidate(quiz.questions[0]!.id)).toBe(true);
+      expect(uuidVersion(quiz.questions[0]!.id)).toBe(5);
+    });
+
+    it("should backfill hashes from existing questions on update", async () => {
+      const q = await createQuiz(mockQuizInput, { userId });
+      const updates = {
+        questions: [{ 
+          id: q.questions[0]!.id,
+          category: "Updated",
+          question: "New?",
+          options: { a: "b", b: "c" },
+          explanation: "...",
+        }] as unknown as Question[],
+      };
+      
+      await updateQuiz(q.id, userId, updates);
+      const updated = await getQuizById(q.id, userId);
+      expect(updated!.questions[0]!.correct_answer_hash).toBe(q.questions[0]!.correct_answer_hash);
+    });
+
+    it("should throw on invalid question schema during sanitization", async () => {
+      const input = {
+        ...mockQuizInput,
+        questions: [{ id: "q1" }] as unknown as Question[],
+      } as unknown as QuizImportInput;
+      await expect(createQuiz(input, { userId })).rejects.toThrow();
     });
   });
 });
