@@ -103,6 +103,9 @@ export function Header(): React.ReactElement {
         );
         return;
       }
+      if (result.error) {
+        addToast("warning", result.error);
+      }
     } catch (error) {
       logger.error("Sign out failed", error);
       addToast("error", "Failed to sign out. Please try again.");

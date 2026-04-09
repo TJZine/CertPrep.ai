@@ -49,12 +49,13 @@ export async function performSignOut({
   userId,
 }: SignOutDependencies): Promise<{ success: boolean; error?: string }> {
   let dbClearError: string | undefined;
+  let shouldPreserveLocalData = false;
 
   // Attempt to flush local changes to server before clearing DB
   if (userId) {
     try {
-      // Refuse to sign out while we can't confirm sync success; clearing local DB
-      // after a failed/partial sync risks data loss.
+      // Sync is best-effort. If it cannot be confirmed, sign out anyway but
+      // preserve local data to avoid discarding unsynced offline progress.
       const syncPromise = Promise.allSettled([
         syncQuizzes(userId),
         syncResults(userId),
@@ -66,46 +67,38 @@ export async function performSignOut({
 
       if (raceResult === "timeout") {
         logger.warn("Pre-logout sync timed out", { userId });
-        return {
-          success: false,
-          error:
-            "Sync is still in progress. Please check your connection and try again.",
-        };
-      }
-
-      const outcomes = raceResult;
-      const failed = outcomes.some((result) => {
-        if (result.status === "rejected") return true;
-        return Boolean(result.value.incomplete);
-      });
-
-      if (failed) {
-        logger.warn("Pre-logout sync failed or incomplete", {
-          userId,
-          outcomes,
+        shouldPreserveLocalData = true;
+      } else {
+        const failed = raceResult.some((result) => {
+          if (result.status === "rejected") return true;
+          return Boolean(result.value.incomplete);
         });
-        return {
-          success: false,
-          error:
-            "Unable to sync changes before signing out. Please try again.",
-        };
+
+        if (failed) {
+          logger.warn("Pre-logout sync failed or incomplete", {
+            userId,
+            outcomes: raceResult,
+          });
+          shouldPreserveLocalData = true;
+        }
       }
     } catch (error) {
       logger.warn("Pre-logout sync threw unexpectedly", error);
-      return {
-        success: false,
-        error:
-          "Unable to sync changes before signing out. Please try again.",
-      };
+      shouldPreserveLocalData = true;
     }
   }
 
-  try {
-    void requestServiceWorkerCacheClear();
-    await clearDb();
-  } catch (error) {
-    logger.error("Failed to clear local database during sign out", error);
-    dbClearError = "Local data could not be cleared.";
+  if (shouldPreserveLocalData) {
+    dbClearError =
+      "Signed out before sync completed. Local study data was kept on this device.";
+  } else {
+    try {
+      void requestServiceWorkerCacheClear();
+      await clearDb();
+    } catch (error) {
+      logger.error("Failed to clear local database during sign out", error);
+      dbClearError = "Local data could not be cleared.";
+    }
   }
 
   if (!supabase) {

@@ -99,10 +99,35 @@ describe("performSignOut", () => {
       userId: "user-123",
     });
 
-    expect(result.success).toBe(false);
-    expect(result.error).toMatch(/sync/i);
+    expect(result.success).toBe(true);
+    expect(result.error).toMatch(/kept on this device/i);
     expect(clearDb).not.toHaveBeenCalled();
-    expect(supabase.auth.signOut).not.toHaveBeenCalled();
-    expect(onResetAuthState).not.toHaveBeenCalled();
+    expect(supabase.auth.signOut).toHaveBeenCalledTimes(1);
+    expect(onResetAuthState).toHaveBeenCalledTimes(1);
+  });
+
+  it("still signs out when pre-logout sync times out", async () => {
+    syncQuizzes.mockImplementation(
+      () => new Promise(() => undefined) as Promise<{ incomplete: boolean }>,
+    );
+    syncResults.mockImplementation(
+      () => new Promise(() => undefined) as Promise<{ incomplete: boolean }>,
+    );
+    const supabase = createSupabaseStub();
+    const clearDb = vi.fn().mockResolvedValue(undefined);
+    const onResetAuthState = vi.fn();
+
+    const result = await performSignOut({
+      supabase: supabase as never,
+      clearDb,
+      onResetAuthState,
+      userId: "user-123",
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.error).toMatch(/kept on this device/i);
+    expect(clearDb).not.toHaveBeenCalled();
+    expect(supabase.auth.signOut).toHaveBeenCalledTimes(1);
+    expect(onResetAuthState).toHaveBeenCalledTimes(1);
   });
 });
