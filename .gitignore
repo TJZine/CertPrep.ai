@@ -76,3 +76,6 @@ docs/GPT_ACTIONS_ROADMAP.md
 # Tool Metadata
 .desloppify/
 
+# Editor swap files
+*.swp
+*.swo
