@@ -13,7 +13,10 @@ describe("Textarea", () => {
     render(<Textarea helperText="Help text" />);
     const helper = screen.getByText("Help text");
     const textarea = screen.getByRole("textbox");
-    expect(textarea).toHaveAttribute("aria-describedby", helper.getAttribute("id"));
+    expect(textarea).toHaveAttribute(
+      "aria-describedby",
+      helper.getAttribute("id"),
+    );
   });
 
   it("sets aria-invalid and associates error text via aria-describedby", () => {
@@ -21,7 +24,8 @@ describe("Textarea", () => {
     const error = screen.getByText("Required");
     const textarea = screen.getByRole("textbox");
     expect(textarea).toHaveAttribute("aria-invalid", "true");
-    expect(textarea.getAttribute("aria-describedby")).toContain(error.getAttribute("id"));
+    expect(textarea.getAttribute("aria-describedby")).toContain(
+      error.getAttribute("id"),
+    );
   });
 });
-

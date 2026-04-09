@@ -58,4 +58,3 @@ export async function migrateLegacySRSQuizIfNeeded(
     await db.quizzes.delete(legacyId);
   });
 }
-

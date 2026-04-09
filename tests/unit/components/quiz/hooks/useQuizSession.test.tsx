@@ -60,7 +60,9 @@ describe("useQuizSession", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useQuizSessionStore as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
+    (
+      useQuizSessionStore as unknown as ReturnType<typeof vi.fn>
+    ).mockReturnValue({
       initializeSession: mockInitializeSession,
       selectAnswer: vi.fn(),
       submitAnswer: vi.fn(),
@@ -100,23 +102,25 @@ describe("useQuizSession", () => {
         quiz: mockQuiz,
         isSRSReview: false,
         effectiveUserId: "user-1",
-      })
+      }),
     );
 
     // Wait for the async initialization effect
     await vi.waitFor(() => {
-        expect(mockInitializeSession).toHaveBeenCalledWith(
-          "quiz-1",
-          "zen",
-          expect.any(Array)
-        );
+      expect(mockInitializeSession).toHaveBeenCalledWith(
+        "quiz-1",
+        "zen",
+        expect.any(Array),
+      );
     });
-    
+
     expect(result.current.isInitializing).toBe(false);
   });
 
   it("calculates progress and isCurrentAnswerCorrect accurately", async () => {
-    (useQuizSessionStore as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
+    (
+      useQuizSessionStore as unknown as ReturnType<typeof vi.fn>
+    ).mockReturnValue({
       initializeSession: mockInitializeSession,
       selectAnswer: vi.fn(),
       submitAnswer: vi.fn(),
@@ -142,11 +146,11 @@ describe("useQuizSession", () => {
         quiz: mockQuiz,
         isSRSReview: false,
         effectiveUserId: "user-1",
-      })
+      }),
     );
 
     await vi.waitFor(() => {
-        expect(result.current.isInitializing).toBe(false);
+      expect(result.current.isInitializing).toBe(false);
     });
 
     expect(result.current.progress.current).toBe(6);

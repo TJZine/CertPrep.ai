@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach, type Mock } from "vitest";
-import { 
-  calculateResults, 
-  createResult, 
-  getOverallStats, 
+import {
+  calculateResults,
+  createResult,
+  getOverallStats,
   deleteResult,
-  type CreateResultInput
+  type CreateResultInput,
 } from "@/db/results";
 import { db } from "@/db/dbInstance";
 import { evaluateAnswer } from "@/lib/grading";
@@ -56,12 +56,22 @@ describe("src/db/results.ts", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Setup generic mock behavior for Dexie chains
-    const mockQuizzes = db.quizzes as unknown as { where: Mock, equals: Mock, filter: Mock, sortBy: Mock };
-    const mockResults = db.results as unknown as { where: Mock, equals: Mock, filter: Mock, sortBy: Mock };
-    
-    [mockQuizzes, mockResults].forEach(mock => {
+    const mockQuizzes = db.quizzes as unknown as {
+      where: Mock;
+      equals: Mock;
+      filter: Mock;
+      sortBy: Mock;
+    };
+    const mockResults = db.results as unknown as {
+      where: Mock;
+      equals: Mock;
+      filter: Mock;
+      sortBy: Mock;
+    };
+
+    [mockQuizzes, mockResults].forEach((mock) => {
       mock.where.mockReturnThis();
       mock.equals.mockReturnThis();
       mock.filter.mockReturnThis();
@@ -110,9 +120,16 @@ describe("src/db/results.ts", () => {
       const mockAnswers = { q1: "a", q2: "b" };
       const activeQuestionIds = ["q1"];
 
-      vi.mocked(evaluateAnswer).mockResolvedValue({ category: "React", isCorrect: true });
+      vi.mocked(evaluateAnswer).mockResolvedValue({
+        category: "React",
+        isCorrect: true,
+      });
 
-      const results = await calculateResults(mockQuiz, mockAnswers, activeQuestionIds);
+      const results = await calculateResults(
+        mockQuiz,
+        mockAnswers,
+        activeQuestionIds,
+      );
 
       expect(results.score).toBe(100);
       expect(vi.mocked(evaluateAnswer)).toHaveBeenCalledTimes(1);
@@ -136,41 +153,63 @@ describe("src/db/results.ts", () => {
       };
 
       vi.mocked(db.quizzes.get).mockResolvedValue(mockQuiz);
-      vi.mocked(evaluateAnswer).mockResolvedValue({ category: "React", isCorrect: true });
+      vi.mocked(evaluateAnswer).mockResolvedValue({
+        category: "React",
+        isCorrect: true,
+      });
 
       const result = await createResult(input);
 
       expect(result.id).toBe("mock-uuid");
       expect(result.score).toBe(100);
-      expect(db.results.add).toHaveBeenCalledWith(expect.objectContaining({
-        user_id: mockUserId,
-        quiz_id: mockQuizId,
-        score: 100,
-      }));
+      expect(db.results.add).toHaveBeenCalledWith(
+        expect.objectContaining({
+          user_id: mockUserId,
+          quiz_id: mockQuizId,
+          score: 100,
+        }),
+      );
     });
 
     it("should throw if user context is missing", async () => {
       const input = { userId: "" } as unknown as CreateResultInput;
-      await expect(createResult(input)).rejects.toThrow("Cannot create result without a user context.");
+      await expect(createResult(input)).rejects.toThrow(
+        "Cannot create result without a user context.",
+      );
     });
 
     it("should throw if quiz is not found", async () => {
       vi.mocked(db.quizzes.get).mockResolvedValue(undefined as unknown as Quiz);
-      const input = { userId: "u1", quizId: "q1" } as unknown as CreateResultInput;
+      const input = {
+        userId: "u1",
+        quizId: "q1",
+      } as unknown as CreateResultInput;
       await expect(createResult(input)).rejects.toThrow("Quiz not found.");
     });
 
     it("should throw if security mismatch occurs", async () => {
       const mockQuiz = { id: "q1", user_id: "other-user" } as unknown as Quiz;
       vi.mocked(db.quizzes.get).mockResolvedValue(mockQuiz);
-      const input = { userId: "u1", quizId: "q1" } as unknown as CreateResultInput;
+      const input = {
+        userId: "u1",
+        quizId: "q1",
+      } as unknown as CreateResultInput;
       await expect(createResult(input)).rejects.toThrow("Security mismatch");
     });
 
     it("should allow calculation for System/Public quizzes (NIL_UUID owner)", async () => {
-      const mockQuiz = { id: "q1", user_id: NIL_UUID, questions: [] } as unknown as Quiz;
+      const mockQuiz = {
+        id: "q1",
+        user_id: NIL_UUID,
+        questions: [],
+      } as unknown as Quiz;
       vi.mocked(db.quizzes.get).mockResolvedValue(mockQuiz);
-      const input = { userId: "u1", quizId: "q1", answers: {}, timeTakenSeconds: 0 } as unknown as CreateResultInput;
+      const input = {
+        userId: "u1",
+        quizId: "q1",
+        answers: {},
+        timeTakenSeconds: 0,
+      } as unknown as CreateResultInput;
       await createResult(input);
       expect(db.results.add).toHaveBeenCalled();
     });
@@ -179,11 +218,30 @@ describe("src/db/results.ts", () => {
   describe("getOverallStats", () => {
     it("should aggregate stats correctly across multiple results", async () => {
       const mockQuizzes = [
-        { id: "q1", user_id: mockUserId, questions: [{ id: "q1_1", category: "React" }], deleted_at: null },
+        {
+          id: "q1",
+          user_id: mockUserId,
+          questions: [{ id: "q1_1", category: "React" }],
+          deleted_at: null,
+        },
       ] as unknown as Quiz[];
       const mockResults = [
-        { score: 100, time_taken_seconds: 60, user_id: mockUserId, quiz_id: "q1", answers: { q1_1: "a" }, deleted_at: null },
-        { score: 50, time_taken_seconds: 40, user_id: mockUserId, quiz_id: "q1", answers: { q1_1: "wrong" }, deleted_at: null },
+        {
+          score: 100,
+          time_taken_seconds: 60,
+          user_id: mockUserId,
+          quiz_id: "q1",
+          answers: { q1_1: "a" },
+          deleted_at: null,
+        },
+        {
+          score: 50,
+          time_taken_seconds: 40,
+          user_id: mockUserId,
+          quiz_id: "q1",
+          answers: { q1_1: "wrong" },
+          deleted_at: null,
+        },
       ] as unknown as Result[];
 
       // Detailed mock for Dexie chain
@@ -209,7 +267,10 @@ describe("src/db/results.ts", () => {
       expect(stats.totalAttempts).toBe(2);
       expect(stats.averageScore).toBe(75);
       expect(stats.totalStudyTime).toBe(100);
-      expect(stats.weakestCategories[0]).toEqual({ category: "React", avgScore: 50 });
+      expect(stats.weakestCategories[0]).toEqual({
+        category: "React",
+        avgScore: 50,
+      });
     });
   });
 
@@ -220,10 +281,13 @@ describe("src/db/results.ts", () => {
 
       await deleteResult("r1", mockUserId);
 
-      expect(db.results.update).toHaveBeenCalledWith("r1", expect.objectContaining({
-        synced: 0,
-        deleted_at: expect.any(Number),
-      }));
+      expect(db.results.update).toHaveBeenCalledWith(
+        "r1",
+        expect.objectContaining({
+          synced: 0,
+          deleted_at: expect.any(Number),
+        }),
+      );
     });
   });
 });

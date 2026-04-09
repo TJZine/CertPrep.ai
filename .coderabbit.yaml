@@ -13,7 +13,7 @@ reviews:
   high_level_summary: true
   high_level_summary_placeholder: "@coderabbit summary"
   poem: false
-  
+
   # Review behavior
   auto_review:
     enabled: true
@@ -21,14 +21,14 @@ reviews:
     base_branches:
       - main
       - develop
-  
+
   # What to review
   review_status: true
   collapse_walkthrough: false
   sequence_diagrams: false
   changed_files_summary: true
   labeling_instructions: []
-  
+
   # Path-specific instructions
   path_instructions:
     # Critical paths - extra scrutiny
@@ -39,7 +39,7 @@ reviews:
         - Missing indexes on queried fields
         - Proper user_id scoping on all queries
         - Soft-delete handling (deleted_at filtering)
-        
+
     - path: "src/lib/sync/**"
       instructions: |
         CRITICAL: Sync layer. Check for:
@@ -48,7 +48,7 @@ reviews:
         - Proper error handling for network failures
         - Cursor/pagination correctness
         - LWW conflict resolution logic
-        
+
     - path: "src/proxy.ts"
       instructions: |
         HIGH RISK: Middleware. This file MUST remain named proxy.ts (not middleware.ts).
@@ -56,7 +56,7 @@ reviews:
         - CSP header correctness and nonce propagation
         - Auth redirect logic
         - CORS configuration
-        
+
     - path: "supabase/**"
       instructions: |
         HIGH RISK: Database migrations and RLS policies. Check for:
@@ -64,7 +64,7 @@ reviews:
         - RLS policy completeness (SELECT, INSERT, UPDATE, DELETE)
         - Index creation on foreign keys
         - Proper user_id enforcement
-        
+
     - path: "src/components/**"
       instructions: |
         UI components. Check for:
@@ -72,7 +72,7 @@ reviews:
         - Theme token usage (no hardcoded colors)
         - Proper loading/error states
         - Event handler cleanup in useEffect
-        
+
     - path: "src/hooks/**"
       instructions: |
         React hooks. Check for:
@@ -80,14 +80,14 @@ reviews:
         - Cleanup functions for subscriptions/timers
         - Proper memoization (useMemo/useCallback where needed)
         - No state updates after unmount
-        
+
     - path: "src/types/**"
       instructions: |
         Type definitions. Verify:
         - No use of 'any' type
         - Proper optional vs required fields
         - Consistency with database schema
-        
+
     - path: "tests/**"
       instructions: |
         Tests. Check for:

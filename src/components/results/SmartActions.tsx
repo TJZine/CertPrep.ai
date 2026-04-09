@@ -240,15 +240,9 @@ export function SmartActions({
             >
               <div className="mb-3 rounded-full bg-accent/10 p-3">
                 {copied ? (
-                  <Check
-                    className="h-6 w-6 text-accent"
-                    aria-hidden="true"
-                  />
+                  <Check className="h-6 w-6 text-accent" aria-hidden="true" />
                 ) : (
-                  <Brain
-                    className="h-6 w-6 text-accent"
-                    aria-hidden="true"
-                  />
+                  <Brain className="h-6 w-6 text-accent" aria-hidden="true" />
                 )}
               </div>
               <h3 className="font-semibold text-foreground">
@@ -278,9 +272,7 @@ export function SmartActions({
                   aria-hidden="true"
                 />
               </div>
-              <h3 className="font-semibold text-foreground">
-                Smart Round
-              </h3>
+              <h3 className="font-semibold text-foreground">Smart Round</h3>
               <p className="mt-1 text-sm text-muted-foreground">
                 {smartRoundQuestionIds.length > 0
                   ? `Start new practice with ${smartRoundQuestionIds.length} items`
@@ -328,9 +320,7 @@ export function SmartActions({
       >
         <div className="space-y-4">
           <div className="rounded-lg border border-border bg-muted/50 p-4">
-            <h4 className="font-medium text-foreground">
-              Questions Included:
-            </h4>
+            <h4 className="font-medium text-foreground">Questions Included:</h4>
             <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
               <li className="flex items-center gap-2">
                 <span className="h-2 w-2 rounded-full bg-destructive" />
@@ -360,5 +350,3 @@ export function SmartActions({
     </>
   );
 }
-
-

@@ -16,7 +16,7 @@ describe("ExamReadinessCard", () => {
         readinessScore={72}
         readinessConfidence="high"
         categoryReadiness={mockCategories}
-      />
+      />,
     );
 
     expect(screen.getByText("72%")).toBeInTheDocument();
@@ -31,7 +31,7 @@ describe("ExamReadinessCard", () => {
         readinessConfidence="medium"
         categoryReadiness={mockCategories}
         passingThreshold={75}
-      />
+      />,
     );
 
     expect(screen.getByText("Target: 75% to pass")).toBeInTheDocument();
@@ -44,7 +44,7 @@ describe("ExamReadinessCard", () => {
         readinessScore={70}
         readinessConfidence="high"
         categoryReadiness={mockCategories}
-      />
+      />,
     );
 
     expect(screen.getByText("Frontend")).toBeInTheDocument();
@@ -64,17 +64,21 @@ describe("ExamReadinessCard", () => {
         readinessScore={50}
         readinessConfidence="medium"
         categoryReadiness={manyCategories}
-      />
+      />,
     );
 
     // Initial display is 10
     expect(screen.getByText("Showing 10 of 15")).toBeInTheDocument();
-    
-    const expandBtn = screen.getByRole("button", { name: /Show 5 more categories/i });
+
+    const expandBtn = screen.getByRole("button", {
+      name: /Show 5 more categories/i,
+    });
     fireEvent.click(expandBtn);
 
     expect(screen.getByText("Showing all 15")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Show less/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Show less/i }),
+    ).toBeInTheDocument();
   });
 
   it("renders empty state placeholder when no data provided", () => {
@@ -83,11 +87,15 @@ describe("ExamReadinessCard", () => {
         readinessScore={0}
         readinessConfidence="low"
         categoryReadiness={new Map()}
-      />
+      />,
     );
 
-    expect(screen.getByText("Track your exam preparation progress")).toBeInTheDocument();
-    expect(screen.getByText("Complete some quizzes to see your readiness score")).toBeInTheDocument();
+    expect(
+      screen.getByText("Track your exam preparation progress"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Complete some quizzes to see your readiness score"),
+    ).toBeInTheDocument();
     expect(screen.queryByText("Low Confidence")).not.toBeInTheDocument();
   });
 });

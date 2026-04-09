@@ -77,19 +77,24 @@ if (dsn && !Sentry.getClient()) {
       replayLoaded = true;
 
       // Dynamic import to load replay chunk on demand
-      import("@sentry/nextjs").then((SentryModule) => {
-        const client = SentryModule.getClient();
-        if (client) {
-          client.addIntegration(
-            SentryModule.replayIntegration({
-              maskAllText: true,
-              blockAllMedia: true,
-            }),
+      import("@sentry/nextjs")
+        .then((SentryModule) => {
+          const client = SentryModule.getClient();
+          if (client) {
+            client.addIntegration(
+              SentryModule.replayIntegration({
+                maskAllText: true,
+                blockAllMedia: true,
+              }),
+            );
+          }
+        })
+        .catch((error) => {
+          console.warn(
+            "[Sentry] Failed to lazy-load Replay integration:",
+            error,
           );
-        }
-      }).catch((error) => {
-        console.warn("[Sentry] Failed to lazy-load Replay integration:", error);
-      });
+        });
     };
 
     // Trigger replay load on first meaningful interaction

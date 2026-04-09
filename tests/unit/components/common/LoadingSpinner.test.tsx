@@ -8,7 +8,7 @@ describe("LoadingSpinner", () => {
     render(<LoadingSpinner />);
     const container = screen.getByRole("status");
     expect(container).toBeDefined();
-    
+
     // Check if sr-only text is present
     expect(screen.getByText("Loading...")).toBeDefined();
   });

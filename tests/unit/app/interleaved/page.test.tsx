@@ -6,15 +6,28 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import InterleavedPage from "@/app/interleaved/page";
 
 // Mock dependencies
-const { mockPush, mockAddToast, mockGenerate, mockGetCategories, mockGetCount, mockSaveState, mockUseAuth, mockUseEffectiveUserId } = vi.hoisted(() => ({
+const {
+  mockPush,
+  mockAddToast,
+  mockGenerate,
+  mockGetCategories,
+  mockGetCount,
+  mockSaveState,
+  mockUseAuth,
+  mockUseEffectiveUserId,
+} = vi.hoisted(() => ({
   mockPush: vi.fn(),
   mockAddToast: vi.fn(),
   mockGenerate: vi.fn(),
   mockGetCategories: vi.fn(),
   mockGetCount: vi.fn(),
   mockSaveState: vi.fn(),
-  mockUseAuth: vi.fn((): { user: { id: string } | null } => ({ user: { id: "user-1" } })),
-  mockUseEffectiveUserId: vi.fn((id: string | undefined): string | null => id ?? null),
+  mockUseAuth: vi.fn((): { user: { id: string } | null } => ({
+    user: { id: "user-1" },
+  })),
+  mockUseEffectiveUserId: vi.fn(
+    (id: string | undefined): string | null => id ?? null,
+  ),
 }));
 
 vi.mock("next/navigation", () => ({
@@ -65,13 +78,15 @@ describe("InterleavedPage", () => {
   });
 
   function mockKeepMocksAlive() {
-    mockUseAuth.mockReturnValue({ 
+    mockUseAuth.mockReturnValue({
       user: { id: "user-1" },
       session: null,
       isLoading: false,
       signOut: vi.fn().mockResolvedValue(undefined),
     } as any);
-    mockUseEffectiveUserId.mockImplementation((id: string | undefined) => id ?? null);
+    mockUseEffectiveUserId.mockImplementation(
+      (id: string | undefined) => id ?? null,
+    );
   }
 
   it("renders login prompt when no user is available", () => {
@@ -79,14 +94,16 @@ describe("InterleavedPage", () => {
     mockUseEffectiveUserId.mockReturnValueOnce(null);
 
     render(<InterleavedPage />);
-    expect(screen.getByText(/Please log in to access interleaved practice/i)).toBeDefined();
+    expect(
+      screen.getByText(/Please log in to access interleaved practice/i),
+    ).toBeDefined();
   });
 
   it("loads and displays the page title", async () => {
     render(<InterleavedPage />);
     expect(screen.getByText("Interleaved Practice")).toBeDefined();
     await waitFor(() => {
-       expect(mockGetCategories).toHaveBeenCalled();
+      expect(mockGetCategories).toHaveBeenCalled();
     });
   });
 });

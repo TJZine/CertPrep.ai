@@ -4,7 +4,11 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 
 // Component that throws an error
-const ThrowError = ({ shouldThrow }: { shouldThrow: boolean }): React.ReactElement => {
+const ThrowError = ({
+  shouldThrow,
+}: {
+  shouldThrow: boolean;
+}): React.ReactElement => {
   if (shouldThrow) {
     throw new Error("Test error!");
   }
@@ -21,7 +25,7 @@ describe("ErrorBoundary", () => {
     render(
       <ErrorBoundary>
         <ThrowError shouldThrow={false} />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     );
 
     expect(screen.getByTestId("child")).toBeDefined();
@@ -32,7 +36,7 @@ describe("ErrorBoundary", () => {
     render(
       <ErrorBoundary>
         <ThrowError shouldThrow={true} />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     );
 
     expect(screen.getByText("Something went wrong")).toBeDefined();
@@ -43,9 +47,11 @@ describe("ErrorBoundary", () => {
 
   it("renders custom fallback UI if provided", () => {
     render(
-      <ErrorBoundary fallback={<div data-testid="custom-fallback">Custom Error View</div>}>
+      <ErrorBoundary
+        fallback={<div data-testid="custom-fallback">Custom Error View</div>}
+      >
         <ThrowError shouldThrow={true} />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     );
 
     expect(screen.getByTestId("custom-fallback")).toBeDefined();
@@ -53,4 +59,3 @@ describe("ErrorBoundary", () => {
     expect(screen.queryByText("Something went wrong")).toBeNull();
   });
 });
-

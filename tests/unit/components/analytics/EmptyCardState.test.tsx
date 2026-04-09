@@ -15,7 +15,9 @@ describe("EmptyCardState", () => {
 
     // Title and Description
     expect(screen.getByText("No Data")).toBeInTheDocument();
-    expect(screen.getByText("There is nothing to see here yet.")).toBeInTheDocument();
+    expect(
+      screen.getByText("There is nothing to see here yet."),
+    ).toBeInTheDocument();
 
     // Check if the icon is rendered (it's cloned inside, but testid should remain)
     // There are actually 2 icons rendered: one in the header (if headerIcon is missing), one in the body.
@@ -28,12 +30,12 @@ describe("EmptyCardState", () => {
       <EmptyCardState
         {...defaultProps}
         headerIcon={<svg data-testid="header-icon" />}
-      />
+      />,
     );
 
     // Header icon should be present (1)
     expect(screen.getByTestId("header-icon")).toBeInTheDocument();
-    
+
     // Main icon should be present in the body only (1)
     expect(screen.getAllByTestId("main-icon").length).toBe(1);
   });
@@ -43,15 +45,17 @@ describe("EmptyCardState", () => {
       <EmptyCardState
         {...defaultProps}
         action={<button>Take Action</button>}
-      />
+      />,
     );
 
-    expect(screen.getByRole("button", { name: "Take Action" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Take Action" }),
+    ).toBeInTheDocument();
   });
 
   it("applies a custom className to the Card", () => {
     const { container } = render(
-      <EmptyCardState {...defaultProps} className="custom-empty-state-class" />
+      <EmptyCardState {...defaultProps} className="custom-empty-state-class" />,
     );
     expect(container.firstChild).toHaveClass("custom-empty-state-class");
   });

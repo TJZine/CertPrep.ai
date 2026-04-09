@@ -71,4 +71,3 @@ describe("computeQuizHash", () => {
     expect(changedHash).not.toBe(baseHash);
   });
 });
-

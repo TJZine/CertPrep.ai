@@ -5,22 +5,31 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // 1. Hoist all mock functions
-const { 
-  mockPush, 
-  mockGetDue, 
-  mockGetSession, 
+const {
+  mockPush,
+  mockGetDue,
+  mockGetSession,
   mockClearSession,
   mockUseAuth,
   mockUseEffectiveUserId,
-  mockUseInitializeDatabase
+  mockUseInitializeDatabase,
 } = vi.hoisted(() => ({
   mockPush: vi.fn(),
   mockGetDue: vi.fn(),
   mockGetSession: vi.fn(),
   mockClearSession: vi.fn(),
-  mockUseAuth: vi.fn((): { user: { id: string } | null } => ({ user: { id: "user-1" } })),
-  mockUseEffectiveUserId: vi.fn((id: string | undefined): string | null => id ?? null),
-  mockUseInitializeDatabase: vi.fn((): { isInitialized: boolean; error: Error | null } => ({ isInitialized: true, error: null })),
+  mockUseAuth: vi.fn((): { user: { id: string } | null } => ({
+    user: { id: "user-1" },
+  })),
+  mockUseEffectiveUserId: vi.fn(
+    (id: string | undefined): string | null => id ?? null,
+  ),
+  mockUseInitializeDatabase: vi.fn(
+    (): { isInitialized: boolean; error: Error | null } => ({
+      isInitialized: true,
+      error: null,
+    }),
+  ),
 }));
 
 // 2. Define mocks using hoisted functions
@@ -69,7 +78,9 @@ vi.mock("lucide-react", () => ({
 }));
 
 vi.mock("@/components/flashcard", () => ({
-  FlashcardContainer: ({ quiz }: { quiz: { title: string } }) => <div data-testid="flashcard-container">{quiz.title}</div>,
+  FlashcardContainer: ({ quiz }: { quiz: { title: string } }) => (
+    <div data-testid="flashcard-container">{quiz.title}</div>
+  ),
 }));
 
 vi.mock("@/components/common/LoadingSpinner", () => ({
@@ -83,18 +94,26 @@ describe("FlashcardReviewPage", () => {
     vi.clearAllMocks();
     mockGetSession.mockReturnValue(null);
     mockGetDue.mockResolvedValue([]);
-    mockUseAuth.mockReturnValue({ 
+    mockUseAuth.mockReturnValue({
       user: { id: "user-1" },
       session: null,
       isLoading: false,
       signOut: vi.fn().mockResolvedValue(undefined),
     } as any);
-    mockUseEffectiveUserId.mockImplementation((id: string | undefined) => id ?? null);
-    mockUseInitializeDatabase.mockReturnValue({ isInitialized: true, error: null });
+    mockUseEffectiveUserId.mockImplementation(
+      (id: string | undefined) => id ?? null,
+    );
+    mockUseInitializeDatabase.mockReturnValue({
+      isInitialized: true,
+      error: null,
+    });
   });
 
   it("shows the loading spinner when initializing", () => {
-    mockUseInitializeDatabase.mockReturnValueOnce({ isInitialized: false, error: null });
+    mockUseInitializeDatabase.mockReturnValueOnce({
+      isInitialized: false,
+      error: null,
+    });
 
     render(<FlashcardReviewPage />);
     expect(screen.getByText(/Preparing Flashcard Review/i)).toBeDefined();

@@ -27,12 +27,12 @@ describe("useTimer", () => {
 
   it("starts and pauses correctly", () => {
     const { result } = renderHook(() => useTimer());
-    
+
     act(() => {
       result.current.start();
     });
     expect(result.current.isRunning).toBe(true);
-    
+
     act(() => {
       vi.advanceTimersByTime(1000);
     });
@@ -51,8 +51,13 @@ describe("useTimer", () => {
 
   it("counts down and triggers onComplete", () => {
     const onComplete = vi.fn();
-    const { result } = renderHook(() => 
-      useTimer({ initialSeconds: 2, countDown: true, autoStart: true, onComplete })
+    const { result } = renderHook(() =>
+      useTimer({
+        initialSeconds: 2,
+        countDown: true,
+        autoStart: true,
+        onComplete,
+      }),
     );
 
     expect(result.current.isRunning).toBe(true);
@@ -72,7 +77,7 @@ describe("useTimer", () => {
 
   it("resets to initial or custom value", () => {
     const { result } = renderHook(() => useTimer({ initialSeconds: 10 }));
-    
+
     act(() => {
       result.current.start();
     });

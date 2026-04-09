@@ -1,7 +1,14 @@
 import React from "react";
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/Card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/Card";
 
 describe("Card", () => {
   it("renders content regions", () => {
@@ -22,4 +29,3 @@ describe("Card", () => {
     expect(screen.getByText("Footer")).toBeInTheDocument();
   });
 });
-

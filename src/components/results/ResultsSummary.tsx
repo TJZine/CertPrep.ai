@@ -116,9 +116,7 @@ export function ResultsSummary(props: ResultsSummaryProps): React.ReactElement {
               <p className="text-lg font-semibold text-foreground">
                 {formatTime(timeTakenSeconds)}
               </p>
-              <p className="text-sm text-muted-foreground">
-                Total Time
-              </p>
+              <p className="text-sm text-muted-foreground">Total Time</p>
             </div>
           </div>
 
@@ -133,9 +131,7 @@ export function ResultsSummary(props: ResultsSummaryProps): React.ReactElement {
               <p className="text-lg font-semibold text-foreground">
                 {formatTime(Math.round(averageTimePerQuestion))}
               </p>
-              <p className="text-sm text-muted-foreground">
-                Avg per Question
-              </p>
+              <p className="text-sm text-muted-foreground">Avg per Question</p>
             </div>
           </div>
         </div>
@@ -152,5 +148,3 @@ export function ResultsSummary(props: ResultsSummaryProps): React.ReactElement {
     </Card>
   );
 }
-
-

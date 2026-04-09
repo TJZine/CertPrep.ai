@@ -5,7 +5,17 @@ import { KeyboardShortcutsHelp } from "@/components/common/KeyboardShortcutsHelp
 
 // Mock the Modal component
 vi.mock("@/components/ui/Modal", () => ({
-  Modal: ({ children, isOpen, title, onClose }: { children: React.ReactNode; isOpen: boolean; title: string; onClose: () => void }): React.ReactElement | null => {
+  Modal: ({
+    children,
+    isOpen,
+    title,
+    onClose,
+  }: {
+    children: React.ReactNode;
+    isOpen: boolean;
+    title: string;
+    onClose: () => void;
+  }): React.ReactElement | null => {
     if (!isOpen) return null;
     return (
       <div role="dialog" aria-label={title} data-testid="modal">
@@ -32,7 +42,7 @@ describe("KeyboardShortcutsHelp", () => {
   it("calls onClose when the close button is clicked", () => {
     const mockOnClose = vi.fn();
     render(<KeyboardShortcutsHelp isOpen={true} onClose={mockOnClose} />);
-    
+
     fireEvent.click(screen.getByText("Close"));
     expect(mockOnClose).toHaveBeenCalled();
   });

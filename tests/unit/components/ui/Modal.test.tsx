@@ -37,4 +37,3 @@ describe("Modal", () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 });
-

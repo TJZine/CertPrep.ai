@@ -9,4 +9,3 @@ describe("Skeleton", () => {
     expect(screen.getByTestId("skeleton")).toHaveAttribute("data-skeleton");
   });
 });
-

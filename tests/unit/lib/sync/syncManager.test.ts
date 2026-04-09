@@ -40,7 +40,10 @@ vi.mock("@/lib/sync/shared", async (importOriginal) => {
   return {
     ...actual,
     // Disable caching for tests so each test can provide its own mock client
-    createSupabaseClientGetter: (factory: () => unknown): (() => unknown) => () => factory(),
+    createSupabaseClientGetter:
+      (factory: () => unknown): (() => unknown) =>
+      () =>
+        factory(),
   };
 });
 
@@ -50,7 +53,7 @@ describe("Sync Manager: results", () => {
   beforeEach(async () => {
     await clearDatabase();
     vi.clearAllMocks();
-    
+
     // Stub Globals
     vi.stubGlobal("performance", {
       mark: vi.fn(),
@@ -60,17 +63,28 @@ describe("Sync Manager: results", () => {
     const mockNavigator = {
       onLine: true,
       locks: {
-        request: vi.fn(async (name: string, _options: unknown, callback: (lock: unknown) => Promise<unknown>) => {
-          logger.debug(`[Test] navigator.locks.request called for ${name}`);
-          try {
-            const result = await callback({ name });
-            logger.debug(`[Test] navigator.locks.request callback SUCCESS for ${name}`);
-            return result;
-          } catch (e) {
-            logger.error(`[Test] navigator.locks.request callback ERROR for ${name}:`, e);
-            throw e;
-          }
-        }),
+        request: vi.fn(
+          async (
+            name: string,
+            _options: unknown,
+            callback: (lock: unknown) => Promise<unknown>,
+          ) => {
+            logger.debug(`[Test] navigator.locks.request called for ${name}`);
+            try {
+              const result = await callback({ name });
+              logger.debug(
+                `[Test] navigator.locks.request callback SUCCESS for ${name}`,
+              );
+              return result;
+            } catch (e) {
+              logger.error(
+                `[Test] navigator.locks.request callback ERROR for ${name}:`,
+                e,
+              );
+              throw e;
+            }
+          },
+        ),
       },
     };
     vi.stubGlobal("navigator", mockNavigator);
@@ -95,7 +109,9 @@ describe("Sync Manager: results", () => {
     const result = await syncResults(userId);
     expect(result.incomplete).toBe(true);
     expect(result.error).toBe("Offline");
-    expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining("Browser is offline"));
+    expect(logger.debug).toHaveBeenCalledWith(
+      expect.stringContaining("Browser is offline"),
+    );
   });
 
   it("should skip sync if not authenticated", async () => {
@@ -103,7 +119,7 @@ describe("Sync Manager: results", () => {
       data: { user: null },
       error: { message: "Session expired" } as unknown as Error,
     });
-    
+
     const outcome = await syncResults(userId);
     expect(outcome.status).toBe("skipped");
     expect(outcome.error).toBe("Not authenticated");
@@ -134,9 +150,9 @@ describe("Sync Manager: results", () => {
       expect(mockSupabase.from).toHaveBeenCalledWith("results");
       expect(mockSupabase.upsert).toHaveBeenCalledWith(
         expect.arrayContaining([expect.objectContaining({ id: "res-1" })]),
-        { onConflict: "id" }
+        { onConflict: "id" },
       );
-      
+
       const local = await db.results.get("res-1");
       expect(local?.synced).toBe(1);
       expect(outcome.status).toBe("synced");
@@ -159,7 +175,7 @@ describe("Sync Manager: results", () => {
       await syncResults(userId);
 
       expect(mockSupabase.upsert).not.toHaveBeenCalled();
-      
+
       const local = await db.results.get("res-skipped");
       expect(local?.synced).toBe(0);
     });
@@ -180,8 +196,11 @@ describe("Sync Manager: results", () => {
         deleted_at: null,
       };
 
-      mockSupabase.limit.mockResolvedValue({ data: [remoteRecord], error: null });
-      
+      mockSupabase.limit.mockResolvedValue({
+        data: [remoteRecord],
+        error: null,
+      });
+
       await syncResults(userId);
 
       const local = await db.results.get("remote-res-1");
@@ -211,7 +230,10 @@ describe("Sync Manager: results", () => {
         deleted_at: new Date().toISOString(),
       };
 
-      mockSupabase.limit.mockResolvedValue({ data: [remoteDeletion], error: null });
+      mockSupabase.limit.mockResolvedValue({
+        data: [remoteDeletion],
+        error: null,
+      });
 
       await syncResults(userId);
 
@@ -242,7 +264,7 @@ describe("Sync Manager: results", () => {
         .mockResolvedValueOnce({ data: [], error: null });
 
       await syncResults(userId);
-      
+
       const cursor = await getSyncCursor(userId);
       expect(cursor.timestamp).toBe(updatedAt);
       expect(cursor.lastId).toBe(testUuid);

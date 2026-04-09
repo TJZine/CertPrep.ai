@@ -1,19 +1,26 @@
 import * as React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
-import { DateRangeFilter, DATE_RANGE_VALUES } from "@/components/analytics/DateRangeFilter";
+import {
+  DateRangeFilter,
+  DATE_RANGE_VALUES,
+} from "@/components/analytics/DateRangeFilter";
 
 describe("DateRangeFilter", () => {
   it("renders all date range options", () => {
     const onChange = vi.fn();
     render(<DateRangeFilter value="7d" onChange={onChange} />);
 
-    expect(screen.getByRole("group", { name: /date range filter/i })).toBeInTheDocument();
-    
+    expect(
+      screen.getByRole("group", { name: /date range filter/i }),
+    ).toBeInTheDocument();
+
     expect(screen.getByRole("button", { name: "7 Days" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "30 Days" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "90 Days" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "All Time" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "All Time" }),
+    ).toBeInTheDocument();
   });
 
   it("highlights the currently selected value", () => {
@@ -43,7 +50,11 @@ describe("DateRangeFilter", () => {
   it("applies custom className", () => {
     const onChange = vi.fn();
     const { container } = render(
-      <DateRangeFilter value="7d" onChange={onChange} className="custom-filter-class" />
+      <DateRangeFilter
+        value="7d"
+        onChange={onChange}
+        className="custom-filter-class"
+      />,
     );
     expect(container.firstChild).toHaveClass("custom-filter-class");
   });

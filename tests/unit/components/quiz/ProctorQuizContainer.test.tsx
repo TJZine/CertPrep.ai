@@ -3,11 +3,11 @@ import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { ProctorQuizContainer } from "@/components/quiz/ProctorQuizContainer";
-import { 
-  useQuizSessionStore, 
-  useCurrentQuestion, 
-  useProctorStatus, 
-  useQuestionStatuses 
+import {
+  useQuizSessionStore,
+  useCurrentQuestion,
+  useProctorStatus,
+  useQuestionStatuses,
 } from "@/stores/quizSessionStore";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTimer } from "@/hooks/useTimer";
@@ -62,26 +62,44 @@ vi.mock("@/lib/quiz/quizRemix", () => ({
 
 // Mock child components
 vi.mock("@/components/quiz/QuizLayout", () => ({
-  QuizLayout: ({ children, onExit }: { children: React.ReactNode; onExit?: () => void }): React.ReactElement => (
+  QuizLayout: ({
+    children,
+    onExit,
+  }: {
+    children: React.ReactNode;
+    onExit?: () => void;
+  }): React.ReactElement => (
     <div data-testid="quiz-layout">
-      <button data-testid="exit-button" onClick={onExit}>Exit</button>
+      <button data-testid="exit-button" onClick={onExit}>
+        Exit
+      </button>
       {children}
     </div>
   ),
 }));
 
 vi.mock("@/components/quiz/QuestionDisplay", () => ({
-  QuestionDisplay: (): React.ReactElement => <div data-testid="question-display" />,
+  QuestionDisplay: (): React.ReactElement => (
+    <div data-testid="question-display" />
+  ),
 }));
 
 vi.mock("@/components/quiz/ProctorOptionsList", () => ({
-  ProctorOptionsList: (): React.ReactElement => <div data-testid="options-list" />,
+  ProctorOptionsList: (): React.ReactElement => (
+    <div data-testid="options-list" />
+  ),
 }));
 
 vi.mock("@/components/quiz/ProctorControls", () => ({
-  ProctorControls: ({ onSubmitExam }: { onSubmitExam: () => void }): React.ReactElement => (
+  ProctorControls: ({
+    onSubmitExam,
+  }: {
+    onSubmitExam: () => void;
+  }): React.ReactElement => (
     <div data-testid="proctor-controls">
-      <button data-testid="submit-exam-button" onClick={onSubmitExam}>Submit Exam</button>
+      <button data-testid="submit-exam-button" onClick={onSubmitExam}>
+        Submit Exam
+      </button>
     </div>
   ),
 }));
@@ -92,9 +110,13 @@ vi.mock("@/components/quiz/QuestionNavGrid", () => ({
 }));
 
 vi.mock("@/components/quiz/SubmitExamModal", () => ({
-  SubmitExamModal: ({ isOpen }: { isOpen: boolean }): React.ReactElement | null => 
+  SubmitExamModal: ({
+    isOpen,
+  }: {
+    isOpen: boolean;
+  }): React.ReactElement | null =>
     isOpen ? <div data-testid="submit-modal" /> : null,
-  TimeUpModal: ({ isOpen }: { isOpen: boolean }): React.ReactElement | null => 
+  TimeUpModal: ({ isOpen }: { isOpen: boolean }): React.ReactElement | null =>
     isOpen ? <div data-testid="time-up-modal" /> : null,
 }));
 
@@ -110,7 +132,7 @@ describe("ProctorQuizContainer", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     vi.mocked(useQuizSessionStore).mockReturnValue({
       initializeProctorSession: mockInitializeProctorSession,
       resetSession: mockResetSession,
@@ -131,7 +153,9 @@ describe("ProctorQuizContainer", () => {
       flaggedCount: 0,
       isTimeWarning: false,
     } as any);
-    vi.mocked(useQuestionStatuses).mockReturnValue([{ id: "q1", status: "unanswered" }] as any);
+    vi.mocked(useQuestionStatuses).mockReturnValue([
+      { id: "q1", status: "unanswered" },
+    ] as any);
 
     vi.mocked(useTimer).mockReturnValue({
       seconds: 3600,
@@ -156,21 +180,26 @@ describe("ProctorQuizContainer", () => {
 
   it("calls initializeProctorSession on mount", async () => {
     render(<ProctorQuizContainer quiz={mockQuiz} />);
-    
+
     await waitFor(() => {
       expect(mockInitializeProctorSession).toHaveBeenCalledWith(
         mockQuiz.id,
         mockQuiz.questions,
-        expect.any(Number)
+        expect.any(Number),
       );
     });
   });
 
   it("handles remix mode correctly", async () => {
-    vi.mocked(useSearchParams).mockReturnValue({ get: vi.fn((key) => key === "remix" ? "true" : null) } as any);
+    vi.mocked(useSearchParams).mockReturnValue({
+      get: vi.fn((key) => (key === "remix" ? "true" : null)),
+    } as any);
 
     const remixedQuestions = [{ id: "rq1", question: "Remixed Q1" }];
-    vi.mocked(remixQuiz).mockResolvedValue({ quiz: { questions: remixedQuestions }, keyMappings: {} } as any);
+    vi.mocked(remixQuiz).mockResolvedValue({
+      quiz: { questions: remixedQuestions },
+      keyMappings: {},
+    } as any);
 
     render(<ProctorQuizContainer quiz={mockQuiz} />);
 
@@ -180,7 +209,7 @@ describe("ProctorQuizContainer", () => {
         mockQuiz.id,
         remixedQuestions,
         expect.any(Number),
-        expect.any(Object)
+        expect.any(Object),
       );
     });
   });

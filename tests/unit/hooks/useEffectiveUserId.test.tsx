@@ -27,7 +27,7 @@ describe("useEffectiveUserId", () => {
   it("returns existing guest id from local storage if available", () => {
     vi.mocked(localStorage.getItem).mockReturnValue("existing-guest-id");
     const { result } = renderHook(() => useEffectiveUserId(undefined));
-    
+
     expect(localStorage.getItem).toHaveBeenCalledWith("cp_guest_user_id");
     expect(result.current).toBe("existing-guest-id");
   });
@@ -35,7 +35,7 @@ describe("useEffectiveUserId", () => {
   it("generates and saves a new guest id if none exists", () => {
     vi.mocked(localStorage.getItem).mockReturnValue(null);
     const mockUUID = "new-uuid-1234-5678";
-    
+
     // Mock crypto.randomUUID
     Object.defineProperty(global, "crypto", {
       value: { randomUUID: () => mockUUID },
@@ -43,10 +43,12 @@ describe("useEffectiveUserId", () => {
     });
 
     const { result } = renderHook(() => useEffectiveUserId(undefined));
-    
+
     expect(localStorage.getItem).toHaveBeenCalledWith("cp_guest_user_id");
-    expect(localStorage.setItem).toHaveBeenCalledWith("cp_guest_user_id", mockUUID);
+    expect(localStorage.setItem).toHaveBeenCalledWith(
+      "cp_guest_user_id",
+      mockUUID,
+    );
     expect(result.current).toBe(mockUUID);
   });
 });
-

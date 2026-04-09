@@ -65,9 +65,12 @@ describe("useKeyboardNav", () => {
 
     // Mock target as input
     const input = document.createElement("input");
-    const event = new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true });
+    const event = new KeyboardEvent("keydown", {
+      key: "ArrowRight",
+      bubbles: true,
+    });
     Object.defineProperty(event, "target", { value: input, enumerable: true });
-    
+
     window.dispatchEvent(event);
     expect(onNext).not.toHaveBeenCalled();
   });

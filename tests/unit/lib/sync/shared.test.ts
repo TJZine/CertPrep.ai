@@ -1,8 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
-import { 
-  createSupabaseClientGetter, 
-  toErrorMessage, 
-  toSafeCursorTimestamp 
+import {
+  createSupabaseClientGetter,
+  toErrorMessage,
+  toSafeCursorTimestamp,
 } from "@/lib/sync/shared";
 import { logger } from "@/lib/logger";
 
@@ -65,12 +65,18 @@ describe("src/lib/sync/shared.ts", () => {
         hint: "check logs",
       };
       const result = toErrorMessage(error, { style: "srs" });
-      expect(result).toBe("Server error | code=500 | details=kaboom | hint=check logs");
+      expect(result).toBe(
+        "Server error | code=500 | details=kaboom | hint=check logs",
+      );
     });
 
     it("should handle empty objects with style fallback", () => {
-      expect(toErrorMessage({}, { style: "sync" })).toBe("Unknown error (empty error object)");
-      expect(toErrorMessage({}, { style: "srs" })).toBe("Unknown error (empty object)");
+      expect(toErrorMessage({}, { style: "sync" })).toBe(
+        "Unknown error (empty error object)",
+      );
+      expect(toErrorMessage({}, { style: "srs" })).toBe(
+        "Unknown error (empty object)",
+      );
     });
 
     it("should serialize other objects to JSON", () => {
@@ -90,7 +96,9 @@ describe("src/lib/sync/shared.ts", () => {
 
     it("should return valid candidate as ISO string", () => {
       const candidate = "2024-03-20T10:00:00Z";
-      expect(toSafeCursorTimestamp(candidate, fallback, context)).toBe("2024-03-20T10:00:00.000Z");
+      expect(toSafeCursorTimestamp(candidate, fallback, context)).toBe(
+        "2024-03-20T10:00:00.000Z",
+      );
     });
 
     it("should use fallback if candidate is invalid", () => {
@@ -99,7 +107,7 @@ describe("src/lib/sync/shared.ts", () => {
       expect(result).toBe(fallback);
       expect(logger.warn).toHaveBeenCalledWith(
         "Invalid cursor timestamp encountered, using fallback",
-        expect.objectContaining({ fallback })
+        expect.objectContaining({ fallback }),
       );
     });
 
@@ -110,7 +118,7 @@ describe("src/lib/sync/shared.ts", () => {
       expect(result).toBe("1970-01-01T00:00:00.000Z");
       expect(logger.error).toHaveBeenCalledWith(
         "Invalid cursor timestamp and fallback; defaulting to epoch",
-        expect.anything()
+        expect.anything(),
       );
     });
 
@@ -120,10 +128,16 @@ describe("src/lib/sync/shared.ts", () => {
         invalidFallbackMessage: "Custom error",
       };
       toSafeCursorTimestamp("bad", fallback, context, options);
-      expect(logger.warn).toHaveBeenCalledWith("Custom warn", expect.anything());
+      expect(logger.warn).toHaveBeenCalledWith(
+        "Custom warn",
+        expect.anything(),
+      );
 
       toSafeCursorTimestamp("bad", "bad", context, options);
-      expect(logger.error).toHaveBeenCalledWith("Custom error", expect.anything());
+      expect(logger.error).toHaveBeenCalledWith(
+        "Custom error",
+        expect.anything(),
+      );
     });
   });
 });

@@ -10,4 +10,3 @@ describe("Badge", () => {
     expect(badge.tagName.toLowerCase()).toBe("span");
   });
 });
-

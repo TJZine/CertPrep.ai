@@ -33,4 +33,3 @@ describe("Button", () => {
     expect(onClick).not.toHaveBeenCalled();
   });
 });
-

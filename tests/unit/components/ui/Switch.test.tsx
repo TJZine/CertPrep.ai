@@ -33,4 +33,3 @@ describe("Switch", () => {
     expect(onCheckedChange).not.toHaveBeenCalled();
   });
 });
-

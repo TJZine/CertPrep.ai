@@ -105,9 +105,18 @@ describe("DB: quizzes", () => {
 
   it("should sort quizzes by created_at desc, then title asc (stable sort)", async () => {
     const now = Date.now();
-    const q1 = await createQuiz({ ...mockQuizInput, title: "Newest" }, { userId });
-    const q2 = await createQuiz({ ...mockQuizInput, title: "ZQuiz" }, { userId });
-    const q3 = await createQuiz({ ...mockQuizInput, title: "AQuiz" }, { userId });
+    const q1 = await createQuiz(
+      { ...mockQuizInput, title: "Newest" },
+      { userId },
+    );
+    const q2 = await createQuiz(
+      { ...mockQuizInput, title: "ZQuiz" },
+      { userId },
+    );
+    const q3 = await createQuiz(
+      { ...mockQuizInput, title: "AQuiz" },
+      { userId },
+    );
 
     await db.quizzes.update(q1.id, { created_at: now + 10000 });
     await db.quizzes.update(q2.id, { created_at: now });
@@ -294,18 +303,30 @@ describe("DB: quizzes - Advanced Search & Operations", () => {
 
   describe("Quiz Search", () => {
     it("should search quizzes by title", async () => {
-      await createQuiz({ ...mockQuizInput, title: "Javascript Basics" }, { userId });
-      await createQuiz({ ...mockQuizInput, title: "Node.js Advanced" }, { userId });
-      
+      await createQuiz(
+        { ...mockQuizInput, title: "Javascript Basics" },
+        { userId },
+      );
+      await createQuiz(
+        { ...mockQuizInput, title: "Node.js Advanced" },
+        { userId },
+      );
+
       const results = await searchQuizzes("Node", userId);
       expect(results).toHaveLength(1);
       expect(results[0]!.title).toBe("Node.js Advanced");
     });
 
     it("should search quizzes by tags", async () => {
-      await createQuiz({ ...mockQuizInput, title: "Q1", tags: ["frontend"] }, { userId });
-      await createQuiz({ ...mockQuizInput, title: "Q2", tags: ["backend"] }, { userId });
-      
+      await createQuiz(
+        { ...mockQuizInput, title: "Q1", tags: ["frontend"] },
+        { userId },
+      );
+      await createQuiz(
+        { ...mockQuizInput, title: "Q2", tags: ["backend"] },
+        { userId },
+      );
+
       const results = await searchQuizzes("BACKEND", userId);
       expect(results).toHaveLength(1);
       expect(results[0]!.title).toBe("Q2");
@@ -320,7 +341,7 @@ describe("DB: quizzes - Advanced Search & Operations", () => {
     it("should exclude deleted quizzes from search", async () => {
       const q = await createQuiz(mockQuizInput, { userId });
       await db.quizzes.update(q.id, { deleted_at: Date.now() });
-      
+
       const results = await searchQuizzes("Unit", userId);
       expect(results).toHaveLength(0);
     });
@@ -330,7 +351,7 @@ describe("DB: quizzes - Advanced Search & Operations", () => {
     it("should soft delete a quiz", async () => {
       const q = await createQuiz(mockQuizInput, { userId });
       await deleteQuiz(q.id, userId);
-      
+
       const deleted = await db.quizzes.get(q.id);
       expect(deleted!.deleted_at).not.toBeNull();
     });
@@ -338,7 +359,7 @@ describe("DB: quizzes - Advanced Search & Operations", () => {
     it("should undelete a quiz", async () => {
       const q = await createQuiz(mockQuizInput, { userId });
       await db.quizzes.update(q.id, { deleted_at: Date.now() });
-      
+
       await undeleteQuiz(q.id, userId);
       const restored = await db.quizzes.get(q.id);
       expect(restored!.deleted_at).toBeNull();
@@ -346,7 +367,9 @@ describe("DB: quizzes - Advanced Search & Operations", () => {
 
     it("should throw on unauthorized delete", async () => {
       const q = await createQuiz(mockQuizInput, { userId: "owner" });
-      await expect(deleteQuiz(q.id, "stranger")).rejects.toThrow("Unauthorized quiz delete.");
+      await expect(deleteQuiz(q.id, "stranger")).rejects.toThrow(
+        "Unauthorized quiz delete.",
+      );
     });
   });
 
@@ -354,9 +377,14 @@ describe("DB: quizzes - Advanced Search & Operations", () => {
     it("should update question notes with sanitization", async () => {
       const q = await createQuiz(mockQuizInput, { userId });
       const qId = q.questions[0]!.id;
-      
-      await updateQuestionNotes(q.id, qId, "<script>bad</script>Good note", userId);
-      
+
+      await updateQuestionNotes(
+        q.id,
+        qId,
+        "<script>bad</script>Good note",
+        userId,
+      );
+
       const updated = await getQuizById(q.id, userId);
       expect(updated!.questions[0]!.user_notes).toBe("Good note");
     });
@@ -366,7 +394,9 @@ describe("DB: quizzes - Advanced Search & Operations", () => {
     it("should generate deterministic UUID v5 for non-UUID question IDs", async () => {
       const input: QuizImportInput = {
         ...mockQuizInput,
-        questions: [{ ...mockQuizInput.questions[0]!, id: "legacy-1" }] as unknown as Question[],
+        questions: [
+          { ...mockQuizInput.questions[0]!, id: "legacy-1" },
+        ] as unknown as Question[],
       };
       const quiz = await createQuiz(input, { userId });
       expect(uuidValidate(quiz.questions[0]!.id)).toBe(true);
@@ -376,18 +406,22 @@ describe("DB: quizzes - Advanced Search & Operations", () => {
     it("should backfill hashes from existing questions on update", async () => {
       const q = await createQuiz(mockQuizInput, { userId });
       const updates = {
-        questions: [{ 
-          id: q.questions[0]!.id,
-          category: "Updated",
-          question: "New?",
-          options: { a: "b", b: "c" },
-          explanation: "...",
-        }] as unknown as Question[],
+        questions: [
+          {
+            id: q.questions[0]!.id,
+            category: "Updated",
+            question: "New?",
+            options: { a: "b", b: "c" },
+            explanation: "...",
+          },
+        ] as unknown as Question[],
       };
-      
+
       await updateQuiz(q.id, userId, updates);
       const updated = await getQuizById(q.id, userId);
-      expect(updated!.questions[0]!.correct_answer_hash).toBe(q.questions[0]!.correct_answer_hash);
+      expect(updated!.questions[0]!.correct_answer_hash).toBe(
+        q.questions[0]!.correct_answer_hash,
+      );
     });
 
     it("should throw on invalid question schema during sanitization", async () => {

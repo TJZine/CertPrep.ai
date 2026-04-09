@@ -204,9 +204,12 @@ export class CertPrepDatabase extends Dexie {
           "Property Basics": "Property and Casualty Insurance Basics",
           "Liability Basics": "Property and Casualty Insurance Basics",
           "Contract Law": "Property and Casualty Insurance Basics",
-          "Property & Casualty Basics": "Property and Casualty Insurance Basics",
-          "Property & Liability Basics": "Property and Casualty Insurance Basics",
-          "Property and Casualty Basics": "Property and Casualty Insurance Basics",
+          "Property & Casualty Basics":
+            "Property and Casualty Insurance Basics",
+          "Property & Liability Basics":
+            "Property and Casualty Insurance Basics",
+          "Property and Casualty Basics":
+            "Property and Casualty Insurance Basics",
           "Insurance Contracts": "Property and Casualty Insurance Basics",
           "Loss Settlement": "Property and Casualty Insurance Basics",
           "Liability Insurance": "Property and Casualty Insurance Basics",
@@ -220,7 +223,7 @@ export class CertPrepDatabase extends Dexie {
           "General Insurance Basics": "General Insurance",
           "Types of Insurers": "General Insurance",
           "Risk Management": "General Insurance",
-          "Underwriting": "General Insurance",
+          Underwriting: "General Insurance",
           "General Insurance Concepts": "General Insurance",
           // Other
           "Flood Insurance": "Other Coverages and Options",
@@ -298,7 +301,10 @@ export class CertPrepDatabase extends Dexie {
         hashCache: "&answer, created_at",
       })
       .upgrade(async (tx) => {
-        const table = tx.table<{ answer: string; hash: string; created_at?: number }, string>("hashCache");
+        const table = tx.table<
+          { answer: string; hash: string; created_at?: number },
+          string
+        >("hashCache");
         await table.toCollection().modify((entry) => {
           if (entry.created_at === undefined) {
             entry.created_at = Date.now();
@@ -322,11 +328,11 @@ export const db = new CertPrepDatabase();
 
 /**
  * Expose db on window for E2E testing.
- * 
+ *
  * SECURITY: Both conditions must be true:
  * 1. NODE_ENV !== 'production' (prevents any prod build exposure)
  * 2. NEXT_PUBLIC_IS_E2E === 'true' (explicit opt-in for E2E builds)
- * 
+ *
  * This ensures that even if NEXT_PUBLIC_IS_E2E is accidentally set in a prod
  * environment, the db is NOT exposed because NODE_ENV will be 'production'.
  */

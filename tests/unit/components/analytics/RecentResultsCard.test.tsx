@@ -50,11 +50,15 @@ describe("RecentResultsCard", () => {
   it("renders empty state when no results provided", () => {
     render(<RecentResultsCard results={[]} />);
     expect(screen.getByText("Recent Results")).toBeInTheDocument();
-    expect(screen.getByText("Complete some quizzes to see your recent results.")).toBeInTheDocument();
+    expect(
+      screen.getByText("Complete some quizzes to see your recent results."),
+    ).toBeInTheDocument();
   });
 
   it("renders results with correct titles from map", () => {
-    render(<RecentResultsCard results={mockResults} quizTitles={mockQuizTitles} />);
+    render(
+      <RecentResultsCard results={mockResults} quizTitles={mockQuizTitles} />,
+    );
     expect(screen.getByText("React Fundamentals")).toBeInTheDocument();
     expect(screen.getByText("Advanced TypeScript")).toBeInTheDocument();
   });
@@ -65,7 +69,7 @@ describe("RecentResultsCard", () => {
         ...mockResult1,
         id: "res-3",
         session_type: "srs_review",
-      }
+      },
     ];
     render(<RecentResultsCard results={sessionResults} />);
     expect(screen.getByText("SRS Review")).toBeInTheDocument();
@@ -84,12 +88,19 @@ describe("RecentResultsCard", () => {
         created_at: 100,
         updated_at: 100,
         category: "", // Missing
-      }
+      },
     ];
-    render(<RecentResultsCard results={mockResults} quizzes={quizzesMissingCategory} />);
-    
+    render(
+      <RecentResultsCard
+        results={mockResults}
+        quizzes={quizzesMissingCategory}
+      />,
+    );
+
     // The alert triangle has aria-hidden="true" but its wrapper button has tooltip
-    const tooltipTarget = screen.getByRole("button", { name: /Missing Category/i });
+    const tooltipTarget = screen.getByRole("button", {
+      name: /Missing Category/i,
+    });
     expect(tooltipTarget).toBeInTheDocument();
     expect(screen.getByText("Missing Category")).toBeInTheDocument();
   });
@@ -103,23 +114,29 @@ describe("RecentResultsCard", () => {
     }));
 
     render(<RecentResultsCard results={manyResults} initialLimit={2} />);
-    
+
     // Should show 'View All 6 Results'
-    const viewAllBtn = screen.getByRole("button", { name: /View All 6 Results/i });
+    const viewAllBtn = screen.getByRole("button", {
+      name: /View All 6 Results/i,
+    });
     expect(viewAllBtn).toBeInTheDocument();
 
     // Clicking reveals more
     fireEvent.click(viewAllBtn);
-    expect(screen.queryByRole("button", { name: /View All 6 Results/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /View All 6 Results/i }),
+    ).not.toBeInTheDocument();
   });
 
   it("navigates to result details on click", () => {
-    render(<RecentResultsCard results={[mockResult1]} quizTitles={mockQuizTitles} />);
-    
+    render(
+      <RecentResultsCard results={[mockResult1]} quizTitles={mockQuizTitles} />,
+    );
+
     // Scorecard is clickable (has onClick passed down)
     const card = screen.getByText("React Fundamentals");
     fireEvent.click(card); // Click on title or card
-    
+
     expect(mockPush).toHaveBeenCalledWith("/results/res-1");
   });
 });

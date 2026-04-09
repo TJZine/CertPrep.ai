@@ -90,7 +90,7 @@ describe("TopicHeatmap", () => {
       time_taken_seconds: 120,
       answers: { "q-1": "A" },
       flagged_questions: [],
-      category_breakdown: { "Frontend": 100 },
+      category_breakdown: { Frontend: 100 },
     },
     {
       id: "res-2",
@@ -102,7 +102,7 @@ describe("TopicHeatmap", () => {
       time_taken_seconds: 120,
       answers: { "q-2": "B" },
       flagged_questions: [],
-      category_breakdown: { "Backend": 100 },
+      category_breakdown: { Backend: 100 },
     },
   ];
 
@@ -110,14 +110,18 @@ describe("TopicHeatmap", () => {
     render(<TopicHeatmap results={[]} quizzes={[]} />);
     await waitFor(() => {
       expect(screen.getByText("Topic Mastery Over Time")).toBeInTheDocument();
-      expect(screen.getByText(/Complete some quizzes to see your/)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Complete some quizzes to see your/),
+      ).toBeInTheDocument();
     });
   });
 
   it("renders the heatmap with categories", async () => {
     render(<TopicHeatmap results={mockResults} quizzes={mockQuizzes} />);
-    await waitForElementToBeRemoved(() => screen.queryByTestId("heatmap-skeleton"));
-    
+    await waitForElementToBeRemoved(() =>
+      screen.queryByTestId("heatmap-skeleton"),
+    );
+
     // The component calculates data asynchronously in useEffect
     await waitFor(() => {
       expect(screen.getByText("Topic Mastery Over Time")).toBeInTheDocument();
@@ -128,8 +132,10 @@ describe("TopicHeatmap", () => {
 
   it("handles sorting menu trigger", async () => {
     render(<TopicHeatmap results={mockResults} quizzes={mockQuizzes} />);
-    await waitForElementToBeRemoved(() => screen.queryByTestId("heatmap-skeleton"));
-    
+    await waitForElementToBeRemoved(() =>
+      screen.queryByTestId("heatmap-skeleton"),
+    );
+
     // Wait for load
     await waitFor(() => {
       expect(screen.getByText("Frontend")).toBeInTheDocument();
@@ -143,18 +149,24 @@ describe("TopicHeatmap", () => {
 
   it("applies custom className", () => {
     const { container } = render(
-      <TopicHeatmap results={mockResults} quizzes={mockQuizzes} className="custom-heatmap-class" />
+      <TopicHeatmap
+        results={mockResults}
+        quizzes={mockQuizzes}
+        className="custom-heatmap-class"
+      />,
     );
     expect(container.firstChild).toHaveClass("custom-heatmap-class");
   });
 
   it("sorts by Best First", async () => {
     render(<TopicHeatmap results={mockResults} quizzes={mockQuizzes} />);
-    await waitForElementToBeRemoved(() => screen.queryByTestId("heatmap-skeleton"));
-    
+    await waitForElementToBeRemoved(() =>
+      screen.queryByTestId("heatmap-skeleton"),
+    );
+
     const sortBtn = screen.getByRole("button", { name: /Change sort order/i });
     fireEvent.click(sortBtn);
-    
+
     const bestOption = screen.getByRole("option", { name: /Strongest First/i });
     fireEvent.click(bestOption);
 
@@ -167,12 +179,16 @@ describe("TopicHeatmap", () => {
 
   it("groups by quiz category when in By Quiz Category mode", async () => {
     render(<TopicHeatmap results={mockResults} quizzes={mockQuizzes} />);
-    await waitForElementToBeRemoved(() => screen.queryByTestId("heatmap-skeleton"));
-    
+    await waitForElementToBeRemoved(() =>
+      screen.queryByTestId("heatmap-skeleton"),
+    );
+
     const sortBtn = screen.getByRole("button", { name: /Change sort order/i });
     fireEvent.click(sortBtn);
-    
-    const groupOption = screen.getByRole("option", { name: /By Quiz Category/i });
+
+    const groupOption = screen.getByRole("option", {
+      name: /By Quiz Category/i,
+    });
     fireEvent.click(groupOption);
 
     await waitFor(() => {
@@ -184,17 +200,19 @@ describe("TopicHeatmap", () => {
 
   it("toggles group collapse", async () => {
     render(<TopicHeatmap results={mockResults} quizzes={mockQuizzes} />);
-    await waitForElementToBeRemoved(() => screen.queryByTestId("heatmap-skeleton"));
-    
+    await waitForElementToBeRemoved(() =>
+      screen.queryByTestId("heatmap-skeleton"),
+    );
+
     const sortBtn = screen.getByRole("button", { name: /Change sort order/i });
     fireEvent.click(sortBtn);
     fireEvent.click(screen.getByRole("option", { name: /By Quiz Category/i }));
 
     await waitFor(() => screen.getByText("Development"));
-    
+
     const groupToggle = screen.getByRole("button", { name: /Development/i });
     expect(groupToggle).toHaveAttribute("aria-expanded", "true");
-    
+
     fireEvent.click(groupToggle);
     expect(groupToggle).toHaveAttribute("aria-expanded", "false");
   });
@@ -207,11 +225,19 @@ describe("TopicHeatmap", () => {
       flaggedCount: 0,
     });
 
-    render(<TopicHeatmap results={mockResults} quizzes={mockQuizzes} userId="user-1" />);
-    await waitForElementToBeRemoved(() => screen.queryByTestId("heatmap-skeleton"));
-    
+    render(
+      <TopicHeatmap
+        results={mockResults}
+        quizzes={mockQuizzes}
+        userId="user-1"
+      />,
+    );
+    await waitForElementToBeRemoved(() =>
+      screen.queryByTestId("heatmap-skeleton"),
+    );
+
     await waitFor(() => screen.getByText("Frontend"));
-    
+
     const studyBtn = screen.getByRole("button", { name: /Study Frontend/i });
     fireEvent.click(studyBtn);
 

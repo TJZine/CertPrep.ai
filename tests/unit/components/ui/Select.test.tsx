@@ -27,4 +27,3 @@ describe("Select", () => {
     expect(onChange).toHaveBeenCalledWith("b");
   });
 });
-

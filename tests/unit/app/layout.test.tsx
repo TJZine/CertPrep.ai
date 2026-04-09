@@ -26,7 +26,9 @@ vi.mock("@/components/layout/Footer", () => ({
 }));
 
 vi.mock("@/components/layout/PageTransition", () => ({
-  PageTransition: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  PageTransition: ({ children }: { children: React.ReactNode }) => (
+    <>{children}</>
+  ),
 }));
 
 vi.mock("@/components/providers/AppProviders", () => ({
@@ -63,7 +65,7 @@ describe("RootLayout", () => {
     });
 
     render(Layout);
-    
+
     expect(screen.getByTestId("header")).toBeDefined();
     expect(screen.getByTestId("footer")).toBeDefined();
     expect(screen.getByTestId("app-providers")).toBeDefined();

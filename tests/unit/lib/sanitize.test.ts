@@ -21,4 +21,3 @@ describe("sanitizeHTML", () => {
     expect(sanitized).toContain("</code>");
   });
 });
-

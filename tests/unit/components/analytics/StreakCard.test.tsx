@@ -8,7 +8,7 @@ import { formatDateKey } from "@/lib/date";
 vi.mock("@/lib/date", () => ({
   formatDateKey: vi.fn((date: Date) => {
     const d = new Date(date);
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   }),
 }));
 
@@ -27,7 +27,7 @@ describe("StreakCard", () => {
         consistencyScore={85}
         last7DaysActivity={mockActivity}
         dailyStudyTime={mockStudyTime}
-      />
+      />,
     );
 
     expect(screen.getByText("5 days")).toBeInTheDocument();
@@ -43,7 +43,7 @@ describe("StreakCard", () => {
         longestStreak={1}
         consistencyScore={10}
         last7DaysActivity={mockActivity}
-      />
+      />,
     );
 
     expect(screen.getByText("Today")).toBeInTheDocument();
@@ -65,18 +65,18 @@ describe("StreakCard", () => {
         consistencyScore={10}
         last7DaysActivity={[true, true, false, false, false, false, false]}
         dailyStudyTime={variedStudyTime}
-      />
+      />,
     );
 
     const bars = screen.getAllByRole("img");
     // Today (index 0 in data loop which is last7DaysData[6] = daysAgo 0)
     // Actually the loop is for (let i = 6; i >= 0; i--) { ... data.push({daysAgo: i}) }
     // So daysAgo 0 is the LAST element in the bars list if rendered linearly.
-    
+
     // Check if max minutes (100) has full intensity class (bg-success)
     const todayBar = bars[6];
     expect(todayBar).toHaveClass("bg-success");
-    
+
     // Check if low minutes (20) has low intensity class (bg-success/30)
     const yesterdayBar = bars[5];
     expect(yesterdayBar).toHaveClass("bg-success/30");
@@ -89,10 +89,14 @@ describe("StreakCard", () => {
         longestStreak={0}
         consistencyScore={0}
         last7DaysActivity={[false, false, false, false, false, false, false]}
-      />
+      />,
     );
 
-    expect(screen.getByText(/Complete a quiz today to start your streak!/i)).toBeInTheDocument();
-    expect(screen.getByText("Track your daily study progress")).toBeInTheDocument();
+    expect(
+      screen.getByText(/Complete a quiz today to start your streak!/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Track your daily study progress"),
+    ).toBeInTheDocument();
   });
 });

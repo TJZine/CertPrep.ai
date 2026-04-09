@@ -32,10 +32,13 @@ describe("hashCache", () => {
 
   describe("getCachedHash", () => {
     it("returns cached hash if available", async () => {
-      (db.hashCache.get as any).mockResolvedValue({ answer: "test", hash: "cached-hash" });
-      
+      (db.hashCache.get as any).mockResolvedValue({
+        answer: "test",
+        hash: "cached-hash",
+      });
+
       const result = await getCachedHash("test");
-      
+
       expect(result).toBe("cached-hash");
       expect(hashAnswer).not.toHaveBeenCalled();
     });
@@ -43,22 +46,24 @@ describe("hashCache", () => {
     it("computes, returns and caches hash if not available", async () => {
       (db.hashCache.get as any).mockResolvedValue(null);
       (db.hashCache.put as any).mockResolvedValue("test");
-      
+
       const result = await getCachedHash("new-answer");
-      
+
       expect(result).toBe("hash-new-answer");
       expect(hashAnswer).toHaveBeenCalledWith("new-answer");
-      expect(db.hashCache.put).toHaveBeenCalledWith(expect.objectContaining({
-        answer: "new-answer",
-        hash: "hash-new-answer"
-      }));
+      expect(db.hashCache.put).toHaveBeenCalledWith(
+        expect.objectContaining({
+          answer: "new-answer",
+          hash: "hash-new-answer",
+        }),
+      );
     });
 
     it("falls back to computation on database error", async () => {
       (db.hashCache.get as any).mockRejectedValue(new Error("DB Error"));
-      
+
       const result = await getCachedHash("error-case");
-      
+
       expect(result).toBe("hash-error-case");
       expect(hashAnswer).toHaveBeenCalledWith("error-case");
     });
@@ -73,12 +78,14 @@ describe("hashCache", () => {
       (db.hashCache.bulkPut as any).mockResolvedValue(["uncached"]);
 
       const results = await getCachedHashBatch(["cached", "uncached"]);
-      
+
       expect(results.get("cached")).toBe("hash-cached");
       expect(results.get("uncached")).toBe("hash-uncached");
-      expect(db.hashCache.bulkPut).toHaveBeenCalledWith(expect.arrayContaining([
-        expect.objectContaining({ answer: "uncached" })
-      ]));
+      expect(db.hashCache.bulkPut).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({ answer: "uncached" }),
+        ]),
+      );
     });
 
     it("triggers eviction if cache exceeds limit", async () => {
@@ -90,17 +97,19 @@ describe("hashCache", () => {
       await getCachedHashBatch(["test"]);
 
       // Wait for fire-and-forget eviction
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       expect(db.hashCache.count).toHaveBeenCalled();
       expect(db.hashCache.bulkDelete).toHaveBeenCalledWith(["key1", "key2"]);
     });
 
     it("falls back to full computation on database error", async () => {
-      (db.hashCache.bulkGet as any).mockRejectedValue(new Error("Bulk DB Error"));
-      
+      (db.hashCache.bulkGet as any).mockRejectedValue(
+        new Error("Bulk DB Error"),
+      );
+
       const results = await getCachedHashBatch(["a", "b"]);
-      
+
       expect(results.get("a")).toBe("hash-a");
       expect(results.get("b")).toBe("hash-b");
     });
