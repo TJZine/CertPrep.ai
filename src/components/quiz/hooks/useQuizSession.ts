@@ -117,9 +117,12 @@ export function useQuizSession({
     };
   }, [quiz, initializeSession, startTimer, resetSession, searchParams]);
 
+  const totalQuestions = questionQueue.length;
   const progress = {
-    current: currentIndex + 1,
-    total: questionQueue.length,
+    current: isComplete
+      ? totalQuestions
+      : Math.min(currentIndex + (hasSubmitted ? 1 : 0), totalQuestions),
+    total: totalQuestions,
   };
 
   const { resolvedAnswers, isResolving } = useCorrectAnswer(

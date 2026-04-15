@@ -157,4 +157,72 @@ describe("useQuizSession", () => {
     expect(result.current.progress.total).toBe(10);
     expect(result.current.isCurrentAnswerCorrect).toBe(true);
   });
+
+  it("does not advance progress until the current question is submitted and reaches total on completion", async () => {
+    let storeState = {
+      initializeSession: mockInitializeSession,
+      selectAnswer: vi.fn(),
+      submitAnswer: vi.fn(),
+      toggleExplanation: vi.fn(),
+      toggleFlag: vi.fn(),
+      markAgain: vi.fn(),
+      markHard: vi.fn(),
+      markGood: vi.fn(),
+      resetSession: mockResetSession,
+      showExplanation: false,
+      flaggedQuestions: new Set(),
+      isComplete: false,
+      currentIndex: 5,
+      questionQueue: new Array(10).fill({ id: "q" }),
+      questions: new Array(10).fill({ id: "q" }),
+      hasSubmitted: false,
+      selectedAnswer: "a" as string | null,
+      answers: new Map(),
+    };
+
+    (
+      useQuizSessionStore as unknown as ReturnType<typeof vi.fn>
+    ).mockImplementation(() => storeState);
+
+    const { result, rerender } = renderHook(() =>
+      useQuizSession({
+        quiz: mockQuiz,
+        isSRSReview: false,
+        effectiveUserId: "user-1",
+      }),
+    );
+
+    await vi.waitFor(() => {
+      expect(result.current.isInitializing).toBe(false);
+    });
+
+    expect(result.current.progress.current).toBe(5);
+    expect(result.current.progress.total).toBe(10);
+
+    storeState = {
+      initializeSession: mockInitializeSession,
+      selectAnswer: vi.fn(),
+      submitAnswer: vi.fn(),
+      toggleExplanation: vi.fn(),
+      toggleFlag: vi.fn(),
+      markAgain: vi.fn(),
+      markHard: vi.fn(),
+      markGood: vi.fn(),
+      resetSession: mockResetSession,
+      showExplanation: false,
+      flaggedQuestions: new Set(),
+      isComplete: true,
+      currentIndex: 9,
+      questionQueue: new Array(10).fill({ id: "q" }),
+      questions: new Array(10).fill({ id: "q" }),
+      hasSubmitted: false,
+      selectedAnswer: null as string | null,
+      answers: new Map(),
+    };
+
+    rerender();
+
+    expect(result.current.progress.current).toBe(10);
+    expect(result.current.progress.total).toBe(10);
+  });
 });
