@@ -71,7 +71,8 @@ tests/e2e/.auth/
 e2e-stability.log
 backup_*.json
 docs/GPT_ACTIONS_ROADMAP.md
-.worktrees/
+# Repo-local git worktrees live only at the repository root.
+/.worktrees/
 
 # Tool Metadata
 .desloppify/
