@@ -205,6 +205,20 @@ export function BuilderControls({ state, onChange }: BuilderControlsProps): Reac
                             />
                         </div>
                         <div className="space-y-1.5">
+                            <label htmlFor="builder-match-question-count" className="text-sm font-medium">Questions</label>
+                            <input
+                                id="builder-match-question-count"
+                                type="number"
+                                value={state.questionCount}
+                                onChange={(e) => {
+                                    const val = parseInt(e.target.value);
+                                    const safeVal = Number.isNaN(val) ? 10 : Math.min(Math.max(val, 1), 50);
+                                    onChange({ questionCount: safeVal });
+                                }}
+                                className="w-full px-3 py-2 rounded-lg border bg-card text-sm focus:ring-1 focus:ring-primary outline-none"
+                            />
+                        </div>
+                        <div className="space-y-1.5">
                             <label htmlFor="builder-example-questions" className="text-sm font-medium">Paste Example Questions & Answers</label>
                             <textarea
                                 id="builder-example-questions"

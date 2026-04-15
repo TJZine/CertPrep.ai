@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import dynamic from "next/dynamic";
+import { useSearchParams } from "next/navigation";
 import { useQuizzes, useInitializeDatabase } from "@/hooks/useDatabase";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { deleteQuiz } from "@/db/quizzes";
@@ -55,6 +56,7 @@ const ReviewModeModal = dynamic(
  * since this component only runs in the browser.
  */
 export default function DashboardClient(): React.ReactElement {
+    const searchParams = useSearchParams();
     const { user, isLoading: authLoading } = useAuth();
     const effectiveUserId = useEffectiveUserId(user?.id);
     const { isInitialized, error: dbError } = useInitializeDatabase();
@@ -73,6 +75,7 @@ export default function DashboardClient(): React.ReactElement {
     } = useDashboardStats(effectiveUserId ?? undefined);
 
     const [isImportModalOpen, setIsImportModalOpen] = React.useState(false);
+    const handledImportQueryRef = React.useRef(false);
     const [modeSelectQuiz, setModeSelectQuiz] = React.useState<Quiz | null>(null);
     const [deleteContext, setDeleteContext] = React.useState<{
         quiz: Quiz;
@@ -89,6 +92,19 @@ export default function DashboardClient(): React.ReactElement {
             isMounted.current = false;
         };
     }, []);
+
+    React.useEffect(() => {
+        const shouldOpenImportModal = searchParams?.get("import") === "1";
+
+        if (shouldOpenImportModal && !handledImportQueryRef.current) {
+            setIsImportModalOpen(true);
+            handledImportQueryRef.current = true;
+        }
+
+        if (!shouldOpenImportModal) {
+            handledImportQueryRef.current = false;
+        }
+    }, [searchParams]);
 
     // Sort/filter state
     const [sortBy, setSortBy] = React.useState<DashboardSortOption>(() => {

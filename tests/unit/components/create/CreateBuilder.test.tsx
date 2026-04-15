@@ -7,7 +7,7 @@ describe("CreateBuilder", () => {
         render(<CreateBuilder />);
 
         fireEvent.click(screen.getByRole("button", { name: /import json/i }));
-        expect(screen.getByRole("link", { name: /open dashboard import/i })).toBeInTheDocument();
+        expect(screen.getByRole("link", { name: /open dashboard import/i })).toHaveAttribute("href", "/?import=1");
     });
 
     it("includes custom categories in the generated prompt", () => {
@@ -20,5 +20,16 @@ describe("CreateBuilder", () => {
 
         expect(screen.getByText(/- Domain A/)).toBeInTheDocument();
         expect(screen.getByText(/- Domain B/)).toBeInTheDocument();
+    });
+
+    it("lets match style update the generated question count without relying on hidden stale state", () => {
+        render(<CreateBuilder />);
+
+        fireEvent.click(screen.getByRole("radio", { name: /match style/i }));
+
+        const questionCountInput = screen.getByRole("spinbutton", { name: /^questions$/i });
+        fireEvent.change(questionCountInput, { target: { value: "25" } });
+
+        expect(screen.getByText(/Create 25 NEW questions/i)).toBeInTheDocument();
     });
 });

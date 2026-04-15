@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
     useDashboardStats: vi.fn(),
     useToast: vi.fn(),
     getDueCountsByBox: vi.fn(),
+    useSearchParams: vi.fn(),
 }));
 
 // Mock Hooks
@@ -33,6 +34,10 @@ vi.mock("@/hooks/useDashboardStats", () => ({
 
 vi.mock("@/components/ui/Toast", () => ({
     useToast: mocks.useToast,
+}));
+
+vi.mock("next/navigation", () => ({
+    useSearchParams: mocks.useSearchParams,
 }));
 
 // Note: deleteQuiz mock removed - add to mocks object when delete flow tests are added
@@ -82,6 +87,7 @@ describe("DashboardClient", () => {
         });
         mocks.useToast.mockReturnValue({ addToast: vi.fn() });
         mocks.getDueCountsByBox.mockResolvedValue({ 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 });
+        mocks.useSearchParams.mockReturnValue(new URLSearchParams());
     });
 
     it("renders dashboard header after initialization", async () => {
@@ -107,6 +113,16 @@ describe("DashboardClient", () => {
 
         const importBtn = screen.getByText("Import Quiz");
         fireEvent.click(importBtn);
+
+        await waitFor(() => {
+            expect(screen.getByTestId("import-modal")).toBeInTheDocument();
+        });
+    });
+
+    it("opens ImportModal automatically when the import query param is present", async () => {
+        mocks.useSearchParams.mockReturnValue(new URLSearchParams("import=1"));
+
+        render(<DashboardClient />);
 
         await waitFor(() => {
             expect(screen.getByTestId("import-modal")).toBeInTheDocument();
