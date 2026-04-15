@@ -90,10 +90,7 @@ if (dsn && !Sentry.getClient()) {
           }
         })
         .catch((error) => {
-          console.warn(
-            "[Sentry] Failed to lazy-load Replay integration:",
-            error,
-          );
+          void error;
         });
     };
 
