@@ -13,50 +13,17 @@ import { ensureSRSQuizExists } from "@/db/quizzes";
 import { createSRSReviewResult, createTopicStudyResult, createInterleavedResult } from "@/db/results";
 import { calculatePercentage } from "@/lib/utils/math";
 import { buildAnswersRecord } from "@/lib/quiz/quizRemix";
-import { db } from "@/db";
-import { logger } from "@/lib/logger";
 
 import type { Question, QuizSessionConfig } from "@/types/quiz";
 
-/**
- * Build a source map from question IDs to their source quiz IDs.
- * Used for aggregated sessions (SRS Review, Topic Study) to track question origins.
- */
-async function buildSourceMapFromUserQuizzes(
-  userId: string,
-  questionIds: string[],
-): Promise<Record<string, string>> {
-  try {
-    const allQuizzes = await db.quizzes
-      .where("user_id")
-      .equals(userId)
-      .filter((q) => !q.deleted_at)
-      .toArray();
-
-    // Warn if quiz count is unexpectedly high (potential perf issue)
-    if (allQuizzes.length > 500) {
-      logger.warn(`High quiz count (${allQuizzes.length}) for user ${userId}`);
-    }
-
-    const questionToQuizMap = new Map<string, string>();
-    for (const q of allQuizzes) {
-      for (const question of q.questions) {
-        if (!questionToQuizMap.has(question.id)) {
-          questionToQuizMap.set(question.id, q.id);
-        }
-      }
-    }
-
-    const sourceMap: Record<string, string> = {};
-    for (const qId of questionIds) {
-      const quizId = questionToQuizMap.get(qId);
-      if (quizId) sourceMap[qId] = quizId;
-    }
-    return sourceMap;
-  } catch (error) {
-    logger.error("Failed to build source map", { userId, error });
-    return {}; // Fail gracefully - sourceMap is optional for display
+function mapSourceMapToObject(
+  sourceMap: Map<string, string> | null | undefined,
+): Record<string, string> {
+  if (!sourceMap) {
+    return {};
   }
+
+  return Object.fromEntries(sourceMap);
 }
 
 interface UseQuizPersistenceProps {
@@ -141,9 +108,7 @@ export function useQuizPersistence({
             ]),
           );
 
-          // Build source map by querying all user quizzes and mapping question IDs to source quiz IDs
-          const sourceMap = await buildSourceMapFromUserQuizzes(effectiveUserId, actualQuestionIds);
-
+          // Reuse the source map captured when the aggregated session was hydrated.
           const result = await createSRSReviewResult({
             userId: effectiveUserId,
             srsQuizId: srsQuiz.id,
@@ -153,7 +118,7 @@ export function useQuizPersistence({
             questionIds: actualQuestionIds,
             score,
             categoryBreakdown,
-            sourceMap,
+            sourceMap: mapSourceMapToObject(configSourceMap),
           });
 
           clearSRSReviewState();
@@ -207,9 +172,7 @@ export function useQuizPersistence({
             ]),
           );
 
-          // Build source map by querying all user quizzes and mapping question IDs to source quiz IDs
-          const sourceMap = await buildSourceMapFromUserQuizzes(effectiveUserId, actualQuestionIds);
-
+          // Reuse the source map captured when the aggregated session was hydrated.
           const result = await createTopicStudyResult({
             userId: effectiveUserId,
             srsQuizId: srsQuiz.id,
@@ -219,7 +182,7 @@ export function useQuizPersistence({
             questionIds: actualQuestionIds,
             score,
             categoryBreakdown,
-            sourceMap,
+            sourceMap: mapSourceMapToObject(configSourceMap),
           });
 
           clearTopicStudyState();
@@ -277,11 +240,6 @@ export function useQuizPersistence({
           );
 
           // Convert sourceMap to plain object
-          const sourceMapObject: Record<string, string> = {};
-          configSourceMap?.forEach((sourceQuizId: string, questionIdKey: string) => {
-            sourceMapObject[questionIdKey] = sourceQuizId;
-          });
-
           const result = await createInterleavedResult({
             userId: effectiveUserId,
             srsQuizId: srsQuiz.id,
@@ -289,7 +247,7 @@ export function useQuizPersistence({
             flaggedQuestions: Array.from(flaggedQuestions),
             timeTakenSeconds,
             questionIds: actualQuestionIds,
-            sourceMap: sourceMapObject,
+            sourceMap: mapSourceMapToObject(configSourceMap),
             score,
             categoryBreakdown,
             categoryScores: categoryTotals,

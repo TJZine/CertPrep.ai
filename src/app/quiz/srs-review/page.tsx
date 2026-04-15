@@ -11,10 +11,10 @@ import { Button } from "@/components/ui/Button";
 import { useInitializeDatabase } from "@/hooks/useDatabase";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
-import { db } from "@/db";
+import { hydrateAggregatedQuiz } from "@/db/aggregatedQuiz";
 import { clearSRSReviewState, SRS_REVIEW_QUESTIONS_KEY } from "@/lib/storage/srsReviewStorage";
 import { logger } from "@/lib/logger";
-import type { Quiz, Question } from "@/types/quiz";
+import type { Quiz } from "@/types/quiz";
 
 /**
  * Dedicated SRS Review page that aggregates questions from multiple quizzes.
@@ -33,6 +33,7 @@ export default function SRSReviewPage(): React.ReactElement {
 
     const [isLoading, setIsLoading] = React.useState(true);
     const [aggregatedQuiz, setAggregatedQuiz] = React.useState<Quiz | null>(null);
+    const [sourceMap, setSourceMap] = React.useState<Map<string, string> | null>(null);
     const [questionCount, setQuestionCount] = React.useState(0);
     const [loadError, setLoadError] = React.useState<string | null>(null);
 
@@ -70,48 +71,21 @@ export default function SRSReviewPage(): React.ReactElement {
                     return;
                 }
 
-                // Load all quizzes to find questions
-                const allQuizzes = await db.quizzes.toArray();
+                const hydrated = await hydrateAggregatedQuiz(
+                    questionIds,
+                    effectiveUserId,
+                    "SRS Review",
+                );
 
-                // Build a map of question ID -> question + source quiz
-                const questionMap = new Map<string, { question: Question; quiz: Quiz }>();
-                for (const quiz of allQuizzes) {
-                    for (const question of quiz.questions) {
-                        if (questionIds.includes(question.id)) {
-                            questionMap.set(question.id, { question, quiz });
-                        }
-                    }
-                }
-
-                // Order questions by the stored order
-                const orderedQuestions: Question[] = [];
-                for (const id of questionIds) {
-                    const found = questionMap.get(id);
-                    if (found) {
-                        orderedQuestions.push(found.question);
-                    }
-                }
-
-                if (orderedQuestions.length === 0) {
+                if (hydrated.syntheticQuiz.questions.length === 0) {
                     setLoadError("Could not find any of the requested questions. They may have been deleted.");
                     setIsLoading(false);
                     return;
                 }
 
-                // Create a synthetic "aggregated" quiz
-                const syntheticQuiz: Quiz = {
-                    id: "srs-review-aggregate",
-                    title: "SRS Review",
-                    description: "Spaced repetition review session",
-                    questions: orderedQuestions,
-                    tags: [],
-                    created_at: Date.now(),
-                    user_id: effectiveUserId,
-                    version: 1,
-                };
-
-                setAggregatedQuiz(syntheticQuiz);
-                setQuestionCount(orderedQuestions.length);
+                setAggregatedQuiz(hydrated.syntheticQuiz);
+                setSourceMap(new Map(Object.entries(hydrated.sourceMap)));
+                setQuestionCount(hydrated.syntheticQuiz.questions.length);
                 setIsLoading(false);
             } catch (err) {
                 logger.error("Failed to load SRS review questions", { error: err });
@@ -224,6 +198,7 @@ export default function SRSReviewPage(): React.ReactElement {
                 quiz={aggregatedQuiz}
                 isSmartRound={false}
                 isSRSReview={true}
+                sessionSourceMap={sourceMap}
             />
         </ErrorBoundary>
     );

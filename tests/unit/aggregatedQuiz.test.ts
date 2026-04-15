@@ -51,6 +51,10 @@ describe("hydrateAggregatedQuiz", () => {
     expect(result.syntheticQuiz.questions[1]?.id).toBe("q2");
     expect(result.sourceQuizByQuestionId.get("q1")?.id).toBe("quiz1");
     expect(result.sourceQuizByQuestionId.get("q2")?.id).toBe("quiz2");
+    expect(result.sourceMap).toEqual({
+      q1: "quiz1",
+      q2: "quiz2",
+    });
     expect(result.missingQuestionIds).toHaveLength(0);
   });
 
@@ -67,6 +71,9 @@ describe("hydrateAggregatedQuiz", () => {
 
     expect(result.syntheticQuiz.questions).toHaveLength(1);
     expect(result.syntheticQuiz.questions[0]?.id).toBe("q1");
+    expect(result.sourceMap).toEqual({
+      q1: "quiz1",
+    });
     expect(result.missingQuestionIds).toContain("q2");
   });
 

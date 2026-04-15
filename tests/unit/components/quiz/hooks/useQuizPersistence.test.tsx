@@ -10,15 +10,6 @@ import {
 } from "@/db/results";
 
 const mocks = vi.hoisted(() => {
-  const dbQueryChain = {
-    equals: vi.fn(),
-    filter: vi.fn(),
-    toArray: vi.fn(),
-  };
-
-  dbQueryChain.equals.mockImplementation(() => dbQueryChain);
-  dbQueryChain.filter.mockImplementation(() => dbQueryChain);
-
   return {
     push: vi.fn(),
     addToast: vi.fn(),
@@ -33,8 +24,6 @@ const mocks = vi.hoisted(() => {
     clearSRSReviewState: vi.fn(),
     clearTopicStudyState: vi.fn(),
     clearInterleavedState: vi.fn(),
-    dbQueryChain,
-    quizzesWhere: vi.fn(() => dbQueryChain),
   };
 });
 
@@ -70,14 +59,6 @@ vi.mock("@/db/results", () => ({
   createSRSReviewResult: mocks.createSRSReviewResult,
   createTopicStudyResult: mocks.createTopicStudyResult,
   createInterleavedResult: mocks.createInterleavedResult,
-}));
-
-vi.mock("@/db", () => ({
-  db: {
-    quizzes: {
-      where: mocks.quizzesWhere,
-    },
-  },
 }));
 
 vi.mock("@/lib/storage/smartRoundStorage", () => ({
@@ -119,19 +100,6 @@ describe("useQuizPersistence", () => {
       retrySave: mocks.retrySave,
     });
 
-    mocks.dbQueryChain.toArray.mockResolvedValue([
-      {
-        id: "source-quiz-1",
-        deleted_at: null,
-        questions: [{ id: "q1" }, { id: "q3" }],
-      },
-      {
-        id: "source-quiz-2",
-        deleted_at: null,
-        questions: [{ id: "q2" }],
-      },
-    ]);
-
     vi.mocked(ensureSRSQuizExists).mockResolvedValue({
       id: "srs-quiz-1",
     } as never);
@@ -159,7 +127,14 @@ describe("useQuizPersistence", () => {
   it("persists an SRS review result, clears review storage, and routes to the saved result", async () => {
     const props = {
       ...defaultProps,
-      config: { ...defaultProps.config, isSRSReview: true },
+      config: {
+        ...defaultProps.config,
+        isSRSReview: true,
+        sourceMap: new Map([
+          ["q1", "source-quiz-1"],
+          ["q2", "source-quiz-2"],
+        ]),
+      },
       questions: [
         { id: "q1", category: "Cardio" },
         { id: "q2", category: "Neuro" },
@@ -208,7 +183,14 @@ describe("useQuizPersistence", () => {
   it("persists a topic study result, clears topic storage, and routes to analytics-friendly results", async () => {
     const props = {
       ...defaultProps,
-      config: { ...defaultProps.config, isTopicStudy: true },
+      config: {
+        ...defaultProps.config,
+        isTopicStudy: true,
+        sourceMap: new Map([
+          ["q1", "source-quiz-1"],
+          ["q2", "source-quiz-2"],
+        ]),
+      },
       questions: [
         { id: "q1", category: "Cardio" },
         { id: "q2", category: "Neuro" },

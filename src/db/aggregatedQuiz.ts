@@ -5,6 +5,7 @@ import { logger } from "@/lib/logger";
 export interface SyntheticQuizResult {
   syntheticQuiz: Quiz;
   sourceQuizByQuestionId: Map<string, Quiz>;
+  sourceMap: Record<string, string>;
   missingQuestionIds: string[];
 }
 
@@ -53,6 +54,7 @@ export async function hydrateAggregatedQuiz(
   }
 
   const orderedQuestions: Question[] = [];
+  const sourceMap: Record<string, string> = {};
   const missingQuestionIds: string[] = [];
 
   // Reconstruct the order from the result's question_ids
@@ -61,6 +63,7 @@ export async function hydrateAggregatedQuiz(
     if (found) {
       orderedQuestions.push(found.question);
       sourceQuizByQuestionId.set(id, found.quiz);
+      sourceMap[id] = found.quiz.id;
     } else {
       missingQuestionIds.push(id);
     }
@@ -95,6 +98,7 @@ export async function hydrateAggregatedQuiz(
   return {
     syntheticQuiz,
     sourceQuizByQuestionId,
+    sourceMap,
     missingQuestionIds,
   };
 }

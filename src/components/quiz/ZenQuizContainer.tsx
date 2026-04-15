@@ -27,10 +27,10 @@ interface ZenQuizContainerProps {
   isTopicStudy?: boolean;
   /** When true, this is an Interleaved Practice session. */
   isInterleaved?: boolean;
-  /** Maps questionId → sourceQuizId for interleaved sessions. */
-  interleavedSourceMap?: Map<string, string> | null;
-  /** Key mappings for answer translation in remixed interleaved sessions. */
-  interleavedKeyMappings?: Map<string, Record<string, string>> | null;
+  /** Maps questionId → sourceQuizId for aggregated sessions. */
+  sessionSourceMap?: Map<string, string> | null;
+  /** Key mappings for answer translation in remixed sessions. */
+  sessionKeyMappings?: Map<string, Record<string, string>> | null;
 }
 
 /**
@@ -42,8 +42,8 @@ export function ZenQuizContainer({
   isSRSReview = false,
   isTopicStudy = false,
   isInterleaved = false,
-  interleavedSourceMap = null,
-  interleavedKeyMappings = null,
+  sessionSourceMap = null,
+  sessionKeyMappings = null,
 }: ZenQuizContainerProps): React.ReactElement {
   const router = useRouter();
   const { addToast } = useToast();
@@ -72,8 +72,8 @@ export function ZenQuizContainer({
       isSRSReview,
       isTopicStudy,
       isInterleaved,
-      sourceMap: interleavedSourceMap,
-      keyMappings: interleavedKeyMappings,
+      sourceMap: sessionSourceMap,
+      keyMappings: sessionKeyMappings,
     },
     questions,
     answers,

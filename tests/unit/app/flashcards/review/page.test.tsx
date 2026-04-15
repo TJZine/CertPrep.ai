@@ -10,6 +10,7 @@ const {
   mockGetDue,
   mockGetSession,
   mockClearSession,
+  mockHydrateAggregatedQuiz,
   mockUseAuth,
   mockUseEffectiveUserId,
   mockUseInitializeDatabase,
@@ -18,6 +19,7 @@ const {
   mockGetDue: vi.fn(),
   mockGetSession: vi.fn(),
   mockClearSession: vi.fn(),
+  mockHydrateAggregatedQuiz: vi.fn(),
   mockUseAuth: vi.fn((): { user: { id: string } | null } => ({
     user: { id: "user-1" },
   })),
@@ -53,13 +55,8 @@ vi.mock("@/hooks/useDatabase", () => ({
   useInitializeDatabase: mockUseInitializeDatabase,
 }));
 
-vi.mock("@/db/index", () => ({
-  db: {
-    quizzes: {
-      toArray: vi.fn(),
-      get: vi.fn(),
-    },
-  },
+vi.mock("@/db/aggregatedQuiz", () => ({
+  hydrateAggregatedQuiz: mockHydrateAggregatedQuiz,
 }));
 
 vi.mock("@/db/srs", () => ({
@@ -94,6 +91,21 @@ describe("FlashcardReviewPage", () => {
     vi.clearAllMocks();
     mockGetSession.mockReturnValue(null);
     mockGetDue.mockResolvedValue([]);
+    mockHydrateAggregatedQuiz.mockResolvedValue({
+      syntheticQuiz: {
+        id: "flashcard-review-aggregate",
+        title: "Flashcard Review",
+        description: "Spaced repetition flashcard review session",
+        questions: [{ id: "q1" }],
+        tags: [],
+        created_at: 1,
+        user_id: "user-1",
+        version: 1,
+      },
+      sourceQuizByQuestionId: new Map([["q1", { id: "quiz-1" }]]),
+      sourceMap: { q1: "quiz-1" },
+      missingQuestionIds: [],
+    });
     mockUseAuth.mockReturnValue({
       user: { id: "user-1" },
       session: null,

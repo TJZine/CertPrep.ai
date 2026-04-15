@@ -66,9 +66,8 @@ export default function InterleavedSessionPage(): React.ReactElement {
         <ZenQuizContainer
             quiz={quiz}
             isInterleaved={true}
-            interleavedSourceMap={sourceMap}
-            interleavedKeyMappings={keyMappings}
+            sessionSourceMap={sourceMap}
+            sessionKeyMappings={keyMappings}
         />
     );
 }
-
