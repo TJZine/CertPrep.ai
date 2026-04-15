@@ -1,5 +1,8 @@
 import { db } from "@/db";
-import { isSRSQuiz, sanitizeQuestions } from "@/db/quizzes";
+import {
+  isSRSQuiz,
+  sanitizeQuestionsWithIdMap,
+} from "@/db/quizzes";
 import { sanitizeQuestionText } from "@/lib/utils/sanitize";
 import { computeQuizHash } from "@/lib/core/crypto";
 import type { Quiz } from "@/types/quiz";
@@ -38,6 +41,13 @@ export type ImportWarning = {
 };
 
 type ImportWarningAccumulator = Map<string, ImportWarning>;
+type QuestionIdMap = Map<string, string>;
+type QuestionIdMapsByQuiz = Map<string, QuestionIdMap>;
+
+type SanitizedQuizImport = {
+  quiz: Quiz;
+  questionIdMap: QuestionIdMap;
+};
 
 function recordImportWarning(
   warnings: ImportWarningAccumulator,
@@ -93,7 +103,7 @@ async function sanitizeQuizRecord(
   quiz: unknown,
   userId: string,
   warnings: ImportWarningAccumulator,
-): Promise<Quiz | null> {
+): Promise<SanitizedQuizImport | null> {
   const parsed = QuizBackupSchema.safeParse(quiz);
 
   if (!parsed.success) {
@@ -115,20 +125,128 @@ async function sanitizeQuizRecord(
   const updatedAt = parsed.data.updated_at ?? createdAt;
   const deletedAt = parsed.data.deleted_at ?? null;
   const quizHash = parsed.data.quiz_hash ?? null;
+  const { questions, questionIdMap } = await sanitizeQuestionsWithIdMap(
+    parsed.data.questions,
+  );
 
   return {
-    ...parsed.data,
-    user_id: userId,
-    title: sanitizeQuestionText(parsed.data.title),
-    description: sanitizeQuestionText(parsed.data.description ?? ""),
-    tags: (parsed.data.tags ?? []).map((tag) => sanitizeQuestionText(tag)),
-    questions: await sanitizeQuestions(parsed.data.questions),
-    created_at: createdAt,
-    updated_at: updatedAt,
-    deleted_at: deletedAt,
-    quiz_hash: quizHash,
-    last_synced_at: null,
-    last_synced_version: null,
+    quiz: {
+      ...parsed.data,
+      user_id: userId,
+      title: sanitizeQuestionText(parsed.data.title),
+      description: sanitizeQuestionText(parsed.data.description ?? ""),
+      tags: (parsed.data.tags ?? []).map((tag) => sanitizeQuestionText(tag)),
+      questions,
+      created_at: createdAt,
+      updated_at: updatedAt,
+      deleted_at: deletedAt,
+      quiz_hash: quizHash,
+      last_synced_at: null,
+      last_synced_version: null,
+    },
+    questionIdMap,
+  };
+}
+
+function remapResultQuestionId(
+  questionId: string,
+  quizId: string | undefined,
+  questionIdMapsByQuiz: QuestionIdMapsByQuiz,
+): string {
+  if (!quizId) return questionId;
+  return questionIdMapsByQuiz.get(quizId)?.get(questionId) ?? questionId;
+}
+
+function remapAnswers(
+  answers: Record<string, string>,
+  quizId: string,
+  sourceMap: Record<string, string> | undefined,
+  questionIdMapsByQuiz: QuestionIdMapsByQuiz,
+): Record<string, string> {
+  const remappedAnswers: Record<string, string> = {};
+  for (const [questionId, answer] of Object.entries(answers)) {
+    remappedAnswers[
+      remapResultQuestionId(
+        questionId,
+        sourceMap?.[questionId] ?? quizId,
+        questionIdMapsByQuiz,
+      )
+    ] = answer;
+  }
+  return remappedAnswers;
+}
+
+function remapQuestionIds(
+  questionIds: string[] | undefined,
+  quizId: string,
+  sourceMap: Record<string, string> | undefined,
+  questionIdMapsByQuiz: QuestionIdMapsByQuiz,
+): string[] | undefined {
+  return questionIds?.map((questionId) =>
+    remapResultQuestionId(
+      questionId,
+      sourceMap?.[questionId] ?? quizId,
+      questionIdMapsByQuiz,
+    ),
+  );
+}
+
+function remapSourceMapKeys(
+  sourceMap: Record<string, string> | undefined,
+  fallbackQuizId: string,
+  questionIdMapsByQuiz: QuestionIdMapsByQuiz,
+): Record<string, string> | undefined {
+  if (!sourceMap) return sourceMap;
+
+  const remappedSourceMap: Record<string, string> = {};
+  for (const [questionId, sourceQuizId] of Object.entries(sourceMap)) {
+    const remappedQuestionId =
+      questionIdMapsByQuiz.get(sourceQuizId)?.get(questionId) ??
+      questionIdMapsByQuiz.get(fallbackQuizId)?.get(questionId) ??
+      questionId;
+    remappedSourceMap[remappedQuestionId] = sourceQuizId;
+  }
+
+  return remappedSourceMap;
+}
+
+function remapSourceMapQuizIds(
+  sourceMap: Record<string, string> | undefined,
+  quizIdMap: Map<string, string>,
+): Record<string, string> | undefined {
+  if (!sourceMap) return sourceMap;
+
+  const remappedSourceMap: Record<string, string> = {};
+  for (const [questionId, sourceQuizId] of Object.entries(sourceMap)) {
+    remappedSourceMap[questionId] = quizIdMap.get(sourceQuizId) ?? sourceQuizId;
+  }
+
+  return remappedSourceMap;
+}
+
+function remapResultQuestionMetadata(
+  result: Result,
+  questionIdMapsByQuiz: QuestionIdMapsByQuiz,
+): Result {
+  return {
+    ...result,
+    answers: remapAnswers(
+      result.answers,
+      result.quiz_id,
+      result.source_map,
+      questionIdMapsByQuiz,
+    ),
+    question_ids: remapQuestionIds(
+      result.question_ids,
+      result.quiz_id,
+      result.source_map,
+      questionIdMapsByQuiz,
+    ),
+    source_map: remapSourceMapKeys(
+      result.source_map,
+      result.quiz_id,
+      questionIdMapsByQuiz,
+    ),
   };
 }
 
@@ -136,6 +254,7 @@ function sanitizeResultRecord(
   result: unknown,
   userId: string,
   warnings: ImportWarningAccumulator,
+  questionIdMapsByQuiz: QuestionIdMapsByQuiz,
 ): Result | null {
   const parsed = ResultImportSchema.safeParse(result);
 
@@ -159,12 +278,15 @@ function sanitizeResultRecord(
     sanitizedCategoryBreakdown[sanitizeQuestionText(key)] = value;
   }
 
-  return {
+  return remapResultQuestionMetadata(
+    {
     ...parsed.data,
     user_id: userId,
     synced: 0,
     category_breakdown: sanitizedCategoryBreakdown,
-  };
+    },
+    questionIdMapsByQuiz,
+  );
 }
 
 /**
@@ -329,25 +451,30 @@ export async function importData(
   }
 
   const sanitizedQuizzes: Quiz[] = [];
+  const questionIdMapsByQuiz: QuestionIdMapsByQuiz = new Map();
   const quizIds = new Set<string>();
 
   for (const quiz of data.quizzes) {
-    const sanitizedQuiz = await sanitizeQuizRecord(quiz, userId, warnings);
-    if (!sanitizedQuiz) continue;
-    if (quizIds.has(sanitizedQuiz.id)) {
+    const sanitizedQuizImport = await sanitizeQuizRecord(quiz, userId, warnings);
+    if (!sanitizedQuizImport) continue;
+    if (quizIds.has(sanitizedQuizImport.quiz.id)) {
       recordImportWarning(
         warnings,
         "duplicate_quiz_id",
         "Skipped duplicate quiz id during import.",
-        sanitizedQuiz.id,
+        sanitizedQuizImport.quiz.id,
       );
       logger.warn("Skipped duplicate quiz id during import", {
-        quizId: sanitizedQuiz.id,
+        quizId: sanitizedQuizImport.quiz.id,
       });
       continue;
     }
-    sanitizedQuizzes.push(sanitizedQuiz);
-    quizIds.add(sanitizedQuiz.id);
+    sanitizedQuizzes.push(sanitizedQuizImport.quiz);
+    questionIdMapsByQuiz.set(
+      sanitizedQuizImport.quiz.id,
+      sanitizedQuizImport.questionIdMap,
+    );
+    quizIds.add(sanitizedQuizImport.quiz.id);
   }
 
   const existingQuizIds =
@@ -364,7 +491,12 @@ export async function importData(
   const resultIds = new Set<string>();
 
   for (const result of data.results) {
-    const sanitizedResult = sanitizeResultRecord(result, userId, warnings);
+    const sanitizedResult = sanitizeResultRecord(
+      result,
+      userId,
+      warnings,
+      questionIdMapsByQuiz,
+    );
     if (!sanitizedResult) continue;
     if (!allowedQuizIds.has(sanitizedResult.quiz_id)) {
       recordImportWarning(
@@ -527,13 +659,15 @@ export async function importDataSmart(
   warnings: ImportWarningAccumulator,
 ): Promise<ImportResult> {
   const sanitizedQuizzes: Quiz[] = [];
+  const questionIdMapsByQuiz: QuestionIdMapsByQuiz = new Map();
   const quizIds = new Set<string>();
   const hashComputationFailed = new Set<string>();
   const missingHashInImport = new Set<string>();
 
   for (const quiz of data.quizzes) {
-    const sanitizedQuiz = await sanitizeQuizRecord(quiz, userId, warnings);
-    if (!sanitizedQuiz) continue;
+    const sanitizedQuizImport = await sanitizeQuizRecord(quiz, userId, warnings);
+    if (!sanitizedQuizImport) continue;
+    const sanitizedQuiz = sanitizedQuizImport.quiz;
     if (quizIds.has(sanitizedQuiz.id)) {
       recordImportWarning(
         warnings,
@@ -567,6 +701,7 @@ export async function importDataSmart(
     }
 
     sanitizedQuizzes.push(sanitizedQuiz);
+    questionIdMapsByQuiz.set(sanitizedQuiz.id, sanitizedQuizImport.questionIdMap);
     quizIds.add(sanitizedQuiz.id);
   }
 
@@ -574,7 +709,12 @@ export async function importDataSmart(
   const resultIds = new Set<string>();
 
   for (const result of data.results) {
-    const sanitizedResult = sanitizeResultRecord(result, userId, warnings);
+    const sanitizedResult = sanitizeResultRecord(
+      result,
+      userId,
+      warnings,
+      questionIdMapsByQuiz,
+    );
     if (!sanitizedResult) continue;
     if (resultIds.has(sanitizedResult.id)) {
       recordImportWarning(
@@ -678,6 +818,7 @@ export async function importDataSmart(
       const remappedResult: Result = {
         ...result,
         quiz_id: mappedQuizId,
+        source_map: remapSourceMapQuizIds(result.source_map, quizIdMap),
       };
       const signature = computeResultSignature(remappedResult);
 

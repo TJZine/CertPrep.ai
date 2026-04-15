@@ -94,6 +94,17 @@ export function sortQuizzesByNewest(quizzes: Quiz[]): Quiz[] {
 export async function sanitizeQuestions(
   questions: unknown[],
 ): Promise<Question[]> {
+  const { questions: sanitizedQuestions } =
+    await sanitizeQuestionsWithIdMap(questions);
+  return sanitizedQuestions;
+}
+
+export async function sanitizeQuestionsWithIdMap(
+  questions: unknown[],
+): Promise<{
+  questions: Question[];
+  questionIdMap: Map<string, string>;
+}> {
   // Validate structure first
   const parsedQuestions = z.array(QuestionSchema).safeParse(questions);
 
@@ -111,7 +122,8 @@ export async function sanitizeQuestions(
     throw new Error(`Invalid questions data: ${errorMsg}`);
   }
 
-  return await Promise.all(
+  const questionIdMap = new Map<string, string>();
+  const sanitizedQuestions = await Promise.all(
     parsedQuestions.data.map(async (q) => {
       // We can trust the shape now, but we still want to sanitize text fields for XSS prevention
       const options = q.options;
@@ -146,6 +158,7 @@ export async function sanitizeQuestions(
       const questionId = isValidUUID(rawId)
         ? rawId
         : uuidv5(`${q.question}:${JSON.stringify(sanitizedOptions)}`, QUESTION_ID_NAMESPACE);
+      questionIdMap.set(rawId, questionId);
 
       return {
         ...rest,
@@ -167,6 +180,11 @@ export async function sanitizeQuestions(
       };
     }),
   );
+
+  return {
+    questions: sanitizedQuestions,
+    questionIdMap,
+  };
 }
 
 /**
