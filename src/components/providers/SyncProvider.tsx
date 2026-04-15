@@ -9,12 +9,9 @@ import React, {
   useState,
 } from "react";
 import { useAuth } from "@/components/providers/AuthProvider";
-import { syncResults } from "@/lib/sync/syncManager";
-import { syncQuizzes } from "@/lib/sync/quizSyncManager";
-import { syncSRS } from "@/lib/sync/srsSyncManager";
-
 import { getSyncBlockState } from "@/db/syncState";
 import { logger } from "@/lib/logger";
+import { runSyncPlan, toSyncDetails } from "@/lib/sync/coordinator";
 
 export interface SyncBlockedInfo {
   reason: string;
@@ -194,26 +191,10 @@ export function SyncProvider({
       const syncStart = performance.now();
 
       try {
-        // Step 2: Run syncs in parallel instead of sequentially
-        // Each sync manager has its own Web Lock, so they are safe to run concurrently
-        const settlements = await Promise.allSettled([
-          syncQuizzes(userId),
-          syncResults(userId),
-          syncSRS(userId),
-        ]);
-
-        // Extract outcomes, treating rejections as incomplete
-        const outcomes = settlements.map(
-          (s) => (s.status === "fulfilled" ? s.value : { incomplete: true })
-        );
-        const quizzesOutcome = outcomes[0] ?? { incomplete: true };
-        const resultsOutcome = outcomes[1] ?? { incomplete: true };
-        const srsOutcome = outcomes[2] ?? { incomplete: true };
-
+        const { outcomes } = await runSyncPlan(userId, "full");
+        const details = toSyncDetails(outcomes);
         const anyIncomplete =
-          quizzesOutcome.incomplete ||
-          resultsOutcome.incomplete ||
-          srsOutcome.incomplete;
+          details.quizzes || details.results || details.srs;
 
         const status: SyncStatus = anyIncomplete ? "partial" : "success";
 
@@ -224,19 +205,15 @@ export function SyncProvider({
         const duration = performance.now() - syncStart;
         logger.info(`[Sync] Total sync completed in ${duration.toFixed(0)}ms`, {
           status,
-          quizzes: quizzesOutcome.incomplete,
-          results: resultsOutcome.incomplete,
-          srs: srsOutcome.incomplete,
+          quizzes: details.quizzes,
+          results: details.results,
+          srs: details.srs,
         });
 
         return {
           status,
           success: status === "success",
-          details: {
-            quizzes: quizzesOutcome.incomplete,
-            results: resultsOutcome.incomplete,
-            srs: srsOutcome.incomplete,
-          },
+          details,
         };
       } catch (error) {
         logger.error("Sync failed with exception", error);

@@ -18,7 +18,7 @@ import { Modal } from "@/components/ui/Modal";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 import { useSync } from "@/hooks/useSync";
-import { syncQuizzes } from "@/lib/sync/quizSyncManager";
+import { runSyncPlan } from "@/lib/sync/coordinator";
 import { logger } from "@/lib/logger";
 
 /**
@@ -203,7 +203,7 @@ export default function ResultsPage(): React.ReactElement {
     const restore = async (): Promise<void> => {
       setIsRestoringQuiz(true);
       try {
-        await syncQuizzes(effectiveUserId);
+        await runSyncPlan(effectiveUserId, "quiz-repair");
       } catch (error) {
         logger.error("Failed to restore quiz for result view", error);
       } finally {

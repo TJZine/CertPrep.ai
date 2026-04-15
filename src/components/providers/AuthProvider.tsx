@@ -17,9 +17,8 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { clearDatabase } from "@/db";
 import { requestServiceWorkerCacheClear } from "@/lib/serviceWorkerClient";
-import { syncQuizzes } from "@/lib/sync/quizSyncManager";
-import { syncResults } from "@/lib/sync/syncManager";
 import { logger } from "@/lib/logger";
+import { requiresLocalDataPreservation, runSyncPlan } from "@/lib/sync/coordinator";
 
 type AuthContextType = {
   user: User | null;
@@ -36,25 +35,6 @@ type SignOutDependencies = {
   clearDb: () => Promise<void>;
   userId?: string;
 };
-
-type PreLogoutSyncOutcome = {
-  incomplete: boolean;
-  status?: "synced" | "skipped" | "failed";
-};
-
-function requiresLocalDataPreservation(
-  outcome: PromiseSettledResult<PreLogoutSyncOutcome>,
-): boolean {
-  if (outcome.status === "rejected") {
-    return true;
-  }
-
-  return (
-    outcome.value.status === "skipped" ||
-    outcome.value.status === "failed" ||
-    Boolean(outcome.value.incomplete)
-  );
-}
 
 /**
  * Signs out the user, optionally syncing data and clearing local storage.
@@ -75,10 +55,7 @@ export async function performSignOut({
     try {
       // Sync is best-effort. If it cannot be confirmed, sign out anyway but
       // preserve local data to avoid discarding unsynced offline progress.
-      const syncPromise = Promise.allSettled([
-        syncQuizzes(userId),
-        syncResults(userId),
-      ]);
+      const syncPromise = runSyncPlan(userId, "logout");
       const timeoutPromise = new Promise<"timeout">((resolve) =>
         setTimeout(() => resolve("timeout"), 3000),
       );
@@ -88,12 +65,14 @@ export async function performSignOut({
         logger.warn("Pre-logout sync timed out", { userId });
         shouldPreserveLocalData = true;
       } else {
-        const failed = raceResult.some(requiresLocalDataPreservation);
+        const failed = raceResult.domains.some((domain) =>
+          requiresLocalDataPreservation(raceResult.settlements[domain]),
+        );
 
         if (failed) {
           logger.warn("Pre-logout sync failed or incomplete", {
             userId,
-            outcomes: raceResult,
+            outcomes: raceResult.outcomes,
           });
           shouldPreserveLocalData = true;
         }
