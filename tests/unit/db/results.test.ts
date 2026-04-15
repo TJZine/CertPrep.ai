@@ -3,6 +3,7 @@ import {
   calculateResults,
   createResult,
   getOverallStats,
+  getCategoryPerformance,
   deleteResult,
   type CreateResultInput,
 } from "@/db/results";
@@ -271,6 +272,103 @@ describe("src/db/results.ts", () => {
         category: "React",
         avgScore: 50,
       });
+    });
+
+    it("only scores the recorded subset of questions for partial quiz sessions", async () => {
+      const mockQuiz = {
+        id: "q1",
+        user_id: mockUserId,
+        questions: [
+          { id: "q1_1", category: "React", correct_answer: "a" },
+          { id: "q1_2", category: "React", correct_answer: "b" },
+          { id: "q1_3", category: "React", correct_answer: "c" },
+        ],
+        deleted_at: null,
+      } as unknown as Quiz;
+      const mockResult = {
+        score: 100,
+        time_taken_seconds: 60,
+        user_id: mockUserId,
+        quiz_id: "q1",
+        answers: { q1_1: "a" },
+        question_ids: ["q1_1"],
+        deleted_at: null,
+      } as unknown as Result;
+
+      const mockQuizQuery = {
+        equals: vi.fn().mockReturnThis(),
+        toArray: vi.fn().mockResolvedValue([mockQuiz]),
+      } as unknown as ReturnType<typeof db.quizzes.where>;
+      vi.mocked(db.quizzes.where).mockReturnValue(mockQuizQuery);
+
+      const mockResultQuery = {
+        equals: vi.fn().mockReturnThis(),
+        toArray: vi.fn().mockResolvedValue([mockResult]),
+      } as unknown as ReturnType<typeof db.results.where>;
+      vi.mocked(db.results.where).mockReturnValue(mockResultQuery);
+
+      vi.mocked(evaluateAnswer).mockImplementation(async (_q, ans) => ({
+        category: "React",
+        isCorrect: ans === "a",
+      }));
+
+      const stats = await getOverallStats(mockUserId);
+
+      expect(stats.averageScore).toBe(100);
+      expect(stats.weakestCategories).toEqual([
+        {
+          category: "React",
+          avgScore: 100,
+        },
+      ]);
+      expect(vi.mocked(evaluateAnswer)).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("getCategoryPerformance", () => {
+    it("only grades the question_ids captured for a subset attempt", async () => {
+      const mockQuiz = {
+        id: mockQuizId,
+        user_id: mockUserId,
+        questions: [
+          { id: "q1", category: "React", correct_answer: "a" },
+          { id: "q2", category: "React", correct_answer: "b" },
+        ],
+      } as unknown as Quiz;
+      const mockResults = [
+        {
+          id: "result-1",
+          user_id: mockUserId,
+          quiz_id: mockQuizId,
+          answers: { q1: "a" },
+          question_ids: ["q1"],
+          deleted_at: null,
+        },
+      ] as unknown as Result[];
+
+      vi.mocked(db.quizzes.get).mockResolvedValue(mockQuiz);
+      const mockResultQuery = {
+        equals: vi.fn().mockReturnThis(),
+        filter: vi.fn().mockReturnThis(),
+        sortBy: vi.fn().mockResolvedValue(mockResults),
+      } as unknown as ReturnType<typeof db.results.where>;
+      vi.mocked(db.results.where).mockReturnValue(mockResultQuery);
+      vi.mocked(evaluateAnswer).mockImplementation(async (question, answer) => ({
+        category: question.category || "Uncategorized",
+        isCorrect: answer === question.correct_answer,
+      }));
+
+      const performance = await getCategoryPerformance(mockQuizId, mockUserId);
+
+      expect(performance).toEqual([
+        {
+          category: "React",
+          correct: 1,
+          total: 1,
+          percentage: 100,
+        },
+      ]);
+      expect(vi.mocked(evaluateAnswer)).toHaveBeenCalledTimes(1);
     });
   });
 
