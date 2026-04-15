@@ -27,6 +27,7 @@ import {
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
+import { copyToClipboard } from "@/lib/clipboard";
 import { formatDate } from "@/lib/date";
 import { cn } from "@/lib/utils/cn";
 import type { Quiz } from "@/types/quiz";
@@ -113,13 +114,13 @@ export function QuizCard({
     e.preventDefault();
     e.stopPropagation();
     setShowMenu(false);
-    if (typeof window === "undefined" || !navigator.clipboard) {
+    if (typeof window === "undefined") {
       addToast("error", "Clipboard is unavailable in this environment.");
       return;
     }
     try {
       const url = `${window.location.origin}/quiz/${quiz.id}/zen`;
-      await navigator.clipboard.writeText(url);
+      await copyToClipboard(url);
       addToast("success", "Quiz link copied!");
     } catch (error) {
       console.error("Failed to copy link", error);

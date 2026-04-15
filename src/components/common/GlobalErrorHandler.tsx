@@ -5,6 +5,7 @@ import { AlertTriangle, RefreshCw, Home, Bug } from "lucide-react";
 import * as Sentry from "@sentry/nextjs";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
+import { copyToClipboard } from "@/lib/clipboard";
 
 interface GlobalErrorHandlerProps {
   children: React.ReactNode;
@@ -196,16 +197,8 @@ export class GlobalErrorHandler extends React.Component<
                         ? `${message}\n\n${stack}\n\nComponent stack:\n${componentStack}`
                         : `${message}\n\n${stack}`;
 
-                      if (!navigator.clipboard?.writeText) {
-                        console.warn("Clipboard API not available");
-                        alert(
-                          "Copy failed: Clipboard API is not available in this browser.",
-                        );
-                        return;
-                      }
-
                       try {
-                        await navigator.clipboard.writeText(text);
+                        await copyToClipboard(text);
                         alert("Error details copied to clipboard");
                       } catch (err) {
                         console.error("Failed to copy error details", err);

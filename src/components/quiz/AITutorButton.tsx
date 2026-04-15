@@ -4,6 +4,7 @@ import * as React from "react";
 import { Bot, Check, Copy, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
+import { copyToClipboard } from "@/lib/clipboard";
 import { cn } from "@/lib/utils/cn";
 import { useCorrectAnswer } from "@/hooks/useCorrectAnswer";
 import type { Question } from "@/types/quiz";
@@ -77,7 +78,7 @@ Please:
     const prompt = generatePrompt();
 
     try {
-      await navigator.clipboard.writeText(prompt);
+      await copyToClipboard(prompt);
       setCopied(true);
       addToast(
         "success",
@@ -85,23 +86,7 @@ Please:
       );
       window.setTimeout(() => setCopied(false), 3000);
     } catch {
-      const textArea = document.createElement("textarea");
-      textArea.value = prompt;
-      textArea.style.position = "fixed";
-      textArea.style.left = "-999999px";
-      document.body.appendChild(textArea);
-      textArea.select();
-
-      try {
-        document.execCommand("copy");
-        setCopied(true);
-        addToast("success", "Prompt copied!");
-        window.setTimeout(() => setCopied(false), 3000);
-      } catch {
-        addToast("error", "Failed to copy prompt. Please try again.");
-      } finally {
-        document.body.removeChild(textArea);
-      }
+      addToast("error", "Failed to copy prompt. Please try again.");
     }
   };
 

@@ -20,6 +20,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
+import { copyToClipboard } from "@/lib/clipboard";
 import { cn } from "@/lib/utils/cn";
 import {
   SMART_ROUND_QUESTIONS_KEY,
@@ -127,7 +128,7 @@ export function SmartActions({
     const prompt = generateStudyPlanPrompt();
 
     try {
-      await navigator.clipboard.writeText(prompt);
+      await copyToClipboard(prompt);
       setCopied(true);
       addToast(
         "success",
@@ -135,23 +136,7 @@ export function SmartActions({
       );
       window.setTimeout(() => setCopied(false), 3000);
     } catch {
-      const textArea = document.createElement("textarea");
-      textArea.value = prompt;
-      textArea.style.position = "fixed";
-      textArea.style.left = "-999999px";
-      document.body.appendChild(textArea);
-      textArea.select();
-
-      try {
-        document.execCommand("copy");
-        setCopied(true);
-        addToast("success", "Study plan prompt copied!");
-        window.setTimeout(() => setCopied(false), 3000);
-      } catch {
-        addToast("error", "Failed to copy. Please try again.");
-      } finally {
-        document.body.removeChild(textArea);
-      }
+      addToast("error", "Failed to copy. Please try again.");
     }
   };
 

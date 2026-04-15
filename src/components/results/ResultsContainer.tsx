@@ -30,6 +30,7 @@ import { useToast } from "@/components/ui/Toast";
 import { db } from "@/db";
 import { deleteResult, isSRSQuiz } from "@/db/results";
 import { celebratePerfectScore } from "@/lib/confetti";
+import { copyToClipboard } from "@/lib/clipboard";
 import { updateStudyStreak } from "@/lib/streaks";
 import { useQuizGrading } from "@/hooks/useQuizGrading";
 import { useResolveCorrectAnswers } from "@/hooks/useResolveCorrectAnswers";
@@ -348,15 +349,6 @@ export function ResultsContainer({
     }
   };
 
-  const copyToClipboard = async (text: string): Promise<void> => {
-    try {
-      await navigator.clipboard.writeText(text);
-      addToast("success", "Result copied to clipboard!");
-    } catch {
-      addToast("error", "Failed to copy");
-    }
-  };
-
   const handleShare = async (): Promise<void> => {
     const shareText = `I scored ${result.score}% on "${quiz.title}" using CertPrep.ai! 🎯`;
 
@@ -374,7 +366,12 @@ export function ResultsContainer({
       }
     }
 
-    await copyToClipboard(shareText);
+    try {
+      await copyToClipboard(shareText);
+      addToast("success", "Result copied to clipboard!");
+    } catch {
+      addToast("error", "Failed to copy");
+    }
   };
 
   const handlePrint = (): void => {
