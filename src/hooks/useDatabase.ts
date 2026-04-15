@@ -5,7 +5,10 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { db, initializeDatabase } from "@/db";
 import { NIL_UUID } from "@/lib/constants";
 import type { Quiz } from "@/types/quiz";
-import type { Result } from "@/types/result";
+import {
+  type Result,
+  isAggregatedSessionType,
+} from "@/types/result";
 import type { QuizStats } from "@/db/quizzes";
 import { getQuizStats, isSRSQuiz, sortQuizzesByNewest } from "@/db/quizzes";
 import { hydrateAggregatedQuiz } from "@/db/aggregatedQuiz";
@@ -52,6 +55,24 @@ interface UseResultWithHydratedQuizResponse {
   quiz: Quiz | undefined;
   isLoading: boolean;
   isHydrating: boolean;
+}
+
+function getAggregatedResultTitle(result: Result, fallbackTitle: string): string {
+  switch (result.session_type) {
+    case "topic_study": {
+      const categories = Object.keys(result.category_breakdown ?? {});
+      if (categories.length === 1) {
+        return `Topic Study: ${categories[0]}`;
+      }
+      return "Topic Study";
+    }
+    case "srs_review":
+      return "SRS Review";
+    case "interleaved":
+      return "Interleaved Practice";
+    default:
+      return fallbackTitle;
+  }
 }
 
 /**
@@ -288,9 +309,10 @@ export function useResultWithHydratedQuiz(
         return;
       }
 
-      // 1. Standard Quiz: It has questions, so just use it.
-      // We check for questions length > 0 to differentiate from empty SRS quizzes.
-      if (!isSRSQuiz(baseQuiz) && baseQuiz.questions.length > 0) {
+      const isAggregatedResult = isAggregatedSessionType(result.session_type);
+
+      // 1. Standard Quiz: It has questions and does not require aggregated hydration.
+      if (!isAggregatedResult && baseQuiz.questions.length > 0) {
         if (isMounted) {
           setHydratedQuiz(baseQuiz);
           setIsHydrating(false);
@@ -298,26 +320,15 @@ export function useResultWithHydratedQuiz(
         return;
       }
 
-      // 2. Aggregated Quiz (SRS/Topic Study):
-      // The base quiz is empty (questions: []). We must hydrate questions from IDs.
-      if (result.question_ids && result.question_ids.length > 0) {
+      // 2. Aggregated session:
+      // Use persisted metadata to decide whether this result needs synthetic hydration.
+      if (isAggregatedResult && result.question_ids && result.question_ids.length > 0) {
         if (isMounted) setIsHydrating(true);
         try {
-          // Determine a display title for the synthetic quiz
-          let title = baseQuiz.title;
-          if (isSRSQuiz(baseQuiz) && result.category_breakdown) {
-            const categories = Object.keys(result.category_breakdown);
-            if (categories.length === 1) {
-              title = `Topic Study: ${categories[0]}`;
-            } else if (categories.length > 1) {
-              title = "Study Session";
-            }
-          }
-
           const { syntheticQuiz } = await hydrateAggregatedQuiz(
             result.question_ids,
             userId,
-            title,
+            getAggregatedResultTitle(result, baseQuiz.title),
           );
 
           if (isMounted) {

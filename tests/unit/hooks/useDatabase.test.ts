@@ -350,6 +350,7 @@ describe("useDatabase hooks (Unit Layer)", () => {
                 id: "r1",
                 user_id: "user1",
                 quiz_id: "q1",
+                session_type: "topic_study",
                 question_ids: ["id1", "id2"],
                 category_breakdown: { "Networking": 1 }
             };
@@ -385,11 +386,58 @@ describe("useDatabase hooks (Unit Layer)", () => {
             });
         });
 
+        it("hydrates aggregated results based on session_type even when the base quiz is not classified as SRS", async () => {
+            const mockResult = {
+                id: "r1",
+                user_id: "user1",
+                quiz_id: "q1",
+                session_type: "topic_study",
+                question_ids: ["id1", "id2"],
+                category_breakdown: { Networking: 1 },
+            };
+
+            const mockBaseQuiz = {
+                id: "q1",
+                user_id: "user1",
+                title: "Base title",
+                questions: [],
+            };
+
+            const mockSyntheticQuiz = {
+                ...mockBaseQuiz,
+                title: "Topic Study: Networking",
+                questions: [{ id: "id1" }, { id: "id2" }],
+            };
+
+            (db.results.get as Mock).mockResolvedValue(mockResult);
+            (db.quizzes.get as Mock).mockResolvedValue(mockBaseQuiz);
+            (isSRSQuiz as unknown as Mock).mockReturnValue(false);
+            (hydrateAggregatedQuiz as unknown as Mock).mockResolvedValue({
+                syntheticQuiz: mockSyntheticQuiz,
+                sourceQuizByQuestionId: {},
+                missingQuestionIds: [],
+            });
+
+            const { result } = renderHook(() => useResultWithHydratedQuiz("r1", "user1"));
+
+            await waitFor(() => {
+                expect(result.current.quiz).toEqual(mockSyntheticQuiz as unknown as Quiz);
+                expect(result.current.isHydrating).toBe(false);
+            });
+
+            expect(hydrateAggregatedQuiz).toHaveBeenCalledWith(
+                ["id1", "id2"],
+                "user1",
+                "Topic Study: Networking",
+            );
+        });
+
         it("handles hydrateAggregatedQuiz failures gracefully", async () => {
             const mockResult = {
                 id: "r1",
                 user_id: "user1",
                 quiz_id: "q1",
+                session_type: "srs_review",
                 question_ids: ["id1", "id2"]
             };
 

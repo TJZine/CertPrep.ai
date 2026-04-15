@@ -28,7 +28,7 @@ import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
 import { db } from "@/db";
-import { deleteResult, isSRSQuiz } from "@/db/results";
+import { deleteResult } from "@/db/results";
 import { celebratePerfectScore } from "@/lib/confetti";
 import { copyToClipboard } from "@/lib/clipboard";
 import { updateStudyStreak } from "@/lib/streaks";
@@ -38,7 +38,7 @@ import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 import type { Quiz } from "@/types/quiz";
-import type { Result } from "@/types/result";
+import { isAggregatedSessionType, type Result } from "@/types/result";
 import { Badge } from "@/components/ui/Badge";
 import { useSync } from "@/hooks/useSync";
 
@@ -178,19 +178,8 @@ export function ResultsContainer({
   }, [quiz.questions, result.question_ids]);
 
   // Detect if this is an SRS/Topic Study result and compute display title
-  const isAggregatedResult = isSRSQuiz(result.quiz_id, effectiveUserId ?? undefined);
-  const displayTitle = React.useMemo(() => {
-    if (!isAggregatedResult) return quiz.title;
-    // For SRS results, try to get a meaningful title from category breakdown
-    const categories = Object.keys(result.category_breakdown ?? {});
-    if (categories.length === 1) {
-      return `Topic Study: ${categories[0]}`;
-    }
-    if (categories.length > 1) {
-      return "Study Session";
-    }
-    return "Study Session";
-  }, [isAggregatedResult, quiz.title, result.category_breakdown]);
+  const isAggregatedResult = isAggregatedSessionType(result.session_type);
+  const displayTitle = quiz.title;
 
   // Get the effective question count - use result.question_ids for SRS results
   // since quiz.questions is empty for the SRS quiz

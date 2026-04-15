@@ -6,8 +6,11 @@ import { readAndRepairResultsSyncCursor, setSyncCursor } from "@/db/syncState";
 import { createClient } from "@/lib/supabase/client";
 import { logNetworkAwareSlowSync } from "@/lib/sync/syncLogging";
 import { safeMark, safeMeasure } from "@/lib/perfMarks";
-import { QUIZ_MODES, type QuizMode } from "@/types/quiz";
-import type { Result, SessionType } from "@/types/result";
+import type { Result } from "@/types/result";
+import {
+  PERSISTED_RESULT_MODES,
+  parseSessionType,
+} from "@/types/result";
 import { z } from "zod";
 import type { Database } from "@/types/database.types";
 import { createSupabaseClientGetter, toErrorMessage, toSafeCursorTimestamp } from "./shared";
@@ -22,9 +25,7 @@ export const RemoteResultSchema = z.object({
   id: z.string(),
   quiz_id: z.string(),
   timestamp: z.coerce.number(), // Coerce string (from Postgres bigint) to number
-  // NOTE: "flashcard" is valid in QuizMode but effectively runtime-only;
-  // flashcard sessions do not produce Result records, so we don't expect it here.
-  mode: z.enum(QUIZ_MODES).transform((val) => val as QuizMode),
+  mode: z.enum(PERSISTED_RESULT_MODES),
   score: z.coerce.number().int().min(0),
   time_taken_seconds: z.coerce.number().min(0),
   answers: z.record(z.string(), z.string()),
@@ -34,7 +35,7 @@ export const RemoteResultSchema = z.object({
   computed_category_scores: z.record(z.string(), z.object({ correct: z.number(), total: z.number() })).nullable().optional(),
   difficulty_ratings: z.record(z.string(), z.union([z.literal(1), z.literal(2), z.literal(3)])).nullable().optional(),
   time_per_question: z.record(z.string(), z.number()).nullable().optional(),
-  session_type: z.string().nullable().optional().transform(v => v as SessionType | undefined),
+  session_type: z.string().nullable().optional().transform(parseSessionType),
   source_map: z.record(z.string(), z.string()).nullable().optional(),
   created_at: z.string(),
   updated_at: z.string(),

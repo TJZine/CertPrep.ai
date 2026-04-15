@@ -75,6 +75,9 @@ describe("data export/import", () => {
     answers: { q1: "A" },
     flagged_questions: [],
     category_breakdown: { Networking: 1 },
+    question_ids: ["q1"],
+    session_type: "topic_study",
+    source_map: { q1: sampleQuiz.id },
   };
 
   beforeEach(async () => {
@@ -113,6 +116,9 @@ describe("data export/import", () => {
     expect(restoredQuiz?.created_at).toBe(sampleQuiz.created_at);
     expect(restoredQuiz?.sourceId).toBe(sampleQuiz.sourceId);
     expect(restoredResult?.quiz_id).toBe(sampleQuiz.id);
+    expect(restoredResult?.question_ids).toEqual(sampleResult.question_ids);
+    expect(restoredResult?.session_type).toBe(sampleResult.session_type);
+    expect(restoredResult?.source_map).toEqual(sampleResult.source_map);
   });
 
   it("clears both legacy and user-scoped results cursors during replace import", async () => {

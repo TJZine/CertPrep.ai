@@ -11,7 +11,7 @@ import {
   useInitializeDatabase,
   useResultWithHydratedQuiz,
 } from "@/hooks/useDatabase";
-import { deleteResult, isSRSQuiz } from "@/db/results";
+import { deleteResult } from "@/db/results";
 import { useToast } from "@/components/ui/Toast";
 import { ArrowLeft, AlertCircle, AlertTriangle, Trash2, Settings } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
@@ -20,6 +20,7 @@ import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 import { useSync } from "@/hooks/useSync";
 import { runSyncPlan } from "@/lib/sync/coordinator";
 import { logger } from "@/lib/logger";
+import { isAggregatedSessionType } from "@/types/result";
 
 /**
  * Debounce delay before attempting quiz restoration.
@@ -399,10 +400,7 @@ export default function ResultsPage(): React.ReactElement {
   }
 
   // Fallback: No quiz or quiz has no questions (hydration failed, orphaned result)
-  const isAggregatedResult = isSRSQuiz(
-    result.quiz_id,
-    effectiveUserId,
-  );
+  const isAggregatedResult = isAggregatedSessionType(result.session_type);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">

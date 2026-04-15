@@ -2,8 +2,12 @@ import { db } from "@/db";
 import { isSRSQuiz, sanitizeQuestions } from "@/db/quizzes";
 import { sanitizeQuestionText } from "@/lib/utils/sanitize";
 import { computeQuizHash } from "@/lib/core/crypto";
-import { QUIZ_MODES, type Quiz } from "@/types/quiz";
-import type { Result } from "@/types/result";
+import type { Quiz } from "@/types/quiz";
+import {
+  PERSISTED_RESULT_MODES,
+  parseSessionType,
+  type Result,
+} from "@/types/result";
 import { QuizSchema } from "@/validators/quizSchema";
 import { requestServiceWorkerCacheClear } from "@/lib/serviceWorkerClient";
 import { logger } from "@/lib/logger";
@@ -65,12 +69,15 @@ const ResultImportSchema = z.object({
   id: z.string().uuid(),
   quiz_id: z.string().uuid(),
   timestamp: z.number().int().nonnegative(),
-  mode: z.enum(QUIZ_MODES),
+  mode: z.enum(PERSISTED_RESULT_MODES),
   score: z.number().min(0).max(100),
   time_taken_seconds: z.number().nonnegative(),
   answers: z.record(z.string(), z.string()).default({}),
   flagged_questions: z.array(z.string()).default([]),
   category_breakdown: z.record(z.string(), z.number()).default({}),
+  question_ids: z.array(z.string()).optional(),
+  session_type: z.string().optional().transform(parseSessionType),
+  source_map: z.record(z.string(), z.string()).optional(),
 });
 
 const QuizBackupSchema = QuizSchema.extend({

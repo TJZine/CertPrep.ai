@@ -4,8 +4,12 @@ import { NIL_UUID } from "@/lib/constants";
 import { calculatePercentage } from "@/lib/utils/math";
 import { generateUUID } from "@/lib/core/crypto";
 import { logger } from "@/lib/logger";
-import type { CategoryPerformance, Result } from "@/types/result";
-import type { Quiz, Question, QuizMode } from "@/types/quiz";
+import type {
+  CategoryPerformance,
+  PersistedResultMode,
+  Result,
+} from "@/types/result";
+import type { Quiz, Question } from "@/types/quiz";
 import { evaluateAnswer } from "@/lib/grading";
 
 // Re-export for backwards compatibility
@@ -13,7 +17,7 @@ export { isSRSQuiz };
 
 export interface CreateResultInput {
   quizId: string;
-  mode: QuizMode;
+  mode: PersistedResultMode;
   answers: Record<string, string>;
   flaggedQuestions: string[];
   timeTakenSeconds: number;

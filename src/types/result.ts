@@ -7,16 +7,69 @@ import type { QuizMode } from "./quiz";
  */
 export type SyncFlag = 0 | 1;
 
+export const PERSISTED_RESULT_MODES = ["zen", "proctor"] as const;
+
+/**
+ * The only quiz modes that can be persisted as `Result` records.
+ *
+ * `flashcard` remains a runtime-only mode and should never be stored in `results`.
+ */
+export type PersistedResultMode = (typeof PERSISTED_RESULT_MODES)[number];
+
 /**
  * Explicit session type classification.
  * Used to identify how a quiz result was generated.
  */
-export type SessionType =
-  | "standard"      // Normal quiz attempt
-  | "smart_round"   // Subset of missed/flagged questions
-  | "srs_review"    // Spaced repetition review session
-  | "topic_study"   // Category-focused study session
-  | "interleaved";  // Multi-quiz aggregated practice
+export const SESSION_TYPES = [
+  "standard",
+  "smart_round",
+  "srs_review",
+  "topic_study",
+  "interleaved",
+] as const;
+
+export type SessionType = (typeof SESSION_TYPES)[number];
+
+export const AGGREGATED_SESSION_TYPES = [
+  "srs_review",
+  "topic_study",
+  "interleaved",
+] as const;
+
+export type AggregatedSessionType = (typeof AGGREGATED_SESSION_TYPES)[number];
+
+export function isPersistedResultMode(
+  value: QuizMode | string | null | undefined,
+): value is PersistedResultMode {
+  return value === "zen" || value === "proctor";
+}
+
+export function parseSessionType(
+  value: string | null | undefined,
+): SessionType | undefined {
+  if (!value) return undefined;
+
+  switch (value) {
+    case "standard":
+    case "smart_round":
+    case "srs_review":
+    case "topic_study":
+    case "interleaved":
+      return value;
+    default:
+      return undefined;
+  }
+}
+
+export function isAggregatedSessionType(
+  value: SessionType | null | undefined,
+): value is AggregatedSessionType {
+  return (
+    value === "srs_review" ||
+    value === "topic_study" ||
+    value === "interleaved"
+  );
+}
 
 /**
  * Represents the outcome of a completed quiz session.
@@ -33,8 +86,8 @@ export interface Result {
   user_id: string;
   /** Unix timestamp (ms) when the quiz was finished. */
   timestamp: number;
-  /** Mode the quiz was taken in (e.g., "zen", "proctor"). */
-  mode: QuizMode;
+  /** Persisted quiz mode for this result record (e.g., "zen", "proctor"). */
+  mode: PersistedResultMode;
   /** Score as a percentage (0-100). Calculated from Math.round((correct/total) * 100). */
   score: number;
   /** Total duration of the session in seconds. */
