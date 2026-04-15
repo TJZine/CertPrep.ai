@@ -201,6 +201,46 @@ describe("data export/import", () => {
     });
   });
 
+  it("keeps source_map keys aligned with answers and question_ids when the source quiz is absent", async () => {
+    const aggregateQuizId = "66666666-6666-4666-8666-666666666666";
+    const missingSourceQuizId = "77777777-7777-4777-8777-777777777777";
+    const aggregateQuiz: Quiz = {
+      ...sampleQuiz,
+      id: aggregateQuizId,
+      title: "Aggregate Quiz Without Imported Source",
+      quiz_hash: "aggregate-no-source-hash",
+      questions: [
+        {
+          ...sampleQuiz.questions[0]!,
+          id: "q1",
+        },
+      ],
+    };
+    const aggregatedResult: Result = {
+      ...sampleResult,
+      id: "88888888-8888-4888-8888-888888888888",
+      quiz_id: aggregateQuizId,
+      answers: { q1: "A" },
+      question_ids: ["q1"],
+      session_type: "topic_study",
+      source_map: { q1: missingSourceQuizId },
+    };
+    const exported: ExportData = {
+      version: "1.0",
+      exportedAt: new Date().toISOString(),
+      quizzes: [aggregateQuiz],
+      results: [aggregatedResult],
+    };
+
+    await importData(exported, TEST_USER_ID, "replace");
+
+    const restoredResult = await db.results.get(aggregatedResult.id);
+
+    expect(restoredResult?.answers).toEqual({ q1: "A" });
+    expect(restoredResult?.question_ids).toEqual(["q1"]);
+    expect(restoredResult?.source_map).toEqual({ q1: missingSourceQuizId });
+  });
+
   it("clears both legacy and user-scoped results cursors during replace import", async () => {
     await db.syncState.bulkPut([
       {
@@ -247,6 +287,61 @@ describe("data export/import", () => {
     expect(resultsImported).toBe(0);
     expect(quizCount).toBe(1);
     expect(resultCount).toBe(1);
+  });
+
+  it("remaps merge-imported result metadata to the retained local quiz question ids", async () => {
+    const retainedLocalQuestionId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+    const retainedLocalQuiz: Quiz = {
+      ...sampleQuiz,
+      questions: [
+        {
+          ...sampleQuiz.questions[0]!,
+          id: retainedLocalQuestionId,
+        },
+      ],
+    };
+    const importedQuiz: Quiz = {
+      ...sampleQuiz,
+      questions: [
+        {
+          ...sampleQuiz.questions[0]!,
+          id: "q1",
+        },
+      ],
+    };
+    const importedResult: Result = {
+      ...sampleResult,
+      id: "55555555-5555-4555-8555-555555555555",
+      answers: { q1: "A" },
+      question_ids: ["q1"],
+      source_map: { q1: sampleQuiz.id },
+    };
+    const exported: ExportData = {
+      version: "1.0",
+      exportedAt: new Date().toISOString(),
+      quizzes: [importedQuiz],
+      results: [importedResult],
+    };
+
+    await db.quizzes.put(retainedLocalQuiz);
+
+    const { quizzesImported, resultsImported } = await importData(
+      exported,
+      TEST_USER_ID,
+      "merge",
+    );
+
+    const storedQuiz = await db.quizzes.get(sampleQuiz.id);
+    const storedResult = await db.results.get(importedResult.id);
+
+    expect(quizzesImported).toBe(0);
+    expect(resultsImported).toBe(1);
+    expect(storedQuiz?.questions[0]?.id).toBe(retainedLocalQuestionId);
+    expect(storedResult?.answers).toEqual({ [retainedLocalQuestionId]: "A" });
+    expect(storedResult?.question_ids).toEqual([retainedLocalQuestionId]);
+    expect(storedResult?.source_map).toEqual({
+      [retainedLocalQuestionId]: sampleQuiz.id,
+    });
   });
 
   it("drops results that reference missing quizzes during import", async () => {

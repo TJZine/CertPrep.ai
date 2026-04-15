@@ -193,7 +193,6 @@ function remapQuestionIds(
 
 function remapSourceMapKeys(
   sourceMap: Record<string, string> | undefined,
-  fallbackQuizId: string,
   questionIdMapsByQuiz: QuestionIdMapsByQuiz,
 ): Record<string, string> | undefined {
   if (!sourceMap) return sourceMap;
@@ -201,9 +200,7 @@ function remapSourceMapKeys(
   const remappedSourceMap: Record<string, string> = {};
   for (const [questionId, sourceQuizId] of Object.entries(sourceMap)) {
     const remappedQuestionId =
-      questionIdMapsByQuiz.get(sourceQuizId)?.get(questionId) ??
-      questionIdMapsByQuiz.get(fallbackQuizId)?.get(questionId) ??
-      questionId;
+      questionIdMapsByQuiz.get(sourceQuizId)?.get(questionId) ?? questionId;
     remappedSourceMap[remappedQuestionId] = sourceQuizId;
   }
 
@@ -242,12 +239,98 @@ function remapResultQuestionMetadata(
       result.source_map,
       questionIdMapsByQuiz,
     ),
-    source_map: remapSourceMapKeys(
-      result.source_map,
-      result.quiz_id,
-      questionIdMapsByQuiz,
-    ),
+    source_map: remapSourceMapKeys(result.source_map, questionIdMapsByQuiz),
   };
+}
+
+function buildIdentityQuestionIdMap(quiz: Quiz): QuestionIdMap {
+  return new Map(quiz.questions.map((question) => [question.id, question.id]));
+}
+
+function buildQuestionSignature(question: Quiz["questions"][number]): string {
+  const sortedOptions = Object.entries(question.options).sort(([a], [b]) =>
+    a.localeCompare(b),
+  );
+  return JSON.stringify({
+    category: question.category,
+    question: question.question,
+    options: sortedOptions,
+    explanation: question.explanation,
+  });
+}
+
+function buildRetainedQuizQuestionIdMap(
+  importedQuiz: Quiz,
+  importedQuestionIdMap: QuestionIdMap,
+  retainedQuiz: Quiz,
+): QuestionIdMap {
+  const retainedQuestionIdMap = buildIdentityQuestionIdMap(retainedQuiz);
+  const retainedQuestionIdsBySignature = new Map(
+    retainedQuiz.questions.map((question) => [
+      buildQuestionSignature(question),
+      question.id,
+    ]),
+  );
+  const rawQuestionIdsBySanitizedId = new Map<string, string[]>();
+
+  for (const [rawQuestionId, sanitizedQuestionId] of importedQuestionIdMap) {
+    const rawQuestionIds = rawQuestionIdsBySanitizedId.get(sanitizedQuestionId);
+    if (rawQuestionIds) {
+      rawQuestionIds.push(rawQuestionId);
+    } else {
+      rawQuestionIdsBySanitizedId.set(sanitizedQuestionId, [rawQuestionId]);
+    }
+  }
+
+  for (const importedQuestion of importedQuiz.questions) {
+    const retainedQuestionId = retainedQuestionIdsBySignature.get(
+      buildQuestionSignature(importedQuestion),
+    );
+    if (!retainedQuestionId) continue;
+
+    retainedQuestionIdMap.set(importedQuestion.id, retainedQuestionId);
+    for (const rawQuestionId of rawQuestionIdsBySanitizedId.get(importedQuestion.id) ??
+      []) {
+      retainedQuestionIdMap.set(rawQuestionId, retainedQuestionId);
+    }
+  }
+
+  return retainedQuestionIdMap;
+}
+
+function buildMergeQuestionIdMaps(
+  importedQuizzes: Quiz[],
+  importedQuestionIdMapsByQuiz: QuestionIdMapsByQuiz,
+  existingQuizzes: Quiz[],
+): QuestionIdMapsByQuiz {
+  const mergedQuestionIdMapsByQuiz: QuestionIdMapsByQuiz = new Map(
+    existingQuizzes.map((quiz) => [quiz.id, buildIdentityQuestionIdMap(quiz)]),
+  );
+  const existingQuizzesById = new Map(
+    existingQuizzes.map((quiz) => [quiz.id, quiz]),
+  );
+
+  for (const importedQuiz of importedQuizzes) {
+    const importedQuestionIdMap = importedQuestionIdMapsByQuiz.get(importedQuiz.id);
+    if (!importedQuestionIdMap) continue;
+
+    const retainedQuiz = existingQuizzesById.get(importedQuiz.id);
+    if (!retainedQuiz) {
+      mergedQuestionIdMapsByQuiz.set(importedQuiz.id, importedQuestionIdMap);
+      continue;
+    }
+
+    mergedQuestionIdMapsByQuiz.set(
+      importedQuiz.id,
+      buildRetainedQuizQuestionIdMap(
+        importedQuiz,
+        importedQuestionIdMap,
+        retainedQuiz,
+      ),
+    );
+  }
+
+  return mergedQuestionIdMapsByQuiz;
 }
 
 function sanitizeResultRecord(
@@ -451,7 +534,7 @@ export async function importData(
   }
 
   const sanitizedQuizzes: Quiz[] = [];
-  const questionIdMapsByQuiz: QuestionIdMapsByQuiz = new Map();
+  const importedQuestionIdMapsByQuiz: QuestionIdMapsByQuiz = new Map();
   const quizIds = new Set<string>();
 
   for (const quiz of data.quizzes) {
@@ -470,21 +553,28 @@ export async function importData(
       continue;
     }
     sanitizedQuizzes.push(sanitizedQuizImport.quiz);
-    questionIdMapsByQuiz.set(
+    importedQuestionIdMapsByQuiz.set(
       sanitizedQuizImport.quiz.id,
       sanitizedQuizImport.questionIdMap,
     );
     quizIds.add(sanitizedQuizImport.quiz.id);
   }
 
-  const existingQuizIds =
+  const existingQuizzes =
     mode === "merge"
-      ? new Set<string>(
-        (await db.quizzes.where("user_id").equals(userId).toArray()).map(
-          (quiz) => quiz.id,
-        ),
+      ? await db.quizzes.where("user_id").equals(userId).toArray()
+      : [];
+  const questionIdMapsByQuiz =
+    mode === "merge"
+      ? buildMergeQuestionIdMaps(
+        sanitizedQuizzes,
+        importedQuestionIdMapsByQuiz,
+        existingQuizzes,
       )
-      : new Set<string>();
+      : importedQuestionIdMapsByQuiz;
+  const existingQuizIds = new Set<string>(
+    existingQuizzes.map((quiz) => quiz.id),
+  );
   const allowedQuizIds = new Set<string>([...quizIds, ...existingQuizIds]);
 
   const sanitizedResults: Result[] = [];
