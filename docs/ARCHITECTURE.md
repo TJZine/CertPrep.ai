@@ -98,6 +98,18 @@ In addition to IndexedDB, the app uses:
 - `sessionStorage` for ephemeral session flow state such as topic study, SRS review, flashcards, smart rounds, and interleaved practice
 - service worker registration and cache-clearing hooks via [public/sw.js](../public/sw.js), [src/components/common/ServiceWorkerInitScript.tsx](../src/components/common/ServiceWorkerInitScript.tsx), and [src/lib/serviceWorkerClient.ts](../src/lib/serviceWorkerClient.ts)
 
+## E2E / Test Harness Boundaries
+
+Playwright and the E2E bootstrap path are test-only surfaces, but they intersect real runtime boundaries:
+
+- [playwright.config.ts](../playwright.config.ts) owns the main Playwright project config, browser launch flags for test projects, and the `NEXT_PUBLIC_IS_E2E` test-build toggle passed to the local web server
+- [tests/e2e/global-setup.ts](../tests/e2e/global-setup.ts) provisions the test user, bootstraps auth state through Supabase admin APIs and magic-link flow, and launches its own Chromium instance for auth-state setup
+- [src/db/dbInstance.ts](../src/db/dbInstance.ts) conditionally exposes `window.__certprepDb` only when `NODE_ENV !== "production"` and `NEXT_PUBLIC_IS_E2E === "true"`
+- [tests/e2e/helpers/db.ts](../tests/e2e/helpers/db.ts) depends on that guarded DB exposure for reliable test helpers
+- [tests/e2e/README.md](../tests/e2e/README.md) is the setup guide for current E2E prerequisites and command entrypoints
+
+Changes to browser launch flags, auth bootstrap, or the E2E DB exposure gate should be treated as test-boundary changes. If the investigation also changes CSP, proxy, auth-route, or other production runtime behavior, reroute the work as a production boundary change and update the corresponding sections in this document.
+
 ## Supabase Database Schema
 
 Repo-visible schema surfaces currently split into:
@@ -170,6 +182,8 @@ Relevant files:
 ## Verification Surfaces
 
 Verification authority lives in [docs/ENGINEERING_RUNBOOK.md](./ENGINEERING_RUNBOOK.md), [package.json](../package.json), and [.github/workflows/ci.yml](../.github/workflows/ci.yml). `scripts/verify-build.sh` is a convenience wrapper, not the primary verification authority.
+
+For Playwright-specific setup and troubleshooting, use [tests/e2e/README.md](../tests/e2e/README.md) and [docs/E2E_DEBUGGING_REFERENCE.md](./E2E_DEBUGGING_REFERENCE.md) as supporting context under the runbook's verification policy.
 
 ## Hotspots
 

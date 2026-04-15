@@ -54,6 +54,15 @@ If schema work touches a surface where these disagree, do not rationalize the co
 
 Plan and verification depth must increase with tier.
 
+### Playwright / E2E Tier Mapping
+
+- Tier 0: wording-only E2E doc updates or comment-only edits with no behavior change.
+- Tier 1: test refactors that keep Playwright bootstrap/runtime behavior unchanged.
+- Tier 2: behavior-changing edits to `playwright.config.ts`, `tests/e2e/global-setup.ts`, E2E auth/bootstrap helpers, browser launch flags, `NEXT_PUBLIC_IS_E2E`-guarded DB exposure, or browser-security workarounds confined to the test harness.
+- Tier 3: any Playwright/E2E investigation that also changes production runtime/security boundaries such as CSP policy, auth-route enforcement, proxy behavior, secret ownership, or browser-security assumptions outside the test harness.
+
+If a Playwright/E2E task starts as Tier 2 and the evidence points to a production boundary bug, stop treating it as test-only work and reroute it under the higher tier immediately.
+
 ## Planning Expectations
 
 - Keep the active, authoritative plan in Codex `update_plan`.
@@ -104,6 +113,8 @@ Plan and verification depth must increase with tier.
 ### E2E Caveat
 
 `npm run test:e2e` depends on environment setup and secrets (including Supabase-related credentials). Treat E2E as required when the changed surface warrants it, especially for behavior-changing Playwright config/bootstrap and browser-security harness changes, and the environment is properly configured. If the environment is not configured, record the gap explicitly and treat it as a stop-and-ask condition before claiming the required verification is complete or merging.
+
+Use [tests/e2e/README.md](../tests/e2e/README.md) for the current local E2E prerequisites and command entrypoints, and [docs/E2E_DEBUGGING_REFERENCE.md](./E2E_DEBUGGING_REFERENCE.md) for task-local debugging notes. Those files support this policy; they do not replace it.
 
 ## Review Policy
 

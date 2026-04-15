@@ -169,7 +169,7 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 # Required for signup / password reset flows that use hCaptcha
 NEXT_PUBLIC_HCAPTCHA_SITE_KEY=your_hcaptcha_site_key
 
-# Required only for admin/service-role flows such as account deletion
+# Required for admin/service-role flows such as account deletion and Playwright E2E global setup
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 ```
 
@@ -185,7 +185,7 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 
 </details>
 
-These are local setup hints only. Runtime code, `.env.example`, and the current authority docs win if this section drifts. Some feature areas are optional in local development, but signup/password-reset and self-serve account deletion do require the extra keys above.
+These are local setup hints only. Runtime code, `.env.example`, and the current authority docs win if this section drifts. Some feature areas are optional in local development, but signup/password-reset, self-serve account deletion, and Playwright E2E global setup do require the extra keys above.
 
 3. **Set up the database:**
 

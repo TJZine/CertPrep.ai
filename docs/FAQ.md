@@ -46,7 +46,7 @@ At a minimum:
   - Baseline schema/RLS from `src/lib/supabase/schema.sql`
   - Repo-root incremental changes from `supabase/migrations/*`
 - `NEXT_PUBLIC_HCAPTCHA_SITE_KEY` if you want signup/password-reset protection paths to work
-- `SUPABASE_SERVICE_ROLE_KEY` only if you need self-serve account deletion or other service-role-only flows
+- `SUPABASE_SERVICE_ROLE_KEY` if you need self-serve account deletion, Playwright E2E global setup, or other service-role-only flows
 - Read setup and contributor expectations in [README.md](../README.md) and [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 If you are provisioning a fresh database, do **not** assume `supabase/migrations/*` alone reconstructs the current DB. Review [docs/ARCHITECTURE.md](./ARCHITECTURE.md) first because schema surfaces are still being consolidated.
