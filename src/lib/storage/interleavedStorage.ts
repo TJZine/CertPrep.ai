@@ -26,6 +26,53 @@ export interface InterleavedSessionState {
     keyMappings: Record<string, Record<string, string>> | null;
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isStringRecord(value: unknown): value is Record<string, string> {
+    return (
+        isRecord(value) &&
+        Object.values(value).every((entry) => typeof entry === "string")
+    );
+}
+
+function isQuizQuestion(value: unknown): boolean {
+    return (
+        isRecord(value) &&
+        typeof value.id === "string" &&
+        typeof value.category === "string" &&
+        typeof value.question === "string" &&
+        typeof value.explanation === "string" &&
+        isStringRecord(value.options)
+    );
+}
+
+function isQuiz(value: unknown): value is Quiz {
+    return (
+        isRecord(value) &&
+        typeof value.id === "string" &&
+        typeof value.user_id === "string" &&
+        typeof value.title === "string" &&
+        typeof value.description === "string" &&
+        typeof value.created_at === "number" &&
+        Array.isArray(value.questions) &&
+        value.questions.every(isQuizQuestion) &&
+        Array.isArray(value.tags) &&
+        value.tags.every((tag) => typeof tag === "string") &&
+        typeof value.version === "number"
+    );
+}
+
+function isKeyMappingsRecord(
+    value: unknown,
+): value is Record<string, Record<string, string>> {
+    return (
+        isRecord(value) &&
+        Object.values(value).every((entry) => isStringRecord(entry))
+    );
+}
+
 /**
  * Converts a Map to a plain object for JSON serialization.
  */
@@ -82,18 +129,36 @@ export function loadInterleavedState(): InterleavedSessionState | null {
             return null;
         }
 
-        const quiz: Quiz = JSON.parse(quizJson);
-        const sourceMap: Record<string, string> = JSON.parse(sourceMapJson);
+        const quiz = JSON.parse(quizJson);
+        const sourceMap = JSON.parse(sourceMapJson);
+
+        if (!isQuiz(quiz) || !isStringRecord(sourceMap)) {
+            clearInterleavedState();
+            return null;
+        }
 
         let keyMappings: Record<string, Record<string, string>> | null = null;
         const keyMappingsJson = sessionStorage.getItem(INTERLEAVED_KEY_MAPPINGS_KEY);
         if (keyMappingsJson) {
-            keyMappings = JSON.parse(keyMappingsJson);
+            try {
+                const parsedKeyMappings = JSON.parse(keyMappingsJson);
+                if (isKeyMappingsRecord(parsedKeyMappings)) {
+                    keyMappings = parsedKeyMappings;
+                } else {
+                    sessionStorage.removeItem(INTERLEAVED_KEY_MAPPINGS_KEY);
+                }
+            } catch (error) {
+                logger.warn("Failed to load interleaved key mappings from sessionStorage", {
+                    error,
+                });
+                sessionStorage.removeItem(INTERLEAVED_KEY_MAPPINGS_KEY);
+            }
         }
 
         return { quiz, sourceMap, keyMappings };
     } catch (error) {
         logger.warn("Failed to load interleaved state from sessionStorage", { error });
+        clearInterleavedState();
         return null;
     }
 }

@@ -50,6 +50,17 @@ function healFutureCursor(
   return { timestamp, healed: false };
 }
 
+/**
+ * Retrieves the results sync cursor for keyset pagination.
+ *
+ * **Self-Healing Behavior (Side-Effect):** If the stored cursor is corrupted
+ * (future timestamp, invalid UUID lastId, or a legacy unscoped key exists),
+ * this function may immediately persist repaired state to IndexedDB before
+ * returning the safe cursor.
+ *
+ * @param userId - The user ID to get the sync cursor for
+ * @returns SyncCursor with validated timestamp and lastId
+ */
 export async function getSyncCursor(userId: string): Promise<SyncCursor> {
   if (!userId) return { timestamp: EPOCH_TIMESTAMP, lastId: NIL_UUID };
 
@@ -159,6 +170,16 @@ export async function setSyncCursor(
   });
 }
 
+/**
+ * Retrieves the quizzes sync cursor for keyset pagination.
+ *
+ * **Self-Healing Behavior (Side-Effect):** If the stored cursor is corrupted
+ * (future timestamp or invalid UUID lastId), this function will immediately
+ * persist the healed cursor to IndexedDB before returning it.
+ *
+ * @param userId - The user ID to get the sync cursor for
+ * @returns SyncCursor with validated timestamp and lastId
+ */
 export async function getQuizSyncCursor(userId: string): Promise<SyncCursor> {
   if (!userId) return { timestamp: EPOCH_TIMESTAMP, lastId: NIL_UUID };
 

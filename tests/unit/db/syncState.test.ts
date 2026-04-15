@@ -138,6 +138,20 @@ describe("syncState cursor operations", () => {
             const cursor = await getQuizSyncCursor(testUserId);
             expect(cursor.lastId).toBe(NIL_UUID);
         });
+
+        it("persists the healed quiz cursor after repairing corrupted state", async () => {
+            await db.syncState.put({
+                table: `quizzes:${testUserId}`,
+                lastSyncedAt: "2024-01-15T10:00:00.000Z",
+                synced: 1,
+                lastId: "quiz-slug-name",
+            });
+
+            await getQuizSyncCursor(testUserId);
+
+            const state = await db.syncState.get(`quizzes:${testUserId}`);
+            expect(state?.lastId).toBe(NIL_UUID);
+        });
     });
 
     describe("getSRSSyncCursor", () => {
