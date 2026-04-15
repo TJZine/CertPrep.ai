@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { CloudOff, Check, Loader2 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import { useSync } from "@/hooks/useSync";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { useAuth } from "@/components/providers/AuthProvider";

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 
 interface EmptyCardStateProps {
   icon: React.ReactNode;

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import "fake-indexeddb/auto";
-import { db } from "@/db/index";
+import { db } from "@/db";
 import {
     getSyncCursor,
     setSyncCursor,

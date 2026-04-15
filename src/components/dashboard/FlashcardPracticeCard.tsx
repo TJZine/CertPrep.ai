@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/Card";
 import { buttonVariants } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 
 interface FlashcardPracticeCardProps {
     /** Number of flashcards due for review. */

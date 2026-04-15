@@ -25,7 +25,6 @@ export function tryFormatDateKey(dateInput: Date | number | string): string | nu
   }
 }
 
-
 /**
  * Formats a date for display using local time (e.g., Sep 5).
  */
@@ -37,4 +36,32 @@ export function formatMonthDayLabel(
     month: "short",
     day: "numeric",
   });
+}
+
+/**
+ * Formats seconds as MM:SS.
+ *
+ * @param seconds - The total number of seconds.
+ * @returns A string in "MM:SS" format (e.g., "01:30", "12:05").
+ *
+ * @example
+ * formatTime(90) // "01:30"
+ */
+export function formatTime(seconds: number): string {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+}
+
+/**
+ * Formats a timestamp into a human-readable date/time string.
+ *
+ * @param timestamp - Unix timestamp in milliseconds.
+ * @returns A locale-formatted string (e.g., "Oct 24, 2023, 12:00 PM").
+ */
+export function formatDate(timestamp: number): string {
+  return new Intl.DateTimeFormat("en-US", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(timestamp));
 }

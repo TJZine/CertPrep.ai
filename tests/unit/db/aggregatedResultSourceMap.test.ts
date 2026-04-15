@@ -5,10 +5,10 @@ import {
     type CreateSRSReviewResultInput,
     type CreateTopicStudyResultInput,
 } from "@/db/results";
-import { db } from "@/db";
+import { db } from "@/db/dbInstance";
 
 // Mock db
-vi.mock("@/db", () => ({
+vi.mock("@/db/dbInstance", () => ({
     db: {
         quizzes: {
             get: vi.fn(),
@@ -25,7 +25,7 @@ vi.mock("@/db/quizzes", () => ({
 }));
 
 // Mock generateUUID
-vi.mock("@/lib/utils", () => ({
+vi.mock("@/lib/utils/cn", () => ({
     generateUUID: vi.fn().mockReturnValue("test-result-id"),
     calculatePercentage: vi.fn((a, b) => (b === 0 ? 0 : Math.round((a / b) * 100))),
 }));

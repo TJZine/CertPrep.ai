@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Brain, Layers, Check, Zap } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 
 export type ReviewMode = "quiz" | "flashcard";
 

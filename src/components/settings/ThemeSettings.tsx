@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { useTheme, THEME_CONFIG, type Theme } from "@/components/common/ThemeProvider";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import { Sun, Check } from "lucide-react"; // Only need Sun for the header icon, and Check for selection
 
 export function ThemeSettings(): React.ReactElement {

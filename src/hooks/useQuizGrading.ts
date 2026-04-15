@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { hashAnswer } from "@/lib/utils";
+import { hashAnswer } from "@/lib/core/crypto";;
 import type { Quiz } from "@/types/quiz";
 
 export interface GradingResult {

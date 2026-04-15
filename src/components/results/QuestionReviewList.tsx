@@ -47,7 +47,7 @@ const MemoizedCard = React.memo(function MemoizedCard({
   return (
     <div
       className="mb-4"
-      style={{ contain: 'content' }} // CSS containment for performance
+      style={{ contain: "content" }} // CSS containment for performance
     >
       <QuestionReviewCard
         question={item.question}
@@ -85,12 +85,15 @@ export function QuestionReviewList({
 
   const activeFilter = filter ?? internalFilter;
 
-  const counts = React.useMemo(() => ({
-    all: questions.length,
-    correct: questions.filter((q) => q.isCorrect).length,
-    incorrect: questions.filter((q) => !q.isCorrect).length,
-    flagged: questions.filter((q) => q.isFlagged).length,
-  }), [questions]);
+  const counts = React.useMemo(
+    () => ({
+      all: questions.length,
+      correct: questions.filter((q) => q.isCorrect).length,
+      incorrect: questions.filter((q) => !q.isCorrect).length,
+      flagged: questions.filter((q) => q.isFlagged).length,
+    }),
+    [questions],
+  );
 
   const filteredQuestions = React.useMemo(() => {
     let result = questions;
@@ -130,10 +133,30 @@ export function QuestionReviewList({
   };
 
   const filters = [
-    { id: "all", label: "All", icon: <List className="h-4 w-4" aria-hidden="true" />, count: counts.all },
-    { id: "correct", label: "Correct", icon: <CheckCircle className="h-4 w-4" aria-hidden="true" />, count: counts.correct },
-    { id: "incorrect", label: "Incorrect", icon: <XCircle className="h-4 w-4" aria-hidden="true" />, count: counts.incorrect },
-    { id: "flagged", label: "Flagged", icon: <Flag className="h-4 w-4" aria-hidden="true" />, count: counts.flagged },
+    {
+      id: "all",
+      label: "All",
+      icon: <List className="h-4 w-4" aria-hidden="true" />,
+      count: counts.all,
+    },
+    {
+      id: "correct",
+      label: "Correct",
+      icon: <CheckCircle className="h-4 w-4" aria-hidden="true" />,
+      count: counts.correct,
+    },
+    {
+      id: "incorrect",
+      label: "Incorrect",
+      icon: <XCircle className="h-4 w-4" aria-hidden="true" />,
+      count: counts.incorrect,
+    },
+    {
+      id: "flagged",
+      label: "Flagged",
+      icon: <Flag className="h-4 w-4" aria-hidden="true" />,
+      count: counts.flagged,
+    },
   ] as const;
 
   return (
@@ -150,7 +173,10 @@ export function QuestionReviewList({
             >
               {f.icon}
               {f.label}
-              <Badge variant={activeFilter === f.id ? "secondary" : "outline"} className="ml-1">
+              <Badge
+                variant={activeFilter === f.id ? "secondary" : "outline"}
+                className="ml-1"
+              >
                 {f.count}
               </Badge>
             </Button>
@@ -166,7 +192,11 @@ export function QuestionReviewList({
         Showing {filteredQuestions.length} of {questions.length} questions
         {categoryFilter && (
           <>
-            {" "}in <Badge variant="outline" className="ml-1">{categoryFilter}</Badge>
+            {" "}
+            in{" "}
+            <Badge variant="outline" className="ml-1">
+              {categoryFilter}
+            </Badge>
             <button
               type="button"
               onClick={() => onCategoryFilterChange?.(null)}
@@ -208,5 +238,3 @@ export function QuestionReviewList({
     </div>
   );
 }
-
-export default QuestionReviewList;

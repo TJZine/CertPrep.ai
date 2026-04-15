@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { hashAnswer } from "@/lib/utils";
+import { hashAnswer } from "@/lib/core/crypto";;
 
 describe("hashAnswer", () => {
   it("should generate consistent hashes for the same input", async () => {

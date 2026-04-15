@@ -6,7 +6,7 @@ import { Brain, Clock, Check, Zap, Layers } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import type { Quiz, QuizMode } from "@/types/quiz";
 
 export interface ModeSelectModalProps {

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Button } from "@/components/ui/Button";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 
 export type DateRange = "7d" | "30d" | "90d" | "all";
 

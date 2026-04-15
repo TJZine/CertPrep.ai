@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Check, ChevronRight, RotateCcw, Home } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import type { FlashcardRating } from "./FlashcardControls";
 
 export interface FlashcardSummaryProps {

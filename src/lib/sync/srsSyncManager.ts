@@ -16,15 +16,26 @@ import { z } from "zod";
 import type { Database } from "@/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { SRSState } from "@/types/srs";
+import {
+  createSupabaseClientGetter,
+  toErrorMessage as toSharedErrorMessage,
+  toSafeCursorTimestamp as toSharedSafeCursorTimestamp,
+} from "./shared";
 
-let supabaseInstance: SupabaseClient<Database> | undefined;
-
-function getSupabaseClient(): SupabaseClient<Database> | undefined {
-  if (!supabaseInstance) {
-    supabaseInstance = createClient();
-  }
-  return supabaseInstance;
-}
+const getSupabaseClient = createSupabaseClientGetter(() => createClient());
+const toErrorMessage = (error: unknown): string =>
+  toSharedErrorMessage(error, { style: "srs" });
+const toSafeCursorTimestamp = (
+  candidate: unknown,
+  fallback: string,
+  context: Record<string, unknown>,
+): string =>
+  toSharedSafeCursorTimestamp(candidate, fallback, context, {
+    invalidCandidateMessage:
+      "Invalid cursor timestamp encountered in SRS sync, using fallback",
+    invalidFallbackMessage:
+      "Invalid cursor timestamp and fallback in SRS sync; defaulting to epoch",
+  });
 
 const BATCH_SIZE = 50;
 const TIME_BUDGET_MS = 5000;
@@ -191,30 +202,6 @@ async function performSRSSync(userId: string): Promise<{ incomplete: boolean }> 
   }
 }
 
-function toErrorMessage(error: unknown): string {
-  if (error instanceof Error) return error.message;
-  if (typeof error === "string") return error;
-
-  // Handle Supabase PostgrestError which has message/code/details/hint properties
-  if (error && typeof error === "object") {
-    const e = error as Record<string, unknown>;
-    if (typeof e.message === "string") {
-      const parts = [e.message];
-      if (e.code) parts.push(`code=${e.code}`);
-      if (e.details) parts.push(`details=${e.details}`);
-      if (e.hint) parts.push(`hint=${e.hint}`);
-      return parts.join(" | ");
-    }
-  }
-
-  try {
-    const json = JSON.stringify(error);
-    return json === "{}" ? "Unknown error (empty object)" : json;
-  } catch {
-    return "Unknown error";
-  }
-}
-
 async function pushLocalChanges(
   userId: string,
   startTime: number,
@@ -325,30 +312,6 @@ async function pushLocalChanges(
   }
 
   return incomplete;
-}
-
-
-function toSafeCursorTimestamp(
-  candidate: unknown,
-  fallback: string,
-  context: Record<string, unknown>,
-): string {
-  if (typeof candidate === "string" && !Number.isNaN(Date.parse(candidate))) {
-    return new Date(candidate).toISOString();
-  }
-
-  if (!Number.isNaN(Date.parse(fallback))) {
-    logger.warn("Invalid cursor timestamp encountered in SRS sync, using fallback", {
-      ...context,
-      fallback,
-    });
-    return new Date(fallback).toISOString();
-  }
-
-  logger.error("Invalid cursor timestamp and fallback in SRS sync; defaulting to epoch", {
-    ...context,
-  });
-  return "1970-01-01T00:00:00.000Z";
 }
 
 async function pullRemoteChanges(

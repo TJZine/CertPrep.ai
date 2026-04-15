@@ -5,7 +5,7 @@ import { useQuizGrading } from "@/hooks/useQuizGrading";
 import type { Quiz } from "@/types/quiz";
 
 // Mock hashAnswer
-vi.mock("@/lib/utils", () => ({
+vi.mock("@/lib/core/crypto", () => ({
     hashAnswer: vi.fn(async (input: string) => `hashed_${input}`),
 }));
 

@@ -3,7 +3,7 @@
 import * as React from "react";
 import { RotateCcw, ChevronRight, Check } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 
 export type FlashcardRating = 1 | 2 | 3;
 

@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import { Input } from "@/components/ui/Input";
-import { getAuthErrorMessage } from "@/lib/auth-utils";
+import { getAuthErrorMessage } from "@/lib/auth/authUtils";
 import Link from "next/link";
 import { useToast } from "@/components/ui/Toast";
 import HCaptcha from "@hcaptcha/react-hcaptcha";

@@ -14,7 +14,7 @@ import {
   Settings as SettingsIcon,
   User as UserIcon,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import { lockBodyScroll, unlockBodyScroll } from "@/lib/bodyScrollLock";
 import { ThemePalette } from "@/components/common/ThemePalette";
 import { useAuth } from "@/components/providers/AuthProvider";
@@ -102,6 +102,9 @@ export function Header(): React.ReactElement {
           result.error ?? "Failed to sign out. Please try again.",
         );
         return;
+      }
+      if (result.error) {
+        addToast("warning", result.error);
       }
     } catch (error) {
       logger.error("Sign out failed", error);

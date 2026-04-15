@@ -106,5 +106,5 @@ module.exports = withBundleAnalyzer(
     // NOTE: This feature is marked as deprecated but no migration path exists yet.
     // Keeping it enabled until Sentry provides the new API.
     automaticVercelMonitors: true,
-  })
+  }),
 );

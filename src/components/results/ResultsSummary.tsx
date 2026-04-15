@@ -11,7 +11,8 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { cn, formatTime } from "@/lib/utils";
+import { formatTime } from "@/lib/date";
+import { cn } from "@/lib/utils/cn";
 import type { QuizMode } from "@/types/quiz";
 
 interface ResultsSummaryProps {
@@ -115,9 +116,7 @@ export function ResultsSummary(props: ResultsSummaryProps): React.ReactElement {
               <p className="text-lg font-semibold text-foreground">
                 {formatTime(timeTakenSeconds)}
               </p>
-              <p className="text-sm text-muted-foreground">
-                Total Time
-              </p>
+              <p className="text-sm text-muted-foreground">Total Time</p>
             </div>
           </div>
 
@@ -132,9 +131,7 @@ export function ResultsSummary(props: ResultsSummaryProps): React.ReactElement {
               <p className="text-lg font-semibold text-foreground">
                 {formatTime(Math.round(averageTimePerQuestion))}
               </p>
-              <p className="text-sm text-muted-foreground">
-                Avg per Question
-              </p>
+              <p className="text-sm text-muted-foreground">Avg per Question</p>
             </div>
           </div>
         </div>
@@ -151,5 +148,3 @@ export function ResultsSummary(props: ResultsSummaryProps): React.ReactElement {
     </Card>
   );
 }
-
-export default ResultsSummary;

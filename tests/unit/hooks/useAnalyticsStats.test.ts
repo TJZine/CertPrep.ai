@@ -7,8 +7,8 @@ import type { Quiz } from "@/types/quiz";
 import type { Result } from "@/types/result";
 
 // Mock hashAnswer
-vi.mock("@/lib/utils", async () => {
-    const actual = await vi.importActual<typeof import("@/lib/utils")>("@/lib/utils");
+vi.mock("@/lib/core/crypto", async (importOriginal) => {
+    const actual = await importOriginal<typeof import("@/lib/core/crypto")>();
     return {
         ...actual,
         hashAnswer: vi.fn(async (input: string) => `hashed_${input}`),

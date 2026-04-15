@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { logger } from "@/lib/logger";
 
 // Inline worker code to avoid network/bundler issues with importScripts/chunks
 const WORKER_CODE = `
@@ -49,8 +50,7 @@ async function hashOptionsFallback(
 ): Promise<Record<string, string>> {
   const results: Record<string, string> = {};
   if (typeof crypto === "undefined" || !crypto.subtle) {
-    console.warn("crypto.subtle not available for fallback hashing");
-    return results;
+    throw new Error("SubtleCrypto is not available for fallback hashing.");
   }
 
   const encoder = new TextEncoder();
@@ -75,11 +75,16 @@ export function useCorrectAnswer(
   questionId: string | null,
   targetHash: string | null,
   options?: Record<string, string>,
-): { resolvedAnswers: Record<string, string>; isResolving: boolean } {
+): {
+  resolvedAnswers: Record<string, string>;
+  isResolving: boolean;
+  error: string | null;
+} {
   const [resolvedAnswers, setResolvedAnswers] = useState<
     Record<string, string>
   >({});
   const [isResolving, setIsResolving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Keep track of resolved attempts to avoid re-work
   const resolvedRef = React.useRef<Set<string>>(new Set());
@@ -114,19 +119,19 @@ export function useCorrectAnswer(
 
       // Handle worker-level errors (e.g., script load failures)
       worker.onerror = (event: ErrorEvent): void => {
-        // Critical: Prevent error from bubbling to window/Sentry
+        // Prevent error from bubbling to window/Sentry; we'll surface it via hook state.
         event.preventDefault();
-        console.warn(
-          "[useCorrectAnswer] Worker failed (likely load error), switching to fallback:",
-          event.message,
-        );
+        logger.warn("[useCorrectAnswer] Worker failed, switching to fallback", {
+          message: event.message,
+        });
+        setError("Answer hashing worker failed; using fallback.");
         // Kill the dead worker and signal failure state
         worker.terminate();
         workerRef.current = null;
         setWorkerFailed(true);
       };
     } catch (error) {
-      console.warn("[useCorrectAnswer] Worker instantiation failed:", error);
+      logger.warn("[useCorrectAnswer] Worker instantiation failed", error);
       setWorkerFailed(true);
     }
 
@@ -151,6 +156,7 @@ export function useCorrectAnswer(
       const currentOptions = optionsRef.current;
       if (!questionId || !targetHash || !currentOptions) return;
 
+      setError(null);
       const cacheKey = `${questionId}:${targetHash}`;
       if (resolvedRef.current.has(cacheKey)) return;
 
@@ -179,7 +185,12 @@ export function useCorrectAnswer(
           const hashes = await hashOptionsFallback(currentOptions);
           processResult(hashes);
         } catch (error) {
-          console.error("[useCorrectAnswer] Fallback hashing failed", error);
+          logger.error("[useCorrectAnswer] Fallback hashing failed", error);
+          if (isMounted) {
+            setError(
+              error instanceof Error ? error.message : "Fallback hashing failed.",
+            );
+          }
         } finally {
           if (isMounted) setIsResolving(false);
         }
@@ -191,7 +202,10 @@ export function useCorrectAnswer(
         const { type, payload } = event.data;
 
         if (type === "hash_bulk_error" && payload.id === questionId) {
-          console.error("Worker computation error:", payload.error);
+          logger.warn("[useCorrectAnswer] Worker computation error", {
+            error: payload.error,
+          });
+          setWorkerFailed(true);
           if (isMounted) setIsResolving(false);
           cleanup();
           return;
@@ -232,5 +246,5 @@ export function useCorrectAnswer(
     };
   }, [questionId, targetHash, optionsKey, workerFailed]); // Depend on optionsKey to trigger when options load
 
-  return { resolvedAnswers, isResolving };
+  return { resolvedAnswers, isResolving, error };
 }

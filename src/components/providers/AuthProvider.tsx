@@ -19,6 +19,7 @@ import { clearDatabase } from "@/db";
 import { requestServiceWorkerCacheClear } from "@/lib/serviceWorkerClient";
 import { syncQuizzes } from "@/lib/sync/quizSyncManager";
 import { syncResults } from "@/lib/sync/syncManager";
+import { logger } from "@/lib/logger";
 
 type AuthContextType = {
   user: User | null;
@@ -36,6 +37,25 @@ type SignOutDependencies = {
   userId?: string;
 };
 
+type PreLogoutSyncOutcome = {
+  incomplete: boolean;
+  status?: "synced" | "skipped" | "failed";
+};
+
+function requiresLocalDataPreservation(
+  outcome: PromiseSettledResult<PreLogoutSyncOutcome>,
+): boolean {
+  if (outcome.status === "rejected") {
+    return true;
+  }
+
+  return (
+    outcome.value.status === "skipped" ||
+    outcome.value.status === "failed" ||
+    Boolean(outcome.value.incomplete)
+  );
+}
+
 /**
  * Signs out the user, optionally syncing data and clearing local storage.
  * @returns An object with success (true if sign-out completed) and error (set if local cleanup failed).
@@ -48,30 +68,53 @@ export async function performSignOut({
   userId,
 }: SignOutDependencies): Promise<{ success: boolean; error?: string }> {
   let dbClearError: string | undefined;
+  let shouldPreserveLocalData = false;
 
   // Attempt to flush local changes to server before clearing DB
   if (userId) {
     try {
-      // We give the sync 3 seconds to finish. If it takes longer, we proceed anyway
-      // to avoid trapping the user in a "signing out..." limbo.
+      // Sync is best-effort. If it cannot be confirmed, sign out anyway but
+      // preserve local data to avoid discarding unsynced offline progress.
       const syncPromise = Promise.allSettled([
         syncQuizzes(userId),
         syncResults(userId),
       ]);
-      const timeoutPromise = new Promise((resolve) => setTimeout(resolve, 3000));
-      await Promise.race([syncPromise, timeoutPromise]);
+      const timeoutPromise = new Promise<"timeout">((resolve) =>
+        setTimeout(() => resolve("timeout"), 3000),
+      );
+      const raceResult = await Promise.race([syncPromise, timeoutPromise]);
+
+      if (raceResult === "timeout") {
+        logger.warn("Pre-logout sync timed out", { userId });
+        shouldPreserveLocalData = true;
+      } else {
+        const failed = raceResult.some(requiresLocalDataPreservation);
+
+        if (failed) {
+          logger.warn("Pre-logout sync failed or incomplete", {
+            userId,
+            outcomes: raceResult,
+          });
+          shouldPreserveLocalData = true;
+        }
+      }
     } catch (error) {
-      console.warn("Pre-logout sync failed or timed out:", error);
-      // We intentionally ignore errors here to ensure signOut proceeds
+      logger.warn("Pre-logout sync threw unexpectedly", error);
+      shouldPreserveLocalData = true;
     }
   }
 
-  try {
-    void requestServiceWorkerCacheClear();
-    await clearDb();
-  } catch (error) {
-    console.error("Failed to clear local database during sign out:", error);
-    dbClearError = "Local data could not be cleared.";
+  if (shouldPreserveLocalData) {
+    dbClearError =
+      "Signed out before sync completed. Local study data was kept on this device.";
+  } else {
+    try {
+      void requestServiceWorkerCacheClear();
+      await clearDb();
+    } catch (error) {
+      logger.error("Failed to clear local database during sign out", error);
+      dbClearError = "Local data could not be cleared.";
+    }
   }
 
   if (!supabase) {
@@ -84,7 +127,7 @@ export async function performSignOut({
     // Navigation is handled by the onAuthStateChange listener to support cross-tab signouts
     return { success: true, error: dbClearError };
   } catch (error) {
-    console.error("Error signing out:", error);
+    logger.error("Error signing out", error);
     return { success: false, error: "Sign out failed. Please try again." };
   }
 }
@@ -121,7 +164,7 @@ export function AuthProvider({
         setSession(session);
         setUser(session?.user ?? null);
       } catch (error) {
-        console.error("Failed to get session:", error);
+        logger.error("Failed to get session", error);
         // Fallback to cleared state
         if (!isMounted) return;
         setSession(null);
