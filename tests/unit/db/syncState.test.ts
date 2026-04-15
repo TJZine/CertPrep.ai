@@ -69,7 +69,7 @@ describe("syncState cursor operations", () => {
             expect(state?.lastId).toBe(NIL_UUID);
         });
 
-        it("migrates a legacy key into the user-scoped results cursor", async () => {
+        it("ignores the unscoped legacy results key and falls back to epoch", async () => {
             await db.syncState.put({
                 table: "results",
                 lastSyncedAt: "2024-01-15T10:00:00.000Z",
@@ -78,13 +78,12 @@ describe("syncState cursor operations", () => {
             });
 
             const cursor = await getSyncCursor(testUserId);
-            expect(cursor.timestamp).toBe("2024-01-15T10:00:00.000Z");
-            expect(cursor.lastId).toBe("a1b2c3d4-e5f6-7890-abcd-ef1234567890");
+            expect(cursor.timestamp).toBe("1970-01-01T00:00:00.000Z");
+            expect(cursor.lastId).toBe(NIL_UUID);
 
             const migratedState = await db.syncState.get(`results:${testUserId}`);
             const legacyState = await db.syncState.get("results");
-            expect(migratedState?.lastSyncedAt).toBe("2024-01-15T10:00:00.000Z");
-            expect(migratedState?.lastId).toBe("a1b2c3d4-e5f6-7890-abcd-ef1234567890");
+            expect(migratedState).toBeUndefined();
             expect(legacyState).toBeUndefined();
         });
 

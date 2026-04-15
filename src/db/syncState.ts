@@ -55,7 +55,7 @@ export async function getSyncCursor(userId: string): Promise<SyncCursor> {
 
   const key = `results:${userId}`;
   const legacyKey = "results";
-  const { state, hasScopedState, hasLegacyState } = await db.transaction(
+  const { scopedState, hasLegacyState } = await db.transaction(
     "rw",
     db.syncState,
     async () => {
@@ -65,12 +65,12 @@ export async function getSyncCursor(userId: string): Promise<SyncCursor> {
       ]);
 
       return {
-        state: scopedState ?? legacyState,
-        hasScopedState: Boolean(scopedState),
+        scopedState,
         hasLegacyState: Boolean(legacyState),
       };
     },
   );
+  const state = scopedState;
 
   let timestamp = EPOCH_TIMESTAMP;
   let healed = false;
@@ -101,19 +101,24 @@ export async function getSyncCursor(userId: string): Promise<SyncCursor> {
   // the (timestamp, lastId) pair must be coherent for correct page boundaries.
   const safeLastId = healed || !isValidUUID ? NIL_UUID : rawLastId;
 
-  // Migrate legacy cursors into the user-scoped key and remove the old entry.
-  // Also persist healed values so follow-up reads don't repeat warnings.
-  if (state && (!hasScopedState || hasLegacyState || healed || lastIdHealed)) {
+  // Results cursors are now user-scoped. The legacy global `results` key has no user
+  // identity, so adopting it into the active user risks cross-account cursor leakage on
+  // shared devices when sign-out preserves local data. Clean it up instead and let the
+  // current user re-sync safely from epoch if they do not already have a scoped cursor.
+  if (hasLegacyState || (state && (healed || lastIdHealed))) {
     try {
       await db.transaction("rw", db.syncState, async () => {
-        await db.syncState.put({
-          table: key,
-          lastSyncedAt: timestamp,
-          synced: 1,
-          lastId: safeLastId,
-        });
+        if (state && (healed || lastIdHealed)) {
+          await db.syncState.put({
+            table: key,
+            lastSyncedAt: timestamp,
+            synced: 1,
+            lastId: safeLastId,
+          });
+        }
 
         if (hasLegacyState) {
+          logger.warn("Discarding unscoped legacy results cursor", { userId });
           await db.syncState.delete(legacyKey);
         }
       });
