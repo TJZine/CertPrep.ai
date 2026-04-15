@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/Button";
 import { useInitializeDatabase } from "@/hooks/useDatabase";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
-import { db } from "@/db/index";
+import { db } from "@/db";
 import {
     clearTopicStudyState,
     TOPIC_STUDY_QUESTIONS_KEY,

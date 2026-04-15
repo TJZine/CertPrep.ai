@@ -3,7 +3,7 @@ import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/Toast";
 import { createResult } from "@/db/results";
 import { initializeSRSForResult } from "@/db/srs";
-import { db } from "@/db/index";
+import { db } from "@/db";
 import { useSync } from "@/hooks/useSync";
 import { useQuizSessionStore } from "@/stores/quizSessionStore";
 import { useAuth } from "@/components/providers/AuthProvider";

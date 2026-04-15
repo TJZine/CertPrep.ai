@@ -10,7 +10,7 @@ import { DueQuestionsCard } from "@/components/srs/DueQuestionsCard";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 import { getDueQuestions, getDueCountsByBox } from "@/db/srs";
-import { db } from "@/db/index";
+import { db } from "@/db";
 import type { LeitnerBox, SRSState } from "@/types/srs";
 import type { Quiz, Question } from "@/types/quiz";
 import {
