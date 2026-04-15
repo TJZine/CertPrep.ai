@@ -23,7 +23,7 @@ import type { Quiz, Question } from "@/types/quiz";
  * Route: /flashcards/review
  *
  * Can be accessed either:
- * 1. From FlashcardPracticeCard with pre-populated session
+ * 1. From another flow with a pre-populated session
  * 2. Directly, which will load all due questions
  */
 export default function FlashcardReviewPage(): React.ReactElement {
