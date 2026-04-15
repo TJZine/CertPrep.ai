@@ -115,6 +115,34 @@ describe("data export/import", () => {
     expect(restoredResult?.quiz_id).toBe(sampleQuiz.id);
   });
 
+  it("clears both legacy and user-scoped results cursors during replace import", async () => {
+    await db.syncState.bulkPut([
+      {
+        table: "results",
+        lastSyncedAt: "2024-01-01T00:00:00.000Z",
+        synced: 1,
+        lastId: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+      },
+      {
+        table: `results:${TEST_USER_ID}`,
+        lastSyncedAt: "2024-01-02T00:00:00.000Z",
+        synced: 1,
+        lastId: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+      },
+    ]);
+
+    const exported: ExportData = {
+      version: "1.0",
+      exportedAt: new Date().toISOString(),
+      quizzes: [sampleQuiz],
+      results: [sampleResult],
+    };
+    await importData(exported, TEST_USER_ID, "replace");
+
+    expect(await db.syncState.get("results")).toBeUndefined();
+    expect(await db.syncState.get(`results:${TEST_USER_ID}`)).toBeUndefined();
+  });
+
   it("skips existing quizzes and results in merge mode", async () => {
     await db.quizzes.put(sampleQuiz);
     await db.results.put(sampleResult);

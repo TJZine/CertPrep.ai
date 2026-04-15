@@ -28,6 +28,7 @@ describe("syncState cursor operations", () => {
             const cursor = await getSyncCursor(testUserId);
             expect(cursor.timestamp).toBe("1970-01-01T00:00:00.000Z");
             expect(cursor.lastId).toBe(NIL_UUID);
+            expect(await db.syncState.get(`results:${testUserId}`)).toBeUndefined();
         });
 
         it("returns stored cursor for valid data", async () => {
@@ -68,7 +69,7 @@ describe("syncState cursor operations", () => {
             expect(state?.lastId).toBe(NIL_UUID);
         });
 
-        it("falls back to legacy key if user-scoped key missing", async () => {
+        it("migrates a legacy key into the user-scoped results cursor", async () => {
             await db.syncState.put({
                 table: "results",
                 lastSyncedAt: "2024-01-15T10:00:00.000Z",
@@ -79,6 +80,34 @@ describe("syncState cursor operations", () => {
             const cursor = await getSyncCursor(testUserId);
             expect(cursor.timestamp).toBe("2024-01-15T10:00:00.000Z");
             expect(cursor.lastId).toBe("a1b2c3d4-e5f6-7890-abcd-ef1234567890");
+
+            const migratedState = await db.syncState.get(`results:${testUserId}`);
+            const legacyState = await db.syncState.get("results");
+            expect(migratedState?.lastSyncedAt).toBe("2024-01-15T10:00:00.000Z");
+            expect(migratedState?.lastId).toBe("a1b2c3d4-e5f6-7890-abcd-ef1234567890");
+            expect(legacyState).toBeUndefined();
+        });
+
+        it("prefers the user-scoped cursor when both scoped and legacy keys exist", async () => {
+            await db.syncState.bulkPut([
+                {
+                    table: `results:${testUserId}`,
+                    lastSyncedAt: "2024-01-20T10:00:00.000Z",
+                    synced: 1,
+                    lastId: "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee",
+                },
+                {
+                    table: "results",
+                    lastSyncedAt: "2024-01-15T10:00:00.000Z",
+                    synced: 1,
+                    lastId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+                },
+            ]);
+
+            const cursor = await getSyncCursor(testUserId);
+            expect(cursor.timestamp).toBe("2024-01-20T10:00:00.000Z");
+            expect(cursor.lastId).toBe("aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee");
+            expect(await db.syncState.get("results")).toBeUndefined();
         });
     });
 

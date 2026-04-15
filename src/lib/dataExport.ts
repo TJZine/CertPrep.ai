@@ -405,6 +405,7 @@ export async function importData(
         await Promise.all([
           db.quizzes.where("user_id").equals(userId).delete(),
           db.results.where("user_id").equals(userId).delete(),
+          db.syncState.delete("results"),
           db.syncState.delete(`results:${userId}`),
           db.syncState.delete(`quizzes:${userId}`),
           db.syncState.delete(`quizzes:backfill:${userId}`),

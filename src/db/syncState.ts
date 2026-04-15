@@ -54,9 +54,23 @@ export async function getSyncCursor(userId: string): Promise<SyncCursor> {
   if (!userId) return { timestamp: EPOCH_TIMESTAMP, lastId: NIL_UUID };
 
   const key = `results:${userId}`;
-  // Fallback to legacy key if present
-  const state =
-    (await db.syncState.get(key)) ?? (await db.syncState.get("results"));
+  const legacyKey = "results";
+  const { state, hasScopedState, hasLegacyState } = await db.transaction(
+    "rw",
+    db.syncState,
+    async () => {
+      const [scopedState, legacyState] = await Promise.all([
+        db.syncState.get(key),
+        db.syncState.get(legacyKey),
+      ]);
+
+      return {
+        state: scopedState ?? legacyState,
+        hasScopedState: Boolean(scopedState),
+        hasLegacyState: Boolean(legacyState),
+      };
+    },
+  );
 
   let timestamp = EPOCH_TIMESTAMP;
   let healed = false;
@@ -87,12 +101,24 @@ export async function getSyncCursor(userId: string): Promise<SyncCursor> {
   // the (timestamp, lastId) pair must be coherent for correct page boundaries.
   const safeLastId = healed || !isValidUUID ? NIL_UUID : rawLastId;
 
-  // Persist healed cursor to prevent repeated warnings
-  if (healed || lastIdHealed) {
+  // Migrate legacy cursors into the user-scoped key and remove the old entry.
+  // Also persist healed values so follow-up reads don't repeat warnings.
+  if (state && (!hasScopedState || hasLegacyState || healed || lastIdHealed)) {
     try {
-      await setSyncCursor(timestamp, userId, safeLastId);
+      await db.transaction("rw", db.syncState, async () => {
+        await db.syncState.put({
+          table: key,
+          lastSyncedAt: timestamp,
+          synced: 1,
+          lastId: safeLastId,
+        });
+
+        if (hasLegacyState) {
+          await db.syncState.delete(legacyKey);
+        }
+      });
     } catch (err) {
-      logger.error("Failed to persist healed results cursor", {
+      logger.error("Failed to persist results cursor state", {
         userId,
         error: err instanceof Error ? err.message : String(err),
       });
