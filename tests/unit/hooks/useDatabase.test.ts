@@ -37,7 +37,7 @@ import {
 } from "@/hooks/useDatabase";
 import { db, initializeDatabase } from "@/db";
 import { isSRSQuiz, getQuizStats } from "@/db/quizzes";
-import { hydrateAggregatedQuiz } from "@/db/aggregatedQuiz";
+import { resolveAggregatedResultReadModel } from "@/db/aggregatedQuiz";
 import type { Quiz } from "@/types/quiz";
 import type { Result } from "@/types/result";
 
@@ -73,7 +73,7 @@ vi.mock("@/db/quizzes", () => ({
 }));
 
 vi.mock("@/db/aggregatedQuiz", () => ({
-    hydrateAggregatedQuiz: vi.fn(),
+    resolveAggregatedResultReadModel: vi.fn(),
 }));
 
 const mockedResultsTable = db.results as unknown as {
@@ -372,16 +372,16 @@ describe("useDatabase hooks (Unit Layer)", () => {
             (db.quizzes.get as Mock).mockResolvedValue(mockBaseQuiz);
 
             (isSRSQuiz as unknown as Mock).mockReturnValue(true);
-            (hydrateAggregatedQuiz as unknown as Mock).mockResolvedValue({
-                syntheticQuiz: mockSyntheticQuiz,
-                sourceQuizByQuestionId: {},
-                missingQuestionIds: []
+            (resolveAggregatedResultReadModel as unknown as Mock).mockResolvedValue({
+                quiz: mockSyntheticQuiz,
+                sourceMap: { id1: "quiz-1", id2: "quiz-2" },
             });
 
             const { result } = renderHook(() => useResultWithHydratedQuiz("r1", "user1"));
 
             await waitFor(() => {
                 expect(result.current.quiz).toEqual(mockSyntheticQuiz as unknown as Quiz);
+                expect(result.current.sourceMap).toEqual({ id1: "quiz-1", id2: "quiz-2" });
                 expect(result.current.isHydrating).toBe(false);
             });
         });
@@ -412,23 +412,62 @@ describe("useDatabase hooks (Unit Layer)", () => {
             (db.results.get as Mock).mockResolvedValue(mockResult);
             (db.quizzes.get as Mock).mockResolvedValue(mockBaseQuiz);
             (isSRSQuiz as unknown as Mock).mockReturnValue(false);
-            (hydrateAggregatedQuiz as unknown as Mock).mockResolvedValue({
-                syntheticQuiz: mockSyntheticQuiz,
-                sourceQuizByQuestionId: {},
-                missingQuestionIds: [],
+            (resolveAggregatedResultReadModel as unknown as Mock).mockResolvedValue({
+                quiz: mockSyntheticQuiz,
+                sourceMap: { id1: "quiz-a", id2: "quiz-b" },
             });
 
             const { result } = renderHook(() => useResultWithHydratedQuiz("r1", "user1"));
 
             await waitFor(() => {
                 expect(result.current.quiz).toEqual(mockSyntheticQuiz as unknown as Quiz);
+                expect(result.current.sourceMap).toEqual({ id1: "quiz-a", id2: "quiz-b" });
                 expect(result.current.isHydrating).toBe(false);
             });
 
-            expect(hydrateAggregatedQuiz).toHaveBeenCalledWith(
-                ["id1", "id2"],
+            expect(resolveAggregatedResultReadModel).toHaveBeenCalledWith(
+                mockResult,
                 "user1",
-                "Topic Study: Networking",
+                mockBaseQuiz,
+            );
+        });
+
+        it("hydrates aggregated results even when the base quiz is missing", async () => {
+            const mockResult = {
+                id: "r1",
+                user_id: "user1",
+                quiz_id: "missing-quiz",
+                session_type: "topic_study",
+                question_ids: ["id1", "id2"],
+                category_breakdown: { Networking: 1 },
+            };
+
+            const mockSyntheticQuiz = {
+                id: "synthetic-user1",
+                user_id: "user1",
+                title: "Topic Study: Networking",
+                questions: [{ id: "id1" }, { id: "id2" }],
+            };
+
+            (db.results.get as Mock).mockResolvedValue(mockResult);
+            (db.quizzes.get as Mock).mockResolvedValue(null);
+            (resolveAggregatedResultReadModel as unknown as Mock).mockResolvedValue({
+                quiz: mockSyntheticQuiz,
+                sourceMap: { id1: "quiz-a", id2: "quiz-b" },
+            });
+
+            const { result } = renderHook(() => useResultWithHydratedQuiz("r1", "user1"));
+
+            await waitFor(() => {
+                expect(result.current.quiz).toEqual(mockSyntheticQuiz as unknown as Quiz);
+                expect(result.current.sourceMap).toEqual({ id1: "quiz-a", id2: "quiz-b" });
+                expect(result.current.isHydrating).toBe(false);
+            });
+
+            expect(resolveAggregatedResultReadModel).toHaveBeenCalledWith(
+                mockResult,
+                "user1",
+                undefined,
             );
         });
 
@@ -452,7 +491,7 @@ describe("useDatabase hooks (Unit Layer)", () => {
             (db.quizzes.get as Mock).mockResolvedValue(mockBaseQuiz);
 
             (isSRSQuiz as unknown as Mock).mockReturnValue(true);
-            (hydrateAggregatedQuiz as unknown as Mock).mockRejectedValue(new Error("Failed"));
+            (resolveAggregatedResultReadModel as unknown as Mock).mockRejectedValue(new Error("Failed"));
             const suppressError = vi.spyOn(console, "error").mockImplementation(() => { });
 
             const { result } = renderHook(() => useResultWithHydratedQuiz("r1", "user1"));
@@ -462,6 +501,36 @@ describe("useDatabase hooks (Unit Layer)", () => {
                 expect(result.current.isHydrating).toBe(false);
             });
             expect(suppressError).toHaveBeenCalledWith("Failed to hydrate quiz", expect.any(Error));
+        });
+
+        it("preserves raw source_map for non-aggregated results", async () => {
+            const mockResult = {
+                id: "r1",
+                user_id: "user1",
+                quiz_id: "q1",
+                session_type: "standard",
+                source_map: { q1: "quiz-1" },
+            };
+
+            const mockBaseQuiz = {
+                id: "q1",
+                user_id: "user1",
+                title: "Base title",
+                questions: [{ id: "q1" }],
+            };
+
+            (db.results.get as Mock).mockResolvedValue(mockResult);
+            (db.quizzes.get as Mock).mockResolvedValue(mockBaseQuiz);
+
+            const { result } = renderHook(() => useResultWithHydratedQuiz("r1", "user1"));
+
+            await waitFor(() => {
+                expect(result.current.quiz).toEqual(mockBaseQuiz as unknown as Quiz);
+                expect(result.current.sourceMap).toEqual({ q1: "quiz-1" });
+                expect(result.current.isHydrating).toBe(false);
+            });
+
+            expect(resolveAggregatedResultReadModel).not.toHaveBeenCalled();
         });
     });
 });

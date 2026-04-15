@@ -1,5 +1,6 @@
 import { db } from "./dbInstance";
 import type { Quiz, Question } from "@/types/quiz";
+import { isAggregatedSessionType, type Result } from "@/types/result";
 import { logger } from "@/lib/logger";
 
 export interface SyntheticQuizResult {
@@ -7,6 +8,32 @@ export interface SyntheticQuizResult {
   sourceQuizByQuestionId: Map<string, Quiz>;
   sourceMap: Record<string, string>;
   missingQuestionIds: string[];
+}
+
+export interface AggregatedResultReadModel {
+  quiz: Quiz;
+  sourceMap: Record<string, string>;
+}
+
+export function getAggregatedResultTitle(
+  result: Result,
+  fallbackTitle: string,
+): string {
+  switch (result.session_type) {
+    case "topic_study": {
+      const categories = Object.keys(result.category_breakdown ?? {});
+      if (categories.length === 1) {
+        return `Topic Study: ${categories[0]}`;
+      }
+      return "Topic Study";
+    }
+    case "srs_review":
+      return "SRS Review";
+    case "interleaved":
+      return "Interleaved Practice";
+    default:
+      return fallbackTitle;
+  }
 }
 
 /**
@@ -100,5 +127,36 @@ export async function hydrateAggregatedQuiz(
     sourceQuizByQuestionId,
     sourceMap,
     missingQuestionIds,
+  };
+}
+
+export async function resolveAggregatedResultReadModel(
+  result: Result,
+  userId: string,
+  baseQuiz?: Quiz,
+): Promise<AggregatedResultReadModel> {
+  if (
+    !isAggregatedSessionType(result.session_type) ||
+    !result.question_ids ||
+    result.question_ids.length === 0
+  ) {
+    return {
+      quiz: baseQuiz as Quiz,
+      sourceMap: result.source_map ?? {},
+    };
+  }
+
+  const { syntheticQuiz, sourceMap } = await hydrateAggregatedQuiz(
+    result.question_ids,
+    userId,
+    getAggregatedResultTitle(result, baseQuiz?.title ?? "Aggregated Study Session"),
+  );
+
+  return {
+    quiz: syntheticQuiz,
+    sourceMap: {
+      ...sourceMap,
+      ...(result.source_map ?? {}),
+    },
   };
 }

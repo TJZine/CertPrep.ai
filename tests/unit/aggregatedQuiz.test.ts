@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { hydrateAggregatedQuiz } from "@/db/aggregatedQuiz";
+import {
+  hydrateAggregatedQuiz,
+  resolveAggregatedResultReadModel,
+} from "@/db/aggregatedQuiz";
 import { db } from "@/db/dbInstance";
 
 // Mock Dexie
@@ -91,5 +94,50 @@ describe("hydrateAggregatedQuiz", () => {
 
     expect(result.syntheticQuiz.questions[0]?.id).toBe("q2");
     expect(result.syntheticQuiz.questions[1]?.id).toBe("q1");
+  });
+
+  it("preserves persisted source_map keys and only backfills missing keys from hydration", async () => {
+    const mockWhere = {
+      equals: vi.fn().mockReturnValue({
+        toArray: vi.fn().mockResolvedValue([quiz1, quiz2]),
+      }),
+    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (db.quizzes.where as any).mockReturnValue(mockWhere);
+
+    const baseQuiz = {
+      id: "aggregated-quiz",
+      user_id: userId,
+      title: "Base title",
+      questions: [],
+      deleted_at: null,
+    };
+
+    const result = await resolveAggregatedResultReadModel(
+      {
+        id: "result-1",
+        quiz_id: baseQuiz.id,
+        user_id: userId,
+        timestamp: Date.now(),
+        mode: "zen",
+        score: 80,
+        time_taken_seconds: 42,
+        answers: {},
+        flagged_questions: [],
+        category_breakdown: { Networking: 80 },
+        session_type: "topic_study",
+        question_ids: ["q1", "q2"],
+        source_map: { q2: "persisted-quiz-2" },
+      },
+      userId,
+      baseQuiz as never,
+    );
+
+    expect(result.quiz.title).toBe("Topic Study: Networking");
+    expect(result.quiz.questions.map((question) => question.id)).toEqual(["q1", "q2"]);
+    expect(result.sourceMap).toEqual({
+      q1: "quiz1",
+      q2: "persisted-quiz-2",
+    });
   });
 });

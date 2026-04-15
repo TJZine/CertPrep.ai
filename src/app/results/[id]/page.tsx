@@ -107,6 +107,7 @@ export default function ResultsPage(): React.ReactElement {
   const {
     result,
     quiz,
+    sourceMap,
     isLoading: dataLoading,
     isHydrating,
   } = useResultWithHydratedQuiz(
@@ -387,7 +388,7 @@ export default function ResultsPage(): React.ReactElement {
           quiz={quiz}
           previousScore={previousScore}
           allQuizResults={allQuizResults}
-          sourceMap={result.source_map}
+          sourceMap={sourceMap}
         />
         <DeleteConfirmationModal
           isOpen={isDeleteModalOpen}
