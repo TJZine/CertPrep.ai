@@ -195,6 +195,26 @@ describe("SRS Quiz Utilities", () => {
       expect(isSRSQuiz({ id: srsId, user_id: userId })).toBe(true);
     });
 
+    it("should not classify deterministic SRS ids without user context", () => {
+      const srsId = getSRSQuizId(userId);
+
+      expect(isSRSQuiz(srsId)).toBe(false);
+    });
+
+    it("should not classify deterministic SRS ids for the wrong user", () => {
+      const srsId = getSRSQuizId(userId);
+
+      expect(isSRSQuiz(srsId, "other-user")).toBe(false);
+      expect(isSRSQuiz({ id: srsId, user_id: "other-user" })).toBe(false);
+    });
+
+    it("should not classify regular UUID quiz ids or objects as SRS", () => {
+      const regularQuizId = "550e8400-e29b-41d4-a716-446655440000";
+
+      expect(isSRSQuiz(regularQuizId, userId)).toBe(false);
+      expect(isSRSQuiz({ id: regularQuizId, user_id: userId })).toBe(false);
+    });
+
     it("should return false for regular quiz ids without user context", () => {
       expect(isSRSQuiz("quiz-123")).toBe(false);
     });
