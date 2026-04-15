@@ -432,6 +432,51 @@ describe("useDatabase hooks (Unit Layer)", () => {
             );
         });
 
+        it("still hydrates legacy aggregated results that predate session_type", async () => {
+            const mockResult = {
+                id: "r1",
+                user_id: "user1",
+                quiz_id: "q1",
+                question_ids: ["id1", "id2"],
+                category_breakdown: { Networking: 1 },
+            };
+
+            const mockBaseQuiz = {
+                id: "q1",
+                user_id: "user1",
+                title: "Legacy SRS quiz",
+                questions: [],
+            };
+
+            const mockSyntheticQuiz = {
+                ...mockBaseQuiz,
+                title: "Topic Study: Networking",
+                questions: [{ id: "id1" }, { id: "id2" }],
+            };
+
+            (db.results.get as Mock).mockResolvedValue(mockResult);
+            (db.quizzes.get as Mock).mockResolvedValue(mockBaseQuiz);
+            (isSRSQuiz as unknown as Mock).mockReturnValue(true);
+            (resolveAggregatedResultReadModel as unknown as Mock).mockResolvedValue({
+                quiz: mockSyntheticQuiz,
+                sourceMap: { id1: "quiz-a", id2: "quiz-b" },
+            });
+
+            const { result } = renderHook(() => useResultWithHydratedQuiz("r1", "user1"));
+
+            await waitFor(() => {
+                expect(result.current.quiz).toEqual(mockSyntheticQuiz as unknown as Quiz);
+                expect(result.current.sourceMap).toEqual({ id1: "quiz-a", id2: "quiz-b" });
+                expect(result.current.isHydrating).toBe(false);
+            });
+
+            expect(resolveAggregatedResultReadModel).toHaveBeenCalledWith(
+                mockResult,
+                "user1",
+                mockBaseQuiz,
+            );
+        });
+
         it("hydrates aggregated results even when the base quiz is missing", async () => {
             const mockResult = {
                 id: "r1",

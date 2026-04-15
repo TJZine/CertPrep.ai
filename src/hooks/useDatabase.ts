@@ -296,7 +296,10 @@ export function useResultWithHydratedQuiz(
         return;
       }
 
-      const isAggregatedResult = isAggregatedSessionType(result.session_type);
+      const isLegacyAggregatedResult =
+        !!result.question_ids?.length && isSRSQuiz(result.quiz_id, userId);
+      const isAggregatedResult =
+        isAggregatedSessionType(result.session_type) || isLegacyAggregatedResult;
 
       // Aggregated results can reconstruct a read-model directly from result metadata
       // even if the container/base quiz record is no longer present.

@@ -4,6 +4,7 @@ import {
   resolveAggregatedResultReadModel,
 } from "@/db/aggregatedQuiz";
 import { db } from "@/db/dbInstance";
+import { NIL_UUID } from "@/lib/constants";
 
 // Mock Dexie
 vi.mock("@/db/dbInstance", () => ({
@@ -38,8 +39,10 @@ describe("hydrateAggregatedQuiz", () => {
   });
 
   it("should hydrate a synthetic quiz from question IDs", async () => {
-    // Mock db.quizzes.where(...).toArray() directly (filter removed)
     const mockWhere = {
+      anyOf: vi.fn().mockReturnValue({
+        toArray: vi.fn().mockResolvedValue([quiz1, quiz2]),
+      }),
       equals: vi.fn().mockReturnValue({
         toArray: vi.fn().mockResolvedValue([quiz1, quiz2]),
       }),
@@ -63,6 +66,9 @@ describe("hydrateAggregatedQuiz", () => {
 
   it("should handle missing questions", async () => {
     const mockWhere = {
+      anyOf: vi.fn().mockReturnValue({
+        toArray: vi.fn().mockResolvedValue([quiz1]), // quiz2 missing
+      }),
       equals: vi.fn().mockReturnValue({
         toArray: vi.fn().mockResolvedValue([quiz1]), // quiz2 missing
       }),
@@ -82,6 +88,9 @@ describe("hydrateAggregatedQuiz", () => {
 
   it("should respect question order", async () => {
      const mockWhere = {
+      anyOf: vi.fn().mockReturnValue({
+        toArray: vi.fn().mockResolvedValue([quiz1, quiz2]),
+      }),
       equals: vi.fn().mockReturnValue({
         toArray: vi.fn().mockResolvedValue([quiz1, quiz2]),
       }),
@@ -98,6 +107,9 @@ describe("hydrateAggregatedQuiz", () => {
 
   it("preserves persisted source_map keys and only backfills missing keys from hydration", async () => {
     const mockWhere = {
+      anyOf: vi.fn().mockReturnValue({
+        toArray: vi.fn().mockResolvedValue([quiz1, quiz2]),
+      }),
       equals: vi.fn().mockReturnValue({
         toArray: vi.fn().mockResolvedValue([quiz1, quiz2]),
       }),
@@ -139,5 +151,42 @@ describe("hydrateAggregatedQuiz", () => {
       q1: "quiz1",
       q2: "persisted-quiz-2",
     });
+  });
+
+  it("hydrates questions that only exist in public quizzes", async () => {
+    const publicQuiz = {
+      id: "public-quiz",
+      user_id: NIL_UUID,
+      title: "Public Quiz",
+      questions: [
+        {
+          id: "public-q1",
+          category: "Cat3",
+          question: "Public Q1",
+          correct_answer_hash: "h3",
+          options: {},
+        },
+      ],
+      deleted_at: null,
+    };
+    const mockWhere = {
+      anyOf: vi.fn().mockReturnValue({
+        toArray: vi.fn().mockResolvedValue([quiz1, publicQuiz]),
+      }),
+      equals: vi.fn().mockReturnValue({
+        toArray: vi.fn().mockResolvedValue([quiz1]),
+      }),
+    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (db.quizzes.where as any).mockReturnValue(mockWhere);
+
+    const result = await hydrateAggregatedQuiz(["public-q1"], userId);
+
+    expect(result.syntheticQuiz.questions).toHaveLength(1);
+    expect(result.syntheticQuiz.questions[0]?.id).toBe("public-q1");
+    expect(result.sourceMap).toEqual({
+      "public-q1": "public-quiz",
+    });
+    expect(result.missingQuestionIds).toEqual([]);
   });
 });

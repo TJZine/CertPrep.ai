@@ -2,6 +2,7 @@ import { db } from "./dbInstance";
 import type { Quiz, Question } from "@/types/quiz";
 import { isAggregatedSessionType, type Result } from "@/types/result";
 import { logger } from "@/lib/logger";
+import { NIL_UUID } from "@/lib/constants";
 
 export interface SyntheticQuizResult {
   syntheticQuiz: Quiz;
@@ -52,12 +53,11 @@ export async function hydrateAggregatedQuiz(
   title: string = "Aggregated Study Session"
 ): Promise<SyntheticQuizResult> {
   // Load all quizzes that might contain these questions.
-  // We include user-owned quizzes and potentially system quizzes (NIL_UUID) if we supported them.
-  // For now, we strictly look at user-owned quizzes as per current architecture.
-  // OPTIMIZATION: Fetch via toArray() then filter in-memory to avoid Dexie filter chain brittleness
+  // Include both user-owned quizzes and public/system quizzes because aggregated
+  // sessions can contain questions from either source.
   const allQuizzesRaw = await db.quizzes
     .where("user_id")
-    .equals(userId)
+    .anyOf([userId, NIL_UUID])
     .toArray();
 
   const allQuizzes = allQuizzesRaw.filter((q) => q.deleted_at == null);
