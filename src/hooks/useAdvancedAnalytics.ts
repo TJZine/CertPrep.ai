@@ -331,5 +331,3 @@ export function useAdvancedAnalytics(
         isLoading: false,
     }), [analytics]);
 }
-
-export default useAdvancedAnalytics;

@@ -147,5 +147,3 @@ export function useCategoryTrends(results: Result[]): UseCategoryTrendsResult {
         };
     }, [results]);
 }
-
-export default useCategoryTrends;
