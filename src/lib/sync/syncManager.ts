@@ -2,7 +2,7 @@
 
 import { db } from "@/db";
 import { logger } from "@/lib/logger";
-import { getSyncCursor, setSyncCursor } from "@/db/syncState";
+import { readAndRepairResultsSyncCursor, setSyncCursor } from "@/db/syncState";
 import { createClient } from "@/lib/supabase/client";
 import { logNetworkAwareSlowSync } from "@/lib/sync/syncLogging";
 import { safeMark, safeMeasure } from "@/lib/perfMarks";
@@ -231,7 +231,7 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
         break;
       }
 
-      const cursor = await getSyncCursor(userId);
+      const cursor = await readAndRepairResultsSyncCursor(userId);
       const timestamp = cursor.timestamp;
 
       // Keyset pagination: (updated_at > ts) OR (updated_at = ts AND id > last_id)

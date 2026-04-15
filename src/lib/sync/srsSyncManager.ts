@@ -3,7 +3,7 @@
 import * as Sentry from "@sentry/nextjs";
 import { db } from "@/db";
 import {
-  getSRSSyncCursor,
+  readAndRepairSRSSyncCursor,
   setSRSSyncCursor,
   getSyncBlockState,
   setSyncBlockState,
@@ -332,7 +332,7 @@ async function pullRemoteChanges(
       break;
     }
 
-    const cursor = await getSRSSyncCursor(userId);
+    const cursor = await readAndRepairSRSSyncCursor(userId);
     const timestamp = cursor.timestamp;
     const safeLastId = cursor.lastId;
 

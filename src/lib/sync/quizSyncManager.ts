@@ -5,7 +5,7 @@ import { db } from "@/db";
 import { NIL_UUID } from "@/lib/constants";
 import {
   getQuizBackfillState,
-  getQuizSyncCursor,
+  readAndRepairQuizSyncCursor,
   setQuizBackfillDone,
   setQuizSyncCursor,
   getSyncBlockState,
@@ -409,7 +409,7 @@ async function pullRemoteChanges(
       break;
     }
 
-    const cursor = await getQuizSyncCursor(userId);
+    const cursor = await readAndRepairQuizSyncCursor(userId);
     const { data: remoteQuizzes, error } = await fetchUserQuizzes({
       userId,
       updatedAfter: cursor.timestamp,

@@ -51,7 +51,7 @@ function healFutureCursor(
 }
 
 /**
- * Retrieves the results sync cursor for keyset pagination.
+ * Reads the results sync cursor for keyset pagination and persists any repairs.
  *
  * **Self-Healing Behavior (Side-Effect):** If the stored cursor is corrupted
  * (future timestamp, invalid UUID lastId, or a legacy unscoped key exists),
@@ -61,7 +61,7 @@ function healFutureCursor(
  * @param userId - The user ID to get the sync cursor for
  * @returns SyncCursor with validated timestamp and lastId
  */
-export async function getSyncCursor(userId: string): Promise<SyncCursor> {
+export async function readAndRepairResultsSyncCursor(userId: string): Promise<SyncCursor> {
   if (!userId) return { timestamp: EPOCH_TIMESTAMP, lastId: NIL_UUID };
 
   const key = `results:${userId}`;
@@ -171,7 +171,7 @@ export async function setSyncCursor(
 }
 
 /**
- * Retrieves the quizzes sync cursor for keyset pagination.
+ * Reads the quizzes sync cursor for keyset pagination and persists any repairs.
  *
  * **Self-Healing Behavior (Side-Effect):** If the stored cursor is corrupted
  * (future timestamp or invalid UUID lastId), this function will immediately
@@ -180,7 +180,7 @@ export async function setSyncCursor(
  * @param userId - The user ID to get the sync cursor for
  * @returns SyncCursor with validated timestamp and lastId
  */
-export async function getQuizSyncCursor(userId: string): Promise<SyncCursor> {
+export async function readAndRepairQuizSyncCursor(userId: string): Promise<SyncCursor> {
   if (!userId) return { timestamp: EPOCH_TIMESTAMP, lastId: NIL_UUID };
 
   const key = `quizzes:${userId}`;
@@ -253,7 +253,7 @@ export async function setQuizSyncCursor(
 }
 
 /**
- * Retrieves the SRS sync cursor for keyset pagination.
+ * Reads the SRS sync cursor for keyset pagination and persists any repairs.
  *
  * **Self-Healing Behavior (Side-Effect):** If the stored cursor is corrupted
  * (future timestamp or invalid UUID lastId), this function will:
@@ -268,7 +268,7 @@ export async function setQuizSyncCursor(
  * @param userId - The user ID to get the sync cursor for
  * @returns SyncCursor with validated timestamp and lastId
  */
-export async function getSRSSyncCursor(userId: string): Promise<SyncCursor> {
+export async function readAndRepairSRSSyncCursor(userId: string): Promise<SyncCursor> {
   if (!userId) return { timestamp: EPOCH_TIMESTAMP, lastId: NIL_UUID };
 
   const key = `srs:${userId}`;

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import { db, clearDatabase } from "@/db";
 import { syncResults } from "@/lib/sync/syncManager";
-import { getSyncCursor } from "@/db/syncState";
+import { readAndRepairResultsSyncCursor } from "@/db/syncState";
 import { logger } from "@/lib/logger";
 import { Quiz } from "@/types/quiz";
 import { Result } from "@/types/result";
@@ -265,7 +265,7 @@ describe("Sync Manager: results", () => {
 
       await syncResults(userId);
 
-      const cursor = await getSyncCursor(userId);
+      const cursor = await readAndRepairResultsSyncCursor(userId);
       expect(cursor.timestamp).toBe(updatedAt);
       expect(cursor.lastId).toBe(testUuid);
     });

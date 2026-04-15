@@ -89,7 +89,7 @@ vi.mock("@/lib/supabase/client", () => ({
 }));
 
 vi.mock("@/db/syncState", () => ({
-  getSRSSyncCursor: vi
+  readAndRepairSRSSyncCursor: vi
     .fn()
     .mockResolvedValue({
       timestamp: "1970-01-01T00:00:00.000Z",
