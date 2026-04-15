@@ -181,7 +181,7 @@ create trigger results_set_updated_at
 
 -- TABLE: srs (Spaced Repetition State)
 create table if not exists srs (
-  question_id uuid not null,
+  question_id text not null, -- App/runtime question IDs are string-based, not UUID-only
   user_id uuid references auth.users(id) on delete cascade not null,
   box smallint not null default 1 check (box >= 1 and box <= 5),
   last_reviewed bigint not null,  -- Unix timestamp (ms) for LWW conflict resolution

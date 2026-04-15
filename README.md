@@ -158,36 +158,43 @@ pnpm install
 cp .env.example .env.local
 ```
 
-2. **Configure required variables:**
+2. **Configure variables by feature area:**
 
 ```env
-# Supabase Configuration (Required)
+# Core app (required)
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
 
-# Optional: Analytics
-NEXT_PUBLIC_ANALYTICS_ID=your_analytics_id
+# Required for signup / password reset flows that use hCaptcha
+NEXT_PUBLIC_HCAPTCHA_SITE_KEY=your_hcaptcha_site_key
+
+# Required only for admin/service-role flows such as account deletion
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 ```
 
 <details>
 <summary>📖 Where to find these values</summary>
 
-| Variable                        | Location                                                  |
-| ------------------------------- | --------------------------------------------------------- |
-| `NEXT_PUBLIC_SUPABASE_URL`      | Supabase Dashboard → Settings → API → Project URL         |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase Dashboard → Settings → API → `anon` `public` key |
+| Variable                        | Location                                                          |
+| ------------------------------- | ----------------------------------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`      | Supabase Dashboard → Settings → API → Project URL                 |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase Dashboard → Settings → API → `anon` `public` key         |
+| `NEXT_PUBLIC_HCAPTCHA_SITE_KEY` | hCaptcha Dashboard → Site Key                                     |
+| `SUPABASE_SERVICE_ROLE_KEY`     | Supabase Dashboard → Settings → API → `service_role` `secret` key |
 
 </details>
 
-These are local setup hints only. Runtime code, `.env.example`, and the current authority docs win if this section drifts.
+These are local setup hints only. Runtime code, `.env.example`, and the current authority docs win if this section drifts. Some feature areas are optional in local development, but signup/password-reset and self-serve account deletion do require the extra keys above.
 
 3. **Set up the database:**
 
-This repo ships Supabase migrations under `supabase/migrations/`.
+This repo does **not** currently expose one clean database bootstrap surface.
 
-- Create a Supabase project.
-- Apply the in-repo migrations with your standard Supabase workflow.
-- Treat `supabase/migrations/*` as primary schema truth and [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) as a human-readable summary.
+- Baseline schema/RLS definitions still live in `src/lib/supabase/schema.sql`.
+- Repo-root incremental changes live in `supabase/migrations/*`.
+- Legacy companion migrations under `src/lib/supabase/migrations/*` are reference-only unless a maintainer explicitly says otherwise.
+- Read [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) before provisioning or changing the DB path, and do not assume `supabase/migrations/*` alone reconstructs the current database.
 
 4. **Start the development server:**
 
@@ -282,16 +289,7 @@ At a high level, the app uses Next.js App Router for UI/runtime composition, Dex
 
 ## Testing
 
-```bash
-# Canonical local check
-npm run verify
-
-# Optional additional checks
-npm run security-check
-npm run build
-```
-
-For verification policy and caveats, use [docs/ENGINEERING_RUNBOOK.md](./docs/ENGINEERING_RUNBOOK.md).
+For required verification sets and caveats, use [docs/ENGINEERING_RUNBOOK.md](./docs/ENGINEERING_RUNBOOK.md). Common local commands still exposed by `package.json` include `npm run verify`, `npm run security-check`, and `npm run build`.
 
 ---
 
@@ -334,6 +332,8 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 5. Open a Pull Request
 
 ### Development Commands
+
+These commands are reference-only onboarding shortcuts. The runbook, not this table, defines which checks are required for a given change.
 
 | Command                  | Description                                      |
 | ------------------------ | ------------------------------------------------ |

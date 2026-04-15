@@ -21,7 +21,7 @@ Do not use it to infer business, compliance, team, or operational claims that ar
 - Offline-first persistence is a real architectural constraint. Review changes to `src/db/*`, `src/lib/sync/*`, providers, and session flows carefully for ownership drift.
 - `src/proxy.ts` is a boundary file. Route-protection, CSP, and auth redirect changes should be treated as high-risk.
 - Supabase data writes for quiz, result, and SRS domains should remain concentrated in the sync layer rather than growing new ad hoc UI write paths.
-- Schema truth lives in `supabase/migrations/*`, with `src/types/database.types.ts` as the derived application contract.
+- Schema truth is currently split across `src/lib/supabase/schema.sql`, `supabase/migrations/*`, and `src/types/database.types.ts`. Reviewers should treat schema/bootstrap disagreements as real defects, not harmless doc drift.
 - Large hotspot files deserve extra scrutiny for scope creep, hidden policy, and duplicated logic.
 - Stale docs should not be allowed to look authoritative. When reviewing doc changes, prefer one clear authority and obvious reference-only demotion for secondary docs.
 

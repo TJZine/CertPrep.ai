@@ -78,7 +78,7 @@ Before you begin, ensure you have the following installed:
    # Edit .env.local with your values
    ```
 
-   This repository includes in-repo Supabase migrations at `supabase/migrations/`. Use those as DB schema source of truth.
+   Database/bootstrap authority is currently split. Use [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) before making schema assumptions, because `src/lib/supabase/schema.sql`, `supabase/migrations/*`, and generated types do not collapse to one clean bootstrap source yet.
 
 6. **Start development server**
 
@@ -220,10 +220,13 @@ gitGraph
 4. **Run checks locally**
 
    ```bash
-   npm run verify      # Canonical local verification (lint + typecheck + tests)
+   # Run the verification set required by docs/ENGINEERING_RUNBOOK.md
+   npm run verify
    npm run security-check
-   npm run build       # Optional pre-PR confidence check (CI also enforces build)
+   npm run build
    ```
+
+   `docs/ENGINEERING_RUNBOOK.md` decides which of these are required for your change class; this section only points to the available commands.
 
 5. **Commit your changes**
 

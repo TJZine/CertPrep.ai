@@ -15,9 +15,8 @@ This is the canonical, short entrypoint for repository workflow policy.
 - Docs lookup: use Context7 first for external references. If unavailable or insufficient, use a fallback source and log the fallback explicitly.
 - Discovery: use Codanna-first discovery/context when available (`semantic_search_with_context`, `analyze_impact`, `find_symbol`, `get_calls`, `find_callers`); fall back to `rg` and log the fallback.
 - Evidence accuracy: do not claim edits, command execution, or test results unless directly observed in this workspace.
-- Verification gate: for UI/navigation/runtime-boundary work, run `npm run verify` before concluding. For logic-only TypeScript changes, at minimum run `npm run typecheck` and `npm test`.
-- Test-failure policy: when a test fails, determine whether it reveals a product bug or a flawed test before changing either.
 - Pre-MVP path policy: do not add compatibility shims, migration shims, or dual-path fallback logic unless explicitly approved by the maintainer.
+- Detailed verification policy, test-failure policy, review policy, stop-and-ask rules, and durable-memory lifecycle rules live in `docs/ENGINEERING_RUNBOOK.md`.
 
 ## Control-Plane Ownership
 

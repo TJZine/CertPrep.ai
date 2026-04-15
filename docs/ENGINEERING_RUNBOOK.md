@@ -25,6 +25,18 @@ For current-state architecture and boundary descriptions, use this order:
 
 If any document conflicts with executable truth, update or demote the document in the same change.
 
+## Database Schema Surfaces
+
+Database/schema truth is currently split across repo-visible surfaces:
+
+1. `src/lib/supabase/schema.sql` for baseline tables, RLS, and trigger definitions still present in the repo
+2. `supabase/migrations/*` for repo-root incremental Supabase changes
+3. `src/types/database.types.ts` as the derived application contract generated from a database state, not from docs
+
+`src/lib/supabase/migrations/*` is legacy/reference-only unless a maintainer explicitly revives it.
+
+If schema work touches a surface where these disagree, do not rationalize the conflict away. Update the current authority docs, record the discrepancy, and ask a human before changing the bootstrap path or declaring a single schema source of truth.
+
 ## Task Routing
 
 - Docs-only/control-plane changes: edit policy/architecture docs and run docs-control verification.
@@ -101,6 +113,18 @@ Plan and verification depth must increase with tier.
 - For Tier 2+ changes, perform explicit adversarial review before commit when requested by task policy.
 - Findings from review must be fixed or explicitly documented as unresolved with owner follow-up before merge.
 
+## Stop-And-Ask
+
+Stop and ask a human instead of inferring when:
+
+- database/bootstrap authority is ambiguous across `src/lib/supabase/schema.sql`, `supabase/migrations/*`, generated types, or deployed behavior
+- env-var ownership, secret requirements, callback-origin allowlists, or other deployment/runtime configuration are not directly established by repo-visible code and config
+- runtime/deployment behavior matters and is not directly established by repo-visible code, scripts, or workflows
+- a security/compliance-sensitive change depends on unclear invariants, owners, or environment assumptions
+- the required verification path is missing, contradictory, or cannot be run in the current environment
+- two docs both look current and disagree about ownership, workflow, or architecture boundaries
+- a change would redefine an authority surface rather than merely update it
+
 ## Freshness Triggers
 
 Update docs in the same pass when changes touch:
@@ -118,6 +142,9 @@ If architecture or workflow changed and docs were not updated, the PR is incompl
 - `update_plan` is the live execution memory.
 - `docs/plans/*` stores durable plans and handoff artifacts for multi-session or high-risk work.
 - One active plan per initiative. Mark completed plans clearly and avoid duplicate active authority for the same initiative.
+- Durable plan files must carry explicit lifecycle metadata near the top: `Status`, `Owner`, and `Last Reviewed`.
+- Allowed statuses are `active`, `completed`, `archived`, and `reference-only`.
+- If a plan file lacks lifecycle metadata, treat it as `reference-only` until it is brought up to the current format.
 
 ## Deprecation Rules
 

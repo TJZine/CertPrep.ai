@@ -100,15 +100,14 @@ In addition to IndexedDB, the app uses:
 
 ## Supabase Database Schema
 
-Primary schema truth lives in:
+Repo-visible schema surfaces currently split into:
 
-- `supabase/migrations/*`
+- `src/lib/supabase/schema.sql` for baseline table, trigger, and RLS definitions still present in the repo
+- `supabase/migrations/*` for repo-root incremental changes
+- `src/lib/supabase/migrations/*` as legacy/reference-only companion migrations that are no longer treated as active authority
+- [src/types/database.types.ts](../src/types/database.types.ts) as the derived application contract from a generated database state
 
-Derived application contract lives in:
-
-- [src/types/database.types.ts](../src/types/database.types.ts)
-
-Human-readable schema notes in this document are summaries only.
+Human-readable schema notes in this document are summaries only. If schema surfaces disagree, do not assume the repo has a single clean bootstrap path today.
 
 ### `quizzes`
 
@@ -139,7 +138,7 @@ Relevant code:
 ### `srs`
 
 The remote `srs` table stores spaced-repetition review state keyed by `question_id` and `user_id`.
-Current generated types and current SRS batch-upsert migration use string/text `question_id` values and a JSONB batch RPC shape.
+Current active repo-visible surfaces use string/text `question_id` values and a JSONB batch RPC shape. Older companion migrations under `src/lib/supabase/migrations/*` still show an earlier UUID-based batch-upsert path and remain reference-only unless a maintainer explicitly revives them.
 
 Relevant migration:
 
@@ -170,21 +169,7 @@ Relevant files:
 
 ## Verification Surfaces
 
-Current repo verification truth lives in:
-
-- [package.json](../package.json)
-- [.github/workflows/ci.yml](../.github/workflows/ci.yml)
-
-The repo currently exposes these main local verification commands:
-
-- `npm run lint`
-- `npm run typecheck`
-- `npm test`
-- `npm run verify`
-- `npm run build`
-- `npm run security-check`
-
-`scripts/verify-build.sh` is a convenience wrapper, not the primary verification authority.
+Verification authority lives in [docs/ENGINEERING_RUNBOOK.md](./ENGINEERING_RUNBOOK.md), [package.json](../package.json), and [.github/workflows/ci.yml](../.github/workflows/ci.yml). `scripts/verify-build.sh` is a convenience wrapper, not the primary verification authority.
 
 ## Hotspots
 
@@ -193,7 +178,10 @@ Large or high-coupling files currently worth treating carefully:
 - [src/components/analytics/TopicHeatmap.tsx](../src/components/analytics/TopicHeatmap.tsx)
 - [src/lib/dataExport.ts](../src/lib/dataExport.ts)
 - [src/stores/quizSessionStore.ts](../src/stores/quizSessionStore.ts)
+- [src/components/dashboard/ImportModal.tsx](../src/components/dashboard/ImportModal.tsx)
 - [src/db/results.ts](../src/db/results.ts)
+- [src/components/results/ResultsContainer.tsx](../src/components/results/ResultsContainer.tsx)
+- [src/components/settings/DataManagement.tsx](../src/components/settings/DataManagement.tsx)
 - [src/lib/sync/quizSyncManager.ts](../src/lib/sync/quizSyncManager.ts)
 - [src/components/providers/SyncProvider.tsx](../src/components/providers/SyncProvider.tsx)
 
@@ -202,14 +190,15 @@ One repo-specific hotspot is aggregated-session persistence. [src/components/qui
 ## Working Rules
 
 - Treat `AGENTS.md` as the entrypoint map, `docs/ENGINEERING_RUNBOOK.md` as workflow authority, and this file as current-state architecture truth.
-- Treat `supabase/migrations/*` as primary database schema truth. Treat generated types as the derived application contract. Treat docs as summaries only.
+- Treat the current DB contract as a split surface: `src/lib/supabase/schema.sql` for baseline schema/RLS still in repo, `supabase/migrations/*` for repo-root deltas, and generated types as derived output. Treat `src/lib/supabase/migrations/*` as legacy/reference-only unless a maintainer explicitly says otherwise.
 - Do not add direct Supabase data writes from UI for quiz, result, or SRS domains; those domains already have dedicated sync ownership in `src/lib/sync/*`.
 - Do not add new route protection or CSP behavior outside `src/proxy.ts` without documenting the boundary change.
-- Do not add new environment-variable ownership points casually. Existing ownership is concentrated in `next.config.js`, `src/proxy.ts`, `src/lib/supabase/*`, route handlers, and integration configs.
+- Do not add new environment-variable ownership points casually. Current env reads are spread across bootstrap/config (`next.config.js`, `src/proxy.ts`, `src/lib/supabase/*`), route handlers, auth UI, instrumentation, and feature-flag/constants modules.
 - Update this file in the same pass when changing composition roots, route handlers, persistence boundaries, sync invariants, verification ownership, or external integrations.
 
 ## Known Gaps and Explicit Unknowns
 
 - Deployment and release behavior beyond repo-visible evidence is intentionally undocumented here.
+- The repo does not yet expose one clean, consolidated database bootstrap surface; schema/RLS/bootstrap work should be treated as a stop-and-ask area until the split surfaces are consolidated.
 - This file does not attempt to preserve historical ADRs as a separate authority surface.
 - If a future migration, generated-type refresh, or runtime change disagrees with this document, the code/migrations win and this document should be updated immediately.
