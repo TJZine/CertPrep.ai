@@ -1,10 +1,16 @@
 # E2E Testing Guide
 
+> [!IMPORTANT]
+> This guide is specific to Playwright E2E setup. For repo-wide workflow and verification policy, use `docs/ENGINEERING_RUNBOOK.md`.
+
+> [!NOTE]
+> Treat this file as an E2E-specific setup guide, not a general repo setup or deployment authority. `README.md`, `CONTRIBUTING.md`, and `docs/ENGINEERING_RUNBOOK.md` own the broader workflow and version baseline.
+
 ## Prerequisites
 
-- Node.js 18+
+- Node.js 24+
 - npm 9+
-- Running dev server (`npm run dev`) or production build
+- Running dev server (`npm run dev`) or a local production build/start flow when the environment allows it
 
 ## Environment Configuration
 
@@ -22,7 +28,7 @@ npx playwright test
 
 ### Production Mode
 
-Tests can still run against `next start` builds using raw IndexedDB fallback, but this is less reliable. A warning will be logged.
+Tests can still run against `next start` builds using raw IndexedDB fallback, but this is less reliable. A warning will be logged. In restricted environments, local `npm run build` may be unavailable even though CI requires it.
 
 ```bash
 npm run build
@@ -72,10 +78,4 @@ Ensure your CI pipeline:
 2. Has valid Supabase credentials in environment
 3. Runs `globalSetup` to generate fresh auth tokens
 
-```yaml
-# Example GitHub Actions
-env:
-  NEXT_PUBLIC_IS_E2E: "true"
-  NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-  SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-```
+Use the actual workflow and secret names present in your CI environment and repository settings. This file does not define CI authority.

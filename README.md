@@ -125,7 +125,7 @@ CertPrep.ai is a modern, offline-first quiz application designed to help users p
 
 | Requirement      | Version    | Installation                     |
 | ---------------- | ---------- | -------------------------------- |
-| Node.js          | `>=20.9.0` | [Download](https://nodejs.org/)  |
+| Node.js          | `>=24.0.0` | [Download](https://nodejs.org/)  |
 | npm/yarn/pnpm    | Latest     | Comes with Node.js               |
 | Supabase Account | -          | [Sign up](https://supabase.com/) |
 
@@ -172,20 +172,22 @@ NEXT_PUBLIC_ANALYTICS_ID=your_analytics_id
 <details>
 <summary>📖 Where to find these values</summary>
 
-| Variable            | Location                                                  |
-| ------------------- | --------------------------------------------------------- |
-| `SUPABASE_URL`      | Supabase Dashboard → Settings → API → Project URL         |
-| `SUPABASE_ANON_KEY` | Supabase Dashboard → Settings → API → `anon` `public` key |
+| Variable                        | Location                                                  |
+| ------------------------------- | --------------------------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`      | Supabase Dashboard → Settings → API → Project URL         |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase Dashboard → Settings → API → `anon` `public` key |
 
 </details>
 
+These are local setup hints only. Runtime code, `.env.example`, and the current authority docs win if this section drifts.
+
 3. **Set up the database:**
 
-This project does not currently ship Supabase migrations in-repo. You will need to:
+This repo ships Supabase migrations under `supabase/migrations/`.
 
 - Create a Supabase project.
-- Configure the database schema described in [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) (tables for users, quizzes, results, etc.).
-- Optionally manage your own migrations using the Supabase CLI (`supabase db ...`) in your environment.
+- Apply the in-repo migrations with your standard Supabase workflow.
+- Treat `supabase/migrations/*` as primary schema truth and [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) as a human-readable summary.
 
 4. **Start the development server:**
 
@@ -210,7 +212,7 @@ npm run dev
 4. Import a sample quiz from `docs/SAMPLE_QUIZ.json` via the Library/Import UI.
 5. Start a quiz (Zen or Proctor mode), complete it, and view your results and analytics.
 
-For code-level examples (auth, quizzes, results, and sync), see the dedicated [API Reference](./docs/API.md).
+For code-level examples (auth, quizzes, results, and sync), use implementation files first (`src/db/*`, `src/lib/sync/*`, `src/lib/supabase/*`). [docs/API.md](./docs/API.md) is reference-only and may lag code.
 
 ### Quiz Modes
 
@@ -246,89 +248,15 @@ graph TD
 
 ## Architecture
 
-### Tech Stack
+This README is not the architecture authority.
 
-```text
-┌─────────────────────────────────────────────────────────────┐
-│                        Frontend                              │
-├─────────────────────────────────────────────────────────────┤
-│  Next.js 16 (App Router) │ React 19 │ TypeScript │ Tailwind │
-└─────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────┐
-│                      State & Storage                         │
-├─────────────────────────────────────────────────────────────┤
-│          Dexie.js (IndexedDB)  │  React Context             │
-└─────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────┐
-│                        Backend                               │
-├─────────────────────────────────────────────────────────────┤
-│     Supabase (Auth + PostgreSQL + RLS + Realtime)           │
-└─────────────────────────────────────────────────────────────┘
-```
+For current technical truth, use:
 
-### Project Structure
+- [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) for runtime composition, boundaries, storage, schema truth, hotspots, and working rules
+- [AGENTS.md](./AGENTS.md) for control-plane entrypoint defaults
+- [docs/ENGINEERING_RUNBOOK.md](./docs/ENGINEERING_RUNBOOK.md) for workflow and verification policy
 
-```text
-src/
-├── app/                          # Next.js App Router
-│   ├── analytics/                # Analytics dashboard
-│   ├── auth/                     # Auth callback routes
-│   ├── login/, signup/           # Auth pages
-│   ├── library/                  # Quiz library
-│   ├── create/                   # Create custom quizzes guide
-│   ├── quiz/                     # Quiz flows ([id]/zen, [id]/proctor)
-│   ├── results/                  # Results pages
-│   └── settings/                 # Settings pages
-├── components/                   # React components
-│   ├── auth/                     # Authentication forms
-│   ├── dashboard/                # Dashboard/library components
-│   ├── quiz/                     # Quiz components
-│   ├── results/                  # Results display
-│   ├── analytics/                # Analytics components
-│   └── ui/                       # Shared UI components
-├── db/                           # Dexie IndexedDB setup
-│   ├── index.ts                  # Database initialization
-│   ├── quizzes.ts                # Quiz operations
-│   └── results.ts                # Results operations
-├── hooks/                        # Custom React hooks
-├── lib/                          # Utility libraries
-│   ├── supabase/                 # Supabase clients
-│   ├── sync/                     # Sync engine
-│   └── sanitize.ts               # HTML sanitization
-└── types/                        # TypeScript definitions
-```
-
-<details>
-<summary>View detailed module diagram</summary>
-
-```mermaid
-graph TB
-    subgraph "Client Layer"
-        A[Pages/Routes] --> B[Components]
-        B --> C[Hooks]
-    end
-
-    subgraph "Data Layer"
-        C --> D[Dexie DB]
-        C --> E[Supabase Client]
-    end
-
-    subgraph "Sync Layer"
-        D <--> F[Sync Manager]
-        E <--> F
-    end
-
-    subgraph "Backend"
-        E --> G[Supabase Auth]
-        E --> H[PostgreSQL + RLS]
-    end
-```
-
-</details>
+At a high level, the app uses Next.js App Router for UI/runtime composition, Dexie/IndexedDB for local-first persistence, and Supabase for auth plus remote synchronization.
 
 ---
 
@@ -336,15 +264,17 @@ graph TB
 
 ## 📚 Documentation
 
-| Document                                               | Description                        |
-| ------------------------------------------------------ | ---------------------------------- |
-| [📖 API Reference](./docs/API.md)                      | API overview and examples          |
-| [🏗️ Architecture](./docs/ARCHITECTURE.md)              | System design and patterns         |
-| [🔒 Security](./SECURITY.md)                           | Security policies and practices    |
-| [🤝 Contributing](./CONTRIBUTING.md)                   | Contribution guidelines            |
-| [📝 Changelog](./CHANGELOG.md)                         | Version history                    |
-| [❓ FAQ](./docs/FAQ.md)                                | Frequently asked questions         |
-| [👩‍💻 Code Review](./docs/CODE_REVIEW_IMPLEMENTATION.md) | Implementation standards & persona |
+| Document                                                | Description                                           |
+| ------------------------------------------------------- | ----------------------------------------------------- |
+| [🤖 Agent Entrypoint](./AGENTS.md)                      | Canonical agent defaults and control-plane entrypoint |
+| [🧭 Engineering Runbook](./docs/ENGINEERING_RUNBOOK.md) | Canonical workflow and verification policy            |
+| [🏗️ Architecture](./docs/ARCHITECTURE.md)               | Current-state architecture truth surface              |
+| [🤝 Contributing](./CONTRIBUTING.md)                    | Contributor workflow and PR expectations              |
+| [❓ FAQ](./docs/FAQ.md)                                 | Product/usage FAQ (not setup authority)               |
+| [📖 API Reference](./docs/API.md)                       | Reference-only examples that may lag implementation   |
+| [🧠 Review Context](./CODE_REVIEW_CONTEXT.md)           | Reference-only review heuristics that may be stale    |
+| [🔒 Security](./SECURITY.md)                            | Security policies and practices                       |
+| [📝 Changelog](./CHANGELOG.md)                          | Version history                                       |
 
 ---
 
@@ -353,9 +283,15 @@ graph TB
 ## Testing
 
 ```bash
-# Run the unit test suite (Vitest)
-npm test
+# Canonical local check
+npm run verify
+
+# Optional additional checks
+npm run security-check
+npm run build
 ```
+
+For verification policy and caveats, use [docs/ENGINEERING_RUNBOOK.md](./docs/ENGINEERING_RUNBOOK.md).
 
 ---
 
@@ -363,11 +299,13 @@ npm test
 
 ## Deployment
 
-### Vercel (Recommended)
+Only verified repo-visible facts are documented here. For authority on deployment and release policy, use [docs/ENGINEERING_RUNBOOK.md](./docs/ENGINEERING_RUNBOOK.md).
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/TJZine/CertPrep.ai)
+Verified repo-visible deployment facts:
 
-### Manual Deployment
+- CI runs lint/typecheck, tests, and build via [`.github/workflows/ci.yml`](./.github/workflows/ci.yml)
+- `main` is synchronized to `staging` via [`.github/workflows/sync-staging.yml`](./.github/workflows/sync-staging.yml)
+- The repo exposes production commands for build and start:
 
 ```bash
 # Build for production
@@ -377,16 +315,7 @@ npm run build
 npm start
 ```
 
-### Environment Variables for Production
-
-> [!IMPORTANT]
-> Ensure all required environment variables are set in your production environment.
-
-| Variable                        | Required | Description            |
-| ------------------------------- | -------- | ---------------------- |
-| `NEXT_PUBLIC_SUPABASE_URL`      | ✅       | Supabase project URL   |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✅       | Supabase anonymous key |
-| `NEXT_PUBLIC_SITE_URL`          | ✅       | Production site URL    |
+Hosting-specific deployment guidance and production environment-variable requirements are intentionally left out here unless backed by current repo evidence.
 
 ---
 
@@ -406,14 +335,15 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 
 ### Development Commands
 
-| Command                  | Description               |
-| ------------------------ | ------------------------- |
-| `npm run dev`            | Start development server  |
-| `npm run build`          | Build for production      |
-| `npm run lint`           | Run ESLint                |
-| `npm test`               | Run the test suite        |
-| `npm run security-check` | Run basic secret scanning |
-| `npm run supabase:types` | Generate DB types         |
+| Command                  | Description                                      |
+| ------------------------ | ------------------------------------------------ |
+| `npm run dev`            | Start development server                         |
+| `npm run build`          | Build for production                             |
+| `npm run verify`         | Canonical local check (lint + typecheck + tests) |
+| `npm run lint`           | Run ESLint                                       |
+| `npm test`               | Run the test suite                               |
+| `npm run security-check` | Run basic secret scanning                        |
+| `npm run supabase:types` | Generate DB types                                |
 
 ---
 

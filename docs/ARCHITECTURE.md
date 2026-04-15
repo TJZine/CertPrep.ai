@@ -1,654 +1,215 @@
-# Architecture Documentation
-
-> This document describes the technical architecture of CertPrep.ai.
-
-## Table of Contents
-
-- [System Overview](#system-overview)
-- [Technology Stack](#technology-stack)
-- [Application Structure](#application-structure)
-- [Data Flow](#data-flow)
-- [State Management](#state-management)
-- [Authentication Flow](#authentication-flow)
-- [Sync Architecture](#sync-architecture)
-- [Security Architecture](#security-architecture)
-- [Performance Considerations](#performance-considerations)
-- [Decision Records](#decision-records)
-
----
-
-## System Overview
-
-```mermaid
-C4Context
-    title System Context Diagram
-
-    Person(user, "User", "Quiz taker or administrator")
-    System(webapp, "Quiz Application", "Next.js web application")
-    System_Ext(supabase, "Supabase", "Authentication & Database")
-    System_Ext(vercel, "Vercel", "Hosting & Edge Functions")
-
-    Rel(user, webapp, "Uses", "HTTPS")
-    Rel(webapp, supabase, "Auth & Data", "HTTPS")
-    Rel(vercel, webapp, "Hosts")
-```
-
-### High-Level Architecture
-
-```text
-┌─────────────────────────────────────────────────────────────────────┐
-│                            Client Browser                            │
-├─────────────────────────────────────────────────────────────────────┤
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────────┐ │
-│  │   Next.js   │  │    React    │  │        Tailwind CSS         │ │
-│  │  App Router │  │ Components  │  │          Styling            │ │
-│  └──────┬──────┘  └──────┬──────┘  └─────────────────────────────┘ │
-│         │                │                                          │
-│  ┌──────┴────────────────┴──────┐  ┌─────────────────────────────┐ │
-│  │        Custom Hooks           │  │      IndexedDB (Dexie)      │ │
-│  │  useAuth, useSync, useQuiz   │  │   Local Storage & Cache     │ │
-│  └──────────────┬───────────────┘  └──────────────┬──────────────┘ │
-│                 │                                  │                │
-│  ┌──────────────┴──────────────────────────────────┴──────────────┐ │
-│  │                       Sync Manager                              │ │
-│  │              Bi-directional data synchronization                │ │
-│  └──────────────────────────────┬─────────────────────────────────┘ │
-└─────────────────────────────────┼───────────────────────────────────┘
-                                  │ HTTPS
-┌─────────────────────────────────┼───────────────────────────────────┐
-│                            Supabase                                  │
-├─────────────────────────────────┼───────────────────────────────────┤
-│  ┌──────────────┐  ┌────────────┴───────────┐  ┌─────────────────┐ │
-│  │     Auth     │  │       PostgreSQL        │  │    Realtime     │ │
-│  │   Service    │  │   + Row Level Security  │  │  (Future Use)   │ │
-│  └──────────────┘  └────────────────────────┘  └─────────────────┘ │
-└─────────────────────────────────────────────────────────────────────┘
-```
-
----
-
-## Technology Stack
-
-### Frontend
-
-| Technology                                    | Purpose           | Version           |
-| --------------------------------------------- | ----------------- | ----------------- |
-| [Next.js](https://nextjs.org/)                | React Framework   | App Router (v16+) |
-| [React](https://react.dev/)                   | UI Library        | 19.x              |
-| [TypeScript](https://www.typescriptlang.org/) | Type Safety       | 5.x               |
-| [Tailwind CSS](https://tailwindcss.com/)      | Styling           | 3.x               |
-| [Dexie.js](https://dexie.org/)                | IndexedDB Wrapper | 3.x               |
-
-### Backend
-
-| Technology                                                                     | Purpose             |
-| ------------------------------------------------------------------------------ | ------------------- |
-| [Supabase Auth](https://supabase.com/auth)                                     | Authentication      |
-| [Supabase Database](https://supabase.com/database)                             | PostgreSQL Database |
-| [Row Level Security](https://supabase.com/docs/guides/auth/row-level-security) | Data Access Control |
-
-### Supabase Database Schema
-
-To run this project against your own Supabase instance, you should provision at least the following tables.
-
-> These schemas are intentionally minimal and mirror what the code expects. You can extend them to fit your own needs.
-
-#### `results`
-
-Stores per‑attempt quiz results and is synchronized between Dexie and Supabase.
-
-```sql
-create table if not exists public.results (
-  id uuid primary key,
-  user_id uuid not null,
-  quiz_id text not null,
-  timestamp bigint not null,
-  mode text not null check (mode in ('zen','proctor')),
-  score integer not null,
-  time_taken_seconds integer not null,
-  answers jsonb not null,
-  flagged_questions text[] not null default '{}',
-  category_breakdown jsonb not null,
-  created_at timestamptz not null default now()
-);
-
-alter table public.results enable row level security;
-```
-
-Recommended indexes:
-
-```sql
-create index if not exists results_user_id_created_at_idx
-  on public.results (user_id, created_at desc);
-
-create index if not exists results_user_id_quiz_id_ts_idx
-  on public.results (user_id, quiz_id, timestamp desc);
-```
-
-RLS policies (owner‑only access):
-
-```sql
-create policy "results_select_owner" on public.results
-  for select using (auth.uid() = user_id);
-
-create policy "results_insert_owner" on public.results
-  for insert with check (auth.uid() = user_id);
-
-create policy "results_update_owner" on public.results
-  for update using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
-
-create policy "results_delete_owner" on public.results
-  for delete using (auth.uid() = user_id);
-```
-
-#### `quizzes`
-
-Stores quiz definitions per user and is synchronized with the local Dexie `quizzes` store.
-
-```sql
-create table if not exists public.quizzes (
-  id uuid primary key,
-  user_id uuid not null,
-  title text not null,
-  description text,
-  tags text[] not null default '{}',
-  version integer not null default 1,
-  questions jsonb not null,
-  quiz_hash text,
-  category text,
-  subcategory text,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  deleted_at timestamptz
-);
-
-alter table public.quizzes enable row level security;
-```
-
-Recommended indexes:
-
-```sql
-create index if not exists quizzes_user_id_updated_at_idx
-  on public.quizzes (user_id, updated_at desc);
-
-create index if not exists quizzes_user_id_deleted_at_idx
-  on public.quizzes (user_id, deleted_at);
-
-create index if not exists quizzes_user_id_hash_idx
-  on public.quizzes (user_id, quiz_hash);
-```
-
-RLS policies (owner‑only access):
-
-```sql
-create policy "quizzes_select_owner" on public.quizzes
-  for select using (auth.uid() = user_id);
-
-create policy "quizzes_insert_owner" on public.quizzes
-  for insert with check (auth.uid() = user_id);
-
-create policy "quizzes_update_owner" on public.quizzes
-  for update using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
-```
-
-> Note: direct `delete` operations are typically not used; the app performs soft‑deletes by setting `deleted_at`.
-
-#### `srs`
-
-Stores Spaced Repetition System (SRS) state for each question/user pair. Synchronized with server-side LWW conflict resolution.
-
-```sql
-create table if not exists public.srs (
-  question_id text not null,
-  user_id uuid not null,
-  box integer not null default 1,
-  last_reviewed bigint not null,
-  next_review bigint not null,
-  consecutive_correct integer not null default 0,
-  updated_at bigint not null,
-  primary key (question_id, user_id)
-);
-
-alter table public.srs enable row level security;
-```
-
-RLS policies (owner‑only access):
-
-```sql
-create policy "srs_select_owner" on public.srs
-  for select using (auth.uid() = user_id);
-
-create policy "srs_insert_owner" on public.srs
-  for insert with check (auth.uid() = user_id);
-
-create policy "srs_update_owner" on public.srs
-  for update using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
-```
-
-Server-side LWW upsert RPC for batch sync (Secure):
-
-```sql
-create or replace function upsert_srs_lww_batch(items srs_input[])
-returns table(question_id uuid, updated boolean)
-language plpgsql
-security definer
-set search_path = public
-as $$
-begin
-  return query
-  with input_rows as (
-    select
-      (unnest.question_id)::uuid as question_id,
-      auth.uid() as user_id, -- Force auth.uid() for security
-      unnest.box,
-      unnest.last_reviewed,
-      unnest.next_review,
-      unnest.consecutive_correct
-    from unnest(items) as unnest
-  ),
-  upserted as (
-    insert into srs (question_id, user_id, box, last_reviewed, next_review, consecutive_correct)
-    select
-      ir.question_id,
-      ir.user_id,
-      ir.box,
-      ir.last_reviewed,
-      ir.next_review,
-      ir.consecutive_correct
-    from input_rows ir
-    on conflict (question_id, user_id) do update
-    set box = excluded.box,
-        last_reviewed = excluded.last_reviewed,
-        next_review = excluded.next_review,
-        consecutive_correct = excluded.consecutive_correct
-    where srs.last_reviewed < excluded.last_reviewed
-    returning srs.question_id, true as was_updated
-  )
-  select
-    ir.question_id,
-    coalesce(u.was_updated, false) as updated
-  from input_rows ir
-  left join upserted u on ir.question_id = u.question_id;
-end;
-$$;
-```
-
-#### Intentional Schema Design Decisions
-
-##### No Foreign Key on `results.quiz_id`
-
-`results.quiz_id` intentionally lacks a foreign key constraint to `quizzes.id` because:
-
-1. **Soft-delete pattern**: Quizzes use `deleted_at` for soft-deletes. A traditional FK with `ON DELETE CASCADE` or `ON DELETE RESTRICT` would conflict with this pattern.
-2. **Offline-first sync**: In an offline-first architecture, a result may be created and synced before its associated quiz arrives on that device. A strict FK would cause insertion failures during sync.
-3. **Graceful degradation**: The UI handles orphaned results (where the quiz no longer exists) gracefully by showing "Unknown Quiz" rather than failing.
-
-##### NIL_UUID Pattern (`00000000-0000-0000-0000-000000000000`)
-
-The `NIL_UUID` constant is used locally in IndexedDB (Dexie) to represent **legacy or orphaned data** that predates per-user scoping:
-
-- **Database migrations** (v5-v7) backfill older records without `user_id` to `NIL_UUID` to prevent cross-account data leakage.
-- **Local access checks** allow users to read/modify quizzes with `user_id === NIL_UUID` for backward compatibility.
-- **Sync filtering** skips uploading `NIL_UUID` records to Supabase since they cannot be attributed to a real user.
-
-> **Important**: The RLS policies on Supabase only permit access to rows where `auth.uid() = user_id`. This means:
->
-> - NIL_UUID rows in Supabase (if any exist) are **inaccessible** via the API.
-> - The `.in("user_id", [userId, NIL_UUID])` filter in `quizRemote.ts` is effectively a no-op for remote fetches—Supabase will never return NIL_UUID rows.
-> - This dead path remains for potential future global/template quiz features, but is currently non-functional.
-
-### Infrastructure
-
-| Service                                 | Purpose              |
-| --------------------------------------- | -------------------- |
-| [Vercel](https://vercel.com/)           | Hosting & Deployment |
-| [Supabase Cloud](https://supabase.com/) | Backend Services     |
-
----
-
-## Application Structure
-
-```text
-src/
-├── app/                          # Next.js App Router
-│   ├── analytics/                # Analytics dashboard
-│   ├── auth/                     # Auth callback routes
-│   ├── login/, signup/           # Auth pages
-│   ├── library/                  # Quiz library
-│   ├── quiz/                     # Quiz flows ([id]/zen, [id]/proctor)
-│   ├── results/                  # Results pages
-│   ├── settings/                 # Settings pages
-│   ├── layout.tsx                # Root layout
-│   └── page.tsx                  # Landing page
-│
-├── components/
-│   ├── auth/                     # Authentication components
-│   ├── quiz/                     # Quiz components
-│   ├── results/                  # Results components
-│   ├── dashboard/                # Dashboard components
-│   ├── analytics/                # Analytics components
-│   ├── settings/                 # Settings components
-│   └── ui/                       # Shared UI components
-│
-├── db/                           # Local database (Dexie)
-│   ├── index.ts                  # Database initialization
-│   ├── quizzes.ts                # Quiz operations
-│   └── results.ts                # Results operations
-│
-├── hooks/                        # Custom React hooks
-│
-├── lib/                          # Utility libraries
-│   ├── supabase/
-│   │   ├── client.ts             # Browser Supabase client
-│   │   └── server.ts             # Server Supabase client
-│   ├── sync/
-│   │   ├── syncManager.ts        # Result sync orchestration
-│   │   └── quizSyncManager.ts    # Quiz sync orchestration
-│   └── sanitize.ts               # HTML sanitization
-│
-├── types/                        # TypeScript definitions
-│   ├── quiz.ts
-│   ├── result.ts
-│   └── user.ts
-│
-└── proxy.ts                      # CSP proxy helper for Supabase
-```
-
----
-
-## Data Flow
-
-### Read Operation Flow
-
-```mermaid
-sequenceDiagram
-    participant U as User
-    participant C as Component
-    participant H as Hook
-    participant D as Dexie (Local)
-    participant S as Supabase
-
-    U->>C: View Results
-    C->>H: useResults()
-    H->>D: Query local DB
-    D-->>H: Local results
-    H-->>C: Return results
-    C-->>U: Display results
-
-    Note over H,S: Background sync (if online)
-    H->>S: Fetch remote results
-    S-->>H: Remote results
-    H->>D: Merge new results
-```
-
-### Write Operation Flow
-
-```mermaid
-sequenceDiagram
-    participant U as User
-    participant C as Component
-    participant H as Hook
-    participant D as Dexie (Local)
-    participant S as Supabase
-    participant SM as SyncManager
-
-    U->>C: Submit Quiz
-    C->>H: submitResult()
-    H->>D: Save locally (synced: 0)
-    D-->>H: Saved
-    H-->>C: Success
-    C-->>U: Show confirmation
-
-    Note over SM,S: Async sync process
-    SM->>D: Get unsynced results
-    D-->>SM: Results (synced: 0)
-    SM->>S: Upsert results
-    S-->>SM: Confirmed
-    SM->>D: Update (synced: 1)
-```
-
----
-
-## State Management
-
-### State Locations
-
-| State Type   | Location        | Example            |
-| ------------ | --------------- | ------------------ |
-| Server State | Supabase        | User data, results |
-| Cache State  | IndexedDB       | Offline data copy  |
-| UI State     | React useState  | Modal open/close   |
-| Form State   | React Hook Form | Form inputs        |
-| Auth State   | Supabase Auth   | User session       |
-
-### State Flow Diagram
-
-```mermaid
-graph TD
-    subgraph "Source of Truth"
-        A[Supabase Database]
-    end
-
-    subgraph "Local Cache"
-        B[IndexedDB via Dexie]
-    end
-
-    subgraph "UI State"
-        C[React Components]
-    end
-
-    A <-->|Sync Manager| B
-    B -->|Hooks| C
-    C -->|Actions| B
-```
-
----
-
-## Authentication Flow
-
-```mermaid
-sequenceDiagram
-    participant U as User
-    participant B as Browser
-    participant M as Middleware
-    participant S as Supabase Auth
-
-    U->>B: Enter credentials
-    B->>S: signInWithPassword()
-    S-->>B: Session + Tokens
-    B->>B: Store in cookies
-
-    Note over B,M: Subsequent requests
-
-    B->>M: Request /dashboard
-    M->>M: Read session cookie
-    M->>S: Validate/refresh token
-    S-->>M: Valid session
-    M->>B: Allow request
-```
-
-### Session Management
-
-| Aspect       | Implementation                |
-| ------------ | ----------------------------- |
-| Storage      | HTTP-only cookies             |
-| Refresh      | Automatic via middleware      |
-| Expiry       | Configurable (default 1 hour) |
-| Invalidation | Logout clears cookies         |
-
----
-
-## Sync Architecture
-
-### Sync Strategy
-
-```text
-┌─────────────────────────────────────────────────────────────────┐
-│                        Sync Manager                              │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│  1. PUSH Phase                                                   │
-│     ┌─────────┐      ┌─────────┐      ┌─────────┐              │
-│     │ Local   │ ───► │ Filter  │ ───► │ Upsert  │              │
-│     │ Results │      │synced=0 │      │ Remote  │              │
-│     └─────────┘      └─────────┘      └─────────┘              │
-│                                              │                   │
-│                                              ▼                   │
-│                                        Mark synced=1             │
-│                                                                  │
-│  2. PULL Phase                                                   │
-│     ┌─────────┐      ┌─────────┐      ┌─────────┐              │
-│     │ Remote  │ ───► │ Filter  │ ───► │  Add    │              │
-│     │ Results │      │ New IDs │      │ Local   │              │
-│     └─────────┘      └─────────┘      └─────────┘              │
-│                                                                  │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-### Conflict Resolution
-
-| Scenario                | Strategy                           |
-| ----------------------- | ---------------------------------- |
-| Same ID, different data | Last-write-wins (server timestamp) |
-| Local only              | Push to server                     |
-| Remote only             | Pull to local                      |
-| Both exist, same data   | No action                          |
-
----
-
-## Security Architecture
-
-### Defense Layers
-
-```text
-┌─────────────────────────────────────────────────────────────────┐
-│                     Layer 1: Transport                           │
-│                     TLS 1.3 Encryption                           │
-├─────────────────────────────────────────────────────────────────┤
-│                     Layer 2: Authentication                      │
-│                   Supabase Auth + JWT Tokens                     │
-├─────────────────────────────────────────────────────────────────┤
-│                     Layer 3: Authorization                       │
-│                PostgreSQL Row Level Security                     │
-├─────────────────────────────────────────────────────────────────┤
-│                     Layer 4: Input Validation                    │
-│              Client & Server-side Validation                     │
-├─────────────────────────────────────────────────────────────────┤
-│                     Layer 5: Output Encoding                     │
-│            React Escaping + sanitizeHTML()                       │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-### RLS Policies
-
-```sql
--- Example RLS policies
-CREATE POLICY "Users can view own results" ON results
-    FOR SELECT USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can insert own results" ON results
-    FOR INSERT WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Users can update own results" ON results
-    FOR UPDATE USING (auth.uid() = user_id)
-    WITH CHECK (auth.uid() = user_id);
-```
-
----
-
-## Performance Considerations
-
-### Optimization Strategies
-
-| Area            | Strategy                                  |
-| --------------- | ----------------------------------------- |
-| Initial Load    | Code splitting, lazy loading              |
-| Data Fetching   | Custom hooks with Supabase client + Dexie |
-| Offline Support | IndexedDB caching                         |
-| Images          | Next.js Image optimization                |
-| Styles          | Tailwind CSS purging                      |
-
-### Performance Metrics Targets
-
-| Metric | Target | Current (Desktop) |
-| ------ | ------ | ----------------- |
-| FCP    | < 1.5s | ~234ms ✅         |
-| LCP    | < 2.5s | ~790-1008ms ✅    |
-| TTI    | < 3.5s | ~1.5s ✅          |
-| CLS    | < 0.1  | ~0.09-0.10 ✅     |
-
-> **Note:** Metrics measured via Lighthouse CLI with desktop preset and authenticated sessions. See `scripts/lighthouse-e2e.mjs` and `scripts/cls-audit.mjs` for reproducibility.
-
----
-
-## Decision Records
-
-### ADR-001: Next.js App Router
-
-**Status:** Accepted
-
-**Context:** Need modern React framework with SSR support.
-
-**Decision:** Use Next.js 16 with App Router.
-
-**Consequences:**
-
-- ✅ Built-in SSR/SSG
-- ✅ File-based routing
-- ✅ Server Components support
-- ⚠️ Learning curve for App Router
-
----
-
-### ADR-002: Supabase for Backend
-
-**Status:** Accepted
-
-**Context:** Need authentication and database with minimal setup.
-
-**Decision:** Use Supabase for auth and PostgreSQL database.
-
-**Consequences:**
-
-- ✅ Quick setup
-- ✅ Built-in auth
-- ✅ Row Level Security
-- ⚠️ Vendor dependency
-
----
-
-### ADR-003: IndexedDB for Offline
-
-**Status:** Accepted
-
-**Context:** Need offline capability for quiz taking.
-
-**Decision:** Use Dexie.js as IndexedDB wrapper.
-
-**Consequences:**
-
-- ✅ Offline support
-- ✅ Fast local queries
-- ⚠️ Sync complexity
-- ⚠️ No encryption at rest
-
----
-
-### Runtime-Only Modes (Flashcards)
-
-While the default behavior for most modes (Zen, Proctor) is to generate a `Result` record upon completion, **Flashcard Mode** is an exception:
-
-- **No Results**: Completing a flashcard session does **not** create a `Result` record in Dexie or Supabase.
-- **SRS Updates**: Instead, it directly updates the `srs` table via `updateSRSState()`.
-- **Schema Implication**: The `quiz_mode` database enum only includes `'zen'` and `'proctor'`. The application internally supports `'flashcard'`, but because no results are ever saved with this mode, the schema mismatch is harmless.
-
----
-
-## Further Reading
-
-- [Next.js Documentation](https://nextjs.org/docs)
-- [Supabase Documentation](https://supabase.com/docs)
-- [Dexie.js Documentation](https://dexie.org/docs/)
+# Architecture
+
+This document describes present-day repo truth only.
+
+When this file conflicts with code, config, generated types, or migrations, follow the code/config/migrations and update this file in the same pass.
+
+## Scope
+
+CertPrep.ai is a Next.js App Router application with an offline-first client data model.
+The browser owns day-to-day quiz, result, and SRS interaction through Dexie-backed IndexedDB.
+Supabase provides authentication, row-level-secured persistence, and cross-device synchronization for remote state.
+
+## Runtime Composition Roots
+
+The main runtime entrypoints are:
+
+- [src/app/layout.tsx](../src/app/layout.tsx)
+- [src/components/providers/AppProviders.tsx](../src/components/providers/AppProviders.tsx)
+- [src/components/providers/AuthProvider.tsx](../src/components/providers/AuthProvider.tsx)
+- [src/components/providers/SyncProvider.tsx](../src/components/providers/SyncProvider.tsx)
+- [src/proxy.ts](../src/proxy.ts)
+
+Route-handler surfaces currently in repo:
+
+- [src/app/auth/callback/route.ts](../src/app/auth/callback/route.ts)
+- [src/app/api/auth/delete-account/route.ts](../src/app/api/auth/delete-account/route.ts)
+
+Representative page entrypoints:
+
+- [src/app/page.tsx](../src/app/page.tsx)
+- [src/app/library/page.tsx](../src/app/library/page.tsx)
+- [src/app/analytics/page.tsx](../src/app/analytics/page.tsx)
+- [src/app/results/[id]/page.tsx](../src/app/results/[id]/page.tsx)
+- [src/app/quiz/[id]/page.tsx](../src/app/quiz/[id]/page.tsx)
+- [src/app/settings/page.tsx](../src/app/settings/page.tsx)
+
+## Runtime Boundaries
+
+### Routing, CSP, and Protected Routes
+
+[src/proxy.ts](../src/proxy.ts) is the network boundary for:
+
+- CSP nonce generation and header application
+- request cache-control for document responses
+- Supabase SSR cookie bridging
+- protected-route and auth-route redirects
+
+Changes to auth-route inventory, protected-route behavior, or CSP policy should be treated as boundary changes and documented here.
+
+### Auth and Session Ownership
+
+Auth/session responsibility is split across:
+
+- server-side Supabase client creation in [src/lib/supabase/server.ts](../src/lib/supabase/server.ts)
+- browser Supabase client creation in [src/lib/supabase/client.ts](../src/lib/supabase/client.ts)
+- client auth lifecycle in [src/components/providers/AuthProvider.tsx](../src/components/providers/AuthProvider.tsx)
+- auth callback exchange in [src/app/auth/callback/route.ts](../src/app/auth/callback/route.ts)
+- self-serve account deletion in [src/app/api/auth/delete-account/route.ts](../src/app/api/auth/delete-account/route.ts)
+
+Quiz, result, and SRS data sync should not bypass the sync layer. Auth and profile/security flows already make direct Supabase calls where appropriate.
+
+### Client Persistence Ownership
+
+Primary client persistence lives in [src/db/dbInstance.ts](../src/db/dbInstance.ts), which defines the Dexie database and current tables:
+
+- `quizzes`
+- `results`
+- `syncState`
+- `srs`
+- `hashCache`
+
+The main local data access layer is:
+
+- [src/db/quizzes.ts](../src/db/quizzes.ts)
+- [src/db/results.ts](../src/db/results.ts)
+- [src/db/srs.ts](../src/db/srs.ts)
+- [src/db/syncState.ts](../src/db/syncState.ts)
+- [src/hooks/useDatabase.ts](../src/hooks/useDatabase.ts)
+
+### Sync Ownership
+
+Remote synchronization ownership lives in:
+
+- [src/lib/sync/quizSyncManager.ts](../src/lib/sync/quizSyncManager.ts)
+- [src/lib/sync/syncManager.ts](../src/lib/sync/syncManager.ts)
+- [src/lib/sync/srsSyncManager.ts](../src/lib/sync/srsSyncManager.ts)
+- [src/lib/sync/quizRemote.ts](../src/lib/sync/quizRemote.ts)
+- [src/lib/sync/quizDomain.ts](../src/lib/sync/quizDomain.ts)
+- [src/components/providers/SyncProvider.tsx](../src/components/providers/SyncProvider.tsx)
+
+The sync model is local-first. Local records are written first, then pushed/pulled against Supabase with user-scoped validation and conflict handling.
+
+## Browser Storage Surfaces
+
+In addition to IndexedDB, the app uses:
+
+- `localStorage` for user/device preferences and lightweight cached state such as theme, comfort mode, dashboard/library sort state, streak state, and install-prompt dismissal
+- `sessionStorage` for ephemeral session flow state such as topic study, SRS review, flashcards, smart rounds, and interleaved practice
+- service worker registration and cache-clearing hooks via [public/sw.js](../public/sw.js), [src/components/common/ServiceWorkerInitScript.tsx](../src/components/common/ServiceWorkerInitScript.tsx), and [src/lib/serviceWorkerClient.ts](../src/lib/serviceWorkerClient.ts)
+
+## Supabase Database Schema
+
+Primary schema truth lives in:
+
+- `supabase/migrations/*`
+
+Derived application contract lives in:
+
+- [src/types/database.types.ts](../src/types/database.types.ts)
+
+Human-readable schema notes in this document are summaries only.
+
+### `quizzes`
+
+The remote `quizzes` table stores user-owned quiz definitions and sync metadata.
+Local quiz ownership and soft-delete behavior are implemented in the Dexie layer and synchronized through the quiz sync managers.
+
+Relevant code:
+
+- [src/db/quizzes.ts](../src/db/quizzes.ts)
+- [src/lib/sync/quizSyncManager.ts](../src/lib/sync/quizSyncManager.ts)
+- [src/lib/sync/quizRemote.ts](../src/lib/sync/quizRemote.ts)
+
+### `results`
+
+The remote `results` table stores quiz attempt history, including analytics-oriented metadata such as `session_type` and `source_map`.
+Soft-delete and resurrection protection are part of the current remote model.
+
+Relevant migration examples:
+
+- [supabase/migrations/20251214073000_results_lww_protection.sql](../supabase/migrations/20251214073000_results_lww_protection.sql)
+- [supabase/migrations/20251221080000_add_session_metadata.sql](../supabase/migrations/20251221080000_add_session_metadata.sql)
+
+Relevant code:
+
+- [src/db/results.ts](../src/db/results.ts)
+- [src/lib/sync/syncManager.ts](../src/lib/sync/syncManager.ts)
+
+### `srs`
+
+The remote `srs` table stores spaced-repetition review state keyed by `question_id` and `user_id`.
+Current generated types and current SRS batch-upsert migration use string/text `question_id` values and a JSONB batch RPC shape.
+
+Relevant migration:
+
+- [supabase/migrations/20251214074500_srs_lww_batch_upsert.sql](../supabase/migrations/20251214074500_srs_lww_batch_upsert.sql)
+
+Relevant code:
+
+- [src/db/srs.ts](../src/db/srs.ts)
+- [src/lib/sync/srsSyncManager.ts](../src/lib/sync/srsSyncManager.ts)
+
+## External Integrations
+
+Current external/system boundaries visible in repo:
+
+- Supabase for auth, remote persistence, and row-level security
+- hCaptcha for signup / password-reset protection paths
+- Sentry for client, server, and edge telemetry
+- Vercel-oriented instrumentation signals via Speed Insights and `VERCEL_ENV` handling in config
+
+Relevant files:
+
+- [src/components/auth/SignupForm.tsx](../src/components/auth/SignupForm.tsx)
+- [src/components/auth/ForgotPasswordForm.tsx](../src/components/auth/ForgotPasswordForm.tsx)
+- [sentry.client.config.ts](../sentry.client.config.ts)
+- [sentry.server.config.ts](../sentry.server.config.ts)
+- [sentry.edge.config.ts](../sentry.edge.config.ts)
+- [next.config.js](../next.config.js)
+
+## Verification Surfaces
+
+Current repo verification truth lives in:
+
+- [package.json](../package.json)
+- [.github/workflows/ci.yml](../.github/workflows/ci.yml)
+
+The repo currently exposes these main local verification commands:
+
+- `npm run lint`
+- `npm run typecheck`
+- `npm test`
+- `npm run verify`
+- `npm run build`
+- `npm run security-check`
+
+`scripts/verify-build.sh` is a convenience wrapper, not the primary verification authority.
+
+## Hotspots
+
+Large or high-coupling files currently worth treating carefully:
+
+- [src/components/analytics/TopicHeatmap.tsx](../src/components/analytics/TopicHeatmap.tsx)
+- [src/lib/dataExport.ts](../src/lib/dataExport.ts)
+- [src/stores/quizSessionStore.ts](../src/stores/quizSessionStore.ts)
+- [src/db/results.ts](../src/db/results.ts)
+- [src/lib/sync/quizSyncManager.ts](../src/lib/sync/quizSyncManager.ts)
+- [src/components/providers/SyncProvider.tsx](../src/components/providers/SyncProvider.tsx)
+
+One repo-specific hotspot is aggregated-session persistence. [src/components/quiz/hooks/useQuizPersistence.ts](../src/components/quiz/hooks/useQuizPersistence.ts) builds `sourceMap` data by scanning quizzes, so changes around aggregated sessions should be reviewed with scale in mind.
+
+## Working Rules
+
+- Treat `AGENTS.md` as the entrypoint map, `docs/ENGINEERING_RUNBOOK.md` as workflow authority, and this file as current-state architecture truth.
+- Treat `supabase/migrations/*` as primary database schema truth. Treat generated types as the derived application contract. Treat docs as summaries only.
+- Do not add direct Supabase data writes from UI for quiz, result, or SRS domains; those domains already have dedicated sync ownership in `src/lib/sync/*`.
+- Do not add new route protection or CSP behavior outside `src/proxy.ts` without documenting the boundary change.
+- Do not add new environment-variable ownership points casually. Existing ownership is concentrated in `next.config.js`, `src/proxy.ts`, `src/lib/supabase/*`, route handlers, and integration configs.
+- Update this file in the same pass when changing composition roots, route handlers, persistence boundaries, sync invariants, verification ownership, or external integrations.
+
+## Known Gaps and Explicit Unknowns
+
+- Deployment and release behavior beyond repo-visible evidence is intentionally undocumented here.
+- This file does not attempt to preserve historical ADRs as a separate authority surface.
+- If a future migration, generated-type refresh, or runtime change disagrees with this document, the code/migrations win and this document should be updated immediately.

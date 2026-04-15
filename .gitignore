@@ -46,7 +46,7 @@ yarn-error.log*
 next-env.d.ts
 
 # dev
-agents.md
+# `AGENTS.md` is a tracked control-plane file and must remain visible to git.
 GEMINI.md
 .geminiignore
 .codanna

@@ -4,6 +4,12 @@ First off, thank you for considering contributing to CertPrep.ai! 🎉
 
 This document provides guidelines and steps for contributing. Following these guidelines helps communicate that you respect the time of the developers managing and developing this open-source project.
 
+Control-plane references for contributors:
+
+- [AGENTS.md](./AGENTS.md) for entrypoint defaults and where to look next
+- [docs/ENGINEERING_RUNBOOK.md](./docs/ENGINEERING_RUNBOOK.md) for workflow and verification policy
+- [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) for current-state architecture truth
+
 ---
 
 ## <a id="table-of-contents"></a> 📋 Table of Contents
@@ -33,7 +39,7 @@ Before you begin, ensure you have the following installed:
 
 | Tool    | Version | Check Command    |
 | ------- | ------- | ---------------- |
-| Node.js | ≥18.0.0 | `node --version` |
+| Node.js | ≥24.0.0 | `node --version` |
 | npm     | ≥9.0.0  | `npm --version`  |
 | Git     | Latest  | `git --version`  |
 
@@ -71,6 +77,8 @@ Before you begin, ensure you have the following installed:
    cp .env.example .env.local
    # Edit .env.local with your values
    ```
+
+   This repository includes in-repo Supabase migrations at `supabase/migrations/`. Use those as DB schema source of truth.
 
 6. **Start development server**
 
@@ -130,7 +138,7 @@ If applicable, add screenshots.
 
 - OS: [e.g., macOS 14.0]
 - Browser: [e.g., Chrome 120]
-- Node.js: [e.g., 18.17.0]
+- Node.js: [e.g., 24.14.0]
 - Version: [e.g., 1.2.0]
 
 ## Additional Context
@@ -179,15 +187,13 @@ We actively welcome your pull requests!
 ```mermaid
 gitGraph
    commit id: "main"
-   branch develop
-   commit id: "dev-1"
    branch feature/new-feature
    commit id: "feat-1"
    commit id: "feat-2"
-   checkout develop
+   checkout main
    merge feature/new-feature
    checkout main
-   merge develop tag: "v1.1.0"
+   commit id: "release"
 ```
 
 ### Workflow
@@ -214,10 +220,9 @@ gitGraph
 4. **Run checks locally**
 
    ```bash
-   npm run lint        # Check linting
-   npm run typecheck   # Check types
-   npm run test        # Run tests
-   npm run build       # Verify build
+   npm run verify      # Canonical local verification (lint + typecheck + tests)
+   npm run security-check
+   npm run build       # Optional pre-PR confidence check (CI also enforces build)
    ```
 
 5. **Commit your changes**
