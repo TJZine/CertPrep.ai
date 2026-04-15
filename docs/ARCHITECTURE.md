@@ -43,9 +43,11 @@ Representative page entrypoints:
 - CSP nonce generation and header application
 - request cache-control for document responses
 - Supabase SSR cookie bridging
-- protected-route and auth-route redirects
+- protected-route redirects and auth-route allowlisting
 
 Changes to auth-route inventory, protected-route behavior, or CSP policy should be treated as boundary changes and documented here.
+
+Authenticated auth-page redirects are client-owned via [src/hooks/useAuthRedirect.ts](../src/hooks/useAuthRedirect.ts). The proxy must not redirect authenticated `/login`, `/signup`, or `/forgot-password` requests because server-visible cookies can be temporarily out of sync with client auth state.
 
 ### Auth and Session Ownership
 

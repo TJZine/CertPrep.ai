@@ -53,7 +53,7 @@ describe("proxy", () => {
     );
   });
 
-  it("redirects authenticated users away from auth routes", async () => {
+  it("passes through authenticated auth-route requests and preserves response headers", async () => {
     supabaseAuth.getUser.mockResolvedValueOnce({
       data: { user: { id: "user-1" } },
       error: null,
@@ -67,8 +67,15 @@ describe("proxy", () => {
 
     const response = await proxy(request);
 
-    expect(response.status).toBe(307);
-    expect(response.headers.get("location")).toBe("https://certprep.ai/");
+    expect(response.status).toBe(200);
+    expect(response.headers.get("location")).toBeNull();
+    expect(response.headers.get("Cache-Control")).toBe(
+      "private, no-cache, no-store, max-age=0, must-revalidate",
+    );
+    expect(response.headers.get("Content-Security-Policy")).toBe(
+      "default-src 'self'",
+    );
+    expect(response.headers.get("x-nonce")).toBeTruthy();
   });
 
   it("passes through public auth pages for unauthenticated users and sets no-cache headers", async () => {
