@@ -43,6 +43,7 @@ If schema work touches a surface where these disagree, do not rationalize the co
 - Logic-only TypeScript changes (no UI/runtime boundary impact): run logic verification.
 - UI/navigation/runtime-boundary changes (routing, providers, auth/session, sync, storage, proxy, API routes): run full verification.
 - Security-sensitive or auth/storage contract changes: run full verification and require explicit review before merge.
+- Behavior-changing Playwright/E2E harness changes (`playwright.config.ts`, `tests/e2e/global-setup.ts`, E2E auth/bootstrap helpers, browser launch flags, or browser-security workarounds) should be treated as runtime/test-boundary changes. Comment-only or wording-only edits in those files follow the normal behavior-based routing rule instead.
 
 ## Risk Tiers
 
@@ -94,6 +95,7 @@ Plan and verification depth must increase with tier.
   - `npm run verify`
   - `npm run security-check`
   - `npm run build` when environment allows
+  - `npm run test:e2e` when the change behaviorally touches Playwright config/bootstrap, browser-security workarounds, or runtime flows that only E2E covers and the environment is configured
 
 ### Build Environment Caveat
 
@@ -101,7 +103,7 @@ Plan and verification depth must increase with tier.
 
 ### E2E Caveat
 
-`npm run test:e2e` depends on environment setup and secrets (including Supabase-related credentials). Treat E2E as required only when the changed surface warrants it and the environment is properly configured.
+`npm run test:e2e` depends on environment setup and secrets (including Supabase-related credentials). Treat E2E as required when the changed surface warrants it, especially for behavior-changing Playwright config/bootstrap and browser-security harness changes, and the environment is properly configured. If the environment is not configured, record the gap explicitly and treat it as a stop-and-ask condition before claiming the required verification is complete or merging.
 
 ## Review Policy
 

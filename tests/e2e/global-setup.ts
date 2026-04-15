@@ -113,9 +113,8 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
   }
 
   const browser = await chromium.launch({
-    // See playwright.config.ts: CSP uses nonced style-src without 'unsafe-inline' in prod mode;
-    // Playwright's server doesn't propagate the nonce header consistently, so disable web security
-    // here to prevent CSP false positives during setup.
+    // Keep this aligned with playwright.config.ts. This is a historical workaround,
+    // not proof of the current root cause; verify the failure mode before changing CSP.
     args: ["--disable-web-security"],
   });
   const page = await browser.newPage();
