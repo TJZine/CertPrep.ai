@@ -37,6 +37,25 @@ type SignOutDependencies = {
   userId?: string;
 };
 
+type PreLogoutSyncOutcome = {
+  incomplete: boolean;
+  status?: "synced" | "skipped" | "failed";
+};
+
+function requiresLocalDataPreservation(
+  outcome: PromiseSettledResult<PreLogoutSyncOutcome>,
+): boolean {
+  if (outcome.status === "rejected") {
+    return true;
+  }
+
+  return (
+    outcome.value.status === "skipped" ||
+    outcome.value.status === "failed" ||
+    Boolean(outcome.value.incomplete)
+  );
+}
+
 /**
  * Signs out the user, optionally syncing data and clearing local storage.
  * @returns An object with success (true if sign-out completed) and error (set if local cleanup failed).
@@ -69,10 +88,7 @@ export async function performSignOut({
         logger.warn("Pre-logout sync timed out", { userId });
         shouldPreserveLocalData = true;
       } else {
-        const failed = raceResult.some((result) => {
-          if (result.status === "rejected") return true;
-          return Boolean(result.value.incomplete);
-        });
+        const failed = raceResult.some(requiresLocalDataPreservation);
 
         if (failed) {
           logger.warn("Pre-logout sync failed or incomplete", {

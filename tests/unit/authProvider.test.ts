@@ -130,4 +130,25 @@ describe("performSignOut", () => {
     expect(supabase.auth.signOut).toHaveBeenCalledTimes(1);
     expect(onResetAuthState).toHaveBeenCalledTimes(1);
   });
+
+  it("preserves local data when pre-logout sync is skipped in another tab", async () => {
+    syncQuizzes.mockResolvedValue({ incomplete: false, status: "skipped" });
+    syncResults.mockResolvedValue({ incomplete: false, status: "synced" });
+    const supabase = createSupabaseStub();
+    const clearDb = vi.fn().mockResolvedValue(undefined);
+    const onResetAuthState = vi.fn();
+
+    const result = await performSignOut({
+      supabase: supabase as never,
+      clearDb,
+      onResetAuthState,
+      userId: "user-123",
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.error).toMatch(/kept on this device/i);
+    expect(clearDb).not.toHaveBeenCalled();
+    expect(supabase.auth.signOut).toHaveBeenCalledTimes(1);
+    expect(onResetAuthState).toHaveBeenCalledTimes(1);
+  });
 });
