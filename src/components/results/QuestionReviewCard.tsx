@@ -98,6 +98,10 @@ export function QuestionReviewCard({
     if (sanitizedQuestion.length <= 150) return sanitizedQuestion;
     return `${sanitizedQuestion.substring(0, 150)}...`;
   }, [sanitizedQuestion]);
+  const questionPreviewHtml = React.useMemo(
+    () => (isExpanded ? sanitizedQuestion : truncatedQuestion),
+    [isExpanded, sanitizedQuestion, truncatedQuestion],
+  );
 
   React.useEffect(() => {
     if (expandAllState !== undefined && expandAllSignal !== undefined) {
@@ -181,11 +185,7 @@ export function QuestionReviewCard({
           </div>
 
           <p className={cn("text-foreground", !isExpanded && "line-clamp-2")}>
-            <span
-              dangerouslySetInnerHTML={{
-                __html: isExpanded ? sanitizedQuestion : truncatedQuestion,
-              }}
-            />
+            <span dangerouslySetInnerHTML={{ __html: questionPreviewHtml }} />
           </p>
         </div>
 
