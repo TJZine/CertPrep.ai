@@ -4,7 +4,7 @@ import LibraryPage from "@/app/library/page";
 import { useQuizzes, useInitializeDatabase } from "@/hooks/useDatabase";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
-import { TestLibrary } from "@/components/dashboard/TestLibrary";
+import { TestLibrary } from "@/components/library/TestLibrary";
 import type { Quiz } from "@/types/quiz";
 
 // Mock dependencies
@@ -27,7 +27,7 @@ vi.mock("@/components/library/LibrarySkeleton", () => ({
   ),
 }));
 
-vi.mock("@/components/dashboard/TestLibrary", () => ({
+vi.mock("@/components/library/TestLibrary", () => ({
   TestLibrary: vi.fn(
     (): React.ReactElement => <div data-testid="test-library" />,
   ),

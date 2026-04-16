@@ -74,7 +74,6 @@ export function TestLibrary({
   const pathname = usePathname();
   const tabRefs = React.useRef<(HTMLButtonElement | null)[]>([]);
 
-  // Sort state with localStorage persistence
   type LibrarySortOption = "title" | "category" | "questions";
   const SORT_OPTIONS: SelectOption[] = [
     { value: "title", label: "Title" },
@@ -91,7 +90,6 @@ export function TestLibrary({
     return "title";
   });
 
-  // Persist sort preference
   React.useEffect(() => {
     try {
       localStorage.setItem("library-sort-by", sortBy);
@@ -127,7 +125,10 @@ export function TestLibrary({
           let target = "all";
           if (urlCategory && nextCategories.includes(urlCategory)) {
             target = urlCategory;
-          } else if (storedCategory && nextCategories.includes(storedCategory)) {
+          } else if (
+            storedCategory &&
+            nextCategories.includes(storedCategory)
+          ) {
             target = storedCategory;
           }
 
@@ -183,7 +184,9 @@ export function TestLibrary({
       params.set("category", category);
     }
     const queryString = params.toString();
-    router.replace(queryString ? `${pathname}?${queryString}` : pathname, { scroll: false });
+    router.replace(queryString ? `${pathname}?${queryString}` : pathname, {
+      scroll: false,
+    });
   };
 
   const handleTabKeyDown = (
@@ -230,7 +233,6 @@ export function TestLibrary({
     });
   }, [categoryFilter, manifest, searchTerm]);
 
-  // Sort the filtered manifest
   const sortedManifest = React.useMemo(() => {
     const sorted = [...filteredManifest];
     switch (sortBy) {
@@ -238,15 +240,17 @@ export function TestLibrary({
         sorted.sort((a, b) => a.title.localeCompare(b.title));
         break;
       case "category":
-        // Secondary sort by title for stable ordering
-        sorted.sort((a, b) =>
-          a.category.localeCompare(b.category) || a.title.localeCompare(b.title)
+        sorted.sort(
+          (a, b) =>
+            a.category.localeCompare(b.category) ||
+            a.title.localeCompare(b.title),
         );
         break;
       case "questions":
-        // Secondary sort by title for stable ordering
-        sorted.sort((a, b) =>
-          (b.questionCount ?? 0) - (a.questionCount ?? 0) || a.title.localeCompare(b.title)
+        sorted.sort(
+          (a, b) =>
+            (b.questionCount ?? 0) - (a.questionCount ?? 0) ||
+            a.title.localeCompare(b.title),
         );
         break;
     }
@@ -312,7 +316,10 @@ export function TestLibrary({
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <Skeleton className="h-10 w-full sm:max-w-sm" />
               <div className="flex items-center gap-2">
-                <div className="flex gap-2 overflow-x-auto pb-1" aria-hidden="true">
+                <div
+                  className="flex gap-2 overflow-x-auto pb-1"
+                  aria-hidden="true"
+                >
                   {Array.from({ length: 4 }).map((_, i) => (
                     <Skeleton key={i} className="h-9 w-24 rounded-full" />
                   ))}
@@ -426,10 +433,7 @@ export function TestLibrary({
                               {entry.description}
                             </p>
                           </div>
-                          <Badge
-                            variant="secondary"
-                            className="shrink-0"
-                          >
+                          <Badge variant="secondary" className="shrink-0">
                             {entry.category}
                           </Badge>
                         </div>
@@ -439,7 +443,7 @@ export function TestLibrary({
                           </p>
                         ) : null}
                         {entry.questionCount != null && (
-                          <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                          <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
                             <FileText className="h-3 w-3" aria-hidden="true" />
                             {entry.questionCount} questions
                           </p>
