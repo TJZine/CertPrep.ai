@@ -4,7 +4,7 @@ import * as React from "react";
 import { ArrowLeft, BookOpen } from "lucide-react";
 import Link from "next/link";
 import { useQuizzes, useInitializeDatabase } from "@/hooks/useDatabase";
-import { TestLibrary } from "@/components/dashboard/TestLibrary";
+import { TestLibrary } from "@/components/library/TestLibrary";
 import { LibrarySkeleton } from "@/components/library/LibrarySkeleton";
 import { buttonVariants } from "@/components/ui/Button";
 import { cn } from "@/lib/utils/cn";
