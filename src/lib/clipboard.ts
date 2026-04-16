@@ -2,12 +2,26 @@
  * Copies text to the clipboard with a DOM-based fallback for older browsers.
  */
 export async function copyToClipboard(text: string): Promise<void> {
+  let writeTextError: unknown;
+
   if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
-    await navigator.clipboard.writeText(text);
-    return;
+    try {
+      await navigator.clipboard.writeText(text);
+      return;
+    } catch (error) {
+      writeTextError = error;
+    }
   }
 
   if (typeof document === "undefined") {
+    if (writeTextError) {
+      const message =
+        writeTextError instanceof Error
+          ? writeTextError.message
+          : "Unknown error";
+      throw new Error(`Copy to clipboard failed: ${message}`);
+    }
+
     throw new Error("Clipboard is not available in this environment.");
   }
 
@@ -20,7 +34,11 @@ export async function copyToClipboard(text: string): Promise<void> {
   textarea.select();
 
   try {
-    document.execCommand("copy");
+    const copied = document.execCommand("copy");
+
+    if (!copied) {
+      throw new Error("execCommand returned false");
+    }
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
     throw new Error(`Copy to clipboard failed: ${message}`);
