@@ -106,6 +106,56 @@ describe("SyncProvider", () => {
     });
   });
 
+  it("returns partial when all coordinated domains are skipped and retryable", async () => {
+    mockRunSyncPlan.mockResolvedValue({
+      domains: ["quizzes", "results", "srs"],
+      settlements: {},
+      outcomes: buildOutcomes({
+        quizzes: { incomplete: false, status: "skipped", shouldRetry: true },
+        results: { incomplete: false, status: "skipped", shouldRetry: true },
+        srs: { incomplete: false, status: "skipped", shouldRetry: true },
+      }),
+    });
+
+    const { result } = renderHook(() => useSyncContext(), { wrapper });
+    await waitFor(() => expect(result.current.hasInitialSyncCompleted).toBe(true));
+
+    let outcome;
+    await act(async () => {
+      outcome = await result.current.sync();
+    });
+
+    expect(outcome).toMatchObject({
+      status: "partial",
+      success: false,
+      details: { quizzes: false, results: false, srs: false },
+    });
+  });
+
+  it("returns partial when a coordinated domain is skipped and retryable", async () => {
+    mockRunSyncPlan.mockResolvedValue({
+      domains: ["quizzes", "results", "srs"],
+      settlements: {},
+      outcomes: buildOutcomes({
+        results: { incomplete: false, status: "skipped", shouldRetry: true },
+      }),
+    });
+
+    const { result } = renderHook(() => useSyncContext(), { wrapper });
+    await waitFor(() => expect(result.current.hasInitialSyncCompleted).toBe(true));
+
+    let outcome;
+    await act(async () => {
+      outcome = await result.current.sync();
+    });
+
+    expect(outcome).toMatchObject({
+      status: "partial",
+      success: false,
+      details: { quizzes: false, results: false, srs: false },
+    });
+  });
+
   it("prevents overlapping sync calls", async () => {
     const syncControl: { resolve: (() => void) | null } = { resolve: null };
     mockRunSyncPlan.mockImplementation(

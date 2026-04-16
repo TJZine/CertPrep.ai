@@ -195,8 +195,14 @@ export function SyncProvider({
         const details = toSyncDetails(outcomes);
         const anyIncomplete =
           details.quizzes || details.results || details.srs;
+        const hasNonSyncedOutcome = Object.values(outcomes).some(
+          (outcome) =>
+            outcome.shouldRetry === true ||
+            (outcome.status !== undefined && outcome.status !== "synced"),
+        );
 
-        const status: SyncStatus = anyIncomplete ? "partial" : "success";
+        const status: SyncStatus =
+          anyIncomplete || hasNonSyncedOutcome ? "partial" : "success";
 
         // Refresh block info immediately after sync attempts (fire-and-forget; guards prevent stale updates)
         void computeBlockedInfo();
