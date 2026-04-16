@@ -169,13 +169,14 @@ Current external/system boundaries visible in repo:
 
 - Supabase for auth, remote persistence, and row-level security
 - hCaptcha for signup / password-reset protection paths
-- Sentry for client, server, and edge telemetry
+- Sentry for client, server, and edge telemetry, with client bootstrap owned by [src/instrumentation-client.ts](../src/instrumentation-client.ts) and shared client options defined in [sentry.client.config.ts](../sentry.client.config.ts)
 - Vercel-oriented instrumentation signals via Speed Insights and `VERCEL_ENV` handling in config
 
 Relevant files:
 
 - [src/components/auth/SignupForm.tsx](../src/components/auth/SignupForm.tsx)
 - [src/components/auth/ForgotPasswordForm.tsx](../src/components/auth/ForgotPasswordForm.tsx)
+- [src/instrumentation-client.ts](../src/instrumentation-client.ts)
 - [sentry.client.config.ts](../sentry.client.config.ts)
 - [sentry.server.config.ts](../sentry.server.config.ts)
 - [sentry.edge.config.ts](../sentry.edge.config.ts)

@@ -14,12 +14,14 @@ const replayIntegrationSpy = vi.fn(
     options,
   }),
 );
+const captureRouterTransitionStartSpy = vi.fn();
 
 vi.mock("@sentry/nextjs", () => ({
   init: initSpy,
   getClient: getClientSpy,
   consoleLoggingIntegration: consoleLoggingIntegrationSpy,
   replayIntegration: replayIntegrationSpy,
+  captureRouterTransitionStart: captureRouterTransitionStartSpy,
 }));
 
 const originalEnv = { ...process.env };
@@ -78,6 +80,54 @@ describe("Sentry config modules", () => {
     );
   });
 
+  it("builds the client SDK config with redaction and sampling defaults", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+    vi.stubEnv("NEXT_PUBLIC_SENTRY_DSN", "https://client.example/1");
+
+    const { getClientSentryConfig } = await import("../../sentry.client.config");
+    const config = getClientSentryConfig();
+
+    expect(config).toEqual(
+      expect.objectContaining({
+        dsn: "https://client.example/1",
+        integrations: [],
+        tracesSampleRate: 1,
+        enableLogs: true,
+        replaysSessionSampleRate: 1,
+        replaysOnErrorSampleRate: 1,
+        sendDefaultPii: false,
+        debug: true,
+      }),
+    );
+
+    expect(
+      config.beforeSend?.({
+        exception: {
+          values: [{ value: "token=abc123 password: hunter2" }],
+        },
+        message: "auth secret=my-secret",
+      } as never, {} as never),
+    ).toEqual({
+      exception: {
+        values: [{ value: "token=[REDACTED] password=[REDACTED]" }],
+      },
+      message: "auth=[REDACTED]",
+    });
+
+    expect(
+      config.beforeSend?.({
+        exception: {
+          values: [
+            {
+              value:
+                "importScripts failed inside WorkerGlobalScope while loading worker chunk",
+            },
+          ],
+        },
+      } as never, {} as never),
+    ).toBeNull();
+  });
+
   it("initializes the client SDK only when a DSN exists and no client is active", async () => {
     const addIntegrationSpy = vi.fn();
     getClientSpy
@@ -91,7 +141,7 @@ describe("Sentry config modules", () => {
       .spyOn(globalThis, "setTimeout")
       .mockImplementation(((() => 1) as unknown) as typeof setTimeout);
 
-    await import("../../sentry.client.config");
+    await import("../../src/instrumentation-client");
 
     expect(initSpy).toHaveBeenCalledTimes(1);
 
@@ -101,38 +151,13 @@ describe("Sentry config modules", () => {
         dsn: "https://client.example/1",
         integrations: [],
         tracesSampleRate: 1,
+        enableLogs: true,
         replaysSessionSampleRate: 1,
         replaysOnErrorSampleRate: 1,
+        sendDefaultPii: false,
         debug: true,
       }),
     );
-
-    expect(
-      config.beforeSend({
-        exception: {
-          values: [{ value: "token=abc123 password: hunter2" }],
-        },
-        message: "auth secret=my-secret",
-      }),
-    ).toEqual({
-      exception: {
-        values: [{ value: "token=[REDACTED] password=[REDACTED]" }],
-      },
-      message: "auth=[REDACTED]",
-    });
-
-    expect(
-      config.beforeSend({
-        exception: {
-          values: [
-            {
-              value:
-                "importScripts failed inside WorkerGlobalScope while loading worker chunk",
-            },
-          ],
-        },
-      }),
-    ).toBeNull();
 
     expect(addEventListenerSpy).toHaveBeenCalledTimes(4);
     expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function), 5000);
@@ -165,7 +190,7 @@ describe("Sentry config modules", () => {
     vi.unstubAllEnvs();
     delete process.env.NEXT_PUBLIC_SENTRY_DSN;
 
-    await import("../../sentry.client.config");
+    await import("../../src/instrumentation-client");
 
     expect(initSpy).not.toHaveBeenCalled();
   });

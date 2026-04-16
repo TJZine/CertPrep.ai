@@ -3,29 +3,62 @@
 // https://docs.sentry.io/platforms/javascript/guides/nextjs/
 
 import * as Sentry from "@sentry/nextjs";
+import { getClientSentryConfig } from "@/../sentry.client.config";
 
-Sentry.init({
-  dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+const clientSentryConfig = getClientSentryConfig();
 
-  // Add optional integrations for additional features
-  integrations: [Sentry.replayIntegration()],
+if (clientSentryConfig.dsn && !Sentry.getClient()) {
+  Sentry.init(clientSentryConfig);
 
-  // Define how likely traces are sampled. Adjust this value in production, or use tracesSampler for greater control.
-  tracesSampleRate: process.env.NODE_ENV === "production" ? 0.1 : 1,
-  // Enable logs to be sent to Sentry
-  enableLogs: true,
+  if (typeof window !== "undefined") {
+    let replayLoaded = false;
 
-  // Define how likely Replay events are sampled.
-  // This sets the sample rate to be 10%. You may want this to be 100% while
-  // in development and sample at a lower rate in production
-  replaysSessionSampleRate: process.env.NODE_ENV === "production" ? 0.1 : 1,
+    const loadReplay = (): void => {
+      if (replayLoaded) {
+        return;
+      }
+      replayLoaded = true;
 
-  // Define how likely Replay events are sampled when an error occurs.
-  replaysOnErrorSampleRate: 1.0,
+      import("@sentry/nextjs")
+        .then((SentryModule) => {
+          const client = SentryModule.getClient();
+          if (client) {
+            client.addIntegration(
+              SentryModule.replayIntegration({
+                maskAllText: true,
+                blockAllMedia: true,
+              }),
+            );
+          }
+        })
+        .catch((error) => {
+          void error;
+        });
+    };
 
-  // Disable sending user PII (Personally Identifiable Information)
-  // https://docs.sentry.io/platforms/javascript/guides/nextjs/configuration/options/#sendDefaultPii
-  sendDefaultPii: false,
-});
+    const interactionEvents: (keyof WindowEventMap)[] = [
+      "click",
+      "keydown",
+      "scroll",
+      "touchstart",
+    ];
+
+    const handleInteraction = (): void => {
+      interactionEvents.forEach((eventName) =>
+        window.removeEventListener(eventName, handleInteraction),
+      );
+      loadReplay();
+    };
+
+    interactionEvents.forEach((eventName) =>
+      window.addEventListener(eventName, handleInteraction, {
+        once: true,
+        passive: true,
+      }),
+    );
+
+    setTimeout(loadReplay, 5000);
+  }
+}
 
 export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
