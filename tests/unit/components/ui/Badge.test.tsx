@@ -9,4 +9,10 @@ describe("Badge", () => {
     const badge = screen.getByText("New");
     expect(badge.tagName.toLowerCase()).toBe("span");
   });
+
+  it("renders the destructive variant", () => {
+    render(<Badge variant="destructive">Alert</Badge>);
+    const badge = screen.getByText("Alert");
+    expect(badge.className).toContain("bg-destructive");
+  });
 });

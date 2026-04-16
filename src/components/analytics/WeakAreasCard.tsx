@@ -216,7 +216,7 @@ export function WeakAreasCard({
                         </Badge>
                       )}
                       {area.recentTrend === "declining" && (
-                        <Badge variant="danger" className="gap-1 flex-shrink-0">
+                        <Badge variant="destructive" className="gap-1 flex-shrink-0">
                           <TrendingDown className="h-3 w-3" aria-hidden="true" />
                           Declining
                         </Badge>

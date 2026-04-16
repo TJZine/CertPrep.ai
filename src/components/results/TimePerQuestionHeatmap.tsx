@@ -145,7 +145,7 @@ export function TimePerQuestionHeatmap({
                       {label}: {q.category}
                     </span>
                     <Badge
-                      variant={idx === 0 ? "danger" : "secondary"}
+                      variant={idx === 0 ? "destructive" : "secondary"}
                       className="ml-2 shrink-0"
                     >
                       {formatSeconds(q.time)}

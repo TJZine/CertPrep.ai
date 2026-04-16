@@ -96,7 +96,7 @@ export function RetryComparisonCard({
             );
         } else if (avgImprovement < 0) {
             return (
-                <Badge variant="danger" className="gap-1">
+                <Badge variant="destructive" className="gap-1">
                     <TrendingDown className="h-3 w-3" aria-hidden="true" />
                     {avgImprovement}% decline
                 </Badge>

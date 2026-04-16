@@ -166,7 +166,7 @@ export function SelfAssessmentSummary({
                   ? "success"
                   : stats.calibrated / stats.good >= 0.6
                     ? "warning"
-                    : "danger"
+                    : "destructive"
               }
             >
               {Math.round((stats.calibrated / stats.good) * 100)}%

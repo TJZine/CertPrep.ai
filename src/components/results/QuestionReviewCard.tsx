@@ -169,7 +169,7 @@ export function QuestionReviewCard({
                     ? "success"
                     : question.difficulty === "Medium"
                       ? "warning"
-                      : "danger"
+                      : "destructive"
                 }
               >
                 {question.difficulty}
@@ -234,7 +234,7 @@ export function QuestionReviewCard({
               } else if (isUserAnswer && !isCorrect) {
                 optionStyle = "border-incorrect/50 bg-incorrect/10";
                 badgeContent = (
-                  <Badge variant="danger" className="ml-2">
+                  <Badge variant="destructive" className="ml-2">
                     Your Answer
                   </Badge>
                 );

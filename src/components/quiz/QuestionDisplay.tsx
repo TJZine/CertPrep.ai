@@ -50,7 +50,7 @@ export function QuestionDisplay({
                   ? "success"
                   : question.difficulty === "Medium"
                     ? "warning"
-                    : "danger"
+                    : "destructive"
               }
             >
               {question.difficulty}
