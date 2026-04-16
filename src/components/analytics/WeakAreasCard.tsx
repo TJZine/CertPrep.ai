@@ -15,7 +15,10 @@ import { Badge } from "@/components/ui/Badge";
 import { Modal } from "@/components/ui/Modal";
 import { cn } from "@/lib/utils/cn";
 import { useToast } from "@/components/ui/Toast";
-import { getTopicStudyQuestions, type TopicStudyData } from "@/db/results";
+import {
+  getTopicStudyQuestions,
+  type TopicStudyData,
+} from "@/db/resultAnalytics";
 import {
   TOPIC_STUDY_QUESTIONS_KEY,
   TOPIC_STUDY_CATEGORY_KEY,

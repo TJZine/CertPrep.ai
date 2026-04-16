@@ -5,7 +5,7 @@ import { BookOpen, Clock, Target, Award } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/Card";
 import { formatTime } from "@/lib/date";
 import { cn } from "@/lib/utils/cn";
-import type { OverallStats } from "@/db/results";
+import type { OverallStats } from "@/db/resultAnalytics";
 
 interface AnalyticsOverviewProps {
   stats: OverallStats;
@@ -79,4 +79,3 @@ export function AnalyticsOverview({
 }
 
 export default AnalyticsOverview;
-

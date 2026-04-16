@@ -2,7 +2,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "@/db";
 import { calculatePercentage } from "@/lib/utils/math";;
 import type { QuizStats } from "@/db/quizzes";
-import type { OverallStats } from "@/db/results";
+import type { OverallStats } from "@/db/resultAnalytics";
 import type { Result } from "@/types/result";
 
 export interface DashboardStats {

@@ -24,7 +24,7 @@ import { useAnalyticsStats } from "@/hooks/useAnalyticsStats";
 import { useAdvancedAnalytics } from "@/hooks/useAdvancedAnalytics";
 import { useCategoryTrends } from "@/hooks/useCategoryTrends";
 import { useSync } from "@/hooks/useSync";
-import { type OverallStats } from "@/db/results";
+import { type OverallStats } from "@/db/resultAnalytics";
 import { calculateWeakestCategories } from "@/lib/analytics/categoryWeighting";
 import { BarChart3, Plus, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/components/providers/AuthProvider";
