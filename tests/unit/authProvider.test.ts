@@ -1,9 +1,14 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { performSignOut } from "@/components/providers/AuthProvider";
 import type { CoordinatedSyncOutcome, SyncDomain } from "@/lib/sync/coordinator";
 
-const { runSyncPlan } = vi.hoisted(() => ({
+const { requestServiceWorkerCacheClear, runSyncPlan } = vi.hoisted(() => ({
+  requestServiceWorkerCacheClear: vi.fn().mockResolvedValue(undefined),
   runSyncPlan: vi.fn(),
+}));
+
+vi.mock("@/lib/serviceWorkerClient", () => ({
+  requestServiceWorkerCacheClear,
 }));
 
 vi.mock("@/lib/sync/coordinator", () => ({
@@ -58,6 +63,11 @@ const createSupabaseStub = (): {
 };
 
 describe("performSignOut", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    requestServiceWorkerCacheClear.mockResolvedValue(undefined);
+  });
+
   it("continues sign-out when clearing Dexie fails but surfaces warning", async () => {
     runSyncPlan.mockResolvedValue(buildSyncSummary());
     const supabase = createSupabaseStub();
@@ -134,6 +144,7 @@ describe("performSignOut", () => {
     expect(result.success).toBe(true);
     expect(result.error).toMatch(/kept on this device/i);
     expect(clearDb).not.toHaveBeenCalled();
+    expect(requestServiceWorkerCacheClear).toHaveBeenCalledTimes(1);
     expect(supabase.auth.signOut).toHaveBeenCalledTimes(1);
     expect(onResetAuthState).toHaveBeenCalledTimes(1);
   });
@@ -157,6 +168,7 @@ describe("performSignOut", () => {
     expect(result.success).toBe(true);
     expect(result.error).toMatch(/kept on this device/i);
     expect(clearDb).not.toHaveBeenCalled();
+    expect(requestServiceWorkerCacheClear).toHaveBeenCalledTimes(1);
     expect(supabase.auth.signOut).toHaveBeenCalledTimes(1);
     expect(onResetAuthState).toHaveBeenCalledTimes(1);
   });

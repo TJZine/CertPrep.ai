@@ -83,12 +83,13 @@ export async function performSignOut({
     }
   }
 
+  void requestServiceWorkerCacheClear();
+
   if (shouldPreserveLocalData) {
     dbClearError =
       "Signed out before sync completed. Local study data was kept on this device.";
   } else {
     try {
-      void requestServiceWorkerCacheClear();
       await clearDb();
     } catch (error) {
       logger.error("Failed to clear local database during sign out", error);
