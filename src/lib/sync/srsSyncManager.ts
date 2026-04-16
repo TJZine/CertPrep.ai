@@ -18,8 +18,12 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { SRSState } from "@/types/srs";
 import {
   createSupabaseClientGetter,
+  failedSyncOutcome,
+  skippedSyncOutcome,
+  syncedSyncOutcome,
   toErrorMessage as toSharedErrorMessage,
   toSafeCursorTimestamp as toSharedSafeCursorTimestamp,
+  type SyncRunnerOutcome,
 } from "./shared";
 
 const getSupabaseClient = createSupabaseClientGetter(() => createClient());
@@ -40,6 +44,7 @@ const toSafeCursorTimestamp = (
 const BATCH_SIZE = 50;
 const TIME_BUDGET_MS = 5000;
 const MAX_INVALID_BATCHES = 3;
+const SRS_SYNC_TIME_BUDGET_ERROR = "SRS sync time budget exceeded";
 
 // Schema for validating remote SRS data structure
 // Using .passthrough() to preserve unknown fields from newer schema versions
@@ -58,34 +63,19 @@ const syncState = {
   lastSyncAttempt: 0,
 };
 
-export type SyncSRSOutcome = {
-  incomplete: boolean;
-  error?: string;
-  status?: "synced" | "skipped" | "failed";
-  shouldRetry?: boolean;
-};
-
-const skippedRetryOutcome = (error?: string): SyncSRSOutcome => ({
-  incomplete: false,
-  status: "skipped",
-  error,
-  shouldRetry: true,
-});
-
-const failedRetryOutcome = (error: string): SyncSRSOutcome => ({
-  incomplete: true,
-  status: "failed",
-  error,
-  shouldRetry: true,
-});
+export type SyncSRSOutcome = SyncRunnerOutcome;
 
 export async function syncSRS(userId: string): Promise<SyncSRSOutcome> {
-  if (!userId) return { incomplete: false, status: "skipped" };
+  if (!userId) return skippedSyncOutcome();
 
   // Optimization: Don't attempt sync if browser is offline
   if (typeof navigator !== "undefined") {
     if (!navigator.onLine) {
-      return failedRetryOutcome("Offline");
+      return skippedSyncOutcome({
+        incomplete: true,
+        error: "Offline",
+        shouldRetry: true,
+      });
     }
   }
 
@@ -98,20 +88,29 @@ export async function syncSRS(userId: string): Promise<SyncSRSOutcome> {
           async (lock) => {
             if (!lock) {
               logger.debug("SRS sync already in progress in another tab, skipping");
-              return skippedRetryOutcome();
+              return skippedSyncOutcome({
+                shouldRetry: true,
+              });
             }
             try {
               return await performSRSSync(userId);
             } catch (error) {
               logger.error("SRS sync failed while holding lock", error);
-              return failedRetryOutcome("SRS sync failed while holding lock");
+              return failedSyncOutcome({
+                error: "SRS sync failed while holding lock",
+              });
             }
           },
-        )) ?? failedRetryOutcome("SRS sync lock request returned no outcome")
+        )) ??
+        failedSyncOutcome({
+          error: "SRS sync lock request returned no outcome",
+        })
       );
     } catch (error) {
       logger.error("Failed to acquire SRS sync lock request", error);
-      return failedRetryOutcome("Failed to acquire SRS sync lock request");
+      return failedSyncOutcome({
+        error: "Failed to acquire SRS sync lock request",
+      });
     }
   }
 
@@ -120,7 +119,9 @@ export async function syncSRS(userId: string): Promise<SyncSRSOutcome> {
       logger.warn("SRS sync lock timed out, resetting");
       syncState.isSyncing = false;
     } else {
-      return skippedRetryOutcome();
+      return skippedSyncOutcome({
+        shouldRetry: true,
+      });
     }
   }
 
@@ -130,7 +131,9 @@ export async function syncSRS(userId: string): Promise<SyncSRSOutcome> {
     return await performSRSSync(userId);
   } catch (error) {
     logger.error("SRS sync failed (fallback path)", error);
-    return failedRetryOutcome("SRS sync failed (fallback path)");
+    return failedSyncOutcome({
+      error: "SRS sync failed (fallback path)",
+    });
   } finally {
     syncState.isSyncing = false;
   }
@@ -144,23 +147,26 @@ async function performSRSSync(userId: string): Promise<SyncSRSOutcome> {
 
   const client = getSupabaseClient();
   if (!client) {
-    return failedRetryOutcome("Supabase client unavailable");
+    return failedSyncOutcome({
+      error: "Supabase client unavailable",
+    });
   }
 
   // Validate auth session matches the userId we're syncing for
   const { data: { user }, error: authError } = await client.auth.getUser();
   if (authError || !user) {
     logger.warn("SRS sync skipped: No valid auth session", { authError: authError?.message });
-    return {
+    return skippedSyncOutcome({
       incomplete: true,
-      status: "skipped",
       error: "Not authenticated",
       shouldRetry: true,
-    };
+    });
   }
   if (user.id !== userId) {
     logger.error("SRS sync aborted: Auth user ID mismatch", { authUserId: user.id, syncUserId: userId });
-    return failedRetryOutcome("User ID mismatch - please re-login");
+    return failedSyncOutcome({
+      error: "User ID mismatch - please re-login",
+    });
   }
 
   // Check if sync is blocked due to previous schema drift
@@ -173,12 +179,16 @@ async function performSRSSync(userId: string): Promise<SyncSRSOutcome> {
       reason: blockState.reason,
       remainingMins,
     });
-    return failedRetryOutcome(blockState.reason);
+    return failedSyncOutcome({
+      error: blockState.reason,
+    });
   }
 
   try {
     if (Date.now() - startTime > TIME_BUDGET_MS) {
-      return { incomplete: true };
+      return failedSyncOutcome({
+        error: SRS_SYNC_TIME_BUDGET_ERROR,
+      });
     }
 
     // Push phase - wrapped in Sentry span for performance monitoring
@@ -189,7 +199,9 @@ async function performSRSSync(userId: string): Promise<SyncSRSOutcome> {
     incomplete = pushIncomplete || incomplete;
 
     if (Date.now() - startTime > TIME_BUDGET_MS) {
-      return { incomplete: true };
+      return failedSyncOutcome({
+        error: SRS_SYNC_TIME_BUDGET_ERROR,
+      });
     }
 
     // Pull phase - wrapped in Sentry span for performance monitoring
@@ -213,11 +225,7 @@ async function performSRSSync(userId: string): Promise<SyncSRSOutcome> {
         incomplete,
       });
     }
-    return {
-      incomplete,
-      status: incomplete ? "failed" : "synced",
-      shouldRetry: incomplete,
-    };
+    return incomplete ? failedSyncOutcome() : syncedSyncOutcome();
   } finally {
     safeMark("srsSync-end");
     safeMeasure("srsSync", "srsSync-start", "srsSync-end");

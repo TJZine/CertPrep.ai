@@ -1,18 +1,18 @@
 import { syncQuizzes, type SyncQuizzesOutcome } from "@/lib/sync/quizSyncManager";
 import { syncResults, type SyncResultsOutcome } from "@/lib/sync/syncManager";
-import { syncSRS } from "@/lib/sync/srsSyncManager";
+import { syncSRS, type SyncSRSOutcome } from "@/lib/sync/srsSyncManager";
+import {
+  failedSyncOutcome,
+  skippedSyncOutcome,
+  type SyncRunnerOutcome,
+} from "@/lib/sync/shared";
 
 export type SyncDomain = "quizzes" | "results" | "srs";
-export type CoordinatedSyncOutcome = {
-  incomplete: boolean;
-  status?: "synced" | "skipped" | "failed";
-  error?: string;
-  shouldRetry?: boolean;
-};
+export type CoordinatedSyncOutcome = SyncRunnerOutcome;
 
 export type SyncPlanName = "full" | "logout" | "quiz-repair";
 
-type SyncRunner = (userId: string) => Promise<CoordinatedSyncOutcome>;
+type SyncRunner = (userId: string) => Promise<SyncRunnerOutcome>;
 type SyncPlanSummary = {
   domains: readonly SyncDomain[];
   settlements: Partial<Record<SyncDomain, PromiseSettledResult<CoordinatedSyncOutcome>>>;
@@ -26,15 +26,15 @@ const SYNC_PLAN_DOMAINS: Record<SyncPlanName, readonly SyncDomain[]> = {
 };
 
 const SYNC_RUNNERS: Record<SyncDomain, SyncRunner> = {
-  quizzes: syncQuizzes as SyncRunner,
-  results: syncResults as SyncRunner,
-  srs: syncSRS as SyncRunner,
+  quizzes: syncQuizzes,
+  results: syncResults,
+  srs: syncSRS,
 };
 
 const DEFAULT_OUTCOME: Record<SyncDomain, CoordinatedSyncOutcome> = {
-  quizzes: { incomplete: false, status: "skipped" },
-  results: { incomplete: false, status: "skipped" },
-  srs: { incomplete: false, status: "skipped" },
+  quizzes: skippedSyncOutcome(),
+  results: skippedSyncOutcome(),
+  srs: skippedSyncOutcome(),
 };
 
 const SYNC_PLAN_PHASES: Record<SyncPlanName, readonly (readonly SyncDomain[])[]> = {
@@ -44,11 +44,9 @@ const SYNC_PLAN_PHASES: Record<SyncPlanName, readonly (readonly SyncDomain[])[]>
 };
 
 function toFailedOutcome(error: unknown): CoordinatedSyncOutcome {
-  return {
-    incomplete: true,
-    status: "failed",
+  return failedSyncOutcome({
     error: error instanceof Error ? error.message : String(error),
-  };
+  });
 }
 
 export async function runSyncPlan(
@@ -130,4 +128,9 @@ export function toSyncDetails(
   };
 }
 
-export type { SyncPlanSummary, SyncQuizzesOutcome, SyncResultsOutcome };
+export type {
+  SyncPlanSummary,
+  SyncQuizzesOutcome,
+  SyncResultsOutcome,
+  SyncSRSOutcome,
+};

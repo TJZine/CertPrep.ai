@@ -13,7 +13,15 @@ import {
 } from "@/types/result";
 import { z } from "zod";
 import type { Database } from "@/types/database.types";
-import { createSupabaseClientGetter, toErrorMessage, toSafeCursorTimestamp } from "./shared";
+import {
+  createSupabaseClientGetter,
+  failedSyncOutcome,
+  skippedSyncOutcome,
+  syncedSyncOutcome,
+  toErrorMessage,
+  toSafeCursorTimestamp,
+  type SyncRunnerOutcome,
+} from "./shared";
 
 const getSupabaseClient = createSupabaseClientGetter(() => createClient());
 const BATCH_SIZE = 50;
@@ -47,36 +55,21 @@ const syncState = {
   lastSyncAttempt: 0,
 };
 
-export type SyncResultsOutcome = {
-  incomplete: boolean;
-  error?: string;
-  status?: "synced" | "skipped" | "failed";
-  shouldRetry?: boolean;
-};
-
-const skippedRetryOutcome = (error?: string): SyncResultsOutcome => ({
-  incomplete: false,
-  status: "skipped",
-  error,
-  shouldRetry: true,
-});
-
-const failedRetryOutcome = (error: string): SyncResultsOutcome => ({
-  incomplete: true,
-  status: "failed",
-  error,
-  shouldRetry: true,
-});
+export type SyncResultsOutcome = SyncRunnerOutcome;
 
 export async function syncResults(userId: string): Promise<SyncResultsOutcome> {
-  if (!userId) return { incomplete: false, status: "skipped" };
+  if (!userId) return skippedSyncOutcome();
 
   // Optimization: Don't attempt sync if browser is offline
   if (typeof navigator !== "undefined") {
     logger.debug(`[Sync] Checking online status: ${navigator.onLine}`);
     if (!navigator.onLine) {
       logger.debug("Browser is offline, skipping sync");
-      return failedRetryOutcome("Offline");
+      return skippedSyncOutcome({
+        incomplete: true,
+        error: "Offline",
+        shouldRetry: true,
+      });
     }
   }
 
@@ -90,20 +83,22 @@ export async function syncResults(userId: string): Promise<SyncResultsOutcome> {
           async (lock) => {
             if (!lock) {
               logger.debug("Sync already in progress in another tab, skipping");
-              return skippedRetryOutcome();
+              return skippedSyncOutcome({
+                shouldRetry: true,
+              });
             }
-            try {
-              return await performSync(userId);
-            } catch (error) {
-              logger.error("Result sync failed while holding lock", toErrorMessage(error));
-              return failedRetryOutcome("Result sync failed while holding lock");
-            }
+            return await performSync(userId);
           },
-        )) || failedRetryOutcome("Results sync lock request returned no outcome")
+        )) ||
+        failedSyncOutcome({
+          error: "Results sync lock request returned no outcome",
+        })
       );
     } catch (error) {
       logger.error("Failed to acquire sync lock:", toErrorMessage(error));
-      return failedRetryOutcome("Failed to acquire sync lock request");
+      return failedSyncOutcome({
+        error: toErrorMessage(error),
+      });
     }
   } else {
     // Fallback for environments without Web Locks
@@ -112,16 +107,15 @@ export async function syncResults(userId: string): Promise<SyncResultsOutcome> {
         logger.warn("Sync lock timed out, resetting...");
         syncState.isSyncing = false;
       } else {
-        return skippedRetryOutcome();
+        return skippedSyncOutcome({
+          shouldRetry: true,
+        });
       }
     }
     syncState.isSyncing = true;
     syncState.lastSyncAttempt = Date.now();
     try {
       return await performSync(userId);
-    } catch (error) {
-      logger.error("Result sync failed (fallback path):", toErrorMessage(error));
-      return failedRetryOutcome("Result sync failed (fallback path)");
     } finally {
       syncState.isSyncing = false;
     }
@@ -138,17 +132,25 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
 
   const client = getSupabaseClient();
   if (!client) {
-    return { incomplete: true, error: "Supabase client unavailable" };
+    return failedSyncOutcome({
+      error: "Supabase client unavailable",
+    });
   }
 
   const { data: { user }, error: authError } = await client.auth.getUser();
   if (authError || !user) {
     logger.warn("Sync skipped: No valid auth session", { authError: authError?.message });
-    return { incomplete: true, error: "Not authenticated", status: "skipped" };
+    return skippedSyncOutcome({
+      incomplete: true,
+      error: "Not authenticated",
+      shouldRetry: true,
+    });
   }
   if (user.id !== userId) {
     logger.error("Sync aborted: Auth user ID mismatch", { authUserId: user.id, syncUserId: userId });
-    return { incomplete: true, error: "User ID mismatch - please re-login", status: "failed" };
+    return failedSyncOutcome({
+      error: "User ID mismatch - please re-login",
+    });
   }
 
   try {
@@ -423,12 +425,9 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
       lastError,
     });
   }
-  return {
-    incomplete,
-    error: lastError,
-    status: incomplete ? "failed" : "synced",
-    shouldRetry: incomplete,
-  };
+  return incomplete
+    ? failedSyncOutcome({ error: lastError })
+    : syncedSyncOutcome();
 }
 
 export function buildSyncPayload(batch: Result[], userId: string): Database["public"]["Tables"]["results"]["Insert"][] {

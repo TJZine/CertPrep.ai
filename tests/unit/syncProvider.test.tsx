@@ -7,6 +7,10 @@ import React from "react";
 
 import { SyncProvider, useSyncContext } from "@/components/providers/SyncProvider";
 import type { CoordinatedSyncOutcome, SyncDomain } from "@/lib/sync/coordinator";
+import {
+  failedSyncOutcome,
+  syncedSyncOutcome,
+} from "@/lib/sync/shared";
 
 const mockRunSyncPlan = vi.hoisted(() => vi.fn());
 const mockGetSyncBlockState = vi.hoisted(() => vi.fn());
@@ -15,9 +19,9 @@ function buildOutcomes(
   overrides: Partial<Record<SyncDomain, CoordinatedSyncOutcome>> = {},
 ): Record<SyncDomain, CoordinatedSyncOutcome> {
   return {
-    quizzes: { incomplete: false, status: "synced" },
-    results: { incomplete: false, status: "synced" },
-    srs: { incomplete: false, status: "synced" },
+    quizzes: syncedSyncOutcome(),
+    results: syncedSyncOutcome(),
+    srs: syncedSyncOutcome(),
     ...overrides,
   };
 }
@@ -87,7 +91,7 @@ describe("SyncProvider", () => {
       domains: ["quizzes", "results", "srs"],
       settlements: {},
       outcomes: buildOutcomes({
-        srs: { incomplete: true, status: "failed" },
+        srs: failedSyncOutcome(),
       }),
     });
 
