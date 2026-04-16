@@ -213,7 +213,7 @@ export function Scorecard({
 
           <Badge
             variant={
-              score >= 70 ? "success" : score >= 60 ? "warning" : "danger"
+              score >= 70 ? "success" : score >= 60 ? "warning" : "destructive"
             }
             className="mb-4 text-sm"
           >
@@ -371,7 +371,7 @@ export function ScorecardCompact({
       </div>
 
       <Badge
-        variant={score >= 70 ? "success" : score >= 60 ? "warning" : "danger"}
+        variant={score >= 70 ? "success" : score >= 60 ? "warning" : "destructive"}
         className="flex-shrink-0"
       >
         {tier.label}

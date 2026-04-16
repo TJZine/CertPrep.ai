@@ -299,11 +299,11 @@ export function CategoryBreakdown({
 
   const getScoreBadge = (
     score: number,
-  ): "success" | "default" | "warning" | "danger" => {
+  ): "success" | "default" | "warning" | "destructive" => {
     if (score >= 80) return "success";
     if (score >= 60) return "default";
     if (score >= 40) return "warning";
-    return "danger";
+    return "destructive";
   };
 
   return (

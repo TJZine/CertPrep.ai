@@ -7,9 +7,6 @@ import type { PersistedResultMode, Result } from "@/types/result";
 import type { Quiz } from "@/types/quiz";
 import { evaluateAnswer } from "@/lib/grading";
 
-// Re-export for backwards compatibility
-export { isSRSQuiz };
-
 export interface CreateResultInput {
   quizId: string;
   mode: PersistedResultMode;
