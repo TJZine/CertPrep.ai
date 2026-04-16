@@ -209,6 +209,22 @@ describe("quizSyncManager", () => {
     );
   });
 
+  it("normalizes unauthenticated quiz sync errors", async () => {
+    supabaseMock.auth.getUser.mockResolvedValueOnce({
+      data: { user: null },
+      error: { message: "Session expired" } as unknown as Error,
+    });
+
+    const result = await syncQuizzes("user-1");
+
+    expect(result).toEqual({
+      incomplete: true,
+      status: "skipped",
+      error: "Not authenticated",
+      shouldRetry: true,
+    });
+  });
+
   it("only pushes quizzes for the active user", async () => {
     quizzesData.push({
       ...sampleQuiz,
@@ -437,6 +453,30 @@ describe("quizSyncManager", () => {
       "quizzes",
       "schema_drift",
     );
+  });
+
+  it("returns an explicit failed outcome when the quiz sync time budget is exhausted", async () => {
+    vi.stubGlobal("navigator", {
+      locks: {
+        request: vi.fn().mockImplementation(async (_name, _options, callback) =>
+          callback({ name: "sync-quizzes-user-1" }),
+        ),
+      },
+    });
+
+    const dateNowSpy = vi.spyOn(Date, "now");
+    dateNowSpy
+      .mockImplementationOnce(() => FIXED_TIMESTAMP)
+      .mockImplementation(() => FIXED_TIMESTAMP + 5001);
+
+    const result = await syncQuizzes("user-1");
+
+    expect(result).toEqual({
+      incomplete: true,
+      status: "failed",
+      error: "Quiz sync time budget exceeded",
+      shouldRetry: true,
+    });
   });
 
   it("should skip sync when block state is set", async () => {

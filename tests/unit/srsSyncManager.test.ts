@@ -315,7 +315,12 @@ describe("srsSyncManager", () => {
 
     const result = await syncSRS("user-1");
 
-    expect(result.incomplete).toBe(true);
+    expect(result).toEqual({
+      incomplete: true,
+      status: "skipped",
+      error: "Offline",
+      shouldRetry: true,
+    });
     expect(supabaseMock.from).not.toHaveBeenCalled();
   });
 
@@ -327,9 +332,62 @@ describe("srsSyncManager", () => {
 
     const result = await syncSRS("user-1");
 
-    expect(result.incomplete).toBe(true);
+    expect(result).toEqual({
+      incomplete: true,
+      status: "skipped",
+      error: "Not authenticated",
+      shouldRetry: true,
+    });
     // Should not attempt push/pull
     expect(supabaseMock.from).not.toHaveBeenCalled();
+  });
+
+  it("returns an explicit skipped outcome when another tab holds the SRS lock", async () => {
+    const lockRequest = vi
+      .fn()
+      .mockImplementation(async (_name, _options, callback) => callback(null));
+    vi.stubGlobal("navigator", { locks: { request: lockRequest }, onLine: true });
+
+    const result = await syncSRS("user-1");
+
+    expect(result).toEqual({
+      incomplete: false,
+      status: "skipped",
+      error: null,
+      shouldRetry: true,
+    });
+  });
+
+  it("returns an explicit skipped outcome when the fallback lock path detects an in-progress SRS sync", async () => {
+    vi.stubGlobal("navigator", { onLine: true });
+
+    const syncControl: { release: (() => void) | null } = { release: null };
+    supabaseMock.auth.getUser.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          syncControl.release = (): void =>
+            resolve({
+              data: { user: { id: "user-1" } },
+              error: null,
+            });
+        }),
+    );
+
+    const firstSync = syncSRS("user-1");
+    const secondSync = await syncSRS("user-1");
+
+    expect(secondSync).toEqual({
+      incomplete: false,
+      status: "skipped",
+      error: null,
+      shouldRetry: true,
+    });
+
+    if (!syncControl.release) {
+      throw new Error("Expected first SRS sync call to be waiting");
+    }
+    syncControl.release();
+    await firstSync;
   });
 
   it("skips invalid remote records during pull", async () => {
