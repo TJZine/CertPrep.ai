@@ -268,6 +268,66 @@ describe("getTopicStudyQuestions", () => {
         expect(data.totalUniqueCount).toBe(0);
     });
 
+    it("skips malformed quizzes without questions and continues processing healthy quizzes", async () => {
+        quizzesData.push(
+            {
+                id: "quiz-malformed",
+                user_id: "user-a",
+                title: "Malformed Quiz",
+                description: "",
+                created_at: 1,
+                updated_at: 1,
+                tags: [],
+                version: 1,
+                deleted_at: null,
+                quiz_hash: null,
+            } as unknown as Quiz,
+            {
+                id: "quiz-healthy",
+                user_id: "user-a",
+                title: "Healthy Quiz",
+                description: "",
+                created_at: 1,
+                updated_at: 1,
+                questions: [
+                    {
+                        id: "q1",
+                        category: "Networking",
+                        question: "What is TCP?",
+                        options: { a: "Protocol", b: "Device" },
+                        correct_answer: "a",
+                        explanation: "",
+                    },
+                ],
+                tags: [],
+                version: 1,
+                deleted_at: null,
+                quiz_hash: null,
+            },
+        );
+
+        resultsData.push({
+            id: "result-healthy",
+            quiz_id: "quiz-healthy",
+            user_id: "user-a",
+            timestamp: 1,
+            mode: "zen",
+            score: 0,
+            time_taken_seconds: 120,
+            answers: { q1: "b" },
+            flagged_questions: [],
+            category_breakdown: {},
+        });
+
+        const data = await getTopicStudyQuestions("user-a", "Networking");
+
+        expect(data.questionIds).toEqual(["q1"]);
+        expect(data.quizIds).toEqual(["quiz-healthy"]);
+        expect(data.missedCount).toBe(1);
+        expect(data.flaggedCount).toBe(0);
+        expect(data.totalUniqueCount).toBe(1);
+    });
+
     it("respects Smart Round subset filtering", async () => {
         quizzesData.push({
             id: "quiz-1",
