@@ -59,24 +59,13 @@ const CategoryTrendChart = dynamic(
 
 /**
  * Wrapper component for CategoryTrendChart that uses the trend hook.
- * Memoizes results input to prevent unnecessary recalculations when
- * only referential identity changes (e.g., during sync operations).
  */
 function CategoryTrendChartSection({
   results,
 }: {
   results: Result[];
 }): React.ReactElement {
-  // Stabilize results identity using length + timestamp of most recent result
-  // This prevents useCategoryTrends from recalculating when array identity
-  // changes but actual data hasn't (common during sync operations)
-  const stabilizedResults = React.useMemo(
-    () => results,
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [results.length, results[results.length - 1]?.timestamp ?? 0]
-  );
-
-  const { trendData, categories } = useCategoryTrends(stabilizedResults);
+  const { trendData, categories } = useCategoryTrends(results);
 
   return (
     <div className="mb-8">
