@@ -22,7 +22,7 @@ vi.mock("@/components/ui/Toast", () => ({
 
 // Mock db/results
 const mockGetTopicStudyQuestions = vi.fn();
-vi.mock("@/db/results", () => ({
+vi.mock("@/db/resultAnalytics", () => ({
   getTopicStudyQuestions: (): Promise<unknown> => mockGetTopicStudyQuestions(),
 }));
 

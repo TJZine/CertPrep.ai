@@ -27,7 +27,7 @@ vi.mock("@/lib/core/crypto", () => ({
 }));
 
 const mockGetTopicStudyQuestions = vi.fn();
-vi.mock("@/db/results", () => ({
+vi.mock("@/db/resultAnalytics", () => ({
   getTopicStudyQuestions: vi.fn(() => mockGetTopicStudyQuestions()),
 }));
 

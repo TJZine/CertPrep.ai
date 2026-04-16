@@ -2,11 +2,13 @@ import { describe, it, expect, vi, beforeEach, type Mock } from "vitest";
 import {
   calculateResults,
   createResult,
-  getOverallStats,
-  getCategoryPerformance,
   deleteResult,
   type CreateResultInput,
 } from "@/db/results";
+import {
+  getCategoryPerformance,
+  getOverallStats,
+} from "@/db/resultAnalytics";
 import { db } from "@/db/dbInstance";
 import { evaluateAnswer } from "@/lib/grading";
 import { NIL_UUID } from "@/lib/constants";

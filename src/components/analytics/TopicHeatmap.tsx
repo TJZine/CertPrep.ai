@@ -17,7 +17,7 @@ import type { Quiz, Question } from "@/types/quiz";
 import { getCachedHash } from "@/db/hashCache";
 import { ChevronDown, ChevronRight, BookOpen, TrendingUp, TrendingDown, Minus, Loader2, Trophy } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
-import { getTopicStudyQuestions } from "@/db/results";
+import { getTopicStudyQuestions } from "@/db/resultAnalytics";
 import {
     TOPIC_STUDY_QUESTIONS_KEY,
     TOPIC_STUDY_CATEGORY_KEY,

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { getOverallStats } from "@/db/results";
+import { getOverallStats } from "@/db/resultAnalytics";
 import type { Quiz } from "@/types/quiz";
 import type { Result } from "@/types/result";
 
