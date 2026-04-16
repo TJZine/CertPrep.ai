@@ -164,6 +164,8 @@ cp .env.example .env.local
 # Core app (required)
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+# Required for auth callbacks/emails and self-serve account deletion origin allowlisting
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 
 # Required for signup / password reset flows that use hCaptcha
