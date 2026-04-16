@@ -37,6 +37,12 @@ const DEFAULT_OUTCOME: Record<SyncDomain, CoordinatedSyncOutcome> = {
   srs: { incomplete: false, status: "skipped" },
 };
 
+const SYNC_PLAN_PHASES: Record<SyncPlanName, readonly (readonly SyncDomain[])[]> = {
+  full: [["quizzes"], ["results", "srs"]],
+  logout: [["quizzes"], ["results", "srs"]],
+  "quiz-repair": [["quizzes"]],
+};
+
 function toFailedOutcome(error: unknown): CoordinatedSyncOutcome {
   return {
     incomplete: true,
@@ -50,41 +56,44 @@ export async function runSyncPlan(
   plan: SyncPlanName,
 ): Promise<SyncPlanSummary> {
   const domains = SYNC_PLAN_DOMAINS[plan];
-  const settlements = await Promise.allSettled(
-    domains.map((domain) =>
-      SYNC_RUNNERS[domain](userId)
-        .then((outcome) => ({ domain, outcome }))
-        .catch((error) => Promise.reject({ domain, error })),
-    ),
-  );
-
   const domainSettlements: SyncPlanSummary["settlements"] = {};
   const outcomes = { ...DEFAULT_OUTCOME };
+  const phases = SYNC_PLAN_PHASES[plan];
 
-  settlements.forEach((settlement) => {
-    if (settlement.status === "fulfilled") {
-      const { domain, outcome } = settlement.value;
+  for (const phase of phases) {
+    const settlements = await Promise.allSettled(
+      phase.map((domain) =>
+        SYNC_RUNNERS[domain](userId)
+          .then((outcome) => ({ domain, outcome }))
+          .catch((error) => Promise.reject({ domain, error })),
+      ),
+    );
+
+    settlements.forEach((settlement) => {
+      if (settlement.status === "fulfilled") {
+        const { domain, outcome } = settlement.value;
+        domainSettlements[domain] = {
+          status: "fulfilled",
+          value: outcome,
+        };
+        outcomes[domain] = outcome;
+        return;
+      }
+
+      const rejected = settlement.reason as { domain?: SyncDomain; error?: unknown };
+      const domain = rejected.domain;
+      if (!domain) {
+        return;
+      }
+
+      const failedOutcome = toFailedOutcome(rejected.error ?? settlement.reason);
       domainSettlements[domain] = {
-        status: "fulfilled",
-        value: outcome,
+        status: "rejected",
+        reason: settlement.reason,
       };
-      outcomes[domain] = outcome;
-      return;
-    }
-
-    const rejected = settlement.reason as { domain?: SyncDomain; error?: unknown };
-    const domain = rejected.domain;
-    if (!domain) {
-      return;
-    }
-
-    const failedOutcome = toFailedOutcome(rejected.error ?? settlement.reason);
-    domainSettlements[domain] = {
-      status: "rejected",
-      reason: settlement.reason,
-    };
-    outcomes[domain] = failedOutcome;
-  });
+      outcomes[domain] = failedOutcome;
+    });
+  }
 
   return {
     domains,
