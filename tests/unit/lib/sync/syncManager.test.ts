@@ -47,6 +47,21 @@ vi.mock("@/lib/sync/shared", async (importOriginal) => {
   };
 });
 
+function createDeferred<T>(): {
+  promise: Promise<T>;
+  resolve: (value: T | PromiseLike<T>) => void;
+  reject: (reason?: unknown) => void;
+} {
+  let resolve!: (value: T | PromiseLike<T>) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+
+  return { promise, resolve, reject };
+}
+
 describe("Sync Manager: results", () => {
   const userId = "user-123";
 
@@ -123,6 +138,51 @@ describe("Sync Manager: results", () => {
     const outcome = await syncResults(userId);
     expect(outcome.status).toBe("skipped");
     expect(outcome.error).toBe("Not authenticated");
+  });
+
+  it("reports skipped overlap when the fallback sync guard is already active", async () => {
+    const authDeferred = createDeferred<{
+      data: { user: { id: string } };
+      error: null;
+    }>();
+    mockSupabase.auth.getUser.mockReturnValueOnce(authDeferred.promise);
+    vi.stubGlobal("navigator", { onLine: true });
+
+    const firstSync = syncResults(userId);
+    await vi.waitFor(() =>
+      expect(mockSupabase.auth.getUser).toHaveBeenCalledTimes(1),
+    );
+
+    const overlappedOutcome = await syncResults(userId);
+
+    expect(overlappedOutcome).toEqual({
+      incomplete: false,
+      status: "skipped",
+      shouldRetry: true,
+    });
+
+    authDeferred.resolve({
+      data: { user: { id: userId } },
+      error: null,
+    });
+    await firstSync;
+  });
+
+  it("reports failed outcome when requesting the results sync lock throws", async () => {
+    const lockRequest = vi.fn().mockRejectedValue(new Error("lock exploded"));
+    vi.stubGlobal("navigator", {
+      onLine: true,
+      locks: { request: lockRequest },
+    });
+
+    const outcome = await syncResults(userId);
+
+    expect(outcome).toEqual({
+      incomplete: true,
+      status: "failed",
+      error: "Failed to acquire sync lock request",
+      shouldRetry: true,
+    });
   });
 
   describe("Push Phase", () => {

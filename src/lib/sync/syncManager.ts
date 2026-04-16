@@ -54,15 +54,29 @@ export type SyncResultsOutcome = {
   shouldRetry?: boolean;
 };
 
+const skippedRetryOutcome = (error?: string): SyncResultsOutcome => ({
+  incomplete: false,
+  status: "skipped",
+  error,
+  shouldRetry: true,
+});
+
+const failedRetryOutcome = (error: string): SyncResultsOutcome => ({
+  incomplete: true,
+  status: "failed",
+  error,
+  shouldRetry: true,
+});
+
 export async function syncResults(userId: string): Promise<SyncResultsOutcome> {
-  if (!userId) return { incomplete: false };
+  if (!userId) return { incomplete: false, status: "skipped" };
 
   // Optimization: Don't attempt sync if browser is offline
   if (typeof navigator !== "undefined") {
     logger.debug(`[Sync] Checking online status: ${navigator.onLine}`);
     if (!navigator.onLine) {
       logger.debug("Browser is offline, skipping sync");
-      return { incomplete: true, error: "Offline" };
+      return failedRetryOutcome("Offline");
     }
   }
 
@@ -76,15 +90,20 @@ export async function syncResults(userId: string): Promise<SyncResultsOutcome> {
           async (lock) => {
             if (!lock) {
               logger.debug("Sync already in progress in another tab, skipping");
-              return { incomplete: false, status: "skipped" };
+              return skippedRetryOutcome();
             }
-            return await performSync(userId);
+            try {
+              return await performSync(userId);
+            } catch (error) {
+              logger.error("Result sync failed while holding lock", toErrorMessage(error));
+              return failedRetryOutcome("Result sync failed while holding lock");
+            }
           },
-        )) || { incomplete: false }
+        )) || failedRetryOutcome("Results sync lock request returned no outcome")
       );
     } catch (error) {
       logger.error("Failed to acquire sync lock:", toErrorMessage(error));
-      return { incomplete: false };
+      return failedRetryOutcome("Failed to acquire sync lock request");
     }
   } else {
     // Fallback for environments without Web Locks
@@ -93,13 +112,16 @@ export async function syncResults(userId: string): Promise<SyncResultsOutcome> {
         logger.warn("Sync lock timed out, resetting...");
         syncState.isSyncing = false;
       } else {
-        return { incomplete: false };
+        return skippedRetryOutcome();
       }
     }
     syncState.isSyncing = true;
     syncState.lastSyncAttempt = Date.now();
     try {
       return await performSync(userId);
+    } catch (error) {
+      logger.error("Result sync failed (fallback path):", toErrorMessage(error));
+      return failedRetryOutcome("Result sync failed (fallback path)");
     } finally {
       syncState.isSyncing = false;
     }

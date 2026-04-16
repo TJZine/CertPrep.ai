@@ -100,6 +100,21 @@ vi.mock("@/db/syncState", () => ({
   setSyncBlockState: vi.fn().mockResolvedValue(undefined),
 }));
 
+function createDeferred<T>(): {
+  promise: Promise<T>;
+  resolve: (value: T | PromiseLike<T>) => void;
+  reject: (reason?: unknown) => void;
+} {
+  let resolve!: (value: T | PromiseLike<T>) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+
+  return { promise, resolve, reject };
+}
+
 describe("srsSyncManager", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -168,6 +183,48 @@ describe("srsSyncManager", () => {
       { ifAvailable: true },
       expect.any(Function),
     );
+  });
+
+  it("reports skipped overlap when the fallback SRS sync guard is already active", async () => {
+    const rpcDeferred = createDeferred<{
+      data: Array<{ out_question_id: string; out_updated: boolean }>;
+      error: null;
+    }>();
+    supabaseMock.rpc.mockReturnValueOnce(rpcDeferred.promise);
+    vi.stubGlobal("navigator", { onLine: true });
+
+    const firstSync = syncSRS("user-1");
+    await vi.waitFor(() => expect(supabaseMock.rpc).toHaveBeenCalledTimes(1));
+
+    const overlappedOutcome = await syncSRS("user-1");
+
+    expect(overlappedOutcome).toEqual({
+      incomplete: false,
+      status: "skipped",
+      shouldRetry: true,
+    });
+
+    rpcDeferred.resolve({
+      data: [{ out_question_id: "q-1", out_updated: true }],
+      error: null,
+    });
+    await firstSync;
+  });
+
+  it("reports failed outcome when the fallback SRS sync path throws", async () => {
+    vi.stubGlobal("navigator", { onLine: true });
+    dbMock.srs.where.mockImplementationOnce(() => {
+      throw new Error("dexie blew up");
+    });
+
+    const outcome = await syncSRS("user-1");
+
+    expect(outcome).toEqual({
+      incomplete: true,
+      status: "failed",
+      error: "SRS sync failed (fallback path)",
+      shouldRetry: true,
+    });
   });
 
   it("pulls remote changes and updates local state (Remote Wins)", async () => {
