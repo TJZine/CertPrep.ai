@@ -83,4 +83,32 @@ describe("QuestionReviewCard", () => {
     expect(screen.getAllByText(/safe text/i).length).toBeGreaterThan(0);
     expect(globals.__previewXss).toBe(0);
   });
+
+  it("strips attacker-controlled classes from rendered review HTML", () => {
+    render(
+      <QuestionReviewCard
+        question={{
+          ...maliciousQuestion,
+          question:
+            'Question <span class="fixed inset-0 z-50 bg-black text-white">prompt</span>',
+          options: {
+            a: '<span class="absolute left-0 top-0 opacity-0">Option A</span>',
+            b: '<span class="sr-only pointer-events-none">Option B</span>',
+          },
+          explanation:
+            'Explanation <span class="contents [&_*]:hidden">detail</span>',
+        }}
+        questionNumber={3}
+        isFlagged={false}
+        defaultExpanded={true}
+      />,
+    );
+
+    for (const element of screen.getAllByText("prompt")) {
+      expect(element).not.toHaveAttribute("class");
+    }
+    expect(screen.getByText("Option A")).not.toHaveAttribute("class");
+    expect(screen.getByText("Option B")).not.toHaveAttribute("class");
+    expect(screen.getByText("detail")).not.toHaveAttribute("class");
+  });
 });

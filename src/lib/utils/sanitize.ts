@@ -1,10 +1,19 @@
 import DOMPurify from "isomorphic-dompurify";
 
+interface SanitizeHTMLOptions {
+  allowClass?: boolean;
+}
+
 /**
  * Sanitizes HTML content to prevent XSS attacks.
  * PRIVACY: All processing happens locally in the browser; no data leaves the device.
  */
-export function sanitizeHTML(dirty: string): string {
+export function sanitizeHTML(
+  dirty: string,
+  options: SanitizeHTMLOptions = {},
+): string {
+  const { allowClass = true } = options;
+
   return DOMPurify.sanitize(dirty, {
     ALLOWED_TAGS: [
       "b",
@@ -20,10 +29,7 @@ export function sanitizeHTML(dirty: string): string {
       "br",
       "span",
     ],
-    // ALLOWED_ATTR includes 'class' to support custom styling in user-uploaded quizzes.
-    // Risk: Users could inject utility classes to deface the UI (Self-XSS).
-    // Decision: Accepted risk to support rich content features.
-    ALLOWED_ATTR: ["class"],
+    ALLOWED_ATTR: allowClass ? ["class"] : [],
   });
 }
 

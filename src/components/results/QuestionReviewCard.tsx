@@ -53,14 +53,18 @@ export function QuestionReviewCard({
   onResize,
 }: QuestionReviewCardProps): React.ReactElement {
   const [isExpanded, setIsExpanded] = React.useState(defaultExpanded);
+  const sanitizeReviewHTML = React.useCallback(
+    (dirty: string) => sanitizeHTML(dirty, { allowClass: false }),
+    [],
+  );
 
   const sanitizedQuestion = React.useMemo(
-    () => sanitizeHTML(question.question),
-    [question.question],
+    () => sanitizeReviewHTML(question.question),
+    [question.question, sanitizeReviewHTML],
   );
   const sanitizedExplanation = React.useMemo(
-    () => sanitizeHTML(question.explanation),
-    [question.explanation],
+    () => sanitizeReviewHTML(question.explanation),
+    [question.explanation, sanitizeReviewHTML],
   );
 
   // Determine the canonical correct answer (prefer prop, fallback to question data)
@@ -215,7 +219,7 @@ export function QuestionReviewCard({
             {sortedOptions.map(([key, text]) => {
               const isUserAnswer = key === userAnswer;
               const isCorrectAnswer = key === correctAnswerKey;
-              const sanitizedText = sanitizeHTML(text);
+              const sanitizedText = sanitizeReviewHTML(text);
 
               let optionStyle = "border-border bg-card";
               let badgeContent: React.ReactNode = null;
