@@ -106,11 +106,11 @@ export default function ZenModePage(): React.ReactElement {
         return null;
       }
 
-      const filtered = quiz.questions.filter((q) =>
-        questionIds.includes(q.id),
+      const questionsById = new Map(
+        quiz.questions.map((q) => [q.id, q] as const),
       );
       const orderedFiltered = questionIds
-        .map((id) => filtered.find((q) => q.id === id))
+        .map((id) => questionsById.get(id))
         .filter((q): q is Question => q !== undefined);
 
       if (orderedFiltered.length === 0) {
@@ -133,7 +133,8 @@ export default function ZenModePage(): React.ReactElement {
         category: storedCategory ?? undefined,
         filteredQuestions: orderedFiltered,
       } as StudyModeData;
-    } catch {
+    } catch (error) {
+      console.warn("Failed to restore filtered study session", error);
       return null;
     }
   }, [isFilteredMode, isSmartRound, isTopicStudy, quiz, quizId]);
@@ -280,7 +281,7 @@ export default function ZenModePage(): React.ReactElement {
         <div className="bg-background px-4 pt-4">
           <div className="mx-auto max-w-3xl">
             <SessionBanner
-              totalQuestions={studyModePayload.questionIds.length}
+              totalQuestions={studyModePayload.filteredQuestions.length}
               missedCount={studyModePayload.missedCount}
               flaggedCount={studyModePayload.flaggedCount}
               onExit={handleModeExit}

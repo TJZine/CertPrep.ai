@@ -86,6 +86,7 @@ export default function QuizSettingsPage(): React.ReactElement {
                 </p>
             </div>
             <QuizSettingsForm
+                key={`${quiz.id}:${quiz.updated_at ?? quiz.version}`}
                 quiz={quiz}
                 id={id}
                 effectiveUserId={effectiveUserId}

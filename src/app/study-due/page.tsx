@@ -46,8 +46,13 @@ export default function StudyDuePage(): React.ReactElement {
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
 
-    const loadDueQuestions = useCallback(async () => {
+    const loadDueQuestions = useCallback(
+      async (options?: { shouldIgnore: () => boolean }) => {
         if (!effectiveUserId) return;
+
+        if (options?.shouldIgnore()) {
+          return;
+        }
 
         setIsLoading(true);
         setError(null);
@@ -57,7 +62,15 @@ export default function StudyDuePage(): React.ReactElement {
                 getDueQuestions(effectiveUserId),
             ]);
 
+            if (options?.shouldIgnore()) {
+              return;
+            }
+
             setDueCountsByBox(counts);
+
+            if (options?.shouldIgnore()) {
+              return;
+            }
 
             // Load question and quiz data for due questions
             const allQuizzes = await db.quizzes.toArray();
@@ -88,23 +101,40 @@ export default function StudyDuePage(): React.ReactElement {
                 }
             }
 
+            if (options?.shouldIgnore()) {
+              return;
+            }
+
             setCategoryGroups(Array.from(groupMap.values()).sort((a, b) =>
                 a.category.localeCompare(b.category)
             ));
         } catch (err) {
             logger.error("Failed to load due questions", { error: err });
+            if (options?.shouldIgnore()) {
+              return;
+            }
             setError("Failed to load review queue. Please try again later.");
         } finally {
+            if (options?.shouldIgnore()) {
+              return;
+            }
             setIsLoading(false);
         }
     }, [effectiveUserId]);
 
     useEffect(() => {
+      let ignore = false;
+
+        // Defer initial load to the next task so first paint is not blocked.
         const timer = window.setTimeout((): void => {
-          void loadDueQuestions();
+          void loadDueQuestions({
+            shouldIgnore: () => ignore,
+          });
         }, 0);
 
         return (): void => {
+          ignore = true;
+          // Defer initial load to the next task so first paint is not blocked.
           window.clearTimeout(timer);
         };
     }, [loadDueQuestions]);
