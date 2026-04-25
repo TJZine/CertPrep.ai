@@ -217,6 +217,7 @@ export async function getTopicStudyQuestions(
   const quizMap = new Map(allQuizzes.map((quiz) => [quiz.id, quiz]));
   const allQuestionsMap = new Map<string, { question: Question; quizId: string }>();
   allQuizzes.forEach((q) => {
+    if (!q.questions) return;
     q.questions.forEach((question) => {
       allQuestionsMap.set(question.id, { question, quizId: q.id });
     });
