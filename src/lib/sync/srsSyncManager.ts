@@ -279,6 +279,7 @@ async function pushLocalChanges(
     if (Date.now() - startTime > TIME_BUDGET_MS) {
       logger.warn("SRS sync time budget exceeded during push");
       incomplete = true;
+      errorMessage = SRS_SYNC_TIME_BUDGET_ERROR;
       break;
     }
 

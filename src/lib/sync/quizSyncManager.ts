@@ -355,6 +355,7 @@ async function pushLocalChanges(
     if (Date.now() - startTime > TIME_BUDGET_MS) {
       logger.warn("Quiz sync time budget exceeded during push");
       incomplete = true;
+      errorMessage = QUIZ_SYNC_TIME_BUDGET_ERROR;
       break;
     }
 
