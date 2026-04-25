@@ -201,6 +201,7 @@ describe("srsSyncManager", () => {
     expect(overlappedOutcome).toEqual({
       incomplete: false,
       status: "skipped",
+      error: null,
       shouldRetry: true,
     });
 

@@ -5,6 +5,7 @@ import {
   failedSyncOutcome,
   skippedSyncOutcome,
   syncedSyncOutcome,
+  type SyncRunnerOutcome,
 } from "@/lib/sync/shared";
 
 const mockSyncQuizzes = vi.hoisted(() => vi.fn());
@@ -32,40 +33,43 @@ describe("runSyncPlan", () => {
   });
 
   it("runs full sync domains in parallel", async () => {
+    // The coordinator runs phases: [["quizzes"], ["results", "srs"]]
+    // Phase 1: quizzes alone → Phase 2: results + srs in parallel
     const callOrder: string[] = [];
+
     mockSyncQuizzes.mockImplementation(async () => {
       callOrder.push("quizzes-start");
-      await new Promise((resolve) => setTimeout(resolve, 10));
       callOrder.push("quizzes-end");
       return syncedSyncOutcome();
     });
-    mockSyncResults.mockImplementation(async () => {
-      callOrder.push("results-start");
-      await new Promise((resolve) => setTimeout(resolve, 10));
-      callOrder.push("results-end");
+
+    // Phase 2 domains use a shared gate to prove they run concurrently
+    let openGate!: () => void;
+    const gate = new Promise<void>((resolve) => { openGate = resolve; });
+    let phase2StartCount = 0;
+
+    const makePhase2Mock = (label: string): (() => Promise<SyncRunnerOutcome>) => async () => {
+      callOrder.push(`${label}-start`);
+      phase2StartCount++;
+      if (phase2StartCount === 2) openGate();
+      await gate;
+      callOrder.push(`${label}-end`);
       return syncedSyncOutcome();
-    });
-    mockSyncSRS.mockImplementation(async () => {
-      callOrder.push("srs-start");
-      await new Promise((resolve) => setTimeout(resolve, 10));
-      callOrder.push("srs-end");
-      return syncedSyncOutcome();
-    });
+    };
+
+    mockSyncResults.mockImplementation(makePhase2Mock("results"));
+    mockSyncSRS.mockImplementation(makePhase2Mock("srs"));
 
     await runSyncPlan("user-123", "full");
 
-    const startIndices = [
-      callOrder.indexOf("quizzes-start"),
-      callOrder.indexOf("results-start"),
-      callOrder.indexOf("srs-start"),
-    ];
-    const endIndices = [
-      callOrder.indexOf("quizzes-end"),
-      callOrder.indexOf("results-end"),
-      callOrder.indexOf("srs-end"),
-    ];
+    // Quizzes completed before phase 2 started
+    expect(callOrder.indexOf("quizzes-end")).toBeLessThan(callOrder.indexOf("results-start"));
+    expect(callOrder.indexOf("quizzes-end")).toBeLessThan(callOrder.indexOf("srs-start"));
 
-    expect(Math.max(...startIndices)).toBeLessThan(Math.min(...endIndices));
+    // Phase 2: both started before either ended (proves parallelism)
+    const phase2Starts = [callOrder.indexOf("results-start"), callOrder.indexOf("srs-start")];
+    const phase2Ends = [callOrder.indexOf("results-end"), callOrder.indexOf("srs-end")];
+    expect(Math.max(...phase2Starts)).toBeLessThan(Math.min(...phase2Ends));
   });
 
   it("limits quiz repair to the quizzes domain", async () => {

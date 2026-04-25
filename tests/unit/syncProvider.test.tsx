@@ -115,9 +115,9 @@ describe("SyncProvider", () => {
       domains: ["quizzes", "results", "srs"],
       settlements: {},
       outcomes: buildOutcomes({
-        quizzes: { incomplete: false, status: "skipped", shouldRetry: true },
-        results: { incomplete: false, status: "skipped", shouldRetry: true },
-        srs: { incomplete: false, status: "skipped", shouldRetry: true },
+        quizzes: { incomplete: false, status: "skipped", shouldRetry: true, error: null },
+        results: { incomplete: false, status: "skipped", shouldRetry: true, error: null },
+        srs: { incomplete: false, status: "skipped", shouldRetry: true, error: null },
       }),
     });
 
@@ -141,7 +141,7 @@ describe("SyncProvider", () => {
       domains: ["quizzes", "results", "srs"],
       settlements: {},
       outcomes: buildOutcomes({
-        results: { incomplete: false, status: "skipped", shouldRetry: true },
+        results: { incomplete: false, status: "skipped", shouldRetry: true, error: null },
       }),
     });
 
