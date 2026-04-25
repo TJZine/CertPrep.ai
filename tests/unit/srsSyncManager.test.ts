@@ -224,7 +224,7 @@ describe("srsSyncManager", () => {
     expect(outcome).toEqual({
       incomplete: true,
       status: "failed",
-      error: "SRS sync failed (fallback path)",
+      error: "dexie blew up",
       shouldRetry: true,
     });
   });

@@ -177,48 +177,63 @@ export function useCorrectAnswer(
         }
       };
 
-      // STRATEGY: Fallback
-      if (workerFailedRef.current || !workerRef.current) {
+      const resolveWithFallback = async (
+        valuesToHash: Record<string, string>,
+      ): Promise<void> => {
         try {
-          const hashes = await hashOptionsFallback(currentOptions);
+          const hashes = await hashOptionsFallback(valuesToHash);
           processResult(hashes);
         } catch (error) {
           logger.error("[useCorrectAnswer] Fallback hashing failed", error);
           if (isMounted) {
             setError(
-              error instanceof Error ? error.message : "Fallback hashing failed.",
+              error instanceof Error
+                ? error.message
+                : "Fallback hashing failed.",
             );
           }
         } finally {
           if (isMounted) setIsResolving(false);
         }
+      };
+
+      // STRATEGY: Fallback
+      if (workerFailedRef.current || !workerRef.current) {
+        await resolveWithFallback(currentOptions);
         return;
       }
-
-      // STRATEGY: Worker
-      handler = (event: MessageEvent): void => {
-        const { type, payload } = event.data;
-
-        if (type === "hash_bulk_error" && payload.id === questionId) {
-          logger.warn("[useCorrectAnswer] Worker computation error", {
-            error: payload.error,
-          });
-          workerFailedRef.current = true;
-          if (isMounted) setIsResolving(false);
-          cleanup();
-          return;
-        }
-
-        if (type === "hash_bulk_result" && payload.id === questionId) {
-          processResult(payload.hashes as Record<string, string>);
-          if (isMounted) setIsResolving(false);
-          cleanup();
-        }
-      };
 
       const cleanup = (): void => {
         if (handler && workerRef.current) {
           workerRef.current.removeEventListener("message", handler);
+        }
+      };
+
+      // STRATEGY: Worker
+      handler = (event: MessageEvent): void => {
+        const { type, payload } = event.data;
+        const isMessageForFallback =
+          payload?.id === questionId || payload?.id == null;
+        if (
+          (type === "hash_bulk_error" || type === "ERROR") &&
+          isMessageForFallback
+        ) {
+          logger.warn("[useCorrectAnswer] Worker computation error", {
+            error: payload?.error ?? "unknown worker error",
+          });
+          workerFailedRef.current = true;
+          if (isMounted) {
+            setError("Answer hashing worker failed; using fallback.");
+          }
+          cleanup();
+          void resolveWithFallback(currentOptions);
+          return;
+        }
+
+        if (type === "hash_bulk_result" && payload?.id === questionId) {
+          processResult(payload.hashes as Record<string, string>);
+          if (isMounted) setIsResolving(false);
+          cleanup();
         }
       };
 

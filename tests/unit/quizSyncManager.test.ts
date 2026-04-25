@@ -224,6 +224,22 @@ describe("quizSyncManager", () => {
     );
   });
 
+  it("reports the thrown error when the fallback quiz sync path throws", async () => {
+    vi.stubGlobal("navigator", { onLine: true });
+    dbMock.quizzes.where.mockImplementationOnce(() => {
+      throw new Error("dexie blew up");
+    });
+
+    const result = await syncQuizzes("user-1");
+
+    expect(result).toEqual({
+      incomplete: true,
+      status: "failed",
+      error: "dexie blew up",
+      shouldRetry: true,
+    });
+  });
+
   it("normalizes unauthenticated quiz sync errors", async () => {
     supabaseMock.auth.getUser.mockResolvedValueOnce({
       data: { user: null },

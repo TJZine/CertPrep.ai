@@ -132,7 +132,7 @@ export async function syncSRS(userId: string): Promise<SyncSRSOutcome> {
   } catch (error) {
     logger.error("SRS sync failed (fallback path)", error);
     return failedSyncOutcome({
-      error: "SRS sync failed (fallback path)",
+      error: toErrorMessage(error),
     });
   } finally {
     syncState.isSyncing = false;

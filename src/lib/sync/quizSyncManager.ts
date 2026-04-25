@@ -140,7 +140,7 @@ export async function syncQuizzes(
   } catch (error) {
     logger.error("Quiz sync failed (fallback path)", error);
     return failedSyncOutcome({
-      error: "Quiz sync failed (fallback path)",
+      error: toErrorMessage(error),
     });
   } finally {
     syncState.isSyncing = false;
