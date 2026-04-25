@@ -9,26 +9,38 @@ trigger: always_on
 - Ship CertPrep.ai features quickly while preserving correctness, accessibility, security, and performance.
 - Prefer incremental, low-risk changes with clear validation steps.
 
+## Temporary Spawned Subagent Guardrail
+
+- This section overrides the MCP-first guidance below for spawned subagents only.
+- Spawned subagents in this repo should prefer shell and local file tools first: `exec_command`, shell `rg`, `sed`, `cat`, `git`, `ls`, direct local file reads, local edits, and local verification commands.
+- Spawned subagents should avoid MCP tools and app/connector tools for routine exploration, search, symbol lookup, documentation lookup, and convenience.
+- Spawned subagents should not hand work back to the parent thread just because an MCP or app tool would be easier.
+- If an MCP or app tool is genuinely necessary for correctness or explicitly required by the task, the subagent may call it normally. This repo guidance does not prohibit that escalation path, but approval behavior is controlled outside these files.
+- Treat this as a temporary mitigation until spawned-subagent approval churn is resolved.
+
 ## Workflow (Codex + MCP)
 
 1. Clarify scope and constraints
    - Confirm sandbox mode, approvals, network access, and deadlines.
    - Restate the task in 1–2 sentences before changing code.
 2. Inspect context before coding
-   - Use Codanna first for code understanding:
+   - Main thread: use Codanna first for code understanding:
      - `semantic_search_with_context` → find relevant symbols and files.
      - `analyze_impact` → understand dependencies and change radius.
-   - Use `rg`/`rg --files` only for quick literal searches or file discovery.
+   - Spawned subagents: follow the temporary guardrail above and use shell/local-file tools first.
+   - Use `rg`/`rg --files` for quick literal searches or file discovery.
    - Use `cat`/`sed` for small reads (≤ ~250 lines at a time).
 3. Plan the work
-   - use context7 to retrieve relevant docs to better understand best practices.
+   - Main thread: use context7 to retrieve relevant docs to better understand best practices.
+   - Spawned subagents: avoid Context7 unless it is genuinely necessary or explicitly required.
    - utilize sequential thinking for planning.
    - For non-trivial tasks, create/update a short `update_plan` with 3–6 steps.
    - Keep steps small, testable, and ordered by dependency.
 4. Implement changes
    - Prefer minimal, focused edits with `apply_patch`.
    - Implement with strict typing, accessibility, and security in mind; avoid `any`.
-   - When editing existing code, re-check impact with Codanna (`analyze_impact`) if the change could affect multiple call sites.
+   - Main thread: when editing existing code, re-check impact with Codanna (`analyze_impact`) if the change could affect multiple call sites.
+   - Spawned subagents: only use Codanna when it is genuinely necessary or explicitly required.
 5. Validate behavior
    - Run targeted tests or scripts when feasible (`npm test`, `npm run lint`, `npm run build`, or feature-specific commands).
    - If validation cannot be run, call it out explicitly and describe how to validate.
@@ -60,7 +72,10 @@ trigger: always_on
 - **Fetch** – pull external URLs when allowed (network access may be restricted).
 - **Context7** – fetch external library docs (resolve library ID then get docs).
 
-When in doubt: prefer Codanna for code understanding, `rg` for quick literal grep-style queries, and only then fall back to manual navigation.
+When in doubt:
+
+- Main thread: prefer Codanna for code understanding, `rg` for quick literal grep-style queries, and only then fall back to manual navigation.
+- Spawned subagents: prefer shell/local-file inspection first and use Codanna only when it is genuinely necessary or explicitly required.
 
 ### Codanna MCP Tools
 

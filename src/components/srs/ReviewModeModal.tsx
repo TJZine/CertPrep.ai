@@ -69,16 +69,14 @@ export function ReviewModeModal({
         router.push(option.href);
     };
 
-    // Reset selection when modal opens
-    React.useEffect(() => {
-        if (isOpen) {
-            setSelectedMode("quiz");
-        }
-    }, [isOpen]);
+    const handleCloseModal = (): void => {
+        setSelectedMode("quiz");
+        onClose();
+    };
 
     const footer = (
         <div className="flex justify-end gap-3">
-            <Button variant="outline" onClick={onClose}>
+            <Button variant="outline" onClick={handleCloseModal}>
                 Cancel
             </Button>
             <Button
@@ -93,7 +91,7 @@ export function ReviewModeModal({
     return (
         <Modal
             isOpen={isOpen}
-            onClose={onClose}
+            onClose={handleCloseModal}
             title="Choose Review Mode"
             description={`${dueCount} question${dueCount !== 1 ? "s" : ""} due for review`}
             size="md"

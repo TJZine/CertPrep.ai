@@ -91,8 +91,7 @@ export function useCorrectAnswer(
 
   // Stable worker reference
   const workerRef = React.useRef<Worker | null>(null);
-  // Track if worker instantiation failed - using State to trigger effect re-run on failure
-  const [workerFailed, setWorkerFailed] = useState(false);
+  const workerFailedRef = React.useRef(false);
 
   // Preserve latest options without re-running the effect on unstable object identity
   const optionsRef = React.useRef<Record<string, string> | undefined>(options);
@@ -108,7 +107,6 @@ export function useCorrectAnswer(
 
   // Worker Lifecycle Management
   useEffect((): (() => void) => {
-    setWorkerFailed(false);
     let blobUrl: string | null = null;
 
     try {
@@ -124,15 +122,15 @@ export function useCorrectAnswer(
         logger.warn("[useCorrectAnswer] Worker failed, switching to fallback", {
           message: event.message,
         });
+        workerFailedRef.current = true;
         setError("Answer hashing worker failed; using fallback.");
         // Kill the dead worker and signal failure state
         worker.terminate();
         workerRef.current = null;
-        setWorkerFailed(true);
       };
     } catch (error) {
       logger.warn("[useCorrectAnswer] Worker instantiation failed", error);
-      setWorkerFailed(true);
+      workerFailedRef.current = true;
     }
 
     return (): void => {
@@ -180,7 +178,7 @@ export function useCorrectAnswer(
       };
 
       // STRATEGY: Fallback
-      if (workerFailed || !workerRef.current) {
+      if (workerFailedRef.current || !workerRef.current) {
         try {
           const hashes = await hashOptionsFallback(currentOptions);
           processResult(hashes);
@@ -205,7 +203,7 @@ export function useCorrectAnswer(
           logger.warn("[useCorrectAnswer] Worker computation error", {
             error: payload.error,
           });
-          setWorkerFailed(true);
+          workerFailedRef.current = true;
           if (isMounted) setIsResolving(false);
           cleanup();
           return;
@@ -244,7 +242,7 @@ export function useCorrectAnswer(
         workerRef.current.removeEventListener("message", handler);
       }
     };
-  }, [questionId, targetHash, optionsKey, workerFailed]); // Depend on optionsKey to trigger when options load
+  }, [questionId, targetHash, optionsKey]); // Depend on optionsKey to trigger when options load
 
   return { resolvedAnswers, isResolving, error };
 }

@@ -72,9 +72,6 @@ export function SyncProvider({
 
   useEffect(() => {
     if (!userId) {
-      // Reset sync state when user logs out
-      setHasInitialSyncCompleted(false);
-      setInitialSyncError(null);
       initialSyncAttemptedRef.current = null;
       return;
     }
@@ -173,9 +170,14 @@ export function SyncProvider({
   // Poll for block state changes
   useEffect(() => {
     if (!userId) return;
-    void computeBlockedInfo();
+    const timer = window.setTimeout(() => {
+      void computeBlockedInfo();
+    }, 0);
     const interval = setInterval(() => void computeBlockedInfo(), 60_000);
-    return (): void => clearInterval(interval);
+    return (): void => {
+      window.clearTimeout(timer);
+      clearInterval(interval);
+    };
   }, [userId, computeBlockedInfo]);
 
   const sync = useCallback(async (): Promise<SyncOutcome> => {
@@ -310,13 +312,18 @@ export function SyncProvider({
     };
   }, [userId, sync]);
 
+  const contextHasInitialSyncCompleted = userId
+    ? hasInitialSyncCompleted
+    : false;
+  const contextInitialSyncError = userId ? initialSyncError : null;
+
   return (
     <SyncContext.Provider
       value={{
         sync,
         isSyncing,
-        hasInitialSyncCompleted,
-        initialSyncError,
+        hasInitialSyncCompleted: contextHasInitialSyncCompleted,
+        initialSyncError: contextInitialSyncError,
         syncBlocked,
       }}
     >

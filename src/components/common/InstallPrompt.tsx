@@ -17,31 +17,30 @@ export function InstallPrompt(): React.ReactElement | null {
   const [deferredPrompt, setDeferredPrompt] =
     React.useState<BeforeInstallPromptEvent | null>(null);
   const [showPrompt, setShowPrompt] = React.useState(false);
-  const [isInstalled, setIsInstalled] = React.useState(false);
-  const [dismissed, setDismissed] = React.useState(false);
-
-  React.useEffect((): void | (() => void) => {
-    if (window.matchMedia("(display-mode: standalone)").matches) {
-      setIsInstalled(true);
-      return;
-    }
-
-    let dismissedAt: string | null = null;
+  const [isInstalled, setIsInstalled] = React.useState(() => {
+    if (typeof window === "undefined") return false;
     try {
-      dismissedAt = localStorage.getItem("pwa_install_dismissed");
+      return window.matchMedia("(display-mode: standalone)").matches;
     } catch {
-      // Ignore storage access errors and continue without persisted dismissal.
+      return false;
     }
-    if (dismissedAt) {
+  });
+  const [dismissed, setDismissed] = React.useState(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      const dismissedAt = localStorage.getItem("pwa_install_dismissed");
+      if (!dismissedAt) return false;
+
       const dismissedTime = new Date(dismissedAt).getTime();
       const now = new Date().getTime();
       const daysSinceDismissed = (now - dismissedTime) / (1000 * 60 * 60 * 24);
-      if (daysSinceDismissed < 7) {
-        setDismissed(true);
-        return;
-      }
+      return daysSinceDismissed < 7;
+    } catch {
+      return false;
     }
+  });
 
+  React.useEffect((): void | (() => void) => {
     let showPromptTimeoutId: number | null = null;
 
     const handleBeforeInstall = (e: Event): void => {

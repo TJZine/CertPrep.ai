@@ -12,6 +12,7 @@ import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 import { useQuiz } from "@/hooks/useDatabase";
 import { updateQuiz } from "@/db/quizzes";
+import type { Quiz } from "@/types/quiz";
 
 /**
  * Quiz settings page for editing category, subcategory, and other metadata.
@@ -37,54 +38,6 @@ export default function QuizSettingsPage(): React.ReactElement {
         // Default: go to dashboard
         return "/";
     }, [searchParams]);
-
-    // Form state
-    const [title, setTitle] = React.useState("");
-    const [description, setDescription] = React.useState("");
-    const [category, setCategory] = React.useState("");
-    const [subcategory, setSubcategory] = React.useState("");
-    const [isSaving, setIsSaving] = React.useState(false);
-
-    // Populate form when quiz loads
-    React.useEffect(() => {
-        if (quiz) {
-            setTitle(quiz.title);
-            setDescription(quiz.description ?? "");
-            setCategory(quiz.category ?? "");
-            setSubcategory(quiz.subcategory ?? "");
-        }
-    }, [quiz]);
-
-    const handleSave = async (): Promise<void> => {
-        if (!effectiveUserId || !quiz) return;
-
-        setIsSaving(true);
-        try {
-            await updateQuiz(id, effectiveUserId, {
-                title: title.trim(),
-                description: description.trim(),
-                category: category.trim() || undefined,
-                subcategory: subcategory.trim() || undefined,
-            });
-            // useLiveQuery auto-updates when Dexie changes, no manual refresh needed
-            addToast("success", "Quiz settings saved");
-            router.push(getBackUrl());
-        } catch (error) {
-            addToast(
-                "error",
-                error instanceof Error ? error.message : "Failed to save settings",
-            );
-        } finally {
-            setIsSaving(false);
-        }
-    };
-
-    const hasChanges = quiz && (
-        title !== quiz.title ||
-        description !== (quiz.description ?? "") ||
-        category !== (quiz.category ?? "") ||
-        subcategory !== (quiz.subcategory ?? "")
-    );
 
     if (isLoading) {
         return (
@@ -132,118 +85,175 @@ export default function QuizSettingsPage(): React.ReactElement {
                     Edit quiz metadata and analytics grouping
                 </p>
             </div>
-
-            <div className="space-y-6">
-                {/* Basic Info */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-lg">Basic Information</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div>
-                            <label
-                                htmlFor="settings-title"
-                                className="mb-1 block text-sm font-medium text-foreground"
-                            >
-                                Title
-                            </label>
-                            <input
-                                id="settings-title"
-                                type="text"
-                                value={title}
-                                onChange={(e) => setTitle(e.target.value)}
-                                maxLength={100}
-                                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                            />
-                        </div>
-                        <div>
-                            <label
-                                htmlFor="settings-description"
-                                className="mb-1 block text-sm font-medium text-foreground"
-                            >
-                                Description
-                            </label>
-                            <textarea
-                                id="settings-description"
-                                value={description}
-                                onChange={(e) => setDescription(e.target.value)}
-                                rows={3}
-                                maxLength={500}
-                                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                            />
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Analytics Grouping */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-lg">Analytics Grouping</CardTitle>
-                        <CardDescription>
-                            Set category and subcategory to group this quiz in the Topic Heatmap.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div>
-                            <label
-                                htmlFor="settings-category"
-                                className="mb-1 block text-sm font-medium text-foreground"
-                            >
-                                Category
-                            </label>
-                            <input
-                                id="settings-category"
-                                type="text"
-                                value={category}
-                                onChange={(e) => setCategory(e.target.value)}
-                                placeholder="e.g., Insurance, Firearms, Custom"
-                                maxLength={50}
-                                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                            />
-                        </div>
-                        <div>
-                            <label
-                                htmlFor="settings-subcategory"
-                                className="mb-1 block text-sm font-medium text-foreground"
-                            >
-                                Subcategory
-                            </label>
-                            <input
-                                id="settings-subcategory"
-                                type="text"
-                                value={subcategory}
-                                onChange={(e) => setSubcategory(e.target.value)}
-                                placeholder="e.g., Massachusetts Personal Lines"
-                                maxLength={100}
-                                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                            />
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Actions */}
-                <div className="flex justify-end gap-3">
-                    <Button
-                        variant="outline"
-                        onClick={() => router.push(getBackUrl())}
-                    >
-                        Cancel
-                    </Button>
-                    <Button
-                        onClick={handleSave}
-                        disabled={isSaving || !hasChanges || !title.trim()}
-                        leftIcon={
-                            isSaving ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                                <Save className="h-4 w-4" />
-                            )
-                        }
-                    >
-                        {isSaving ? "Saving..." : "Save Changes"}
-                    </Button>
-                </div>
-            </div>
+            <QuizSettingsForm
+                quiz={quiz}
+                id={id}
+                effectiveUserId={effectiveUserId}
+                addToast={addToast}
+                onBack={() => router.push(getBackUrl())}
+            />
         </main>
     );
+}
+
+function QuizSettingsForm({
+  quiz,
+  id,
+  effectiveUserId,
+  addToast,
+  onBack,
+}: {
+  quiz: Quiz;
+  id: string;
+  effectiveUserId: string | null;
+  addToast: (type: "success" | "error", message: string) => void;
+  onBack: () => void;
+}): React.ReactElement {
+  const [title, setTitle] = React.useState(quiz.title);
+  const [description, setDescription] = React.useState(quiz.description ?? "");
+  const [category, setCategory] = React.useState(quiz.category ?? "");
+  const [subcategory, setSubcategory] = React.useState(quiz.subcategory ?? "");
+  const [isSaving, setIsSaving] = React.useState(false);
+
+  const hasChanges = (
+    title !== quiz.title ||
+    description !== (quiz.description ?? "") ||
+    category !== (quiz.category ?? "") ||
+    subcategory !== (quiz.subcategory ?? "")
+  );
+
+  const handleSave = async (): Promise<void> => {
+    if (!effectiveUserId) return;
+
+    setIsSaving(true);
+    try {
+      await updateQuiz(id, effectiveUserId, {
+        title: title.trim(),
+        description: description.trim(),
+        category: category.trim() || undefined,
+        subcategory: subcategory.trim() || undefined,
+      });
+      // useLiveQuery auto-updates when Dexie changes, no manual refresh needed
+      addToast("success", "Quiz settings saved");
+      onBack();
+    } catch (error) {
+      addToast(
+        "error",
+        error instanceof Error ? error.message : "Failed to save settings",
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Basic Info */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Basic Information</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <label
+              htmlFor="settings-title"
+              className="mb-1 block text-sm font-medium text-foreground"
+            >
+              Title
+            </label>
+            <input
+              id="settings-title"
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              maxLength={100}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="settings-description"
+              className="mb-1 block text-sm font-medium text-foreground"
+            >
+              Description
+            </label>
+            <textarea
+              id="settings-description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={3}
+              maxLength={500}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Analytics Grouping */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Analytics Grouping</CardTitle>
+          <CardDescription>
+            Set category and subcategory to group this quiz in the Topic Heatmap.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <label
+              htmlFor="settings-category"
+              className="mb-1 block text-sm font-medium text-foreground"
+            >
+              Category
+            </label>
+            <input
+              id="settings-category"
+              type="text"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              placeholder="e.g., Insurance, Firearms, Custom"
+              maxLength={50}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="settings-subcategory"
+              className="mb-1 block text-sm font-medium text-foreground"
+            >
+              Subcategory
+            </label>
+            <input
+              id="settings-subcategory"
+              type="text"
+              value={subcategory}
+              onChange={(e) => setSubcategory(e.target.value)}
+              placeholder="e.g., Massachusetts Personal Lines"
+              maxLength={100}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Actions */}
+      <div className="flex justify-end gap-3">
+        <Button variant="outline" onClick={onBack}>
+          Cancel
+        </Button>
+        <Button
+          onClick={handleSave}
+          disabled={isSaving || !hasChanges || !title.trim()}
+          leftIcon={
+            isSaving ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4" />
+            )
+          }
+        >
+          {isSaving ? "Saving..." : "Save Changes"}
+        </Button>
+      </div>
+    </div>
+  );
 }

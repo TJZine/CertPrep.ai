@@ -26,7 +26,6 @@ interface QuestionReviewCardProps {
   defaultExpanded?: boolean;
   className?: string;
   expandAllState?: boolean;
-  expandAllSignal?: number;
   correctAnswer?: string | null;
   isResolving?: boolean;
   /** Optional source quiz name for aggregated sessions */
@@ -46,13 +45,14 @@ export function QuestionReviewCard({
   defaultExpanded = false,
   className,
   expandAllState,
-  expandAllSignal,
   correctAnswer,
   isResolving = false,
   sourceQuizName,
   onResize,
 }: QuestionReviewCardProps): React.ReactElement {
-  const [isExpanded, setIsExpanded] = React.useState(defaultExpanded);
+  const [isExpanded, setIsExpanded] = React.useState<boolean>(
+    expandAllState ?? defaultExpanded,
+  );
   const sanitizeReviewHTML = React.useCallback(
     (dirty: string) => sanitizeHTML(dirty, { allowClass: false }),
     [],
@@ -106,12 +106,6 @@ export function QuestionReviewCard({
     () => (isExpanded ? sanitizedQuestion : truncatedQuestion),
     [isExpanded, sanitizedQuestion, truncatedQuestion],
   );
-
-  React.useEffect(() => {
-    if (expandAllState !== undefined && expandAllSignal !== undefined) {
-      setIsExpanded(expandAllState);
-    }
-  }, [expandAllSignal, expandAllState]);
 
   // Notify parent when expansion changes so virtualized list can remeasure.
   // onResize should be stable (wraps useCallback-based setSize) to avoid spurious calls.

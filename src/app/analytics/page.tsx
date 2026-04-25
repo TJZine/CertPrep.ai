@@ -95,19 +95,17 @@ export default function AnalyticsPage(): React.ReactElement {
   } = useQuizzes(effectiveUserId ?? undefined, true);
 
   // Date range filter state
-  const [dateRange, setDateRange] = React.useState<DateRange>("all");
-
-  // Load persisted date range on mount
-  React.useEffect(() => {
+  const [dateRange, setDateRange] = React.useState<DateRange>(() => {
     try {
       const saved = localStorage.getItem("analytics-date-range");
       if (saved && DATE_RANGE_VALUES.includes(saved as DateRange)) {
-        setDateRange(saved as DateRange);
+        return saved as DateRange;
       }
     } catch {
       // Safari Private Browsing or storage disabled – use default
     }
-  }, []);
+    return "all";
+  });
 
   const handleDateRangeChange = (range: DateRange): void => {
     setDateRange(range);

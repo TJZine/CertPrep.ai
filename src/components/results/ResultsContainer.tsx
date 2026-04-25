@@ -274,7 +274,7 @@ export function ResultsContainer({
 
   const [questionFilter, setQuestionFilter] = React.useState<FilterType>("all");
   const [categoryFilter, setCategoryFilter] = React.useState<string | null>(null);
-  const [autoFilterApplied, setAutoFilterApplied] = React.useState(false);
+  const [hasUserFilterOverride, setHasUserFilterOverride] = React.useState(false);
 
   const handleCategoryFilter = React.useCallback((category: string) => {
     setCategoryFilter(category);
@@ -285,24 +285,15 @@ export function ResultsContainer({
     }
   }, []);
 
-  // Update filter once grading is done
-  React.useEffect(() => {
-    if (
-      !gradingLoading &&
-      hasMissedQuestions &&
-      !autoFilterApplied
-    ) {
-      setQuestionFilter("incorrect");
-      setAutoFilterApplied(true);
-      addToast(
-        "info",
-        "Showing incorrect answers to help you focus on areas to improve.",
-      );
+  const effectiveQuestionFilter = React.useMemo(() => {
+    if (!gradingLoading && hasMissedQuestions && !hasUserFilterOverride) {
+      return "incorrect" as const;
     }
-  }, [gradingLoading, hasMissedQuestions, autoFilterApplied, addToast]);
+    return questionFilter;
+  }, [gradingLoading, hasMissedQuestions, hasUserFilterOverride, questionFilter]);
 
   const handleFilterChange = (filter: FilterType): void => {
-    setAutoFilterApplied(true);
+    setHasUserFilterOverride(true);
     setQuestionFilter(filter);
   };
 
@@ -602,7 +593,7 @@ export function ResultsContainer({
               </h2>
               <QuestionReviewList
                 questions={questionsWithAnswers}
-                filter={questionFilter}
+                filter={effectiveQuestionFilter}
                 onFilterChange={handleFilterChange}
                 categoryFilter={categoryFilter}
                 onCategoryFilterChange={setCategoryFilter}

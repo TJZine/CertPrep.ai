@@ -91,15 +91,14 @@ export function ModeSelectModal({
     router.push(`/quiz/${quiz.id}/${selectedMode}`);
   };
 
-  React.useEffect(() => {
-    if (isOpen) {
-      setSelectedMode("zen");
-    }
-  }, [isOpen, quiz]);
+  const handleCloseModal = (): void => {
+    setSelectedMode("zen");
+    onClose();
+  };
 
   const footer = (
     <div className="flex justify-end gap-3">
-      <Button variant="outline" onClick={onClose}>
+      <Button variant="outline" onClick={handleCloseModal}>
         Cancel
       </Button>
       <Button
@@ -115,7 +114,7 @@ export function ModeSelectModal({
   return (
     <Modal
       isOpen={isOpen}
-      onClose={onClose}
+      onClose={handleCloseModal}
       title="Select Study Mode"
       description={quiz ? `Starting: "${quiz.title}"` : undefined}
       size="lg"

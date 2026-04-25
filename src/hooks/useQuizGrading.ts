@@ -30,19 +30,22 @@ export function useQuizGrading(
   // useLiveQuery returns a new object reference every time, even if data hasn't changed
   const answersJson = JSON.stringify(answers);
   const questionIdsJson = JSON.stringify(questionIds);
+  const isReady = Boolean(quiz && answers);
 
   useEffect((): (() => void) | void => {
-    if (!quiz || !answers) {
-      setGrading(null);
+    if (!isReady || !quiz) {
       return;
     }
 
     let isMounted = true;
-    setIsLoading(true);
-    setGrading(null); // Clear previous result while loading
-    setError(null);
 
     const grade = async (): Promise<void> => {
+      if (isMounted) {
+        setIsLoading(true);
+        setGrading(null); // Clear previous result while loading
+        setError(null);
+      }
+
       try {
         const status: Record<string, boolean> = {};
         let correct = 0;
@@ -111,7 +114,15 @@ export function useQuizGrading(
       isMounted = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [quiz, answersJson, questionIdsJson]); // Depend on JSON strings instead of objects
+  }, [isReady, quiz, answersJson, questionIdsJson]); // Depend on JSON strings instead of objects
+
+  if (!isReady) {
+    return {
+      grading: null,
+      isLoading: false,
+      error: null,
+    };
+  }
 
   return { grading, isLoading, error };
 }
