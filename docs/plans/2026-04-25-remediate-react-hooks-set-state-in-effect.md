@@ -218,7 +218,7 @@ npm run security-check
 npm run build
 ```
 
-If `npm run build` cannot run due environment limits, record exact limitation and stop before claiming full verification complete.
+If `npm run build` cannot run due to environment limits, record exact limitation and stop before claiming full verification complete.
 
 ### Step 4: Handoff bundle for maintainer review
 

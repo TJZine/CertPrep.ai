@@ -53,7 +53,7 @@ vi.mock("@/lib/logger", () => ({
   },
 }));
 
-describe("src/db/results.ts", () => {
+describe("src/db/results and src/db/resultAnalytics", () => {
   const mockUserId = "user-123";
   const mockQuizId = "quiz-123";
 
