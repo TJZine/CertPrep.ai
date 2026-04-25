@@ -4,7 +4,7 @@ import * as React from "react";
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { ZenQuizContainer } from "@/components/quiz/ZenQuizContainer";
-import { loadInterleavedState, clearInterleavedState } from "@/lib/interleavedStorage";
+import { loadInterleavedState, clearInterleavedState } from "@/lib/storage/interleavedStorage";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 
@@ -66,9 +66,8 @@ export default function InterleavedSessionPage(): React.ReactElement {
         <ZenQuizContainer
             quiz={quiz}
             isInterleaved={true}
-            interleavedSourceMap={sourceMap}
-            interleavedKeyMappings={keyMappings}
+            sessionSourceMap={sourceMap}
+            sessionKeyMappings={keyMappings}
         />
     );
 }
-

@@ -4,7 +4,7 @@ import { useToast } from "@/components/ui/Toast";
 import { useSync } from "@/hooks/useSync";
 import { useQuizSessionStore } from "@/stores/quizSessionStore";
 import { createResult } from "@/db/results";
-import { buildAnswersRecord } from "@/lib/quiz-remix";
+import { buildAnswersRecord } from "@/lib/quiz/quizRemix";
 import type { Quiz } from "@/types/quiz";
 
 interface UseExamSubmissionProps {

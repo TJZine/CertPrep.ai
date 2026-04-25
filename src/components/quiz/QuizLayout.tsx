@@ -5,7 +5,7 @@ import { ArrowLeft, Clock, Keyboard, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { ProgressBar } from "./ProgressBar";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import {
   KeyboardShortcutsHelp,
   useKeyboardShortcutsHelp,

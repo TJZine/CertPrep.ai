@@ -7,6 +7,8 @@ import { Inter, Press_Start_2P, Nunito, Roboto_Slab, Space_Grotesk, Playfair_Dis
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { SkipLink } from "@/components/common/SkipLink";
+import { ServiceWorkerInitScript } from "@/components/common/ServiceWorkerInitScript";
+import { ThemeInitScript } from "@/components/common/ThemeInitScript";
 import { AppProviders } from "@/components/providers/AppProviders";
 import { PageTransition } from "@/components/layout/PageTransition";
 import { ThemeEffects } from "@/components/effects/ThemeEffects";
@@ -165,22 +167,8 @@ export default async function RootLayout({
         <meta name="theme-color" content="#2563eb" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <script
-          id="theme-init"
-          nonce={nonce}
-          suppressHydrationWarning
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{const stored=localStorage.getItem('theme');const prefersDark=window.matchMedia('(prefers-color-scheme: dark)').matches;const shouldDark=stored==='dark'||(!stored&&prefersDark);const root=document.documentElement;if(shouldDark){root.classList.add('dark');}else{root.classList.remove('dark');}}catch(e){}})();`,
-          }}
-        />
-        <script
-          id="sw-init"
-          nonce={nonce}
-          suppressHydrationWarning
-          dangerouslySetInnerHTML={{
-            __html: `if('serviceWorker'in navigator){navigator.serviceWorker.register('/sw.js',{scope:'/'}).catch(function(e){console.error('[SW] Failed:',e);});}`,
-          }}
-        />
+        <ThemeInitScript nonce={nonce} />
+        <ServiceWorkerInitScript nonce={nonce} />
       </head>
       <body className="flex min-h-screen flex-col bg-background text-foreground antialiased">
         <SkipLink />

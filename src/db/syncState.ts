@@ -1,4 +1,4 @@
-import { db } from "@/db";
+import { db } from "./dbInstance";
 import { NIL_UUID } from "@/lib/constants";
 import { logger } from "@/lib/logger";
 
@@ -50,13 +50,38 @@ function healFutureCursor(
   return { timestamp, healed: false };
 }
 
-export async function getSyncCursor(userId: string): Promise<SyncCursor> {
+/**
+ * Reads the results sync cursor for keyset pagination and persists any repairs.
+ *
+ * **Self-Healing Behavior (Side-Effect):** If the stored cursor is corrupted
+ * (future timestamp, invalid UUID lastId, or a legacy unscoped key exists),
+ * this function may immediately persist repaired state to IndexedDB before
+ * returning the safe cursor.
+ *
+ * @param userId - The user ID to get the sync cursor for
+ * @returns SyncCursor with validated timestamp and lastId
+ */
+export async function readAndRepairResultsSyncCursor(userId: string): Promise<SyncCursor> {
   if (!userId) return { timestamp: EPOCH_TIMESTAMP, lastId: NIL_UUID };
 
   const key = `results:${userId}`;
-  // Fallback to legacy key if present
-  const state =
-    (await db.syncState.get(key)) ?? (await db.syncState.get("results"));
+  const legacyKey = "results";
+  const { scopedState, hasLegacyState } = await db.transaction(
+    "rw",
+    db.syncState,
+    async () => {
+      const [scopedState, legacyState] = await Promise.all([
+        db.syncState.get(key),
+        db.syncState.get(legacyKey),
+      ]);
+
+      return {
+        scopedState,
+        hasLegacyState: Boolean(legacyState),
+      };
+    },
+  );
+  const state = scopedState;
 
   let timestamp = EPOCH_TIMESTAMP;
   let healed = false;
@@ -87,12 +112,29 @@ export async function getSyncCursor(userId: string): Promise<SyncCursor> {
   // the (timestamp, lastId) pair must be coherent for correct page boundaries.
   const safeLastId = healed || !isValidUUID ? NIL_UUID : rawLastId;
 
-  // Persist healed cursor to prevent repeated warnings
-  if (healed || lastIdHealed) {
+  // Results cursors are now user-scoped. The legacy global `results` key has no user
+  // identity, so adopting it into the active user risks cross-account cursor leakage on
+  // shared devices when sign-out preserves local data. Clean it up instead and let the
+  // current user re-sync safely from epoch if they do not already have a scoped cursor.
+  if (hasLegacyState || (state && (healed || lastIdHealed))) {
     try {
-      await setSyncCursor(timestamp, userId, safeLastId);
+      await db.transaction("rw", db.syncState, async () => {
+        if (state && (healed || lastIdHealed)) {
+          await db.syncState.put({
+            table: key,
+            lastSyncedAt: timestamp,
+            synced: 1,
+            lastId: safeLastId,
+          });
+        }
+
+        if (hasLegacyState) {
+          logger.warn("Discarding unscoped legacy results cursor", { userId });
+          await db.syncState.delete(legacyKey);
+        }
+      });
     } catch (err) {
-      logger.error("Failed to persist healed results cursor", {
+      logger.error("Failed to persist results cursor state", {
         userId,
         error: err instanceof Error ? err.message : String(err),
       });
@@ -128,7 +170,17 @@ export async function setSyncCursor(
   });
 }
 
-export async function getQuizSyncCursor(userId: string): Promise<SyncCursor> {
+/**
+ * Reads the quizzes sync cursor for keyset pagination and persists any repairs.
+ *
+ * **Self-Healing Behavior (Side-Effect):** If the stored cursor is corrupted
+ * (future timestamp or invalid UUID lastId), this function will immediately
+ * persist the healed cursor to IndexedDB before returning it.
+ *
+ * @param userId - The user ID to get the sync cursor for
+ * @returns SyncCursor with validated timestamp and lastId
+ */
+export async function readAndRepairQuizSyncCursor(userId: string): Promise<SyncCursor> {
   if (!userId) return { timestamp: EPOCH_TIMESTAMP, lastId: NIL_UUID };
 
   const key = `quizzes:${userId}`;
@@ -201,7 +253,7 @@ export async function setQuizSyncCursor(
 }
 
 /**
- * Retrieves the SRS sync cursor for keyset pagination.
+ * Reads the SRS sync cursor for keyset pagination and persists any repairs.
  *
  * **Self-Healing Behavior (Side-Effect):** If the stored cursor is corrupted
  * (future timestamp or invalid UUID lastId), this function will:
@@ -216,7 +268,7 @@ export async function setQuizSyncCursor(
  * @param userId - The user ID to get the sync cursor for
  * @returns SyncCursor with validated timestamp and lastId
  */
-export async function getSRSSyncCursor(userId: string): Promise<SyncCursor> {
+export async function readAndRepairSRSSyncCursor(userId: string): Promise<SyncCursor> {
   if (!userId) return { timestamp: EPOCH_TIMESTAMP, lastId: NIL_UUID };
 
   const key = `srs:${userId}`;

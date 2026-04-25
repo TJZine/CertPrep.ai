@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { cn } from "@/lib/utils";
-import { sanitizeHTML } from "@/lib/sanitize";
+import { cn } from "@/lib/utils/cn";
+import { sanitizeHTML } from "@/lib/utils/sanitize";
 
 interface ProctorOptionsListProps {
   options: Record<string, string>;

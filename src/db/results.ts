@@ -1,10 +1,15 @@
-import { db } from "@/db";
-import { isSRSQuiz } from "./quizzes";
+import { db } from "./dbInstance";
+import { isSRSQuiz } from "./srsQuiz";
 import { NIL_UUID } from "@/lib/constants";
-import { calculatePercentage, generateUUID } from "@/lib/utils";
+import { calculatePercentage } from "@/lib/utils/math";
+import { generateUUID } from "@/lib/core/crypto";
 import { logger } from "@/lib/logger";
-import type { CategoryPerformance, Result } from "@/types/result";
-import type { Quiz, Question, QuizMode } from "@/types/quiz";
+import type {
+  CategoryPerformance,
+  PersistedResultMode,
+  Result,
+} from "@/types/result";
+import type { Quiz, Question } from "@/types/quiz";
 import { evaluateAnswer } from "@/lib/grading";
 
 // Re-export for backwards compatibility
@@ -12,7 +17,7 @@ export { isSRSQuiz };
 
 export interface CreateResultInput {
   quizId: string;
-  mode: QuizMode;
+  mode: PersistedResultMode;
   answers: Record<string, string>;
   flaggedQuestions: string[];
   timeTakenSeconds: number;
@@ -169,7 +174,7 @@ async function validateAggregatedResultInput(
 
 export interface CreateSRSReviewResultInput {
   userId: string;
-  /** The per-user SRS quiz ID (from getOrCreateSRSQuiz) */
+  /** The per-user SRS quiz ID (from ensureSRSQuizExists) */
   srsQuizId: string;
   answers: Record<string, string>;
   flaggedQuestions: string[];
@@ -371,6 +376,29 @@ export async function getResultsByQuizId(
   return results.reverse();
 }
 
+function resolveSessionQuestions(
+  result: Result,
+  quiz: Quiz | undefined,
+  allQuestionsMap: Map<string, { question: Question; quizId: string }>,
+): Question[] {
+  if (result.question_ids !== undefined) {
+    if (quiz && quiz.questions.length > 0) {
+      const idSet = new Set(result.question_ids);
+      return quiz.questions.filter((question) => idSet.has(question.id));
+    }
+
+    return result.question_ids
+      .map((id) => allQuestionsMap.get(id)?.question)
+      .filter((question): question is Question => !!question);
+  }
+
+  if (quiz && quiz.questions.length > 0) {
+    return quiz.questions;
+  }
+
+  return [];
+}
+
 /**
  * Retrieves all results ordered by newest first.
  */
@@ -415,6 +443,12 @@ export async function getCategoryPerformance(
 
   const results = await getResultsByQuizId(quizId, userId); // Uses filtered getter
   const totals: Record<string, { correct: number; total: number }> = {};
+  const allQuestionsMap = new Map(
+    quiz.questions.map((question) => [
+      question.id,
+      { question, quizId: quiz.id },
+    ]),
+  );
 
   // Process results in batches to avoid unbounded concurrency (consistent with getOverallStats)
   const BATCH_SIZE = 50;
@@ -422,8 +456,14 @@ export async function getCategoryPerformance(
     const batch = results.slice(i, i + BATCH_SIZE);
     const batchData = await Promise.all(
       batch.map(async (result) => {
+        const sessionQuestions = resolveSessionQuestions(
+          result,
+          quiz,
+          allQuestionsMap,
+        );
+
         return Promise.all(
-          quiz.questions.map(async (question) => {
+          sessionQuestions.map(async (question) => {
             const userAnswer = result.answers[String(question.id)];
             return evaluateAnswer(question, userAnswer);
           }),
@@ -507,6 +547,7 @@ export async function getOverallStats(userId: string): Promise<OverallStats> {
   // source quiz is empty, but the questions exist in other user quizzes.
   const allQuestionsMap = new Map<string, { question: Question; quizId: string }>();
   quizzes.forEach((q) => {
+    if (!q.questions) return;
     q.questions.forEach((question) => {
       allQuestionsMap.set(question.id, { question, quizId: q.id });
     });
@@ -530,18 +571,12 @@ export async function getOverallStats(userId: string): Promise<OverallStats> {
     const batch = results.slice(i, i + BATCH_SIZE);
     const batchData = await Promise.all(
       batch.map(async (result) => {
-        let sessionQuestions: Question[] = [];
         const quiz = quizMap.get(result.quiz_id);
-
-        if (quiz && quiz.questions.length > 0) {
-          sessionQuestions = quiz.questions;
-        }
-        // Handle aggregated results (Topic Study / SRS)
-        else if (result.question_ids && result.question_ids.length > 0) {
-          sessionQuestions = result.question_ids
-            .map(id => allQuestionsMap.get(id)?.question)
-            .filter((q): q is Question => !!q);
-        }
+        const sessionQuestions = resolveSessionQuestions(
+          result,
+          quiz,
+          allQuestionsMap,
+        );
 
         if (sessionQuestions.length === 0) return [];
 
@@ -624,6 +659,7 @@ export async function getTopicStudyQuestions(
   const quizMap = new Map(allQuizzes.map((quiz) => [quiz.id, quiz]));
   const allQuestionsMap = new Map<string, { question: Question; quizId: string }>();
   allQuizzes.forEach((q) => {
+    if (!q.questions) return;
     q.questions.forEach((question) => {
       allQuestionsMap.set(question.id, { question, quizId: q.id });
     });
@@ -639,26 +675,15 @@ export async function getTopicStudyQuestions(
   for (let i = 0; i < allResults.length; i += BATCH_SIZE) {
     const batch = allResults.slice(i, i + BATCH_SIZE);
 
-    await Promise.all(
-      batch.map(async (result) => {
-        let sessionQuestions: Question[] = [];
+    for (const result of batch) {
         const quiz = quizMap.get(result.quiz_id);
+        const sessionQuestions = resolveSessionQuestions(
+          result,
+          quiz,
+          allQuestionsMap,
+        );
 
-        if (quiz && quiz.questions.length > 0) {
-          // If we have question_ids (e.g. Smart Round), filter to them. 
-          // Otherwise use all quiz questions.
-          const idSet = result.question_ids ? new Set(result.question_ids) : null;
-          sessionQuestions = idSet
-            ? quiz.questions.filter(q => idSet.has(q.id))
-            : quiz.questions;
-        }
-        else if (result.question_ids && result.question_ids.length > 0) {
-          sessionQuestions = result.question_ids
-            .map(id => allQuestionsMap.get(id)?.question)
-            .filter((q): q is Question => !!q);
-        }
-
-        if (sessionQuestions.length === 0) return;
+        if (sessionQuestions.length === 0) continue;
 
         // Filter for category if specified
         const categoryQuestions = sessionQuestions.filter((q) => {
@@ -714,8 +739,7 @@ export async function getTopicStudyQuestions(
             });
           }
         }
-      }),
-    );
+    }
   }
 
   // Combine and deduplicate

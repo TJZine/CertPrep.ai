@@ -108,7 +108,7 @@ vi.mock("@/db", () => ({
 }));
 
 vi.mock("@/db/syncState", () => ({
-  getQuizSyncCursor: vi
+  readAndRepairQuizSyncCursor: vi
     .fn()
     .mockResolvedValue({
       timestamp: "1970-01-01T00:00:00.000Z",

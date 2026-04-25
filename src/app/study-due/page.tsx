@@ -10,12 +10,12 @@ import { DueQuestionsCard } from "@/components/srs/DueQuestionsCard";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 import { getDueQuestions, getDueCountsByBox } from "@/db/srs";
-import { db } from "@/db/index";
+import { db } from "@/db";
 import type { LeitnerBox, SRSState } from "@/types/srs";
 import type { Quiz, Question } from "@/types/quiz";
 import {
     SRS_REVIEW_QUESTIONS_KEY,
-} from "@/lib/srsReviewStorage";
+} from "@/lib/storage/srsReviewStorage";
 import { logger } from "@/lib/logger";
 import {
     Card,
@@ -23,7 +23,7 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/Card";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 
 interface CategoryGroup {
     category: string;

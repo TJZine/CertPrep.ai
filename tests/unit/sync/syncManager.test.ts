@@ -1,6 +1,6 @@
 
 import { describe, it, expect } from "vitest";
-import { buildSyncPayload } from "@/lib/sync/syncManager";
+import { buildSyncPayload, RemoteResultSchema } from "@/lib/sync/syncManager";
 import type { Result } from "@/types/result";
 
 describe("syncManager payload construction", () => {
@@ -56,5 +56,45 @@ describe("syncManager payload construction", () => {
 
     expect(item).toHaveProperty("deleted_at");
     expect(item.deleted_at).toBe(new Date(deletedAt).toISOString());
+  });
+
+  it("rejects runtime-only flashcard mode from remote results", () => {
+    const parsed = RemoteResultSchema.safeParse({
+      id: "remote-result",
+      quiz_id: "quiz-1",
+      timestamp: 1234567890,
+      mode: "flashcard",
+      score: 100,
+      time_taken_seconds: 60,
+      answers: {},
+      flagged_questions: [],
+      category_breakdown: {},
+      created_at: "2026-04-15T12:00:00.000Z",
+      updated_at: "2026-04-15T12:00:00.000Z",
+    });
+
+    expect(parsed.success).toBe(false);
+  });
+
+  it("normalizes unknown remote session_type values to undefined", () => {
+    const parsed = RemoteResultSchema.safeParse({
+      id: "remote-result",
+      quiz_id: "quiz-1",
+      timestamp: 1234567890,
+      mode: "zen",
+      score: 100,
+      time_taken_seconds: 60,
+      answers: {},
+      flagged_questions: [],
+      category_breakdown: {},
+      session_type: "legacy_custom_value",
+      created_at: "2026-04-15T12:00:00.000Z",
+      updated_at: "2026-04-15T12:00:00.000Z",
+    });
+
+    expect(parsed.success).toBe(true);
+    if (parsed.success) {
+      expect(parsed.data.session_type).toBeUndefined();
+    }
   });
 });

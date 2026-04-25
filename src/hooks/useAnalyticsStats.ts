@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { calculateCategoryTrends, type TrendDirection } from "@/lib/analytics/trends";
 import { formatDateKey } from "@/lib/date";
-import { hashAnswer } from "@/lib/utils";
+import { hashAnswer } from "@/lib/core/crypto";;
 import type { Quiz, Question } from "@/types/quiz";
 import type { Result } from "@/types/result";
 

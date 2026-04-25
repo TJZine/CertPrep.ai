@@ -1,10 +1,12 @@
 import { Dexie } from "dexie";
-import { db } from "@/db";
+import { db } from "./dbInstance";
 import { NIL_UUID } from "@/lib/constants";
-import { sanitizeQuestionText } from "@/lib/sanitize";
-import { calculatePercentage, generateUUID, hashAnswer } from "@/lib/utils";
+import { sanitizeQuestionText } from "@/lib/utils/sanitize";
+import { generateUUID, hashAnswer } from "@/lib/core/crypto";;
 import type { Question, Quiz } from "@/types/quiz";
-import { computeQuizHash } from "@/lib/sync/quizDomain";
+import { computeQuizHash } from "@/lib/core/crypto";
+import { getSRSQuizId } from "./srsQuiz";
+import { migrateLegacySRSQuizIfNeeded } from "./srsQuizMigration";
 
 import { v5 as uuidv5, validate as isValidUUID } from "uuid";
 import type { QuizImportInput } from "@/validators/quizSchema";
@@ -22,103 +24,10 @@ import { z } from "zod";
  */
 const QUESTION_ID_NAMESPACE = uuidv5.DNS;
 
-/**
- * Legacy prefix for per-user SRS quiz IDs.
- *
- * NOTE: This legacy format (`srs-{userId}`) is NOT a valid UUID and therefore
- * cannot sync to Supabase when `quizzes.id` is a UUID column.
- * We keep it only for local migration/backwards compatibility.
- */
-export const LEGACY_SRS_QUIZ_ID_PREFIX = "srs-";
-
-/**
- * Generates the deterministic SRS quiz ID for a user.
- *
- * This MUST be a valid UUID to round-trip through Supabase's `uuid` columns.
- */
-export function getSRSQuizId(userId: string): string {
-  return uuidv5(`certprep:srs:${userId}`, uuidv5.URL);
-}
-
-function getLegacySRSQuizId(userId: string): string {
-  return `${LEGACY_SRS_QUIZ_ID_PREFIX}${userId}`;
-}
-
-/**
- * Checks if a quiz ID is an SRS review quiz.
- */
-export function isSRSQuiz(
-  quizOrId: Pick<Quiz, "id" | "user_id"> | string,
-  userId?: string,
-): boolean {
-  if (typeof quizOrId === "string") {
-    if (quizOrId.startsWith(LEGACY_SRS_QUIZ_ID_PREFIX)) return true;
-    return Boolean(userId && quizOrId === getSRSQuizId(userId));
-  }
-
-  if (quizOrId.id.startsWith(LEGACY_SRS_QUIZ_ID_PREFIX)) return true;
-  // For quiz objects, we can derive the deterministic SRS ID from the quiz's owner.
-  // Avoid using tags/title to prevent misclassifying user-created quizzes.
-  return quizOrId.id === getSRSQuizId(quizOrId.user_id);
-}
-
-/**
- * Migrates legacy SRS quiz IDs (`srs-{userId}`) to the deterministic UUID v5 format.
- *
- * This is required to sync successfully when Supabase expects UUID IDs for quizzes/results.
- */
-export async function migrateLegacySRSQuizIfNeeded(
-  userId: string,
-): Promise<void> {
-  const srsQuizId = getSRSQuizId(userId);
-  const legacyId = getLegacySRSQuizId(userId);
-
-  const [legacyQuiz, existingNewQuiz, legacyResultCount] = await Promise.all([
-    db.quizzes.get(legacyId),
-    db.quizzes.get(srsQuizId),
-    db.results.where("[user_id+quiz_id]").equals([userId, legacyId]).count(),
-  ]);
-
-  if (!legacyQuiz && legacyResultCount === 0) return;
-
-  const now = Date.now();
-  const migratedQuiz: Quiz =
-    existingNewQuiz ??
-    ({
-      id: srsQuizId,
-      user_id: userId,
-      title: legacyQuiz?.title || "SRS Review Sessions",
-      description:
-        legacyQuiz?.description ||
-        "Spaced repetition review sessions aggregated from your quizzes",
-      questions: legacyQuiz?.questions ?? [],
-      tags: Array.from(new Set([...(legacyQuiz?.tags ?? []), "srs", "system"])),
-      version: legacyQuiz?.version ?? 1,
-      created_at: legacyQuiz?.created_at ?? now,
-      updated_at: now,
-      deleted_at: null,
-      quiz_hash: legacyQuiz?.quiz_hash ?? null,
-      last_synced_at: null,
-      last_synced_version: null,
-    } satisfies Quiz);
-
-  await db.transaction("rw", db.quizzes, db.results, async () => {
-    // Ensure the UUID-based quiz exists (dirty so quizSyncManager will push it).
-    await db.quizzes.put(migratedQuiz);
-
-    // Move any legacy results onto the UUID-based quiz and re-mark as unsynced.
-    if (legacyResultCount > 0) {
-      await db.results
-        .where("[user_id+quiz_id]")
-        .equals([userId, legacyId])
-        .modify({ quiz_id: srsQuizId, synced: 0 });
-    }
-
-    // Drop legacy quiz row if it exists; it cannot sync to Supabase.
-    await db.quizzes.delete(legacyId);
-  });
-
-}
+export { LEGACY_SRS_QUIZ_ID_PREFIX, getSRSQuizId, isSRSQuiz } from "./srsQuiz";
+export { migrateLegacySRSQuizIfNeeded } from "./srsQuizMigration";
+export { getQuizStats } from "./quizStats";
+export type { QuizStats } from "./quizStats";
 
 /**
  * Gets or creates the per-user SRS review quiz.
@@ -128,7 +37,7 @@ export async function migrateLegacySRSQuizIfNeeded(
  * @param userId - The user's ID
  * @returns The SRS quiz (existing or newly created)
  */
-export async function getOrCreateSRSQuiz(userId: string): Promise<Quiz> {
+export async function ensureSRSQuizExists(userId: string): Promise<Quiz> {
   await migrateLegacySRSQuizIfNeeded(userId);
 
   const srsQuizId = getSRSQuizId(userId);
@@ -182,19 +91,20 @@ export function sortQuizzesByNewest(quizzes: Quiz[]): Quiz[] {
   });
 }
 
-export interface QuizStats {
-  quizId: string;
-  attemptCount: number;
-  lastAttemptScore: number | null;
-  lastAttemptDate: number | null;
-  averageScore: number | null;
-  bestScore: number | null;
-  totalStudyTime: number;
-}
-
 export async function sanitizeQuestions(
   questions: unknown[],
 ): Promise<Question[]> {
+  const { questions: sanitizedQuestions } =
+    await sanitizeQuestionsWithIdMap(questions);
+  return sanitizedQuestions;
+}
+
+export async function sanitizeQuestionsWithIdMap(
+  questions: unknown[],
+): Promise<{
+  questions: Question[];
+  questionIdMap: Map<string, string>;
+}> {
   // Validate structure first
   const parsedQuestions = z.array(QuestionSchema).safeParse(questions);
 
@@ -212,7 +122,8 @@ export async function sanitizeQuestions(
     throw new Error(`Invalid questions data: ${errorMsg}`);
   }
 
-  return Promise.all(
+  const questionIdMap = new Map<string, string>();
+  const sanitizedQuestions = await Promise.all(
     parsedQuestions.data.map(async (q) => {
       // We can trust the shape now, but we still want to sanitize text fields for XSS prevention
       const options = q.options;
@@ -247,6 +158,7 @@ export async function sanitizeQuestions(
       const questionId = isValidUUID(rawId)
         ? rawId
         : uuidv5(`${q.question}:${JSON.stringify(sanitizedOptions)}`, QUESTION_ID_NAMESPACE);
+      questionIdMap.set(rawId, questionId);
 
       return {
         ...rest,
@@ -268,6 +180,11 @@ export async function sanitizeQuestions(
       };
     }),
   );
+
+  return {
+    questions: sanitizedQuestions,
+    questionIdMap,
+  };
 }
 
 /**
@@ -519,6 +436,9 @@ export async function deleteQuiz(id: string, userId: string): Promise<void> {
   });
 }
 
+/**
+ * Reverts a soft-delete on a quiz (sets deleted_at to null).
+ */
 export async function undeleteQuiz(id: string, userId: string): Promise<void> {
   await db.transaction("rw", db.quizzes, async () => {
     const existing = await db.quizzes.get(id);
@@ -536,62 +456,6 @@ export async function undeleteQuiz(id: string, userId: string): Promise<void> {
       user_id: userId,
     });
   });
-}
-
-/**
- * Aggregates quiz statistics from associated results.
- */
-export async function getQuizStats(
-  quizId: string,
-  userId: string,
-): Promise<QuizStats> {
-  const attempts = await db.results
-    .where("[user_id+quiz_id]")
-    .equals([userId, quizId])
-    .sortBy("timestamp");
-  const attemptCount = attempts.length;
-
-  if (attemptCount === 0) {
-    return {
-      quizId,
-      attemptCount: 0,
-      lastAttemptScore: null,
-      lastAttemptDate: null,
-      averageScore: null,
-      bestScore: null,
-      totalStudyTime: 0,
-    };
-  }
-
-  const lastAttempt = attempts[attemptCount - 1];
-  if (!lastAttempt) {
-    return {
-      quizId,
-      attemptCount,
-      lastAttemptScore: null,
-      lastAttemptDate: null,
-      averageScore: null,
-      bestScore: null,
-      totalStudyTime: 0,
-    };
-  }
-  const totalScore = attempts.reduce((sum, attempt) => sum + attempt.score, 0);
-  const bestScore = Math.max(...attempts.map((attempt) => attempt.score));
-  const averageScore = calculatePercentage(totalScore, attemptCount * 100);
-  const totalStudyTime = attempts.reduce(
-    (sum, attempt) => sum + attempt.time_taken_seconds,
-    0,
-  );
-
-  return {
-    quizId,
-    attemptCount,
-    lastAttemptScore: lastAttempt.score,
-    lastAttemptDate: lastAttempt.timestamp,
-    averageScore,
-    bestScore,
-    totalStudyTime,
-  };
 }
 
 /**

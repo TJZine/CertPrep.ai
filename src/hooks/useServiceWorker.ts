@@ -122,5 +122,3 @@ export function useServiceWorker(): UseServiceWorkerReturn {
 
   return { ...state, update };
 }
-
-export default useServiceWorker;

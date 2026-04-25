@@ -101,86 +101,72 @@ Future optimizations to consider if slow sync issues persist after the cursor fi
 
 #### Current State
 
-`playwright.config.ts` and `global-setup.ts` include `--disable-web-security` to bypass CSP nonce validation failures in headless Chrome during E2E tests.
+`playwright.config.ts` and `global-setup.ts` currently launch Chromium with `--disable-web-security`.
+
+> [!WARNING]
+> Historical analysis below was refreshed on 2026-04-15 after the CSP implementation changed. Do not reuse older assumptions that production `style-src` currently depends on nonces; the current repo truth is `src/lib/security.ts`.
 
 #### Root Cause Analysis
 
 1. **CSP Implementation** (`src/proxy.ts`):
    - Generates per-request nonce via `crypto.randomUUID()`
    - Passes nonce to layout via `x-nonce` header
-   - In **production**: `style-src 'self' 'nonce-${nonce}'` (strict)
-   - In **development**: `style-src 'self' 'unsafe-inline' 'nonce-${nonce}'` (relaxed)
+   - Uses script nonces plus a hashed service-worker bootstrap script
+   - Currently allows `'unsafe-inline'` for `style-src` in both development and production via `src/lib/security.ts`
 
 2. **Why Tests Fail Without the Flag**:
-   - Playwright runs `npm run dev` which sets `NODE_ENV=development`
-   - Development mode already includes `'unsafe-inline'`, so CSP _should_ be relaxed
-   - However, **Turbopack/HMR** injects style chunks that don't propagate the nonce
-   - The `x-nonce` header flows correctly, but injected HMR styles lack `nonce` attributes
-   - Headless Chrome enforces CSP strictly, causing silent style failures
+   - The exact failure mode is not yet revalidated against the current CSP implementation
+   - Older notes blamed nonce propagation and Turbopack/HMR style injection, but that theory no longer matches the current `style-src` policy
+   - The remaining possibilities include another browser-security interaction, a stale workaround that is no longer necessary, or a different runtime bootstrap issue during Playwright startup
+   - This item should be re-investigated from current code and current Playwright behavior before changing CSP policy
 
 3. **Why This Doesn't Affect Production**:
-   - Production builds have static chunks with nonces baked in during SSR
-   - No HMR/Turbopack runtime injection
-   - Real browsers receive consistent nonce across CSP header and inline elements
+   - The flag is isolated to local Playwright/browser launch configuration
+   - Repo-visible production CSP policy lives in `src/lib/security.ts` and `src/proxy.ts`
+   - Removing the flag safely should not require redefining production CSP unless fresh evidence shows a real boundary bug
 
 #### Why Common Suggestions Don't Work
 
-| Suggestion                             | Issue                                                                                                      |
-| -------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| "Use `extraHTTPHeaders` to inject CSP" | Can't inject HTML `nonce` attributes via headers—nonce must be in both CSP header AND every inline element |
-| "Fix dev server nonce propagation"     | Already correct. The issue is Turbopack, not the middleware.                                               |
-| "Create test-specific middleware"      | Would duplicate `proxy.ts` and still wouldn't fix Turbopack's style injection                              |
+| Suggestion                                     | Issue                                                                                   |
+| ---------------------------------------------- | --------------------------------------------------------------------------------------- |
+| "Treat this as a pure CSP nonce problem"       | Current repo code no longer supports that assumption; verify the actual failure first.  |
+| "Tighten production CSP while debugging tests" | Risks turning test-infra cleanup into a real security-boundary change without evidence. |
+| "Create test-specific middleware"              | Would duplicate `src/proxy.ts` and blur the runtime authority surface.                  |
 
 #### Proposed Fix (When Prioritized)
 
 ```typescript
-// 1. Add NODE_ENV=test to playwright webServer config
-// playwright.config.ts
-webServer: {
-  command: "NODE_ENV=test npm run dev",
-  // ...
-}
-
-// 2. In proxy.ts, treat 'test' like production (strict CSP)
-const isDev = process.env.NODE_ENV === "development";
-const isTest = process.env.NODE_ENV === "test";
-const useStrictCsp = !isDev || isTest;
-
-const styleSrc = useStrictCsp
-  ? `'self' 'nonce-${nonce}' https://hcaptcha.com https://*.hcaptcha.com`
-  : `'self' 'unsafe-inline' 'nonce-${nonce}' https://hcaptcha.com https://*.hcaptcha.com`;
-
-// 3. Audit all components for inline styles without nonce
-// 4. Either:
-//    a) Disable Turbopack for test runs: command: "NODE_ENV=test npm run dev -- --webpack"
-//    b) Wait for Turbopack to support nonce propagation in HMR styles
-
-// 5. Remove --disable-web-security from:
-//    - playwright.config.ts (line ~51)
-//    - tests/e2e/global-setup.ts (line ~116)
+// 1. Reproduce the failure on current mainline code without changing CSP policy.
+// 2. Remove `--disable-web-security` from Playwright config and global setup in a branch.
+// 3. Run `npm run test:e2e` with the required local secrets.
+// 4. If failures appear, capture the exact browser/CSP/runtime error and only then decide whether:
+//    a) the workaround is stale and can be deleted,
+//    b) Playwright/dev-server bootstrapping needs adjustment, or
+//    c) a real CSP/runtime boundary bug exists and must be treated as Tier 2/Tier 3 work.
+// 5. If CSP policy truly changes, update docs/ARCHITECTURE.md in the same pass.
 ```
 
 #### Acceptance Criteria
 
 - [ ] E2E tests pass without `--disable-web-security`
-- [ ] CSP violations are caught in Playwright (test fails if inline style lacks nonce)
-- [ ] No regression in dev mode DX (HMR still works)
-- [ ] Document any Turbopack limitations in `docs/E2E_DEBUGGING_REFERENCE.md`
+- [ ] Any remaining failures are explained by current evidence, not stale nonce assumptions
+- [ ] No production CSP policy change is made without explicit justification and matching doc updates
+- [ ] Document the confirmed root cause or the removal of the stale workaround in `docs/E2E_DEBUGGING_REFERENCE.md`
 
 #### Decision
 
 **Deferred** - Current workaround (flag + documentation) is acceptable because:
 
-1. Production CSP is enforced and validated by real browsers + Sentry
-2. The security flag only affects test infrastructure, not production
-3. Turbopack is actively developing; this may be fixed upstream
-4. Effort-to-value ratio is low for current project scale
+1. The flag is limited to the Playwright/browser test harness, not repo-visible production behavior, but it weakens E2E coverage as evidence for CSP and related browser-security behavior while it remains in place
+2. The previous root-cause theory drifted from current code and needs a fresh investigation before product/security changes
+3. Effort-to-value ratio is still low until the test harness becomes a higher-priority trust boundary
+4. This work should follow the runbook's Playwright/E2E verification path, including `npm run test:e2e` when secrets are available
 
 #### Re-evaluation Triggers
 
 Revisit this issue when any of the following occur:
 
-- [ ] Turbopack releases HMR style nonce propagation support
+- [ ] A fresh repro confirms the current root cause
 - [ ] Next.js 17+ ships with improved CSP handling in dev mode
 - [ ] Security audit requires CSP validation in E2E tests
 - [ ] Test suite grows beyond 50 E2E tests (higher confidence needed)

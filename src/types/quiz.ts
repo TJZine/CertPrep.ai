@@ -102,3 +102,23 @@ export interface QuizSessionState {
   isComplete: boolean;
   isSubmitting?: boolean;
 }
+
+/**
+ * Configuration for a quiz session, specifying the mode and any aggregated metadata.
+ */
+export interface QuizSessionConfig {
+  /** The primary quiz ID or root ID for the session. */
+  quizId: string;
+  /** When true, a smart round is active. */
+  isSmartRound?: boolean;
+  /** When true, this is an SRS review session. */
+  isSRSReview?: boolean;
+  /** When true, this is a topic-based study session. */
+  isTopicStudy?: boolean;
+  /** When true, this is an interleaved practice session. */
+  isInterleaved?: boolean;
+  /** Optional metadata mapping question IDs to source quiz IDs (for interleaved/SRS). */
+  sourceMap?: Map<string, string> | null;
+  /** Optional key mappings for answer translation in remixed sessions. */
+  keyMappings?: Map<string, Record<string, string>> | null;
+}

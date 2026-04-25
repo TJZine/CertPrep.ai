@@ -9,21 +9,21 @@ import { Button } from "@/components/ui/Button";
 import { useInitializeDatabase } from "@/hooks/useDatabase";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
-import { db } from "@/db/index";
+import { hydrateAggregatedQuiz } from "@/db/aggregatedQuiz";
 import { getDueQuestions } from "@/db/srs";
 import {
     clearFlashcardSession,
     getFlashcardSession,
 } from "@/lib/flashcardStorage";
 import { logger } from "@/lib/logger";
-import type { Quiz, Question } from "@/types/quiz";
+import type { Quiz } from "@/types/quiz";
 
 /**
  * Aggregated flashcard review page for due SRS questions across all quizzes.
  * Route: /flashcards/review
  *
  * Can be accessed either:
- * 1. From FlashcardPracticeCard with pre-populated session
+ * 1. From another flow with a pre-populated session
  * 2. Directly, which will load all due questions
  */
 export default function FlashcardReviewPage(): React.ReactElement {
@@ -72,31 +72,13 @@ export default function FlashcardReviewPage(): React.ReactElement {
                     questionIds = dueStates.map((s) => s.question_id);
                 }
 
-                // Load all quizzes to find questions
-                const allQuizzes = await db.quizzes.toArray();
+                const hydrated = await hydrateAggregatedQuiz(
+                    questionIds,
+                    effectiveUserId,
+                    "Flashcard Review",
+                );
 
-                // Build a map of question ID -> question
-                // Use Set for O(1) lookup instead of O(n) .includes()
-                const questionIdSet = new Set(questionIds);
-                const questionMap = new Map<string, { question: Question; quiz: Quiz }>();
-                for (const quiz of allQuizzes) {
-                    for (const question of quiz.questions) {
-                        if (questionIdSet.has(question.id)) {
-                            questionMap.set(question.id, { question, quiz });
-                        }
-                    }
-                }
-
-                // Order questions by the stored/due order
-                const orderedQuestions: Question[] = [];
-                for (const id of questionIds) {
-                    const found = questionMap.get(id);
-                    if (found) {
-                        orderedQuestions.push(found.question);
-                    }
-                }
-
-                if (orderedQuestions.length === 0) {
+                if (hydrated.syntheticQuiz.questions.length === 0) {
                     if (isMounted) {
                         setLoadError("Could not find the requested questions. They may have been deleted.");
                         setIsLoading(false);
@@ -104,20 +86,8 @@ export default function FlashcardReviewPage(): React.ReactElement {
                     return;
                 }
 
-                // Create a synthetic "aggregated" quiz
-                const syntheticQuiz: Quiz = {
-                    id: "flashcard-review-aggregate",
-                    title: "Flashcard Review",
-                    description: "Spaced repetition flashcard review session",
-                    questions: orderedQuestions,
-                    tags: [],
-                    created_at: Date.now(),
-                    user_id: effectiveUserId,
-                    version: 1,
-                };
-
                 if (isMounted) {
-                    setAggregatedQuiz(syntheticQuiz);
+                    setAggregatedQuiz(hydrated.syntheticQuiz);
                     setIsLoading(false);
                 }
             } catch (err) {

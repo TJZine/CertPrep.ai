@@ -4,8 +4,8 @@ import * as React from "react";
 import { AlertCircle, ChevronDown, ChevronUp, Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
-import { cn } from "@/lib/utils";
-import { sanitizeHTML } from "@/lib/sanitize";
+import { cn } from "@/lib/utils/cn";
+import { sanitizeHTML } from "@/lib/utils/sanitize";
 
 interface ExplanationPanelProps {
   explanation: string;

@@ -1,36 +1,42 @@
-# Technical Stack
+# Review Context
 
-| Component    | Detected                                                        | Confidence |
-| ------------ | --------------------------------------------------------------- | ---------- |
-| Language     | TypeScript (Strict)                                             | High       |
-| Framework    | Next.js 16 (App Router) + React 19                              | High       |
-| Database     | Dexie.js (IndexedDB local) + Supabase (Remote PostgreSQL)       | High       |
-| Architecture | Offline-First Sync Architecture (Local DB primary write source) | High       |
-| Testing      | Vitest (Unit/Integration) + Playwright (E2E)                    | High       |
+> [!WARNING]
+> Reference-only reviewer context. This file may be stale and must not be treated as an authority surface.
+>
+> Authoritative sources:
+>
+> - [AGENTS.md](./AGENTS.md)
+> - [docs/ENGINEERING_RUNBOOK.md](./docs/ENGINEERING_RUNBOOK.md)
+> - [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)
+> - Current implementation under `src/`
+> - Active CI config under `.github/workflows/`
 
-# Inferred Business Context
+## Purpose
 
-- **Domain**: EdTech / Certification Preparation (CertPrep.ai)
-- **Data Sensitivity**: Medium (User authentication, learning progress, subscription/entitlement data typical of such platforms)
-- **Criticality**: Customer-Facing Application
-- **Compliance Considerations**: Potential GDPR/CCPA considerations due to user account data. Sentry is used for error tracking, which requires PII scrubbing.
+Use this file as a lightweight reminder of repo-specific review pressure points.
+Do not use it to infer business, compliance, team, or operational claims that are not directly established elsewhere.
 
-# Code Quality Baseline
+## Stable Review Heuristics
 
-- **Maturity**: Production-ready. Includes complete E2E suites, CI tools (Husky, lint-staged), error tracking (Sentry), and analytics (Vercel Speed Insights).
-- **Consistency**: High. Enforced by ESLint, Prettier, and strict project constraints (e.g., specific filename `src/proxy.ts` for middleware).
-- **Test Coverage**: High. Both unit testing (Vitest + Testing Library) and E2E testing (Playwright) are actively maintained.
-- **Documentation**: Structured and strict. Project relies on explicit architectural rules (e.g., `src/db/**` and `src/lib/sync/**` are critical).
-- **Security Posture**: Strong. Specific sanitization pipelines (`src/lib/sanitize` using `isomorphic-dompurify`) are mandated to prevent XSS. Secrets are checked via CI scripts (`scripts/check-secrets.sh`).
+- Offline-first persistence is a real architectural constraint. Review changes to `src/db/*`, `src/lib/sync/*`, providers, and session flows carefully for ownership drift.
+- `src/proxy.ts` is a boundary file. Route-protection, CSP, and auth redirect changes should be treated as high-risk.
+- Supabase data writes for quiz, result, and SRS domains should remain concentrated in the sync layer rather than growing new ad hoc UI write paths.
+- Schema truth is currently split across `src/lib/supabase/schema.sql`, `supabase/migrations/*`, and `src/types/database.types.ts`. Reviewers should treat schema/bootstrap disagreements as real defects, not harmless doc drift.
+- Large hotspot files deserve extra scrutiny for scope creep, hidden policy, and duplicated logic.
+- Stale docs should not be allowed to look authoritative. When reviewing doc changes, prefer one clear authority and obvious reference-only demotion for secondary docs.
 
-# Team & Project Signals
+## Current Hotspots To Review Carefully
 
-- **Estimated Team Experience**: Senior/Advanced. The use of offline-first sync models, strict typing, and comprehensive testing indicates a mature engineering culture.
-- **Development Velocity Pressure**: Balanced. The project explicitly prefers "incremental, low-risk changes with clear validation steps" over rushed features.
-- **Technical Debt Level**: Low/Managed. Refactoring and systematic debugging workflows are formalized.
+- `src/components/analytics/TopicHeatmap.tsx`
+- `src/lib/dataExport.ts`
+- `src/stores/quizSessionStore.ts`
+- `src/db/results.ts`
+- `src/lib/sync/quizSyncManager.ts`
+- `src/components/providers/SyncProvider.tsx`
 
-# Context Adjustments Applied
+## Review Questions
 
-- **Offline-First Constraint**: Any suggestion to write directly to Supabase from the UI is an automatic 10/10 Critical failure and must be blocked. All data flow must be Component -> Dexie -> Sync Worker -> Supabase.
-- **Sanitization Strictness**: Suggestions involving `dangerouslySetInnerHTML` without going through the central `sanitizeHTML` utility will be flagged as high-risk security issues.
-- **Middleware Naming**: Any linter or reviewer suggestion to rename `src/proxy.ts` to `middleware.ts` will be flagged as an invalid (false positive) suggestion per project rules.
+- Does this change create a second authority surface for workflow, architecture, or schema truth?
+- Does this change move policy into UI code when a boundary owner already exists?
+- Does this change weaken verification guidance or overstate certainty relative to repo evidence?
+- Does this change increase coupling in a known hotspot without paying down any existing complexity?

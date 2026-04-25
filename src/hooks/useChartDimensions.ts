@@ -88,5 +88,3 @@ export function useChartDimensions(): UseChartDimensionsResult {
         isReady,
     };
 }
-
-export default useChartDimensions;

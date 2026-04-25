@@ -14,7 +14,7 @@ import {
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import { TrendingUp, TrendingDown, Target } from "lucide-react";
 import { useChartColors } from "@/hooks/useChartColors";
 import { useChartDimensions } from "@/hooks/useChartDimensions";
@@ -54,9 +54,7 @@ function TopicRadarTooltip({
   const data = currentPayload.payload as CategoryTooltipData;
   return (
     <div className="rounded-lg border border-border bg-popover p-3 shadow-lg">
-      <p className="font-semibold text-popover-foreground">
-        {data.fullName}
-      </p>
+      <p className="font-semibold text-popover-foreground">{data.fullName}</p>
       <p className="text-sm text-muted-foreground">
         Score: <span className="font-semibold">{data.score}%</span>
       </p>
@@ -80,7 +78,12 @@ export function TopicRadar({
 
   const chartData = React.useMemo(() => {
     return categories
-      .filter((cat) => cat.category && typeof cat.score === "number" && !Number.isNaN(cat.score))
+      .filter(
+        (cat) =>
+          cat.category &&
+          typeof cat.score === "number" &&
+          !Number.isNaN(cat.score),
+      )
       .map((cat) => ({
         subject:
           cat.category.length > 15
@@ -220,9 +223,7 @@ export function TopicRadar({
             <p className="text-2xl font-bold text-foreground">
               {averageScore}%
             </p>
-            <p className="text-xs text-muted-foreground">
-              Average
-            </p>
+            <p className="text-xs text-muted-foreground">Average</p>
           </div>
 
           {strongest && (
@@ -320,7 +321,7 @@ export function CategoryBreakdown({
               disabled={!onCategoryClick}
               className={cn(
                 "w-full text-left rounded-lg p-2 -m-2 transition-colors",
-                onCategoryClick && "hover:bg-accent cursor-pointer"
+                onCategoryClick && "hover:bg-accent cursor-pointer",
               )}
             >
               <div className="mb-1 flex items-center justify-between">
@@ -332,7 +333,10 @@ export function CategoryBreakdown({
               <div className="flex items-center gap-2">
                 <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
                   <div
-                    className={cn("h-full transition-all", getScoreColor(cat.score))}
+                    className={cn(
+                      "h-full transition-all",
+                      getScoreColor(cat.score),
+                    )}
                     style={{ width: `${Math.round(cat.score)}%` }}
                   />
                 </div>
@@ -347,5 +351,3 @@ export function CategoryBreakdown({
     </Card>
   );
 }
-
-export default TopicRadar;

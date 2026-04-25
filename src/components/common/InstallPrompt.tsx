@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Download, X, Smartphone, Monitor } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;

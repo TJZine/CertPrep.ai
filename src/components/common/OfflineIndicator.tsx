@@ -3,7 +3,7 @@
 import * as React from "react";
 import { WifiOff, Wifi, X } from "lucide-react";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 
 /**
  * Shows a banner when the user goes offline.
@@ -15,6 +15,14 @@ export function OfflineIndicator(): React.ReactElement | null {
   const [dismissed, setDismissed] = React.useState(false);
   const [showReconnected, setShowReconnected] = React.useState(false);
 
+  const hideReconnected = React.useCallback((): void => {
+    setShowReconnected(false);
+  }, []);
+
+  const handleDismiss = React.useCallback((): void => {
+    setDismissed(true);
+  }, []);
+
   React.useEffect(() => {
     setMounted(true);
   }, []);
@@ -22,15 +30,13 @@ export function OfflineIndicator(): React.ReactElement | null {
   React.useEffect((): void | (() => void) => {
     if (isOnline && wasOffline && !dismissed) {
       setShowReconnected(true);
-      const timer = window.setTimeout(() => {
-        setShowReconnected(false);
-      }, 3000);
+      const timer = window.setTimeout(hideReconnected, 3000);
       return () => {
         window.clearTimeout(timer);
       };
     }
     return undefined;
-  }, [isOnline, wasOffline, dismissed]);
+  }, [dismissed, hideReconnected, isOnline, wasOffline]);
 
   React.useEffect((): void => {
     if (!isOnline) {
@@ -102,7 +108,7 @@ export function OfflineIndicator(): React.ReactElement | null {
         {!isOnline && (
           <button
             type="button"
-            onClick={() => setDismissed(true)}
+            onClick={handleDismiss}
             className="flex-shrink-0 rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
             aria-label="Dismiss notification"
           >

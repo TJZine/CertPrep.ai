@@ -1,3 +1,8 @@
+-- LEGACY / REFERENCE-ONLY
+-- This historical companion migration predates the repo-root JSONB/text SRS batch-upsert path.
+-- Do not use this file as current bootstrap authority unless a maintainer explicitly revives
+-- `src/lib/supabase/migrations/*`.
+
 -- Migration: SRS LWW Batch Upsert
 -- Purpose: Server-side Last-Write-Wins conflict resolution for SRS sync
 -- Date: 2025-12-13

@@ -4,7 +4,7 @@ import { logger } from "@/lib/logger";
 import { buildCSPHeader } from "@/lib/security";
 
 const PROTECTED_ROUTES = ["/settings"];
-// Retained to prevent open redirects; server-side redirect logic (lines 147+) temporarily disabled
+// Retained for protected-route `next` validation; client auth forms own auth-page redirects.
 const AUTH_ROUTES = ["/login", "/signup", "/forgot-password"];
 
 export async function proxy(request: NextRequest): Promise<NextResponse> {
@@ -102,7 +102,6 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
     request.nextUrl.pathname.startsWith(route),
   );
 
-
   // Unauthenticated users trying to access protected routes -> Redirect to Login
   if (isProtectedRoute && !user) {
     const redirectUrl = new URL("/login", request.url);
@@ -128,26 +127,6 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
 
     return redirectResponse;
   }
-
-  // Authenticated users trying to access auth routes -> Redirect to Dashboard
-  // TODO: Re-enable server-side redirects once we verify robust client/server session sync.
-  // Current Issue: Server cookie may be valid while client state is stale, causing infinite loops.
-  // Requirement for Re-enabling: Ensure client's session state (AuthProvider) matches server cookie < 500ms.
-  // Tracked in Issue: #123 (Server-Side Redirect Optimization)
-  /*
-  if (isAuthRoute && user) {
-    const redirectUrl = new URL("/", request.url);
-    const redirectResponse = NextResponse.redirect(redirectUrl);
-
-    // Copy cookies from the main response to the redirect response
-    const cookies = response.cookies.getAll();
-    cookies.forEach((cookie) => {
-      redirectResponse.cookies.set(cookie);
-    });
-
-    return redirectResponse;
-  }
-  */
 
   return response;
 }

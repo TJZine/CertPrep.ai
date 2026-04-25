@@ -5,10 +5,13 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { db, initializeDatabase } from "@/db";
 import { NIL_UUID } from "@/lib/constants";
 import type { Quiz } from "@/types/quiz";
-import type { Result } from "@/types/result";
+import {
+  type Result,
+  isAggregatedSessionType,
+} from "@/types/result";
 import type { QuizStats } from "@/db/quizzes";
 import { getQuizStats, isSRSQuiz, sortQuizzesByNewest } from "@/db/quizzes";
-import { hydrateAggregatedQuiz } from "@/db/aggregatedQuiz";
+import { resolveAggregatedResultReadModel } from "@/db/aggregatedQuiz";
 
 interface InitializationState {
   isInitialized: boolean;
@@ -50,6 +53,7 @@ interface UseQuizResultsResponse {
 interface UseResultWithHydratedQuizResponse {
   result: Result | null | undefined;
   quiz: Quiz | undefined;
+  sourceMap: Record<string, string> | undefined;
   isLoading: boolean;
   isHydrating: boolean;
 }
@@ -269,6 +273,7 @@ export function useResultWithHydratedQuiz(
 ): UseResultWithHydratedQuizResponse {
   const { result, isLoading: resultLoading } = useResult(id, userId);
   const [hydratedQuiz, setHydratedQuiz] = useState<Quiz | undefined>(undefined);
+  const [resolvedSourceMap, setResolvedSourceMap] = useState<Record<string, string> | undefined>(undefined);
   const [isHydrating, setIsHydrating] = useState(false);
 
   // We use live query for the base quiz to keep it reactive to title changes etc.
@@ -282,64 +287,73 @@ export function useResultWithHydratedQuiz(
     let isMounted = true;
 
     const hydrate = async (): Promise<void> => {
-      // Wait for all data to be ready
-      if (!result || !baseQuiz || !userId) {
-        if (isMounted) setHydratedQuiz(undefined);
-        return;
-      }
-
-      // 1. Standard Quiz: It has questions, so just use it.
-      // We check for questions length > 0 to differentiate from empty SRS quizzes.
-      if (!isSRSQuiz(baseQuiz) && baseQuiz.questions.length > 0) {
+      if (!result || !userId) {
         if (isMounted) {
-          setHydratedQuiz(baseQuiz);
+          setHydratedQuiz(undefined);
+          setResolvedSourceMap(undefined);
           setIsHydrating(false);
         }
         return;
       }
 
-      // 2. Aggregated Quiz (SRS/Topic Study):
-      // The base quiz is empty (questions: []). We must hydrate questions from IDs.
-      if (result.question_ids && result.question_ids.length > 0) {
+      const isLegacyAggregatedResult =
+        !!result.question_ids?.length && isSRSQuiz(result.quiz_id, userId);
+      const isAggregatedResult =
+        isAggregatedSessionType(result.session_type) || isLegacyAggregatedResult;
+
+      // Aggregated results can reconstruct a read-model directly from result metadata
+      // even if the container/base quiz record is no longer present.
+      if (isAggregatedResult && result.question_ids && result.question_ids.length > 0) {
         if (isMounted) setIsHydrating(true);
         try {
-          // Determine a display title for the synthetic quiz
-          let title = baseQuiz.title;
-          if (isSRSQuiz(baseQuiz) && result.category_breakdown) {
-            const categories = Object.keys(result.category_breakdown);
-            if (categories.length === 1) {
-              title = `Topic Study: ${categories[0]}`;
-            } else if (categories.length > 1) {
-              title = "Study Session";
-            }
-          }
-
-          const { syntheticQuiz } = await hydrateAggregatedQuiz(
-            result.question_ids,
+          const readModel = await resolveAggregatedResultReadModel(
+            result,
             userId,
-            title,
+            baseQuiz,
           );
 
           if (isMounted) {
-            setHydratedQuiz(syntheticQuiz);
+            setHydratedQuiz(readModel.quiz);
+            setResolvedSourceMap(readModel.sourceMap);
           }
         } catch (err) {
           console.error("Failed to hydrate quiz", err);
-          // Fallback to base quiz (empty) so UI can at least show something
           if (isMounted) {
             setHydratedQuiz(baseQuiz);
+            setResolvedSourceMap(result.source_map);
           }
         } finally {
           if (isMounted) {
             setIsHydrating(false);
           }
         }
-      } else {
-        // Fallback: base quiz is empty and we have no question_ids to hydrate from.
+        return;
+      }
+
+      if (!baseQuiz) {
         if (isMounted) {
-          setHydratedQuiz(baseQuiz);
+          setHydratedQuiz(undefined);
+          setResolvedSourceMap(result.source_map);
           setIsHydrating(false);
         }
+        return;
+      }
+
+      // Standard quiz: use the persisted quiz directly when it has questions.
+      if (baseQuiz.questions.length > 0) {
+        if (isMounted) {
+          setHydratedQuiz(baseQuiz);
+          setResolvedSourceMap(result.source_map);
+          setIsHydrating(false);
+        }
+        return;
+      }
+
+      // Fallback: base quiz is empty and we have no question_ids to hydrate from.
+      if (isMounted) {
+        setHydratedQuiz(baseQuiz);
+        setResolvedSourceMap(result.source_map);
+        setIsHydrating(false);
       }
     };
 
@@ -356,6 +370,7 @@ export function useResultWithHydratedQuiz(
   return {
     result,
     quiz: hydratedQuiz,
+    sourceMap: resolvedSourceMap,
     isLoading,
     isHydrating,
   };

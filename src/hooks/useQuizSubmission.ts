@@ -3,14 +3,14 @@ import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/Toast";
 import { createResult } from "@/db/results";
 import { initializeSRSForResult } from "@/db/srs";
-import { db } from "@/db/index";
+import { db } from "@/db";
 import { useSync } from "@/hooks/useSync";
 import { useQuizSessionStore } from "@/stores/quizSessionStore";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
-import { clearSmartRoundState } from "@/lib/smartRoundStorage";
+import { clearSmartRoundState } from "@/lib/storage/smartRoundStorage";
 import { logger } from "@/lib/logger";
-import { buildAnswersRecord } from "@/lib/quiz-remix";
+import { buildAnswersRecord } from "@/lib/quiz/quizRemix";
 
 interface UseQuizSubmissionProps {
   quizId: string;

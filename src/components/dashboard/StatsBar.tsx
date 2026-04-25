@@ -3,7 +3,7 @@
 import * as React from "react";
 import { BookOpen, CheckCircle, BarChart3, Clock } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/Card";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 
 export interface StatsBarProps {
   totalQuizzes: number;

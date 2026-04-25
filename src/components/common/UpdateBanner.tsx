@@ -4,7 +4,7 @@ import * as React from "react";
 import { RefreshCw, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useServiceWorker } from "@/hooks/useServiceWorker";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 
 /**
  * Shows a banner when a new version of the app is available.

@@ -2,36 +2,30 @@
 
 import { db } from "@/db";
 import { logger } from "@/lib/logger";
-import { getSyncCursor, setSyncCursor } from "@/db/syncState";
+import { readAndRepairResultsSyncCursor, setSyncCursor } from "@/db/syncState";
 import { createClient } from "@/lib/supabase/client";
 import { logNetworkAwareSlowSync } from "@/lib/sync/syncLogging";
 import { safeMark, safeMeasure } from "@/lib/perfMarks";
-import { QUIZ_MODES, type QuizMode } from "@/types/quiz";
-import type { Result, SessionType } from "@/types/result";
+import type { Result } from "@/types/result";
+import {
+  PERSISTED_RESULT_MODES,
+  parseSessionType,
+} from "@/types/result";
 import { z } from "zod";
 import type { Database } from "@/types/database.types";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import { createSupabaseClientGetter, toErrorMessage, toSafeCursorTimestamp } from "./shared";
 
-let supabaseInstance: SupabaseClient<Database> | undefined;
-
-function getSupabaseClient(): SupabaseClient<Database> | undefined {
-  if (!supabaseInstance) {
-    supabaseInstance = createClient();
-  }
-  return supabaseInstance;
-}
+const getSupabaseClient = createSupabaseClientGetter(() => createClient());
 const BATCH_SIZE = 50;
 const TIME_BUDGET_MS = 5000;
 
 // Schema for validating remote result data structure
 // Using .passthrough() to preserve unknown fields from newer schema versions
-const RemoteResultSchema = z.object({
+export const RemoteResultSchema = z.object({
   id: z.string(),
   quiz_id: z.string(),
   timestamp: z.coerce.number(), // Coerce string (from Postgres bigint) to number
-  // NOTE: "flashcard" is valid in QuizMode but effectively runtime-only;
-  // flashcard sessions do not produce Result records, so we don't expect it here.
-  mode: z.enum(QUIZ_MODES).transform((val) => val as QuizMode),
+  mode: z.enum(PERSISTED_RESULT_MODES),
   score: z.coerce.number().int().min(0),
   time_taken_seconds: z.coerce.number().min(0),
   answers: z.record(z.string(), z.string()),
@@ -41,7 +35,7 @@ const RemoteResultSchema = z.object({
   computed_category_scores: z.record(z.string(), z.object({ correct: z.number(), total: z.number() })).nullable().optional(),
   difficulty_ratings: z.record(z.string(), z.union([z.literal(1), z.literal(2), z.literal(3)])).nullable().optional(),
   time_per_question: z.record(z.string(), z.number()).nullable().optional(),
-  session_type: z.string().nullable().optional().transform(v => v as SessionType | undefined),
+  session_type: z.string().nullable().optional().transform(parseSessionType),
   source_map: z.record(z.string(), z.string()).nullable().optional(),
   created_at: z.string(),
   updated_at: z.string(),
@@ -60,66 +54,29 @@ export type SyncResultsOutcome = {
   shouldRetry?: boolean;
 };
 
-function toErrorMessage(error: unknown): string {
-  if (error instanceof Error) return error.message;
-  if (typeof error === "string") return error;
+const skippedRetryOutcome = (error?: string): SyncResultsOutcome => ({
+  incomplete: false,
+  status: "skipped",
+  error,
+  shouldRetry: true,
+});
 
-  // Handle Supabase PostgrestError objects (properties may not serialize with JSON.stringify)
-  if (typeof error === "object" && error !== null) {
-    const e = error as Record<string, unknown>;
-    // PostgrestError has: code, message, details, hint
-    if (e.message || e.code) {
-      const parts: string[] = [];
-      if (e.code) parts.push(`[${e.code}]`);
-      if (e.message) parts.push(String(e.message));
-      if (e.details) parts.push(`Details: ${e.details}`);
-      if (e.hint) parts.push(`Hint: ${e.hint}`);
-      if (parts.length > 0) return parts.join(" ");
-    }
-  }
-
-  try {
-    const serialized = JSON.stringify(error);
-    // If JSON.stringify returns "{}", the object has no enumerable properties
-    if (serialized === "{}") return "Unknown error (empty error object)";
-    return serialized;
-  } catch {
-    return "Unknown error";
-  }
-}
-
-function toSafeCursorTimestamp(
-  candidate: unknown,
-  fallback: string,
-  context: Record<string, unknown>,
-): string {
-  if (typeof candidate === "string" && !Number.isNaN(Date.parse(candidate))) {
-    return new Date(candidate).toISOString();
-  }
-
-  if (!Number.isNaN(Date.parse(fallback))) {
-    logger.warn("Invalid cursor timestamp encountered, using fallback", {
-      ...context,
-      fallback,
-    });
-    return new Date(fallback).toISOString();
-  }
-
-  logger.error("Invalid cursor timestamp and fallback; defaulting to epoch", {
-    ...context,
-  });
-  return "1970-01-01T00:00:00.000Z";
-}
+const failedRetryOutcome = (error: string): SyncResultsOutcome => ({
+  incomplete: true,
+  status: "failed",
+  error,
+  shouldRetry: true,
+});
 
 export async function syncResults(userId: string): Promise<SyncResultsOutcome> {
-  if (!userId) return { incomplete: false };
+  if (!userId) return { incomplete: false, status: "skipped" };
 
   // Optimization: Don't attempt sync if browser is offline
   if (typeof navigator !== "undefined") {
     logger.debug(`[Sync] Checking online status: ${navigator.onLine}`);
     if (!navigator.onLine) {
       logger.debug("Browser is offline, skipping sync");
-      return { incomplete: true, error: "Offline" };
+      return failedRetryOutcome("Offline");
     }
   }
 
@@ -133,15 +90,20 @@ export async function syncResults(userId: string): Promise<SyncResultsOutcome> {
           async (lock) => {
             if (!lock) {
               logger.debug("Sync already in progress in another tab, skipping");
-              return { incomplete: false, status: "skipped" };
+              return skippedRetryOutcome();
             }
-            return await performSync(userId);
+            try {
+              return await performSync(userId);
+            } catch (error) {
+              logger.error("Result sync failed while holding lock", toErrorMessage(error));
+              return failedRetryOutcome("Result sync failed while holding lock");
+            }
           },
-        )) || { incomplete: false }
+        )) || failedRetryOutcome("Results sync lock request returned no outcome")
       );
     } catch (error) {
       logger.error("Failed to acquire sync lock:", toErrorMessage(error));
-      return { incomplete: false };
+      return failedRetryOutcome("Failed to acquire sync lock request");
     }
   } else {
     // Fallback for environments without Web Locks
@@ -150,13 +112,16 @@ export async function syncResults(userId: string): Promise<SyncResultsOutcome> {
         logger.warn("Sync lock timed out, resetting...");
         syncState.isSyncing = false;
       } else {
-        return { incomplete: false };
+        return skippedRetryOutcome();
       }
     }
     syncState.isSyncing = true;
     syncState.lastSyncAttempt = Date.now();
     try {
       return await performSync(userId);
+    } catch (error) {
+      logger.error("Result sync failed (fallback path):", toErrorMessage(error));
+      return failedRetryOutcome("Result sync failed (fallback path)");
     } finally {
       syncState.isSyncing = false;
     }
@@ -289,7 +254,7 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
         break;
       }
 
-      const cursor = await getSyncCursor(userId);
+      const cursor = await readAndRepairResultsSyncCursor(userId);
       const timestamp = cursor.timestamp;
 
       // Keyset pagination: (updated_at > ts) OR (updated_at = ts AND id > last_id)
@@ -372,6 +337,7 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
           synced: 1,
         });
 
+        // Track the last valid record for cursor advancement
         lastRecordUpdatedAt = toSafeCursorTimestamp(r.updated_at, cursor.timestamp, {
           userId,
           resultId: r.id,

@@ -14,7 +14,7 @@ import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { Textarea } from "@/components/ui/Textarea";
 import { useToast } from "@/components/ui/Toast";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import { createQuiz, updateQuiz } from "@/db/quizzes";
 import { db } from "@/db";
 import {

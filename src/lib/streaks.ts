@@ -4,6 +4,50 @@ export interface StudyStreak {
   lastStudyDate: string | null;
 }
 
+const STUDY_STREAK_STORAGE_KEY = "study_streak";
+
+const DEFAULT_STUDY_STREAK: StudyStreak = {
+  currentStreak: 0,
+  longestStreak: 0,
+  lastStudyDate: null,
+};
+
+function createDefaultStudyStreak(): StudyStreak {
+  return { ...DEFAULT_STUDY_STREAK };
+}
+
+function isValidStudyStreak(value: unknown): value is StudyStreak {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    typeof (value as StudyStreak).currentStreak === "number" &&
+    Number.isInteger((value as StudyStreak).currentStreak) &&
+    (value as StudyStreak).currentStreak >= 0 &&
+    typeof (value as StudyStreak).longestStreak === "number" &&
+    Number.isInteger((value as StudyStreak).longestStreak) &&
+    (value as StudyStreak).longestStreak >= 0 &&
+    (value as StudyStreak).longestStreak >= (value as StudyStreak).currentStreak &&
+    (typeof (value as StudyStreak).lastStudyDate === "string" ||
+      (value as StudyStreak).lastStudyDate === null)
+  );
+}
+
+function persistStudyStreak(streak: StudyStreak): void {
+  localStorage.setItem(STUDY_STREAK_STORAGE_KEY, JSON.stringify(streak));
+}
+
+function repairStudyStreak(): StudyStreak {
+  const streak = createDefaultStudyStreak();
+
+  try {
+    persistStudyStreak(streak);
+  } catch {
+    // Return a safe fallback even if repair-write fails.
+  }
+
+  return streak;
+}
+
 function isLocalStorageAvailable(): boolean {
   if (typeof window === "undefined") return false;
   try {
@@ -18,17 +62,23 @@ function isLocalStorageAvailable(): boolean {
 
 export function getStudyStreak(): StudyStreak {
   if (!isLocalStorageAvailable()) {
-    return { currentStreak: 0, longestStreak: 0, lastStudyDate: null };
+    return createDefaultStudyStreak();
   }
 
-  const stored = localStorage.getItem("study_streak");
+  const stored = localStorage.getItem(STUDY_STREAK_STORAGE_KEY);
   if (!stored) {
-    return { currentStreak: 0, longestStreak: 0, lastStudyDate: null };
+    return createDefaultStudyStreak();
   }
   try {
-    return JSON.parse(stored) as StudyStreak;
+    const parsed = JSON.parse(stored);
+
+    if (!isValidStudyStreak(parsed)) {
+      return repairStudyStreak();
+    }
+
+    return parsed;
   } catch {
-    return { currentStreak: 0, longestStreak: 0, lastStudyDate: null };
+    return repairStudyStreak();
   }
 }
 
@@ -58,6 +108,6 @@ export function updateStudyStreak(): StudyStreak {
   streak.longestStreak = Math.max(streak.currentStreak, streak.longestStreak);
   streak.lastStudyDate = today;
 
-  localStorage.setItem("study_streak", JSON.stringify(streak));
+  persistStudyStreak(streak);
   return streak;
 }

@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { formatDateKey, formatMonthDayLabel } from "@/lib/date";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import type { Result } from "@/types/result";
 import type { Quiz, Question } from "@/types/quiz";
 import { getCachedHash } from "@/db/hashCache";
@@ -23,7 +23,7 @@ import {
     TOPIC_STUDY_CATEGORY_KEY,
     TOPIC_STUDY_MISSED_COUNT_KEY,
     TOPIC_STUDY_FLAGGED_COUNT_KEY,
-} from "@/lib/topicStudyStorage";
+} from "@/lib/storage/topicStudyStorage";
 import { logger } from "@/lib/logger";
 import { EmptyCardState } from "@/components/analytics/EmptyCardState";
 
@@ -154,7 +154,7 @@ function getTrendColor(trend: "up" | "down" | "stable" | null): string {
  */
 function HeatmapSkeleton({ className }: { className?: string }): React.ReactElement {
     return (
-        <Card className={cn("min-h-[400px] [contain:layout]", className)}>
+        <Card className={cn("min-h-[400px] [contain:layout]", className)} data-testid="heatmap-skeleton">
             <CardHeader>
                 <div className="h-6 w-48 animate-pulse rounded bg-muted" />
                 <div className="mt-1 h-4 w-72 animate-pulse rounded bg-muted" />

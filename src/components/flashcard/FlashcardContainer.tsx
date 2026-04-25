@@ -12,7 +12,7 @@ import { updateSRSState } from "@/db/srs";
 import { useResolveCorrectAnswers } from "@/hooks/useResolveCorrectAnswers";
 import { clearFlashcardSession } from "@/lib/flashcardStorage";
 import { logger } from "@/lib/logger";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import type { Quiz } from "@/types/quiz";
 
 export interface FlashcardContainerProps {

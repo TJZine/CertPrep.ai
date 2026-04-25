@@ -75,6 +75,9 @@ describe("data export/import", () => {
     answers: { q1: "A" },
     flagged_questions: [],
     category_breakdown: { Networking: 1 },
+    question_ids: ["q1"],
+    session_type: "topic_study",
+    source_map: { q1: sampleQuiz.id },
   };
 
   beforeEach(async () => {
@@ -106,6 +109,7 @@ describe("data export/import", () => {
 
     const restoredQuiz = await db.quizzes.get(sampleQuiz.id);
     const restoredResult = await db.results.get(sampleResult.id);
+    const sanitizedQuestionId = restoredQuiz?.questions[0]?.id;
 
     expect(quizzesImported).toBe(1);
     expect(resultsImported).toBe(1);
@@ -113,6 +117,156 @@ describe("data export/import", () => {
     expect(restoredQuiz?.created_at).toBe(sampleQuiz.created_at);
     expect(restoredQuiz?.sourceId).toBe(sampleQuiz.sourceId);
     expect(restoredResult?.quiz_id).toBe(sampleQuiz.id);
+    expect(sanitizedQuestionId).toBeDefined();
+    expect(restoredResult?.question_ids).toEqual([sanitizedQuestionId!]);
+    expect(restoredResult?.session_type).toBe(sampleResult.session_type);
+    expect(restoredResult?.source_map).toEqual({
+      [sanitizedQuestionId!]: sampleQuiz.id,
+    });
+  });
+
+  it("remaps legacy question-linked result metadata during replace import", async () => {
+    const exported: ExportData = {
+      version: "1.0",
+      exportedAt: new Date().toISOString(),
+      quizzes: [sampleQuiz],
+      results: [sampleResult],
+    };
+
+    const { quizzesImported, resultsImported } = await importData(
+      exported,
+      TEST_USER_ID,
+      "replace",
+    );
+
+    const restoredQuiz = await db.quizzes.get(sampleQuiz.id);
+    const restoredResult = await db.results.get(sampleResult.id);
+    const sanitizedQuestionId = restoredQuiz?.questions[0]?.id;
+
+    expect(quizzesImported).toBe(1);
+    expect(resultsImported).toBe(1);
+    expect(sanitizedQuestionId).toBeDefined();
+    expect(sanitizedQuestionId).not.toBe("q1");
+    expect(restoredResult?.answers).toEqual({ [sanitizedQuestionId!]: "A" });
+    expect(restoredResult?.question_ids).toEqual([sanitizedQuestionId!]);
+    expect(restoredResult?.source_map).toEqual({
+      [sanitizedQuestionId!]: sampleQuiz.id,
+    });
+  });
+
+  it("remaps aggregated result metadata using source quiz question ids during replace import", async () => {
+    const aggregateQuizId = "33333333-3333-4333-8333-333333333333";
+    const aggregateQuestionId = "11111111-1111-4111-8111-111111111114";
+    const aggregateQuiz: Quiz = {
+      ...sampleQuiz,
+      id: aggregateQuizId,
+      title: "Imported Aggregate Quiz",
+      quiz_hash: "aggregate-quiz-hash",
+      questions: [
+        {
+          ...sampleQuiz.questions[0]!,
+          id: aggregateQuestionId,
+        },
+      ],
+    };
+    const aggregatedResult: Result = {
+      ...sampleResult,
+      id: "44444444-4444-4444-8444-444444444444",
+      quiz_id: aggregateQuizId,
+      answers: { q1: "A" },
+      question_ids: ["q1"],
+      session_type: "topic_study",
+      source_map: { q1: sampleQuiz.id },
+    };
+    const exported: ExportData = {
+      version: "1.0",
+      exportedAt: new Date().toISOString(),
+      quizzes: [sampleQuiz, aggregateQuiz],
+      results: [aggregatedResult],
+    };
+
+    await importData(exported, TEST_USER_ID, "replace");
+
+    const restoredSourceQuiz = await db.quizzes.get(sampleQuiz.id);
+    const restoredResult = await db.results.get(aggregatedResult.id);
+    const sanitizedSourceQuestionId = restoredSourceQuiz?.questions[0]?.id;
+
+    expect(sanitizedSourceQuestionId).toBeDefined();
+    expect(restoredResult?.answers).toEqual({
+      [sanitizedSourceQuestionId!]: "A",
+    });
+    expect(restoredResult?.question_ids).toEqual([sanitizedSourceQuestionId!]);
+    expect(restoredResult?.source_map).toEqual({
+      [sanitizedSourceQuestionId!]: sampleQuiz.id,
+    });
+  });
+
+  it("keeps source_map keys aligned with answers and question_ids when the source quiz is absent", async () => {
+    const aggregateQuizId = "66666666-6666-4666-8666-666666666666";
+    const missingSourceQuizId = "77777777-7777-4777-8777-777777777777";
+    const aggregateQuiz: Quiz = {
+      ...sampleQuiz,
+      id: aggregateQuizId,
+      title: "Aggregate Quiz Without Imported Source",
+      quiz_hash: "aggregate-no-source-hash",
+      questions: [
+        {
+          ...sampleQuiz.questions[0]!,
+          id: "q1",
+        },
+      ],
+    };
+    const aggregatedResult: Result = {
+      ...sampleResult,
+      id: "88888888-8888-4888-8888-888888888888",
+      quiz_id: aggregateQuizId,
+      answers: { q1: "A" },
+      question_ids: ["q1"],
+      session_type: "topic_study",
+      source_map: { q1: missingSourceQuizId },
+    };
+    const exported: ExportData = {
+      version: "1.0",
+      exportedAt: new Date().toISOString(),
+      quizzes: [aggregateQuiz],
+      results: [aggregatedResult],
+    };
+
+    await importData(exported, TEST_USER_ID, "replace");
+
+    const restoredResult = await db.results.get(aggregatedResult.id);
+
+    expect(restoredResult?.answers).toEqual({ q1: "A" });
+    expect(restoredResult?.question_ids).toEqual(["q1"]);
+    expect(restoredResult?.source_map).toEqual({ q1: missingSourceQuizId });
+  });
+
+  it("clears both legacy and user-scoped results cursors during replace import", async () => {
+    await db.syncState.bulkPut([
+      {
+        table: "results",
+        lastSyncedAt: "2024-01-01T00:00:00.000Z",
+        synced: 1,
+        lastId: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+      },
+      {
+        table: `results:${TEST_USER_ID}`,
+        lastSyncedAt: "2024-01-02T00:00:00.000Z",
+        synced: 1,
+        lastId: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+      },
+    ]);
+
+    const exported: ExportData = {
+      version: "1.0",
+      exportedAt: new Date().toISOString(),
+      quizzes: [sampleQuiz],
+      results: [sampleResult],
+    };
+    await importData(exported, TEST_USER_ID, "replace");
+
+    expect(await db.syncState.get("results")).toBeUndefined();
+    expect(await db.syncState.get(`results:${TEST_USER_ID}`)).toBeUndefined();
   });
 
   it("skips existing quizzes and results in merge mode", async () => {
@@ -133,6 +287,61 @@ describe("data export/import", () => {
     expect(resultsImported).toBe(0);
     expect(quizCount).toBe(1);
     expect(resultCount).toBe(1);
+  });
+
+  it("remaps merge-imported result metadata to the retained local quiz question ids", async () => {
+    const retainedLocalQuestionId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+    const retainedLocalQuiz: Quiz = {
+      ...sampleQuiz,
+      questions: [
+        {
+          ...sampleQuiz.questions[0]!,
+          id: retainedLocalQuestionId,
+        },
+      ],
+    };
+    const importedQuiz: Quiz = {
+      ...sampleQuiz,
+      questions: [
+        {
+          ...sampleQuiz.questions[0]!,
+          id: "q1",
+        },
+      ],
+    };
+    const importedResult: Result = {
+      ...sampleResult,
+      id: "55555555-5555-4555-8555-555555555555",
+      answers: { q1: "A" },
+      question_ids: ["q1"],
+      source_map: { q1: sampleQuiz.id },
+    };
+    const exported: ExportData = {
+      version: "1.0",
+      exportedAt: new Date().toISOString(),
+      quizzes: [importedQuiz],
+      results: [importedResult],
+    };
+
+    await db.quizzes.put(retainedLocalQuiz);
+
+    const { quizzesImported, resultsImported } = await importData(
+      exported,
+      TEST_USER_ID,
+      "merge",
+    );
+
+    const storedQuiz = await db.quizzes.get(sampleQuiz.id);
+    const storedResult = await db.results.get(importedResult.id);
+
+    expect(quizzesImported).toBe(0);
+    expect(resultsImported).toBe(1);
+    expect(storedQuiz?.questions[0]?.id).toBe(retainedLocalQuestionId);
+    expect(storedResult?.answers).toEqual({ [retainedLocalQuestionId]: "A" });
+    expect(storedResult?.question_ids).toEqual([retainedLocalQuestionId]);
+    expect(storedResult?.source_map).toEqual({
+      [retainedLocalQuestionId]: sampleQuiz.id,
+    });
   });
 
   it("drops results that reference missing quizzes during import", async () => {
@@ -160,6 +369,27 @@ describe("data export/import", () => {
     expect(resultsImported).toBe(1);
     expect(storedResults).toHaveLength(1);
     expect(storedResults[0]?.id).toBe(sampleResult.id);
+  });
+
+  it("returns warnings for invalid quiz/result rows during import", async () => {
+    const invalidQuiz = { id: "not-a-uuid" } as unknown as Quiz;
+    const invalidResult = { id: "not-a-uuid" } as unknown as Result;
+
+    const exported: ExportData = {
+      version: "1.0",
+      exportedAt: new Date().toISOString(),
+      quizzes: [sampleQuiz, invalidQuiz],
+      results: [sampleResult, invalidResult],
+    };
+
+    const result = await importData(exported, TEST_USER_ID, "replace");
+
+    expect(result.warnings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: "invalid_quiz", count: 1 }),
+        expect.objectContaining({ code: "invalid_result", count: 1 }),
+      ]),
+    );
   });
 
   it("scopes merge dedupe to the active user", async () => {
@@ -290,6 +520,75 @@ describe("smart merge import", () => {
       .toArray();
     expect(storedResults).toHaveLength(1);
     expect(storedResults[0]?.quiz_id).toBe(sampleQuiz.id);
+  });
+
+  it("remaps aggregated result source_map quiz ids when smart import merges a source quiz", async () => {
+    const existingSourceQuiz: Quiz = {
+      ...sampleQuiz,
+      id: "77777777-7777-4777-8777-777777777777",
+      quiz_hash: "merged-source-hash",
+      questions: [
+        {
+          ...sampleQuiz.questions[0]!,
+          id: "11111111-1111-4111-8111-111111111112",
+        },
+      ],
+    };
+    const importedSourceQuizId = "99999999-9999-4999-8999-999999999999";
+    const aggregatedQuestionId = "11111111-1111-4111-8111-111111111113";
+    const aggregatedQuiz: Quiz = {
+      ...sampleQuiz,
+      id: "66666666-6666-4666-8666-666666666666",
+      title: "Aggregated Parent Quiz",
+      quiz_hash: "aggregated-parent-hash",
+      questions: [
+        {
+          ...sampleQuiz.questions[0]!,
+          id: aggregatedQuestionId,
+        },
+      ],
+    };
+
+    await db.quizzes.put(existingSourceQuiz);
+
+    const importPayload: ExportData = {
+      version: "1.0",
+      exportedAt: new Date().toISOString(),
+      quizzes: [
+        {
+          ...existingSourceQuiz,
+          id: importedSourceQuizId,
+        },
+        aggregatedQuiz,
+      ],
+      results: [
+        {
+          ...sampleResult,
+          id: "55555555-5555-4555-8555-555555555555",
+          quiz_id: aggregatedQuiz.id,
+          question_ids: [aggregatedQuestionId],
+          answers: { [aggregatedQuestionId]: "B" },
+          session_type: "topic_study",
+          source_map: { [aggregatedQuestionId]: importedSourceQuizId },
+        },
+      ],
+    };
+
+    const result = await importData(importPayload, TEST_USER_ID, "smart");
+
+    expect(result.quizzesImported).toBe(1);
+    expect(result.quizzesMerged).toBe(1);
+    expect(result.resultsImported).toBe(1);
+
+    const storedResults = await db.results
+      .where("user_id")
+      .equals(TEST_USER_ID)
+      .toArray();
+    expect(storedResults).toHaveLength(1);
+    expect(storedResults[0]?.quiz_id).toBe(aggregatedQuiz.id);
+    expect(storedResults[0]?.source_map).toEqual({
+      [aggregatedQuestionId]: existingSourceQuiz.id,
+    });
   });
 
   it("matches quizzes by title when hash is missing", async () => {

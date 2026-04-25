@@ -10,7 +10,7 @@ import {
     CardDescription,
 } from "@/components/ui/Card";
 import { formatDateKey } from "@/lib/date";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 
 interface DailyStudyData {
     date: string;

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { BookOpen, FileText, Shuffle, FileKey } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import type { BuilderState, GenerationStrategy } from "@/types/create";
 import { EXAM_PRESETS, type ExamPreset } from "@/data/examPresets";
 
@@ -202,6 +202,20 @@ export function BuilderControls({ state, onChange }: BuilderControlsProps): Reac
                                 onChange={(e) => onChange({ topic: e.target.value })}
                                 placeholder="e.g., AWS IAM, VPC, S3"
                                 className="w-full p-3 rounded-lg border bg-card text-sm focus:ring-1 focus:ring-primary outline-none"
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label htmlFor="builder-match-question-count" className="text-sm font-medium">Questions</label>
+                            <input
+                                id="builder-match-question-count"
+                                type="number"
+                                value={state.questionCount}
+                                onChange={(e) => {
+                                    const val = parseInt(e.target.value);
+                                    const safeVal = Number.isNaN(val) ? 10 : Math.min(Math.max(val, 1), 50);
+                                    onChange({ questionCount: safeVal });
+                                }}
+                                className="w-full px-3 py-2 rounded-lg border bg-card text-sm focus:ring-1 focus:ring-primary outline-none"
                             />
                         </div>
                         <div className="space-y-1.5">

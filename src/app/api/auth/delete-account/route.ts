@@ -111,10 +111,15 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
     } = await supabase.auth.getUser();
 
     if (!user) {
+      logger.warn("Account deletion rejected: no authenticated user found");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // 2. Initialize Admin Client
+    // We MUST use the service role key here because the standard Supabase client
+    // does not allow self-deletion from the `auth.users` table directly.
+    // The security of this operation is guaranteed by strictly passing `user.id`
+    // from the authenticated session verified above.
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!serviceRoleKey) {
       logger.error("Missing SUPABASE_SERVICE_ROLE_KEY");
@@ -143,7 +148,7 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    logger.info("Initiating account deletion for user", { userId: user.id });
+    logger.info("Initiating account deletion for user via service role (self-serve deletion)", { userId: user.id });
 
     // Delete user - ON DELETE CASCADE in schema automatically deletes:
     // - profiles (id references auth.users)

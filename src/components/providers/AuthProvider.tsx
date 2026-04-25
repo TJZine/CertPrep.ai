@@ -17,8 +17,8 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { clearDatabase } from "@/db";
 import { requestServiceWorkerCacheClear } from "@/lib/serviceWorkerClient";
-import { syncQuizzes } from "@/lib/sync/quizSyncManager";
-import { syncResults } from "@/lib/sync/syncManager";
+import { logger } from "@/lib/logger";
+import { requiresLocalDataPreservation, runSyncPlan } from "@/lib/sync/coordinator";
 
 type AuthContextType = {
   user: User | null;
@@ -48,30 +48,53 @@ export async function performSignOut({
   userId,
 }: SignOutDependencies): Promise<{ success: boolean; error?: string }> {
   let dbClearError: string | undefined;
+  let shouldPreserveLocalData = false;
 
   // Attempt to flush local changes to server before clearing DB
   if (userId) {
     try {
-      // We give the sync 3 seconds to finish. If it takes longer, we proceed anyway
-      // to avoid trapping the user in a "signing out..." limbo.
-      const syncPromise = Promise.allSettled([
-        syncQuizzes(userId),
-        syncResults(userId),
-      ]);
-      const timeoutPromise = new Promise((resolve) => setTimeout(resolve, 3000));
-      await Promise.race([syncPromise, timeoutPromise]);
+      // Sync is best-effort. If it cannot be confirmed, sign out anyway but
+      // preserve local data to avoid discarding unsynced offline progress.
+      const syncPromise = runSyncPlan(userId, "logout");
+      const timeoutPromise = new Promise<"timeout">((resolve) =>
+        setTimeout(() => resolve("timeout"), 3000),
+      );
+      const raceResult = await Promise.race([syncPromise, timeoutPromise]);
+
+      if (raceResult === "timeout") {
+        logger.warn("Pre-logout sync timed out", { userId });
+        shouldPreserveLocalData = true;
+      } else {
+        const failed = raceResult.domains.some((domain) =>
+          requiresLocalDataPreservation(raceResult.settlements[domain]),
+        );
+
+        if (failed) {
+          logger.warn("Pre-logout sync failed or incomplete", {
+            userId,
+            outcomes: raceResult.outcomes,
+          });
+          shouldPreserveLocalData = true;
+        }
+      }
     } catch (error) {
-      console.warn("Pre-logout sync failed or timed out:", error);
-      // We intentionally ignore errors here to ensure signOut proceeds
+      logger.warn("Pre-logout sync threw unexpectedly", error);
+      shouldPreserveLocalData = true;
     }
   }
 
-  try {
-    void requestServiceWorkerCacheClear();
-    await clearDb();
-  } catch (error) {
-    console.error("Failed to clear local database during sign out:", error);
-    dbClearError = "Local data could not be cleared.";
+  void requestServiceWorkerCacheClear();
+
+  if (shouldPreserveLocalData) {
+    dbClearError =
+      "Signed out before sync completed. Local study data was kept on this device.";
+  } else {
+    try {
+      await clearDb();
+    } catch (error) {
+      logger.error("Failed to clear local database during sign out", error);
+      dbClearError = "Local data could not be cleared.";
+    }
   }
 
   if (!supabase) {
@@ -84,7 +107,7 @@ export async function performSignOut({
     // Navigation is handled by the onAuthStateChange listener to support cross-tab signouts
     return { success: true, error: dbClearError };
   } catch (error) {
-    console.error("Error signing out:", error);
+    logger.error("Error signing out", error);
     return { success: false, error: "Sign out failed. Please try again." };
   }
 }
@@ -121,7 +144,7 @@ export function AuthProvider({
         setSession(session);
         setUser(session?.user ?? null);
       } catch (error) {
-        console.error("Failed to get session:", error);
+        logger.error("Failed to get session", error);
         // Fallback to cleared state
         if (!isMounted) return;
         setSession(null);

@@ -12,7 +12,7 @@ vi.mock("@/lib/logger", () => ({
 }));
 
 vi.mock("@/db/syncState", () => ({
-    getSRSSyncCursor: vi.fn().mockResolvedValue({
+    readAndRepairSRSSyncCursor: vi.fn().mockResolvedValue({
         timestamp: "1970-01-01T00:00:00.000Z",
         lastId: "00000000-0000-0000-0000-000000000000",
     }),

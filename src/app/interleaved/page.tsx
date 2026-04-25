@@ -16,9 +16,9 @@ import {
     getAvailableCategories,
     getMatchingQuestionCount,
     NoQuestionsError,
-} from "@/lib/interleavedPractice";
-import { saveInterleavedState } from "@/lib/interleavedStorage";
-import { cn } from "@/lib/utils";
+} from "@/lib/quiz/interleavedPractice";
+import { saveInterleavedState } from "@/lib/storage/interleavedStorage";
+import { cn } from "@/lib/utils/cn";
 
 const QUESTION_COUNTS = [10, 20, 50] as const;
 
@@ -56,6 +56,7 @@ export default function InterleavedPage(): React.ReactElement {
                 setAvailableQuestions(count);
             } catch (error) {
                 console.error("Failed to load categories:", error);
+                return;
             } finally {
                 setIsLoading(false);
             }
@@ -126,6 +127,7 @@ export default function InterleavedPage(): React.ReactElement {
             } else {
                 console.error("Failed to generate session:", error);
                 addToast("error", "Failed to generate practice session. Please try again.");
+                return;
             }
         }
     }, [effectiveUserId, selectedCategories, questionCount, enableRemix, router, addToast]);

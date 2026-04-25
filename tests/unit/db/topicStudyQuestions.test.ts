@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getTopicStudyQuestions } from "@/db/results";
+import { evaluateAnswer } from "@/lib/grading";
 import type { Quiz } from "@/types/quiz";
 import type { Result } from "@/types/result";
 
@@ -54,8 +55,12 @@ const { quizzesData, resultsData, dbMock } = vi.hoisted(() => {
 });
 
 vi.mock("@/db", () => ({ db: dbMock }));
+vi.mock("@/db/dbInstance", () => ({ db: dbMock }));
+vi.mock("@/lib/grading", () => ({
+    evaluateAnswer: vi.fn(),
+}));
 
-vi.mock("@/lib/utils", () => ({
+vi.mock("@/lib/utils/cn", () => ({
     hashAnswer: vi.fn(async (answer: string) => `hash-${answer}`),
     calculatePercentage: (correct: number, total: number): number =>
         total === 0 ? 0 : Math.round((correct / total) * 100),
@@ -66,6 +71,11 @@ describe("getTopicStudyQuestions", () => {
     beforeEach(() => {
         quizzesData.length = 0;
         resultsData.length = 0;
+        vi.clearAllMocks();
+        vi.mocked(evaluateAnswer).mockImplementation(async (question, answer) => ({
+            category: question.category || "Uncategorized",
+            isCorrect: answer === question.correct_answer,
+        }));
     });
 
     it("returns only questions from the specified category", async () => {
@@ -258,6 +268,66 @@ describe("getTopicStudyQuestions", () => {
         expect(data.totalUniqueCount).toBe(0);
     });
 
+    it("skips malformed quizzes without questions and continues processing healthy quizzes", async () => {
+        quizzesData.push(
+            {
+                id: "quiz-malformed",
+                user_id: "user-a",
+                title: "Malformed Quiz",
+                description: "",
+                created_at: 1,
+                updated_at: 1,
+                tags: [],
+                version: 1,
+                deleted_at: null,
+                quiz_hash: null,
+            } as unknown as Quiz,
+            {
+                id: "quiz-healthy",
+                user_id: "user-a",
+                title: "Healthy Quiz",
+                description: "",
+                created_at: 1,
+                updated_at: 1,
+                questions: [
+                    {
+                        id: "q1",
+                        category: "Networking",
+                        question: "What is TCP?",
+                        options: { a: "Protocol", b: "Device" },
+                        correct_answer: "a",
+                        explanation: "",
+                    },
+                ],
+                tags: [],
+                version: 1,
+                deleted_at: null,
+                quiz_hash: null,
+            },
+        );
+
+        resultsData.push({
+            id: "result-healthy",
+            quiz_id: "quiz-healthy",
+            user_id: "user-a",
+            timestamp: 1,
+            mode: "zen",
+            score: 0,
+            time_taken_seconds: 120,
+            answers: { q1: "b" },
+            flagged_questions: [],
+            category_breakdown: {},
+        });
+
+        const data = await getTopicStudyQuestions("user-a", "Networking");
+
+        expect(data.questionIds).toEqual(["q1"]);
+        expect(data.quizIds).toEqual(["quiz-healthy"]);
+        expect(data.missedCount).toBe(1);
+        expect(data.flaggedCount).toBe(0);
+        expect(data.totalUniqueCount).toBe(1);
+    });
+
     it("respects Smart Round subset filtering", async () => {
         quizzesData.push({
             id: "quiz-1",
@@ -312,6 +382,52 @@ describe("getTopicStudyQuestions", () => {
         // Should NOT include q1 (not in subset, even if implied missed or whatever)
         expect(data.questionIds).not.toContain("q1");
         expect(data.quizIds).toContain("quiz-1");
+    });
+
+    it("treats an explicit empty question_ids list as an empty session", async () => {
+        quizzesData.push({
+            id: "quiz-1",
+            user_id: "user-a",
+            title: "Explicit Empty Session Quiz",
+            description: "",
+            created_at: 1,
+            updated_at: 1,
+            questions: [
+                {
+                    id: "q1",
+                    category: "Networking",
+                    question: "Q1",
+                    options: { a: "A", b: "B" },
+                    correct_answer: "a",
+                    explanation: "",
+                },
+            ],
+            tags: [],
+            version: 1,
+            deleted_at: null,
+            quiz_hash: null,
+        });
+
+        resultsData.push({
+            id: "result-empty-session",
+            quiz_id: "quiz-1",
+            user_id: "user-a",
+            timestamp: 1,
+            mode: "zen",
+            score: 0,
+            time_taken_seconds: 120,
+            question_ids: [],
+            answers: { q1: "b" },
+            flagged_questions: ["q1"],
+            category_breakdown: {},
+        });
+
+        const data = await getTopicStudyQuestions("user-a", "Networking");
+
+        expect(data.questionIds).toEqual([]);
+        expect(data.missedCount).toBe(0);
+        expect(data.flaggedCount).toBe(0);
+        expect(data.totalUniqueCount).toBe(0);
     });
 
     it("uses newest result status (deduplication)", async () => {
@@ -374,6 +490,101 @@ describe("getTopicStudyQuestions", () => {
         // Should be empty because the latest attempt was correct
         expect(data.questionIds).toEqual([]);
         expect(data.missedCount).toBe(0);
+    });
+
+    it("uses the newest attempt when batched results overlap on a later question", async () => {
+        quizzesData.push({
+            id: "quiz-1",
+            user_id: "user-a",
+            title: "Test Quiz",
+            description: "",
+            created_at: 1,
+            updated_at: 1,
+            questions: [
+                {
+                    id: "q1",
+                    category: "Networking",
+                    question: "Q1",
+                    options: { a: "A", b: "B" },
+                    correct_answer: "a",
+                    explanation: "",
+                },
+                {
+                    id: "q2",
+                    category: "Networking",
+                    question: "Q2",
+                    options: { a: "A", b: "B" },
+                    correct_answer: "a",
+                    explanation: "",
+                },
+            ],
+            tags: [],
+            version: 1,
+            deleted_at: null,
+            quiz_hash: null,
+        });
+
+        resultsData.push(
+            {
+                id: "result-old",
+                quiz_id: "quiz-1",
+                user_id: "user-a",
+                timestamp: 1000,
+                mode: "zen",
+                score: 0,
+                time_taken_seconds: 60,
+                answers: { q2: "b" },
+                flagged_questions: [],
+                category_breakdown: {},
+                question_ids: ["q2"],
+            },
+            {
+                id: "result-new",
+                quiz_id: "quiz-1",
+                user_id: "user-a",
+                timestamp: 2000,
+                mode: "zen",
+                score: 100,
+                time_taken_seconds: 60,
+                answers: { q1: "a", q2: "a" },
+                flagged_questions: [],
+                category_breakdown: {},
+                question_ids: ["q1", "q2"],
+            },
+        );
+        resultsData.sort((a, b) => b.timestamp - a.timestamp);
+
+        let releaseNewestFirstQuestion!: () => void;
+        let newerAttemptReachedGate!: () => void;
+        const newestFirstQuestion = new Promise<void>((resolve) => {
+            releaseNewestFirstQuestion = resolve;
+        });
+        const newerAttemptEntered = new Promise<void>((resolve) => {
+            newerAttemptReachedGate = resolve;
+        });
+
+        vi.mocked(evaluateAnswer).mockImplementation(async (question, answer) => {
+            if (question.id === "q1") {
+                newerAttemptReachedGate();
+                await newestFirstQuestion;
+            }
+
+            return {
+                category: question.category || "Uncategorized",
+                isCorrect: answer === question.correct_answer,
+            };
+        });
+
+        const pending = getTopicStudyQuestions("user-a", "Networking");
+        await newerAttemptEntered;
+        releaseNewestFirstQuestion();
+
+        const data = await pending;
+
+        expect(data.questionIds).toEqual([]);
+        expect(data.missedCount).toBe(0);
+        expect(data.flaggedCount).toBe(0);
+        expect(data.totalUniqueCount).toBe(0);
     });
 
     it("returns empty array when no matching questions exist", async () => {

@@ -133,5 +133,3 @@ export function useChartColors(): { colors: ChartColors; isReady: boolean } {
 
     return { colors, isReady };
 }
-
-export default useChartColors;

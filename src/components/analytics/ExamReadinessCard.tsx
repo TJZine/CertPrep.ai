@@ -10,7 +10,7 @@ import {
     CardDescription,
 } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import type { ConfidenceLevel } from "@/hooks/useAdvancedAnalytics";
 
 interface ExamReadinessCardProps {

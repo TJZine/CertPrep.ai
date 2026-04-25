@@ -5,6 +5,8 @@ import { AuthProvider, useAuth } from "@/components/providers/AuthProvider";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { clearDatabase } from "@/db";
+import { runSyncPlan } from "@/lib/sync/coordinator";
+import { requestServiceWorkerCacheClear } from "@/lib/serviceWorkerClient";
 
 // Mock dependencies
 vi.mock("@/lib/supabase/client");
@@ -12,12 +14,12 @@ vi.mock("next/navigation", () => ({
     useRouter: vi.fn(),
 }));
 
-// Mock the sync methods to prevent actual background execution
-vi.mock("@/lib/sync/quizSyncManager", () => ({
-    syncQuizzes: vi.fn().mockResolvedValue({ success: true }),
+vi.mock("@/lib/sync/coordinator", () => ({
+    runSyncPlan: vi.fn(),
+    requiresLocalDataPreservation: vi.fn((outcome) => outcome?.status === "rejected" || Boolean(outcome?.value?.incomplete)),
 }));
-vi.mock("@/lib/sync/syncManager", () => ({
-    syncResults: vi.fn().mockResolvedValue({ success: true }),
+vi.mock("@/lib/serviceWorkerClient", () => ({
+    requestServiceWorkerCacheClear: vi.fn(),
 }));
 vi.mock("@/db", () => ({
     clearDatabase: vi.fn().mockResolvedValue(undefined),
@@ -70,6 +72,19 @@ describe("AuthProvider", () => {
 
         (createClient as unknown as Mock).mockReturnValue(mockSupabase);
         (useRouter as unknown as Mock).mockReturnValue(mockRouter);
+        (runSyncPlan as unknown as Mock).mockResolvedValue({
+            domains: ["quizzes", "results", "srs"],
+            settlements: {
+                quizzes: { status: "fulfilled", value: { incomplete: false, status: "synced" } },
+                results: { status: "fulfilled", value: { incomplete: false, status: "synced" } },
+                srs: { status: "fulfilled", value: { incomplete: false, status: "synced" } },
+            },
+            outcomes: {
+                quizzes: { incomplete: false, status: "synced" },
+                results: { incomplete: false, status: "synced" },
+                srs: { incomplete: false, status: "synced" },
+            },
+        });
     });
 
     afterEach(() => {
@@ -215,5 +230,8 @@ describe("AuthProvider", () => {
             // Verify supabase signOut was called
             expect(mockSupabase.auth.signOut).toHaveBeenCalled();
         });
+
+        expect(runSyncPlan).toHaveBeenCalledWith("test-user-1", "logout");
+        expect(requestServiceWorkerCacheClear).toHaveBeenCalled();
     });
 });

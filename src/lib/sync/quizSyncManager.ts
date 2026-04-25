@@ -5,15 +5,15 @@ import { db } from "@/db";
 import { NIL_UUID } from "@/lib/constants";
 import {
   getQuizBackfillState,
-  getQuizSyncCursor,
+  readAndRepairQuizSyncCursor,
   setQuizBackfillDone,
   setQuizSyncCursor,
   getSyncBlockState,
   setSyncBlockState,
 } from "@/db/syncState";
 import { logger } from "@/lib/logger";
+import { computeQuizHash } from "@/lib/core/crypto";
 import {
-  computeQuizHash,
   resolveQuizConflict,
   toLocalQuiz,
   toRemoteQuiz,
@@ -24,17 +24,9 @@ import type { Quiz } from "@/types/quiz";
 import { QuestionSchema } from "@/validators/quizSchema";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/client";
-import type { Database } from "@/types/database.types";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import { createSupabaseClientGetter } from "./shared";
 
-let supabaseInstance: SupabaseClient<Database> | undefined;
-
-function getSupabaseClient(): SupabaseClient<Database> | undefined {
-  if (!supabaseInstance) {
-    supabaseInstance = createClient();
-  }
-  return supabaseInstance;
-}
+const getSupabaseClient = createSupabaseClientGetter(() => createClient());
 
 async function ensureQuizHash(
   quiz: Quiz,
@@ -78,10 +70,17 @@ const syncState = {
   lastSyncAttempt: 0,
 };
 
+export type SyncQuizzesOutcome = {
+  incomplete: boolean;
+  status?: "synced" | "skipped" | "failed";
+  error?: string;
+  shouldRetry?: boolean;
+};
+
 export async function syncQuizzes(
   userId: string,
-): Promise<{ incomplete: boolean }> {
-  if (!userId) return { incomplete: false };
+): Promise<SyncQuizzesOutcome> {
+  if (!userId) return { incomplete: false, status: "skipped" };
 
   if (typeof navigator !== "undefined" && "locks" in navigator) {
     try {
@@ -94,20 +93,34 @@ export async function syncQuizzes(
               logger.debug(
                 "Quiz sync already in progress in another tab, skipping",
               );
-              return { incomplete: false };
+              return {
+                incomplete: false,
+                status: "skipped",
+                shouldRetry: true,
+              };
             }
             try {
               return await performQuizSync(userId);
             } catch (error) {
               logger.error("Quiz sync failed while holding lock", error);
-              return { incomplete: true };
+              return {
+                incomplete: true,
+                status: "failed",
+                error: "Quiz sync failed while holding lock",
+                shouldRetry: true,
+              };
             }
           },
         )) || { incomplete: false }
       );
     } catch (error) {
       logger.error("Failed to acquire quiz sync lock request", error);
-      return { incomplete: true };
+      return {
+        incomplete: true,
+        status: "failed",
+        error: "Failed to acquire quiz sync lock request",
+        shouldRetry: true,
+      };
     }
   }
 
@@ -116,7 +129,11 @@ export async function syncQuizzes(
       logger.warn("Quiz sync lock timed out, resetting");
       syncState.isSyncing = false;
     } else {
-      return { incomplete: false };
+      return {
+        incomplete: false,
+        status: "skipped",
+        shouldRetry: true,
+      };
     }
   }
 
@@ -126,7 +143,12 @@ export async function syncQuizzes(
     return await performQuizSync(userId);
   } catch (error) {
     logger.error("Quiz sync failed (fallback path)", error);
-    return { incomplete: true };
+    return {
+      incomplete: true,
+      status: "failed",
+      error: "Quiz sync failed (fallback path)",
+      shouldRetry: true,
+    };
   } finally {
     syncState.isSyncing = false;
   }
@@ -134,7 +156,7 @@ export async function syncQuizzes(
 
 async function performQuizSync(
   userId: string,
-): Promise<{ incomplete: boolean }> {
+): Promise<SyncQuizzesOutcome> {
   performance.mark("quizSync-start");
   const startTime = Date.now();
   let incomplete = false;
@@ -150,24 +172,44 @@ async function performQuizSync(
       reason: blockState.reason,
       remainingMins,
     });
-    return { incomplete: true };
+    return {
+      incomplete: true,
+      status: "failed",
+      error: blockState.reason,
+      shouldRetry: true,
+    };
   }
 
   // Validate auth session matches the userId we're syncing for
   const client = getSupabaseClient();
   if (!client) {
     logger.warn("Quiz sync skipped: Supabase client unavailable");
-    return { incomplete: true };
+    return {
+      incomplete: true,
+      status: "failed",
+      error: "Supabase client unavailable",
+      shouldRetry: true,
+    };
   }
 
   const { data: { user }, error: authError } = await client.auth.getUser();
   if (authError || !user) {
     logger.warn("Quiz sync skipped: No valid auth session", { authError: authError?.message });
-    return { incomplete: true };
+    return {
+      incomplete: true,
+      status: "skipped",
+      error: authError?.message ?? "Not authenticated",
+      shouldRetry: true,
+    };
   }
   if (user.id !== userId) {
     logger.error("Quiz sync aborted: Auth user ID mismatch", { authUserId: user.id, syncUserId: userId });
-    return { incomplete: true };
+    return {
+      incomplete: true,
+      status: "failed",
+      error: "User ID mismatch - please re-login",
+      shouldRetry: true,
+    };
   }
 
   try {
@@ -221,7 +263,11 @@ async function performQuizSync(
         incomplete: false,
       });
     }
-    return { incomplete };
+    return {
+      incomplete,
+      status: incomplete ? "failed" : "synced",
+      shouldRetry: incomplete,
+    };
   } finally {
     performance.mark("quizSync-end");
     performance.measure("quizSync", "quizSync-start", "quizSync-end");
@@ -363,7 +409,7 @@ async function pullRemoteChanges(
       break;
     }
 
-    const cursor = await getQuizSyncCursor(userId);
+    const cursor = await readAndRepairQuizSyncCursor(userId);
     const { data: remoteQuizzes, error } = await fetchUserQuizzes({
       userId,
       updatedAfter: cursor.timestamp,

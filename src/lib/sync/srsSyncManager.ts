@@ -3,7 +3,7 @@
 import * as Sentry from "@sentry/nextjs";
 import { db } from "@/db";
 import {
-  getSRSSyncCursor,
+  readAndRepairSRSSyncCursor,
   setSRSSyncCursor,
   getSyncBlockState,
   setSyncBlockState,
@@ -16,15 +16,26 @@ import { z } from "zod";
 import type { Database } from "@/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { SRSState } from "@/types/srs";
+import {
+  createSupabaseClientGetter,
+  toErrorMessage as toSharedErrorMessage,
+  toSafeCursorTimestamp as toSharedSafeCursorTimestamp,
+} from "./shared";
 
-let supabaseInstance: SupabaseClient<Database> | undefined;
-
-function getSupabaseClient(): SupabaseClient<Database> | undefined {
-  if (!supabaseInstance) {
-    supabaseInstance = createClient();
-  }
-  return supabaseInstance;
-}
+const getSupabaseClient = createSupabaseClientGetter(() => createClient());
+const toErrorMessage = (error: unknown): string =>
+  toSharedErrorMessage(error, { style: "srs" });
+const toSafeCursorTimestamp = (
+  candidate: unknown,
+  fallback: string,
+  context: Record<string, unknown>,
+): string =>
+  toSharedSafeCursorTimestamp(candidate, fallback, context, {
+    invalidCandidateMessage:
+      "Invalid cursor timestamp encountered in SRS sync, using fallback",
+    invalidFallbackMessage:
+      "Invalid cursor timestamp and fallback in SRS sync; defaulting to epoch",
+  });
 
 const BATCH_SIZE = 50;
 const TIME_BUDGET_MS = 5000;
@@ -47,13 +58,34 @@ const syncState = {
   lastSyncAttempt: 0,
 };
 
-export async function syncSRS(userId: string): Promise<{ incomplete: boolean }> {
-  if (!userId) return { incomplete: false };
+export type SyncSRSOutcome = {
+  incomplete: boolean;
+  error?: string;
+  status?: "synced" | "skipped" | "failed";
+  shouldRetry?: boolean;
+};
+
+const skippedRetryOutcome = (error?: string): SyncSRSOutcome => ({
+  incomplete: false,
+  status: "skipped",
+  error,
+  shouldRetry: true,
+});
+
+const failedRetryOutcome = (error: string): SyncSRSOutcome => ({
+  incomplete: true,
+  status: "failed",
+  error,
+  shouldRetry: true,
+});
+
+export async function syncSRS(userId: string): Promise<SyncSRSOutcome> {
+  if (!userId) return { incomplete: false, status: "skipped" };
 
   // Optimization: Don't attempt sync if browser is offline
   if (typeof navigator !== "undefined") {
     if (!navigator.onLine) {
-      return { incomplete: true };
+      return failedRetryOutcome("Offline");
     }
   }
 
@@ -66,20 +98,20 @@ export async function syncSRS(userId: string): Promise<{ incomplete: boolean }> 
           async (lock) => {
             if (!lock) {
               logger.debug("SRS sync already in progress in another tab, skipping");
-              return { incomplete: true }; // Skipped — caller should retry
+              return skippedRetryOutcome();
             }
             try {
               return await performSRSSync(userId);
             } catch (error) {
               logger.error("SRS sync failed while holding lock", error);
-              return { incomplete: true }; // Failed — caller should retry
+              return failedRetryOutcome("SRS sync failed while holding lock");
             }
           },
-        )) ?? { incomplete: true }
+        )) ?? failedRetryOutcome("SRS sync lock request returned no outcome")
       );
     } catch (error) {
       logger.error("Failed to acquire SRS sync lock request", error);
-      return { incomplete: true };
+      return failedRetryOutcome("Failed to acquire SRS sync lock request");
     }
   }
 
@@ -88,7 +120,7 @@ export async function syncSRS(userId: string): Promise<{ incomplete: boolean }> 
       logger.warn("SRS sync lock timed out, resetting");
       syncState.isSyncing = false;
     } else {
-      return { incomplete: false };
+      return skippedRetryOutcome();
     }
   }
 
@@ -98,13 +130,13 @@ export async function syncSRS(userId: string): Promise<{ incomplete: boolean }> 
     return await performSRSSync(userId);
   } catch (error) {
     logger.error("SRS sync failed (fallback path)", error);
-    return { incomplete: false };
+    return failedRetryOutcome("SRS sync failed (fallback path)");
   } finally {
     syncState.isSyncing = false;
   }
 }
 
-async function performSRSSync(userId: string): Promise<{ incomplete: boolean }> {
+async function performSRSSync(userId: string): Promise<SyncSRSOutcome> {
   safeMark("srsSync-start");
   const startTime = Date.now();
   let incomplete = false;
@@ -112,18 +144,23 @@ async function performSRSSync(userId: string): Promise<{ incomplete: boolean }> 
 
   const client = getSupabaseClient();
   if (!client) {
-    return { incomplete: true };
+    return failedRetryOutcome("Supabase client unavailable");
   }
 
   // Validate auth session matches the userId we're syncing for
   const { data: { user }, error: authError } = await client.auth.getUser();
   if (authError || !user) {
     logger.warn("SRS sync skipped: No valid auth session", { authError: authError?.message });
-    return { incomplete: true };
+    return {
+      incomplete: true,
+      status: "skipped",
+      error: "Not authenticated",
+      shouldRetry: true,
+    };
   }
   if (user.id !== userId) {
     logger.error("SRS sync aborted: Auth user ID mismatch", { authUserId: user.id, syncUserId: userId });
-    return { incomplete: true };
+    return failedRetryOutcome("User ID mismatch - please re-login");
   }
 
   // Check if sync is blocked due to previous schema drift
@@ -136,7 +173,7 @@ async function performSRSSync(userId: string): Promise<{ incomplete: boolean }> 
       reason: blockState.reason,
       remainingMins,
     });
-    return { incomplete: true };
+    return failedRetryOutcome(blockState.reason);
   }
 
   try {
@@ -176,7 +213,11 @@ async function performSRSSync(userId: string): Promise<{ incomplete: boolean }> 
         incomplete,
       });
     }
-    return { incomplete };
+    return {
+      incomplete,
+      status: incomplete ? "failed" : "synced",
+      shouldRetry: incomplete,
+    };
   } finally {
     safeMark("srsSync-end");
     safeMeasure("srsSync", "srsSync-start", "srsSync-end");
@@ -188,30 +229,6 @@ async function performSRSSync(userId: string): Promise<{ incomplete: boolean }> 
         pulled: stats.pulled,
       });
     }
-  }
-}
-
-function toErrorMessage(error: unknown): string {
-  if (error instanceof Error) return error.message;
-  if (typeof error === "string") return error;
-
-  // Handle Supabase PostgrestError which has message/code/details/hint properties
-  if (error && typeof error === "object") {
-    const e = error as Record<string, unknown>;
-    if (typeof e.message === "string") {
-      const parts = [e.message];
-      if (e.code) parts.push(`code=${e.code}`);
-      if (e.details) parts.push(`details=${e.details}`);
-      if (e.hint) parts.push(`hint=${e.hint}`);
-      return parts.join(" | ");
-    }
-  }
-
-  try {
-    const json = JSON.stringify(error);
-    return json === "{}" ? "Unknown error (empty object)" : json;
-  } catch {
-    return "Unknown error";
   }
 }
 
@@ -327,30 +344,6 @@ async function pushLocalChanges(
   return incomplete;
 }
 
-
-function toSafeCursorTimestamp(
-  candidate: unknown,
-  fallback: string,
-  context: Record<string, unknown>,
-): string {
-  if (typeof candidate === "string" && !Number.isNaN(Date.parse(candidate))) {
-    return new Date(candidate).toISOString();
-  }
-
-  if (!Number.isNaN(Date.parse(fallback))) {
-    logger.warn("Invalid cursor timestamp encountered in SRS sync, using fallback", {
-      ...context,
-      fallback,
-    });
-    return new Date(fallback).toISOString();
-  }
-
-  logger.error("Invalid cursor timestamp and fallback in SRS sync; defaulting to epoch", {
-    ...context,
-  });
-  return "1970-01-01T00:00:00.000Z";
-}
-
 async function pullRemoteChanges(
   userId: string,
   startTime: number,
@@ -369,7 +362,7 @@ async function pullRemoteChanges(
       break;
     }
 
-    const cursor = await getSRSSyncCursor(userId);
+    const cursor = await readAndRepairSRSSyncCursor(userId);
     const timestamp = cursor.timestamp;
     const safeLastId = cursor.lastId;
 

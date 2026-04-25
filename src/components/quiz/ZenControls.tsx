@@ -3,7 +3,7 @@
 import * as React from "react";
 import { AlertTriangle, ArrowRight, RotateCcw, ThumbsUp } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 
 interface ZenControlsProps {
   onAgain: () => void;

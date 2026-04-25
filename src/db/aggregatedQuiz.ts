@@ -1,11 +1,40 @@
-import { db } from "@/db";
+import { db } from "./dbInstance";
 import type { Quiz, Question } from "@/types/quiz";
+import { isAggregatedSessionType, type Result } from "@/types/result";
 import { logger } from "@/lib/logger";
+import { NIL_UUID } from "@/lib/constants";
 
 export interface SyntheticQuizResult {
   syntheticQuiz: Quiz;
   sourceQuizByQuestionId: Map<string, Quiz>;
+  sourceMap: Record<string, string>;
   missingQuestionIds: string[];
+}
+
+export interface AggregatedResultReadModel {
+  quiz: Quiz;
+  sourceMap: Record<string, string>;
+}
+
+export function getAggregatedResultTitle(
+  result: Result,
+  fallbackTitle: string,
+): string {
+  switch (result.session_type) {
+    case "topic_study": {
+      const categories = Object.keys(result.category_breakdown ?? {});
+      if (categories.length === 1) {
+        return `Topic Study: ${categories[0]}`;
+      }
+      return "Topic Study";
+    }
+    case "srs_review":
+      return "SRS Review";
+    case "interleaved":
+      return "Interleaved Practice";
+    default:
+      return fallbackTitle;
+  }
 }
 
 /**
@@ -24,12 +53,11 @@ export async function hydrateAggregatedQuiz(
   title: string = "Aggregated Study Session"
 ): Promise<SyntheticQuizResult> {
   // Load all quizzes that might contain these questions.
-  // We include user-owned quizzes and potentially system quizzes (NIL_UUID) if we supported them.
-  // For now, we strictly look at user-owned quizzes as per current architecture.
-  // OPTIMIZATION: Fetch via toArray() then filter in-memory to avoid Dexie filter chain brittleness
+  // Include both user-owned quizzes and public/system quizzes because aggregated
+  // sessions can contain questions from either source.
   const allQuizzesRaw = await db.quizzes
     .where("user_id")
-    .equals(userId)
+    .anyOf([userId, NIL_UUID])
     .toArray();
 
   const allQuizzes = allQuizzesRaw.filter((q) => q.deleted_at == null);
@@ -53,6 +81,7 @@ export async function hydrateAggregatedQuiz(
   }
 
   const orderedQuestions: Question[] = [];
+  const sourceMap: Record<string, string> = {};
   const missingQuestionIds: string[] = [];
 
   // Reconstruct the order from the result's question_ids
@@ -61,6 +90,7 @@ export async function hydrateAggregatedQuiz(
     if (found) {
       orderedQuestions.push(found.question);
       sourceQuizByQuestionId.set(id, found.quiz);
+      sourceMap[id] = found.quiz.id;
     } else {
       missingQuestionIds.push(id);
     }
@@ -95,6 +125,38 @@ export async function hydrateAggregatedQuiz(
   return {
     syntheticQuiz,
     sourceQuizByQuestionId,
+    sourceMap,
     missingQuestionIds,
+  };
+}
+
+export async function resolveAggregatedResultReadModel(
+  result: Result,
+  userId: string,
+  baseQuiz?: Quiz,
+): Promise<AggregatedResultReadModel> {
+  if (
+    !isAggregatedSessionType(result.session_type) ||
+    !result.question_ids ||
+    result.question_ids.length === 0
+  ) {
+    return {
+      quiz: baseQuiz as Quiz,
+      sourceMap: result.source_map ?? {},
+    };
+  }
+
+  const { syntheticQuiz, sourceMap } = await hydrateAggregatedQuiz(
+    result.question_ids,
+    userId,
+    getAggregatedResultTitle(result, baseQuiz?.title ?? "Aggregated Study Session"),
+  );
+
+  return {
+    quiz: syntheticQuiz,
+    sourceMap: {
+      ...sourceMap,
+      ...(result.source_map ?? {}),
+    },
   };
 }

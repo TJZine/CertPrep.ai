@@ -118,9 +118,29 @@ const config: Config = {
         "3xl": "calc(var(--radius) + 12px)",
       },
       fontFamily: {
-        sans: ["var(--font-sans)", "Inter", "Roboto", "system-ui", "sans-serif"],
-        heading: ["var(--font-heading)", "Inter", "Roboto", "system-ui", "sans-serif"],
-        mono: ["var(--font-mono)", "ui-monospace", "SFMono-Regular", "Menlo", "Monaco", "Consolas", "monospace"],
+        sans: [
+          "var(--font-sans)",
+          "Inter",
+          "Roboto",
+          "system-ui",
+          "sans-serif",
+        ],
+        heading: [
+          "var(--font-heading)",
+          "Inter",
+          "Roboto",
+          "system-ui",
+          "sans-serif",
+        ],
+        mono: [
+          "var(--font-mono)",
+          "ui-monospace",
+          "SFMono-Regular",
+          "Menlo",
+          "Monaco",
+          "Consolas",
+          "monospace",
+        ],
       },
       fontSize: {
         question: ["1.25rem", { lineHeight: "1.75rem", fontWeight: "600" }],

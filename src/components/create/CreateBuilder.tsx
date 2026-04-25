@@ -79,7 +79,7 @@ export function CreateBuilder(): React.ReactElement {
                         Import is available from the dashboard import modal.
                     </p>
                     <Link
-                        href="/"
+                        href="/?import=1"
                         className="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
                     >
                         Open Dashboard Import

@@ -11,16 +11,16 @@ import { Button } from "@/components/ui/Button";
 import { useInitializeDatabase } from "@/hooks/useDatabase";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
-import { db } from "@/db/index";
+import { hydrateAggregatedQuiz } from "@/db/aggregatedQuiz";
 import {
     clearTopicStudyState,
     TOPIC_STUDY_QUESTIONS_KEY,
     TOPIC_STUDY_CATEGORY_KEY,
     TOPIC_STUDY_MISSED_COUNT_KEY,
     TOPIC_STUDY_FLAGGED_COUNT_KEY,
-} from "@/lib/topicStudyStorage";
+} from "@/lib/storage/topicStudyStorage";
 import { logger } from "@/lib/logger";
-import type { Quiz, Question } from "@/types/quiz";
+import type { Quiz } from "@/types/quiz";
 
 /**
  * Dedicated Topic Study page that aggregates questions from multiple quizzes.
@@ -39,6 +39,7 @@ export default function TopicReviewPage(): React.ReactElement {
 
     const [isLoading, setIsLoading] = React.useState(true);
     const [aggregatedQuiz, setAggregatedQuiz] = React.useState<Quiz | null>(null);
+    const [sourceMap, setSourceMap] = React.useState<Map<string, string> | null>(null);
     const [questionCount, setQuestionCount] = React.useState(0);
     const [loadError, setLoadError] = React.useState<string | null>(null);
     const [category, setCategory] = React.useState<string | null>(null);
@@ -105,35 +106,15 @@ export default function TopicReviewPage(): React.ReactElement {
                     }
                 }
 
-                // Load quizzes scoped to the current user (exclude soft-deleted)
-                const allQuizzes = await db.quizzes
-                    .where("user_id")
-                    .equals(effectiveUserId)
-                    .filter((q) => !q.deleted_at)
-                    .toArray();
+                const hydrated = await hydrateAggregatedQuiz(
+                    questionIds,
+                    effectiveUserId,
+                    storedCategory ? `Topic Study: ${storedCategory}` : "Topic Study",
+                );
 
                 if (!isMounted) return;
 
-                // Build a map of question ID -> question + source quiz
-                const questionMap = new Map<string, { question: Question; quiz: Quiz }>();
-                for (const quiz of allQuizzes) {
-                    for (const question of quiz.questions) {
-                        if (questionIds.includes(question.id)) {
-                            questionMap.set(question.id, { question, quiz });
-                        }
-                    }
-                }
-
-                // Order questions by the stored order
-                const orderedQuestions: Question[] = [];
-                for (const id of questionIds) {
-                    const found = questionMap.get(id);
-                    if (found) {
-                        orderedQuestions.push(found.question);
-                    }
-                }
-
-                if (orderedQuestions.length === 0) {
+                if (hydrated.syntheticQuiz.questions.length === 0) {
                     if (isMounted) {
                         setLoadError("Could not find any of the requested questions. They may have been deleted.");
                         setIsLoading(false);
@@ -141,21 +122,10 @@ export default function TopicReviewPage(): React.ReactElement {
                     return;
                 }
 
-                // Create a synthetic "aggregated" quiz
-                const syntheticQuiz: Quiz = {
-                    id: "topic-study-aggregate",
-                    title: storedCategory ? `Topic Study: ${storedCategory}` : "Topic Study",
-                    description: "Targeted topic study session",
-                    questions: orderedQuestions,
-                    tags: [],
-                    created_at: Date.now(),
-                    user_id: effectiveUserId,
-                    version: 1,
-                };
-
                 if (isMounted) {
-                    setAggregatedQuiz(syntheticQuiz);
-                    setQuestionCount(orderedQuestions.length);
+                    setAggregatedQuiz(hydrated.syntheticQuiz);
+                    setSourceMap(new Map(Object.entries(hydrated.sourceMap)));
+                    setQuestionCount(hydrated.syntheticQuiz.questions.length);
                     setIsLoading(false);
                 }
             } catch (err) {
@@ -277,6 +247,7 @@ export default function TopicReviewPage(): React.ReactElement {
                 quiz={aggregatedQuiz}
                 isSmartRound={false}
                 isTopicStudy
+                sessionSourceMap={sourceMap}
             />
         </ErrorBoundary>
     );

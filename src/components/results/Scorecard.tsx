@@ -15,7 +15,8 @@ import {
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { cn, formatTime, formatDate } from "@/lib/utils";
+import { formatTime, formatDate } from "@/lib/date";
+import { cn } from "@/lib/utils/cn";
 import type { QuizMode } from "@/types/quiz";
 
 interface ScorecardProps {
@@ -51,7 +52,9 @@ function getPerformanceTier(score: number): PerformanceTier {
       label: "Excellent",
       color: "text-tier-excellent",
       bgColor: "bg-tier-excellent/10 border-tier-excellent/30",
-      icon: <Trophy className="h-12 w-12 text-tier-excellent" aria-hidden="true" />,
+      icon: (
+        <Trophy className="h-12 w-12 text-tier-excellent" aria-hidden="true" />
+      ),
     };
   }
   if (score >= 80) {
@@ -77,7 +80,9 @@ function getPerformanceTier(score: number): PerformanceTier {
       label: "Passing",
       color: "text-tier-passing",
       bgColor: "bg-tier-passing/10 border-tier-passing/30",
-      icon: <Target className="h-12 w-12 text-tier-passing" aria-hidden="true" />,
+      icon: (
+        <Target className="h-12 w-12 text-tier-passing" aria-hidden="true" />
+      ),
     };
   }
   return {
@@ -85,7 +90,10 @@ function getPerformanceTier(score: number): PerformanceTier {
     color: "text-tier-failing",
     bgColor: "bg-tier-failing/10 border-tier-failing/30",
     icon: (
-      <AlertTriangle className="h-12 w-12 text-tier-failing" aria-hidden="true" />
+      <AlertTriangle
+        className="h-12 w-12 text-tier-failing"
+        aria-hidden="true"
+      />
     ),
   };
 }
@@ -136,7 +144,8 @@ function useAnimatedScore(target: number, duration = 1000): number {
     const mql = window.matchMedia("(prefers-reduced-motion: reduce)");
     setPrefersReducedMotion(mql.matches);
 
-    const handler = (e: MediaQueryListEvent): void => setPrefersReducedMotion(e.matches);
+    const handler = (e: MediaQueryListEvent): void =>
+      setPrefersReducedMotion(e.matches);
     mql.addEventListener("change", handler);
     return (): void => mql.removeEventListener("change", handler);
   }, []);
@@ -212,17 +221,13 @@ export function Scorecard({
           </Badge>
 
           <p className="mb-2 text-lg text-muted-foreground">
-            <span className="font-semibold text-success">
-              {correctCount}
-            </span>
+            <span className="font-semibold text-success">{correctCount}</span>
             {" correct, "}
             <span className="font-semibold text-destructive">
               {incorrectCount}
             </span>
             {" incorrect out of "}
-            <span className="font-semibold text-foreground">
-              {totalCount}
-            </span>
+            <span className="font-semibold text-foreground">{totalCount}</span>
             {" questions"}
           </p>
 
@@ -265,9 +270,7 @@ export function Scorecard({
               <p className="text-lg font-semibold text-foreground">
                 {formatTime(timeTakenSeconds)}
               </p>
-              <p className="text-xs text-muted-foreground">
-                Duration
-              </p>
+              <p className="text-xs text-muted-foreground">Duration</p>
             </div>
 
             <div className="rounded-lg bg-background/50 p-3 border border-border">
@@ -340,7 +343,9 @@ export function ScorecardCompact({
         )}
         aria-label={`Score ${score}%`}
       >
-        <span className={cn("text-lg sm:text-xl font-bold", tier.color)}>{score}%</span>
+        <span className={cn("text-lg sm:text-xl font-bold", tier.color)}>
+          {score}%
+        </span>
       </div>
 
       <div className="flex-1 min-w-0">
@@ -374,5 +379,3 @@ export function ScorecardCompact({
     </button>
   );
 }
-
-export default Scorecard;

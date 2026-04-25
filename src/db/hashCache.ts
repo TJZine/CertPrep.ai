@@ -1,5 +1,5 @@
-import { db } from "@/db";
-import { hashAnswer } from "@/lib/utils";
+import { db } from "./dbInstance";
+import { hashAnswer } from "@/lib/core/crypto";;
 import { logger } from "@/lib/logger";
 
 /** Maximum number of entries before eviction is triggered. */
@@ -119,4 +119,3 @@ export async function getCachedHashBatch(
 
     return results;
 }
-

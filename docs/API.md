@@ -1,6 +1,14 @@
 # API Reference
 
-> Complete API documentation for CertPrep.ai
+> [!WARNING]
+> Reference-only document. Examples here may be stale and must not override implementation.
+>
+> Authoritative sources:
+>
+> - [AGENTS.md](../AGENTS.md) for control-plane entrypoint defaults
+> - [docs/ENGINEERING_RUNBOOK.md](./ENGINEERING_RUNBOOK.md) for workflow/verification policy
+> - [docs/ARCHITECTURE.md](./ARCHITECTURE.md) for current-state architecture truth
+> - Runtime code (`src/db/*`, `src/lib/sync/*`, `src/lib/supabase/*`) for exact behavior
 
 ---
 

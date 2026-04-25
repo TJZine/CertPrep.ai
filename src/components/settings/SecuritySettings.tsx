@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/Card";
 import { useToast } from "@/components/ui/Toast";
 import { Shield } from "lucide-react";
-import { getAuthErrorMessage } from "@/lib/auth-utils";
+import { getAuthErrorMessage } from "@/lib/auth/authUtils";
 import { resetPasswordSchema } from "@/validators/authSchema";
 import { ZodError } from "zod";
 

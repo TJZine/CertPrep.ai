@@ -2,6 +2,9 @@
 
 This FAQ covers common questions when running or extending CertPrep.ai yourself.
 
+> [!IMPORTANT]
+> This FAQ is not the setup or workflow authority. For canonical guidance, use [AGENTS.md](../AGENTS.md), [docs/ENGINEERING_RUNBOOK.md](./ENGINEERING_RUNBOOK.md), and [docs/ARCHITECTURE.md](./ARCHITECTURE.md).
+
 ---
 
 ## Is my data stored locally or in the cloud?
@@ -37,10 +40,16 @@ v1.4.2 introduced an interactive Flashcard mode for self-paced study:
 
 At a minimum:
 
-- Node.js 18+ and npm.
+- Node.js 24+ and npm.
 - A Supabase project with:
   - `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
-  - Tables and RLS policies as described in [docs/ARCHITECTURE.md](./ARCHITECTURE.md#supabase-database-schema).
+  - Baseline schema/RLS from `src/lib/supabase/schema.sql`
+  - Repo-root incremental changes from `supabase/migrations/*`
+- `NEXT_PUBLIC_HCAPTCHA_SITE_KEY` if you want signup/password-reset protection paths to work
+- `SUPABASE_SERVICE_ROLE_KEY` if you need self-serve account deletion, Playwright E2E global setup, or other service-role-only flows
+- Read setup and contributor expectations in [README.md](../README.md) and [CONTRIBUTING.md](../CONTRIBUTING.md).
+
+If you are provisioning a fresh database, do **not** assume `supabase/migrations/*` alone reconstructs the current DB. Review [docs/ARCHITECTURE.md](./ARCHITECTURE.md) first because schema surfaces are still being consolidated.
 
 > [!WARNING]
 > **Schema Drift**: The application supports a `flashcard` mode that is runtime-only. If you use the provided generated types, you may see a mismatch with the `quiz_mode` enum (`zen`, `proctor`). This is expected and handled safely by the application—you do **not** need to add `flashcard` to your database enum.
@@ -98,7 +107,7 @@ CertPrep.ai uses a **Leitner box algorithm** for optimized review scheduling:
 - SRS state is stored locally and synced cross-device via Supabase.
 - Access your review queue at `/study-due`.
 
-For details, see the `srs` table schema in [ARCHITECTURE.md](./ARCHITECTURE.md#srs).
+For current schema details, see [docs/ARCHITECTURE.md](./ARCHITECTURE.md). The repo currently splits DB truth across `src/lib/supabase/schema.sql`, `supabase/migrations/*`, and generated types.
 
 ---
 

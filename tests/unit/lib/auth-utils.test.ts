@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, afterEach } from "vitest";
-import { getAuthErrorMessage } from "@/lib/auth-utils";
+import { getAuthErrorMessage } from "@/lib/auth/authUtils";
 import { AuthError } from "@supabase/supabase-js";
 import { logger } from "@/lib/logger";
 

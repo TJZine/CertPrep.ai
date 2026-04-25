@@ -125,7 +125,7 @@ CertPrep.ai is a modern, offline-first quiz application designed to help users p
 
 | Requirement      | Version    | Installation                     |
 | ---------------- | ---------- | -------------------------------- |
-| Node.js          | `>=20.9.0` | [Download](https://nodejs.org/)  |
+| Node.js          | `>=24.0.0` | [Download](https://nodejs.org/)  |
 | npm/yarn/pnpm    | Latest     | Comes with Node.js               |
 | Supabase Account | -          | [Sign up](https://supabase.com/) |
 
@@ -158,34 +158,45 @@ pnpm install
 cp .env.example .env.local
 ```
 
-2. **Configure required variables:**
+2. **Configure variables by feature area:**
 
 ```env
-# Supabase Configuration (Required)
+# Core app (required)
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 
-# Optional: Analytics
-NEXT_PUBLIC_ANALYTICS_ID=your_analytics_id
+# Required for auth callbacks/emails and self-serve account deletion origin allowlisting
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+
+# Required for signup / password reset flows that use hCaptcha
+NEXT_PUBLIC_HCAPTCHA_SITE_KEY=your_hcaptcha_site_key
+
+# Required for admin/service-role flows such as account deletion and Playwright E2E global setup
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 ```
 
 <details>
 <summary>📖 Where to find these values</summary>
 
-| Variable            | Location                                                  |
-| ------------------- | --------------------------------------------------------- |
-| `SUPABASE_URL`      | Supabase Dashboard → Settings → API → Project URL         |
-| `SUPABASE_ANON_KEY` | Supabase Dashboard → Settings → API → `anon` `public` key |
+| Variable                        | Location                                                          |
+| ------------------------------- | ----------------------------------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`      | Supabase Dashboard → Settings → API → Project URL                 |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase Dashboard → Settings → API → `anon` `public` key         |
+| `NEXT_PUBLIC_HCAPTCHA_SITE_KEY` | hCaptcha Dashboard → Site Key                                     |
+| `SUPABASE_SERVICE_ROLE_KEY`     | Supabase Dashboard → Settings → API → `service_role` `secret` key |
 
 </details>
 
+These are local setup hints only. Runtime code, `.env.example`, and the current authority docs win if this section drifts. Some feature areas are optional in local development, but signup/password-reset, self-serve account deletion, and Playwright E2E global setup do require the extra keys above.
+
 3. **Set up the database:**
 
-This project does not currently ship Supabase migrations in-repo. You will need to:
+This repo does **not** currently expose one clean database bootstrap surface.
 
-- Create a Supabase project.
-- Configure the database schema described in [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) (tables for users, quizzes, results, etc.).
-- Optionally manage your own migrations using the Supabase CLI (`supabase db ...`) in your environment.
+- Baseline schema/RLS definitions still live in `src/lib/supabase/schema.sql`.
+- Repo-root incremental changes live in `supabase/migrations/*`.
+- Legacy companion migrations under `src/lib/supabase/migrations/*` are reference-only unless a maintainer explicitly says otherwise.
+- Read [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) before provisioning or changing the DB path, and do not assume `supabase/migrations/*` alone reconstructs the current database.
 
 4. **Start the development server:**
 
@@ -210,7 +221,7 @@ npm run dev
 4. Import a sample quiz from `docs/SAMPLE_QUIZ.json` via the Library/Import UI.
 5. Start a quiz (Zen or Proctor mode), complete it, and view your results and analytics.
 
-For code-level examples (auth, quizzes, results, and sync), see the dedicated [API Reference](./docs/API.md).
+For code-level examples (auth, quizzes, results, and sync), use implementation files first (`src/db/*`, `src/lib/sync/*`, `src/lib/supabase/*`). [docs/API.md](./docs/API.md) is reference-only and may lag code.
 
 ### Quiz Modes
 
@@ -246,89 +257,15 @@ graph TD
 
 ## Architecture
 
-### Tech Stack
+This README is not the architecture authority.
 
-```text
-┌─────────────────────────────────────────────────────────────┐
-│                        Frontend                              │
-├─────────────────────────────────────────────────────────────┤
-│  Next.js 16 (App Router) │ React 19 │ TypeScript │ Tailwind │
-└─────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────┐
-│                      State & Storage                         │
-├─────────────────────────────────────────────────────────────┤
-│          Dexie.js (IndexedDB)  │  React Context             │
-└─────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────┐
-│                        Backend                               │
-├─────────────────────────────────────────────────────────────┤
-│     Supabase (Auth + PostgreSQL + RLS + Realtime)           │
-└─────────────────────────────────────────────────────────────┘
-```
+For current technical truth, use:
 
-### Project Structure
+- [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) for runtime composition, boundaries, storage, schema truth, hotspots, and working rules
+- [AGENTS.md](./AGENTS.md) for control-plane entrypoint defaults
+- [docs/ENGINEERING_RUNBOOK.md](./docs/ENGINEERING_RUNBOOK.md) for workflow and verification policy
 
-```text
-src/
-├── app/                          # Next.js App Router
-│   ├── analytics/                # Analytics dashboard
-│   ├── auth/                     # Auth callback routes
-│   ├── login/, signup/           # Auth pages
-│   ├── library/                  # Quiz library
-│   ├── create/                   # Create custom quizzes guide
-│   ├── quiz/                     # Quiz flows ([id]/zen, [id]/proctor)
-│   ├── results/                  # Results pages
-│   └── settings/                 # Settings pages
-├── components/                   # React components
-│   ├── auth/                     # Authentication forms
-│   ├── dashboard/                # Dashboard/library components
-│   ├── quiz/                     # Quiz components
-│   ├── results/                  # Results display
-│   ├── analytics/                # Analytics components
-│   └── ui/                       # Shared UI components
-├── db/                           # Dexie IndexedDB setup
-│   ├── index.ts                  # Database initialization
-│   ├── quizzes.ts                # Quiz operations
-│   └── results.ts                # Results operations
-├── hooks/                        # Custom React hooks
-├── lib/                          # Utility libraries
-│   ├── supabase/                 # Supabase clients
-│   ├── sync/                     # Sync engine
-│   └── sanitize.ts               # HTML sanitization
-└── types/                        # TypeScript definitions
-```
-
-<details>
-<summary>View detailed module diagram</summary>
-
-```mermaid
-graph TB
-    subgraph "Client Layer"
-        A[Pages/Routes] --> B[Components]
-        B --> C[Hooks]
-    end
-
-    subgraph "Data Layer"
-        C --> D[Dexie DB]
-        C --> E[Supabase Client]
-    end
-
-    subgraph "Sync Layer"
-        D <--> F[Sync Manager]
-        E <--> F
-    end
-
-    subgraph "Backend"
-        E --> G[Supabase Auth]
-        E --> H[PostgreSQL + RLS]
-    end
-```
-
-</details>
+At a high level, the app uses Next.js App Router for UI/runtime composition, Dexie/IndexedDB for local-first persistence, and Supabase for auth plus remote synchronization.
 
 ---
 
@@ -336,15 +273,17 @@ graph TB
 
 ## 📚 Documentation
 
-| Document                                               | Description                        |
-| ------------------------------------------------------ | ---------------------------------- |
-| [📖 API Reference](./docs/API.md)                      | API overview and examples          |
-| [🏗️ Architecture](./docs/ARCHITECTURE.md)              | System design and patterns         |
-| [🔒 Security](./SECURITY.md)                           | Security policies and practices    |
-| [🤝 Contributing](./CONTRIBUTING.md)                   | Contribution guidelines            |
-| [📝 Changelog](./CHANGELOG.md)                         | Version history                    |
-| [❓ FAQ](./docs/FAQ.md)                                | Frequently asked questions         |
-| [👩‍💻 Code Review](./docs/CODE_REVIEW_IMPLEMENTATION.md) | Implementation standards & persona |
+| Document                                                | Description                                           |
+| ------------------------------------------------------- | ----------------------------------------------------- |
+| [🤖 Agent Entrypoint](./AGENTS.md)                      | Canonical agent defaults and control-plane entrypoint |
+| [🧭 Engineering Runbook](./docs/ENGINEERING_RUNBOOK.md) | Canonical workflow and verification policy            |
+| [🏗️ Architecture](./docs/ARCHITECTURE.md)               | Current-state architecture truth surface              |
+| [🤝 Contributing](./CONTRIBUTING.md)                    | Contributor workflow and PR expectations              |
+| [❓ FAQ](./docs/FAQ.md)                                 | Product/usage FAQ (not setup authority)               |
+| [📖 API Reference](./docs/API.md)                       | Reference-only examples that may lag implementation   |
+| [🧠 Review Context](./CODE_REVIEW_CONTEXT.md)           | Reference-only review heuristics that may be stale    |
+| [🔒 Security](./SECURITY.md)                            | Security policies and practices                       |
+| [📝 Changelog](./CHANGELOG.md)                          | Version history                                       |
 
 ---
 
@@ -352,10 +291,7 @@ graph TB
 
 ## Testing
 
-```bash
-# Run the unit test suite (Vitest)
-npm test
-```
+For required verification sets and caveats, use [docs/ENGINEERING_RUNBOOK.md](./docs/ENGINEERING_RUNBOOK.md). Common local commands still exposed by `package.json` include `npm run verify`, `npm run security-check`, and `npm run build`.
 
 ---
 
@@ -363,11 +299,13 @@ npm test
 
 ## Deployment
 
-### Vercel (Recommended)
+Only verified repo-visible facts are documented here. For authority on deployment and release policy, use [docs/ENGINEERING_RUNBOOK.md](./docs/ENGINEERING_RUNBOOK.md).
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/TJZine/CertPrep.ai)
+Verified repo-visible deployment facts:
 
-### Manual Deployment
+- CI runs lint/typecheck, tests, and build via [`.github/workflows/ci.yml`](./.github/workflows/ci.yml)
+- `main` is synchronized to `staging` via [`.github/workflows/sync-staging.yml`](./.github/workflows/sync-staging.yml)
+- The repo exposes production commands for build and start:
 
 ```bash
 # Build for production
@@ -377,16 +315,7 @@ npm run build
 npm start
 ```
 
-### Environment Variables for Production
-
-> [!IMPORTANT]
-> Ensure all required environment variables are set in your production environment.
-
-| Variable                        | Required | Description            |
-| ------------------------------- | -------- | ---------------------- |
-| `NEXT_PUBLIC_SUPABASE_URL`      | ✅       | Supabase project URL   |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✅       | Supabase anonymous key |
-| `NEXT_PUBLIC_SITE_URL`          | ✅       | Production site URL    |
+Hosting-specific deployment guidance and production environment-variable requirements are intentionally left out here unless backed by current repo evidence.
 
 ---
 
@@ -406,14 +335,17 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 
 ### Development Commands
 
-| Command                  | Description               |
-| ------------------------ | ------------------------- |
-| `npm run dev`            | Start development server  |
-| `npm run build`          | Build for production      |
-| `npm run lint`           | Run ESLint                |
-| `npm test`               | Run the test suite        |
-| `npm run security-check` | Run basic secret scanning |
-| `npm run supabase:types` | Generate DB types         |
+These commands are reference-only onboarding shortcuts. The runbook, not this table, defines which checks are required for a given change.
+
+| Command                  | Description                                      |
+| ------------------------ | ------------------------------------------------ |
+| `npm run dev`            | Start development server                         |
+| `npm run build`          | Build for production                             |
+| `npm run verify`         | Canonical local check (lint + typecheck + tests) |
+| `npm run lint`           | Run ESLint                                       |
+| `npm test`               | Run the test suite                               |
+| `npm run security-check` | Run basic secret scanning                        |
+| `npm run supabase:types` | Generate DB types                                |
 
 ---
 

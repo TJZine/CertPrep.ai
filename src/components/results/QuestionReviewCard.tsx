@@ -14,8 +14,8 @@ import {
 import { Card, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { AITutorButton } from "@/components/quiz/AITutorButton";
-import { cn } from "@/lib/utils";
-import { sanitizeHTML } from "@/lib/sanitize";
+import { cn } from "@/lib/utils/cn";
+import { sanitizeHTML } from "@/lib/utils/sanitize";
 import type { Question } from "@/types/quiz";
 
 interface QuestionReviewCardProps {
@@ -53,14 +53,18 @@ export function QuestionReviewCard({
   onResize,
 }: QuestionReviewCardProps): React.ReactElement {
   const [isExpanded, setIsExpanded] = React.useState(defaultExpanded);
+  const sanitizeReviewHTML = React.useCallback(
+    (dirty: string) => sanitizeHTML(dirty, { allowClass: false }),
+    [],
+  );
 
   const sanitizedQuestion = React.useMemo(
-    () => sanitizeHTML(question.question),
-    [question.question],
+    () => sanitizeReviewHTML(question.question),
+    [question.question, sanitizeReviewHTML],
   );
   const sanitizedExplanation = React.useMemo(
-    () => sanitizeHTML(question.explanation),
-    [question.explanation],
+    () => sanitizeReviewHTML(question.explanation),
+    [question.explanation, sanitizeReviewHTML],
   );
 
   // Determine the canonical correct answer (prefer prop, fallback to question data)
@@ -98,6 +102,10 @@ export function QuestionReviewCard({
     if (sanitizedQuestion.length <= 150) return sanitizedQuestion;
     return `${sanitizedQuestion.substring(0, 150)}...`;
   }, [sanitizedQuestion]);
+  const questionPreviewHtml = React.useMemo(
+    () => (isExpanded ? sanitizedQuestion : truncatedQuestion),
+    [isExpanded, sanitizedQuestion, truncatedQuestion],
+  );
 
   React.useEffect(() => {
     if (expandAllState !== undefined && expandAllSignal !== undefined) {
@@ -137,15 +145,9 @@ export function QuestionReviewCard({
           )}
         >
           {isCorrect ? (
-            <CheckCircle
-              className="h-5 w-5 text-correct"
-              aria-hidden="true"
-            />
+            <CheckCircle className="h-5 w-5 text-correct" aria-hidden="true" />
           ) : isWrong ? (
-            <XCircle
-              className="h-5 w-5 text-incorrect"
-              aria-hidden="true"
-            />
+            <XCircle className="h-5 w-5 text-incorrect" aria-hidden="true" />
           ) : (
             <HelpCircle
               className="h-5 w-5 text-muted-foreground"
@@ -186,17 +188,8 @@ export function QuestionReviewCard({
             )}
           </div>
 
-          <p
-            className={cn(
-              "text-foreground",
-              !isExpanded && "line-clamp-2",
-            )}
-          >
-            <span
-              dangerouslySetInnerHTML={{
-                __html: isExpanded ? sanitizedQuestion : truncatedQuestion,
-              }}
-            />
+          <p className={cn("text-foreground", !isExpanded && "line-clamp-2")}>
+            <span dangerouslySetInnerHTML={{ __html: questionPreviewHtml }} />
           </p>
         </div>
 
@@ -226,23 +219,20 @@ export function QuestionReviewCard({
             {sortedOptions.map(([key, text]) => {
               const isUserAnswer = key === userAnswer;
               const isCorrectAnswer = key === correctAnswerKey;
-              const sanitizedText = sanitizeHTML(text);
+              const sanitizedText = sanitizeReviewHTML(text);
 
-              let optionStyle =
-                "border-border bg-card";
+              let optionStyle = "border-border bg-card";
               let badgeContent: React.ReactNode = null;
 
               if (isCorrectAnswer) {
-                optionStyle =
-                  "border-correct/50 bg-correct/10";
+                optionStyle = "border-correct/50 bg-correct/10";
                 badgeContent = (
                   <Badge variant="success" className="ml-2">
                     Correct
                   </Badge>
                 );
               } else if (isUserAnswer && !isCorrect) {
-                optionStyle =
-                  "border-incorrect/50 bg-incorrect/10";
+                optionStyle = "border-incorrect/50 bg-incorrect/10";
                 badgeContent = (
                   <Badge variant="danger" className="ml-2">
                     Your Answer
@@ -289,9 +279,7 @@ export function QuestionReviewCard({
                   <span className="font-medium text-correct block mb-1">
                     Correct Answer:
                   </span>
-                  <span className="text-correct">
-                    {correctAnswerDisplay}
-                  </span>
+                  <span className="text-correct">{correctAnswerDisplay}</span>
                 </div>
               </div>
             </div>
@@ -306,13 +294,8 @@ export function QuestionReviewCard({
 
           <div className="rounded-lg border border-border bg-muted/50 p-4">
             <div className="mb-2 flex items-center gap-2">
-              <Lightbulb
-                className="h-4 w-4 text-warning"
-                aria-hidden="true"
-              />
-              <span className="font-medium text-foreground">
-                Explanation
-              </span>
+              <Lightbulb className="h-4 w-4 text-warning" aria-hidden="true" />
+              <span className="font-medium text-foreground">Explanation</span>
             </div>
             <div
               className="prose prose-sm max-w-none text-foreground"
@@ -334,5 +317,3 @@ export function QuestionReviewCard({
     </Card>
   );
 }
-
-export default QuestionReviewCard;

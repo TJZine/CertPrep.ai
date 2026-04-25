@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { computeQuizHash, resolveQuizConflict, toRemoteQuiz } from "@/lib/sync/quizDomain";
+import { computeQuizHash } from "@/lib/core/crypto";
+import { resolveQuizConflict, toRemoteQuiz } from "@/lib/sync/quizDomain";
 import type { Quiz } from "@/types/quiz";
 
 const baseQuiz: Quiz = {
