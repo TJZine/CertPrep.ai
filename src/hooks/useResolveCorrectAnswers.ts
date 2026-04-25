@@ -20,19 +20,21 @@ export function useResolveCorrectAnswers(questions: Question[]): {
     () => questions.map((q) => q.id + ":" + q.correct_answer_hash).join("|"),
     [questions],
   );
+  const isReady = questions.length > 0;
 
   useEffect((): (() => void) | void => {
-    if (!questions.length) {
-      setResolved({});
-      setIsResolving(false);
+    if (!isReady) {
       return;
     }
 
     let isMounted = true;
-    setIsResolving(true);
-    setError(null);
 
     const resolveAll = async (): Promise<void> => {
+      if (isMounted) {
+        setIsResolving(true);
+        setError(null);
+      }
+
       try {
         // Calculate new resolutions
         const updates: Record<string, string> = {};
@@ -74,7 +76,15 @@ export function useResolveCorrectAnswers(questions: Question[]): {
       isMounted = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [questionsKey]); // Depend on stable key only
+  }, [isReady, questionsKey]); // Depend on stable key only
+
+  if (!isReady) {
+    return {
+      resolvedAnswers: {},
+      isResolving: false,
+      error: null,
+    };
+  }
 
   return { resolvedAnswers: resolved, isResolving, error };
 }

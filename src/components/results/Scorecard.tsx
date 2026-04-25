@@ -135,15 +135,18 @@ function getTrendIndicator(
  * Respects prefers-reduced-motion and reacts to changes.
  */
 function useAnimatedScore(target: number, duration = 1000): number {
+  const [prefersReducedMotion, setPrefersReducedMotion] = React.useState(
+    (): boolean => {
+      if (typeof window === "undefined") return false;
+      return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    },
+  );
   const [displayValue, setDisplayValue] = React.useState(0);
-  const [prefersReducedMotion, setPrefersReducedMotion] = React.useState(false);
 
   // Listen for changes to prefers-reduced-motion
   React.useEffect(() => {
     if (typeof window === "undefined") return;
     const mql = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setPrefersReducedMotion(mql.matches);
-
     const handler = (e: MediaQueryListEvent): void =>
       setPrefersReducedMotion(e.matches);
     mql.addEventListener("change", handler);
@@ -151,10 +154,7 @@ function useAnimatedScore(target: number, duration = 1000): number {
   }, []);
 
   React.useEffect(() => {
-    if (prefersReducedMotion) {
-      setDisplayValue(target);
-      return;
-    }
+    if (prefersReducedMotion) return;
 
     let startTime: number | null = null;
     let animationFrame: number;
@@ -177,7 +177,7 @@ function useAnimatedScore(target: number, duration = 1000): number {
     return (): void => cancelAnimationFrame(animationFrame);
   }, [target, duration, prefersReducedMotion]);
 
-  return displayValue;
+  return prefersReducedMotion ? target : displayValue;
 }
 
 /**

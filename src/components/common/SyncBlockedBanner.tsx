@@ -11,15 +11,15 @@ import { cn } from "@/lib/utils/cn";
  */
 export function SyncBlockedBanner(): React.ReactElement | null {
   const { syncBlocked } = useSync();
-  const [dismissed, setDismissed] = React.useState(false);
-
-  React.useEffect(() => {
-    if (syncBlocked) {
-      setDismissed(false);
-    }
+  const [dismissedBlockKey, setDismissedBlockKey] = React.useState<string | null>(
+    null,
+  );
+  const activeBlockKey = React.useMemo(() => {
+    if (!syncBlocked) return null;
+    return `${syncBlocked.reason}|${syncBlocked.blockedAt}|${syncBlocked.tables.join(",")}`;
   }, [syncBlocked]);
 
-  if (!syncBlocked || dismissed) {
+  if (!syncBlocked || dismissedBlockKey === activeBlockKey) {
     return null;
   }
 
@@ -76,7 +76,7 @@ export function SyncBlockedBanner(): React.ReactElement | null {
           </Button>
           <button
             type="button"
-            onClick={() => setDismissed(true)}
+            onClick={() => setDismissedBlockKey(activeBlockKey)}
             className="rounded p-1 text-warning hover:bg-warning/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-warning"
             aria-label="Dismiss sync paused notification"
           >
@@ -89,4 +89,3 @@ export function SyncBlockedBanner(): React.ReactElement | null {
 }
 
 export default SyncBlockedBanner;
-

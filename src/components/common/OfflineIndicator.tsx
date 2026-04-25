@@ -24,11 +24,13 @@ export function OfflineIndicator(): React.ReactElement | null {
   }, []);
 
   React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 
   React.useEffect((): void | (() => void) => {
     if (isOnline && wasOffline && !dismissed) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setShowReconnected(true);
       const timer = window.setTimeout(hideReconnected, 3000);
       return () => {
@@ -40,6 +42,7 @@ export function OfflineIndicator(): React.ReactElement | null {
 
   React.useEffect((): void => {
     if (!isOnline) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setDismissed(false);
     }
   }, [isOnline]);

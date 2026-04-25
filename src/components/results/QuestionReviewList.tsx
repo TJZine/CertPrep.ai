@@ -34,14 +34,12 @@ const MemoizedCard = React.memo(function MemoizedCard({
   questionNumber,
   activeFilter,
   expandAll,
-  expandAllSignal,
   isResolving,
 }: {
   item: QuestionWithAnswer;
   questionNumber: number;
   activeFilter: FilterType;
   expandAll: boolean;
-  expandAllSignal: number;
   isResolving: boolean;
 }) {
   return (
@@ -56,7 +54,6 @@ const MemoizedCard = React.memo(function MemoizedCard({
         isFlagged={item.isFlagged}
         defaultExpanded={activeFilter === "incorrect" && !item.isCorrect}
         expandAllState={expandAll}
-        expandAllSignal={expandAllSignal}
         correctAnswer={item.correctAnswer}
         isResolving={isResolving}
         sourceQuizName={item.sourceQuizName}
@@ -223,12 +220,11 @@ export function QuestionReviewList({
             const originalIndex = questionIndexMap.get(item.question.id) ?? 0;
             return (
               <MemoizedCard
-                key={item.question.id}
+                key={`${item.question.id}-${expandAllSignal}`}
                 item={item}
                 questionNumber={originalIndex + 1}
                 activeFilter={activeFilter}
                 expandAll={expandAll}
-                expandAllSignal={expandAllSignal}
                 isResolving={isResolving}
               />
             );

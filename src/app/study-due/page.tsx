@@ -100,7 +100,13 @@ export default function StudyDuePage(): React.ReactElement {
     }, [effectiveUserId]);
 
     useEffect(() => {
-        void loadDueQuestions();
+        const timer = window.setTimeout((): void => {
+          void loadDueQuestions();
+        }, 0);
+
+        return (): void => {
+          window.clearTimeout(timer);
+        };
     }, [loadDueQuestions]);
 
     const totalDue = Object.values(dueCountsByBox).reduce((sum, count) => sum + count, 0);

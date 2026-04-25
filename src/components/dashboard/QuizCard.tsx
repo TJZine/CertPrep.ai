@@ -158,16 +158,18 @@ export function QuizCard({
     return `${minutes}m`;
   };
 
-  // Focus first menu item when menu opens
-  React.useEffect(() => {
+  const handleMenuToggle = (): void => {
     if (showMenu) {
-      setFocusedMenuIndex(0);
-      // Small delay to ensure DOM is ready
-      requestAnimationFrame(() => {
-        menuItemRefs.current[0]?.focus();
-      });
+      setShowMenu(false);
+      return;
     }
-  }, [showMenu]);
+
+    setShowMenu(true);
+    setFocusedMenuIndex(0);
+    requestAnimationFrame(() => {
+      menuItemRefs.current[0]?.focus();
+    });
+  };
 
   // Keyboard navigation for dropdown menu
   const handleMenuKeyDown = (event: React.KeyboardEvent): void => {
@@ -270,7 +272,7 @@ export function QuizCard({
                 aria-label="Quiz options"
                 aria-expanded={showMenu}
                 aria-haspopup="menu"
-                onClick={() => setShowMenu((open) => !open)}
+                onClick={handleMenuToggle}
               >
                 <MoreVertical className="h-5 w-5" aria-hidden="true" />
               </button>

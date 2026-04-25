@@ -195,46 +195,53 @@ export function ThemeProvider({
   const [mounted, setMounted] = React.useState(false);
 
   // 1. Initialize from localStorage if available, else default to "system"
-  // We initialize strictly to "system" (or a safe default) to match server
-  // and then sync in an effect to avoid hydration mismatch.
-  const [theme, setThemeState] = React.useState<Theme>("system");
+  const [theme, setThemeState] = React.useState<Theme>(() => {
+    if (typeof window === "undefined") return "system";
 
-  // On mount, read from storage
-  React.useEffect(() => {
-    setMounted(true);
     try {
       const stored = window.localStorage.getItem("theme");
       if (stored && Object.keys(THEME_CONFIG).includes(stored)) {
-        setThemeState(stored as Theme);
+        return stored as Theme;
       }
     } catch {
       // Ignore
     }
+    return "system";
+  });
+
+  // On mount, hydrate state after mount gate is enabled.
+  React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true);
   }, []);
 
   // Comfort Mode - reduces eye strain with gentler visual effects
-  const [comfortMode, setComfortModeState] = React.useState(false);
-
-  // On mount, read comfort mode from storage or detect system preference
-  React.useEffect(() => {
-    if (typeof window === "undefined") return;
+  const [comfortMode, setComfortModeState] = React.useState(() => {
+    if (typeof window === "undefined") return false;
     try {
       const stored = window.localStorage.getItem("comfortMode");
       if (stored !== null) {
-        setComfortModeState(stored === "true");
-      } else {
-        // Auto-enable if user prefers reduced motion
-        const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        setComfortModeState(prefersReducedMotion);
+        return stored === "true";
       }
+      // Auto-enable if user prefers reduced motion
+      return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     } catch {
-      // Ignore
+      return false;
     }
-  }, []);
+  });
 
   // 2. Resolve "system" to actual theme
   const [systemTheme, setSystemTheme] = React.useState<"light" | "dark">(
-    "light",
+    () => {
+      if (typeof window === "undefined") return "light";
+      try {
+        return window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "light";
+      } catch {
+        return "light";
+      }
+    },
   );
 
   // Listen for system changes
@@ -245,9 +252,6 @@ export function ThemeProvider({
     const handler = (e: MediaQueryListEvent): void => {
       setSystemTheme(e.matches ? "dark" : "light");
     };
-
-    // Set initial
-    setSystemTheme(mediaQuery.matches ? "dark" : "light");
 
     mediaQuery.addEventListener("change", handler);
     return (): void => mediaQuery.removeEventListener("change", handler);
