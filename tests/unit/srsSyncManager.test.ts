@@ -195,6 +195,7 @@ describe("srsSyncManager", () => {
 
     const firstSync = syncSRS("user-1");
     await vi.waitFor(() => expect(supabaseMock.rpc).toHaveBeenCalledTimes(1));
+    await Promise.resolve();
 
     const overlappedOutcome = await syncSRS("user-1");
 
@@ -375,6 +376,7 @@ describe("srsSyncManager", () => {
     );
 
     const firstSync = syncSRS("user-1");
+    await Promise.resolve();
     const secondSync = await syncSRS("user-1");
 
     expect(secondSync).toEqual({

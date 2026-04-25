@@ -143,6 +143,7 @@ async function performSRSSync(userId: string): Promise<SyncSRSOutcome> {
   safeMark("srsSync-start");
   const startTime = Date.now();
   let incomplete = false;
+  let lastError: string | undefined;
   const stats = { pushed: 0, pulled: 0 };
 
   const client = getSupabaseClient();
@@ -186,8 +187,9 @@ async function performSRSSync(userId: string): Promise<SyncSRSOutcome> {
 
   try {
     if (Date.now() - startTime > TIME_BUDGET_MS) {
+      lastError = SRS_SYNC_TIME_BUDGET_ERROR;
       return failedSyncOutcome({
-        error: SRS_SYNC_TIME_BUDGET_ERROR,
+        error: lastError,
       });
     }
 
@@ -196,11 +198,19 @@ async function performSRSSync(userId: string): Promise<SyncSRSOutcome> {
       { name: "srs.sync.push", op: "db.sync" },
       async () => await pushLocalChanges(userId, startTime, stats, client)
     );
-    incomplete = pushIncomplete || incomplete;
+    incomplete = pushIncomplete.incomplete || incomplete;
+    if (pushIncomplete.error) {
+      lastError = pushIncomplete.error;
+      logger.warn("SRS sync push failed", {
+        userId,
+        error: pushIncomplete.error,
+      });
+    }
 
     if (Date.now() - startTime > TIME_BUDGET_MS) {
+      lastError = SRS_SYNC_TIME_BUDGET_ERROR;
       return failedSyncOutcome({
-        error: SRS_SYNC_TIME_BUDGET_ERROR,
+        error: lastError,
       });
     }
 
@@ -210,6 +220,13 @@ async function performSRSSync(userId: string): Promise<SyncSRSOutcome> {
       async () => await pullRemoteChanges(userId, startTime, stats, client)
     );
     incomplete = pullResult.incomplete || incomplete;
+    if (pullResult.error) {
+      lastError = pullResult.error;
+      logger.warn("SRS sync pull failed", {
+        userId,
+        error: pullResult.error,
+      });
+    }
 
     if (pullResult.hardFailure) {
       logger.warn("SRS sync halted due to schema drift", {
@@ -225,7 +242,7 @@ async function performSRSSync(userId: string): Promise<SyncSRSOutcome> {
         incomplete,
       });
     }
-    return incomplete ? failedSyncOutcome() : syncedSyncOutcome();
+    return incomplete ? failedSyncOutcome({ error: lastError }) : syncedSyncOutcome();
   } finally {
     safeMark("srsSync-end");
     safeMeasure("srsSync", "srsSync-start", "srsSync-end");
@@ -245,8 +262,9 @@ async function pushLocalChanges(
   startTime: number,
   stats: { pushed: number },
   client: SupabaseClient<Database>,
-): Promise<boolean> {
+): Promise<{ incomplete: boolean; error?: string }> {
   let incomplete = false;
+  let errorMessage: string | undefined;
 
   // Find unsynced local SRS items
   // Index: [user_id+synced]
@@ -255,7 +273,7 @@ async function pushLocalChanges(
     .equals([userId, 0])
     .toArray();
 
-  if (unsyncedItems.length === 0) return false;
+  if (unsyncedItems.length === 0) return { incomplete: false };
 
   for (let i = 0; i < unsyncedItems.length; i += BATCH_SIZE) {
     if (Date.now() - startTime > TIME_BUDGET_MS) {
@@ -286,6 +304,8 @@ async function pushLocalChanges(
         userId,
         error: errorMsg,
       });
+      incomplete = true;
+      errorMessage = errorMsg;
 
       // Check for critical errors (circuit breaker)
       const code = error.code;
@@ -349,7 +369,10 @@ async function pushLocalChanges(
     stats.pushed += updatedCount;
   }
 
-  return incomplete;
+  return {
+    incomplete,
+    error: errorMessage,
+  };
 }
 
 async function pullRemoteChanges(
@@ -357,9 +380,10 @@ async function pullRemoteChanges(
   startTime: number,
   stats: { pulled: number },
   client: SupabaseClient<Database>,
-): Promise<{ incomplete: boolean; hardFailure: boolean }> {
+): Promise<{ incomplete: boolean; hardFailure: boolean; error?: string }> {
   let incomplete = false;
   let hardFailure = false;
+  let errorMessage: string | undefined;
   let hasMore = true;
   let consecutiveInvalidBatches = 0;
 
@@ -367,6 +391,7 @@ async function pullRemoteChanges(
     if (Date.now() - startTime > TIME_BUDGET_MS) {
       logger.warn("SRS sync time budget exceeded during pull");
       incomplete = true;
+      errorMessage = SRS_SYNC_TIME_BUDGET_ERROR;
       break;
     }
 
@@ -388,6 +413,8 @@ async function pullRemoteChanges(
 
     if (error) {
       logger.error("Failed to pull SRS items from Supabase", { userId, error });
+      incomplete = true;
+      errorMessage = toErrorMessage(error);
       break;
     }
 
@@ -493,6 +520,9 @@ async function pullRemoteChanges(
       consecutiveInvalidBatches++;
       if (consecutiveInvalidBatches >= MAX_INVALID_BATCHES) {
         logger.error(`Hit MAX_INVALID_BATCHES (${MAX_INVALID_BATCHES}) in SRS sync. Blocking sync to prevent loop.`, { userId });
+        const hardFailureError =
+          "SRS sync blocked due to repeated invalid records in pull";
+        errorMessage = hardFailureError;
         await setSyncBlockState(userId, "srs", "schema_drift");
         hardFailure = true;
         incomplete = true;
@@ -514,5 +544,5 @@ async function pullRemoteChanges(
     }
   }
 
-  return { incomplete, hardFailure };
+  return { incomplete, hardFailure, error: errorMessage };
 }

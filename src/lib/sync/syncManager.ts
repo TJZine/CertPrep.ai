@@ -116,6 +116,11 @@ export async function syncResults(userId: string): Promise<SyncResultsOutcome> {
     syncState.lastSyncAttempt = Date.now();
     try {
       return await performSync(userId);
+    } catch (error) {
+      logger.error("Result sync failed (fallback path)", error);
+      return failedSyncOutcome({
+        error: toErrorMessage(error),
+      });
     } finally {
       syncState.isSyncing = false;
     }

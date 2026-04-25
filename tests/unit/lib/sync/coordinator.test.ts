@@ -60,7 +60,15 @@ describe("runSyncPlan", () => {
     mockSyncResults.mockImplementation(makePhase2Mock("results"));
     mockSyncSRS.mockImplementation(makePhase2Mock("srs"));
 
-    await runSyncPlan("user-123", "full");
+    await Promise.race([
+      runSyncPlan("user-123", "full"),
+      new Promise<never>((_, reject) =>
+        setTimeout(
+          () => reject(new Error("phase2 domains did not start in parallel")),
+          1000,
+        ),
+      ),
+    ]);
 
     // Quizzes completed before phase 2 started
     expect(callOrder.indexOf("quizzes-end")).toBeLessThan(callOrder.indexOf("results-start"));

@@ -29,6 +29,7 @@ import {
   failedSyncOutcome,
   skippedSyncOutcome,
   syncedSyncOutcome,
+  toErrorMessage,
   type SyncRunnerOutcome,
 } from "./shared";
 
@@ -152,6 +153,7 @@ async function performQuizSync(
   performance.mark("quizSync-start");
   const startTime = Date.now();
   let incomplete = false;
+  let lastError: string | undefined;
   const stats = { pushed: 0, pulled: 0 };
 
   // Check if sync is blocked due to previous schema drift
@@ -201,21 +203,27 @@ async function performQuizSync(
     }
 
     if (Date.now() - startTime > TIME_BUDGET_MS) {
-      return failedSyncOutcome({
-        error: QUIZ_SYNC_TIME_BUDGET_ERROR,
-      });
+      lastError = QUIZ_SYNC_TIME_BUDGET_ERROR;
+      return failedSyncOutcome({ error: lastError });
     }
 
     // Push phase - wrapped in Sentry span for performance monitoring
-    incomplete = await Sentry.startSpan(
+    const pushResult = await Sentry.startSpan(
       { name: "quiz.sync.push", op: "db.sync" },
-      async () => (await pushLocalChanges(userId, startTime, stats)) || incomplete
+      async () => await pushLocalChanges(userId, startTime, stats),
     );
+    incomplete = pushResult.incomplete || incomplete;
+    if (pushResult.error) {
+      lastError = pushResult.error;
+      logger.warn("Quiz sync push failed", {
+        userId,
+        error: pushResult.error,
+      });
+    }
 
     if (Date.now() - startTime > TIME_BUDGET_MS) {
-      return failedSyncOutcome({
-        error: QUIZ_SYNC_TIME_BUDGET_ERROR,
-      });
+      lastError = QUIZ_SYNC_TIME_BUDGET_ERROR;
+      return failedSyncOutcome({ error: lastError });
     }
 
     // Pull phase - wrapped in Sentry span for performance monitoring
@@ -224,6 +232,13 @@ async function performQuizSync(
       async () => await pullRemoteChanges(userId, startTime, stats)
     );
     incomplete = pullResult.incomplete || incomplete;
+    if (pullResult.error) {
+      lastError = pullResult.error;
+      logger.warn("Quiz sync pull failed", {
+        userId,
+        error: pullResult.error,
+      });
+    }
 
 
     if (pullResult.hardFailure) {
@@ -249,7 +264,7 @@ async function performQuizSync(
         incomplete: false,
       });
     }
-    return incomplete ? failedSyncOutcome() : syncedSyncOutcome();
+    return incomplete ? failedSyncOutcome({ error: lastError }) : syncedSyncOutcome();
   } finally {
     performance.mark("quizSync-end");
     performance.measure("quizSync", "quizSync-start", "quizSync-end");
@@ -321,8 +336,9 @@ async function pushLocalChanges(
   userId: string,
   startTime: number,
   stats: { pushed: number },
-): Promise<boolean> {
+): Promise<{ incomplete: boolean; error?: string }> {
   let incomplete = false;
+  let errorMessage: string | undefined;
   const userQuizzes = await db.quizzes
     .where("user_id")
     .equals(userId)
@@ -350,11 +366,13 @@ async function pushLocalChanges(
 
 
     if (error) {
+      const pushError = toErrorMessage(error);
       logger.error("Failed to push local quizzes to Supabase", {
         userId,
         error,
       });
       incomplete = true;
+      errorMessage = pushError;
       continue;
     }
 
@@ -372,21 +390,26 @@ async function pushLocalChanges(
     stats.pushed += updatedBatch.length;
   }
 
-  return incomplete;
+  return {
+    incomplete,
+    error: errorMessage,
+  };
 }
 
 async function pullRemoteChanges(
   userId: string,
   startTime: number,
   stats: { pulled: number },
-): Promise<{ incomplete: boolean; hardFailure: boolean }> {
+): Promise<{ incomplete: boolean; hardFailure: boolean; error?: string }> {
   let incomplete = false;
   let hardFailure = false;
+  let errorMessage: string | undefined;
   let hasMore = true;
 
   while (hasMore) {
     if (Date.now() - startTime > TIME_BUDGET_MS) {
       logger.warn("Quiz sync time budget exceeded during pull");
+      errorMessage = QUIZ_SYNC_TIME_BUDGET_ERROR;
       incomplete = true;
       break;
     }
@@ -400,8 +423,10 @@ async function pullRemoteChanges(
     });
 
     if (error) {
+      const pullError = toErrorMessage(error);
       logger.error("Failed to pull quizzes from Supabase", { userId, error });
       incomplete = true;
+      errorMessage = pullError;
       break;
     }
 
@@ -543,8 +568,10 @@ async function pullRemoteChanges(
     // If we only saw invalid items, this indicates schema drift.
     // HALT sync without advancing cursor and set block state.
     if (!sawValid && sawInvalid) {
+      const schemaDriftError =
+        "All remote quizzes failed validation - schema drift detected. Halting sync.";
       logger.error(
-        "All remote quizzes failed validation - schema drift detected. Halting sync.",
+        schemaDriftError,
         {
           userId,
           batchSize: remoteQuizzes.length,
@@ -554,6 +581,7 @@ async function pullRemoteChanges(
       );
       incomplete = true;
       hardFailure = true;
+      errorMessage = schemaDriftError;
       // Set block state to prevent retry-hammering (6 hour default TTL)
       await setSyncBlockState(userId, "quizzes", "schema_drift");
       break; // Exit loop WITHOUT advancing cursor
@@ -580,5 +608,5 @@ async function pullRemoteChanges(
     }
   }
 
-  return { incomplete, hardFailure };
+  return { incomplete, hardFailure, error: errorMessage };
 }

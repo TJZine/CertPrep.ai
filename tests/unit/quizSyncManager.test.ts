@@ -22,6 +22,21 @@ const { supabaseMock } = vi.hoisted(() => {
   return { supabaseMock: supabase };
 });
 
+function createDeferred<T>(): {
+  promise: Promise<T>;
+  resolve: (value: T | PromiseLike<T>) => void;
+  reject: (reason?: unknown) => void;
+} {
+  let resolve!: (value: T | PromiseLike<T>) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+
+  return { promise, resolve, reject };
+}
+
 const sampleQuiz: Quiz = {
   id: "quiz-1",
   user_id: "user-1",
@@ -464,12 +479,22 @@ describe("quizSyncManager", () => {
       },
     });
 
-    const dateNowSpy = vi.spyOn(Date, "now");
-    dateNowSpy
-      .mockImplementationOnce(() => FIXED_TIMESTAMP)
-      .mockImplementation(() => FIXED_TIMESTAMP + 5001);
+    const authDeferred = createDeferred<{
+      data: { user: { id: string } };
+      error: null;
+    }>();
+    supabaseMock.auth.getUser.mockReturnValueOnce(authDeferred.promise);
 
-    const result = await syncQuizzes("user-1");
+    const syncPromise = syncQuizzes("user-1");
+    await vi.waitFor(() => expect(supabaseMock.auth.getUser).toHaveBeenCalledTimes(1));
+
+    vi.setSystemTime(FIXED_TIMESTAMP + 5001);
+    authDeferred.resolve({
+      data: { user: { id: "user-1" } },
+      error: null,
+    });
+
+    const result = await syncPromise;
 
     expect(result).toEqual({
       incomplete: true,

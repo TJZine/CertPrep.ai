@@ -31,17 +31,19 @@ const SYNC_RUNNERS: Record<SyncDomain, SyncRunner> = {
   srs: syncSRS,
 };
 
-const DEFAULT_OUTCOME: Record<SyncDomain, CoordinatedSyncOutcome> = {
-  quizzes: skippedSyncOutcome(),
-  results: skippedSyncOutcome(),
-  srs: skippedSyncOutcome(),
-};
-
 const SYNC_PLAN_PHASES: Record<SyncPlanName, readonly (readonly SyncDomain[])[]> = {
   full: [["quizzes"], ["results", "srs"]],
   logout: [["quizzes"], ["results", "srs"]],
   "quiz-repair": [["quizzes"]],
 };
+
+function createDefaultOutcome(): Record<SyncDomain, CoordinatedSyncOutcome> {
+  return {
+    quizzes: skippedSyncOutcome(),
+    results: skippedSyncOutcome(),
+    srs: skippedSyncOutcome(),
+  };
+}
 
 function toFailedOutcome(error: unknown): CoordinatedSyncOutcome {
   return failedSyncOutcome({
@@ -55,7 +57,7 @@ export async function runSyncPlan(
 ): Promise<SyncPlanSummary> {
   const domains = SYNC_PLAN_DOMAINS[plan];
   const domainSettlements: SyncPlanSummary["settlements"] = {};
-  const outcomes = { ...DEFAULT_OUTCOME };
+  const outcomes = createDefaultOutcome();
   const phases = SYNC_PLAN_PHASES[plan];
 
   for (const phase of phases) {

@@ -192,8 +192,22 @@ describe("Sync Manager: results", () => {
 
     expect(outcome.incomplete).toBe(true);
     expect(outcome.status).toBe("failed");
-    expect(outcome.error).toContain("lock failed");
+    expect(outcome.error).toBe("lock failed");
     expect(outcome.shouldRetry).toBe(true);
+  });
+
+  it("returns failed outcome when the fallback performSync throws", async () => {
+    vi.stubGlobal("navigator", { onLine: true });
+    mockSupabase.auth.getUser.mockRejectedValue(new Error("fallback failed"));
+
+    const outcome = await syncResults(userId);
+
+    expect(outcome).toEqual({
+      incomplete: true,
+      status: "failed",
+      error: "fallback failed",
+      shouldRetry: true,
+    });
   });
 
   it("reports skipped overlap when the fallback sync guard is already active", async () => {
