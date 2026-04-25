@@ -214,6 +214,7 @@ describe("Sync Manager: results", () => {
     expect(overlappedOutcome).toEqual({
       incomplete: false,
       status: "skipped",
+      error: null,
       shouldRetry: true,
     });
 
@@ -236,7 +237,7 @@ describe("Sync Manager: results", () => {
     expect(outcome).toEqual({
       incomplete: true,
       status: "failed",
-      error: "Failed to acquire sync lock request",
+      error: "lock exploded",
       shouldRetry: true,
     });
   });

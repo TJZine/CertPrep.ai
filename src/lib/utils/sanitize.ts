@@ -1,4 +1,4 @@
-import DOMPurify from "isomorphic-dompurify";
+import { sanitize as purify } from "isomorphic-dompurify";
 
 interface SanitizeHTMLOptions {
   allowClass?: boolean;
@@ -14,7 +14,7 @@ export function sanitizeHTML(
 ): string {
   const { allowClass = true } = options;
 
-  return DOMPurify.sanitize(dirty, {
+  return purify(dirty, {
     ALLOWED_TAGS: [
       "b",
       "i",
