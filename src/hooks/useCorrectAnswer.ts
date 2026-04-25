@@ -149,6 +149,9 @@ export function useCorrectAnswer(
   useEffect((): (() => void) => {
     let isMounted = true;
     let handler: ((event: MessageEvent) => void) | null = null;
+    let cleanup: () => void = () => {
+      // placeholder until request-specific handlers are wired
+    };
 
     const resolveAnswer = async (): Promise<void> => {
       const currentOptions = optionsRef.current;
@@ -203,10 +206,40 @@ export function useCorrectAnswer(
         return;
       }
 
-      const cleanup = (): void => {
-        if (handler && workerRef.current) {
-          workerRef.current.removeEventListener("message", handler);
+      const workerForRequest = workerRef.current;
+      const previousOnError = workerForRequest.onerror;
+      let activeOnError: ((event: ErrorEvent) => void) | null = null;
+      let hasFallbacked = false;
+
+      cleanup = (): void => {
+        if (handler && workerForRequest) {
+          workerForRequest.removeEventListener("message", handler);
         }
+        if (workerForRequest.onerror === activeOnError) {
+          workerForRequest.onerror = previousOnError;
+        }
+      };
+
+      const fallbackWithWorkerError = (): void => {
+        if (hasFallbacked) return;
+        hasFallbacked = true;
+        logger.warn("[useCorrectAnswer] Worker failed during answer resolution", {
+          questionId,
+        });
+        workerFailedRef.current = true;
+
+        if (isMounted) {
+          setError("Answer hashing worker failed; using fallback.");
+        }
+
+        cleanup();
+
+        workerForRequest.terminate();
+        if (workerRef.current === workerForRequest) {
+          workerRef.current = null;
+        }
+
+        void resolveWithFallback(currentOptions);
       };
 
       // STRATEGY: Worker
@@ -225,22 +258,33 @@ export function useCorrectAnswer(
           if (isMounted) {
             setError("Answer hashing worker failed; using fallback.");
           }
-          cleanup();
-          void resolveWithFallback(currentOptions);
+          fallbackWithWorkerError();
           return;
         }
 
         if (type === "hash_bulk_result" && payload?.id === questionId) {
+          hasFallbacked = true;
           processResult(payload.hashes as Record<string, string>);
           if (isMounted) setIsResolving(false);
           cleanup();
         }
       };
 
-      workerRef.current.addEventListener("message", handler);
+      activeOnError = (event: ErrorEvent): void => {
+        event.preventDefault();
+
+        logger.warn("[useCorrectAnswer] Worker failed during answer resolution", {
+          message: event.message,
+          questionId,
+        });
+        fallbackWithWorkerError();
+      };
+
+      workerForRequest.onerror = activeOnError;
+      workerForRequest.addEventListener("message", handler);
 
       // Send work
-      workerRef.current.postMessage({
+      workerForRequest.postMessage({
         type: "hash_bulk",
         payload: {
           id: questionId,
@@ -253,9 +297,7 @@ export function useCorrectAnswer(
 
     return () => {
       isMounted = false;
-      if (handler && workerRef.current) {
-        workerRef.current.removeEventListener("message", handler);
-      }
+      cleanup();
     };
   }, [questionId, targetHash, optionsKey]); // Depend on optionsKey to trigger when options load
 
