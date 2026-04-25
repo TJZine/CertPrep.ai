@@ -4,10 +4,11 @@
 
 import * as Sentry from "@sentry/nextjs";
 
-const SECRET_PATTERN = /\b(password|secret|key|token|auth)\b[=:\s]+([^\s,;]+)/gi;
+const SECRET_PATTERN =
+  /\b(?:[\w.-]*(?:password|passwd|secret|api[_-]?key|key|access[_-]?token|token|auth(?:orization)?)[\w.-]*)\b\s*[=:]\s*(?:Bearer\s+)?[^\s,;]+/gi;
 
 function redactSecretLikeValues(value: string): string {
-  return value.replace(SECRET_PATTERN, "$1=[REDACTED]");
+  return value.replace(SECRET_PATTERN, "[REDACTED]");
 }
 
 export function getClientSentryConfig(): Parameters<typeof Sentry.init>[0] {
@@ -19,7 +20,7 @@ export function getClientSentryConfig(): Parameters<typeof Sentry.init>[0] {
     integrations: [],
 
     tracesSampleRate: process.env.NODE_ENV === "production" ? 0.1 : 1.0,
-    enableLogs: true,
+    enableLogs: process.env.NODE_ENV !== "production",
     replaysSessionSampleRate: process.env.NODE_ENV === "production" ? 0.1 : 1.0,
     replaysOnErrorSampleRate: 1.0,
     sendDefaultPii: false,

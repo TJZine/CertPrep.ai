@@ -13,29 +13,6 @@ if (clientSentryConfig.dsn && !Sentry.getClient()) {
   if (typeof window !== "undefined") {
     let replayLoaded = false;
 
-    const loadReplay = (): void => {
-      if (replayLoaded) {
-        return;
-      }
-      replayLoaded = true;
-
-      import("@sentry/nextjs")
-        .then((SentryModule) => {
-          const client = SentryModule.getClient();
-          if (client) {
-            client.addIntegration(
-              SentryModule.replayIntegration({
-                maskAllText: true,
-                blockAllMedia: true,
-              }),
-            );
-          }
-        })
-        .catch((error) => {
-          void error;
-        });
-    };
-
     const interactionEvents: (keyof WindowEventMap)[] = [
       "click",
       "keydown",
@@ -43,12 +20,40 @@ if (clientSentryConfig.dsn && !Sentry.getClient()) {
       "touchstart",
     ];
 
-    const handleInteraction = (): void => {
+    function removeInteractionListeners(): void {
       interactionEvents.forEach((eventName) =>
         window.removeEventListener(eventName, handleInteraction),
       );
+    }
+
+    function loadReplay(): void {
+      if (replayLoaded) {
+        return;
+      }
+      replayLoaded = true;
+      removeInteractionListeners();
+
+      try {
+        const client = Sentry.getClient();
+        if (client) {
+          client.addIntegration(
+            Sentry.replayIntegration({
+              maskAllText: true,
+              blockAllMedia: true,
+            }),
+          );
+        }
+      } catch (error) {
+        console.warn("Failed to load Sentry replay integration", error);
+      }
+    }
+
+    function handleInteraction(): void {
       loadReplay();
-    };
+    }
+
+    // Replay is deferred to reduce initial client work; this may miss very early
+    // session replay context.
 
     interactionEvents.forEach((eventName) =>
       window.addEventListener(eventName, handleInteraction, {

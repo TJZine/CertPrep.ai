@@ -29,9 +29,14 @@ const originalEnv = { ...process.env };
 describe("Sentry config modules", () => {
   beforeEach(() => {
     vi.resetModules();
-    vi.clearAllMocks();
+    vi.resetAllMocks();
     process.env = { ...originalEnv };
     vi.unstubAllEnvs();
+
+    // Set default mock responses so each test has a known baseline before overrides.
+    getClientSpy.mockReturnValue(null);
+    initSpy.mockImplementation(() => {});
+    captureRouterTransitionStartSpy.mockImplementation(() => void 0);
   });
 
   afterEach(() => {
@@ -103,15 +108,24 @@ describe("Sentry config modules", () => {
     expect(
       config.beforeSend?.({
         exception: {
-          values: [{ value: "token=abc123 password: hunter2" }],
+          values: [
+            {
+              value:
+                "token=abc123 apiKey=abc123 accessToken=abc123 secret_key=abc123 Authorization: Bearer abc123",
+            },
+          ],
         },
-        message: "auth secret=my-secret",
+        message: "apiKey=abc123",
       } as never, {} as never),
     ).toEqual({
       exception: {
-        values: [{ value: "token=[REDACTED] password=[REDACTED]" }],
+        values: [
+          {
+            value: "[REDACTED] [REDACTED] [REDACTED] [REDACTED] [REDACTED]",
+          },
+        ],
       },
-      message: "auth=[REDACTED]",
+      message: "[REDACTED]",
     });
 
     expect(
@@ -128,7 +142,7 @@ describe("Sentry config modules", () => {
     ).toBeNull();
   });
 
-  it("initializes the client SDK only when a DSN exists and no client is active", async () => {
+  it("loads replay when user interaction occurs and removes listeners", async () => {
     const addIntegrationSpy = vi.fn();
     getClientSpy
       .mockReturnValueOnce(null)
@@ -139,7 +153,7 @@ describe("Sentry config modules", () => {
     const removeEventListenerSpy = vi.spyOn(window, "removeEventListener");
     const setTimeoutSpy = vi
       .spyOn(globalThis, "setTimeout")
-      .mockImplementation(((() => 1) as unknown) as typeof setTimeout);
+      .mockReturnValue(1 as unknown as ReturnType<typeof setTimeout>);
 
     await import("../../src/instrumentation-client");
 
@@ -167,22 +181,88 @@ describe("Sentry config modules", () => {
       | undefined;
     expect(handleInteraction).toBeDefined();
     handleInteraction?.();
-    await vi.waitFor(() => {
-      expect(replayIntegrationSpy).toHaveBeenCalledWith({
-        maskAllText: true,
-        blockAllMedia: true,
-      });
-      expect(addIntegrationSpy).toHaveBeenCalledWith({
-        name: "replay",
-        options: { maskAllText: true, blockAllMedia: true },
-      });
+    expect(replayIntegrationSpy).toHaveBeenCalledWith({
+      maskAllText: true,
+      blockAllMedia: true,
     });
-
+    expect(addIntegrationSpy).toHaveBeenCalledWith({
+      name: "replay",
+      options: { maskAllText: true, blockAllMedia: true },
+    });
     expect(removeEventListenerSpy).toHaveBeenCalledTimes(4);
 
     addEventListenerSpy.mockRestore();
     removeEventListenerSpy.mockRestore();
     setTimeoutSpy.mockRestore();
+  });
+
+  it("loads replay on timeout fallback and removes listeners", async () => {
+    const addIntegrationSpy = vi.fn();
+    getClientSpy
+      .mockReturnValueOnce(null)
+      .mockReturnValue({ addIntegration: addIntegrationSpy });
+    vi.stubEnv("NODE_ENV", "development");
+    vi.stubEnv("NEXT_PUBLIC_SENTRY_DSN", "https://client.example/1");
+
+    const addEventListenerSpy = vi.spyOn(window, "addEventListener");
+    const removeEventListenerSpy = vi.spyOn(window, "removeEventListener");
+    const setTimeoutSpy = vi
+      .spyOn(globalThis, "setTimeout")
+      .mockImplementation((handler) => {
+        void handler;
+        return 1 as unknown as ReturnType<typeof setTimeout>;
+      });
+
+    await import("../../src/instrumentation-client");
+
+    expect(initSpy).toHaveBeenCalledTimes(1);
+
+    const [config] = initSpy.mock.calls[0] ?? [];
+    expect(config).toEqual(
+      expect.objectContaining({
+        dsn: "https://client.example/1",
+        integrations: [],
+        tracesSampleRate: 1,
+        enableLogs: true,
+        replaysSessionSampleRate: 1,
+        replaysOnErrorSampleRate: 1,
+        sendDefaultPii: false,
+        debug: true,
+      }),
+    );
+
+    expect(addEventListenerSpy).toHaveBeenCalledTimes(4);
+    expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function), 5000);
+
+    const timeoutHandler = setTimeoutSpy.mock.calls[0]?.[0];
+    expect(timeoutHandler).toBeDefined();
+    if (typeof timeoutHandler === "function") {
+      timeoutHandler();
+    }
+
+    expect(replayIntegrationSpy).toHaveBeenCalledWith({
+      maskAllText: true,
+      blockAllMedia: true,
+    });
+    expect(addIntegrationSpy).toHaveBeenCalledWith({
+      name: "replay",
+      options: { maskAllText: true, blockAllMedia: true },
+    });
+    expect(removeEventListenerSpy).toHaveBeenCalledTimes(4);
+
+    addEventListenerSpy.mockRestore();
+    removeEventListenerSpy.mockRestore();
+    setTimeoutSpy.mockRestore();
+  });
+
+  it("disables client logs in production", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("NEXT_PUBLIC_SENTRY_DSN", "https://client.example/1");
+
+    const { getClientSentryConfig } = await import("../../sentry.client.config");
+    const config = getClientSentryConfig();
+
+    expect(config.enableLogs).toBe(false);
   });
 
   it("does not initialize the client SDK without a DSN", async () => {
