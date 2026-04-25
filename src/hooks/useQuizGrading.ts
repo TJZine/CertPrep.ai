@@ -30,7 +30,7 @@ export function useQuizGrading(
   // useLiveQuery returns a new object reference every time, even if data hasn't changed
   const answersJson = JSON.stringify(answers);
   const questionIdsJson = JSON.stringify(questionIds);
-  const isReady = Boolean(quiz && answers);
+  const isReady = Boolean(quiz);
 
   useEffect((): (() => void) | void => {
     if (!isReady || !quiz) {

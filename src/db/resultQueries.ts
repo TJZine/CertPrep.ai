@@ -57,14 +57,21 @@ export async function getMissedQuestions(
   }
 
   const quiz = await db.quizzes.get(result.quiz_id);
-  if (!quiz) {
+  if (!quiz || quiz.deleted_at != null) {
     throw new Error("Quiz not found.");
   }
 
   const questionResults = await Promise.all(
     quiz.questions.map(async (question) => {
-      const userAnswer = result.answers[String(question.id)];
-      if (!userAnswer) return null;
+      const questionId = String(question.id);
+      const hasAnswer = Object.prototype.hasOwnProperty.call(
+        result.answers,
+        questionId,
+      );
+      if (!hasAnswer) return null;
+
+      const userAnswer = result.answers[questionId];
+      if (userAnswer == null) return null;
 
       const { isCorrect } = await evaluateAnswer(question, userAnswer);
 

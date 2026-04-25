@@ -3,6 +3,7 @@ import { getAllResults, getResultsByQuizId } from "./resultQueries";
 import { calculatePercentage } from "@/lib/utils/math";
 import { logger } from "@/lib/logger";
 import { evaluateAnswer } from "@/lib/grading";
+import { NIL_UUID } from "@/lib/constants";
 import type { CategoryPerformance, Result } from "@/types/result";
 import type { Question, Quiz } from "@/types/quiz";
 
@@ -46,7 +47,11 @@ export async function getCategoryPerformance(
 ): Promise<CategoryPerformance[]> {
   const quiz = await db.quizzes.get(quizId);
 
-  if (!quiz) {
+  if (
+    !quiz ||
+    quiz.deleted_at != null ||
+    (quiz.user_id !== userId && quiz.user_id !== NIL_UUID)
+  ) {
     throw new Error("Quiz not found.");
   }
 
@@ -110,8 +115,8 @@ export async function getOverallStats(userId: string): Promise<OverallStats> {
     db.results.where("user_id").equals(userId).toArray(),
   ]);
 
-  const results = allResults.filter((r) => !r.deleted_at);
-  const quizzes = allQuizzes.filter((q) => !q.deleted_at);
+  const results = allResults.filter((r) => r.deleted_at == null);
+  const quizzes = allQuizzes.filter((q) => q.deleted_at == null);
 
   const quizMap = new Map(quizzes.map((quiz) => [quiz.id, quiz]));
   const allQuestionsMap = new Map<string, { question: Question; quizId: string }>();
