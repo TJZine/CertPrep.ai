@@ -87,7 +87,7 @@ export function ModeSelectModal({
 
   const handleStart = (): void => {
     if (!quiz) return;
-    onClose();
+    handleCloseModal();
     router.push(`/quiz/${quiz.id}/${selectedMode}`);
   };
 

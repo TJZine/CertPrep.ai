@@ -166,10 +166,12 @@ export function QuizCard({
 
     setShowMenu(true);
     setFocusedMenuIndex(0);
-    requestAnimationFrame(() => {
-      menuItemRefs.current[0]?.focus();
-    });
   };
+
+  React.useEffect(() => {
+    if (!showMenu) return;
+    menuItemRefs.current[focusedMenuIndex]?.focus();
+  }, [showMenu, focusedMenuIndex]);
 
   // Keyboard navigation for dropdown menu
   const handleMenuKeyDown = (event: React.KeyboardEvent): void => {

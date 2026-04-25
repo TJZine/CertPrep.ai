@@ -62,12 +62,12 @@ export function ReviewModeModal({
     const router = useRouter();
     const [selectedMode, setSelectedMode] = React.useState<ReviewMode>("quiz");
 
-    const handleStart = (): void => {
-        const option = reviewModeOptions.find((o) => o.id === selectedMode);
-        if (!option) return;
-        onClose();
-        router.push(option.href);
-    };
+  const handleStart = (): void => {
+    const option = reviewModeOptions.find((o) => o.id === selectedMode);
+    if (!option) return;
+    handleCloseModal();
+    router.push(option.href);
+  };
 
     const handleCloseModal = (): void => {
         setSelectedMode("quiz");

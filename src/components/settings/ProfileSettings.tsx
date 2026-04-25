@@ -56,8 +56,14 @@ function ProfileSettingsForm({
   const [isEditingEmail, setIsEditingEmail] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const hasNameChange = fullName !== (user?.user_metadata?.full_name || "");
-  const hasEmailChange = isEditingEmail && email !== (user?.email || "");
+  const existingFullName = (user?.user_metadata?.full_name ?? "").trim();
+  const nextFullName = fullName.trim();
+  const existingEmail = user?.email ?? "";
+  const nextEmail = email.trim();
+
+  const hasNameChange =
+    nextFullName.length > 0 && nextFullName !== existingFullName;
+  const hasEmailChange = isEditingEmail && nextEmail !== existingEmail;
   const hasChanges = hasNameChange || hasEmailChange;
   const isDisabled = !user || isLoading || !hasChanges;
 
@@ -72,12 +78,12 @@ function ProfileSettingsForm({
     const updates: { data?: { full_name: string }; email?: string } = {};
     let message = "Profile updated successfully";
 
-    if (fullName !== user?.user_metadata?.full_name) {
-      updates.data = { full_name: fullName };
+    if (hasNameChange) {
+      updates.data = { full_name: nextFullName };
     }
 
-    if (isEditingEmail && email !== user?.email) {
-      updates.email = email;
+    if (hasEmailChange) {
+      updates.email = nextEmail;
       message =
         "Profile updated. Please check both your old and new emails to confirm the change.";
     }

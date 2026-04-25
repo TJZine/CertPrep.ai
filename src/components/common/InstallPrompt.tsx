@@ -10,6 +10,8 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
+const PWA_INSTALL_DISMISSED_KEY = "pwa_install_dismissed";
+
 /**
  * Component to prompt users to install the PWA.
  */
@@ -17,6 +19,8 @@ export function InstallPrompt(): React.ReactElement | null {
   const [deferredPrompt, setDeferredPrompt] =
     React.useState<BeforeInstallPromptEvent | null>(null);
   const [showPrompt, setShowPrompt] = React.useState(false);
+  // Keep these initializers SSR-safe. showPrompt/deferredPrompt must remain falsy
+  // on first render to avoid hydration mismatches.
   const [isInstalled, setIsInstalled] = React.useState(() => {
     if (typeof window === "undefined") return false;
     try {
@@ -28,7 +32,7 @@ export function InstallPrompt(): React.ReactElement | null {
   const [dismissed, setDismissed] = React.useState(() => {
     if (typeof window === "undefined") return false;
     try {
-      const dismissedAt = localStorage.getItem("pwa_install_dismissed");
+      const dismissedAt = localStorage.getItem(PWA_INSTALL_DISMISSED_KEY);
       if (!dismissedAt) return false;
 
       const dismissedTime = new Date(dismissedAt).getTime();
@@ -92,7 +96,7 @@ export function InstallPrompt(): React.ReactElement | null {
     setShowPrompt(false);
     setDismissed(true);
     try {
-      localStorage.setItem("pwa_install_dismissed", new Date().toISOString());
+      localStorage.setItem(PWA_INSTALL_DISMISSED_KEY, new Date().toISOString());
     } catch {
       // Ignore storage persistence failures.
     }

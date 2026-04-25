@@ -72,16 +72,12 @@ export function Header(): React.ReactElement {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Close menu during browser history navigation to avoid stale open state.
-  React.useEffect((): (() => void) => {
-    const handlePopState = (): void => {
-      setOpenMenuPathname(null);
-    };
-    window.addEventListener("popstate", handlePopState);
-    return (): void => {
-      window.removeEventListener("popstate", handlePopState);
-    };
-  }, []);
+  React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Clears stale mobile-menu route state after App Router navigation.
+    setOpenMenuPathname((current) =>
+      current === null || current === pathname ? current : null,
+    );
+  }, [pathname]);
 
   // Lock body scroll when mobile menu is open
   React.useEffect(() => {

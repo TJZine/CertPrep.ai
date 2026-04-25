@@ -16,7 +16,7 @@ export function SyncBlockedBanner(): React.ReactElement | null {
   );
   const activeBlockKey = React.useMemo(() => {
     if (!syncBlocked) return null;
-    return `${syncBlocked.reason}|${syncBlocked.blockedAt}|${syncBlocked.tables.join(",")}`;
+    return `${syncBlocked.reason}|${syncBlocked.blockedAt}|${[...syncBlocked.tables].sort().join(",")}`;
   }, [syncBlocked]);
 
   if (!syncBlocked || dismissedBlockKey === activeBlockKey) {
