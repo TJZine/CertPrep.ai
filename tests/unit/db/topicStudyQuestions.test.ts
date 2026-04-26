@@ -8,23 +8,31 @@ const { quizzesData, resultsData, dbMock } = vi.hoisted(() => {
     const quizzesData: Quiz[] = [];
     const resultsData: Result[] = [];
 
-    const quizzesWhere = vi.fn().mockReturnValue({
+    const quizzesWhere = vi.fn().mockImplementation(() => ({
         equals: vi.fn().mockImplementation((userId: string) => ({
-            // Updated mock to support immediate toArray() call
             toArray: vi
                 .fn()
                 .mockImplementation(async () =>
                     quizzesData.filter((quiz) => quiz.user_id === userId),
                 ),
+            filter: vi.fn().mockImplementation((predicate: (quiz: Quiz) => boolean) => ({
+                toArray: vi
+                    .fn()
+                    .mockImplementation(async () =>
+                        quizzesData
+                            .filter((quiz) => quiz.user_id === userId)
+                            .filter(predicate),
+                    ),
+            })),
         })),
-    });
+    }));
 
     // Mock bulkGet for getTopicStudyQuestions
     const quizzesBulkGet = vi.fn().mockImplementation(async (ids: string[]) =>
         ids.map((id) => quizzesData.find((q) => q.id === id)),
     );
 
-    const resultsWhere = vi.fn().mockReturnValue({
+    const resultsWhere = vi.fn().mockImplementation(() => ({
         equals: vi.fn().mockImplementation((userId: string) => ({
             toArray: vi
                 .fn()
@@ -37,7 +45,7 @@ const { quizzesData, resultsData, dbMock } = vi.hoisted(() => {
                 ),
             })),
         })),
-    });
+    }));
 
     return {
         quizzesData,
@@ -58,13 +66,6 @@ vi.mock("@/db", () => ({ db: dbMock }));
 vi.mock("@/db/dbInstance", () => ({ db: dbMock }));
 vi.mock("@/lib/grading", () => ({
     evaluateAnswer: vi.fn(),
-}));
-
-vi.mock("@/lib/utils/cn", () => ({
-    hashAnswer: vi.fn(async (answer: string) => `hash-${answer}`),
-    calculatePercentage: (correct: number, total: number): number =>
-        total === 0 ? 0 : Math.round((correct / total) * 100),
-    generateUUID: (): string => "test-uuid",
 }));
 
 describe("getTopicStudyQuestions", () => {
@@ -410,7 +411,7 @@ describe("getTopicStudyQuestions", () => {
             },
             {
                 id: "quiz-2",
-                user_id: "user-a",
+                user_id: "user-b",
                 title: "Source Quiz",
                 description: "",
                 created_at: 1,
@@ -453,6 +454,8 @@ describe("getTopicStudyQuestions", () => {
         expect(data.questionIds).toEqual(["q2"]);
         expect(data.quizIds).toEqual(["quiz-2"]);
         expect(data.missedCount).toBe(1);
+        expect(data.flaggedCount).toBe(0);
+        expect(data.totalUniqueCount).toBe(1);
     });
 
     it("treats an explicit empty question_ids list as an empty session", async () => {
@@ -647,7 +650,17 @@ describe("getTopicStudyQuestions", () => {
         });
 
         const pending = getTopicStudyQuestions("user-a", "Networking");
-        await newerAttemptEntered;
+        // Force q1 evaluation from the newest attempt to start before releasing it;
+        // otherwise a batching regression could let the test hang indefinitely.
+        await Promise.race([
+            newerAttemptEntered,
+            new Promise<never>((_, reject) =>
+                setTimeout(
+                    () => reject(new Error("newest q1 evaluation did not start")),
+                    1000,
+                ),
+            ),
+        ]);
         releaseNewestFirstQuestion();
 
         const data = await pending;
