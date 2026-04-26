@@ -97,7 +97,7 @@ export async function syncSRS(userId: string): Promise<SyncSRSOutcome> {
             } catch (error) {
               logger.error("SRS sync failed while holding lock", error);
               return failedSyncOutcome({
-                error: "SRS sync failed while holding lock",
+                error: toErrorMessage(error),
               });
             }
           },
@@ -109,7 +109,7 @@ export async function syncSRS(userId: string): Promise<SyncSRSOutcome> {
     } catch (error) {
       logger.error("Failed to acquire SRS sync lock request", error);
       return failedSyncOutcome({
-        error: "Failed to acquire SRS sync lock request",
+        error: toErrorMessage(error),
       });
     }
   }
@@ -167,6 +167,7 @@ async function performSRSSync(userId: string): Promise<SyncSRSOutcome> {
     logger.error("SRS sync aborted: Auth user ID mismatch", { authUserId: user.id, syncUserId: userId });
     return failedSyncOutcome({
       error: "User ID mismatch - please re-login",
+      shouldRetry: false,
     });
   }
 
@@ -182,6 +183,7 @@ async function performSRSSync(userId: string): Promise<SyncSRSOutcome> {
     });
     return failedSyncOutcome({
       error: blockState.reason,
+      shouldRetry: false,
     });
   }
 
