@@ -85,6 +85,7 @@ export async function syncResults(userId: string): Promise<SyncResultsOutcome> {
             if (!lock) {
               logger.debug("Sync already in progress in another tab, skipping");
               return skippedSyncOutcome({
+                incomplete: true,
                 shouldRetry: true,
               });
             }
@@ -116,6 +117,7 @@ export async function syncResults(userId: string): Promise<SyncResultsOutcome> {
         syncState.isSyncing = false;
       } else {
         return skippedSyncOutcome({
+          incomplete: true,
           shouldRetry: true,
         });
       }
@@ -204,6 +206,7 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
         if (Date.now() - startTime > TIME_BUDGET_MS) {
           logger.warn(`Sync time budget exceeded (${TIME_BUDGET_MS}ms) during PUSH, pausing.`);
           incomplete = true;
+          lastError = "Result sync push time budget exceeded";
           break;
         }
 
@@ -255,6 +258,7 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
       // sync if any result references an unsynced quiz.
       if (skippedCount > 0) {
         incomplete = true;
+        lastError ??= "Result sync skipped results with unsynced quizzes";
       }
     }
 
@@ -269,6 +273,7 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
         logger.warn(`Sync limit reached (time budget ${TIME_BUDGET_MS}ms), pausing.`);
         hasMore = false;
         incomplete = true;
+        lastError = "Result sync pull time budget exceeded";
         break;
       }
 
