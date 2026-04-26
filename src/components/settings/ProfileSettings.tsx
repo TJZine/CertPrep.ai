@@ -138,6 +138,7 @@ function ProfileSettingsForm({
           <Input
             id="email"
             type="email"
+            autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             disabled={!isEditingEmail || isLoading}
@@ -170,6 +171,7 @@ function ProfileSettingsForm({
         </label>
         <Input
           id="fullName"
+          autoComplete="name"
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
           placeholder="Your Name"
