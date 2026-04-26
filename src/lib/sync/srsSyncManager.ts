@@ -96,6 +96,7 @@ export async function syncSRS(userId: string): Promise<SyncSRSOutcome> {
             if (!lock) {
               logger.debug("SRS sync already in progress in another tab, skipping");
               return skippedSyncOutcome({
+                incomplete: true,
                 shouldRetry: true,
               });
             }
@@ -127,6 +128,7 @@ export async function syncSRS(userId: string): Promise<SyncSRSOutcome> {
       syncState.isSyncing = false;
     } else {
       return skippedSyncOutcome({
+        incomplete: true,
         shouldRetry: true,
       });
     }
@@ -197,6 +199,11 @@ async function performSRSSync(userId: string): Promise<SyncSRSOutcome> {
   try {
     if (Date.now() - startTime > TIME_BUDGET_MS) {
       lastError = SRS_SYNC_TIME_BUDGET_ERROR;
+      logger.info("SRS sync stopped before work due to time budget", {
+        userId,
+        pushed: stats.pushed,
+        pulled: stats.pulled,
+      });
       return failedSyncOutcome({
         error: lastError,
       });
@@ -218,6 +225,11 @@ async function performSRSSync(userId: string): Promise<SyncSRSOutcome> {
 
     if (Date.now() - startTime > TIME_BUDGET_MS) {
       lastError = SRS_SYNC_TIME_BUDGET_ERROR;
+      logger.info("SRS sync stopped after push due to time budget", {
+        userId,
+        pushed: stats.pushed,
+        pulled: stats.pulled,
+      });
       return failedSyncOutcome({
         error: lastError,
       });
@@ -254,7 +266,10 @@ async function performSRSSync(userId: string): Promise<SyncSRSOutcome> {
     return incomplete
       ? failedSyncOutcome({
           error: lastError,
-          shouldRetry: pushIncomplete.shouldRetry ?? true,
+          shouldRetry: pullResult.hardFailure
+            ? false
+            : (pushIncomplete.shouldRetry ?? true) &&
+              (pullResult.shouldRetry ?? true),
         })
       : syncedSyncOutcome();
   } finally {
@@ -399,10 +414,11 @@ async function pullRemoteChanges(
   startTime: number,
   stats: { pulled: number },
   client: SupabaseClient<Database>,
-): Promise<{ incomplete: boolean; hardFailure: boolean; error?: string }> {
+): Promise<SRSPhaseOutcome & { hardFailure: boolean }> {
   let incomplete = false;
   let hardFailure = false;
   let errorMessage: string | undefined;
+  let shouldRetry = true;
   let hasMore = true;
   let consecutiveInvalidBatches = 0;
 
@@ -434,6 +450,7 @@ async function pullRemoteChanges(
       logger.error("Failed to pull SRS items from Supabase", { userId, error });
       incomplete = true;
       errorMessage = toErrorMessage(error);
+      shouldRetry = !isNonRetryableAuthSyncError(error);
       break;
     }
 
@@ -545,6 +562,7 @@ async function pullRemoteChanges(
         await setSyncBlockState(userId, "srs", "schema_drift");
         hardFailure = true;
         incomplete = true;
+        shouldRetry = false;
         break;
       }
     } else {
@@ -563,5 +581,5 @@ async function pullRemoteChanges(
     }
   }
 
-  return { incomplete, hardFailure, error: errorMessage };
+  return { incomplete, hardFailure, error: errorMessage, shouldRetry };
 }
