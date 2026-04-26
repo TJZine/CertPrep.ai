@@ -73,6 +73,12 @@ describe("runSyncPlan", () => {
       ),
     ]);
 
+    expect(callOrder).toContain("quizzes-end");
+    expect(callOrder).toContain("results-start");
+    expect(callOrder).toContain("srs-start");
+    expect(callOrder).toContain("results-end");
+    expect(callOrder).toContain("srs-end");
+
     // Quizzes completed before phase 2 started
     expect(callOrder.indexOf("quizzes-end")).toBeLessThan(callOrder.indexOf("results-start"));
     expect(callOrder.indexOf("quizzes-end")).toBeLessThan(callOrder.indexOf("srs-start"));
