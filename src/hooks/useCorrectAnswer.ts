@@ -210,7 +210,7 @@ export function useCorrectAnswer(
       const workerForRequest = workerRef.current;
       const previousOnError = workerForRequest.onerror;
       let activeOnError: ((event: ErrorEvent) => void) | null = null;
-      let hasFallbacked = false;
+      let isSettled = false;
 
       cleanup = (): void => {
         if (handler && workerForRequest) {
@@ -222,8 +222,8 @@ export function useCorrectAnswer(
       };
 
       const fallbackWithWorkerError = (): void => {
-        if (hasFallbacked) return;
-        hasFallbacked = true;
+        if (isSettled) return;
+        isSettled = true;
         logger.warn("[useCorrectAnswer] Worker failed during answer resolution", {
           questionId,
         });
@@ -260,7 +260,7 @@ export function useCorrectAnswer(
         }
 
         if (type === "hash_bulk_result" && payload?.id === questionId) {
-          hasFallbacked = true;
+          isSettled = true;
           processResult(payload.hashes as Record<string, string>);
           if (isMounted) setIsResolving(false);
           cleanup();
