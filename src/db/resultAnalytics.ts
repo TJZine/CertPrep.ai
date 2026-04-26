@@ -18,6 +18,9 @@ export interface OverallStats {
 const WEAKEST_CATEGORY_PRIOR_TOTAL = 5;
 const WEAKEST_CATEGORY_PRIOR_PERCENTAGE = 70;
 
+type QuestionIndex = Map<string, { question: Question; quizId: string }>;
+type CategoryScoreEntry = { category: string; correct: number; total: number };
+
 function calculateWeakestCategoryRank(correct: number, total: number): number {
   const priorCorrect =
     (WEAKEST_CATEGORY_PRIOR_PERCENTAGE / 100) * WEAKEST_CATEGORY_PRIOR_TOTAL;
@@ -27,10 +30,48 @@ function calculateWeakestCategoryRank(correct: number, total: number): number {
   );
 }
 
+function buildQuestionIndex(
+  quizzes: Array<Quiz | undefined | null>,
+): QuestionIndex {
+  const questionIndex: QuestionIndex = new Map();
+
+  quizzes.forEach((quiz) => {
+    if (!quiz || quiz.deleted_at != null || !quiz.questions) return;
+    quiz.questions.forEach((question) => {
+      questionIndex.set(question.id, { question, quizId: quiz.id });
+    });
+  });
+
+  return questionIndex;
+}
+
+async function buildQuestionIndexWithSourceMap(
+  quizzes: Quiz[],
+  results: Result[],
+): Promise<QuestionIndex> {
+  const baseQuizIds = new Set(quizzes.map((quiz) => quiz.id));
+  const sourceQuizIds = new Set<string>();
+
+  results.forEach((result) => {
+    Object.values(result.source_map ?? {}).forEach((quizId) => {
+      if (quizId && !baseQuizIds.has(quizId)) {
+        sourceQuizIds.add(quizId);
+      }
+    });
+  });
+
+  if (sourceQuizIds.size === 0) {
+    return buildQuestionIndex(quizzes);
+  }
+
+  const sourceQuizzes = await db.quizzes.bulkGet(Array.from(sourceQuizIds));
+  return buildQuestionIndex([...quizzes, ...sourceQuizzes]);
+}
+
 function resolveSessionQuestions(
   result: Result,
   quiz: Quiz | undefined,
-  allQuestionsMap: Map<string, { question: Question; quizId: string }>,
+  allQuestionsMap: QuestionIndex,
 ): Question[] {
   if (result.question_ids !== undefined) {
     const localById = new Map(
@@ -46,6 +87,34 @@ function resolveSessionQuestions(
   }
 
   return [];
+}
+
+function getValidComputedCategoryScoreEntries(
+  result: Result,
+  resolvedQuestionCount: number,
+): CategoryScoreEntry[] | null {
+  if (!result.computed_category_scores) return null;
+
+  const entries = Object.entries(result.computed_category_scores).map(
+    ([category, scores]) => ({
+      category,
+      correct: scores.correct,
+      total: scores.total,
+    }),
+  );
+
+  const hasInvalidScore = entries.some(
+    ({ correct, total }) =>
+      !Number.isFinite(correct) ||
+      !Number.isFinite(total) ||
+      correct < 0 ||
+      total < 0 ||
+      correct > total,
+  );
+  if (hasInvalidScore) return null;
+
+  const computedTotal = entries.reduce((sum, { total }) => sum + total, 0);
+  return computedTotal === resolvedQuestionCount ? entries : null;
 }
 
 /**
@@ -67,12 +136,7 @@ export async function getCategoryPerformance(
 
   const results = await getResultsByQuizId(quizId, userId);
   const totals: Record<string, { correct: number; total: number }> = {};
-  const allQuestionsMap = new Map(
-    quiz.questions.map((question) => [
-      question.id,
-      { question, quizId: quiz.id },
-    ]),
-  );
+  const allQuestionsMap = buildQuestionIndex([quiz]);
 
   const BATCH_SIZE = 50;
   for (let i = 0; i < results.length; i += BATCH_SIZE) {
@@ -134,13 +198,7 @@ export async function getOverallStats(userId: string): Promise<OverallStats> {
   ]);
 
   const quizMap = new Map(quizzes.map((quiz) => [quiz.id, quiz]));
-  const allQuestionsMap = new Map<string, { question: Question; quizId: string }>();
-  quizzes.forEach((q) => {
-    if (!q.questions) return;
-    q.questions.forEach((question) => {
-      allQuestionsMap.set(question.id, { question, quizId: q.id });
-    });
-  });
+  const allQuestionsMap = await buildQuestionIndexWithSourceMap(quizzes, results);
 
   const totalQuizzes = quizzes.length;
   const totalAttempts = results.length;
@@ -159,16 +217,6 @@ export async function getOverallStats(userId: string): Promise<OverallStats> {
     const batch = results.slice(i, i + BATCH_SIZE);
     const batchData = await Promise.all(
       batch.map(async (result) => {
-        if (result.computed_category_scores) {
-          return Object.entries(result.computed_category_scores).map(
-            ([category, scores]) => ({
-              category,
-              correct: scores.correct,
-              total: scores.total,
-            }),
-          );
-        }
-
         const quiz = quizMap.get(result.quiz_id);
         const sessionQuestions = resolveSessionQuestions(
           result,
@@ -177,6 +225,14 @@ export async function getOverallStats(userId: string): Promise<OverallStats> {
         );
 
         if (sessionQuestions.length === 0) return [];
+
+        const computedScores = getValidComputedCategoryScoreEntries(
+          result,
+          sessionQuestions.length,
+        );
+        if (computedScores) {
+          return computedScores;
+        }
 
         return Promise.all(
           sessionQuestions.map(async (question) => {
@@ -250,116 +306,115 @@ export async function getTopicStudyQuestions(
 ): Promise<TopicStudyData> {
   const allResults = await getAllResults(userId);
 
-  const allQuizzesRaw = await db.quizzes
+  const allQuizzes = await db.quizzes
     .where("user_id")
     .equals(userId)
+    .filter((quiz) => quiz.deleted_at == null)
     .toArray();
 
-  const allQuizzes = allQuizzesRaw.filter((q) => q.deleted_at == null);
-
   const quizMap = new Map(allQuizzes.map((quiz) => [quiz.id, quiz]));
-  const allQuestionsMap = new Map<string, { question: Question; quizId: string }>();
-  allQuizzes.forEach((q) => {
-    if (!q.questions) return;
-    q.questions.forEach((question) => {
-      allQuestionsMap.set(question.id, { question, quizId: q.id });
-    });
-  });
+  const allQuestionsMap = await buildQuestionIndexWithSourceMap(
+    allQuizzes,
+    allResults,
+  );
 
-  const processedQuestionIds = new Set<string>();
-  const missedIds = new Set<string>();
-  const flaggedIds = new Set<string>();
-  const sourceQuizIds = new Set<string>();
-
-  const BATCH_SIZE = 50;
-  for (let i = 0; i < allResults.length; i += BATCH_SIZE) {
-    const batch = allResults.slice(i, i + BATCH_SIZE);
-    const batchEntries: Array<{
+  const latestEntries = new Map<
+    string,
+    {
       question: Question;
       questionId: string;
       result: Result;
       quiz: Quiz | undefined;
       isFlagged: boolean;
       userAnswer: string | undefined;
-    }> = [];
-
-    for (const result of batch) {
-      const quiz = quizMap.get(result.quiz_id);
-      const sessionQuestions = resolveSessionQuestions(
-        result,
-        quiz,
-        allQuestionsMap,
-      );
-
-      if (sessionQuestions.length === 0) continue;
-
-      const categoryQuestions = sessionQuestions.filter((q) => {
-        const qCategory = q.category || "Uncategorized";
-        return qCategory === category;
-      });
-
-      for (const question of categoryQuestions) {
-        const questionId = String(question.id);
-        if (processedQuestionIds.has(questionId)) {
-          continue;
-        }
-
-        processedQuestionIds.add(questionId);
-        batchEntries.push({
-          question,
-          questionId,
-          result,
-          quiz,
-          isFlagged: result.flagged_questions.includes(questionId),
-          userAnswer: result.answers[questionId],
-        });
-      }
+      timestamp: number;
     }
+  >();
 
-    const processedEntries = await Promise.all(
-      batchEntries.map(
-        async ({ question, questionId, result, quiz, isFlagged, userAnswer }) => {
-          try {
-            const isMissed = userAnswer
-              ? !(await evaluateAnswer(question, userAnswer)).isCorrect
-              : false;
-
-            return { questionId, quiz, isFlagged, isMissed };
-          } catch (error) {
-            logger.error("Failed to process topic study question", {
-              error,
-              quizId: result.quiz_id,
-              questionId,
-              category,
-            });
-            return null;
-          }
-        },
-      ),
+  for (const result of allResults) {
+    const quiz = quizMap.get(result.quiz_id);
+    const sessionQuestions = resolveSessionQuestions(
+      result,
+      quiz,
+      allQuestionsMap,
     );
 
-    processedEntries.forEach((entry) => {
-      if (!entry) return;
-      const { questionId, quiz, isFlagged, isMissed } = entry;
+    if (sessionQuestions.length === 0) continue;
 
-      if (isFlagged) {
-        flaggedIds.add(questionId);
-      }
-
-      if (isMissed) {
-        missedIds.add(questionId);
-      }
-
-      if (isFlagged || isMissed) {
-        const sourceInfo = allQuestionsMap.get(questionId);
-        if (sourceInfo) {
-          sourceQuizIds.add(sourceInfo.quizId);
-        } else if (quiz) {
-          sourceQuizIds.add(quiz.id);
-        }
-      }
+    const categoryQuestions = sessionQuestions.filter((q) => {
+      const qCategory = q.category || "Uncategorized";
+      return qCategory === category;
     });
+
+    for (const question of categoryQuestions) {
+      const questionId = String(question.id);
+      const previous = latestEntries.get(questionId);
+      if (previous && previous.timestamp >= result.timestamp) {
+        continue;
+      }
+
+      latestEntries.set(questionId, {
+        question,
+        questionId,
+        result,
+        quiz,
+        isFlagged: result.flagged_questions?.includes(questionId) ?? false,
+        userAnswer: result.answers[questionId],
+        timestamp: result.timestamp,
+      });
+    }
   }
+
+  const processedEntries = await Promise.all(
+    Array.from(latestEntries.values()).map(
+      async ({ question, questionId, result, quiz, isFlagged, userAnswer }) => {
+        try {
+          const isMissed = userAnswer
+            ? !(await evaluateAnswer(question, userAnswer)).isCorrect
+            : false;
+
+          return { questionId, result, quiz, isFlagged, isMissed };
+        } catch (error) {
+          logger.error("Failed to process topic study question", {
+            error,
+            quizId: result.quiz_id,
+            questionId,
+            category,
+          });
+          return null;
+        }
+      },
+    ),
+  );
+
+  const missedIds = new Set<string>();
+  const flaggedIds = new Set<string>();
+  const sourceQuizIds = new Set<string>();
+
+  processedEntries.forEach((entry) => {
+    if (!entry) return;
+    const { questionId, result, quiz, isFlagged, isMissed } = entry;
+
+    if (isFlagged) {
+      flaggedIds.add(questionId);
+    }
+
+    if (isMissed) {
+      missedIds.add(questionId);
+    }
+
+    if (isFlagged || isMissed) {
+      const sourceQuizId = result.source_map?.[questionId];
+      const sourceInfo = allQuestionsMap.get(questionId);
+      if (sourceQuizId) {
+        sourceQuizIds.add(sourceQuizId);
+      } else if (sourceInfo) {
+        sourceQuizIds.add(sourceInfo.quizId);
+      } else if (quiz) {
+        sourceQuizIds.add(quiz.id);
+      }
+    }
+  });
 
   const allIds = new Set([...missedIds, ...flaggedIds]);
 
