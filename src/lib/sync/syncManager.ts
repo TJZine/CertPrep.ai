@@ -16,6 +16,7 @@ import type { Database } from "@/types/database.types";
 import {
   createSupabaseClientGetter,
   failedSyncOutcome,
+  isNonRetryableAuthSyncError,
   skippedSyncOutcome,
   syncedSyncOutcome,
   toErrorMessage,
@@ -87,9 +88,16 @@ export async function syncResults(userId: string): Promise<SyncResultsOutcome> {
                 shouldRetry: true,
               });
             }
-            return await performSync(userId);
+            try {
+              return await performSync(userId);
+            } catch (error) {
+              logger.error("Results sync failed while holding lock", error);
+              return failedSyncOutcome({
+                error: toErrorMessage(error),
+              });
+            }
           },
-        )) ||
+        )) ??
         failedSyncOutcome({
           error: "Results sync lock request returned no outcome",
         })
@@ -134,6 +142,7 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
   let pushed = 0;
   let pulled = 0;
   let lastError: string | undefined;
+  let shouldRetry = true;
 
   const client = getSupabaseClient();
   if (!client) {
@@ -155,6 +164,7 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
     logger.error("Sync aborted: Auth user ID mismatch", { authUserId: user.id, syncUserId: userId });
     return failedSyncOutcome({
       error: "User ID mismatch - please re-login",
+      shouldRetry: false,
     });
   }
 
@@ -213,6 +223,7 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
           logger.error("Failed to push results batch to Supabase:", errorMsg, { code: error.code });
           incomplete = true;
           lastError = errorMsg;
+          shouldRetry = shouldRetry && !isNonRetryableAuthSyncError(error);
 
           const code = error.code;
           const status = (error as unknown as { status?: number }).status;
@@ -431,7 +442,7 @@ async function performSync(userId: string): Promise<SyncResultsOutcome> {
     });
   }
   return incomplete
-    ? failedSyncOutcome({ error: lastError })
+    ? failedSyncOutcome({ error: lastError, shouldRetry })
     : syncedSyncOutcome();
 }
 

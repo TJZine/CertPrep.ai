@@ -62,6 +62,12 @@ export function ReviewModeModal({
     const router = useRouter();
     const [selectedMode, setSelectedMode] = React.useState<ReviewMode>("quiz");
 
+    React.useEffect(() => {
+        if (isOpen) return;
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- Reset hidden modal state after it closes to avoid visible selection jumps.
+        setSelectedMode("quiz");
+    }, [isOpen]);
+
   const handleStart = (): void => {
     const option = reviewModeOptions.find((o) => o.id === selectedMode);
     if (!option) return;
@@ -70,7 +76,6 @@ export function ReviewModeModal({
   };
 
     const handleCloseModal = (): void => {
-        setSelectedMode("quiz");
         onClose();
     };
 

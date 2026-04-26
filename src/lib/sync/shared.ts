@@ -107,6 +107,16 @@ export function toErrorMessage(
   }
 }
 
+export function isNonRetryableAuthSyncError(error: unknown): boolean {
+  if (typeof error !== "object" || error === null) return false;
+  const details = error as { code?: unknown; status?: unknown };
+  return (
+    details.code === "401" ||
+    details.code === "PGRST301" ||
+    details.status === 401
+  );
+}
+
 export function toSafeCursorTimestamp(
   candidate: unknown,
   fallback: string,

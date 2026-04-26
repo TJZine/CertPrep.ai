@@ -8,6 +8,8 @@ import {
   type SyncRunnerOutcome,
 } from "@/lib/sync/shared";
 
+const PHASE_2_PARALLEL_DEADLOCK_TIMEOUT_MS = 1000;
+
 const mockSyncQuizzes = vi.hoisted(() => vi.fn());
 const mockSyncResults = vi.hoisted(() => vi.fn());
 const mockSyncSRS = vi.hoisted(() => vi.fn());
@@ -62,10 +64,11 @@ describe("runSyncPlan", () => {
 
     await Promise.race([
       runSyncPlan("user-123", "full"),
+      // Fails fast with a targeted error if phase-2 mocks never both start.
       new Promise<never>((_, reject) =>
         setTimeout(
           () => reject(new Error("phase2 domains did not start in parallel")),
-          1000,
+          PHASE_2_PARALLEL_DEADLOCK_TIMEOUT_MS,
         ),
       ),
     ]);

@@ -19,6 +19,7 @@ import type { SRSState } from "@/types/srs";
 import {
   createSupabaseClientGetter,
   failedSyncOutcome,
+  isNonRetryableAuthSyncError,
   skippedSyncOutcome,
   syncedSyncOutcome,
   toErrorMessage as toSharedErrorMessage,
@@ -65,6 +66,12 @@ const syncState = {
 
 export type SyncSRSOutcome = SyncRunnerOutcome;
 
+type SRSPhaseOutcome = {
+  incomplete: boolean;
+  error?: string;
+  shouldRetry?: boolean;
+};
+
 export async function syncSRS(userId: string): Promise<SyncSRSOutcome> {
   if (!userId) return skippedSyncOutcome();
 
@@ -97,7 +104,7 @@ export async function syncSRS(userId: string): Promise<SyncSRSOutcome> {
             } catch (error) {
               logger.error("SRS sync failed while holding lock", error);
               return failedSyncOutcome({
-                error: "SRS sync failed while holding lock",
+                error: toErrorMessage(error),
               });
             }
           },
@@ -109,7 +116,7 @@ export async function syncSRS(userId: string): Promise<SyncSRSOutcome> {
     } catch (error) {
       logger.error("Failed to acquire SRS sync lock request", error);
       return failedSyncOutcome({
-        error: "Failed to acquire SRS sync lock request",
+        error: toErrorMessage(error),
       });
     }
   }
@@ -167,6 +174,7 @@ async function performSRSSync(userId: string): Promise<SyncSRSOutcome> {
     logger.error("SRS sync aborted: Auth user ID mismatch", { authUserId: user.id, syncUserId: userId });
     return failedSyncOutcome({
       error: "User ID mismatch - please re-login",
+      shouldRetry: false,
     });
   }
 
@@ -182,6 +190,7 @@ async function performSRSSync(userId: string): Promise<SyncSRSOutcome> {
     });
     return failedSyncOutcome({
       error: blockState.reason,
+      shouldRetry: false,
     });
   }
 
@@ -242,7 +251,12 @@ async function performSRSSync(userId: string): Promise<SyncSRSOutcome> {
         incomplete,
       });
     }
-    return incomplete ? failedSyncOutcome({ error: lastError }) : syncedSyncOutcome();
+    return incomplete
+      ? failedSyncOutcome({
+          error: lastError,
+          shouldRetry: pushIncomplete.shouldRetry ?? true,
+        })
+      : syncedSyncOutcome();
   } finally {
     safeMark("srsSync-end");
     safeMeasure("srsSync", "srsSync-start", "srsSync-end");
@@ -262,9 +276,10 @@ async function pushLocalChanges(
   startTime: number,
   stats: { pushed: number },
   client: SupabaseClient<Database>,
-): Promise<{ incomplete: boolean; error?: string }> {
+): Promise<SRSPhaseOutcome> {
   let incomplete = false;
   let errorMessage: string | undefined;
+  let shouldRetry = true;
 
   // Find unsynced local SRS items
   // Index: [user_id+synced]
@@ -307,8 +322,10 @@ async function pushLocalChanges(
       });
       incomplete = true;
       errorMessage = errorMsg;
+      shouldRetry = shouldRetry && !isNonRetryableAuthSyncError(error);
 
-      // Check for critical errors (circuit breaker)
+      // Any batch error marks the push incomplete; the last batch error is reported.
+      // Critical errors stop the push early, while non-critical batches keep trying.
       const code = error.code;
       const status = (error as unknown as { status?: number }).status;
       if (
@@ -373,6 +390,7 @@ async function pushLocalChanges(
   return {
     incomplete,
     error: errorMessage,
+    shouldRetry,
   };
 }
 

@@ -250,12 +250,14 @@ describe("src/db/results and src/db/resultAnalytics", () => {
       // Detailed mock for Dexie chain
       const mockQuizQuery = {
         equals: vi.fn().mockReturnThis(),
+        filter: vi.fn().mockReturnThis(),
         toArray: vi.fn().mockResolvedValue(mockQuizzes),
       } as unknown as ReturnType<typeof db.quizzes.where>;
       vi.mocked(db.quizzes.where).mockReturnValue(mockQuizQuery);
 
       const mockResultQuery = {
         equals: vi.fn().mockReturnThis(),
+        filter: vi.fn().mockReturnThis(),
         toArray: vi.fn().mockResolvedValue(mockResults),
       } as unknown as ReturnType<typeof db.results.where>;
       vi.mocked(db.results.where).mockReturnValue(mockResultQuery);
@@ -299,12 +301,14 @@ describe("src/db/results and src/db/resultAnalytics", () => {
 
       const mockQuizQuery = {
         equals: vi.fn().mockReturnThis(),
+        filter: vi.fn().mockReturnThis(),
         toArray: vi.fn().mockResolvedValue([mockQuiz]),
       } as unknown as ReturnType<typeof db.quizzes.where>;
       vi.mocked(db.quizzes.where).mockReturnValue(mockQuizQuery);
 
       const mockResultQuery = {
         equals: vi.fn().mockReturnThis(),
+        filter: vi.fn().mockReturnThis(),
         toArray: vi.fn().mockResolvedValue([mockResult]),
       } as unknown as ReturnType<typeof db.results.where>;
       vi.mocked(db.results.where).mockReturnValue(mockResultQuery);
@@ -324,6 +328,95 @@ describe("src/db/results and src/db/resultAnalytics", () => {
         },
       ]);
       expect(vi.mocked(evaluateAnswer)).toHaveBeenCalledTimes(1);
+    });
+
+    it("uses computed category scores without re-grading answers", async () => {
+      const mockQuiz = {
+        id: "q1",
+        user_id: mockUserId,
+        questions: [
+          { id: "q1_1", category: "React", correct_answer: "a" },
+          { id: "q1_2", category: "React", correct_answer: "b" },
+        ],
+        deleted_at: null,
+      } as unknown as Quiz;
+      const mockResult = {
+        score: 50,
+        time_taken_seconds: 60,
+        user_id: mockUserId,
+        quiz_id: "q1",
+        answers: { q1_1: "a", q1_2: "wrong" },
+        computed_category_scores: {
+          React: { correct: 1, total: 2 },
+        },
+        deleted_at: null,
+      } as unknown as Result;
+
+      const mockQuizQuery = {
+        equals: vi.fn().mockReturnThis(),
+        filter: vi.fn().mockReturnThis(),
+        toArray: vi.fn().mockResolvedValue([mockQuiz]),
+      } as unknown as ReturnType<typeof db.quizzes.where>;
+      vi.mocked(db.quizzes.where).mockReturnValue(mockQuizQuery);
+
+      const mockResultQuery = {
+        equals: vi.fn().mockReturnThis(),
+        filter: vi.fn().mockReturnThis(),
+        toArray: vi.fn().mockResolvedValue([mockResult]),
+      } as unknown as ReturnType<typeof db.results.where>;
+      vi.mocked(db.results.where).mockReturnValue(mockResultQuery);
+
+      const stats = await getOverallStats(mockUserId);
+
+      expect(stats.weakestCategories).toEqual([
+        {
+          category: "React",
+          avgScore: 50,
+        },
+      ]);
+      expect(vi.mocked(evaluateAnswer)).not.toHaveBeenCalled();
+    });
+
+    it("ranks weakest categories using sample-size confidence", async () => {
+      const mockQuiz = {
+        id: "q1",
+        user_id: mockUserId,
+        questions: [],
+        deleted_at: null,
+      } as unknown as Quiz;
+      const mockResult = {
+        score: 50,
+        time_taken_seconds: 60,
+        user_id: mockUserId,
+        quiz_id: "q1",
+        answers: {},
+        computed_category_scores: {
+          Sparse: { correct: 0, total: 1 },
+          Established: { correct: 50, total: 100 },
+        },
+        deleted_at: null,
+      } as unknown as Result;
+
+      const mockQuizQuery = {
+        equals: vi.fn().mockReturnThis(),
+        filter: vi.fn().mockReturnThis(),
+        toArray: vi.fn().mockResolvedValue([mockQuiz]),
+      } as unknown as ReturnType<typeof db.quizzes.where>;
+      vi.mocked(db.quizzes.where).mockReturnValue(mockQuizQuery);
+
+      const mockResultQuery = {
+        equals: vi.fn().mockReturnThis(),
+        filter: vi.fn().mockReturnThis(),
+        toArray: vi.fn().mockResolvedValue([mockResult]),
+      } as unknown as ReturnType<typeof db.results.where>;
+      vi.mocked(db.results.where).mockReturnValue(mockResultQuery);
+
+      const stats = await getOverallStats(mockUserId);
+
+      expect(stats.weakestCategories).toEqual([
+        { category: "Established", avgScore: 50 },
+        { category: "Sparse", avgScore: 0 },
+      ]);
     });
   });
 
@@ -372,6 +465,7 @@ describe("src/db/results and src/db/resultAnalytics", () => {
       ]);
       expect(vi.mocked(evaluateAnswer)).toHaveBeenCalledTimes(1);
     });
+
   });
 
   describe("deleteResult", () => {

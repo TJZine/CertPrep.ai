@@ -115,7 +115,7 @@ export function ImportModal({
     }
   }, [showDuplicateWarning]);
 
-  const resetState = (): void => {
+  const resetState = React.useCallback((): void => {
     setActiveTab("paste");
     setJsonText("");
     setFileName(null);
@@ -129,7 +129,13 @@ export function ImportModal({
     setShowDuplicateWarning(false);
     setCategory("");
     setSubcategory("");
-  };
+  }, []);
+
+  React.useEffect(() => {
+    if (isOpen) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Reset hidden modal state after close so the visible form does not blank before dismissal.
+    resetState();
+  }, [isOpen, resetState]);
 
   const handleJsonTextChange = (
     event: React.ChangeEvent<HTMLTextAreaElement>,
@@ -362,7 +368,6 @@ export function ImportModal({
   };
 
   const handleCloseModal = (): void => {
-    resetState();
     onClose();
   };
 

@@ -15,19 +15,29 @@ export interface OverallStats {
   weakestCategories: Array<{ category: string; avgScore: number }>;
 }
 
+const WEAKEST_CATEGORY_PRIOR_TOTAL = 5;
+const WEAKEST_CATEGORY_PRIOR_PERCENTAGE = 70;
+
+function calculateWeakestCategoryRank(correct: number, total: number): number {
+  const priorCorrect =
+    (WEAKEST_CATEGORY_PRIOR_PERCENTAGE / 100) * WEAKEST_CATEGORY_PRIOR_TOTAL;
+  return calculatePercentage(
+    correct + priorCorrect,
+    total + WEAKEST_CATEGORY_PRIOR_TOTAL,
+  );
+}
+
 function resolveSessionQuestions(
   result: Result,
   quiz: Quiz | undefined,
   allQuestionsMap: Map<string, { question: Question; quizId: string }>,
 ): Question[] {
   if (result.question_ids !== undefined) {
-    if (quiz && quiz.questions.length > 0) {
-      const idSet = new Set(result.question_ids);
-      return quiz.questions.filter((question) => idSet.has(question.id));
-    }
-
+    const localById = new Map(
+      quiz?.questions.map((question) => [question.id, question] as const) ?? [],
+    );
     return result.question_ids
-      .map((id) => allQuestionsMap.get(id)?.question)
+      .map((id) => localById.get(id) ?? allQuestionsMap.get(id)?.question)
       .filter((question): question is Question => !!question);
   }
 
@@ -110,13 +120,18 @@ export async function getCategoryPerformance(
  * Aggregates global statistics across all quizzes and results.
  */
 export async function getOverallStats(userId: string): Promise<OverallStats> {
-  const [allQuizzes, allResults] = await Promise.all([
-    db.quizzes.where("user_id").equals(userId).toArray(),
-    db.results.where("user_id").equals(userId).toArray(),
+  const [quizzes, results] = await Promise.all([
+    db.quizzes
+      .where("user_id")
+      .equals(userId)
+      .filter((quiz) => quiz.deleted_at == null)
+      .toArray(),
+    db.results
+      .where("user_id")
+      .equals(userId)
+      .filter((result) => result.deleted_at == null)
+      .toArray(),
   ]);
-
-  const results = allResults.filter((r) => r.deleted_at == null);
-  const quizzes = allQuizzes.filter((q) => q.deleted_at == null);
 
   const quizMap = new Map(quizzes.map((quiz) => [quiz.id, quiz]));
   const allQuestionsMap = new Map<string, { question: Question; quizId: string }>();
@@ -144,6 +159,16 @@ export async function getOverallStats(userId: string): Promise<OverallStats> {
     const batch = results.slice(i, i + BATCH_SIZE);
     const batchData = await Promise.all(
       batch.map(async (result) => {
+        if (result.computed_category_scores) {
+          return Object.entries(result.computed_category_scores).map(
+            ([category, scores]) => ({
+              category,
+              correct: scores.correct,
+              total: scores.total,
+            }),
+          );
+        }
+
         const quiz = quizMap.get(result.quiz_id);
         const sessionQuestions = resolveSessionQuestions(
           result,
@@ -156,30 +181,40 @@ export async function getOverallStats(userId: string): Promise<OverallStats> {
         return Promise.all(
           sessionQuestions.map(async (question) => {
             const userAnswer = result.answers[String(question.id)];
-            return evaluateAnswer(question, userAnswer);
+            const { category, isCorrect } = await evaluateAnswer(
+              question,
+              userAnswer,
+            );
+            return {
+              category,
+              correct: isCorrect ? 1 : 0,
+              total: 1,
+            };
           }),
         );
       }),
     );
 
-    batchData.flat().forEach(({ category, isCorrect }) => {
+    batchData.flat().forEach(({ category, correct, total }) => {
       if (!categoryTotals[category]) {
         categoryTotals[category] = { correct: 0, total: 0 };
       }
 
-      categoryTotals[category].total += 1;
-      if (isCorrect) {
-        categoryTotals[category].correct += 1;
-      }
+      categoryTotals[category].total += total;
+      categoryTotals[category].correct += correct;
     });
   }
 
   const weakestCategories = Object.entries(categoryTotals)
-    .map(([category, { correct, total }]) => ({
-      category,
-      avgScore: calculatePercentage(correct, total),
-    }))
-    .sort((a, b) => a.avgScore - b.avgScore)
+    .map(([category, { correct, total }]) => {
+      const avgScore = calculatePercentage(correct, total);
+      return {
+        category,
+        avgScore,
+        rankScore: calculateWeakestCategoryRank(correct, total),
+      };
+    })
+    .sort((a, b) => a.rankScore - b.rankScore || a.avgScore - b.avgScore)
     .slice(0, 5);
 
   return {
@@ -187,7 +222,10 @@ export async function getOverallStats(userId: string): Promise<OverallStats> {
     totalAttempts,
     averageScore,
     totalStudyTime,
-    weakestCategories,
+    weakestCategories: weakestCategories.map(({ category, avgScore }) => ({
+      category,
+      avgScore,
+    })),
   };
 }
 
@@ -236,6 +274,14 @@ export async function getTopicStudyQuestions(
   const BATCH_SIZE = 50;
   for (let i = 0; i < allResults.length; i += BATCH_SIZE) {
     const batch = allResults.slice(i, i + BATCH_SIZE);
+    const batchEntries: Array<{
+      question: Question;
+      questionId: string;
+      result: Result;
+      quiz: Quiz | undefined;
+      isFlagged: boolean;
+      userAnswer: string | undefined;
+    }> = [];
 
     for (const result of batch) {
       const quiz = quizMap.get(result.quiz_id);
@@ -253,49 +299,66 @@ export async function getTopicStudyQuestions(
       });
 
       for (const question of categoryQuestions) {
-        try {
-          const questionId = String(question.id);
-          if (processedQuestionIds.has(questionId)) {
-            continue;
-          }
-
-          processedQuestionIds.add(questionId);
-
-          const isFlagged = result.flagged_questions.includes(questionId);
-          const userAnswer = result.answers[questionId];
-          let isMissed = false;
-
-          if (userAnswer) {
-            const { isCorrect } = await evaluateAnswer(question, userAnswer);
-            isMissed = !isCorrect;
-          }
-
-          if (isFlagged) {
-            flaggedIds.add(questionId);
-          }
-
-          if (isMissed) {
-            missedIds.add(questionId);
-          }
-
-          if (isFlagged || isMissed) {
-            const sourceInfo = allQuestionsMap.get(questionId);
-            if (sourceInfo) {
-              sourceQuizIds.add(sourceInfo.quizId);
-            } else if (quiz) {
-              sourceQuizIds.add(quiz.id);
-            }
-          }
-        } catch (error) {
-          logger.error("Failed to process topic study question", {
-            error,
-            quizId: result.quiz_id,
-            questionId: question.id,
-            category,
-          });
+        const questionId = String(question.id);
+        if (processedQuestionIds.has(questionId)) {
+          continue;
         }
+
+        processedQuestionIds.add(questionId);
+        batchEntries.push({
+          question,
+          questionId,
+          result,
+          quiz,
+          isFlagged: result.flagged_questions.includes(questionId),
+          userAnswer: result.answers[questionId],
+        });
       }
     }
+
+    const processedEntries = await Promise.all(
+      batchEntries.map(
+        async ({ question, questionId, result, quiz, isFlagged, userAnswer }) => {
+          try {
+            const isMissed = userAnswer
+              ? !(await evaluateAnswer(question, userAnswer)).isCorrect
+              : false;
+
+            return { questionId, quiz, isFlagged, isMissed };
+          } catch (error) {
+            logger.error("Failed to process topic study question", {
+              error,
+              quizId: result.quiz_id,
+              questionId,
+              category,
+            });
+            return null;
+          }
+        },
+      ),
+    );
+
+    processedEntries.forEach((entry) => {
+      if (!entry) return;
+      const { questionId, quiz, isFlagged, isMissed } = entry;
+
+      if (isFlagged) {
+        flaggedIds.add(questionId);
+      }
+
+      if (isMissed) {
+        missedIds.add(questionId);
+      }
+
+      if (isFlagged || isMissed) {
+        const sourceInfo = allQuestionsMap.get(questionId);
+        if (sourceInfo) {
+          sourceQuizIds.add(sourceInfo.quizId);
+        } else if (quiz) {
+          sourceQuizIds.add(quiz.id);
+        }
+      }
+    });
   }
 
   const allIds = new Set([...missedIds, ...flaggedIds]);

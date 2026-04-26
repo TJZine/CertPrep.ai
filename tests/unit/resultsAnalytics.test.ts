@@ -9,6 +9,15 @@ const { quizzesData, resultsData, dbMock } = vi.hoisted(() => {
 
   const quizzesWhere = vi.fn().mockReturnValue({
     equals: vi.fn().mockImplementation((userId: string) => ({
+      filter: vi.fn().mockImplementation((predicate: (quiz: Quiz) => boolean) => ({
+        toArray: vi
+          .fn()
+          .mockImplementation(async () =>
+            quizzesData
+              .filter((quiz) => quiz.user_id === userId)
+              .filter(predicate),
+          ),
+      })),
       toArray: vi
         .fn()
         .mockImplementation(async () =>
@@ -19,6 +28,15 @@ const { quizzesData, resultsData, dbMock } = vi.hoisted(() => {
 
   const resultsWhere = vi.fn().mockReturnValue({
     equals: vi.fn().mockImplementation((userId: string) => ({
+      filter: vi.fn().mockImplementation((predicate: (result: Result) => boolean) => ({
+        toArray: vi
+          .fn()
+          .mockImplementation(async () =>
+            resultsData
+              .filter((result) => result.user_id === userId)
+              .filter(predicate),
+          ),
+      })),
       toArray: vi
         .fn()
         .mockImplementation(async () =>

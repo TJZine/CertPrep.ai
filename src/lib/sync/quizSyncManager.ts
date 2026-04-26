@@ -105,11 +105,11 @@ export async function syncQuizzes(
             } catch (error) {
               logger.error("Quiz sync failed while holding lock", error);
               return failedSyncOutcome({
-                error: "Quiz sync failed while holding lock",
+                error: toErrorMessage(error),
               });
             }
           },
-        )) ||
+        )) ??
         failedSyncOutcome({
           error: "Quiz sync lock request returned no outcome",
         })
@@ -117,7 +117,7 @@ export async function syncQuizzes(
     } catch (error) {
       logger.error("Failed to acquire quiz sync lock request", error);
       return failedSyncOutcome({
-        error: "Failed to acquire quiz sync lock request",
+        error: toErrorMessage(error),
       });
     }
   }
@@ -168,6 +168,7 @@ async function performQuizSync(
     });
     return failedSyncOutcome({
       error: blockState.reason,
+      shouldRetry: false,
     });
   }
 
@@ -193,6 +194,7 @@ async function performQuizSync(
     logger.error("Quiz sync aborted: Auth user ID mismatch", { authUserId: user.id, syncUserId: userId });
     return failedSyncOutcome({
       error: "User ID mismatch - please re-login",
+      shouldRetry: false,
     });
   }
 

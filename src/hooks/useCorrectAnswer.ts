@@ -186,6 +186,7 @@ export function useCorrectAnswer(
         try {
           const hashes = await hashOptionsFallback(valuesToHash);
           processResult(hashes);
+          if (isMounted) setError(null);
         } catch (error) {
           logger.error("[useCorrectAnswer] Fallback hashing failed", error);
           if (isMounted) {
@@ -254,10 +255,6 @@ export function useCorrectAnswer(
           logger.warn("[useCorrectAnswer] Worker computation error", {
             error: payload?.error ?? "unknown worker error",
           });
-          workerFailedRef.current = true;
-          if (isMounted) {
-            setError("Answer hashing worker failed; using fallback.");
-          }
           fallbackWithWorkerError();
           return;
         }

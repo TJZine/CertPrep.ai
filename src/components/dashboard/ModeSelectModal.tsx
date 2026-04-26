@@ -85,6 +85,12 @@ export function ModeSelectModal({
   const estimatedMinutes =
     questionCount > 0 ? Math.max(1, Math.ceil(questionCount * 1.5)) : null;
 
+  React.useEffect(() => {
+    if (isOpen) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Reset hidden modal state after it closes to avoid visible selection jumps.
+    setSelectedMode("zen");
+  }, [isOpen]);
+
   const handleStart = (): void => {
     if (!quiz) return;
     handleCloseModal();
@@ -92,7 +98,6 @@ export function ModeSelectModal({
   };
 
   const handleCloseModal = (): void => {
-    setSelectedMode("zen");
     onClose();
   };
 

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import type { SupabaseClient, User as SupabaseUser } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { useAuth } from "@/components/providers/AuthProvider";
@@ -47,8 +48,8 @@ function ProfileSettingsForm({
   supabase,
   addToast,
 }: {
-  user: { id?: string; email?: string; user_metadata?: { full_name?: string } } | null;
-  supabase: ReturnType<typeof createClient> | null;
+  user: SupabaseUser | null;
+  supabase: SupabaseClient | null | undefined;
   addToast: ReturnType<typeof useToast>["addToast"];
 }): React.ReactElement {
   const [fullName, setFullName] = useState(user?.user_metadata?.full_name || "");

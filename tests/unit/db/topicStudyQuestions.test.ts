@@ -384,6 +384,77 @@ describe("getTopicStudyQuestions", () => {
         expect(data.quizIds).toContain("quiz-1");
     });
 
+    it("includes cross-quiz questions referenced by aggregated session question_ids", async () => {
+        quizzesData.push(
+            {
+                id: "quiz-1",
+                user_id: "user-a",
+                title: "Linked Quiz",
+                description: "",
+                created_at: 1,
+                updated_at: 1,
+                questions: [
+                    {
+                        id: "q1",
+                        category: "Networking",
+                        question: "Q1",
+                        options: { a: "A", b: "B" },
+                        correct_answer: "a",
+                        explanation: "",
+                    },
+                ],
+                tags: [],
+                version: 1,
+                deleted_at: null,
+                quiz_hash: null,
+            },
+            {
+                id: "quiz-2",
+                user_id: "user-a",
+                title: "Source Quiz",
+                description: "",
+                created_at: 1,
+                updated_at: 1,
+                questions: [
+                    {
+                        id: "q2",
+                        category: "Networking",
+                        question: "Q2",
+                        options: { a: "A", b: "B" },
+                        correct_answer: "a",
+                        explanation: "",
+                    },
+                ],
+                tags: [],
+                version: 1,
+                deleted_at: null,
+                quiz_hash: null,
+            },
+        );
+
+        resultsData.push({
+            id: "result-topic-study",
+            quiz_id: "quiz-1",
+            user_id: "user-a",
+            timestamp: 1,
+            mode: "zen",
+            score: 0,
+            time_taken_seconds: 120,
+            question_ids: ["q1", "q2"],
+            answers: { q1: "a", q2: "b" },
+            flagged_questions: [],
+            category_breakdown: {},
+            session_type: "topic_study",
+            source_map: { q1: "quiz-1", q2: "quiz-2" },
+        });
+
+        const data = await getTopicStudyQuestions("user-a", "Networking");
+
+        expect(data.questionIds).toEqual(["q2"]);
+        expect(data.quizIds).toEqual(["quiz-2"]);
+        expect(data.missedCount).toBe(1);
+    });
+
     it("treats an explicit empty question_ids list as an empty session", async () => {
         quizzesData.push({
             id: "quiz-1",
