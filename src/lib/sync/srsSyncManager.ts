@@ -96,7 +96,6 @@ export async function syncSRS(userId: string): Promise<SyncSRSOutcome> {
             if (!lock) {
               logger.debug("SRS sync already in progress in another tab, skipping");
               return skippedSyncOutcome({
-                incomplete: true,
                 shouldRetry: true,
               });
             }
@@ -128,7 +127,6 @@ export async function syncSRS(userId: string): Promise<SyncSRSOutcome> {
       syncState.isSyncing = false;
     } else {
       return skippedSyncOutcome({
-        incomplete: true,
         shouldRetry: true,
       });
     }
