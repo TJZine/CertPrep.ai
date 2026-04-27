@@ -85,7 +85,6 @@ export async function syncResults(userId: string): Promise<SyncResultsOutcome> {
             if (!lock) {
               logger.debug("Sync already in progress in another tab, skipping");
               return skippedSyncOutcome({
-                incomplete: true,
                 shouldRetry: true,
               });
             }
@@ -117,7 +116,6 @@ export async function syncResults(userId: string): Promise<SyncResultsOutcome> {
         syncState.isSyncing = false;
       } else {
         return skippedSyncOutcome({
-          incomplete: true,
           shouldRetry: true,
         });
       }
