@@ -378,10 +378,18 @@ describe("src/db/results and src/db/resultAnalytics", () => {
     });
 
     it("ranks weakest categories using sample-size confidence", async () => {
+      const questions = [
+        { id: "sparse-1", category: "Sparse", correct_answer: "a" },
+        ...Array.from({ length: 100 }, (_, index) => ({
+          id: `established-${index + 1}`,
+          category: "Established",
+          correct_answer: "a",
+        })),
+      ] as unknown as Question[];
       const mockQuiz = {
         id: "q1",
         user_id: mockUserId,
-        questions: [],
+        questions,
         deleted_at: null,
       } as unknown as Quiz;
       const mockResult = {
@@ -390,6 +398,7 @@ describe("src/db/results and src/db/resultAnalytics", () => {
         user_id: mockUserId,
         quiz_id: "q1",
         answers: {},
+        question_ids: questions.map((question) => question.id),
         computed_category_scores: {
           Sparse: { correct: 0, total: 1 },
           Established: { correct: 50, total: 100 },
@@ -417,6 +426,7 @@ describe("src/db/results and src/db/resultAnalytics", () => {
         { category: "Established", avgScore: 50 },
         { category: "Sparse", avgScore: 0 },
       ]);
+      expect(vi.mocked(evaluateAnswer)).not.toHaveBeenCalled();
     });
   });
 
