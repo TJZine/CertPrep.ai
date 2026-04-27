@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getTopicStudyQuestions } from "@/db/resultAnalytics";
 import { evaluateAnswer } from "@/lib/grading";
+import { NIL_UUID } from "@/lib/constants";
 import type { Quiz } from "@/types/quiz";
 import type { Result } from "@/types/result";
 
@@ -385,7 +386,7 @@ describe("getTopicStudyQuestions", () => {
         expect(data.quizIds).toContain("quiz-1");
     });
 
-    it("includes cross-quiz questions referenced by aggregated session question_ids", async () => {
+    it("includes cross-quiz public questions referenced by aggregated session question_ids", async () => {
         quizzesData.push(
             {
                 id: "quiz-1",
@@ -411,8 +412,8 @@ describe("getTopicStudyQuestions", () => {
             },
             {
                 id: "quiz-2",
-                user_id: "user-b",
-                title: "Source Quiz",
+                user_id: NIL_UUID,
+                title: "Public Source Quiz",
                 description: "",
                 created_at: 1,
                 updated_at: 1,
@@ -456,6 +457,79 @@ describe("getTopicStudyQuestions", () => {
         expect(data.missedCount).toBe(1);
         expect(data.flaggedCount).toBe(0);
         expect(data.totalUniqueCount).toBe(1);
+    });
+
+    it("does not include private source-map quizzes owned by another user", async () => {
+        quizzesData.push(
+            {
+                id: "quiz-1",
+                user_id: "user-a",
+                title: "Linked Quiz",
+                description: "",
+                created_at: 1,
+                updated_at: 1,
+                questions: [
+                    {
+                        id: "q1",
+                        category: "Networking",
+                        question: "Q1",
+                        options: { a: "A", b: "B" },
+                        correct_answer: "a",
+                        explanation: "",
+                    },
+                ],
+                tags: [],
+                version: 1,
+                deleted_at: null,
+                quiz_hash: null,
+            },
+            {
+                id: "quiz-2",
+                user_id: "user-b",
+                title: "Private Source Quiz",
+                description: "",
+                created_at: 1,
+                updated_at: 1,
+                questions: [
+                    {
+                        id: "q2",
+                        category: "Networking",
+                        question: "Q2",
+                        options: { a: "A", b: "B" },
+                        correct_answer: "a",
+                        explanation: "",
+                    },
+                ],
+                tags: [],
+                version: 1,
+                deleted_at: null,
+                quiz_hash: null,
+            },
+        );
+
+        resultsData.push({
+            id: "result-topic-study-private-source",
+            quiz_id: "quiz-1",
+            user_id: "user-a",
+            timestamp: 1,
+            mode: "zen",
+            score: 0,
+            time_taken_seconds: 120,
+            question_ids: ["q1", "q2"],
+            answers: { q1: "a", q2: "b" },
+            flagged_questions: [],
+            category_breakdown: {},
+            session_type: "topic_study",
+            source_map: { q1: "quiz-1", q2: "quiz-2" },
+        });
+
+        const data = await getTopicStudyQuestions("user-a", "Networking");
+
+        expect(data.questionIds).toEqual([]);
+        expect(data.quizIds).toEqual([]);
+        expect(data.missedCount).toBe(0);
+        expect(data.flaggedCount).toBe(0);
+        expect(data.totalUniqueCount).toBe(0);
     });
 
     it("treats an explicit empty question_ids list as an empty session", async () => {
