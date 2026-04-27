@@ -1,18 +1,18 @@
 import { syncQuizzes, type SyncQuizzesOutcome } from "@/lib/sync/quizSyncManager";
 import { syncResults, type SyncResultsOutcome } from "@/lib/sync/syncManager";
-import { syncSRS } from "@/lib/sync/srsSyncManager";
+import { syncSRS, type SyncSRSOutcome } from "@/lib/sync/srsSyncManager";
+import {
+  failedSyncOutcome,
+  skippedSyncOutcome,
+  type SyncRunnerOutcome,
+} from "@/lib/sync/shared";
 
 export type SyncDomain = "quizzes" | "results" | "srs";
-export type CoordinatedSyncOutcome = {
-  incomplete: boolean;
-  status?: "synced" | "skipped" | "failed";
-  error?: string;
-  shouldRetry?: boolean;
-};
+export type CoordinatedSyncOutcome = SyncRunnerOutcome;
 
 export type SyncPlanName = "full" | "logout" | "quiz-repair";
 
-type SyncRunner = (userId: string) => Promise<CoordinatedSyncOutcome>;
+type SyncRunner = (userId: string) => Promise<SyncRunnerOutcome>;
 type SyncPlanSummary = {
   domains: readonly SyncDomain[];
   settlements: Partial<Record<SyncDomain, PromiseSettledResult<CoordinatedSyncOutcome>>>;
@@ -26,15 +26,9 @@ const SYNC_PLAN_DOMAINS: Record<SyncPlanName, readonly SyncDomain[]> = {
 };
 
 const SYNC_RUNNERS: Record<SyncDomain, SyncRunner> = {
-  quizzes: syncQuizzes as SyncRunner,
-  results: syncResults as SyncRunner,
-  srs: syncSRS as SyncRunner,
-};
-
-const DEFAULT_OUTCOME: Record<SyncDomain, CoordinatedSyncOutcome> = {
-  quizzes: { incomplete: false, status: "skipped" },
-  results: { incomplete: false, status: "skipped" },
-  srs: { incomplete: false, status: "skipped" },
+  quizzes: syncQuizzes,
+  results: syncResults,
+  srs: syncSRS,
 };
 
 const SYNC_PLAN_PHASES: Record<SyncPlanName, readonly (readonly SyncDomain[])[]> = {
@@ -43,12 +37,18 @@ const SYNC_PLAN_PHASES: Record<SyncPlanName, readonly (readonly SyncDomain[])[]>
   "quiz-repair": [["quizzes"]],
 };
 
-function toFailedOutcome(error: unknown): CoordinatedSyncOutcome {
+function createDefaultOutcome(): Record<SyncDomain, CoordinatedSyncOutcome> {
   return {
-    incomplete: true,
-    status: "failed",
-    error: error instanceof Error ? error.message : String(error),
+    quizzes: skippedSyncOutcome(),
+    results: skippedSyncOutcome(),
+    srs: skippedSyncOutcome(),
   };
+}
+
+function toFailedOutcome(error: unknown): CoordinatedSyncOutcome {
+  return failedSyncOutcome({
+    error: error instanceof Error ? error.message : String(error),
+  });
 }
 
 export async function runSyncPlan(
@@ -57,7 +57,7 @@ export async function runSyncPlan(
 ): Promise<SyncPlanSummary> {
   const domains = SYNC_PLAN_DOMAINS[plan];
   const domainSettlements: SyncPlanSummary["settlements"] = {};
-  const outcomes = { ...DEFAULT_OUTCOME };
+  const outcomes = createDefaultOutcome();
   const phases = SYNC_PLAN_PHASES[plan];
 
   for (const phase of phases) {
@@ -130,4 +130,9 @@ export function toSyncDetails(
   };
 }
 
-export type { SyncPlanSummary, SyncQuizzesOutcome, SyncResultsOutcome };
+export type {
+  SyncPlanSummary,
+  SyncQuizzesOutcome,
+  SyncResultsOutcome,
+  SyncSRSOutcome,
+};

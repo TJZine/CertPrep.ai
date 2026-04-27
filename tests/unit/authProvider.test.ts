@@ -1,6 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { performSignOut } from "@/components/providers/AuthProvider";
 import type { CoordinatedSyncOutcome, SyncDomain } from "@/lib/sync/coordinator";
+import {
+  failedSyncOutcome,
+  skippedSyncOutcome,
+  syncedSyncOutcome,
+} from "@/lib/sync/shared";
 
 const { requestServiceWorkerCacheClear, runSyncPlan } = vi.hoisted(() => ({
   requestServiceWorkerCacheClear: vi.fn().mockResolvedValue(undefined),
@@ -34,9 +39,9 @@ function buildSyncSummary(
   outcomes: Record<SyncDomain, CoordinatedSyncOutcome>;
 } {
   const outcomes: Record<SyncDomain, CoordinatedSyncOutcome> = {
-    quizzes: { incomplete: false, status: "synced" },
-    results: { incomplete: false, status: "synced" },
-    srs: { incomplete: false, status: "synced" },
+    quizzes: syncedSyncOutcome(),
+    results: syncedSyncOutcome(),
+    srs: syncedSyncOutcome(),
     ...overrides,
   };
 
@@ -127,7 +132,7 @@ describe("performSignOut", () => {
   it("blocks sign-out when pre-logout sync is incomplete", async () => {
     runSyncPlan.mockResolvedValue(
       buildSyncSummary({
-        results: { incomplete: true, status: "failed" },
+        results: failedSyncOutcome(),
       }),
     );
     const supabase = createSupabaseStub();
@@ -176,7 +181,7 @@ describe("performSignOut", () => {
   it("preserves local data when pre-logout sync is skipped in another tab", async () => {
     runSyncPlan.mockResolvedValue(
       buildSyncSummary({
-        quizzes: { incomplete: false, status: "skipped" },
+        quizzes: skippedSyncOutcome(),
       }),
     );
     const supabase = createSupabaseStub();
@@ -200,7 +205,7 @@ describe("performSignOut", () => {
   it("preserves local data when SRS is incomplete during logout sync", async () => {
     runSyncPlan.mockResolvedValue(
       buildSyncSummary({
-        srs: { incomplete: true, status: "failed" },
+        srs: failedSyncOutcome(),
       }),
     );
     const supabase = createSupabaseStub();

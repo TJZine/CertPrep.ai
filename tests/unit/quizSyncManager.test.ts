@@ -22,6 +22,21 @@ const { supabaseMock } = vi.hoisted(() => {
   return { supabaseMock: supabase };
 });
 
+function createDeferred<T>(): {
+  promise: Promise<T>;
+  resolve: (value: T | PromiseLike<T>) => void;
+  reject: (reason?: unknown) => void;
+} {
+  let resolve!: (value: T | PromiseLike<T>) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+
+  return { promise, resolve, reject };
+}
+
 const sampleQuiz: Quiz = {
   id: "quiz-1",
   user_id: "user-1",
@@ -207,6 +222,38 @@ describe("quizSyncManager", () => {
       { ifAvailable: true },
       expect.any(Function),
     );
+  });
+
+  it("reports the thrown error when the fallback quiz sync path throws", async () => {
+    vi.stubGlobal("navigator", { onLine: true });
+    dbMock.quizzes.where.mockImplementationOnce(() => {
+      throw new Error("dexie blew up");
+    });
+
+    const result = await syncQuizzes("user-1");
+
+    expect(result).toEqual({
+      incomplete: true,
+      status: "failed",
+      error: "dexie blew up",
+      shouldRetry: true,
+    });
+  });
+
+  it("normalizes unauthenticated quiz sync errors", async () => {
+    supabaseMock.auth.getUser.mockResolvedValueOnce({
+      data: { user: null },
+      error: { message: "Session expired" } as unknown as Error,
+    });
+
+    const result = await syncQuizzes("user-1");
+
+    expect(result).toEqual({
+      incomplete: true,
+      status: "skipped",
+      error: "Not authenticated",
+      shouldRetry: true,
+    });
   });
 
   it("only pushes quizzes for the active user", async () => {
@@ -437,6 +484,40 @@ describe("quizSyncManager", () => {
       "quizzes",
       "schema_drift",
     );
+  });
+
+  it("returns an explicit failed outcome when the quiz sync time budget is exhausted", async () => {
+    vi.stubGlobal("navigator", {
+      locks: {
+        request: vi.fn().mockImplementation(async (_name, _options, callback) =>
+          callback({ name: "sync-quizzes-user-1" }),
+        ),
+      },
+    });
+
+    const authDeferred = createDeferred<{
+      data: { user: { id: string } };
+      error: null;
+    }>();
+    supabaseMock.auth.getUser.mockReturnValueOnce(authDeferred.promise);
+
+    const syncPromise = syncQuizzes("user-1");
+    await vi.waitFor(() => expect(supabaseMock.auth.getUser).toHaveBeenCalledTimes(1));
+
+    vi.setSystemTime(FIXED_TIMESTAMP + 5001);
+    authDeferred.resolve({
+      data: { user: { id: "user-1" } },
+      error: null,
+    });
+
+    const result = await syncPromise;
+
+    expect(result).toEqual({
+      incomplete: true,
+      status: "failed",
+      error: "Quiz sync time budget exceeded",
+      shouldRetry: true,
+    });
   });
 
   it("should skip sync when block state is set", async () => {

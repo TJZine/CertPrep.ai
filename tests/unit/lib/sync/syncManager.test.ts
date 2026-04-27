@@ -123,7 +123,9 @@ describe("Sync Manager: results", () => {
     vi.stubGlobal("navigator", { onLine: false });
     const result = await syncResults(userId);
     expect(result.incomplete).toBe(true);
+    expect(result.status).toBe("skipped");
     expect(result.error).toBe("Offline");
+    expect(result.shouldRetry).toBe(true);
     expect(logger.debug).toHaveBeenCalledWith(
       expect.stringContaining("Browser is offline"),
     );
@@ -138,6 +140,74 @@ describe("Sync Manager: results", () => {
     const outcome = await syncResults(userId);
     expect(outcome.status).toBe("skipped");
     expect(outcome.error).toBe("Not authenticated");
+    expect(outcome.shouldRetry).toBe(true);
+  });
+
+  it("should return an explicit skipped outcome when another tab holds the lock", async () => {
+    const lockRequest = vi
+      .fn()
+      .mockImplementation(async (_name, _options, callback) => callback(null));
+    vi.stubGlobal("navigator", {
+      onLine: true,
+      locks: { request: lockRequest },
+    });
+
+    const outcome = await syncResults(userId);
+
+    expect(outcome).toEqual({
+      incomplete: false,
+      status: "skipped",
+      error: null,
+      shouldRetry: true,
+    });
+  });
+
+  it("should return an explicit failed outcome when the Web Locks request resolves without an outcome", async () => {
+    vi.stubGlobal("navigator", {
+      onLine: true,
+      locks: {
+        request: vi.fn().mockResolvedValue(undefined),
+      },
+    });
+
+    const outcome = await syncResults(userId);
+
+    expect(outcome).toEqual({
+      incomplete: true,
+      status: "failed",
+      error: "Results sync lock request returned no outcome",
+      shouldRetry: true,
+    });
+  });
+
+  it("should return an explicit failed outcome when lock acquisition throws", async () => {
+    vi.stubGlobal("navigator", {
+      onLine: true,
+      locks: {
+        request: vi.fn().mockRejectedValue(new Error("lock failed")),
+      },
+    });
+
+    const outcome = await syncResults(userId);
+
+    expect(outcome.incomplete).toBe(true);
+    expect(outcome.status).toBe("failed");
+    expect(outcome.error).toBe("lock failed");
+    expect(outcome.shouldRetry).toBe(true);
+  });
+
+  it("returns failed outcome when the fallback performSync throws", async () => {
+    vi.stubGlobal("navigator", { onLine: true });
+    mockSupabase.auth.getUser.mockRejectedValue(new Error("fallback failed"));
+
+    const outcome = await syncResults(userId);
+
+    expect(outcome).toEqual({
+      incomplete: true,
+      status: "failed",
+      error: "fallback failed",
+      shouldRetry: true,
+    });
   });
 
   it("reports skipped overlap when the fallback sync guard is already active", async () => {
@@ -158,6 +228,7 @@ describe("Sync Manager: results", () => {
     expect(overlappedOutcome).toEqual({
       incomplete: false,
       status: "skipped",
+      error: null,
       shouldRetry: true,
     });
 
@@ -180,7 +251,7 @@ describe("Sync Manager: results", () => {
     expect(outcome).toEqual({
       incomplete: true,
       status: "failed",
-      error: "Failed to acquire sync lock request",
+      error: "lock exploded",
       shouldRetry: true,
     });
   });

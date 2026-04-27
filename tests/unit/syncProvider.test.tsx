@@ -7,6 +7,11 @@ import React from "react";
 
 import { SyncProvider, useSyncContext } from "@/components/providers/SyncProvider";
 import type { CoordinatedSyncOutcome, SyncDomain } from "@/lib/sync/coordinator";
+import {
+  failedSyncOutcome,
+  skippedSyncOutcome,
+  syncedSyncOutcome,
+} from "@/lib/sync/shared";
 
 const mockRunSyncPlan = vi.hoisted(() => vi.fn());
 const mockGetSyncBlockState = vi.hoisted(() => vi.fn());
@@ -15,9 +20,9 @@ function buildOutcomes(
   overrides: Partial<Record<SyncDomain, CoordinatedSyncOutcome>> = {},
 ): Record<SyncDomain, CoordinatedSyncOutcome> {
   return {
-    quizzes: { incomplete: false, status: "synced" },
-    results: { incomplete: false, status: "synced" },
-    srs: { incomplete: false, status: "synced" },
+    quizzes: syncedSyncOutcome(),
+    results: syncedSyncOutcome(),
+    srs: syncedSyncOutcome(),
     ...overrides,
   };
 }
@@ -87,7 +92,7 @@ describe("SyncProvider", () => {
       domains: ["quizzes", "results", "srs"],
       settlements: {},
       outcomes: buildOutcomes({
-        srs: { incomplete: true, status: "failed" },
+        srs: failedSyncOutcome(),
       }),
     });
 
@@ -107,15 +112,15 @@ describe("SyncProvider", () => {
   });
 
   it("returns partial when all coordinated domains are skipped and retryable", async () => {
-    mockRunSyncPlan.mockResolvedValue({
-      domains: ["quizzes", "results", "srs"],
-      settlements: {},
-      outcomes: buildOutcomes({
-        quizzes: { incomplete: false, status: "skipped", shouldRetry: true },
-        results: { incomplete: false, status: "skipped", shouldRetry: true },
-        srs: { incomplete: false, status: "skipped", shouldRetry: true },
-      }),
-    });
+  mockRunSyncPlan.mockResolvedValue({
+    domains: ["quizzes", "results", "srs"],
+    settlements: {},
+    outcomes: buildOutcomes({
+      quizzes: skippedSyncOutcome({ shouldRetry: true }),
+      results: skippedSyncOutcome({ shouldRetry: true }),
+      srs: skippedSyncOutcome({ shouldRetry: true }),
+    }),
+  });
 
     const { result } = renderHook(() => useSyncContext(), { wrapper });
     await waitFor(() => expect(result.current.hasInitialSyncCompleted).toBe(true));
@@ -137,7 +142,7 @@ describe("SyncProvider", () => {
       domains: ["quizzes", "results", "srs"],
       settlements: {},
       outcomes: buildOutcomes({
-        results: { incomplete: false, status: "skipped", shouldRetry: true },
+        results: skippedSyncOutcome({ shouldRetry: true }),
       }),
     });
 

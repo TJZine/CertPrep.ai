@@ -2,11 +2,13 @@ import { describe, it, expect, vi, beforeEach, type Mock } from "vitest";
 import {
   calculateResults,
   createResult,
-  getOverallStats,
-  getCategoryPerformance,
   deleteResult,
   type CreateResultInput,
 } from "@/db/results";
+import {
+  getCategoryPerformance,
+  getOverallStats,
+} from "@/db/resultAnalytics";
 import { db } from "@/db/dbInstance";
 import { evaluateAnswer } from "@/lib/grading";
 import { NIL_UUID } from "@/lib/constants";
@@ -51,7 +53,7 @@ vi.mock("@/lib/logger", () => ({
   },
 }));
 
-describe("src/db/results.ts", () => {
+describe("src/db/results and src/db/resultAnalytics", () => {
   const mockUserId = "user-123";
   const mockQuizId = "quiz-123";
 
@@ -248,12 +250,14 @@ describe("src/db/results.ts", () => {
       // Detailed mock for Dexie chain
       const mockQuizQuery = {
         equals: vi.fn().mockReturnThis(),
+        filter: vi.fn().mockReturnThis(),
         toArray: vi.fn().mockResolvedValue(mockQuizzes),
       } as unknown as ReturnType<typeof db.quizzes.where>;
       vi.mocked(db.quizzes.where).mockReturnValue(mockQuizQuery);
 
       const mockResultQuery = {
         equals: vi.fn().mockReturnThis(),
+        filter: vi.fn().mockReturnThis(),
         toArray: vi.fn().mockResolvedValue(mockResults),
       } as unknown as ReturnType<typeof db.results.where>;
       vi.mocked(db.results.where).mockReturnValue(mockResultQuery);
@@ -297,12 +301,14 @@ describe("src/db/results.ts", () => {
 
       const mockQuizQuery = {
         equals: vi.fn().mockReturnThis(),
+        filter: vi.fn().mockReturnThis(),
         toArray: vi.fn().mockResolvedValue([mockQuiz]),
       } as unknown as ReturnType<typeof db.quizzes.where>;
       vi.mocked(db.quizzes.where).mockReturnValue(mockQuizQuery);
 
       const mockResultQuery = {
         equals: vi.fn().mockReturnThis(),
+        filter: vi.fn().mockReturnThis(),
         toArray: vi.fn().mockResolvedValue([mockResult]),
       } as unknown as ReturnType<typeof db.results.where>;
       vi.mocked(db.results.where).mockReturnValue(mockResultQuery);
@@ -322,6 +328,105 @@ describe("src/db/results.ts", () => {
         },
       ]);
       expect(vi.mocked(evaluateAnswer)).toHaveBeenCalledTimes(1);
+    });
+
+    it("uses computed category scores without re-grading answers", async () => {
+      const mockQuiz = {
+        id: "q1",
+        user_id: mockUserId,
+        questions: [
+          { id: "q1_1", category: "React", correct_answer: "a" },
+          { id: "q1_2", category: "React", correct_answer: "b" },
+        ],
+        deleted_at: null,
+      } as unknown as Quiz;
+      const mockResult = {
+        score: 50,
+        time_taken_seconds: 60,
+        user_id: mockUserId,
+        quiz_id: "q1",
+        answers: { q1_1: "a", q1_2: "wrong" },
+        computed_category_scores: {
+          React: { correct: 1, total: 2 },
+        },
+        deleted_at: null,
+      } as unknown as Result;
+
+      const mockQuizQuery = {
+        equals: vi.fn().mockReturnThis(),
+        filter: vi.fn().mockReturnThis(),
+        toArray: vi.fn().mockResolvedValue([mockQuiz]),
+      } as unknown as ReturnType<typeof db.quizzes.where>;
+      vi.mocked(db.quizzes.where).mockReturnValue(mockQuizQuery);
+
+      const mockResultQuery = {
+        equals: vi.fn().mockReturnThis(),
+        filter: vi.fn().mockReturnThis(),
+        toArray: vi.fn().mockResolvedValue([mockResult]),
+      } as unknown as ReturnType<typeof db.results.where>;
+      vi.mocked(db.results.where).mockReturnValue(mockResultQuery);
+
+      const stats = await getOverallStats(mockUserId);
+
+      expect(stats.weakestCategories).toEqual([
+        {
+          category: "React",
+          avgScore: 50,
+        },
+      ]);
+      expect(vi.mocked(evaluateAnswer)).not.toHaveBeenCalled();
+    });
+
+    it("ranks weakest categories using sample-size confidence", async () => {
+      const questions = [
+        { id: "sparse-1", category: "Sparse", correct_answer: "a" },
+        ...Array.from({ length: 100 }, (_, index) => ({
+          id: `established-${index + 1}`,
+          category: "Established",
+          correct_answer: "a",
+        })),
+      ] as unknown as Question[];
+      const mockQuiz = {
+        id: "q1",
+        user_id: mockUserId,
+        questions,
+        deleted_at: null,
+      } as unknown as Quiz;
+      const mockResult = {
+        score: 50,
+        time_taken_seconds: 60,
+        user_id: mockUserId,
+        quiz_id: "q1",
+        answers: {},
+        question_ids: questions.map((question) => question.id),
+        computed_category_scores: {
+          Sparse: { correct: 0, total: 1 },
+          Established: { correct: 50, total: 100 },
+        },
+        deleted_at: null,
+      } as unknown as Result;
+
+      const mockQuizQuery = {
+        equals: vi.fn().mockReturnThis(),
+        filter: vi.fn().mockReturnThis(),
+        toArray: vi.fn().mockResolvedValue([mockQuiz]),
+      } as unknown as ReturnType<typeof db.quizzes.where>;
+      vi.mocked(db.quizzes.where).mockReturnValue(mockQuizQuery);
+
+      const mockResultQuery = {
+        equals: vi.fn().mockReturnThis(),
+        filter: vi.fn().mockReturnThis(),
+        toArray: vi.fn().mockResolvedValue([mockResult]),
+      } as unknown as ReturnType<typeof db.results.where>;
+      vi.mocked(db.results.where).mockReturnValue(mockResultQuery);
+
+      const stats = await getOverallStats(mockUserId);
+
+      expect(stats.weakestCategories).toEqual([
+        { category: "Established", avgScore: 50 },
+        { category: "Sparse", avgScore: 0 },
+      ]);
+      expect(vi.mocked(evaluateAnswer)).not.toHaveBeenCalled();
     });
   });
 
@@ -370,6 +475,7 @@ describe("src/db/results.ts", () => {
       ]);
       expect(vi.mocked(evaluateAnswer)).toHaveBeenCalledTimes(1);
     });
+
   });
 
   describe("deleteResult", () => {

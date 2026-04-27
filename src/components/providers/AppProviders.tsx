@@ -5,7 +5,6 @@ import { ThemeProvider } from "@/components/common/ThemeProvider";
 import { GlobalErrorHandler } from "@/components/common/GlobalErrorHandler";
 import { ToastProvider } from "@/components/ui/Toast";
 import { AuthProvider } from "@/components/providers/AuthProvider";
-import "@/../sentry.client.config";
 import { SyncProvider } from "@/components/providers/SyncProvider";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { UpdateBanner } from "@/components/common/UpdateBanner";

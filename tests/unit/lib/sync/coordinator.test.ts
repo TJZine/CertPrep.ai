@@ -1,6 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { runSyncPlan, requiresLocalDataPreservation, toSyncDetails } from "@/lib/sync/coordinator";
+import {
+  failedSyncOutcome,
+  skippedSyncOutcome,
+  syncedSyncOutcome,
+  type SyncRunnerOutcome,
+} from "@/lib/sync/shared";
+
+const PHASE_2_PARALLEL_DEADLOCK_TIMEOUT_MS = 1000;
 
 const mockSyncQuizzes = vi.hoisted(() => vi.fn());
 const mockSyncResults = vi.hoisted(() => vi.fn());
@@ -18,198 +26,68 @@ vi.mock("@/lib/sync/srsSyncManager", () => ({
   syncSRS: mockSyncSRS,
 }));
 
-function createDeferred<T>(): {
-  promise: Promise<T>;
-  resolve: (value: T | PromiseLike<T>) => void;
-  reject: (reason?: unknown) => void;
-} {
-  let resolve!: (value: T | PromiseLike<T>) => void;
-  let reject!: (reason?: unknown) => void;
-  const promise = new Promise<T>((res, rej) => {
-    resolve = res;
-    reject = rej;
-  });
-
-  return { promise, resolve, reject };
-}
-
 describe("runSyncPlan", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockSyncQuizzes.mockResolvedValue({ incomplete: false, status: "synced" });
-    mockSyncResults.mockResolvedValue({ incomplete: false, status: "synced" });
-    mockSyncSRS.mockResolvedValue({ incomplete: false });
+    mockSyncQuizzes.mockResolvedValue(syncedSyncOutcome());
+    mockSyncResults.mockResolvedValue(syncedSyncOutcome());
+    mockSyncSRS.mockResolvedValue(syncedSyncOutcome());
   });
 
-  it("waits for quizzes to settle before starting results and srs during full sync", async () => {
+  it("runs full sync domains in parallel", async () => {
+    // The coordinator runs phases: [["quizzes"], ["results", "srs"]]
+    // Phase 1: quizzes alone → Phase 2: results + srs in parallel
     const callOrder: string[] = [];
-    const quizDeferred = createDeferred<{ incomplete: false; status: "synced" }>();
-    const resultsDeferred = createDeferred<{ incomplete: false; status: "synced" }>();
-    const srsDeferred = createDeferred<{ incomplete: false }>();
 
     mockSyncQuizzes.mockImplementation(async () => {
       callOrder.push("quizzes-start");
-      const outcome = await quizDeferred.promise;
       callOrder.push("quizzes-end");
-      return outcome;
-    });
-    mockSyncResults.mockImplementation(async () => {
-      callOrder.push("results-start");
-      const outcome = await resultsDeferred.promise;
-      callOrder.push("results-end");
-      return outcome;
-    });
-    mockSyncSRS.mockImplementation(async () => {
-      callOrder.push("srs-start");
-      const outcome = await srsDeferred.promise;
-      callOrder.push("srs-end");
-      return outcome;
+      return syncedSyncOutcome();
     });
 
-    const runPromise = runSyncPlan("user-123", "full");
+    // Phase 2 domains use a shared gate to prove they run concurrently
+    let openGate!: () => void;
+    const gate = new Promise<void>((resolve) => { openGate = resolve; });
+    let phase2StartCount = 0;
 
-    await Promise.resolve();
-    expect(callOrder).toEqual(["quizzes-start"]);
-    expect(mockSyncResults).not.toHaveBeenCalled();
-    expect(mockSyncSRS).not.toHaveBeenCalled();
+    const makePhase2Mock = (label: string): (() => Promise<SyncRunnerOutcome>) => async () => {
+      callOrder.push(`${label}-start`);
+      phase2StartCount++;
+      if (phase2StartCount === 2) openGate();
+      await gate;
+      callOrder.push(`${label}-end`);
+      return syncedSyncOutcome();
+    };
 
-    quizDeferred.resolve({ incomplete: false, status: "synced" });
-    await vi.waitFor(() =>
-      expect(callOrder).toEqual([
-        "quizzes-start",
-        "quizzes-end",
-        "results-start",
-        "srs-start",
-      ]),
-    );
+    mockSyncResults.mockImplementation(makePhase2Mock("results"));
+    mockSyncSRS.mockImplementation(makePhase2Mock("srs"));
 
-    resultsDeferred.resolve({ incomplete: false, status: "synced" });
-    srsDeferred.resolve({ incomplete: false });
+    await Promise.race([
+      runSyncPlan("user-123", "full"),
+      // Fails fast with a targeted error if phase-2 mocks never both start.
+      new Promise<never>((_, reject) =>
+        setTimeout(
+          () => reject(new Error("phase2 domains did not start in parallel")),
+          PHASE_2_PARALLEL_DEADLOCK_TIMEOUT_MS,
+        ),
+      ),
+    ]);
 
-    await runPromise;
+    expect(callOrder).toContain("quizzes-end");
+    expect(callOrder).toContain("results-start");
+    expect(callOrder).toContain("srs-start");
+    expect(callOrder).toContain("results-end");
+    expect(callOrder).toContain("srs-end");
 
+    // Quizzes completed before phase 2 started
     expect(callOrder.indexOf("quizzes-end")).toBeLessThan(callOrder.indexOf("results-start"));
     expect(callOrder.indexOf("quizzes-end")).toBeLessThan(callOrder.indexOf("srs-start"));
+
+    // Phase 2: both started before either ended (proves parallelism)
+    const phase2Starts = [callOrder.indexOf("results-start"), callOrder.indexOf("srs-start")];
+    const phase2Ends = [callOrder.indexOf("results-end"), callOrder.indexOf("srs-end")];
+    expect(Math.max(...phase2Starts)).toBeLessThan(Math.min(...phase2Ends));
   });
-
-  it("waits for quizzes to settle before starting results and srs during logout sync", async () => {
-    const callOrder: string[] = [];
-    const quizDeferred = createDeferred<{ incomplete: false; status: "synced" }>();
-    const resultsDeferred = createDeferred<{ incomplete: false; status: "synced" }>();
-    const srsDeferred = createDeferred<{ incomplete: false }>();
-
-    mockSyncQuizzes.mockImplementation(async () => {
-      callOrder.push("quizzes-start");
-      const outcome = await quizDeferred.promise;
-      callOrder.push("quizzes-end");
-      return outcome;
-    });
-    mockSyncResults.mockImplementation(async () => {
-      callOrder.push("results-start");
-      const outcome = await resultsDeferred.promise;
-      callOrder.push("results-end");
-      return outcome;
-    });
-    mockSyncSRS.mockImplementation(async () => {
-      callOrder.push("srs-start");
-      const outcome = await srsDeferred.promise;
-      callOrder.push("srs-end");
-      return outcome;
-    });
-
-    const runPromise = runSyncPlan("user-123", "logout");
-
-    await Promise.resolve();
-    expect(callOrder).toEqual(["quizzes-start"]);
-    expect(mockSyncResults).not.toHaveBeenCalled();
-    expect(mockSyncSRS).not.toHaveBeenCalled();
-
-    quizDeferred.resolve({ incomplete: false, status: "synced" });
-    await vi.waitFor(() =>
-      expect(callOrder).toEqual([
-        "quizzes-start",
-        "quizzes-end",
-        "results-start",
-        "srs-start",
-      ]),
-    );
-
-    resultsDeferred.resolve({ incomplete: false, status: "synced" });
-    srsDeferred.resolve({ incomplete: false });
-
-    await runPromise;
-  });
-
-  it.each([
-    [
-      "returns incomplete",
-      async (): Promise<{
-        incomplete: true;
-        status: "failed";
-        shouldRetry: true;
-      }> =>
-        ({
-          incomplete: true,
-          status: "failed" as const,
-          shouldRetry: true,
-        }),
-    ],
-    [
-      "rejects",
-      async (): Promise<never> => {
-        throw new Error("quiz sync failed");
-      },
-    ],
-  ])(
-    "still runs results after the quiz phase settles when quiz sync %s",
-    async (_label, runQuizSync) => {
-      const callOrder: string[] = [];
-      const resultsDeferred = createDeferred<{ incomplete: false; status: "synced" }>();
-      const srsDeferred = createDeferred<{ incomplete: false }>();
-
-      mockSyncQuizzes.mockImplementation(async () => {
-        callOrder.push("quizzes-start");
-        try {
-          return await runQuizSync();
-        } finally {
-          callOrder.push("quizzes-end");
-        }
-      });
-      mockSyncResults.mockImplementation(async () => {
-        callOrder.push("results-start");
-        const outcome = await resultsDeferred.promise;
-        callOrder.push("results-end");
-        return outcome;
-      });
-      mockSyncSRS.mockImplementation(async () => {
-        callOrder.push("srs-start");
-        const outcome = await srsDeferred.promise;
-        callOrder.push("srs-end");
-        return outcome;
-      });
-
-      const runPromise = runSyncPlan("user-123", "full");
-
-      await vi.waitFor(() =>
-        expect(callOrder).toEqual([
-          "quizzes-start",
-          "quizzes-end",
-          "results-start",
-          "srs-start",
-        ]),
-      );
-      expect(mockSyncResults).toHaveBeenCalledWith("user-123");
-      expect(mockSyncSRS).toHaveBeenCalledWith("user-123");
-
-      resultsDeferred.resolve({ incomplete: false, status: "synced" });
-      srsDeferred.resolve({ incomplete: false });
-
-      const summary = await runPromise;
-
-      expect(summary.outcomes.results.status).toBe("synced");
-      expect(summary.outcomes.srs.incomplete).toBe(false);
-    },
-  );
 
   it("limits quiz repair to the quizzes domain", async () => {
     const summary = await runSyncPlan("user-123", "quiz-repair");
@@ -218,8 +96,8 @@ describe("runSyncPlan", () => {
     expect(mockSyncResults).not.toHaveBeenCalled();
     expect(mockSyncSRS).not.toHaveBeenCalled();
     expect(summary.domains).toEqual(["quizzes"]);
-    expect(summary.outcomes.results.status).toBe("skipped");
-    expect(summary.outcomes.srs.status).toBe("skipped");
+    expect(summary.outcomes.results).toEqual(skippedSyncOutcome());
+    expect(summary.outcomes.srs).toEqual(skippedSyncOutcome());
   });
 });
 
@@ -228,13 +106,17 @@ describe("sync coordinator helpers", () => {
     expect(
       requiresLocalDataPreservation({
         status: "fulfilled",
-        value: { incomplete: true, status: "synced" },
+        value: {
+          ...syncedSyncOutcome(),
+          incomplete: true,
+          shouldRetry: true,
+        },
       }),
     ).toBe(true);
     expect(
       requiresLocalDataPreservation({
         status: "fulfilled",
-        value: { incomplete: false, status: "skipped" },
+        value: skippedSyncOutcome(),
       }),
     ).toBe(true);
     expect(
@@ -248,9 +130,9 @@ describe("sync coordinator helpers", () => {
   it("maps coordinated outcomes into incomplete detail flags", () => {
     expect(
       toSyncDetails({
-        quizzes: { incomplete: false, status: "synced" },
-        results: { incomplete: true, status: "failed" },
-        srs: { incomplete: false, status: "skipped" },
+        quizzes: syncedSyncOutcome(),
+        results: failedSyncOutcome(),
+        srs: skippedSyncOutcome(),
       }),
     ).toEqual({
       quizzes: false,

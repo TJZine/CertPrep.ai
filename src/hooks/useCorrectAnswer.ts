@@ -91,8 +91,7 @@ export function useCorrectAnswer(
 
   // Stable worker reference
   const workerRef = React.useRef<Worker | null>(null);
-  // Track if worker instantiation failed - using State to trigger effect re-run on failure
-  const [workerFailed, setWorkerFailed] = useState(false);
+  const workerFailedRef = React.useRef(false);
 
   // Preserve latest options without re-running the effect on unstable object identity
   const optionsRef = React.useRef<Record<string, string> | undefined>(options);
@@ -108,7 +107,6 @@ export function useCorrectAnswer(
 
   // Worker Lifecycle Management
   useEffect((): (() => void) => {
-    setWorkerFailed(false);
     let blobUrl: string | null = null;
 
     try {
@@ -124,15 +122,15 @@ export function useCorrectAnswer(
         logger.warn("[useCorrectAnswer] Worker failed, switching to fallback", {
           message: event.message,
         });
+        workerFailedRef.current = true;
         setError("Answer hashing worker failed; using fallback.");
         // Kill the dead worker and signal failure state
         worker.terminate();
         workerRef.current = null;
-        setWorkerFailed(true);
       };
     } catch (error) {
       logger.warn("[useCorrectAnswer] Worker instantiation failed", error);
-      setWorkerFailed(true);
+      workerFailedRef.current = true;
     }
 
     return (): void => {
@@ -151,6 +149,9 @@ export function useCorrectAnswer(
   useEffect((): (() => void) => {
     let isMounted = true;
     let handler: ((event: MessageEvent) => void) | null = null;
+    let cleanup: () => void = () => {
+      // placeholder until request-specific handlers are wired
+    };
 
     const resolveAnswer = async (): Promise<void> => {
       const currentOptions = optionsRef.current;
@@ -179,55 +180,108 @@ export function useCorrectAnswer(
         }
       };
 
-      // STRATEGY: Fallback
-      if (workerFailed || !workerRef.current) {
+      const resolveWithFallback = async (
+        valuesToHash: Record<string, string>,
+      ): Promise<void> => {
         try {
-          const hashes = await hashOptionsFallback(currentOptions);
+          const hashes = await hashOptionsFallback(valuesToHash);
           processResult(hashes);
+          if (isMounted) setError(null);
         } catch (error) {
           logger.error("[useCorrectAnswer] Fallback hashing failed", error);
           if (isMounted) {
             setError(
-              error instanceof Error ? error.message : "Fallback hashing failed.",
+              error instanceof Error
+                ? error.message
+                : "Fallback hashing failed.",
             );
           }
         } finally {
           if (isMounted) setIsResolving(false);
         }
+      };
+
+      // STRATEGY: Fallback
+      if (workerFailedRef.current || !workerRef.current) {
+        await resolveWithFallback(currentOptions);
         return;
       }
+
+      const workerForRequest = workerRef.current;
+      const previousOnError = workerForRequest.onerror;
+      let activeOnError: ((event: ErrorEvent) => void) | null = null;
+      let isSettled = false;
+
+      cleanup = (): void => {
+        if (handler && workerForRequest) {
+          workerForRequest.removeEventListener("message", handler);
+        }
+        if (workerForRequest.onerror === activeOnError) {
+          workerForRequest.onerror = previousOnError;
+        }
+      };
+
+      const fallbackWithWorkerError = (): void => {
+        if (isSettled) return;
+        isSettled = true;
+        logger.warn("[useCorrectAnswer] Worker failed during answer resolution", {
+          questionId,
+        });
+        workerFailedRef.current = true;
+
+        if (isMounted) {
+          setError("Answer hashing worker failed; using fallback.");
+        }
+
+        cleanup();
+
+        workerForRequest.terminate();
+        if (workerRef.current === workerForRequest) {
+          workerRef.current = null;
+        }
+
+        void resolveWithFallback(currentOptions);
+      };
 
       // STRATEGY: Worker
       handler = (event: MessageEvent): void => {
         const { type, payload } = event.data;
-
-        if (type === "hash_bulk_error" && payload.id === questionId) {
+        const isMessageForFallback =
+          payload?.id === questionId || payload?.id == null;
+        if (
+          (type === "hash_bulk_error" || type === "ERROR") &&
+          isMessageForFallback
+        ) {
           logger.warn("[useCorrectAnswer] Worker computation error", {
-            error: payload.error,
+            error: payload?.error ?? "unknown worker error",
           });
-          setWorkerFailed(true);
-          if (isMounted) setIsResolving(false);
-          cleanup();
+          fallbackWithWorkerError();
           return;
         }
 
-        if (type === "hash_bulk_result" && payload.id === questionId) {
+        if (type === "hash_bulk_result" && payload?.id === questionId) {
+          isSettled = true;
           processResult(payload.hashes as Record<string, string>);
           if (isMounted) setIsResolving(false);
           cleanup();
         }
       };
 
-      const cleanup = (): void => {
-        if (handler && workerRef.current) {
-          workerRef.current.removeEventListener("message", handler);
-        }
+      activeOnError = (event: ErrorEvent): void => {
+        event.preventDefault();
+
+        logger.warn("[useCorrectAnswer] Worker failed during answer resolution", {
+          message: event.message,
+          questionId,
+        });
+        fallbackWithWorkerError();
       };
 
-      workerRef.current.addEventListener("message", handler);
+      workerForRequest.onerror = activeOnError;
+      workerForRequest.addEventListener("message", handler);
 
       // Send work
-      workerRef.current.postMessage({
+      workerForRequest.postMessage({
         type: "hash_bulk",
         payload: {
           id: questionId,
@@ -240,11 +294,9 @@ export function useCorrectAnswer(
 
     return () => {
       isMounted = false;
-      if (handler && workerRef.current) {
-        workerRef.current.removeEventListener("message", handler);
-      }
+      cleanup();
     };
-  }, [questionId, targetHash, optionsKey, workerFailed]); // Depend on optionsKey to trigger when options load
+  }, [questionId, targetHash, optionsKey]); // Depend on optionsKey to trigger when options load
 
   return { resolvedAnswers, isResolving, error };
 }

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { getOverallStats } from "@/db/results";
+import { getOverallStats } from "@/db/resultAnalytics";
 import type { Quiz } from "@/types/quiz";
 import type { Result } from "@/types/result";
 
@@ -9,6 +9,15 @@ const { quizzesData, resultsData, dbMock } = vi.hoisted(() => {
 
   const quizzesWhere = vi.fn().mockReturnValue({
     equals: vi.fn().mockImplementation((userId: string) => ({
+      filter: vi.fn().mockImplementation((predicate: (quiz: Quiz) => boolean) => ({
+        toArray: vi
+          .fn()
+          .mockImplementation(async () =>
+            quizzesData
+              .filter((quiz) => quiz.user_id === userId)
+              .filter(predicate),
+          ),
+      })),
       toArray: vi
         .fn()
         .mockImplementation(async () =>
@@ -19,6 +28,15 @@ const { quizzesData, resultsData, dbMock } = vi.hoisted(() => {
 
   const resultsWhere = vi.fn().mockReturnValue({
     equals: vi.fn().mockImplementation((userId: string) => ({
+      filter: vi.fn().mockImplementation((predicate: (result: Result) => boolean) => ({
+        toArray: vi
+          .fn()
+          .mockImplementation(async () =>
+            resultsData
+              .filter((result) => result.user_id === userId)
+              .filter(predicate),
+          ),
+      })),
       toArray: vi
         .fn()
         .mockImplementation(async () =>

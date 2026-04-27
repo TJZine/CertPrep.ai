@@ -9,7 +9,7 @@ import {
   AnalyticsSkeleton,
 } from "@/components/analytics/AnalyticsSkeleton";
 import { EmptyCardState } from "@/components/analytics/EmptyCardState";
-import type { OverallStats } from "@/db/results";
+import type { OverallStats } from "@/db/resultAnalytics";
 
 const baseStats: OverallStats = {
   totalQuizzes: 12,

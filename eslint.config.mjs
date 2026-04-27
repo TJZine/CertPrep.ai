@@ -13,6 +13,7 @@ const config = [
       "test-results/**",
       ".agent/**",
       ".agents/**",
+      ".worktrees/**",
     ],
   },
 

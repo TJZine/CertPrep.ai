@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import type { SupabaseClient, User as SupabaseUser } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { useAuth } from "@/components/providers/AuthProvider";
@@ -18,39 +19,72 @@ import { getAuthErrorMessage } from "@/lib/auth/authUtils";
 
 export function ProfileSettings(): React.ReactElement {
   const { user } = useAuth();
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [isEditingEmail, setIsEditingEmail] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const supabase = createClient();
   const { addToast } = useToast();
-  const hasNameChange = fullName !== (user?.user_metadata?.full_name || "");
-  const hasEmailChange = isEditingEmail && email !== (user?.email || "");
+
+  return (
+    <Card className="mb-8">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <User className="h-5 w-5" />
+          Profile
+        </CardTitle>
+        <CardDescription>Manage your personal information</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <ProfileSettingsForm
+          key={user?.id ?? "anonymous"}
+          user={user}
+          supabase={supabase}
+          addToast={addToast}
+        />
+      </CardContent>
+    </Card>
+  );
+}
+
+function ProfileSettingsForm({
+  user,
+  supabase,
+  addToast,
+}: {
+  user: SupabaseUser | null;
+  supabase: SupabaseClient | null | undefined;
+  addToast: ReturnType<typeof useToast>["addToast"];
+}): React.ReactElement {
+  const [fullName, setFullName] = useState(user?.user_metadata?.full_name || "");
+  const [email, setEmail] = useState(user?.email || "");
+  const [isEditingEmail, setIsEditingEmail] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const existingFullName = (user?.user_metadata?.full_name ?? "").trim();
+  const nextFullName = fullName.trim();
+  const existingEmail = user?.email ?? "";
+  const nextEmail = email.trim();
+
+  const hasNameChange =
+    nextFullName.length > 0 && nextFullName !== existingFullName;
+  const hasEmailChange = isEditingEmail && nextEmail !== existingEmail;
   const hasChanges = hasNameChange || hasEmailChange;
   const isDisabled = !user || isLoading || !hasChanges;
 
-  useEffect(() => {
-    if (user) {
-      setFullName(user.user_metadata?.full_name || "");
-      setEmail(user.email || "");
-    }
-  }, [user]);
-
   const handleUpdateProfile = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
+
     if (!user) {
       addToast("error", "You must be signed in to update your profile.");
       return;
     }
+
     const updates: { data?: { full_name: string }; email?: string } = {};
     let message = "Profile updated successfully";
 
-    if (fullName !== user?.user_metadata?.full_name) {
-      updates.data = { full_name: fullName };
+    if (hasNameChange) {
+      updates.data = { full_name: nextFullName };
     }
 
-    if (isEditingEmail && email !== user?.email) {
-      updates.email = email;
+    if (hasEmailChange) {
+      updates.email = nextEmail;
       message =
         "Profile updated. Please check both your old and new emails to confirm the change.";
     }
@@ -83,99 +117,86 @@ export function ProfileSettings(): React.ReactElement {
   };
 
   return (
-    <Card className="mb-8">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <User className="h-5 w-5" />
-          Profile
-        </CardTitle>
-        <CardDescription>Manage your personal information</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleUpdateProfile} className="space-y-4">
-          <div className="space-y-2">
-            <label
-              htmlFor="email"
-              className="text-sm font-medium leading-none flex justify-between"
+    <form onSubmit={handleUpdateProfile} className="space-y-4">
+      <div className="space-y-2">
+        <label
+          htmlFor="email"
+          className="text-sm font-medium leading-none flex justify-between"
+        >
+          <span>Email</span>
+          {!isEditingEmail && (
+            <button
+              type="button"
+              onClick={() => setIsEditingEmail(true)}
+              className="text-xs text-primary hover:underline"
             >
-              <span>Email</span>
-              {!isEditingEmail && (
-                <button
-                  type="button"
-                  onClick={() => setIsEditingEmail(true)}
-                  className="text-xs text-primary hover:underline"
-                >
-                  Change Email
-                </button>
-              )}
-            </label>
-            <div className="relative">
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={!isEditingEmail || isLoading}
-                className={
-                  !isEditingEmail
-                    ? "bg-muted text-muted-foreground"
-                    : ""
-                }
-              />
-              {!isEditingEmail && (
-                <Mail className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground" />
-              )}
+              Change Email
+            </button>
+          )}
+        </label>
+        <div className="relative">
+          <Input
+            id="email"
+            type="email"
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            disabled={!isEditingEmail || isLoading}
+            className={!isEditingEmail ? "bg-muted text-muted-foreground" : ""}
+          />
+          {!isEditingEmail && (
+            <Mail className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground" />
+          )}
+        </div>
+        {isEditingEmail && (
+          <div className="rounded-md bg-warning/10 p-3 text-sm text-warning">
+            <div className="flex gap-2">
+              <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+              <p>
+                Changing your email requires re-verification. Confirm the change
+                via links sent to <strong>both</strong> your old and new
+                addresses; you may be signed out after confirmation.
+              </p>
             </div>
-            {isEditingEmail && (
-              <div className="rounded-md bg-warning/10 p-3 text-sm text-warning">
-                <div className="flex gap-2">
-                  <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                  <p>
-                    Changing your email requires re-verification. Confirm the
-                    change via links sent to <strong>both</strong> your old and
-                    new addresses; you may be signed out after confirmation.
-                  </p>
-                </div>
-              </div>
-            )}
           </div>
+        )}
+      </div>
 
-          <div className="space-y-2">
-            <label
-              htmlFor="fullName"
-              className="text-sm font-medium leading-none"
-            >
-              Full Name
-            </label>
-            <Input
-              id="fullName"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              placeholder="Your Name"
-              disabled={isLoading}
-            />
-          </div>
+      <div className="space-y-2">
+        <label
+          htmlFor="fullName"
+          className="text-sm font-medium leading-none"
+        >
+          Full Name
+        </label>
+        <Input
+          id="fullName"
+          autoComplete="name"
+          value={fullName}
+          onChange={(e) => setFullName(e.target.value)}
+          placeholder="Your Name"
+          disabled={isLoading}
+        />
+      </div>
 
-          <div className="flex justify-end gap-2">
-            {isEditingEmail && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setIsEditingEmail(false);
-                  setEmail(user?.email || "");
-                }}
-                disabled={isLoading}
-              >
-                Cancel
-              </Button>
-            )}
-            <Button type="submit" isLoading={isLoading} disabled={isDisabled}>
-              Save Changes
-            </Button>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+      <div className="flex justify-end gap-2">
+        {isEditingEmail && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              setIsEditingEmail(false);
+              setEmail(user?.email || "");
+            }}
+            disabled={isLoading}
+          >
+            Cancel
+          </Button>
+        )}
+        <Button type="submit" isLoading={isLoading} disabled={isDisabled}>
+          Save Changes
+        </Button>
+      </div>
+    </form>
   );
 }

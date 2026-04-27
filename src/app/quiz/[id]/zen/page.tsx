@@ -12,7 +12,6 @@ import { useInitializeDatabase, useQuiz } from "@/hooks/useDatabase";
 import type { Question } from "@/types/quiz";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
-import { logger } from "@/lib/logger";
 import {
   clearSmartRoundState,
   SMART_ROUND_QUESTIONS_KEY,
@@ -36,6 +35,7 @@ interface StudyModeData {
   missedCount: number;
   flaggedCount: number;
   category?: string;
+  filteredQuestions: Question[];
 }
 
 /**
@@ -66,20 +66,12 @@ export default function ZenModePage(): React.ReactElement {
     effectiveUserId ?? undefined,
   );
 
-  const [studyModeData, setStudyModeData] =
-    React.useState<StudyModeData | null>(null);
-  const [filteredQuestions, setFilteredQuestions] = React.useState<
-    Question[] | null
-  >(null);
-
-  React.useEffect(() => {
-    if (!isFilteredMode || !quiz) return;
-
-    // SSR guard: sessionStorage is only available in browser
-    if (typeof window === "undefined") return;
+  const studyModePayload = React.useMemo(() => {
+    if (!isFilteredMode || !quiz || typeof window === "undefined") {
+      return null;
+    }
 
     try {
-      // Determine which storage keys to use based on mode
       let questionsKey: string;
       let quizIdKey: string;
       let missedKey: string | null = null;
@@ -91,7 +83,6 @@ export default function ZenModePage(): React.ReactElement {
         missedKey = SMART_ROUND_MISSED_COUNT_KEY;
         flaggedKey = SMART_ROUND_FLAGGED_COUNT_KEY;
       } else {
-        // Topic study mode
         questionsKey = TOPIC_STUDY_QUESTIONS_KEY;
         quizIdKey = TOPIC_STUDY_QUIZ_ID_KEY;
         missedKey = TOPIC_STUDY_MISSED_COUNT_KEY;
@@ -106,45 +97,53 @@ export default function ZenModePage(): React.ReactElement {
         ? sessionStorage.getItem(TOPIC_STUDY_CATEGORY_KEY)
         : undefined;
 
-
-      if (storedQuestionIds && storedQuizId === quizId) {
-        const questionIds: string[] = JSON.parse(storedQuestionIds);
-
-        const filtered = quiz.questions.filter((q) =>
-          questionIds.includes(q.id),
-        );
-        const orderedFiltered = questionIds
-          .map((id) => filtered.find((q) => q.id === id))
-          .filter((q): q is Question => q !== undefined);
-
-        if (orderedFiltered.length > 0) {
-          setFilteredQuestions(orderedFiltered);
-          // Parse counts with proper handling for 0 (which is falsy but valid)
-          const parsedMissed = storedMissedCount !== null
-            ? Number.parseInt(storedMissedCount, 10)
-            : NaN;
-          const parsedFlagged = storedFlaggedCount !== null
-            ? Number.parseInt(storedFlaggedCount, 10)
-            : NaN;
-          setStudyModeData({
-            questionIds,
-            missedCount: Number.isNaN(parsedMissed)
-              ? (isSmartRound ? orderedFiltered.length : 0)
-              : parsedMissed,
-            flaggedCount: Number.isNaN(parsedFlagged) ? 0 : parsedFlagged,
-            category: storedCategory ?? undefined,
-          });
-        } else {
-          router.replace(`/quiz/${quizId}/zen`);
-        }
-      } else {
-        router.replace(`/quiz/${quizId}/zen`);
+      if (!storedQuestionIds || storedQuizId !== quizId) {
+        return null;
       }
+
+      const questionIds = JSON.parse(storedQuestionIds) as string[];
+      if (!Array.isArray(questionIds)) {
+        return null;
+      }
+
+      const questionsById = new Map(
+        quiz.questions.map((q) => [q.id, q] as const),
+      );
+      const orderedFiltered = questionIds
+        .map((id) => questionsById.get(id))
+        .filter((q): q is Question => q !== undefined);
+
+      if (orderedFiltered.length === 0) {
+        return null;
+      }
+
+      const parsedMissed = storedMissedCount !== null
+        ? Number.parseInt(storedMissedCount, 10)
+        : NaN;
+      const parsedFlagged = storedFlaggedCount !== null
+        ? Number.parseInt(storedFlaggedCount, 10)
+        : NaN;
+
+      return {
+        questionIds,
+        missedCount: Number.isNaN(parsedMissed)
+          ? (isSmartRound ? orderedFiltered.length : 0)
+          : parsedMissed,
+        flaggedCount: Number.isNaN(parsedFlagged) ? 0 : parsedFlagged,
+        category: storedCategory ?? undefined,
+        filteredQuestions: orderedFiltered,
+      } as StudyModeData;
     } catch (error) {
-      logger.error(`Failed to load ${mode} mode data`, { error });
+      console.warn("Failed to restore filtered study session", error);
+      return null;
+    }
+  }, [isFilteredMode, isSmartRound, isTopicStudy, quiz, quizId]);
+
+  React.useEffect(() => {
+    if (isFilteredMode && !isLoading && quiz && !studyModePayload) {
       router.replace(`/quiz/${quizId}/zen`);
     }
-  }, [isFilteredMode, isSmartRound, isTopicStudy, mode, quiz, quizId, router]);
+  }, [isFilteredMode, isLoading, quiz, studyModePayload, quizId, router]);
 
   const handleModeExit = (): void => {
     if (isSmartRound) {
@@ -159,7 +158,7 @@ export default function ZenModePage(): React.ReactElement {
     return <ZenQuizSkeleton />;
   }
 
-  if (isFilteredMode && !filteredQuestions) {
+  if (isFilteredMode && quiz && !studyModePayload) {
     // Filtered mode (Smart Round / Topic Study) still loading
     return <ZenQuizSkeleton />;
   }
@@ -212,7 +211,7 @@ export default function ZenModePage(): React.ReactElement {
   }
 
   const questionsToUse =
-    isFilteredMode && filteredQuestions ? filteredQuestions : quiz.questions;
+    isFilteredMode && studyModePayload ? studyModePayload.filteredQuestions : quiz.questions;
 
   if (questionsToUse.length === 0) {
     return (
@@ -240,14 +239,14 @@ export default function ZenModePage(): React.ReactElement {
   }
 
   const quizForSession =
-    isFilteredMode && filteredQuestions
-      ? { ...quiz, questions: filteredQuestions }
+    isFilteredMode && studyModePayload
+      ? { ...quiz, questions: studyModePayload.filteredQuestions }
       : quiz;
 
   // Build banner title based on mode
   const getBannerTitle = (): string => {
-    if (isTopicStudy && studyModeData?.category) {
-      return `Topic Study: ${studyModeData.category}`;
+    if (isTopicStudy && studyModePayload?.category) {
+      return `Topic Study: ${studyModePayload.category}`;
     }
     if (isTopicStudy) {
       return "Topic Study";
@@ -278,13 +277,13 @@ export default function ZenModePage(): React.ReactElement {
         </div>
       }
     >
-      {isFilteredMode && studyModeData && (
+      {isFilteredMode && studyModePayload && (
         <div className="bg-background px-4 pt-4">
           <div className="mx-auto max-w-3xl">
             <SessionBanner
-              totalQuestions={studyModeData.questionIds.length}
-              missedCount={studyModeData.missedCount}
-              flaggedCount={studyModeData.flaggedCount}
+              totalQuestions={studyModePayload.filteredQuestions.length}
+              missedCount={studyModePayload.missedCount}
+              flaggedCount={studyModePayload.flaggedCount}
               onExit={handleModeExit}
               title={getBannerTitle()}
             />

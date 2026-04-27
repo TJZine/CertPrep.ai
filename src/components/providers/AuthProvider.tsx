@@ -119,16 +119,14 @@ export function AuthProvider({
 }): React.ReactElement {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
-
   const supabase = useMemo(() => createClient(), []);
+  const [isLoading, setIsLoading] = useState(Boolean(supabase));
 
   useEffect((): (() => void) => {
     let isMounted = true;
 
     if (!supabase) {
-      if (isMounted) setIsLoading(false);
       return () => {};
     }
 

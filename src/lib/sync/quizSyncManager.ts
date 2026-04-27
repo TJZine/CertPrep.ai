@@ -24,7 +24,14 @@ import type { Quiz } from "@/types/quiz";
 import { QuestionSchema } from "@/validators/quizSchema";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/client";
-import { createSupabaseClientGetter } from "./shared";
+import {
+  createSupabaseClientGetter,
+  failedSyncOutcome,
+  skippedSyncOutcome,
+  syncedSyncOutcome,
+  toErrorMessage,
+  type SyncRunnerOutcome,
+} from "./shared";
 
 const getSupabaseClient = createSupabaseClientGetter(() => createClient());
 
@@ -46,6 +53,7 @@ async function ensureQuizHash(
 
 const BATCH_SIZE = 50;
 const TIME_BUDGET_MS = 5000;
+const QUIZ_SYNC_TIME_BUDGET_ERROR = "Quiz sync time budget exceeded";
 
 // Using .passthrough() to preserve unknown fields from newer schema versions
 const RemoteQuizSchema = z.object({
@@ -70,17 +78,12 @@ const syncState = {
   lastSyncAttempt: 0,
 };
 
-export type SyncQuizzesOutcome = {
-  incomplete: boolean;
-  status?: "synced" | "skipped" | "failed";
-  error?: string;
-  shouldRetry?: boolean;
-};
+export type SyncQuizzesOutcome = SyncRunnerOutcome;
 
 export async function syncQuizzes(
   userId: string,
 ): Promise<SyncQuizzesOutcome> {
-  if (!userId) return { incomplete: false, status: "skipped" };
+  if (!userId) return skippedSyncOutcome();
 
   if (typeof navigator !== "undefined" && "locks" in navigator) {
     try {
@@ -93,34 +96,29 @@ export async function syncQuizzes(
               logger.debug(
                 "Quiz sync already in progress in another tab, skipping",
               );
-              return {
-                incomplete: false,
-                status: "skipped",
+              return skippedSyncOutcome({
                 shouldRetry: true,
-              };
+              });
             }
             try {
               return await performQuizSync(userId);
             } catch (error) {
               logger.error("Quiz sync failed while holding lock", error);
-              return {
-                incomplete: true,
-                status: "failed",
-                error: "Quiz sync failed while holding lock",
-                shouldRetry: true,
-              };
+              return failedSyncOutcome({
+                error: toErrorMessage(error),
+              });
             }
           },
-        )) || { incomplete: false }
+        )) ??
+        failedSyncOutcome({
+          error: "Quiz sync lock request returned no outcome",
+        })
       );
     } catch (error) {
       logger.error("Failed to acquire quiz sync lock request", error);
-      return {
-        incomplete: true,
-        status: "failed",
-        error: "Failed to acquire quiz sync lock request",
-        shouldRetry: true,
-      };
+      return failedSyncOutcome({
+        error: toErrorMessage(error),
+      });
     }
   }
 
@@ -129,11 +127,9 @@ export async function syncQuizzes(
       logger.warn("Quiz sync lock timed out, resetting");
       syncState.isSyncing = false;
     } else {
-      return {
-        incomplete: false,
-        status: "skipped",
+      return skippedSyncOutcome({
         shouldRetry: true,
-      };
+      });
     }
   }
 
@@ -143,12 +139,9 @@ export async function syncQuizzes(
     return await performQuizSync(userId);
   } catch (error) {
     logger.error("Quiz sync failed (fallback path)", error);
-    return {
-      incomplete: true,
-      status: "failed",
-      error: "Quiz sync failed (fallback path)",
-      shouldRetry: true,
-    };
+    return failedSyncOutcome({
+      error: toErrorMessage(error),
+    });
   } finally {
     syncState.isSyncing = false;
   }
@@ -160,6 +153,7 @@ async function performQuizSync(
   performance.mark("quizSync-start");
   const startTime = Date.now();
   let incomplete = false;
+  let lastError: string | undefined;
   const stats = { pushed: 0, pulled: 0 };
 
   // Check if sync is blocked due to previous schema drift
@@ -172,44 +166,36 @@ async function performQuizSync(
       reason: blockState.reason,
       remainingMins,
     });
-    return {
-      incomplete: true,
-      status: "failed",
+    return failedSyncOutcome({
       error: blockState.reason,
-      shouldRetry: true,
-    };
+      shouldRetry: false,
+    });
   }
 
   // Validate auth session matches the userId we're syncing for
   const client = getSupabaseClient();
   if (!client) {
     logger.warn("Quiz sync skipped: Supabase client unavailable");
-    return {
-      incomplete: true,
-      status: "failed",
+    return failedSyncOutcome({
       error: "Supabase client unavailable",
-      shouldRetry: true,
-    };
+    });
   }
 
   const { data: { user }, error: authError } = await client.auth.getUser();
   if (authError || !user) {
     logger.warn("Quiz sync skipped: No valid auth session", { authError: authError?.message });
-    return {
+    return skippedSyncOutcome({
       incomplete: true,
-      status: "skipped",
-      error: authError?.message ?? "Not authenticated",
+      error: "Not authenticated",
       shouldRetry: true,
-    };
+    });
   }
   if (user.id !== userId) {
     logger.error("Quiz sync aborted: Auth user ID mismatch", { authUserId: user.id, syncUserId: userId });
-    return {
-      incomplete: true,
-      status: "failed",
+    return failedSyncOutcome({
       error: "User ID mismatch - please re-login",
-      shouldRetry: true,
-    };
+      shouldRetry: false,
+    });
   }
 
   try {
@@ -219,17 +205,27 @@ async function performQuizSync(
     }
 
     if (Date.now() - startTime > TIME_BUDGET_MS) {
-      return { incomplete: true };
+      lastError = QUIZ_SYNC_TIME_BUDGET_ERROR;
+      return failedSyncOutcome({ error: lastError });
     }
 
     // Push phase - wrapped in Sentry span for performance monitoring
-    incomplete = await Sentry.startSpan(
+    const pushResult = await Sentry.startSpan(
       { name: "quiz.sync.push", op: "db.sync" },
-      async () => (await pushLocalChanges(userId, startTime, stats)) || incomplete
+      async () => await pushLocalChanges(userId, startTime, stats),
     );
+    incomplete = pushResult.incomplete || incomplete;
+    if (pushResult.error) {
+      lastError = pushResult.error;
+      logger.warn("Quiz sync push failed", {
+        userId,
+        error: pushResult.error,
+      });
+    }
 
     if (Date.now() - startTime > TIME_BUDGET_MS) {
-      return { incomplete: true };
+      lastError = QUIZ_SYNC_TIME_BUDGET_ERROR;
+      return failedSyncOutcome({ error: lastError });
     }
 
     // Pull phase - wrapped in Sentry span for performance monitoring
@@ -238,6 +234,13 @@ async function performQuizSync(
       async () => await pullRemoteChanges(userId, startTime, stats)
     );
     incomplete = pullResult.incomplete || incomplete;
+    if (pullResult.error) {
+      lastError = pullResult.error;
+      logger.warn("Quiz sync pull failed", {
+        userId,
+        error: pullResult.error,
+      });
+    }
 
 
     if (pullResult.hardFailure) {
@@ -263,11 +266,7 @@ async function performQuizSync(
         incomplete: false,
       });
     }
-    return {
-      incomplete,
-      status: incomplete ? "failed" : "synced",
-      shouldRetry: incomplete,
-    };
+    return incomplete ? failedSyncOutcome({ error: lastError }) : syncedSyncOutcome();
   } finally {
     performance.mark("quizSync-end");
     performance.measure("quizSync", "quizSync-start", "quizSync-end");
@@ -339,8 +338,9 @@ async function pushLocalChanges(
   userId: string,
   startTime: number,
   stats: { pushed: number },
-): Promise<boolean> {
+): Promise<{ incomplete: boolean; error?: string }> {
   let incomplete = false;
+  let errorMessage: string | undefined;
   const userQuizzes = await db.quizzes
     .where("user_id")
     .equals(userId)
@@ -357,6 +357,7 @@ async function pushLocalChanges(
     if (Date.now() - startTime > TIME_BUDGET_MS) {
       logger.warn("Quiz sync time budget exceeded during push");
       incomplete = true;
+      errorMessage = QUIZ_SYNC_TIME_BUDGET_ERROR;
       break;
     }
 
@@ -368,11 +369,13 @@ async function pushLocalChanges(
 
 
     if (error) {
+      const pushError = toErrorMessage(error);
       logger.error("Failed to push local quizzes to Supabase", {
         userId,
         error,
       });
       incomplete = true;
+      errorMessage = pushError;
       continue;
     }
 
@@ -390,21 +393,26 @@ async function pushLocalChanges(
     stats.pushed += updatedBatch.length;
   }
 
-  return incomplete;
+  return {
+    incomplete,
+    error: errorMessage,
+  };
 }
 
 async function pullRemoteChanges(
   userId: string,
   startTime: number,
   stats: { pulled: number },
-): Promise<{ incomplete: boolean; hardFailure: boolean }> {
+): Promise<{ incomplete: boolean; hardFailure: boolean; error?: string }> {
   let incomplete = false;
   let hardFailure = false;
+  let errorMessage: string | undefined;
   let hasMore = true;
 
   while (hasMore) {
     if (Date.now() - startTime > TIME_BUDGET_MS) {
       logger.warn("Quiz sync time budget exceeded during pull");
+      errorMessage = QUIZ_SYNC_TIME_BUDGET_ERROR;
       incomplete = true;
       break;
     }
@@ -418,8 +426,10 @@ async function pullRemoteChanges(
     });
 
     if (error) {
+      const pullError = toErrorMessage(error);
       logger.error("Failed to pull quizzes from Supabase", { userId, error });
       incomplete = true;
+      errorMessage = pullError;
       break;
     }
 
@@ -561,8 +571,10 @@ async function pullRemoteChanges(
     // If we only saw invalid items, this indicates schema drift.
     // HALT sync without advancing cursor and set block state.
     if (!sawValid && sawInvalid) {
+      const schemaDriftError =
+        "All remote quizzes failed validation - schema drift detected. Halting sync.";
       logger.error(
-        "All remote quizzes failed validation - schema drift detected. Halting sync.",
+        schemaDriftError,
         {
           userId,
           batchSize: remoteQuizzes.length,
@@ -572,6 +584,7 @@ async function pullRemoteChanges(
       );
       incomplete = true;
       hardFailure = true;
+      errorMessage = schemaDriftError;
       // Set block state to prevent retry-hammering (6 hour default TTL)
       await setSyncBlockState(userId, "quizzes", "schema_drift");
       break; // Exit loop WITHOUT advancing cursor
@@ -598,5 +611,5 @@ async function pullRemoteChanges(
     }
   }
 
-  return { incomplete, hardFailure };
+  return { incomplete, hardFailure, error: errorMessage };
 }

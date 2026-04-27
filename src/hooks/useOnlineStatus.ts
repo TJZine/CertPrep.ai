@@ -29,7 +29,6 @@ export function useOnlineStatus(): OnlineStatus {
 
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
-    setIsOnline(navigator.onLine);
 
     return () => {
       window.removeEventListener("online", handleOnline);

@@ -24,7 +24,7 @@ import { useAnalyticsStats } from "@/hooks/useAnalyticsStats";
 import { useAdvancedAnalytics } from "@/hooks/useAdvancedAnalytics";
 import { useCategoryTrends } from "@/hooks/useCategoryTrends";
 import { useSync } from "@/hooks/useSync";
-import { type OverallStats } from "@/db/results";
+import { type OverallStats } from "@/db/resultAnalytics";
 import { calculateWeakestCategories } from "@/lib/analytics/categoryWeighting";
 import { BarChart3, Plus, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/components/providers/AuthProvider";
@@ -94,14 +94,13 @@ export default function AnalyticsPage(): React.ReactElement {
     error: quizzesError,
   } = useQuizzes(effectiveUserId ?? undefined, true);
 
-  // Date range filter state
   const [dateRange, setDateRange] = React.useState<DateRange>("all");
 
-  // Load persisted date range on mount
   React.useEffect(() => {
     try {
       const saved = localStorage.getItem("analytics-date-range");
       if (saved && DATE_RANGE_VALUES.includes(saved as DateRange)) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- Hydrates browser-only persisted preference after SSR-safe default.
         setDateRange(saved as DateRange);
       }
     } catch {

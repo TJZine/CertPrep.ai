@@ -1,5 +1,53 @@
 import { logger } from "@/lib/logger";
 
+export type SyncRunnerStatus = "synced" | "skipped" | "failed";
+
+export type SyncRunnerOutcome = {
+  incomplete: boolean;
+  status: SyncRunnerStatus;
+  error: string | null;
+  shouldRetry: boolean;
+};
+
+type OutcomeOptions = {
+  error?: string | null;
+  incomplete?: boolean;
+  shouldRetry?: boolean;
+};
+
+export function syncedSyncOutcome(
+  options?: Pick<OutcomeOptions, "error">,
+): SyncRunnerOutcome {
+  return {
+    incomplete: false,
+    status: "synced",
+    error: options?.error ?? null,
+    shouldRetry: false,
+  };
+}
+
+export function skippedSyncOutcome(
+  options?: OutcomeOptions,
+): SyncRunnerOutcome {
+  return {
+    incomplete: options?.incomplete ?? false,
+    status: "skipped",
+    error: options?.error ?? null,
+    shouldRetry: options?.shouldRetry ?? false,
+  };
+}
+
+export function failedSyncOutcome(
+  options?: OutcomeOptions,
+): SyncRunnerOutcome {
+  return {
+    incomplete: options?.incomplete ?? true,
+    status: "failed",
+    error: options?.error ?? null,
+    shouldRetry: options?.shouldRetry ?? true,
+  };
+}
+
 export function createSupabaseClientGetter<TClient>(
   createClient: () => TClient | undefined,
 ): () => TClient | undefined {
@@ -57,6 +105,16 @@ export function toErrorMessage(
   } catch {
     return "Unknown error";
   }
+}
+
+export function isNonRetryableAuthSyncError(error: unknown): boolean {
+  if (typeof error !== "object" || error === null) return false;
+  const details = error as { code?: unknown; status?: unknown };
+  return (
+    details.code === "401" ||
+    details.code === "PGRST301" ||
+    details.status === 401
+  );
 }
 
 export function toSafeCursorTimestamp(

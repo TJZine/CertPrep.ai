@@ -14,7 +14,7 @@
     "noUncheckedIndexedAccess": true,
     "forceConsistentCasingInFileNames": true,
     "module": "ESNext",
-    "moduleResolution": "Node",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "react-jsx",
@@ -48,8 +48,7 @@
     "vitest.config.ts",
     "playwright.config.ts",
     "tailwind.config.ts",
-    "next.config.ts",
-    "eslint.config.mjs"
+    "next.config.ts"
   ],
   "exclude": ["node_modules"]
 }

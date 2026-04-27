@@ -44,15 +44,20 @@ export function Header(): React.ReactElement {
   const { user, signOut } = useAuth();
   const { addToast } = useToast();
 
-
-
-
-  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  const [openMenuPathname, setOpenMenuPathname] = React.useState<string | null>(
+    null,
+  );
+  const isMenuOpen = openMenuPathname === pathname;
   const [scrolled, setScrolled] = React.useState(false);
   const handleCloseMenu = React.useCallback(
-    (): void => setIsMenuOpen(false),
+    (): void => setOpenMenuPathname(null),
     [],
   );
+  const handleToggleMenu = React.useCallback((): void => {
+    setOpenMenuPathname((currentPathname) =>
+      currentPathname === pathname ? null : pathname,
+    );
+  }, [pathname]);
   const menuItemTabIndex = isMenuOpen ? 0 : -1;
 
   // Handle scroll effect for glassmorphism border
@@ -67,9 +72,11 @@ export function Header(): React.ReactElement {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Close mobile menu on route change
-  React.useEffect((): void => {
-    setIsMenuOpen(false);
+  React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Clears stale mobile-menu route state after App Router navigation.
+    setOpenMenuPathname((current) =>
+      current === null || current === pathname ? current : null,
+    );
   }, [pathname]);
 
   // Lock body scroll when mobile menu is open
@@ -91,7 +98,7 @@ export function Header(): React.ReactElement {
     if (isSigningOut) return;
 
     setIsSigningOut(true);
-    setIsMenuOpen(false);
+    handleCloseMenu();
 
     try {
       const result = await signOut();
@@ -210,7 +217,7 @@ export function Header(): React.ReactElement {
           <button
             type="button"
             className="inline-flex h-10 w-10 items-center justify-center rounded-md text-foreground transition hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-            onClick={(): void => setIsMenuOpen((prev) => !prev)}
+            onClick={handleToggleMenu}
             aria-expanded={isMenuOpen}
             aria-controls="mobile-nav"
             aria-label={isMenuOpen ? "Close menu" : "Open menu"}

@@ -115,7 +115,7 @@ export function ImportModal({
     }
   }, [showDuplicateWarning]);
 
-  const resetState = (): void => {
+  const resetState = React.useCallback((): void => {
     setActiveTab("paste");
     setJsonText("");
     setFileName(null);
@@ -129,6 +129,27 @@ export function ImportModal({
     setShowDuplicateWarning(false);
     setCategory("");
     setSubcategory("");
+  }, []);
+
+  React.useEffect(() => {
+    if (isOpen) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Reset hidden modal state after close so the visible form does not blank before dismissal.
+    resetState();
+  }, [isOpen, resetState]);
+
+  const handleJsonTextChange = (
+    event: React.ChangeEvent<HTMLTextAreaElement>,
+  ): void => {
+    const text = event.target.value;
+    setJsonText(text);
+
+    if (!text.trim()) {
+      setValidationResult(null);
+      setParseError(null);
+      setWarnings([]);
+      setShowDuplicateWarning(false);
+      setExistingQuiz(null);
+    }
   };
 
   const validateJson = React.useCallback(
@@ -184,9 +205,6 @@ export function ImportModal({
 
   React.useEffect((): (() => void) | void => {
     if (!jsonText.trim()) {
-      setValidationResult(null);
-      setParseError(null);
-      setWarnings([]);
       return undefined;
     }
 
@@ -196,12 +214,6 @@ export function ImportModal({
 
     return () => window.clearTimeout(timer);
   }, [jsonText, validateJson]);
-
-  React.useEffect((): void => {
-    if (!isOpen) {
-      resetState();
-    }
-  }, [isOpen]);
 
   const handleFileSelect = (file: File): void => {
     // SECURITY: Prevent DoS via oversized file loading
@@ -226,7 +238,15 @@ export function ImportModal({
       const text = typeof reader.result === "string" ? reader.result : "";
       setActiveTab("upload");
       setFileName(file.name);
+      setShowDuplicateWarning(false);
+      setExistingQuiz(null);
       setJsonText(text);
+      if (!text.trim()) {
+        setValidationResult(null);
+        setParseError(null);
+        setWarnings([]);
+        return;
+      }
       validateJson(text);
     };
     reader.onerror = (): void =>
@@ -336,8 +356,7 @@ export function ImportModal({
         });
       }
       onImportSuccess(quiz);
-      resetState();
-      onClose();
+      handleCloseModal();
     } catch (error) {
       addToast(
         "error",
@@ -346,6 +365,10 @@ export function ImportModal({
     } finally {
       setIsImporting(false);
     }
+  };
+
+  const handleCloseModal = (): void => {
+    onClose();
   };
 
   /**
@@ -418,7 +441,7 @@ export function ImportModal({
 
   const footer = (
     <div className="flex justify-end gap-3">
-      <Button variant="outline" onClick={onClose}>
+      <Button variant="outline" onClick={handleCloseModal}>
         Cancel
       </Button>
       <Button
@@ -604,7 +627,7 @@ export function ImportModal({
   return (
     <Modal
       isOpen={isOpen}
-      onClose={onClose}
+      onClose={handleCloseModal}
       title="Import Quiz"
       description="Add a new quiz by pasting JSON or uploading a file"
       size="lg"
@@ -645,7 +668,7 @@ export function ImportModal({
         {activeTab === "paste" ? (
           <Textarea
             value={jsonText}
-            onChange={(event) => setJsonText(event.target.value)}
+            onChange={handleJsonTextChange}
             className="font-mono"
             placeholder={exampleJson}
             rows={14}

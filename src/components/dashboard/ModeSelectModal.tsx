@@ -85,21 +85,25 @@ export function ModeSelectModal({
   const estimatedMinutes =
     questionCount > 0 ? Math.max(1, Math.ceil(questionCount * 1.5)) : null;
 
+  React.useEffect(() => {
+    if (isOpen) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Reset hidden modal state after it closes to avoid visible selection jumps.
+    setSelectedMode("zen");
+  }, [isOpen]);
+
   const handleStart = (): void => {
     if (!quiz) return;
-    onClose();
+    handleCloseModal();
     router.push(`/quiz/${quiz.id}/${selectedMode}`);
   };
 
-  React.useEffect(() => {
-    if (isOpen) {
-      setSelectedMode("zen");
-    }
-  }, [isOpen, quiz]);
+  const handleCloseModal = (): void => {
+    onClose();
+  };
 
   const footer = (
     <div className="flex justify-end gap-3">
-      <Button variant="outline" onClick={onClose}>
+      <Button variant="outline" onClick={handleCloseModal}>
         Cancel
       </Button>
       <Button
@@ -115,7 +119,7 @@ export function ModeSelectModal({
   return (
     <Modal
       isOpen={isOpen}
-      onClose={onClose}
+      onClose={handleCloseModal}
       title="Select Study Mode"
       description={quiz ? `Starting: "${quiz.title}"` : undefined}
       size="lg"

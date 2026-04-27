@@ -193,49 +193,44 @@ export function ThemeProvider({
   children: React.ReactNode;
 }): React.ReactElement {
   const [mounted, setMounted] = React.useState(false);
-
-  // 1. Initialize from localStorage if available, else default to "system"
-  // We initialize strictly to "system" (or a safe default) to match server
-  // and then sync in an effect to avoid hydration mismatch.
   const [theme, setThemeState] = React.useState<Theme>("system");
-
-  // On mount, read from storage
+  const [comfortMode, setComfortModeState] = React.useState(false);
+  const [systemTheme, setSystemTheme] = React.useState<"light" | "dark">(
+    "light",
+  );
   React.useEffect(() => {
-    setMounted(true);
+    if (typeof window === "undefined") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Hydrates browser-only mount flag after SSR-safe defaults.
+      setMounted(true);
+      return;
+    }
+
     try {
       const stored = window.localStorage.getItem("theme");
       if (stored && Object.keys(THEME_CONFIG).includes(stored)) {
         setThemeState(stored as Theme);
       }
-    } catch {
-      // Ignore
-    }
-  }, []);
 
-  // Comfort Mode - reduces eye strain with gentler visual effects
-  const [comfortMode, setComfortModeState] = React.useState(false);
-
-  // On mount, read comfort mode from storage or detect system preference
-  React.useEffect(() => {
-    if (typeof window === "undefined") return;
-    try {
-      const stored = window.localStorage.getItem("comfortMode");
-      if (stored !== null) {
-        setComfortModeState(stored === "true");
+      const storedComfort = window.localStorage.getItem("comfortMode");
+      if (storedComfort !== null) {
+        setComfortModeState(storedComfort === "true");
       } else {
-        // Auto-enable if user prefers reduced motion
-        const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        setComfortModeState(prefersReducedMotion);
+        setComfortModeState(
+          window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+        );
       }
-    } catch {
-      // Ignore
-    }
-  }, []);
 
-  // 2. Resolve "system" to actual theme
-  const [systemTheme, setSystemTheme] = React.useState<"light" | "dark">(
-    "light",
-  );
+      setSystemTheme(
+        window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "light",
+      );
+    } catch {
+      // Keep SSR-safe defaults.
+    }
+
+    setMounted(true);
+  }, []);
 
   // Listen for system changes
   React.useEffect(() => {
@@ -245,9 +240,6 @@ export function ThemeProvider({
     const handler = (e: MediaQueryListEvent): void => {
       setSystemTheme(e.matches ? "dark" : "light");
     };
-
-    // Set initial
-    setSystemTheme(mediaQuery.matches ? "dark" : "light");
 
     mediaQuery.addEventListener("change", handler);
     return (): void => mediaQuery.removeEventListener("change", handler);
@@ -341,10 +333,8 @@ export function ThemeProvider({
     [theme, resolvedTheme, setTheme, toggleTheme, comfortMode, setComfortMode],
   );
 
-  // We render children immediately to avoid SEO/LCP impact.
-  // Theme state initializes to "system" on both server and client,
-  // then hydrates from localStorage, causing a repaint but no mismatch.
-  // This is standard practice for Next.js theme providers.
+  // Render children with SSR-safe defaults first, then hydrate browser preferences after mount.
+  // This avoids server/client markup mismatches at the cost of a post-mount theme repaint.
 
   return (
     <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>

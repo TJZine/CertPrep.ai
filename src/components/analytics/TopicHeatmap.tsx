@@ -17,7 +17,7 @@ import type { Quiz, Question } from "@/types/quiz";
 import { getCachedHash } from "@/db/hashCache";
 import { ChevronDown, ChevronRight, BookOpen, TrendingUp, TrendingDown, Minus, Loader2, Trophy } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
-import { getTopicStudyQuestions } from "@/db/results";
+import { getTopicStudyQuestions } from "@/db/resultAnalytics";
 import {
     TOPIC_STUDY_QUESTIONS_KEY,
     TOPIC_STUDY_CATEGORY_KEY,
@@ -221,10 +221,10 @@ export function TopicHeatmap({
     // Tracks which parent groups are collapsed (quiz category — subcategory)
     const [collapsedGroups, setCollapsedGroups] = React.useState<Set<string>>(new Set());
 
-    // Clear collapsed groups when sort mode changes to prevent stale state
-    React.useEffect(() => {
+    const handleSortModeChange = React.useCallback((nextMode: SortMode) => {
+        setSortMode(nextMode);
         setCollapsedGroups(new Set());
-    }, [sortMode]);
+    }, []);
 
     // Keyboard and click-outside handling for sort dropdown
     React.useEffect(() => {
@@ -261,7 +261,7 @@ export function TopicHeatmap({
                 case "Enter":
                 case " ":
                     e.preventDefault();
-                    setSortMode(sortModes[focusedSortIndex]!);
+                    handleSortModeChange(sortModes[focusedSortIndex]!);
                     setShowSortMenu(false);
                     sortButtonRef.current?.focus();
                     break;
@@ -275,7 +275,7 @@ export function TopicHeatmap({
             document.removeEventListener("mousedown", handleClickOutside);
             document.removeEventListener("keydown", handleKeyDown);
         };
-    }, [showSortMenu, focusedSortIndex, sortMode]);
+    }, [showSortMenu, focusedSortIndex, handleSortModeChange]);
 
     // Use module-level constant for sort labels
 
@@ -696,7 +696,7 @@ export function TopicHeatmap({
                                     role="option"
                                     aria-selected={sortMode === mode}
                                     onClick={() => {
-                                        setSortMode(mode);
+                                        handleSortModeChange(mode);
                                         setShowSortMenu(false);
                                     }}
                                     className={cn(

@@ -1,6 +1,6 @@
 import * as React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { describe, it, expect, vi } from "vitest";
+import { beforeEach, describe, it, expect, vi } from "vitest";
 import { WeakAreasCard } from "@/components/analytics/WeakAreasCard";
 // Remove unused useQuizzes to satisfy lint
 
@@ -20,9 +20,9 @@ vi.mock("@/components/ui/Toast", () => ({
   }),
 }));
 
-// Mock db/results
+// Mock "@/db/resultAnalytics"
 const mockGetTopicStudyQuestions = vi.fn();
-vi.mock("@/db/results", () => ({
+vi.mock("@/db/resultAnalytics", () => ({
   getTopicStudyQuestions: (): Promise<unknown> => mockGetTopicStudyQuestions(),
 }));
 
@@ -33,6 +33,15 @@ const mockUseQuizzes = vi.fn(() => ({
   ],
   error: null as Error | null,
 }));
+
+beforeEach(() => {
+  mockUseQuizzes.mockReset();
+  mockUseQuizzes.mockReturnValue({
+    quizzes: [{ id: "quiz-1", title: "React Fundamentals" }],
+    error: null,
+  });
+});
+
 vi.mock("@/hooks/useDatabase", () => ({
   useQuizzes: (): { quizzes: unknown[]; error: Error | null } =>
     mockUseQuizzes() as unknown as { quizzes: unknown[]; error: Error | null },

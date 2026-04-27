@@ -62,23 +62,26 @@ export function ReviewModeModal({
     const router = useRouter();
     const [selectedMode, setSelectedMode] = React.useState<ReviewMode>("quiz");
 
-    const handleStart = (): void => {
-        const option = reviewModeOptions.find((o) => o.id === selectedMode);
-        if (!option) return;
-        onClose();
-        router.push(option.href);
-    };
-
-    // Reset selection when modal opens
     React.useEffect(() => {
-        if (isOpen) {
-            setSelectedMode("quiz");
-        }
+        if (isOpen) return;
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- Reset hidden modal state after it closes to avoid visible selection jumps.
+        setSelectedMode("quiz");
     }, [isOpen]);
+
+  const handleStart = (): void => {
+    const option = reviewModeOptions.find((o) => o.id === selectedMode);
+    if (!option) return;
+    handleCloseModal();
+    router.push(option.href);
+  };
+
+    const handleCloseModal = (): void => {
+        onClose();
+    };
 
     const footer = (
         <div className="flex justify-end gap-3">
-            <Button variant="outline" onClick={onClose}>
+            <Button variant="outline" onClick={handleCloseModal}>
                 Cancel
             </Button>
             <Button
@@ -93,7 +96,7 @@ export function ReviewModeModal({
     return (
         <Modal
             isOpen={isOpen}
-            onClose={onClose}
+            onClose={handleCloseModal}
             title="Choose Review Mode"
             description={`${dueCount} question${dueCount !== 1 ? "s" : ""} due for review`}
             size="md"
