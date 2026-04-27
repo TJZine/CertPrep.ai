@@ -46,6 +46,7 @@ function buildQuestionIndex(
 }
 
 async function buildQuestionIndexWithSourceMap(
+  userId: string,
   quizzes: Quiz[],
   results: Result[],
 ): Promise<QuestionIndex> {
@@ -65,7 +66,12 @@ async function buildQuestionIndexWithSourceMap(
   }
 
   const sourceQuizzes = await db.quizzes.bulkGet(Array.from(sourceQuizIds));
-  return buildQuestionIndex([...quizzes, ...sourceQuizzes]);
+  const accessibleSourceQuizzes = sourceQuizzes.filter(
+    (quiz): quiz is Quiz =>
+      !!quiz && (quiz.user_id === userId || quiz.user_id === NIL_UUID),
+  );
+
+  return buildQuestionIndex([...quizzes, ...accessibleSourceQuizzes]);
 }
 
 function resolveSessionQuestions(
@@ -75,14 +81,14 @@ function resolveSessionQuestions(
 ): Question[] {
   if (result.question_ids !== undefined) {
     const localById = new Map(
-      quiz?.questions.map((question) => [question.id, question] as const) ?? [],
+      quiz?.questions?.map((question) => [question.id, question] as const) ?? [],
     );
     return result.question_ids
       .map((id) => localById.get(id) ?? allQuestionsMap.get(id)?.question)
       .filter((question): question is Question => !!question);
   }
 
-  if (quiz && quiz.questions.length > 0) {
+  if (quiz?.questions && quiz.questions.length > 0) {
     return quiz.questions;
   }
 
@@ -198,7 +204,11 @@ export async function getOverallStats(userId: string): Promise<OverallStats> {
   ]);
 
   const quizMap = new Map(quizzes.map((quiz) => [quiz.id, quiz]));
-  const allQuestionsMap = await buildQuestionIndexWithSourceMap(quizzes, results);
+  const allQuestionsMap = await buildQuestionIndexWithSourceMap(
+    userId,
+    quizzes,
+    results,
+  );
 
   const totalQuizzes = quizzes.length;
   const totalAttempts = results.length;
@@ -314,6 +324,7 @@ export async function getTopicStudyQuestions(
 
   const quizMap = new Map(allQuizzes.map((quiz) => [quiz.id, quiz]));
   const allQuestionsMap = await buildQuestionIndexWithSourceMap(
+    userId,
     allQuizzes,
     allResults,
   );
@@ -406,7 +417,7 @@ export async function getTopicStudyQuestions(
     if (isFlagged || isMissed) {
       const sourceQuizId = result.source_map?.[questionId];
       const sourceInfo = allQuestionsMap.get(questionId);
-      if (sourceQuizId) {
+      if (sourceQuizId && sourceInfo?.quizId === sourceQuizId) {
         sourceQuizIds.add(sourceQuizId);
       } else if (sourceInfo) {
         sourceQuizIds.add(sourceInfo.quizId);
