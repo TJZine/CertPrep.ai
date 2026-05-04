@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@hcaptcha/react-hcaptcha": "^2.0.2",
-    "@sentry/nextjs": "^10.47.0",
+    "@sentry/nextjs": "^10.51.0",
     "@supabase/ssr": "^0.10.2",
     "@supabase/supabase-js": "^2.103.0",
     "@tsparticles/react": "^3.0.0",
