@@ -59,6 +59,10 @@ Auth/session responsibility is split across:
 - auth callback exchange in [src/app/auth/callback/route.ts](../src/app/auth/callback/route.ts)
 - self-serve account deletion in [src/app/api/auth/delete-account/route.ts](../src/app/api/auth/delete-account/route.ts)
 
+Server-side Supabase clients use the SSR package's batch `getAll`/`setAll`
+cookie contract so refreshed session state is propagated through Next.js cookie
+stores and proxy responses.
+
 Quiz, result, and SRS data sync should not bypass the sync layer. Auth and profile/security flows already make direct Supabase calls where appropriate.
 
 ### Client Persistence Ownership

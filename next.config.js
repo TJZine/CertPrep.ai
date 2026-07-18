@@ -99,12 +99,10 @@ module.exports = withBundleAnalyzer(
       // excludeTracing: true,
     },
 
-    // Enables automatic instrumentation of Vercel Cron Monitors. (Does not yet work with App Router route handlers.)
-    // See the following for more information:
-    // https://docs.sentry.io/product/crons/
-    // https://vercel.com/docs/cron-jobs
-    // NOTE: This feature is marked as deprecated but no migration path exists yet.
-    // Keeping it enabled until Sentry provides the new API.
-    automaticVercelMonitors: true,
+    webpack: {
+      // Enables automatic instrumentation of Vercel Cron Monitors.
+      // This legacy webpack integration only supports Pages Router API routes.
+      automaticVercelMonitors: true,
+    },
   }),
 );

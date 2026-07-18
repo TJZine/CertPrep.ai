@@ -1,37 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Particles, { initParticlesEngine } from "@tsparticles/react";
+import Particles, { ParticlesProvider } from "@tsparticles/react";
 import { loadSlim } from "@tsparticles/slim";
 
 /**
  * Subtle snowfall effect for Holiday theme.
  */
-export default function HolidayParticles(): React.ReactElement | null {
-  const [init, setInit] = useState(false);
-
-  useEffect(() => {
-    let mounted = true;
-
-    initParticlesEngine(async (engine) => {
-      await loadSlim(engine);
-    })
-      .then(() => {
-        if (mounted) setInit(true);
-      })
-      .catch((err) => {
-        console.error("[HolidayParticles] Failed to initialize:", err);
-      });
-
-    return (): void => {
-      mounted = false;
-    };
-  }, []);
-
-  if (!init) {
-    return null;
-  }
-
+function HolidayParticleEffect(): React.ReactElement {
   return (
     <Particles
       id="holiday-particles"
@@ -97,5 +72,13 @@ export default function HolidayParticles(): React.ReactElement | null {
         pointerEvents: "none",
       }}
     />
+  );
+}
+
+export default function HolidayParticles(): React.ReactElement {
+  return (
+    <ParticlesProvider init={loadSlim}>
+      <HolidayParticleEffect />
+    </ParticlesProvider>
   );
 }
