@@ -41,12 +41,14 @@ vi.mock("@/components/quiz/QuizLayout", () => ({
     children,
     onExit,
     title,
+    timerKind,
   }: {
     children: React.ReactNode;
     onExit?: () => void;
     title: string;
+    timerKind?: "elapsed" | "remaining";
   }): React.ReactElement => (
-    <div data-testid="quiz-layout">
+    <div data-testid="quiz-layout" data-timer-kind={timerKind ?? "elapsed"}>
       <h1>{title}</h1>
       <button data-testid="exit-button" onClick={onExit}>
         Exit
@@ -184,6 +186,10 @@ describe("ZenQuizContainer", () => {
     expect(screen.getByTestId("question-display")).toBeDefined();
     expect(screen.getByTestId("options-list")).toBeDefined();
     expect(screen.getByTestId("submit-button")).toBeDefined();
+    expect(screen.getByTestId("quiz-layout")).toHaveAttribute(
+      "data-timer-kind",
+      "elapsed",
+    );
   });
 
   it("renders loading state when initializing", () => {

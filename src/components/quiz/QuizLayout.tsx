@@ -16,6 +16,7 @@ interface QuizLayoutProps {
   currentProgress: number;
   totalQuestions: number;
   timerDisplay?: string;
+  timerKind?: "elapsed" | "remaining";
   timerWarning?: boolean;
   onExit: () => void;
   showExitConfirm?: boolean;
@@ -33,6 +34,7 @@ export function QuizLayout({
   currentProgress,
   totalQuestions,
   timerDisplay,
+  timerKind = "elapsed",
   timerWarning = false,
   onExit,
   showExitConfirm = true,
@@ -91,7 +93,7 @@ export function QuizLayout({
                     ? "bg-destructive/10 text-destructive"
                     : "bg-muted text-foreground",
                 )}
-                aria-label={`Time remaining: ${timerDisplay}`}
+                aria-label={`${timerKind === "remaining" ? "Time remaining" : "Elapsed time"}: ${timerDisplay}`}
               >
                 <Clock className="h-4 w-4" aria-hidden="true" />
                 {timerDisplay}

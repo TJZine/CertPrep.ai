@@ -65,11 +65,13 @@ vi.mock("@/components/quiz/QuizLayout", () => ({
   QuizLayout: ({
     children,
     onExit,
+    timerKind,
   }: {
     children: React.ReactNode;
     onExit?: () => void;
+    timerKind?: "elapsed" | "remaining";
   }): React.ReactElement => (
-    <div data-testid="quiz-layout">
+    <div data-testid="quiz-layout" data-timer-kind={timerKind}>
       <button data-testid="exit-button" onClick={onExit}>
         Exit
       </button>
@@ -181,6 +183,10 @@ describe("ProctorQuizContainer", () => {
   it("calls initializeProctorSession on mount", async () => {
     render(<ProctorQuizContainer quiz={mockQuiz} />);
 
+    expect(screen.getByTestId("quiz-layout")).toHaveAttribute(
+      "data-timer-kind",
+      "remaining",
+    );
     await waitFor(() => {
       expect(mockInitializeProctorSession).toHaveBeenCalledWith(
         mockQuiz.id,

@@ -46,9 +46,9 @@ export default function InterleavedSessionPage(): React.ReactElement {
     if (!quiz) {
         return (
             <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background p-4">
-                <p className="text-muted-foreground">
+                <h1 className="text-xl font-semibold text-foreground">
                     No active interleaved session found.
-                </p>
+                </h1>
                 <button
                     onClick={() => {
                         clearInterleavedState();
