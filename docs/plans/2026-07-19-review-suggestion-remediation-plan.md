@@ -51,6 +51,9 @@ production-like E2E/CI execution path.
 6. `npm run build`
 7. `npm run test:e2e:production`
 
+Steps 2–4 were executed through `npm run verify`, which runs `npm run lint`,
+`npm run typecheck`, and `npm test` in that order.
+
 If E2E prerequisites or the build environment are unavailable, record the exact
 gap and stop before claiming Tier 3 verification is complete.
 
@@ -72,3 +75,15 @@ gap and stop before claiming Tier 3 verification is complete.
   upload disabled.
 - `npm run test:e2e:production` passed against a freshly built `next start`
   server: 1 test passed.
+
+## Follow-up Outcome
+
+- Clarified that `npm run verify` is the execution record for lint, typecheck,
+  and unit tests.
+- Focused Playwright configuration, account-deletion, and particle-accessibility
+  coverage passed: 19 tests passed.
+- `npm run verify` passed: 140 test files passed, 1 skipped; 838 tests passed,
+  3 skipped.
+- `npm run security-check` passed.
+- `npm run build` passed with verification-safe Supabase placeholders and Sentry
+  upload disabled.
