@@ -12,21 +12,18 @@ vi.mock("@playwright/test", () => ({
   },
 }));
 
-const originalEnv = { ...process.env };
-
 describe("playwright.config", () => {
   beforeEach(() => {
     vi.resetModules();
     vi.clearAllMocks();
-    process.env = { ...originalEnv };
   });
 
   afterEach(() => {
-    process.env = { ...originalEnv };
+    vi.unstubAllEnvs();
   });
 
   it("uses local defaults outside CI", async () => {
-    delete process.env.CI;
+    vi.stubEnv("CI", undefined);
 
     const { default: config } = await import("../../playwright.config");
     const projects = config.projects ?? [];
@@ -71,7 +68,7 @@ describe("playwright.config", () => {
   });
 
   it("tightens retries and workers on CI", async () => {
-    process.env.CI = "true";
+    vi.stubEnv("CI", "true");
 
     const { default: config } = await import("../../playwright.config");
     const webServer = Array.isArray(config.webServer)
@@ -86,7 +83,7 @@ describe("playwright.config", () => {
   });
 
   it("builds and starts the production server for production-like checks", async () => {
-    delete process.env.CI;
+    vi.stubEnv("CI", undefined);
 
     const { default: config } =
       await import("../../playwright.production.config");

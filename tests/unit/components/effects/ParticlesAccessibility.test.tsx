@@ -1,4 +1,3 @@
-import type { ReactElement, ReactNode } from "react";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import HolidayParticles from "@/components/effects/HolidayParticles";
@@ -6,9 +5,14 @@ import MidnightParticles from "@/components/effects/MidnightParticles";
 import VaporParticles from "@/components/effects/VaporParticles";
 
 vi.mock("@tsparticles/react", () => ({
-  default: ({ id }: { id?: string }): ReactElement => <div data-testid={id} />,
-  ParticlesProvider: ({ children }: { children: ReactNode }): ReactNode =>
+  default: ({ id }: { id?: string }): React.JSX.Element => (
+    <div data-testid={id} />
+  ),
+  ParticlesProvider: ({
     children,
+  }: {
+    children: React.ReactNode;
+  }): React.JSX.Element => <>{children}</>,
 }));
 
 describe.each([
