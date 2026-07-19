@@ -216,14 +216,19 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
     // The destructive remote operation has succeeded. Session cleanup is now
     // best-effort because returning a failure at this point would falsely imply
     // that the account still exists.
-    const { error: signOutError } = await supabase.auth.signOut({
-      scope: "local",
-    });
-    if (signOutError) {
-      logger.warn(
-        "Account deleted but local sign-out cleanup failed",
-        signOutError,
-      );
+    try {
+      const { error: signOutError } = await supabase.auth.signOut({
+        scope: "local",
+      });
+
+      if (signOutError) {
+        logger.warn(
+          "Account deleted but local sign-out cleanup failed",
+          signOutError,
+        );
+      }
+    } catch (error) {
+      logger.warn("Account deleted but local sign-out cleanup failed", error);
     }
 
     const response = NextResponse.json({ success: true });

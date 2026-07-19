@@ -4,6 +4,7 @@ import { DELETE } from "@/app/api/auth/delete-account/route";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { ACCOUNT_DELETION_SERVER_TIMEOUT_MS } from "@/lib/accountDeletionTimeouts";
+import { logger } from "@/lib/logger";
 
 type CookieRecord = {
   name: string;
@@ -254,8 +255,10 @@ describe("DELETE /api/auth/delete-account", () => {
   });
 
   it("returns success after deletion even when local sign-out cleanup fails", async () => {
+    const signOutError = new Error("sign out failed");
+    const warnSpy = vi.spyOn(logger, "warn").mockImplementation(() => {});
     supabaseAuth.signOut.mockResolvedValueOnce({
-      error: new Error("sign out failed"),
+      error: signOutError,
     });
 
     const request = new NextRequest(
@@ -276,6 +279,42 @@ describe("DELETE /api/auth/delete-account", () => {
       "user-1",
     );
     expect(supabaseAuth.signOut).toHaveBeenCalledWith({ scope: "local" });
+    expect(warnSpy).toHaveBeenCalledWith(
+      "Account deleted but local sign-out cleanup failed",
+      signOutError,
+    );
+  });
+
+  it("returns success when sign-out throws after confirmed deletion", async () => {
+    const timeoutError = new DOMException("Timed out", "TimeoutError");
+    const timeoutController = new AbortController();
+    timeoutController.abort(timeoutError);
+    vi.spyOn(AbortSignal, "timeout").mockReturnValue(timeoutController.signal);
+    const warnSpy = vi.spyOn(logger, "warn").mockImplementation(() => {});
+    supabaseAuth.signOut.mockRejectedValueOnce(timeoutError);
+
+    const request = new NextRequest(
+      "https://certprep.ai/api/auth/delete-account",
+      {
+        method: "DELETE",
+        headers: {
+          origin: "https://certprep.ai",
+          "sec-fetch-site": "same-origin",
+        },
+      },
+    );
+
+    const response = await DELETE(request);
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({ success: true });
+    expect(supabaseAdminClient.auth.admin.deleteUser).toHaveBeenCalledWith(
+      "user-1",
+    );
+    expect(warnSpy).toHaveBeenCalledWith(
+      "Account deleted but local sign-out cleanup failed",
+      timeoutError,
+    );
   });
 
   it("rejects requests with any body content", async () => {
