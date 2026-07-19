@@ -1,6 +1,13 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { logger } from "@/lib/logger";
+import {
+  generateRecoveryProofNonce,
+  RECOVERY_PROOF_COOKIE_NAME,
+  RECOVERY_PROOF_COOKIE_PATH,
+  RECOVERY_PROOF_MAX_AGE_SECONDS,
+  serializeRecoveryProof,
+} from "@/lib/auth/recoveryProof";
 
 function stripControlCharacters(value: string): string {
   let result = "";
@@ -41,6 +48,51 @@ function isAllowedHost(host: string | null): boolean {
   });
 }
 
+function prepareRecoveryRedirect(
+  path: string,
+  origin: string,
+  recoveryUserId: string | null,
+): { path: string; proof: string | null } {
+  const target = new URL(path, origin);
+  let proof: string | null = null;
+
+  // Recovery proof is callback-owned. Never trust a nonce supplied by `next`.
+  target.searchParams.delete("recovery");
+  if (
+    recoveryUserId &&
+    target.pathname === "/reset-password"
+  ) {
+    const nonce = generateRecoveryProofNonce();
+    proof = serializeRecoveryProof({
+      nonce,
+      userId: recoveryUserId,
+    });
+    target.searchParams.set("recovery", nonce);
+  }
+
+  return {
+    path: `${target.pathname}${target.search}${target.hash}`,
+    proof,
+  };
+}
+
+function createRedirectResponse(
+  destination: string,
+  proof: string | null,
+): NextResponse {
+  const response = NextResponse.redirect(destination);
+  if (proof) {
+    response.cookies.set(RECOVERY_PROOF_COOKIE_NAME, proof, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: RECOVERY_PROOF_COOKIE_PATH,
+      maxAge: RECOVERY_PROOF_MAX_AGE_SECONDS,
+    });
+  }
+  return response;
+}
+
 export async function GET(request: Request): Promise<NextResponse> {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
@@ -76,21 +128,42 @@ export async function GET(request: Request): Promise<NextResponse> {
     next = "/";
   }
 
+  next = prepareRecoveryRedirect(next, origin, null).path;
+
   if (code) {
     const supabase = await createClient();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
+      // auth-js 2.110.7 returns this PKCE provenance at runtime, although the
+      // public AuthTokenResponse type currently omits it.
+      const redirectType = (
+        data as typeof data & { redirectType?: string | null }
+      ).redirectType;
+      const verifiedRedirect = prepareRecoveryRedirect(
+        next,
+        origin,
+        redirectType === "recovery" ? data.user.id : null,
+      );
       const forwardedHost = request.headers.get("x-forwarded-host"); // original origin before load balancer
       const isLocalEnv = process.env.NODE_ENV === "development";
 
       if (isLocalEnv) {
         // we can be sure that there is no load balancer in between, so no need to watch for X-Forwarded-Host
-        return NextResponse.redirect(`${origin}${next}`);
+        return createRedirectResponse(
+          `${origin}${verifiedRedirect.path}`,
+          verifiedRedirect.proof,
+        );
       } else if (forwardedHost && isAllowedHost(forwardedHost)) {
-        return NextResponse.redirect(`https://${forwardedHost}${next}`);
+        return createRedirectResponse(
+          `https://${forwardedHost}${verifiedRedirect.path}`,
+          verifiedRedirect.proof,
+        );
       } else {
-        return NextResponse.redirect(`${origin}${next}`);
+        return createRedirectResponse(
+          `${origin}${verifiedRedirect.path}`,
+          verifiedRedirect.proof,
+        );
       }
     } else {
       logger.error("Auth exchange failed", { error, code: "REDACTED" });

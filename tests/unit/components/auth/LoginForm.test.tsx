@@ -76,6 +76,14 @@ describe("LoginForm", () => {
     ).toBeInTheDocument();
   });
 
+  it("links to password recovery", () => {
+    render(<LoginForm />);
+
+    expect(
+      screen.getByRole("link", { name: /forgot password/i }),
+    ).toHaveAttribute("href", "/forgot-password");
+  });
+
   it("updates state on input change", () => {
     render(<LoginForm />);
     const emailInput = screen.getByLabelText(/Email/i) as HTMLInputElement;

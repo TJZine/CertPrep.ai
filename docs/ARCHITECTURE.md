@@ -59,6 +59,16 @@ Auth/session responsibility is split across:
 - auth callback exchange in [src/app/auth/callback/route.ts](../src/app/auth/callback/route.ts)
 - self-serve account deletion in [src/app/api/auth/delete-account/route.ts](../src/app/api/auth/delete-account/route.ts)
 
+Password-recovery redirects are authorized by the callback only when the
+Supabase PKCE exchange reports recovery provenance. For that verified exchange,
+the callback generates a short-lived random nonce, places it in the reset URL,
+and sets an HttpOnly, path-scoped proof cookie binding that nonce to the verified
+recovery user. The reset page compares the query nonce with that server-readable
+proof and passes only the expected user ID to the client form. The form requires
+the active Supabase session to have that same user ID and consumes the proof
+after a successful password update. Direct client code/token recovery paths are
+not supported.
+
 Server-side Supabase clients use the SSR package's batch `getAll`/`setAll`
 cookie contract so refreshed session state is propagated through Next.js cookie
 stores and proxy responses.
