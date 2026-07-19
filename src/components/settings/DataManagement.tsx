@@ -186,48 +186,57 @@ export function DataManagement(): React.ReactElement {
   const handleReset = async (): Promise<void> => {
     if (isResetting || isClearingLocal) return;
     setIsResetting(true);
-    let serverError: string | null = null;
     try {
-      const response = await fetch("/api/auth/delete-account", {
-        method: "DELETE",
-      });
+      let response: Response;
+      try {
+        response = await fetch("/api/auth/delete-account", {
+          method: "DELETE",
+        });
+      } catch (error) {
+        console.error("Account deletion request failed:", error);
+        addToast(
+          "error",
+          "Account deletion could not be completed. Your local data was preserved.",
+        );
+        return;
+      }
 
-      if (!response.ok && response.status !== 401) {
+      if (!response.ok) {
         let bodyText = "";
+        let message = "Unknown server error";
         try {
           bodyText = await response.text();
           const parsed = bodyText ? JSON.parse(bodyText) : {};
-          const message =
+          message =
             (parsed as { error?: string }).error ||
             bodyText ||
             "Unknown server error";
-          serverError = `Account deletion failed (${response.status}): ${message}`;
         } catch {
-          serverError = `Account deletion failed (${response.status}): ${bodyText || "Unknown server error"}`;
+          message = bodyText || "Unknown server error";
         }
-      }
-    } catch (error) {
-      serverError =
-        error instanceof Error
-          ? error.message
-          : "Network error deleting account";
-    }
 
-    try {
-      await clearAllData();
-      await refreshStats();
-      addToast(
-        serverError ? "error" : "success",
-        serverError
-          ? `Local data cleared. ${serverError}`
-          : "Account deleted and local data cleared.",
-      );
+        addToast(
+          "error",
+          `Account deletion failed (${response.status}): ${message}. Your local data was preserved.`,
+        );
+        return;
+      }
+
+      try {
+        await clearAllData();
+      } catch (error) {
+        console.error("Local clear failed after account deletion:", error);
+        addToast(
+          "error",
+          "Account deleted, but local data could not be fully cleared. Use “Clear Local Data Only” to retry.",
+        );
+        return;
+      }
+
+      addToast("success", "Account deleted and local data cleared.");
       setShowResetModal(false);
       setDeleteConfirmation("");
       window.location.href = "/";
-    } catch (error) {
-      console.error("Local clear failed after account delete attempt:", error);
-      addToast("error", "Failed to clear local data. Please try again.");
     } finally {
       setIsResetting(false);
     }

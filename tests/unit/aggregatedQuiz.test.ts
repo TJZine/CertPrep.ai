@@ -189,4 +189,50 @@ describe("hydrateAggregatedQuiz", () => {
     });
     expect(result.missingQuestionIds).toEqual([]);
   });
+
+  it("hydrates a caller-confirmed legacy aggregated result without session_type", async () => {
+    const mockWhere = {
+      anyOf: vi.fn().mockReturnValue({
+        toArray: vi.fn().mockResolvedValue([quiz1, quiz2]),
+      }),
+    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (db.quizzes.where as any).mockReturnValue(mockWhere);
+
+    const baseQuiz = {
+      id: "legacy-srs-quiz",
+      user_id: userId,
+      title: "Legacy SRS quiz",
+      questions: [],
+      deleted_at: null,
+    };
+
+    const result = await resolveAggregatedResultReadModel(
+      {
+        id: "legacy-result",
+        quiz_id: baseQuiz.id,
+        user_id: userId,
+        timestamp: Date.now(),
+        mode: "zen",
+        score: 50,
+        time_taken_seconds: 30,
+        answers: {},
+        flagged_questions: [],
+        category_breakdown: {},
+        question_ids: ["q1", "q2"],
+      },
+      userId,
+      baseQuiz as never,
+      true,
+    );
+
+    expect(result.quiz.questions.map((question) => question.id)).toEqual([
+      "q1",
+      "q2",
+    ]);
+    expect(result.sourceMap).toEqual({
+      q1: "quiz1",
+      q2: "quiz2",
+    });
+  });
 });

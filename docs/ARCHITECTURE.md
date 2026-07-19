@@ -102,13 +102,16 @@ In addition to IndexedDB, the app uses:
 
 - `localStorage` for user/device preferences and lightweight cached state such as theme, comfort mode, dashboard/library sort state, streak state, and install-prompt dismissal
 - `sessionStorage` for ephemeral session flow state such as topic study, SRS review, flashcards, smart rounds, and interleaved practice
-- service worker registration and cache-clearing hooks via [public/sw.js](../public/sw.js), [src/components/common/ServiceWorkerInitScript.tsx](../src/components/common/ServiceWorkerInitScript.tsx), and [src/lib/serviceWorkerClient.ts](../src/lib/serviceWorkerClient.ts)
+- service worker registration and update ownership via [src/hooks/useServiceWorker.ts](../src/hooks/useServiceWorker.ts) and cache-clearing hooks via [public/sw.js](../public/sw.js) and [src/lib/serviceWorkerClient.ts](../src/lib/serviceWorkerClient.ts)
 
 ## E2E / Test Harness Boundaries
 
 Playwright and the E2E bootstrap path are test-only surfaces, but they intersect real runtime boundaries:
 
 - [playwright.config.ts](../playwright.config.ts) owns the main Playwright project config, browser launch flags for test projects, and the `NEXT_PUBLIC_IS_E2E` test-build toggle passed to the local web server
+- [playwright.production.config.ts](../playwright.production.config.ts) owns
+  unauthenticated production-like PWA checks with normal browser security and
+  service workers enabled
 - [tests/e2e/global-setup.ts](../tests/e2e/global-setup.ts) provisions the test user, bootstraps auth state through Supabase admin APIs and magic-link flow, and launches its own Chromium instance for auth-state setup
 - [src/db/dbInstance.ts](../src/db/dbInstance.ts) conditionally exposes `window.__certprepDb` only when `NODE_ENV !== "production"` and `NEXT_PUBLIC_IS_E2E === "true"`
 - [tests/e2e/helpers/db.ts](../tests/e2e/helpers/db.ts) depends on that guarded DB exposure for reliable test helpers

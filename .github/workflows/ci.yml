@@ -28,6 +28,8 @@ jobs:
           cache: "npm"
       - name: Install dependencies
         run: npm ci
+      - name: Scan repository files for secrets
+        run: npm run security-check
       - name: Run lint
         run: npm run lint
       - name: Run typecheck
@@ -73,3 +75,24 @@ jobs:
           NEXT_TELEMETRY_DISABLED: 1
           # Disable Sentry source map upload in CI to save time/resources
           SENTRY_DISABLE_AUTO_UPLOAD: 1
+
+  pwa:
+    name: Production-like PWA
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.14.0
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Run production-like PWA test
+        run: npm run test:e2e:production
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder-anon-key

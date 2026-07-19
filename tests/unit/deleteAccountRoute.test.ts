@@ -101,7 +101,7 @@ describe("DELETE /api/auth/delete-account", () => {
     expect(supabaseAdminClient.auth.admin.deleteUser).toHaveBeenCalledWith(
       "user-1",
     );
-    expect(supabaseAuth.signOut).toHaveBeenCalledWith({ scope: "global" });
+    expect(supabaseAuth.signOut).toHaveBeenCalledWith({ scope: "local" });
     expect(response.cookies.get("sb-access-token")?.value).toBe("");
   });
 
@@ -185,7 +185,32 @@ describe("DELETE /api/auth/delete-account", () => {
     const response = await DELETE(request);
 
     expect(response.status).toBe(500);
-    expect(supabaseAuth.signOut).toHaveBeenCalledWith({ scope: "global" });
+    expect(supabaseAuth.signOut).not.toHaveBeenCalled();
+  });
+
+  it("returns success after deletion even when local sign-out cleanup fails", async () => {
+    supabaseAuth.signOut.mockResolvedValueOnce({
+      error: new Error("sign out failed"),
+    });
+
+    const request = new NextRequest(
+      "https://certprep.ai/api/auth/delete-account",
+      {
+        method: "DELETE",
+        headers: {
+          origin: "https://certprep.ai",
+          "sec-fetch-site": "same-origin",
+        },
+      },
+    );
+
+    const response = await DELETE(request);
+
+    expect(response.status).toBe(200);
+    expect(supabaseAdminClient.auth.admin.deleteUser).toHaveBeenCalledWith(
+      "user-1",
+    );
+    expect(supabaseAuth.signOut).toHaveBeenCalledWith({ scope: "local" });
   });
 
   it("rejects requests with any body content", async () => {

@@ -7,7 +7,6 @@ import { Inter, Press_Start_2P, Nunito, Roboto_Slab, Space_Grotesk, Playfair_Dis
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { SkipLink } from "@/components/common/SkipLink";
-import { ServiceWorkerInitScript } from "@/components/common/ServiceWorkerInitScript";
 import { ThemeInitScript } from "@/components/common/ThemeInitScript";
 import { AppProviders } from "@/components/providers/AppProviders";
 import { PageTransition } from "@/components/layout/PageTransition";
@@ -168,7 +167,6 @@ export default async function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <ThemeInitScript nonce={nonce} />
-        <ServiceWorkerInitScript nonce={nonce} />
       </head>
       <body className="flex min-h-screen flex-col bg-background text-foreground antialiased">
         <SkipLink />

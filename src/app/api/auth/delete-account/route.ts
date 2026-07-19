@@ -136,18 +136,6 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
       },
     });
 
-    // Sign out user first (invalidates all sessions)
-    const { error: signOutError } = await supabase.auth.signOut({
-      scope: "global",
-    });
-    if (signOutError) {
-      logger.error("Error signing out before account deletion", signOutError);
-      return NextResponse.json(
-        { error: "Failed to clear session before deletion" },
-        { status: 500 },
-      );
-    }
-
     logger.info("Initiating account deletion for user via service role (self-serve deletion)", { userId: user.id });
 
     // Delete user - ON DELETE CASCADE in schema automatically deletes:
@@ -163,6 +151,16 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
         { error: "Failed to delete account. Please try again or contact support." },
         { status: 500 },
       );
+    }
+
+    // The destructive remote operation has succeeded. Session cleanup is now
+    // best-effort because returning a failure at this point would falsely imply
+    // that the account still exists.
+    const { error: signOutError } = await supabase.auth.signOut({
+      scope: "local",
+    });
+    if (signOutError) {
+      logger.warn("Account deleted but local sign-out cleanup failed", signOutError);
     }
 
     const response = NextResponse.json({ success: true });

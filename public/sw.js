@@ -1,7 +1,9 @@
-const STATIC_CACHE = "certprep-static-v3";
-const APP_SHELL = "/"; // SPA shell - critical for offline navigation
+const STATIC_CACHE = "certprep-static-v4";
+const OFFLINE_FALLBACK = "/offline.html";
 const STATIC_ASSETS = [
-  APP_SHELL,
+  "/",
+  OFFLINE_FALLBACK,
+  "/offline.css",
   "/manifest.json",
   "/favicon.ico",
   "/logo-icon.svg",
@@ -28,24 +30,25 @@ self.addEventListener("install", (event) => {
       return cache.addAll(STATIC_ASSETS);
     }),
   );
-  self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches
-      .keys()
-      .then((cacheNames) =>
-        Promise.all(
-          cacheNames
-            .filter(
-              (name) => name !== STATIC_CACHE && name.startsWith("certprep-"),
-            )
-            .map((name) => caches.delete(name)),
+    Promise.all([
+      caches
+        .keys()
+        .then((cacheNames) =>
+          Promise.all(
+            cacheNames
+              .filter(
+                (name) => name !== STATIC_CACHE && name.startsWith("certprep-"),
+              )
+              .map((name) => caches.delete(name)),
+          ),
         ),
-      ),
+      self.clients.claim(),
+    ]),
   );
-  self.clients.claim();
 });
 
 self.addEventListener("fetch", (event) => {
@@ -56,36 +59,31 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
 
-  // Handle navigation requests with network-first + offline fallback to app shell
-  // This ensures the SPA works offline (home screen launch, refresh, deep links)
+  // Cache successful documents by their exact URL. Serving an arbitrary cached
+  // route as another URL gives Next.js the wrong server-rendered payload and
+  // causes route/hydration mismatches.
   if (request.mode === "navigate") {
     event.respondWith(
       fetch(request)
-        .then((response) => {
-          // Cache successful navigation response as the shell
-          if (response.ok) {
+        .then(async (response) => {
+          if (response.ok && isCacheableNavigation(url, response)) {
             const clone = response.clone();
-            caches
-              .open(STATIC_CACHE)
-              .then((cache) => cache.put(APP_SHELL, clone));
+            const cache = await caches.open(STATIC_CACHE);
+            await cache.put(request, clone);
           }
           return response;
         })
-        .catch(() => {
-          // Offline: serve cached app shell for all navigation
-          return caches.match(APP_SHELL).then((cached) => {
-            if (cached) return cached;
-            // Ultimate fallback if shell not cached (shouldn't happen after install)
-            return new Response(
-              '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Offline</title></head>' +
-                '<body style="font-family:system-ui;display:flex;align-items:center;justify-content:center;height:100vh;margin:0">' +
-                '<div style="text-align:center"><h1>You\'re Offline</h1><p>Please check your connection and try again.</p></div></body></html>',
-              {
-                status: 503,
-                statusText: "Service Unavailable",
-                headers: { "Content-Type": "text/html" },
-              },
-            );
+        .catch(async () => {
+          const cachedRoute = await caches.match(request);
+          if (cachedRoute) return cachedRoute;
+
+          const offlineFallback = await caches.match(OFFLINE_FALLBACK);
+          if (offlineFallback) return offlineFallback;
+
+          return new Response("Offline", {
+            status: 503,
+            statusText: "Service Unavailable",
+            headers: { "Content-Type": "text/plain; charset=utf-8" },
           });
         }),
     );
@@ -102,7 +100,7 @@ self.addEventListener("fetch", (event) => {
       try {
         const response = await fetch(request);
         if (response.ok) {
-          cache.put(request, response.clone());
+          await cache.put(request, response.clone());
         }
         return response;
       } catch {
@@ -158,4 +156,26 @@ function isCacheableAsset(request, url) {
 
   // Cache based on path prefix (e.g. icons, static chunks)
   return STATIC_PATH_PREFIXES.some((prefix) => url.pathname.startsWith(prefix));
+}
+
+/**
+ * Avoid persisting authentication documents or callback query parameters.
+ * @param {URL} url - The requested navigation URL
+ * @param {Response} response - The successful network response
+ * @returns {boolean} True when the document can be cached by exact URL
+ */
+function isCacheableNavigation(url, response) {
+  const sensitivePrefixes = [
+    "/auth/",
+    "/login",
+    "/signup",
+    "/forgot-password",
+    "/reset-password",
+  ];
+
+  if (sensitivePrefixes.some((prefix) => url.pathname.startsWith(prefix))) {
+    return false;
+  }
+
+  return response.headers.get("content-type")?.includes("text/html") ?? false;
 }

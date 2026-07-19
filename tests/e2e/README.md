@@ -84,6 +84,16 @@ npx playwright test --ui
 npx playwright test --debug
 ```
 
+For production-like PWA checks with normal browser security and service workers
+enabled, use the separate unauthenticated entrypoint:
+
+```bash
+npm run test:e2e:production
+```
+
+That command uses `playwright.production.config.ts` and does not use the
+authenticated global setup or `NEXT_PUBLIC_IS_E2E` database exposure.
+
 Use raw `npx playwright ...` commands when you need spec-level targeting, UI mode, or debugging against an already-running server. Use `npm run test:e2e` for the standard repo verification path.
 
 ## CI Configuration
