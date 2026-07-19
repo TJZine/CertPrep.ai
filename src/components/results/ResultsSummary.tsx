@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/Badge";
 import { formatTime } from "@/lib/date";
 import { cn } from "@/lib/utils/cn";
 import type { QuizMode } from "@/types/quiz";
+import type { SessionType } from "@/types/result";
 
 interface ResultsSummaryProps {
   score: number;
@@ -24,8 +25,59 @@ interface ResultsSummaryProps {
   totalQuestions: number;
   timeTakenSeconds: number;
   mode: QuizMode;
+  sessionType?: SessionType;
   averageTimePerQuestion: number;
   className?: string;
+}
+
+export interface ResultModePresentation {
+  scorecardLabel: string;
+  summaryLabel: string;
+  summaryVariant: "default" | "secondary";
+}
+
+/**
+ * Derive user-facing result mode labels from persisted session metadata.
+ *
+ * Aggregated sessions retain their persisted Zen mode for storage compatibility,
+ * while their display labels reflect the actual study workflow.
+ */
+export function getResultModePresentation(
+  mode: QuizMode,
+  sessionType?: SessionType,
+): ResultModePresentation {
+  switch (sessionType) {
+    case "srs_review":
+      return {
+        scorecardLabel: "SRS Review",
+        summaryLabel: "SRS Review",
+        summaryVariant: "secondary",
+      };
+    case "topic_study":
+      return {
+        scorecardLabel: "Topic Study",
+        summaryLabel: "Topic Study",
+        summaryVariant: "secondary",
+      };
+    case "interleaved":
+      return {
+        scorecardLabel: "Interleaved Practice",
+        summaryLabel: "Interleaved Practice",
+        summaryVariant: "secondary",
+      };
+    default:
+      return mode === "zen"
+        ? {
+            scorecardLabel: "zen",
+            summaryLabel: "🧘 Zen Study Mode",
+            summaryVariant: "default",
+          }
+        : {
+            scorecardLabel: "proctor",
+            summaryLabel: "📋 Proctor Exam Mode",
+            summaryVariant: "secondary",
+          };
+  }
 }
 
 /**
@@ -39,9 +91,11 @@ export function ResultsSummary(props: ResultsSummaryProps): React.ReactElement {
     flaggedCount,
     timeTakenSeconds,
     mode,
+    sessionType,
     averageTimePerQuestion,
     className,
   } = props;
+  const modePresentation = getResultModePresentation(mode, sessionType);
   const stats = [
     {
       label: "Correct",
@@ -137,11 +191,8 @@ export function ResultsSummary(props: ResultsSummaryProps): React.ReactElement {
         </div>
 
         <div className="mt-4 flex justify-center">
-          <Badge
-            variant={mode === "zen" ? "default" : "secondary"}
-            className="text-sm"
-          >
-            {mode === "zen" ? "🧘 Zen Study Mode" : "📋 Proctor Exam Mode"}
+          <Badge variant={modePresentation.summaryVariant} className="text-sm">
+            {modePresentation.summaryLabel}
           </Badge>
         </div>
       </CardContent>
