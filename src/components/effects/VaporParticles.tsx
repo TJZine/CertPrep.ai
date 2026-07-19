@@ -85,7 +85,9 @@ function VaporParticleEffect(): React.ReactElement {
 export default function VaporParticles(): React.ReactElement {
   return (
     <ParticlesProvider init={loadSlim}>
-      <VaporParticleEffect />
+      <div aria-hidden="true">
+        <VaporParticleEffect />
+      </div>
     </ParticlesProvider>
   );
 }

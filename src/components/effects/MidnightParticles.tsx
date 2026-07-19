@@ -10,7 +10,6 @@ function MidnightParticleEffect(): React.ReactElement {
   return (
     <Particles
       id="midnight-particles"
-      aria-hidden="true"
       options={{
         fullScreen: {
           enable: true,
@@ -80,7 +79,9 @@ function MidnightParticleEffect(): React.ReactElement {
 export default function MidnightParticles(): React.ReactElement {
   return (
     <ParticlesProvider init={loadSlim}>
-      <MidnightParticleEffect />
+      <div aria-hidden="true">
+        <MidnightParticleEffect />
+      </div>
     </ParticlesProvider>
   );
 }

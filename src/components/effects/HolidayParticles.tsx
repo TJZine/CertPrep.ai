@@ -78,7 +78,9 @@ function HolidayParticleEffect(): React.ReactElement {
 export default function HolidayParticles(): React.ReactElement {
   return (
     <ParticlesProvider init={loadSlim}>
-      <HolidayParticleEffect />
+      <div aria-hidden="true">
+        <HolidayParticleEffect />
+      </div>
     </ParticlesProvider>
   );
 }
