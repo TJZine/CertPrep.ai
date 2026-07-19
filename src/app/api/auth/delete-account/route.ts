@@ -3,6 +3,7 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { NextResponse, type NextRequest } from "next/server";
 import { logger } from "@/lib/logger";
+import { ACCOUNT_DELETION_SERVER_TIMEOUT_MS } from "@/lib/accountDeletionTimeouts";
 
 const originCandidates = [
   process.env.NEXT_PUBLIC_SITE_URL,
@@ -42,7 +43,35 @@ function isSameSiteRequest(request: NextRequest): boolean {
   );
 }
 
+function createDeadlineFetch(operationSignal: AbortSignal): typeof fetch {
+  return (input, init) => {
+    const signal = init?.signal
+      ? AbortSignal.any([operationSignal, init.signal])
+      : operationSignal;
+
+    return fetch(input, {
+      ...init,
+      signal,
+    });
+  };
+}
+
+function deletionDeadlineResponse(): NextResponse {
+  return NextResponse.json(
+    {
+      error:
+        "Account deletion could not be confirmed before the server deadline.",
+    },
+    { status: 504 },
+  );
+}
+
 export async function DELETE(request: NextRequest): Promise<NextResponse> {
+  const operationSignal = AbortSignal.any([
+    request.signal,
+    AbortSignal.timeout(ACCOUNT_DELETION_SERVER_TIMEOUT_MS),
+  ]);
+
   try {
     // SECURITY: DELETE requests should have no body per HTTP semantics
     // Reject any body (>0 bytes) or malformed content-length headers to prevent DoS
@@ -53,7 +82,7 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
       if (!Number.isFinite(length) || length > 0) {
         return NextResponse.json(
           { error: "Request body not allowed" },
-          { status: 413 }
+          { status: 413 },
         );
       }
     }
@@ -87,7 +116,11 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
       supabaseUrl = `https://${supabaseUrl}`;
     }
 
+    const deadlineFetch = createDeadlineFetch(operationSignal);
     const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        fetch: deadlineFetch,
+      },
       cookies: {
         getAll() {
           return cookieStore.getAll();
@@ -108,7 +141,22 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
 
     const {
       data: { user },
+      error: getUserError,
     } = await supabase.auth.getUser();
+
+    if (getUserError) {
+      logger.error(
+        "Account deletion session verification failed",
+        getUserError,
+      );
+      if (operationSignal.aborted) {
+        return deletionDeadlineResponse();
+      }
+      return NextResponse.json(
+        { error: "Unable to verify the current session" },
+        { status: 502 },
+      );
+    }
 
     if (!user) {
       logger.warn("Account deletion rejected: no authenticated user found");
@@ -134,9 +182,15 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
         autoRefreshToken: false,
         persistSession: false,
       },
+      global: {
+        fetch: deadlineFetch,
+      },
     });
 
-    logger.info("Initiating account deletion for user via service role (self-serve deletion)", { userId: user.id });
+    logger.info(
+      "Initiating account deletion for user via service role (self-serve deletion)",
+      { userId: user.id },
+    );
 
     // Delete user - ON DELETE CASCADE in schema automatically deletes:
     // - profiles (id references auth.users)
@@ -147,8 +201,14 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
 
     if (error) {
       logger.error("Error deleting user via service role", error);
+      if (operationSignal.aborted) {
+        return deletionDeadlineResponse();
+      }
       return NextResponse.json(
-        { error: "Failed to delete account. Please try again or contact support." },
+        {
+          error:
+            "Failed to delete account. Please try again or contact support.",
+        },
         { status: 500 },
       );
     }
@@ -160,7 +220,10 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
       scope: "local",
     });
     if (signOutError) {
-      logger.warn("Account deleted but local sign-out cleanup failed", signOutError);
+      logger.warn(
+        "Account deleted but local sign-out cleanup failed",
+        signOutError,
+      );
     }
 
     const response = NextResponse.json({ success: true });
@@ -172,6 +235,10 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
 
     return response;
   } catch (error) {
+    if (operationSignal.aborted) {
+      logger.error("Account deletion exceeded its operation deadline", error);
+      return deletionDeadlineResponse();
+    }
     logger.error("Unexpected error in delete-account", error);
     return NextResponse.json(
       { error: "An unexpected error occurred" },

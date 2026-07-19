@@ -1,6 +1,9 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 import { DELETE } from "@/app/api/auth/delete-account/route";
+import { createServerClient } from "@supabase/ssr";
+import { createClient } from "@supabase/supabase-js";
+import { ACCOUNT_DELETION_SERVER_TIMEOUT_MS } from "@/lib/accountDeletionTimeouts";
 
 type CookieRecord = {
   name: string;
@@ -57,6 +60,10 @@ vi.mock("next/headers", () => ({
 }));
 
 describe("DELETE /api/auth/delete-account", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     cookieJar.length = 0;
@@ -103,6 +110,64 @@ describe("DELETE /api/auth/delete-account", () => {
     );
     expect(supabaseAuth.signOut).toHaveBeenCalledWith({ scope: "local" });
     expect(response.cookies.get("sb-access-token")?.value).toBe("");
+  });
+
+  it("uses one bounded fetch implementation for session and admin calls", async () => {
+    const timeoutSignal = new AbortController().signal;
+    const timeoutSpy = vi
+      .spyOn(AbortSignal, "timeout")
+      .mockReturnValue(timeoutSignal);
+    const request = new NextRequest(
+      "https://certprep.ai/api/auth/delete-account",
+      {
+        method: "DELETE",
+        headers: {
+          origin: "https://certprep.ai",
+          "sec-fetch-site": "same-origin",
+        },
+      },
+    );
+
+    const response = await DELETE(request);
+
+    expect(response.status).toBe(200);
+    expect(timeoutSpy).toHaveBeenCalledWith(ACCOUNT_DELETION_SERVER_TIMEOUT_MS);
+
+    const serverOptions = vi.mocked(createServerClient).mock.calls[0]?.[2] as
+      { global?: { fetch?: typeof fetch } } | undefined;
+    const adminOptions = vi.mocked(createClient).mock.calls[0]?.[2] as
+      { global?: { fetch?: typeof fetch } } | undefined;
+
+    expect(serverOptions?.global?.fetch).toBeTypeOf("function");
+    expect(adminOptions?.global?.fetch).toBe(serverOptions?.global?.fetch);
+  });
+
+  it("returns an explicit timeout response when deletion cannot be confirmed", async () => {
+    const timeoutController = new AbortController();
+    timeoutController.abort(new DOMException("Timed out", "TimeoutError"));
+    vi.spyOn(AbortSignal, "timeout").mockReturnValue(timeoutController.signal);
+    supabaseAuth.getUser.mockRejectedValueOnce(
+      new DOMException("Timed out", "TimeoutError"),
+    );
+    const request = new NextRequest(
+      "https://certprep.ai/api/auth/delete-account",
+      {
+        method: "DELETE",
+        headers: {
+          origin: "https://certprep.ai",
+          "sec-fetch-site": "same-origin",
+        },
+      },
+    );
+
+    const response = await DELETE(request);
+
+    expect(response.status).toBe(504);
+    await expect(response.json()).resolves.toEqual({
+      error:
+        "Account deletion could not be confirmed before the server deadline.",
+    });
+    expect(supabaseAdminClient.auth.admin.deleteUser).not.toHaveBeenCalled();
   });
 
   it("returns unauthorized when no user is found", async () => {

@@ -2,6 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { DataManagement } from "@/components/settings/DataManagement";
+import { ACCOUNT_DELETION_CLIENT_TIMEOUT_MS } from "@/lib/accountDeletionTimeouts";
 
 const mocks = vi.hoisted(() => ({
   addToast: vi.fn(),
@@ -70,7 +71,10 @@ describe("DataManagement account deletion", () => {
       render(<DataManagement />);
 
       await user.click(screen.getByRole("button", { name: "Reset" }));
-      await user.type(screen.getByLabelText(/Type DELETE to confirm/i), "DELETE");
+      await user.type(
+        screen.getByLabelText(/Type DELETE to confirm/i),
+        "DELETE",
+      );
       await user.click(
         screen.getByRole("button", { name: "Delete Account + Local" }),
       );
@@ -89,7 +93,14 @@ describe("DataManagement account deletion", () => {
   );
 
   it("preserves local data when the remote request cannot be confirmed", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("offline")));
+    const timeoutSignal = new AbortController().signal;
+    const timeoutSpy = vi
+      .spyOn(AbortSignal, "timeout")
+      .mockReturnValue(timeoutSignal);
+    const fetchMock = vi
+      .fn()
+      .mockRejectedValue(new DOMException("Timed out", "TimeoutError"));
+    vi.stubGlobal("fetch", fetchMock);
     const user = userEvent.setup();
 
     render(<DataManagement />);
@@ -103,9 +114,17 @@ describe("DataManagement account deletion", () => {
     await waitFor(() => {
       expect(mocks.addToast).toHaveBeenCalledWith(
         "error",
-        "Account deletion could not be completed. Your local data was preserved.",
+        "Account deletion could not be confirmed. Your local data was preserved. Please retry or sign in again to verify the account state.",
       );
     });
+    expect(timeoutSpy).toHaveBeenCalledWith(ACCOUNT_DELETION_CLIENT_TIMEOUT_MS);
+    expect(fetchMock).toHaveBeenCalledWith("/api/auth/delete-account", {
+      method: "DELETE",
+      signal: timeoutSignal,
+    });
     expect(mocks.clearAllData).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole("button", { name: "Delete Account + Local" }),
+    ).toBeEnabled();
   });
 });
