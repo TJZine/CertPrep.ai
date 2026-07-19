@@ -98,11 +98,5 @@ module.exports = withBundleAnalyzer(
       // Exclude tracing instrumentation for smaller bundle (only if not using performance monitoring)
       // excludeTracing: true,
     },
-
-    webpack: {
-      // Enables automatic instrumentation of Vercel Cron Monitors.
-      // This legacy webpack integration only supports Pages Router API routes.
-      automaticVercelMonitors: true,
-    },
   }),
 );

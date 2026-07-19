@@ -92,7 +92,9 @@ npm run test:e2e:production
 ```
 
 That command uses `playwright.production.config.ts` and does not use the
-authenticated global setup or `NEXT_PUBLIC_IS_E2E` database exposure.
+authenticated global setup or `NEXT_PUBLIC_IS_E2E` database exposure. It creates
+a fresh production build, launches that build with `npm run start`, and does not
+reuse an existing server on port 3000.
 
 Use raw `npx playwright ...` commands when you need spec-level targeting, UI mode, or debugging against an already-running server. Use `npm run test:e2e` for the standard repo verification path.
 

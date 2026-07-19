@@ -84,4 +84,24 @@ describe("playwright.config", () => {
     expect(config.reporter).toBe("github");
     expect(webServer?.reuseExistingServer).toBe(false);
   });
+
+  it("builds and starts the production server for production-like checks", async () => {
+    delete process.env.CI;
+
+    const { default: config } =
+      await import("../../playwright.production.config");
+    const webServer = Array.isArray(config.webServer)
+      ? config.webServer[0]
+      : config.webServer;
+
+    expect(defineConfigSpy).toHaveBeenCalledTimes(1);
+    expect(config.testDir).toBe("./tests/e2e-production");
+    expect(webServer?.command).toBe("npm run build && npm run start");
+    expect(webServer?.url).toBe("http://localhost:3000");
+    expect(webServer?.reuseExistingServer).toBe(false);
+    expect(webServer?.timeout).toBe(120 * 1000);
+    expect(webServer?.env).toEqual({
+      SENTRY_DISABLE_AUTO_UPLOAD: "1",
+    });
+  });
 });
