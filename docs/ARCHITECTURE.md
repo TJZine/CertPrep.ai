@@ -63,6 +63,11 @@ Server-side Supabase clients use the SSR package's batch `getAll`/`setAll`
 cookie contract so refreshed session state is propagated through Next.js cookie
 stores and proxy responses.
 
+Self-serve account deletion uses a shorter server-owned upstream deadline and a
+longer browser deadline. Unconfirmed outcomes, including timeouts, preserve
+local data and are reported as unconfirmed because aborting the browser request
+does not prove that the remote destructive operation did not complete.
+
 Quiz, result, and SRS data sync should not bypass the sync layer. Auth and profile/security flows already make direct Supabase calls where appropriate.
 
 ### Client Persistence Ownership
@@ -111,7 +116,8 @@ Playwright and the E2E bootstrap path are test-only surfaces, but they intersect
 - [playwright.config.ts](../playwright.config.ts) owns the main Playwright project config, browser launch flags for test projects, and the `NEXT_PUBLIC_IS_E2E` test-build toggle passed to the local web server
 - [playwright.production.config.ts](../playwright.production.config.ts) owns
   unauthenticated production-like PWA checks with normal browser security and
-  service workers enabled
+  service workers enabled; it builds the application, launches `next start`, and
+  refuses to reuse an arbitrary process already listening on the test URL
 - [tests/e2e/global-setup.ts](../tests/e2e/global-setup.ts) provisions the test user, bootstraps auth state through Supabase admin APIs and magic-link flow, and launches its own Chromium instance for auth-state setup
 - [src/db/dbInstance.ts](../src/db/dbInstance.ts) conditionally exposes `window.__certprepDb` only when `NODE_ENV !== "production"` and `NEXT_PUBLIC_IS_E2E === "true"`
 - [tests/e2e/helpers/db.ts](../tests/e2e/helpers/db.ts) depends on that guarded DB exposure for reliable test helpers
