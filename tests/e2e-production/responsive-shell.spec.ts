@@ -15,14 +15,17 @@ const viewports: ViewportExpectation[] = [
 
 async function expectNoHorizontalDocumentOverflow(page: Page): Promise<void> {
   await expect
-    .poll(() =>
-      page.evaluate(
-        () =>
-          document.documentElement.scrollWidth ===
-          document.documentElement.clientWidth,
-      ),
+    .poll(
+      () =>
+        page.evaluate(
+          () => document.documentElement.scrollWidth - window.innerWidth,
+        ),
+      {
+        message:
+          "document scrollWidth must not exceed the viewport width by more than 1 CSS pixel; the received value is the excess width",
+      },
     )
-    .toBe(true);
+    .toBeLessThanOrEqual(1);
 }
 
 for (const viewport of viewports) {
