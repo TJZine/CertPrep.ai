@@ -119,6 +119,15 @@ In addition to IndexedDB, the app uses:
 - `sessionStorage` for ephemeral session flow state such as topic study, SRS review, flashcards, smart rounds, and interleaved practice
 - service worker registration and update ownership via [src/hooks/useServiceWorker.ts](../src/hooks/useServiceWorker.ts) and cache-clearing hooks via [public/sw.js](../public/sw.js) and [src/lib/serviceWorkerClient.ts](../src/lib/serviceWorkerClient.ts)
 
+The service worker owns exactly two cache classes. The precache contains only
+public, user-independent offline-shell assets and survives sign-out and factory
+reset. The runtime cache contains exact-URL navigation documents and on-demand
+same-origin assets and is deleted during those destructive cleanup flows. The
+client and worker use a bounded, transferred-message-port acknowledgement so a
+caller can distinguish confirmed deletion from timeout or failure without
+blocking sign-out indefinitely. Runtime writes that began before a clear are
+settled before deletion, and new writes are suppressed until deletion finishes.
+
 ## E2E / Test Harness Boundaries
 
 Playwright and the E2E bootstrap path are test-only surfaces, but they intersect real runtime boundaries:

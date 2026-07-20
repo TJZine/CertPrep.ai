@@ -1,7 +1,9 @@
-const STATIC_CACHE = "certprep-static-v4";
+const CACHE_PREFIX = "certprep-";
+const PRECACHE = "certprep-precache-v5";
+const RUNTIME_CACHE = "certprep-runtime-v5";
+const CURRENT_CACHES = new Set([PRECACHE, RUNTIME_CACHE]);
 const OFFLINE_FALLBACK = "/offline.html";
-const STATIC_ASSETS = [
-  "/",
+const PRECACHE_ASSETS = [
   OFFLINE_FALLBACK,
   "/offline.css",
   "/manifest.json",
@@ -11,7 +13,6 @@ const STATIC_ASSETS = [
   "/icons/logo-icon-180.png",
 ];
 
-// Cacheable destination types and path prefixes
 const ALLOWED_DESTINATIONS = new Set([
   "style",
   "script",
@@ -21,14 +22,18 @@ const ALLOWED_DESTINATIONS = new Set([
 ]);
 const STATIC_PATH_PREFIXES = ["/icons/", "/_next/static/"];
 
-// NOTE: Cache version bumping is currently manual.
-// Future Improvement: Integrate with build script to auto-increment on deployment.
+// Cache version bumping is intentionally explicit so deployments control when
+// installed app-shell assets and runtime responses are invalidated.
+
+/** @type {Set<Promise<void>>} */
+const pendingRuntimeWrites = new Set();
+/** @type {Promise<void> | null} */
+let runtimeClearPromise = null;
+let runtimeCacheGeneration = 0;
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(STATIC_CACHE).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
-    }),
+    caches.open(PRECACHE).then((cache) => cache.addAll(PRECACHE_ASSETS)),
   );
 });
 
@@ -41,7 +46,8 @@ self.addEventListener("activate", (event) => {
           Promise.all(
             cacheNames
               .filter(
-                (name) => name !== STATIC_CACHE && name.startsWith("certprep-"),
+                (name) =>
+                  name.startsWith(CACHE_PREFIX) && !CURRENT_CACHES.has(name),
               )
               .map((name) => caches.delete(name)),
           ),
@@ -59,57 +65,64 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
 
-  // Cache successful documents by their exact URL. Serving an arbitrary cached
-  // route as another URL gives Next.js the wrong server-rendered payload and
-  // causes route/hydration mismatches.
   if (request.mode === "navigate") {
+    const cacheGeneration = runtimeCacheGeneration;
+    const cacheAllowed = runtimeClearPromise === null;
+    const networkResponse = fetch(request);
+    const cacheWrite = networkResponse
+      .then((response) => {
+        if (!response.ok || !isCacheableNavigation(url, response)) return;
+        return writeRuntimeResponse(
+          request,
+          response.clone(),
+          cacheGeneration,
+          cacheAllowed,
+        );
+      })
+      .catch(() => undefined);
+
+    event.waitUntil(cacheWrite);
     event.respondWith(
-      fetch(request)
-        .then(async (response) => {
-          if (response.ok && isCacheableNavigation(url, response)) {
-            const clone = response.clone();
-            const cache = await caches.open(STATIC_CACHE);
-            await cache.put(request, clone);
-          }
-          return response;
-        })
-        .catch(async () => {
-          const cachedRoute = await caches.match(request);
-          if (cachedRoute) return cachedRoute;
-
-          const offlineFallback = await caches.match(OFFLINE_FALLBACK);
-          if (offlineFallback) return offlineFallback;
-
-          return new Response("Offline", {
-            status: 503,
-            statusText: "Service Unavailable",
-            headers: { "Content-Type": "text/plain; charset=utf-8" },
-          });
-        }),
+      networkResponse.catch(() => resolveOfflineNavigation(request)),
     );
     return;
   }
 
-  // Static assets: cache-first strategy
   if (!isCacheableAsset(request, url)) return;
 
+  const cacheGeneration = runtimeCacheGeneration;
+  const cacheAllowed = runtimeClearPromise === null;
+  const responseRecord = caches.open(RUNTIME_CACHE).then(async (cache) => {
+    const cached = await cache.match(request);
+    if (cached) {
+      return { response: cached, cacheWrite: undefined };
+    }
+
+    const response = await fetch(request);
+    const cacheWrite = response.ok
+      ? writeRuntimeResponse(
+          request,
+          response.clone(),
+          cacheGeneration,
+          cacheAllowed,
+        )
+      : undefined;
+    return { response, cacheWrite };
+  });
+
+  event.waitUntil(
+    responseRecord.then(({ cacheWrite }) => cacheWrite).catch(() => undefined),
+  );
   event.respondWith(
-    caches.open(STATIC_CACHE).then(async (cache) => {
-      const cached = await cache.match(request);
-      if (cached) return cached;
-      try {
-        const response = await fetch(request);
-        if (response.ok) {
-          await cache.put(request, response.clone());
-        }
-        return response;
-      } catch {
-        return new Response("Offline", {
-          status: 503,
-          statusText: "Service Unavailable",
-        });
-      }
-    }),
+    responseRecord
+      .then(({ response }) => response)
+      .catch(
+        () =>
+          new Response("Offline", {
+            status: 503,
+            statusText: "Service Unavailable",
+          }),
+      ),
   );
 });
 
@@ -123,46 +136,141 @@ self.addEventListener("message", (event) => {
   }
 
   if (data.type === "CLEAR_CACHES") {
-    event.waitUntil(
-      caches
-        .keys()
-        .then((cacheNames) =>
-          Promise.all(
-            cacheNames
-              .filter((name) => name.startsWith("certprep-"))
-              .map((name) => caches.delete(name)),
-          ),
-        ),
+    const responsePort = event.ports[0];
+    const completion = clearRuntimeCache().then(
+      () => replyToCacheClearRequest(responsePort, true),
+      (error) => {
+        console.warn("Runtime cache clear failed", error);
+        replyToCacheClearRequest(responsePort, false);
+      },
     );
+    event.waitUntil(completion);
   }
 });
 
 /**
- * Determines if a request should be cached by the service worker.
- * @param {Request} request - The fetch request object
- * @param {URL} url - The parsed URL of the request
- * @returns {boolean} True if the asset should be cached
+ * Writes a runtime response without coupling a successful network response to
+ * Cache Storage availability. New writes are suppressed while destructive
+ * cache clearing is in progress, and all already-started writes are tracked so
+ * clearing cannot race them.
+ * @param {Request} request
+ * @param {Response} response
+ * @param {number} generation
+ * @param {boolean} allowedAtRequestStart
+ * @returns {Promise<void>}
+ */
+function writeRuntimeResponse(
+  request,
+  response,
+  generation,
+  allowedAtRequestStart,
+) {
+  if (
+    !allowedAtRequestStart ||
+    runtimeClearPromise ||
+    generation !== runtimeCacheGeneration
+  ) {
+    return Promise.resolve();
+  }
+
+  const writePromise = caches
+    .open(RUNTIME_CACHE)
+    .then((cache) => {
+      if (runtimeClearPromise || generation !== runtimeCacheGeneration) {
+        return;
+      }
+      return cache.put(request, response);
+    })
+    .catch((error) => {
+      console.warn("Runtime cache write failed", error);
+    });
+
+  pendingRuntimeWrites.add(writePromise);
+  void writePromise.then(
+    () => pendingRuntimeWrites.delete(writePromise),
+    () => pendingRuntimeWrites.delete(writePromise),
+  );
+  return writePromise;
+}
+
+/**
+ * Waits for writes that started before the clear request, then deletes the
+ * entire runtime cache. Calls made during the same clear share one promise.
+ * @returns {Promise<void>}
+ */
+function clearRuntimeCache() {
+  if (runtimeClearPromise) return runtimeClearPromise;
+
+  runtimeCacheGeneration += 1;
+  const clearPromise = Promise.allSettled([...pendingRuntimeWrites])
+    .then(() => caches.delete(RUNTIME_CACHE))
+    .then(() => undefined);
+
+  runtimeClearPromise = clearPromise.finally(() => {
+    runtimeClearPromise = null;
+  });
+  return runtimeClearPromise;
+}
+
+/**
+ * @param {MessagePort | undefined} port
+ * @param {boolean} ok
+ */
+function replyToCacheClearRequest(port, ok) {
+  if (!port) return;
+  try {
+    port.postMessage({ ok });
+  } catch (error) {
+    console.warn("Failed to acknowledge runtime cache clear", error);
+  } finally {
+    port.close();
+  }
+}
+
+/**
+ * @param {Request} request
+ * @returns {Promise<Response>}
+ */
+async function resolveOfflineNavigation(request) {
+  const cachedRoute = await caches.match(request, {
+    cacheName: RUNTIME_CACHE,
+  });
+  if (cachedRoute) return cachedRoute;
+
+  const offlineFallback = await caches.match(OFFLINE_FALLBACK, {
+    cacheName: PRECACHE,
+  });
+  if (offlineFallback) return offlineFallback;
+
+  return new Response("Offline", {
+    status: 503,
+    statusText: "Service Unavailable",
+    headers: { "Content-Type": "text/plain; charset=utf-8" },
+  });
+}
+
+/**
+ * @param {Request} request
+ * @param {URL} url
+ * @returns {boolean}
  */
 function isCacheableAsset(request, url) {
-  // Don't cache API calls or Next.js data
   if (
     url.pathname.startsWith("/api/") ||
     url.pathname.startsWith("/_next/data/")
-  )
+  ) {
     return false;
+  }
 
-  // Cache based on destination
   if (ALLOWED_DESTINATIONS.has(request.destination)) return true;
 
-  // Cache based on path prefix (e.g. icons, static chunks)
   return STATIC_PATH_PREFIXES.some((prefix) => url.pathname.startsWith(prefix));
 }
 
 /**
- * Avoid persisting authentication documents or callback query parameters.
- * @param {URL} url - The requested navigation URL
- * @param {Response} response - The successful network response
- * @returns {boolean} True when the document can be cached by exact URL
+ * @param {URL} url
+ * @param {Response} response
+ * @returns {boolean}
  */
 function isCacheableNavigation(url, response) {
   const sensitivePrefixes = [

@@ -19,7 +19,7 @@ vi.mock("@/lib/sync/coordinator", () => ({
     requiresLocalDataPreservation: vi.fn((outcome) => outcome?.status === "rejected" || Boolean(outcome?.value?.incomplete)),
 }));
 vi.mock("@/lib/serviceWorkerClient", () => ({
-    requestServiceWorkerCacheClear: vi.fn(),
+    requestServiceWorkerCacheClear: vi.fn().mockResolvedValue({ status: "cleared" }),
 }));
 vi.mock("@/db", () => ({
     clearDatabase: vi.fn().mockResolvedValue(undefined),

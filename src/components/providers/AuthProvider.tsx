@@ -47,7 +47,7 @@ export async function performSignOut({
   clearDb,
   userId,
 }: SignOutDependencies): Promise<{ success: boolean; error?: string }> {
-  let dbClearError: string | undefined;
+  let cleanupWarning: string | undefined;
   let shouldPreserveLocalData = false;
 
   // Attempt to flush local changes to server before clearing DB
@@ -83,18 +83,33 @@ export async function performSignOut({
     }
   }
 
-  void requestServiceWorkerCacheClear();
+  const cacheClearPromise = requestServiceWorkerCacheClear();
 
   if (shouldPreserveLocalData) {
-    dbClearError =
+    cleanupWarning =
       "Signed out before sync completed. Local study data was kept on this device.";
   } else {
     try {
       await clearDb();
     } catch (error) {
       logger.error("Failed to clear local database during sign out", error);
-      dbClearError = "Local data could not be cleared.";
+      cleanupWarning = "Local data could not be cleared.";
     }
+  }
+
+  const cacheClearResult = await cacheClearPromise;
+  if (
+    cacheClearResult.status === "failed" ||
+    cacheClearResult.status === "timeout" ||
+    cacheClearResult.status === "no-active-worker"
+  ) {
+    logger.warn("Sign out could not confirm runtime cache deletion", {
+      status: cacheClearResult.status,
+    });
+    const cacheWarning = "Browser cache cleanup could not be confirmed.";
+    cleanupWarning = cleanupWarning
+      ? `${cleanupWarning} ${cacheWarning}`
+      : cacheWarning;
   }
 
   if (!supabase) {
@@ -105,7 +120,7 @@ export async function performSignOut({
     await supabase.auth.signOut();
     onResetAuthState();
     // Navigation is handled by the onAuthStateChange listener to support cross-tab signouts
-    return { success: true, error: dbClearError };
+    return { success: true, error: cleanupWarning };
   } catch (error) {
     logger.error("Error signing out", error);
     return { success: false, error: "Sign out failed. Please try again." };

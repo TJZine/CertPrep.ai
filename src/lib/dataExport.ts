@@ -998,7 +998,16 @@ export async function clearAllData(): Promise<void> {
     sessionStorage.clear();
   }
 
-  await requestServiceWorkerCacheClear();
+  const cacheClearResult = await requestServiceWorkerCacheClear();
+  if (
+    cacheClearResult.status === "failed" ||
+    cacheClearResult.status === "timeout" ||
+    cacheClearResult.status === "no-active-worker"
+  ) {
+    logger.warn("Factory reset could not confirm runtime cache deletion", {
+      status: cacheClearResult.status,
+    });
+  }
 }
 
 /**
