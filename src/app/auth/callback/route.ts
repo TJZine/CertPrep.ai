@@ -58,10 +58,7 @@ function prepareRecoveryRedirect(
 
   // Recovery proof is callback-owned. Never trust a nonce supplied by `next`.
   target.searchParams.delete("recovery");
-  if (
-    recoveryUserId &&
-    target.pathname === "/reset-password"
-  ) {
+  if (recoveryUserId && target.pathname === RECOVERY_PROOF_COOKIE_PATH) {
     const nonce = generateRecoveryProofNonce();
     proof = serializeRecoveryProof({
       nonce,

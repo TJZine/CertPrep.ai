@@ -37,6 +37,7 @@ vi.mock("@/lib/dataExport", () => ({
 
 describe("DataManagement account deletion", () => {
   afterEach(() => {
+    vi.restoreAllMocks();
     vi.unstubAllGlobals();
   });
 

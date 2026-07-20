@@ -16,6 +16,9 @@ import { buildAnswersRecord } from "@/lib/quiz/quizRemix";
 
 import type { Question, QuizSessionConfig } from "@/types/quiz";
 
+const AGGREGATED_SAVE_ERROR_MESSAGE =
+  "Failed to save result. Your answers are still here—retry when ready.";
+
 function mapSourceMapToObject(
   sourceMap: Map<string, string> | null | undefined,
 ): Record<string, string> {
@@ -134,7 +137,7 @@ export function useQuizPersistence({
           setAggregatedSaveError(true);
           addToast(
             "error",
-            "Failed to save result. Your answers are still here—retry when ready.",
+            AGGREGATED_SAVE_ERROR_MESSAGE,
           );
           return;
         }
@@ -201,7 +204,7 @@ export function useQuizPersistence({
           setAggregatedSaveError(true);
           addToast(
             "error",
-            "Failed to save result. Your answers are still here—retry when ready.",
+            AGGREGATED_SAVE_ERROR_MESSAGE,
           );
           return;
         }
@@ -272,7 +275,7 @@ export function useQuizPersistence({
           setAggregatedSaveError(true);
           addToast(
             "error",
-            "Failed to save result. Your answers are still here—retry when ready.",
+            AGGREGATED_SAVE_ERROR_MESSAGE,
           );
           return;
         }
