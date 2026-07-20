@@ -81,10 +81,12 @@ describe("LoginForm", () => {
     vi.clearAllMocks();
   });
 
-  it("renders the login form", () => {
+  it("renders the login form with the configured captcha", () => {
     render(<LoginForm />);
+
     expect(screen.getByLabelText(/Email/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Password/i)).toBeInTheDocument();
+    expect(screen.getByTestId("mock-hcaptcha")).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /Sign In/i }),
     ).toBeInTheDocument();
@@ -112,24 +114,21 @@ describe("LoginForm", () => {
     expect(passwordInput.value).toBe("password123");
   });
 
-  it("shows error if captcha is enabled but not completed", async () => {
+  it("shows an error when the configured captcha is not completed", () => {
     render(<LoginForm />);
 
-    // Check if captcha is present
-    if (screen.queryByTestId("mock-hcaptcha")) {
-      fireEvent.change(screen.getByLabelText(/Email/i), {
-        target: { value: "test@example.com" },
-      });
-      fireEvent.change(screen.getByLabelText(/Password/i), {
-        target: { value: "password123" },
-      });
+    fireEvent.change(screen.getByLabelText(/Email/i), {
+      target: { value: "test@example.com" },
+    });
+    fireEvent.change(screen.getByLabelText(/Password/i), {
+      target: { value: "password123" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /Sign In/i }));
 
-      fireEvent.click(screen.getByRole("button", { name: /Sign In/i }));
-
-      expect(
-        screen.getByText(/Please complete the captcha/i),
-      ).toBeInTheDocument();
-    }
+    expect(
+      screen.getByText(/Please complete the captcha/i),
+    ).toBeInTheDocument();
+    expect(mockSignInWithPassword).not.toHaveBeenCalled();
   });
 
   it("successfully signs in and navigates", async () => {
@@ -137,11 +136,7 @@ describe("LoginForm", () => {
 
     render(<LoginForm />);
 
-    // Complete captcha if present
-    const captcha = screen.queryByTestId("mock-hcaptcha");
-    if (captcha) {
-      fireEvent.click(captcha);
-    }
+    fireEvent.click(screen.getByTestId("mock-hcaptcha"));
 
     fireEvent.change(screen.getByLabelText(/Email/i), {
       target: { value: "test@example.com" },
@@ -156,7 +151,7 @@ describe("LoginForm", () => {
       expect(mockSignInWithPassword).toHaveBeenCalledWith({
         email: "test@example.com",
         password: "password123",
-        options: { captchaToken: captcha ? "mock-token" : undefined },
+        options: { captchaToken: "mock-token" },
       });
       expect(mockPush).toHaveBeenCalledWith("/");
       expect(mockRefresh).toHaveBeenCalled();
@@ -170,11 +165,7 @@ describe("LoginForm", () => {
 
     render(<LoginForm />);
 
-    // Complete captcha if present
-    const captcha = screen.queryByTestId("mock-hcaptcha");
-    if (captcha) {
-      fireEvent.click(captcha);
-    }
+    fireEvent.click(screen.getByTestId("mock-hcaptcha"));
 
     fireEvent.change(screen.getByLabelText(/Email/i), {
       target: { value: "test@example.com" },
