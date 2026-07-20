@@ -111,7 +111,7 @@ describe("Sentry config modules", () => {
           values: [
             {
               value:
-                "token=abc123 apiKey=abc123 accessToken=abc123 secret_key=abc123 Authorization: Bearer abc123",
+                "token=abc123 apiKey=abc123 accessToken=abc123 secret_key=abc123 Authorization: Bearer abc123", // secret-scan: allow -- redaction fixture
             },
           ],
         },

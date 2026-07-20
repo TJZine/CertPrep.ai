@@ -32,6 +32,8 @@ jobs:
         run: npm ci
       - name: Scan repository files for secrets
         run: npm run security-check
+      - name: Test staged secret scanner
+        run: npm run test:security-check
       - name: Run lint
         run: npm run lint
       - name: Run typecheck

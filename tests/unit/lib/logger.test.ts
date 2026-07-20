@@ -148,7 +148,7 @@ describe("logger", () => {
         });
 
         it("should redact standalone Bearer token but NOT include invalid characters like comma", () => {
-            prodLogger.log("Authorization: Bearer mySecretToken123==, extra context");
+            prodLogger.log("Authorization: Bearer mySecretToken123==, extra context"); // secret-scan: allow -- redaction fixture
             
             const call = vi.mocked(Sentry.addBreadcrumb).mock.calls[0]?.[0];
             if (!call) return;

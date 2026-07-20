@@ -14,6 +14,7 @@
     "test:e2e:production": "playwright test --config=playwright.production.config.ts",
     "security-check": "bash scripts/check-secrets.sh --repo",
     "security-check:staged": "bash scripts/check-secrets.sh --staged",
+    "test:security-check": "bash scripts/tests/check-secrets.test.sh",
     "prepare": "husky || true",
     "supabase:types": "supabase gen types typescript --project-id rkhtvyvuksuhzqlxjyzx > src/types/database.types.ts"
   },

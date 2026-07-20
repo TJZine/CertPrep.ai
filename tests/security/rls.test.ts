@@ -95,7 +95,7 @@ describe.skipIf(!shouldRun)("Row Level Security (RLS) Verification", () => {
       client: SupabaseClient;
     }> => {
       const email = `test-${generateUUID()}@example.com`;
-      const password = "test-password-123";
+      const password = "test-password-123"; // secret-scan: allow -- deterministic test-user credential
       const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
       let userId: string;
