@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.1] - 2026-07-19
+
+### Fixed
+
+- **Responsive Navigation**: Removed mobile and tablet horizontal overflow,
+  contained compact-menu focus, restored focus on dismissal, and corrected
+  responsive authentication page sizing.
+- **Password Recovery**: Added the missing recovery entry point and bound reset
+  authorization to the verified Supabase recovery user with a short-lived,
+  consumed HttpOnly proof.
+- **Flashcard Content**: Rendered sanitized rich-text questions, answers, and
+  explanations with theme-aware typography.
+- **Results and Dashboard Semantics**: Corrected aggregate-session labels,
+  hidden-system-quiz totals, mobile result control names, and guest completion
+  sync behavior.
+- **Study Accessibility**: Corrected timer announcements, page heading
+  hierarchy, and undersized study-action targets.
+
+### Added
+
+- **Production Browser Coverage**: Added normal-security responsive navigation
+  and focus regression checks alongside the existing service-worker offline
+  route-isolation test.
+
 ## [1.4.3] - 2025-12-30
 
 ### Fixed
