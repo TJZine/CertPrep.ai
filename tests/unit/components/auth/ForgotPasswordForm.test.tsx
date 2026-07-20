@@ -1,8 +1,5 @@
-import * as React from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
-
-process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY = "test-key";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   resetPasswordForEmail: vi.fn(),
@@ -51,8 +48,13 @@ import ForgotPasswordForm from "@/components/auth/ForgotPasswordForm";
 
 describe("ForgotPasswordForm", () => {
   beforeEach(() => {
+    vi.stubEnv("NEXT_PUBLIC_HCAPTCHA_SITE_KEY", "test-key");
     vi.clearAllMocks();
     mocks.resetPasswordForEmail.mockResolvedValue({ error: null });
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   it("sends recovery links through the callback with a non-secret recovery marker", async () => {

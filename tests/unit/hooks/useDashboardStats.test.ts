@@ -69,7 +69,7 @@ describe("useDashboardStats", () => {
     mocks.resultsSortBy.mockResolvedValue([]);
   });
 
-  it("excludes the internal SRS quiz from totals and per-quiz stats", async () => {
+  it("hides the internal SRS quiz while retaining aggregated activity totals", async () => {
     const srsQuizId = getSRSQuizId("user-123");
     mocks.quizzesToArray.mockResolvedValue([
       makeQuiz("certification-quiz"),

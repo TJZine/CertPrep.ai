@@ -1,4 +1,3 @@
-import * as React from "react";
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -25,7 +24,7 @@ vi.mock("next/headers", () => ({
 }));
 
 vi.mock("@/components/auth/ForgotPasswordForm", () => ({
-  default: (): React.ReactElement => <form aria-label="Forgot password" />,
+  default: (): React.JSX.Element => <form aria-label="Forgot password" />,
 }));
 
 vi.mock("@/components/auth/ResetPasswordForm", () => ({
@@ -33,7 +32,7 @@ vi.mock("@/components/auth/ResetPasswordForm", () => ({
     expectedRecoveryUserId,
   }: {
     expectedRecoveryUserId: string | null;
-  }): React.ReactElement => (
+  }): React.JSX.Element => (
     <form
       aria-label="Reset password"
       data-recovery-user={expectedRecoveryUserId ?? ""}

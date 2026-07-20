@@ -1,9 +1,13 @@
-import * as React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
-
-// Set env var BEFORE anything else
-process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY = "test-key";
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 
 // Mock next/navigation
 const mockPush = vi.fn();
@@ -60,9 +64,19 @@ vi.mock("@hcaptcha/react-hcaptcha", () => {
   return { default: Mock };
 });
 
-import LoginForm from "@/components/auth/LoginForm";
+let LoginForm: typeof import("@/components/auth/LoginForm").default;
 
 describe("LoginForm", () => {
+  beforeAll(async () => {
+    // LoginForm captures this public key when its module is evaluated.
+    vi.stubEnv("NEXT_PUBLIC_HCAPTCHA_SITE_KEY", "test-key");
+    ({ default: LoginForm } = await import("@/components/auth/LoginForm"));
+  });
+
+  afterAll(() => {
+    vi.unstubAllEnvs();
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
