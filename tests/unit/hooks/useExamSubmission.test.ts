@@ -1,11 +1,12 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook, act } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { renderHook, act, waitFor } from "@testing-library/react";
 import { useExamSubmission } from "@/hooks/useExamSubmission";
 import { useQuizSessionStore } from "@/stores/quizSessionStore";
 import * as ResultsDB from "@/db/results";
 import { useSync } from "@/hooks/useSync";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/Toast";
+import { useAuth } from "@/components/providers/AuthProvider";
 import type { Quiz } from "@/types/quiz";
 import type { Result } from "@/types/result";
 
@@ -18,6 +19,9 @@ vi.mock("next/navigation", () => ({
 }));
 vi.mock("@/components/ui/Toast", () => ({
     useToast: vi.fn(),
+}));
+vi.mock("@/components/providers/AuthProvider", () => ({
+    useAuth: vi.fn(),
 }));
 
 describe("useExamSubmission", () => {
@@ -97,6 +101,14 @@ describe("useExamSubmission", () => {
             toasts: [],
             removeToast: vi.fn(),
         });
+
+        vi.mocked(useAuth).mockReturnValue({
+            user: { id: "user-123" },
+        } as ReturnType<typeof useAuth>);
+    });
+
+    afterEach(() => {
+        vi.restoreAllMocks();
     });
 
     it("handles manual submission correctly", async () => {
@@ -174,6 +186,79 @@ describe("useExamSubmission", () => {
 
         expect(mockAddToast).toHaveBeenCalledWith("error", expect.stringContaining("no user context"));
         expect(ResultsDB.createResult).not.toHaveBeenCalled();
+    });
+
+    it("preserves a guest manual result without attempting remote sync", async () => {
+        const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+        const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
+        vi.mocked(useAuth).mockReturnValue({
+            user: null,
+        } as ReturnType<typeof useAuth>);
+
+        const guestProps = {
+            ...defaultProps,
+            effectiveUserId: "guest-user-123",
+        };
+        const { result } = renderHook(() => useExamSubmission(guestProps));
+
+        await act(async () => {
+            await result.current.handleSubmitExam();
+        });
+
+        expect(ResultsDB.createResult).toHaveBeenCalledWith(
+            expect.objectContaining({ userId: "guest-user-123" }),
+        );
+        expect(mockRouterPush).toHaveBeenCalledWith("/results/result-123");
+        expect(mockSync).not.toHaveBeenCalled();
+        expect(consoleError).not.toHaveBeenCalled();
+        expect(consoleWarn).not.toHaveBeenCalled();
+    });
+
+    it("preserves a guest auto-submit result without attempting remote sync", async () => {
+        const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+        const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
+        vi.mocked(useAuth).mockReturnValue({
+            user: null,
+        } as ReturnType<typeof useAuth>);
+
+        const guestProps = {
+            ...defaultProps,
+            effectiveUserId: "guest-user-123",
+        };
+        const { result } = renderHook(() => useExamSubmission(guestProps));
+
+        let resultId: string | null = null;
+        await act(async () => {
+            resultId = await result.current.handleAutoSubmit();
+        });
+
+        expect(resultId).toBe("result-123");
+        expect(ResultsDB.createResult).toHaveBeenCalledWith(
+            expect.objectContaining({ userId: "guest-user-123" }),
+        );
+        expect(mockSync).not.toHaveBeenCalled();
+        expect(consoleError).not.toHaveBeenCalled();
+        expect(consoleWarn).not.toHaveBeenCalled();
+    });
+
+    it("keeps authenticated sync failures observable", async () => {
+        const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+        mockSync.mockResolvedValueOnce({
+            success: false,
+            error: "Network unavailable",
+        });
+        const { result } = renderHook(() => useExamSubmission(defaultProps));
+
+        await act(async () => {
+            await result.current.handleSubmitExam();
+        });
+
+        await waitFor(() => {
+            expect(consoleError).toHaveBeenCalledWith(
+                "Failed to sync results after submit:",
+                "Network unavailable",
+            );
+        });
     });
 
     it("handles createResult failure gracefully", async () => {

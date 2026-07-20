@@ -4,7 +4,14 @@ import * as React from "react";
 import { Tag } from "lucide-react";
 import type { Question } from "@/types/quiz";
 import { cn } from "@/lib/utils/cn";
+import { sanitizeHTML } from "@/lib/utils/sanitize";
 import styles from "./FlashcardCard.module.css";
+
+const foregroundProseClasses =
+    "prose-headings:text-foreground prose-p:text-foreground prose-strong:text-foreground prose-em:text-foreground prose-code:text-foreground prose-pre:text-foreground prose-li:text-foreground prose-li:marker:text-foreground";
+
+const mutedProseClasses =
+    "prose-headings:text-muted-foreground prose-p:text-muted-foreground prose-strong:text-muted-foreground prose-em:text-muted-foreground prose-code:text-muted-foreground prose-pre:text-muted-foreground prose-li:text-muted-foreground prose-li:marker:text-muted-foreground";
 
 export interface FlashcardCardProps {
     /** The question to display */
@@ -46,6 +53,21 @@ export function FlashcardCard({
         return question.options[answerKey] ?? null;
     }, [question.options, question.correct_answer, correctAnswerKey]);
 
+    const sanitizedCorrectAnswer = React.useMemo(
+        () => sanitizeHTML(correctAnswerText ?? "Answer not found"),
+        [correctAnswerText]
+    );
+
+    const sanitizedQuestion = React.useMemo(
+        () => sanitizeHTML(question.question),
+        [question.question]
+    );
+
+    const sanitizedExplanation = React.useMemo(
+        () => question.explanation ? sanitizeHTML(question.explanation) : null,
+        [question.explanation]
+    );
+
     // Handle keyboard navigation (Space is handled natively by button)
     const handleKeyDown = React.useCallback(
         (event: React.KeyboardEvent): void => {
@@ -80,7 +102,14 @@ export function FlashcardCard({
                             {question.category}
                         </div>
                     )}
-                    <p className={styles.questionText}>{question.question}</p>
+                    <div
+                        className={cn(
+                            styles.questionText,
+                            "prose max-w-none break-words text-foreground",
+                            foregroundProseClasses
+                        )}
+                        dangerouslySetInnerHTML={{ __html: sanitizedQuestion }}
+                    />
                     <div className={styles.flipHint}>
                         <span>Press</span>
                         <kbd>Space</kbd>
@@ -98,14 +127,26 @@ export function FlashcardCard({
                     )}
                     <div className={styles.answerSection}>
                         <span className={styles.answerLabel}>Correct Answer</span>
-                        <p className={styles.answerText}>
-                            {correctAnswerText ?? "Answer not found"}
-                        </p>
+                        <div
+                            className={cn(
+                                styles.answerText,
+                                "prose prose-sm max-w-none break-words text-foreground",
+                                foregroundProseClasses
+                            )}
+                            dangerouslySetInnerHTML={{ __html: sanitizedCorrectAnswer }}
+                        />
                     </div>
-                    {question.explanation && (
+                    {sanitizedExplanation && (
                         <div className={styles.explanationSection}>
                             <span className={styles.explanationLabel}>Explanation</span>
-                            <p className={styles.explanationText}>{question.explanation}</p>
+                            <div
+                                className={cn(
+                                    styles.explanationText,
+                                    "prose prose-sm max-w-none break-words text-muted-foreground",
+                                    mutedProseClasses
+                                )}
+                                dangerouslySetInnerHTML={{ __html: sanitizedExplanation }}
+                            />
                         </div>
                     )}
                 </div>

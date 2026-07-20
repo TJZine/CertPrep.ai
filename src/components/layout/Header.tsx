@@ -33,6 +33,9 @@ const navigation = [
   { name: "Settings", href: "/settings", icon: SettingsIcon, public: false },
 ];
 
+const focusableMenuSelector =
+  'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
 function isRouteActive(pathname: string, href: string): boolean {
   return (
     pathname === href || (href !== "/" && pathname.startsWith(href + "/"))
@@ -43,6 +46,9 @@ export function Header(): React.ReactElement {
   const pathname = usePathname();
   const { user, signOut } = useAuth();
   const { addToast } = useToast();
+  const logoRef = React.useRef<HTMLAnchorElement>(null);
+  const menuTriggerRef = React.useRef<HTMLButtonElement>(null);
+  const mobileNavRef = React.useRef<HTMLDivElement>(null);
 
   const [openMenuPathname, setOpenMenuPathname] = React.useState<string | null>(
     null,
@@ -78,6 +84,82 @@ export function Header(): React.ReactElement {
       current === null || current === pathname ? current : null,
     );
   }, [pathname]);
+
+  React.useEffect(() => {
+    if (!isMenuOpen) {
+      return;
+    }
+
+    const getFocusableMenuItems = (): HTMLElement[] =>
+      Array.from(
+        mobileNavRef.current?.querySelectorAll<HTMLElement>(
+          focusableMenuSelector,
+        ) ?? [],
+      ).filter((element) => element.tabIndex >= 0);
+
+    getFocusableMenuItems()[0]?.focus();
+
+    const handleMenuKeyDown = (event: KeyboardEvent): void => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        handleCloseMenu();
+        menuTriggerRef.current?.focus();
+        return;
+      }
+
+      if (event.key !== "Tab") {
+        return;
+      }
+
+      const focusableItems = getFocusableMenuItems();
+      const firstItem = focusableItems[0];
+      const lastItem = focusableItems.at(-1);
+
+      if (!firstItem || !lastItem) {
+        event.preventDefault();
+        return;
+      }
+
+      if (!mobileNavRef.current?.contains(document.activeElement)) {
+        event.preventDefault();
+        (event.shiftKey ? lastItem : firstItem).focus();
+      } else if (event.shiftKey && document.activeElement === firstItem) {
+        event.preventDefault();
+        lastItem.focus();
+      } else if (!event.shiftKey && document.activeElement === lastItem) {
+        event.preventDefault();
+        firstItem.focus();
+      }
+    };
+
+    document.addEventListener("keydown", handleMenuKeyDown);
+
+    return (): void => {
+      document.removeEventListener("keydown", handleMenuKeyDown);
+    };
+  }, [handleCloseMenu, isMenuOpen]);
+
+  React.useEffect(() => {
+    if (!isMenuOpen) {
+      return;
+    }
+
+    const desktopMediaQuery = window.matchMedia("(min-width: 1280px)");
+    const handleDesktopTransition = (event: MediaQueryListEvent): void => {
+      if (!event.matches) {
+        return;
+      }
+
+      handleCloseMenu();
+      logoRef.current?.focus();
+    };
+
+    desktopMediaQuery.addEventListener("change", handleDesktopTransition);
+
+    return (): void => {
+      desktopMediaQuery.removeEventListener("change", handleDesktopTransition);
+    };
+  }, [handleCloseMenu, isMenuOpen]);
 
   // Lock body scroll when mobile menu is open
   React.useEffect(() => {
@@ -134,6 +216,7 @@ export function Header(): React.ReactElement {
       <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
         {/* Logo */}
         <Link
+          ref={logoRef}
           href="/"
           className="flex items-center gap-2 transition-all hover:opacity-90 hover:scale-105 active:scale-95 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
@@ -141,7 +224,7 @@ export function Header(): React.ReactElement {
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-8 ml-12" aria-label="Main navigation">
+        <nav className="hidden xl:flex items-center gap-8 ml-12" aria-label="Main navigation">
           {navigation.map((item) => {
             // Show if public OR if user is authenticated
             if (!item.public && !user) return null;
@@ -166,7 +249,7 @@ export function Header(): React.ReactElement {
         </nav>
 
         {/* Desktop Actions */}
-        <div className="hidden md:flex items-center gap-4">
+        <div className="hidden xl:flex items-center gap-4">
           <ThemePalette />
 
           {user ? (
@@ -212,9 +295,10 @@ export function Header(): React.ReactElement {
         </div>
 
         {/* Mobile Menu Button */}
-        <div className="flex items-center gap-4 md:hidden">
+        <div className="flex items-center gap-4 xl:hidden">
           <ThemePalette />
           <button
+            ref={menuTriggerRef}
             type="button"
             className="inline-flex h-10 w-10 items-center justify-center rounded-md text-foreground transition hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             onClick={handleToggleMenu}
@@ -242,15 +326,21 @@ export function Header(): React.ReactElement {
 
       {/* Mobile Navigation Sheet */}
       <div
+        ref={mobileNavRef}
         inert={!isMenuOpen ? true : undefined}
         className={cn(
-          "fixed inset-x-0 top-[var(--header-height,4rem)] z-40 bg-background/95 backdrop-blur-xl md:hidden transition-[transform,opacity] duration-300 ease-in-out h-[calc(100dvh-var(--header-height,4rem))] min-h-[calc(100vh-var(--header-height,4rem))]",
-          isMenuOpen ? "translate-x-0 opacity-100" : "translate-x-full opacity-0",
+          "fixed inset-x-0 top-[var(--header-height,4rem)] z-40 h-[calc(100dvh-var(--header-height,4rem))] min-h-[calc(100vh-var(--header-height,4rem))] bg-background/95 backdrop-blur-xl transition-[transform,opacity] duration-300 ease-in-out xl:hidden",
+          isMenuOpen
+            ? "translate-y-0 opacity-100"
+            : "pointer-events-none -translate-y-2 opacity-0",
         )}
+        role="dialog"
+        aria-label="Navigation menu"
+        aria-modal="true"
         aria-hidden={!isMenuOpen}
         id="mobile-nav"
       >
-        <div className="flex flex-col h-full overflow-y-auto p-6 space-y-6">
+        <div className="flex h-full flex-col space-y-6 overflow-x-hidden overflow-y-auto p-6">
           <nav className="flex flex-col space-y-2">
             {navigation.map((item) => {
               if (!item.public && !user) return null;
@@ -280,15 +370,15 @@ export function Header(): React.ReactElement {
           <div className="border-t border-border pt-6 mt-auto">
             {user ? (
               <div className="space-y-4">
-                <div className="flex items-center gap-3 px-4 py-2">
+                <div className="flex min-w-0 items-center gap-3 px-4 py-2">
                   <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                     <UserIcon className="h-5 w-5" />
                   </div>
-                  <div className="flex flex-col">
+                  <div className="flex min-w-0 flex-col">
                     <span className="text-sm font-medium text-foreground">
                       Account
                     </span>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="truncate text-xs text-muted-foreground">
                       {user.email}
                     </span>
                   </div>

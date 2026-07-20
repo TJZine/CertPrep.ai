@@ -1,58 +1,15 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
-import Particles, { initParticlesEngine } from "@tsparticles/react";
-import type { Container } from "@tsparticles/engine";
+import Particles, { ParticlesProvider } from "@tsparticles/react";
 import { loadSlim } from "@tsparticles/slim";
 
 /**
  * Twinkling stars effect for Midnight theme.
  */
-export default function MidnightParticles(): React.ReactElement | null {
-  const [init, setInit] = useState(false);
-  const containerRef = useRef<Container | null>(null);
-
-  useEffect(() => {
-    let mounted = true;
-
-    initParticlesEngine(async (engine) => {
-      await loadSlim(engine);
-    })
-      .then(() => {
-        if (mounted) setInit(true);
-      })
-      .catch((err) => {
-        console.error("[MidnightParticles] Failed to initialize:", err);
-      });
-
-    return (): void => {
-      mounted = false;
-      // Defensive cleanup: destroy container if it exists
-      if (containerRef.current) {
-        containerRef.current.destroy();
-        containerRef.current = null;
-      }
-    };
-  }, []);
-
-  const particlesLoaded = useCallback(
-    async (container?: Container): Promise<void> => {
-      if (container) {
-        containerRef.current = container;
-      }
-    },
-    [],
-  );
-
-  if (!init) {
-    return null;
-  }
-
+function MidnightParticleEffect(): React.ReactElement {
   return (
     <Particles
       id="midnight-particles"
-      aria-hidden="true"
-      particlesLoaded={particlesLoaded}
       options={{
         fullScreen: {
           enable: true,
@@ -116,5 +73,15 @@ export default function MidnightParticles(): React.ReactElement | null {
         pointerEvents: "none",
       }}
     />
+  );
+}
+
+export default function MidnightParticles(): React.ReactElement {
+  return (
+    <ParticlesProvider init={loadSlim}>
+      <div aria-hidden="true">
+        <MidnightParticleEffect />
+      </div>
+    </ParticlesProvider>
   );
 }

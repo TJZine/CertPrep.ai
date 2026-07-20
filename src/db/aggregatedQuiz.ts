@@ -134,14 +134,20 @@ export async function resolveAggregatedResultReadModel(
   result: Result,
   userId: string,
   baseQuiz?: Quiz,
+  isLegacyAggregatedResult = false,
 ): Promise<AggregatedResultReadModel> {
   if (
-    !isAggregatedSessionType(result.session_type) ||
+    (!isAggregatedSessionType(result.session_type) &&
+      !isLegacyAggregatedResult) ||
     !result.question_ids ||
     result.question_ids.length === 0
   ) {
+    if (!baseQuiz) {
+      throw new Error("Unable to resolve quiz for non-aggregated result.");
+    }
+
     return {
-      quiz: baseQuiz as Quiz,
+      quiz: baseQuiz,
       sourceMap: result.source_map ?? {},
     };
   }

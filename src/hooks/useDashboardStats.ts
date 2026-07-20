@@ -1,7 +1,7 @@
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "@/db";
 import { calculatePercentage } from "@/lib/utils/math";;
-import type { QuizStats } from "@/db/quizzes";
+import { isSRSQuiz, type QuizStats } from "@/db/quizzes";
 import type { OverallStats } from "@/db/resultAnalytics";
 import type { Result } from "@/types/result";
 
@@ -35,8 +35,10 @@ export function useDashboardStats(userId: string | undefined): DashboardStats {
         .sortBy("timestamp"),
     ]);
 
+    const visibleQuizzes = allQuizzes.filter((quiz) => !isSRSQuiz(quiz));
+
     // 1. Calculate Overall Stats
-    const totalQuizzes = allQuizzes.length;
+    const totalQuizzes = visibleQuizzes.length;
     const totalAttempts = allResults.length;
     const totalStudyTime = allResults.reduce(
       (sum, r) => sum + r.time_taken_seconds,
@@ -67,7 +69,7 @@ export function useDashboardStats(userId: string | undefined): DashboardStats {
       resultsByQuiz.get(qId)?.push(result);
     }
 
-    for (const quiz of allQuizzes) {
+    for (const quiz of visibleQuizzes) {
       const attempts = resultsByQuiz.get(quiz.id) || [];
       const attemptCount = attempts.length;
 

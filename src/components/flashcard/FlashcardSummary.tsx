@@ -4,7 +4,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { Check, ChevronRight, RotateCcw, Home } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { cn } from "@/lib/utils/cn";
 import type { FlashcardRating } from "./FlashcardControls";
 
@@ -46,10 +46,10 @@ export function FlashcardSummary({
     return (
         <Card className={cn("w-full max-w-md mx-auto", className)}>
             <CardHeader className="text-center pb-4">
-                <CardTitle className="flex items-center justify-center gap-2 text-2xl">
+                <h1 className="flex items-center justify-center gap-2 text-2xl font-semibold leading-none tracking-tight">
                     <Check className="h-7 w-7 text-correct" aria-hidden="true" />
                     Session Complete
-                </CardTitle>
+                </h1>
             </CardHeader>
             <CardContent className="space-y-6">
                 {/* Summary stats */}

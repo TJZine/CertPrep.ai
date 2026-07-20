@@ -85,6 +85,10 @@ If a Playwright/E2E task starts as Tier 2 and the evidence points to a productio
 - `npm run build`: exists in `package.json`; required in CI (`.github/workflows/ci.yml`).
 - `npm run security-check`: exists in `package.json`; local runnable.
 - `npm run test:e2e`: exists in `package.json`; requires local environment/secrets.
+- `npm run test:e2e:production`: exists in `package.json`; runs normal-security,
+  service-worker-enabled PWA checks without authenticated global setup.
+- `npm run security-check:staged`: exists in `package.json`; pre-commit-only
+  scanning of staged files.
 
 ### Required Verification Sets
 
@@ -104,6 +108,8 @@ If a Playwright/E2E task starts as Tier 2 and the evidence points to a productio
   - `npm run verify`
   - `npm run security-check`
   - `npm run build` when environment allows
+  - `npm run test:e2e:production` for service-worker, offline, CSP, CORS, or
+    browser-security behavior
   - `npm run test:e2e` when the change behaviorally touches Playwright config/bootstrap, browser-security workarounds, or runtime flows that only E2E covers and the environment is configured
 
 ### Build Environment Caveat

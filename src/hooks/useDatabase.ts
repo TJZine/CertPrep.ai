@@ -297,7 +297,9 @@ export function useResultWithHydratedQuiz(
       }
 
       const isLegacyAggregatedResult =
-        !!result.question_ids?.length && isSRSQuiz(result.quiz_id, userId);
+        !isAggregatedSessionType(result.session_type) &&
+        !!result.question_ids?.length &&
+        isSRSQuiz(result.quiz_id, userId);
       const isAggregatedResult =
         isAggregatedSessionType(result.session_type) || isLegacyAggregatedResult;
 
@@ -310,6 +312,7 @@ export function useResultWithHydratedQuiz(
             result,
             userId,
             baseQuiz,
+            isLegacyAggregatedResult,
           );
 
           if (isMounted) {

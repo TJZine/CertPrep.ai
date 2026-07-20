@@ -239,6 +239,7 @@ describe("TopicHeatmap", () => {
     await waitFor(() => screen.getByText("Frontend"));
 
     const studyBtn = screen.getByRole("button", { name: /Study Frontend/i });
+    expect(studyBtn).toHaveClass("h-6", "w-6");
     fireEvent.click(studyBtn);
 
     await waitFor(() => {

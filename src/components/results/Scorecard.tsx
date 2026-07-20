@@ -25,6 +25,7 @@ interface ScorecardProps {
   totalCount: number;
   timeTakenSeconds: number;
   mode: QuizMode;
+  modeLabel?: string;
   timestamp: number;
   previousScore?: number | null; // For comparison
   className?: string;
@@ -189,6 +190,7 @@ export function Scorecard({
   totalCount,
   timeTakenSeconds,
   mode,
+  modeLabel,
   timestamp,
   previousScore,
   className,
@@ -279,7 +281,7 @@ export function Scorecard({
                 aria-hidden="true"
               />
               <p className="text-lg font-semibold capitalize text-foreground">
-                {mode}
+                {modeLabel ?? mode}
               </p>
               <p className="text-xs text-muted-foreground">Mode</p>
             </div>

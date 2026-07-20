@@ -22,11 +22,6 @@ const config = [
     plugins: {
       "@typescript-eslint": tseslintPlugin,
     },
-    languageOptions: {
-      parserOptions: {
-        project: "./tsconfig.json",
-      },
-    },
     rules: {
       "@typescript-eslint/no-unused-vars": "error",
       "@typescript-eslint/no-explicit-any": "error",

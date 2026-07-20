@@ -1,5 +1,5 @@
 #!/bin/sh
-npm run security-check
+npm run security-check:staged
 npx lint-staged
 npm run typecheck
 # Full tests moved to CI to improve commit velocity

@@ -429,6 +429,7 @@ describe("useDatabase hooks (Unit Layer)", () => {
                 mockResult,
                 "user1",
                 mockBaseQuiz,
+                false,
             );
         });
 
@@ -474,6 +475,7 @@ describe("useDatabase hooks (Unit Layer)", () => {
                 mockResult,
                 "user1",
                 mockBaseQuiz,
+                true,
             );
         });
 
@@ -513,6 +515,7 @@ describe("useDatabase hooks (Unit Layer)", () => {
                 mockResult,
                 "user1",
                 undefined,
+                false,
             );
         });
 
