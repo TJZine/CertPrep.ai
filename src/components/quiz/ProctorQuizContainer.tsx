@@ -212,6 +212,7 @@ export function ProctorQuizContainer({
         currentProgress={proctorStatus.answeredCount}
         totalQuestions={proctorStatus.totalQuestions}
         timerDisplay={formattedTime}
+        timerKind="remaining"
         timerWarning={proctorStatus.isTimeWarning}
         onExit={handleExit}
         mode="proctor"
@@ -239,6 +240,7 @@ export function ProctorQuizContainer({
         currentProgress={proctorStatus.answeredCount}
         totalQuestions={proctorStatus.totalQuestions}
         timerDisplay={formattedTime}
+        timerKind="remaining"
         timerWarning={proctorStatus.isTimeWarning}
         onExit={handleExit}
         showExitConfirm

@@ -790,7 +790,7 @@ export function TopicHeatmap({
                                                         <Button
                                                             variant="ghost"
                                                             size="sm"
-                                                            className="h-5 w-5 flex-shrink-0 p-0"
+                                                            className="h-6 w-6 flex-shrink-0 p-0"
                                                             onClick={() => handleFocusCategory(catData.category)}
                                                             disabled={loadingCategory !== null}
                                                             title={`Study ${catData.category}`}

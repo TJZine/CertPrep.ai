@@ -12,28 +12,6 @@ import { OfflineIndicator } from "@/components/common/OfflineIndicator";
 import { InstallPrompt } from "@/components/common/InstallPrompt";
 import { SyncBlockedBanner } from "@/components/common/SyncBlockedBanner";
 
-/**
- * Ensures service worker registration happens on app mount.
- * Uses direct useEffect for client-side registration - simpler
- * than the useServiceWorker hook and avoids potential edge cases.
- */
-function ServiceWorkerInit(): null {
-  React.useEffect(() => {
-    // Client-side only - service workers not available in SSR
-    if (typeof window === "undefined" || !("serviceWorker" in navigator)) {
-      return;
-    }
-
-    navigator.serviceWorker
-      .register("/sw.js", { scope: "/" })
-      .catch((error) => {
-        console.error("[ServiceWorkerInit] SW registration failed:", error);
-      });
-  }, []);
-
-  return null;
-}
-
 export function AppProviders({
   children,
 }: {
@@ -45,7 +23,6 @@ export function AppProviders({
         <ToastProvider>
           <AuthProvider>
             <SyncProvider>
-              <ServiceWorkerInit />
               <UpdateBanner />
               <SyncBlockedBanner />
               {children}

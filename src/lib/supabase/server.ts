@@ -71,36 +71,24 @@ export const createClient = async (): Promise<
         fetch: fetchWithTimeout,
       },
       cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
+        getAll() {
+          return cookieStore.getAll();
         },
-        set(name: string, value: string, options: CookieOptions) {
+        setAll(cookiesToSet) {
           try {
-            cookieStore.set({
-              name,
-              value,
-              ...options,
-              ...sharedCookieOptions,
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set({
+                name,
+                value,
+                ...options,
+                ...sharedCookieOptions,
+              });
             });
           } catch (error) {
             // The `cookies().set()` method can only be called in a Server Component or Route Handler.
             // This error `cookies().set()` will cause when called from a Client Component.
             if (process.env.NODE_ENV === "development") {
               logger.warn("Could not set cookie from Server Client", error);
-            }
-          }
-        },
-        remove(name: string, options: CookieOptions) {
-          try {
-            cookieStore.set({
-              name,
-              value: "",
-              ...options,
-              ...sharedCookieOptions,
-            });
-          } catch (error) {
-            if (process.env.NODE_ENV === "development") {
-              logger.warn("Could not remove cookie from Server Client", error);
             }
           }
         },

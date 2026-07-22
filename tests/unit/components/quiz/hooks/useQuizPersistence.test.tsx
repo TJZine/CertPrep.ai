@@ -1,4 +1,4 @@
-import { renderHook } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { useQuizPersistence } from "@/components/quiz/hooks/useQuizPersistence";
 import { useQuizSubmission } from "@/hooks/useQuizSubmission";
@@ -299,6 +299,70 @@ describe("useQuizPersistence", () => {
     expect(mocks.sync).toHaveBeenCalledTimes(1);
     expect(mocks.submitQuiz).not.toHaveBeenCalled();
   });
+
+  it.each([
+    {
+      name: "SRS review",
+      config: { isSRSReview: true },
+      createResult: mocks.createSRSReviewResult,
+      clearState: mocks.clearSRSReviewState,
+      resultId: "srs-result-retry",
+    },
+    {
+      name: "topic study",
+      config: { isTopicStudy: true },
+      createResult: mocks.createTopicStudyResult,
+      clearState: mocks.clearTopicStudyState,
+      resultId: "topic-result-retry",
+    },
+    {
+      name: "interleaved practice",
+      config: { isInterleaved: true },
+      createResult: mocks.createInterleavedResult,
+      clearState: mocks.clearInterleavedState,
+      resultId: "interleaved-result-retry",
+    },
+  ])(
+    "preserves $name state after a save failure and retries successfully",
+    async ({ config, createResult, clearState, resultId }) => {
+      createResult
+        .mockRejectedValueOnce(new Error("storage unavailable"))
+        .mockResolvedValueOnce({ id: resultId });
+
+      const props = {
+        ...defaultProps,
+        config: {
+          ...defaultProps.config,
+          ...config,
+        },
+      };
+
+      const { result } = renderHook(() => useQuizPersistence(props));
+
+      await act(async () => {
+        await result.current.submitQuiz(45);
+      });
+
+      expect(result.current.saveError).toBe(true);
+      expect(clearState).not.toHaveBeenCalled();
+      expect(mocks.push).not.toHaveBeenCalled();
+      expect(mocks.addToast).toHaveBeenCalledWith(
+        "error",
+        "Failed to save result. Your answers are still here—retry when ready.",
+      );
+
+      await act(async () => {
+        result.current.retrySave(45);
+        await vi.waitFor(() => {
+          expect(createResult).toHaveBeenCalledTimes(2);
+        });
+      });
+
+      expect(result.current.saveError).toBe(false);
+      expect(clearState).toHaveBeenCalledTimes(1);
+      expect(mocks.push).toHaveBeenCalledWith(`/results/${resultId}`);
+    },
+  );
 
   it("should call underlying submitQuiz for standard quizzes", async () => {
     const { result } = renderHook(() => useQuizPersistence(defaultProps));

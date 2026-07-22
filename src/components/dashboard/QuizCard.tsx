@@ -239,7 +239,7 @@ export function QuizCard({
                 {isMissingCategory && (
                   <button
                     type="button"
-                    className="group/tooltip relative flex-shrink-0 rounded border-none bg-transparent p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="group/tooltip relative inline-flex h-6 w-6 flex-shrink-0 items-center justify-center rounded border-none bg-transparent p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     aria-label="Missing category for full analytics"
                   >
                     <AlertTriangle

@@ -29,6 +29,10 @@ reviews:
   changed_files_summary: true
   labeling_instructions: []
 
+  tools:
+    eslint:
+      enabled: true
+
   # Path-specific instructions
   path_instructions:
     # Critical paths - extra scrutiny

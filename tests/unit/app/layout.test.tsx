@@ -41,10 +41,6 @@ vi.mock("@/components/common/SkipLink", () => ({
   SkipLink: () => <div data-testid="skip-link" />,
 }));
 
-vi.mock("@/components/common/ServiceWorkerInitScript", () => ({
-  ServiceWorkerInitScript: () => <div data-testid="sw-init" />,
-}));
-
 vi.mock("@/components/common/ThemeInitScript", () => ({
   ThemeInitScript: () => <div data-testid="theme-init" />,
 }));

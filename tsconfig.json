@@ -47,6 +47,7 @@
     "tests/**/*",
     "vitest.config.ts",
     "playwright.config.ts",
+    "playwright.production.config.ts",
     "tailwind.config.ts",
     "next.config.ts"
   ],

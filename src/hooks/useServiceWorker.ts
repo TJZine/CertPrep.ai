@@ -18,6 +18,7 @@ interface UseServiceWorkerReturn extends ServiceWorkerState {
  * Hook to manage service worker registration and updates.
  */
 export function useServiceWorker(): UseServiceWorkerReturn {
+  const refreshRequestedRef = React.useRef(false);
   const [state, setState] = React.useState<ServiceWorkerState>({
     isSupported: false,
     isRegistered: false,
@@ -46,7 +47,10 @@ export function useServiceWorker(): UseServiceWorkerReturn {
           scope: "/",
         });
 
-        if (!isMounted) return;
+        // Some browser-test harnesses intentionally block service workers and
+        // resolve registration without a value. Treat that as unsupported
+        // instead of producing repeated runtime errors.
+        if (!registration || !isMounted) return;
 
         currentRegistration = registration;
         setState((prev) => ({
@@ -91,7 +95,9 @@ export function useServiceWorker(): UseServiceWorkerReturn {
     void registerSW();
 
     const handleControllerChange = (): void => {
-      window.location.reload();
+      if (refreshRequestedRef.current) {
+        window.location.reload();
+      }
     };
 
     navigator.serviceWorker.addEventListener(
@@ -116,6 +122,7 @@ export function useServiceWorker(): UseServiceWorkerReturn {
 
   const update = React.useCallback(async (): Promise<void> => {
     if (state.registration?.waiting) {
+      refreshRequestedRef.current = true;
       state.registration.waiting.postMessage({ type: "SKIP_WAITING" });
     }
   }, [state.registration]);

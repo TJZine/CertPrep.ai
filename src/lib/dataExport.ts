@@ -1,4 +1,4 @@
-import { db } from "@/db";
+import { clearDatabase, db } from "@/db";
 import {
   isSRSQuiz,
   sanitizeQuestionsWithIdMap,
@@ -990,13 +990,7 @@ function indexByTitle(quizzes: Quiz[]): Map<string, Quiz[]> {
  * Clear all data (factory reset).
  */
 export async function clearAllData(): Promise<void> {
-  await db.transaction("rw", db.quizzes, db.results, db.syncState, async () => {
-    await Promise.all([
-      db.quizzes.clear(),
-      db.results.clear(),
-      db.syncState.clear(),
-    ]);
-  });
+  await clearDatabase();
 
   // Guard against SSR - storage APIs only exist in browser context
   if (typeof window !== "undefined") {
@@ -1004,7 +998,16 @@ export async function clearAllData(): Promise<void> {
     sessionStorage.clear();
   }
 
-  await requestServiceWorkerCacheClear();
+  const cacheClearResult = await requestServiceWorkerCacheClear();
+  if (
+    cacheClearResult.status === "failed" ||
+    cacheClearResult.status === "timeout" ||
+    cacheClearResult.status === "no-active-worker"
+  ) {
+    logger.warn("Factory reset could not confirm runtime cache deletion", {
+      status: cacheClearResult.status,
+    });
+  }
 }
 
 /**

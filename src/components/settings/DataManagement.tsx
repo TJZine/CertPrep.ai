@@ -31,6 +31,7 @@ import {
 } from "@/lib/dataExport";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
+import { ACCOUNT_DELETION_CLIENT_TIMEOUT_MS } from "@/lib/accountDeletionTimeouts";
 
 export function DataManagement(): React.ReactElement {
   const { addToast } = useToast();
@@ -83,7 +84,8 @@ export function DataManagement(): React.ReactElement {
     if (!effectiveUserId || isPurging) return;
     setIsPurging(true);
     try {
-      const { quizzesPurged, resultsPurged } = await purgeDeletedItems(effectiveUserId);
+      const { quizzesPurged, resultsPurged } =
+        await purgeDeletedItems(effectiveUserId);
       addToast(
         "success",
         `Cleaned up ${quizzesPurged} deleted ${quizzesPurged === 1 ? "quiz" : "quizzes"} and ${resultsPurged} deleted ${resultsPurged === 1 ? "result" : "results"}.`,
@@ -155,7 +157,8 @@ export function DataManagement(): React.ReactElement {
       const result = await importData(importFile, effectiveUserId, importMode);
 
       // Build user-friendly import message based on results
-      const totalQuizzesProcessed = result.quizzesImported + (result.quizzesMerged ?? 0);
+      const totalQuizzesProcessed =
+        result.quizzesImported + (result.quizzesMerged ?? 0);
       let message: string;
 
       if (result.quizzesMerged && result.quizzesImported === 0) {
@@ -186,48 +189,58 @@ export function DataManagement(): React.ReactElement {
   const handleReset = async (): Promise<void> => {
     if (isResetting || isClearingLocal) return;
     setIsResetting(true);
-    let serverError: string | null = null;
     try {
-      const response = await fetch("/api/auth/delete-account", {
-        method: "DELETE",
-      });
+      let response: Response;
+      try {
+        response = await fetch("/api/auth/delete-account", {
+          method: "DELETE",
+          signal: AbortSignal.timeout(ACCOUNT_DELETION_CLIENT_TIMEOUT_MS),
+        });
+      } catch (error) {
+        console.error("Account deletion request failed:", error);
+        addToast(
+          "error",
+          "Account deletion could not be confirmed. Your local data was preserved. Please retry or sign in again to verify the account state.",
+        );
+        return;
+      }
 
-      if (!response.ok && response.status !== 401) {
+      if (!response.ok) {
         let bodyText = "";
+        let message = "Unknown server error";
         try {
           bodyText = await response.text();
           const parsed = bodyText ? JSON.parse(bodyText) : {};
-          const message =
+          message =
             (parsed as { error?: string }).error ||
             bodyText ||
             "Unknown server error";
-          serverError = `Account deletion failed (${response.status}): ${message}`;
         } catch {
-          serverError = `Account deletion failed (${response.status}): ${bodyText || "Unknown server error"}`;
+          message = bodyText || "Unknown server error";
         }
-      }
-    } catch (error) {
-      serverError =
-        error instanceof Error
-          ? error.message
-          : "Network error deleting account";
-    }
 
-    try {
-      await clearAllData();
-      await refreshStats();
-      addToast(
-        serverError ? "error" : "success",
-        serverError
-          ? `Local data cleared. ${serverError}`
-          : "Account deleted and local data cleared.",
-      );
+        addToast(
+          "error",
+          `Account deletion failed (${response.status}): ${message}. Your local data was preserved.`,
+        );
+        return;
+      }
+
+      try {
+        await clearAllData();
+      } catch (error) {
+        console.error("Local clear failed after account deletion:", error);
+        addToast(
+          "error",
+          "Account deleted, but local data could not be fully cleared. Use “Clear Local Data Only” to retry.",
+        );
+        return;
+      }
+
+      addToast("success", "Account deleted and local data cleared.");
       setShowResetModal(false);
       setDeleteConfirmation("");
       window.location.href = "/";
-    } catch (error) {
-      console.error("Local clear failed after account delete attempt:", error);
-      addToast("error", "Failed to clear local data. Please try again.");
     } finally {
       setIsResetting(false);
     }
@@ -282,25 +295,19 @@ export function DataManagement(): React.ReactElement {
                   <p className="text-2xl font-bold text-foreground">
                     {stats.quizCount}
                   </p>
-                  <p className="text-sm text-muted-foreground">
-                    Quizzes
-                  </p>
+                  <p className="text-sm text-muted-foreground">Quizzes</p>
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-foreground">
                     {stats.resultCount}
                   </p>
-                  <p className="text-sm text-muted-foreground">
-                    Results
-                  </p>
+                  <p className="text-sm text-muted-foreground">Results</p>
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-foreground">
                     {stats.estimatedSizeKB} KB
                   </p>
-                  <p className="text-sm text-muted-foreground">
-                    Est. Size
-                  </p>
+                  <p className="text-sm text-muted-foreground">Est. Size</p>
                 </div>
               </div>
             </div>
@@ -308,9 +315,7 @@ export function DataManagement(): React.ReactElement {
 
           <div className="flex items-center justify-between rounded-lg border border-border p-4">
             <div>
-              <h4 className="font-medium text-foreground">
-                Export Data
-              </h4>
+              <h4 className="font-medium text-foreground">Export Data</h4>
               <p className="text-sm text-muted-foreground">
                 Download all your quizzes and results as a JSON file
               </p>
@@ -326,9 +331,7 @@ export function DataManagement(): React.ReactElement {
 
           <div className="flex items-center justify-between rounded-lg border border-border p-4">
             <div>
-              <h4 className="font-medium text-foreground">
-                Import Data
-              </h4>
+              <h4 className="font-medium text-foreground">Import Data</h4>
               <p className="text-sm text-muted-foreground">
                 Restore from a previously exported backup file
               </p>
@@ -355,11 +358,11 @@ export function DataManagement(): React.ReactElement {
           {/* Deleted Items Section */}
           <div className="flex items-center justify-between rounded-lg border border-border p-4">
             <div>
-              <h4 className="font-medium text-foreground">
-                Deleted Items
-              </h4>
+              <h4 className="font-medium text-foreground">Deleted Items</h4>
               <p className="text-sm text-muted-foreground">
-                {deletedStats && (deletedStats.deletedQuizCount > 0 || deletedStats.deletedResultCount > 0)
+                {deletedStats &&
+                (deletedStats.deletedQuizCount > 0 ||
+                  deletedStats.deletedResultCount > 0)
                   ? `${deletedStats.deletedQuizCount} deleted ${deletedStats.deletedQuizCount === 1 ? "quiz" : "quizzes"} and ${deletedStats.deletedResultCount} deleted ${deletedStats.deletedResultCount === 1 ? "result" : "results"} stored locally`
                   : "No deleted items pending cleanup"}
               </p>
@@ -367,7 +370,11 @@ export function DataManagement(): React.ReactElement {
             <Button
               variant="outline"
               onClick={() => setShowPurgeModal(true)}
-              disabled={!deletedStats || (deletedStats.deletedQuizCount === 0 && deletedStats.deletedResultCount === 0)}
+              disabled={
+                !deletedStats ||
+                (deletedStats.deletedQuizCount === 0 &&
+                  deletedStats.deletedResultCount === 0)
+              }
               leftIcon={<Trash2 className="h-4 w-4" />}
             >
               Clean Up
@@ -376,9 +383,7 @@ export function DataManagement(): React.ReactElement {
 
           <div className="flex items-center justify-between rounded-lg border border-destructive/50 bg-destructive/10 p-4">
             <div>
-              <h4 className="font-medium text-destructive">
-                Reset All Data
-              </h4>
+              <h4 className="font-medium text-destructive">Reset All Data</h4>
               <p className="text-sm text-destructive/80">
                 Permanently delete all quizzes, results, and settings
               </p>
@@ -466,9 +471,7 @@ export function DataManagement(): React.ReactElement {
               <div className="flex items-center gap-3">
                 <FileJson className="h-8 w-8 text-info" />
                 <div>
-                  <p className="font-medium text-foreground">
-                    Backup File
-                  </p>
+                  <p className="font-medium text-foreground">Backup File</p>
                   <p className="text-sm text-muted-foreground">
                     {importFile.quizzes.length} quizzes,{" "}
                     {importFile.results.length} results

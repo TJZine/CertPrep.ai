@@ -1,5 +1,6 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/components/providers/AuthProvider";
 import { useToast } from "@/components/ui/Toast";
 import { useSync } from "@/hooks/useSync";
 import { useQuizSessionStore } from "@/stores/quizSessionStore";
@@ -51,6 +52,7 @@ export function useExamSubmission({
     flaggedQuestions,
 }: UseExamSubmissionProps): UseExamSubmissionReturn {
     const router = useRouter();
+    const { user } = useAuth();
     const { addToast } = useToast();
     const { sync } = useSync();
     const { submitExam, autoSubmitExam, keyMappings } = useQuizSessionStore();
@@ -61,6 +63,35 @@ export function useExamSubmission({
     const [autoResultId, setAutoResultId] = React.useState<string | null>(null);
     const hasSavedResultRef = React.useRef(false);
     const isMountedRef = React.useRef(false);
+    const authenticatedUserId = user?.id;
+
+    const syncSavedResult = React.useCallback(
+        (submissionType: "submit" | "auto-submit"): void => {
+            if (
+                !authenticatedUserId ||
+                authenticatedUserId !== effectiveUserId
+            ) {
+                return;
+            }
+
+            void sync()
+                .then((syncResult) => {
+                    if (!syncResult.success) {
+                        console.error(
+                            `Failed to sync results after ${submissionType}:`,
+                            syncResult.error,
+                        );
+                    }
+                })
+                .catch((syncErr) => {
+                    console.warn(
+                        `Background sync failed after exam ${submissionType}:`,
+                        syncErr,
+                    );
+                });
+        },
+        [authenticatedUserId, effectiveUserId, sync],
+    );
 
     React.useEffect((): (() => void) => {
         isMountedRef.current = true;
@@ -92,21 +123,7 @@ export function useExamSubmission({
             });
             hasSavedResultRef.current = true;
             addToast("success", "Exam submitted successfully!");
-            void sync()
-                .then((syncResult) => {
-                    if (!syncResult.success) {
-                        console.error(
-                            "Failed to sync results after submit:",
-                            syncResult.error,
-                        );
-                    }
-                })
-                .catch((syncErr) => {
-                    console.warn(
-                        "Background sync failed after exam submit:",
-                        syncErr,
-                    );
-                });
+            syncSavedResult("submit");
             router.push(`/results/${result.id}`);
         } catch (error) {
             console.error("Failed to submit exam:", error);
@@ -130,7 +147,7 @@ export function useExamSubmission({
         quiz.id,
         router,
         submitExam,
-        sync,
+        syncSavedResult,
         timeRemaining,
     ]);
 
@@ -160,21 +177,7 @@ export function useExamSubmission({
             hasSavedResultRef.current = true;
             setAutoResultId(result.id);
             setShowTimeUpModal(true);
-            void sync()
-                .then((syncResult) => {
-                    if (!syncResult.success) {
-                        console.error(
-                            "Failed to sync results after auto-submit:",
-                            syncResult.error,
-                        );
-                    }
-                })
-                .catch((syncErr) => {
-                    console.warn(
-                        "Background sync failed after exam auto-submit:",
-                        syncErr,
-                    );
-                });
+            syncSavedResult("auto-submit");
             return result.id;
         } catch (error) {
             console.error("Failed to auto-submit exam:", error);
@@ -200,7 +203,7 @@ export function useExamSubmission({
         isSubmitting,
         pauseTimer,
         quiz.id,
-        sync,
+        syncSavedResult,
     ]);
 
     const handleTimeUpConfirm = React.useCallback(async (): Promise<void> => {

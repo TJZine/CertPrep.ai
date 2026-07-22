@@ -337,15 +337,17 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 
 These commands are reference-only onboarding shortcuts. The runbook, not this table, defines which checks are required for a given change.
 
-| Command                  | Description                                      |
-| ------------------------ | ------------------------------------------------ |
-| `npm run dev`            | Start development server                         |
-| `npm run build`          | Build for production                             |
-| `npm run verify`         | Canonical local check (lint + typecheck + tests) |
-| `npm run lint`           | Run ESLint                                       |
-| `npm test`               | Run the test suite                               |
-| `npm run security-check` | Run basic secret scanning                        |
-| `npm run supabase:types` | Generate DB types                                |
+| Command                         | Description                                      |
+| ------------------------------- | ------------------------------------------------ |
+| `npm run dev`                   | Start development server                         |
+| `npm run build`                 | Build for production                             |
+| `npm run verify`                | Canonical local check (lint + typecheck + tests) |
+| `npm run lint`                  | Run ESLint                                       |
+| `npm test`                      | Run the test suite                               |
+| `npm run security-check`        | Scan tracked repository files for secrets        |
+| `npm run security-check:staged` | Scan staged files for pre-commit use             |
+| `npm run test:e2e:production`   | Run normal-security offline/PWA checks           |
+| `npm run supabase:types`        | Generate DB types                                |
 
 ---
 

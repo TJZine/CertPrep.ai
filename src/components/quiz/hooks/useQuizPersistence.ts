@@ -16,6 +16,9 @@ import { buildAnswersRecord } from "@/lib/quiz/quizRemix";
 
 import type { Question, QuizSessionConfig } from "@/types/quiz";
 
+const AGGREGATED_SAVE_ERROR_MESSAGE =
+  "Failed to save result. Your answers are still here—retry when ready.";
+
 function mapSourceMapToObject(
   sourceMap: Map<string, string> | null | undefined,
 ): Record<string, string> {
@@ -60,6 +63,7 @@ export function useQuizPersistence({
   const { sync } = useSync();
   const { user } = useAuth();
   const effectiveUserId = useEffectiveUserId(user?.id);
+  const [aggregatedSaveError, setAggregatedSaveError] = React.useState(false);
 
   const {
     saveError,
@@ -74,6 +78,7 @@ export function useQuizPersistence({
     async (timeTakenSeconds: number): Promise<void> => {
       // SRS review sessions save results differently
       if (isSRSReview && effectiveUserId) {
+        setAggregatedSaveError(false);
         try {
           const srsQuiz = await ensureSRSQuizExists(effectiveUserId);
           const questionMap = new Map(questions.map((q) => [q.id, q]));
@@ -129,15 +134,18 @@ export function useQuizPersistence({
           router.push(`/results/${result.id}`);
         } catch (err) {
           console.error("Failed to save SRS review result:", err);
-          addToast("error", "Failed to save result. You can still continue studying.");
-          clearSRSReviewState();
-          router.push("/study-due");
+          setAggregatedSaveError(true);
+          addToast(
+            "error",
+            AGGREGATED_SAVE_ERROR_MESSAGE,
+          );
           return;
         }
         return;
       }
 
       if (isTopicStudy && effectiveUserId) {
+        setAggregatedSaveError(false);
         try {
           const srsQuiz = await ensureSRSQuizExists(effectiveUserId);
           const questionMap = new Map(questions.map((q) => [q.id, q]));
@@ -193,9 +201,11 @@ export function useQuizPersistence({
           router.push(`/results/${result.id}`);
         } catch (err) {
           console.error("Failed to save topic study result:", err);
-          addToast("error", "Failed to save result. You can still continue studying.");
-          clearTopicStudyState();
-          router.push("/analytics");
+          setAggregatedSaveError(true);
+          addToast(
+            "error",
+            AGGREGATED_SAVE_ERROR_MESSAGE,
+          );
           return;
         }
         return;
@@ -203,6 +213,7 @@ export function useQuizPersistence({
 
       // Handle Interleaved Practice session completion
       if (isInterleaved && effectiveUserId) {
+        setAggregatedSaveError(false);
         try {
           const srsQuiz = await ensureSRSQuizExists(effectiveUserId);
           const questionMap = new Map(questions.map((q) => [q.id, q]));
@@ -261,9 +272,11 @@ export function useQuizPersistence({
           router.push(`/results/${result.id}`);
         } catch (err) {
           console.error("Failed to save interleaved result:", err);
-          addToast("error", "Failed to save result. You can still continue studying.");
-          clearInterleavedState();
-          router.push("/interleaved");
+          setAggregatedSaveError(true);
+          addToast(
+            "error",
+            AGGREGATED_SAVE_ERROR_MESSAGE,
+          );
           return;
         }
         return;
@@ -295,10 +308,28 @@ export function useQuizPersistence({
     if (isInterleaved) clearInterleavedState();
   }, [isSmartRound, isSRSReview, isTopicStudy, isInterleaved]);
 
+  const retrySave = React.useCallback(
+    (timeTakenSeconds: number): void => {
+      if (isSRSReview || isTopicStudy || isInterleaved) {
+        void handleSessionComplete(timeTakenSeconds);
+        return;
+      }
+
+      retrySaveAction(timeTakenSeconds);
+    },
+    [
+      handleSessionComplete,
+      isSRSReview,
+      isTopicStudy,
+      isInterleaved,
+      retrySaveAction,
+    ],
+  );
+
   return {
-    saveError,
+    saveError: saveError || aggregatedSaveError,
     submitQuiz: handleSessionComplete,
-    retrySave: retrySaveAction,
+    retrySave,
     clearSessionStorage,
     effectiveUserId,
   };

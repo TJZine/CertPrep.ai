@@ -360,7 +360,7 @@ export async function initializeDatabase(): Promise<void> {
 }
 
 /**
- * Clears all quizzes, results, and sync state. Intended for testing/reset flows.
+ * Clears every local application table. Intended for testing/reset flows.
  */
 export async function clearDatabase(): Promise<void> {
   try {

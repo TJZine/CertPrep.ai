@@ -12,21 +12,18 @@ vi.mock("@playwright/test", () => ({
   },
 }));
 
-const originalEnv = { ...process.env };
-
 describe("playwright.config", () => {
   beforeEach(() => {
     vi.resetModules();
     vi.clearAllMocks();
-    process.env = { ...originalEnv };
   });
 
   afterEach(() => {
-    process.env = { ...originalEnv };
+    vi.unstubAllEnvs();
   });
 
   it("uses local defaults outside CI", async () => {
-    delete process.env.CI;
+    vi.stubEnv("CI", undefined);
 
     const { default: config } = await import("../../playwright.config");
     const projects = config.projects ?? [];
@@ -71,7 +68,7 @@ describe("playwright.config", () => {
   });
 
   it("tightens retries and workers on CI", async () => {
-    process.env.CI = "true";
+    vi.stubEnv("CI", "true");
 
     const { default: config } = await import("../../playwright.config");
     const webServer = Array.isArray(config.webServer)
@@ -83,5 +80,25 @@ describe("playwright.config", () => {
     expect(config.workers).toBe(1);
     expect(config.reporter).toBe("github");
     expect(webServer?.reuseExistingServer).toBe(false);
+  });
+
+  it("builds and starts the production server for production-like checks", async () => {
+    vi.stubEnv("CI", undefined);
+
+    const { default: config } =
+      await import("../../playwright.production.config");
+    const webServer = Array.isArray(config.webServer)
+      ? config.webServer[0]
+      : config.webServer;
+
+    expect(defineConfigSpy).toHaveBeenCalledTimes(1);
+    expect(config.testDir).toBe("./tests/e2e-production");
+    expect(webServer?.command).toBe("npm run build && npm run start");
+    expect(webServer?.url).toBe("http://localhost:3000");
+    expect(webServer?.reuseExistingServer).toBe(false);
+    expect(webServer?.timeout).toBe(120 * 1000);
+    expect(webServer?.env).toEqual({
+      SENTRY_DISABLE_AUTO_UPLOAD: "1",
+    });
   });
 });

@@ -104,12 +104,20 @@ export default function LoginForm(): React.ReactElement {
           />
         </div>
         <div className="space-y-2">
-          <label
-            htmlFor="password"
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-          >
-            Password
-          </label>
+          <div className="flex items-center justify-between gap-4">
+            <label
+              htmlFor="password"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
+              Password
+            </label>
+            <Link
+              href="/forgot-password"
+              className="text-sm underline underline-offset-4 hover:text-primary"
+            >
+              Forgot password?
+            </Link>
+          </div>
           <Input
             id="password"
             type="password"

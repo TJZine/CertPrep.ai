@@ -14,7 +14,10 @@ import {
   Trash2,
 } from "lucide-react";
 import { Scorecard } from "./Scorecard";
-import { ResultsSummary } from "./ResultsSummary";
+import {
+  getResultModePresentation,
+  ResultsSummary,
+} from "./ResultsSummary";
 import { QuestionReviewList, type FilterType } from "./QuestionReviewList";
 import { SmartActions } from "./SmartActions";
 import { AttemptHistoryTimeline } from "./AttemptHistoryTimeline";
@@ -180,6 +183,10 @@ export function ResultsContainer({
   // Detect if this is an SRS/Topic Study result and compute display title
   const isAggregatedResult = isAggregatedSessionType(result.session_type);
   const displayTitle = quiz.title;
+  const modePresentation = getResultModePresentation(
+    result.mode,
+    result.session_type,
+  );
 
   // Get the effective question count - use result.question_ids for SRS results
   // since quiz.questions is empty for the SRS quiz
@@ -454,6 +461,7 @@ export function ResultsContainer({
                   size="sm"
                   onClick={handleShare}
                   leftIcon={<Share2 className="h-4 w-4" aria-hidden="true" />}
+                  aria-label="Share result"
                 >
                   <span className="hidden sm:inline">Share</span>
                 </Button>
@@ -462,6 +470,7 @@ export function ResultsContainer({
                   size="sm"
                   onClick={handlePrint}
                   leftIcon={<Printer className="h-4 w-4" aria-hidden="true" />}
+                  aria-label="Print result"
                 >
                   <span className="hidden sm:inline">Print</span>
                 </Button>
@@ -514,6 +523,7 @@ export function ResultsContainer({
               totalCount={sessionQuestionCount}
               timeTakenSeconds={result.time_taken_seconds}
               mode={result.mode}
+              modeLabel={modePresentation.scorecardLabel}
               timestamp={result.timestamp}
               className="mb-8"
             />
@@ -538,6 +548,7 @@ export function ResultsContainer({
                 totalQuestions={sessionQuestionCount}
                 timeTakenSeconds={result.time_taken_seconds}
                 mode={result.mode}
+                sessionType={result.session_type}
                 averageTimePerQuestion={stats.averageTimePerQuestion}
               />
             </div>

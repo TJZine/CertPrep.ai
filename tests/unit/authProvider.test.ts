@@ -7,13 +7,25 @@ import {
   syncedSyncOutcome,
 } from "@/lib/sync/shared";
 
-const { requestServiceWorkerCacheClear, runSyncPlan } = vi.hoisted(() => ({
-  requestServiceWorkerCacheClear: vi.fn().mockResolvedValue(undefined),
-  runSyncPlan: vi.fn(),
-}));
+const { requestServiceWorkerCacheClear, runSyncPlan, loggerWarn, loggerError } =
+  vi.hoisted(() => ({
+    requestServiceWorkerCacheClear: vi.fn().mockResolvedValue({
+      status: "cleared",
+    }),
+    runSyncPlan: vi.fn(),
+    loggerWarn: vi.fn(),
+    loggerError: vi.fn(),
+  }));
 
 vi.mock("@/lib/serviceWorkerClient", () => ({
   requestServiceWorkerCacheClear,
+}));
+
+vi.mock("@/lib/logger", () => ({
+  logger: {
+    warn: loggerWarn,
+    error: loggerError,
+  },
 }));
 
 vi.mock("@/lib/sync/coordinator", () => ({
@@ -70,7 +82,7 @@ const createSupabaseStub = (): {
 describe("performSignOut", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    requestServiceWorkerCacheClear.mockResolvedValue(undefined);
+    requestServiceWorkerCacheClear.mockResolvedValue({ status: "cleared" });
   });
 
   it("continues sign-out when clearing Dexie fails but surfaces warning", async () => {
@@ -223,5 +235,30 @@ describe("performSignOut", () => {
     expect(result.success).toBe(true);
     expect(result.error).toMatch(/kept on this device/i);
     expect(clearDb).not.toHaveBeenCalled();
+  });
+
+  it("bounds cache cleanup and preserves successful remote sign-out", async () => {
+    runSyncPlan.mockResolvedValue(buildSyncSummary());
+    requestServiceWorkerCacheClear.mockResolvedValue({ status: "timeout" });
+    const supabase = createSupabaseStub();
+    const clearDb = vi.fn().mockResolvedValue(undefined);
+    const onResetAuthState = vi.fn();
+
+    const result = await performSignOut({
+      supabase: supabase as never,
+      clearDb,
+      onResetAuthState,
+    });
+
+    expect(result).toEqual({
+      success: true,
+      error: "Browser cache cleanup could not be confirmed.",
+    });
+    expect(supabase.auth.signOut).toHaveBeenCalledTimes(1);
+    expect(onResetAuthState).toHaveBeenCalledTimes(1);
+    expect(loggerWarn).toHaveBeenCalledWith(
+      "Sign out could not confirm runtime cache deletion",
+      { status: "timeout" },
+    );
   });
 });
