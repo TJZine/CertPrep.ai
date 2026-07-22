@@ -115,11 +115,11 @@ function InterleavedPlaceholderSkeleton(): React.ReactElement {
 /**
  * Quiz card skeleton - matches QuizCard layout
  */
-function HeroQuizCardSkeleton(): React.ReactElement {
+function FeaturedQuizCardSkeleton(): React.ReactElement {
     return (
         <Card
-            data-testid="dashboard-skeleton-hero-card"
-            className="dashboard-card dashboard-hero-card flex h-full flex-col sm:col-span-2 lg:col-span-2 lg:row-span-2"
+            data-testid="dashboard-skeleton-featured-card"
+            className="dashboard-card dashboard-featured-card flex h-full flex-col sm:col-span-2 lg:col-span-2"
             aria-hidden="true"
         >
             <CardHeader className="pb-4">
@@ -127,7 +127,12 @@ function HeroQuizCardSkeleton(): React.ReactElement {
                 <Skeleton className="h-4 w-1/2" />
             </CardHeader>
             <CardContent className="flex-1 space-y-4">
-                <Skeleton className="h-40 w-full rounded-lg" />
+                <div className="grid grid-cols-3 gap-2">
+                    {Array.from({ length: 3 }).map((_, i) => (
+                        <Skeleton key={i} className="h-16 rounded-lg" />
+                    ))}
+                </div>
+                <Skeleton className="h-11 w-full rounded-lg" />
             </CardContent>
             <CardFooter className="pt-0">
                 <Skeleton className="h-10 w-full" />
@@ -210,10 +215,10 @@ function QuizGridSkeleton({ count }: { count: number }): React.ReactElement {
     return (
         <div
             data-testid="dashboard-skeleton-grid"
-            className="grid gap-6 auto-rows-[minmax(140px,auto)] sm:grid-cols-2 lg:grid-cols-3"
+            className="grid items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3"
         >
             {Array.from({ length: count }).map((_, i) => (
-                i === 0 ? <HeroQuizCardSkeleton key={i} /> : <QuizCardSkeleton key={i} />
+                i === 0 ? <FeaturedQuizCardSkeleton key={i} /> : <QuizCardSkeleton key={i} />
             ))}
         </div>
     );

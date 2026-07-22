@@ -7,7 +7,7 @@ import type { QuizStats } from "@/db/quizzes";
 const { quizCardSpy } = vi.hoisted(() => ({ quizCardSpy: vi.fn() }));
 
 vi.mock("@/components/dashboard/QuizCard", () => ({
-  QuizCard: (props: { isHero?: boolean; quiz: { id: string } }): React.JSX.Element => {
+  QuizCard: (props: { isFeatured?: boolean; quiz: { id: string } }): React.JSX.Element => {
     quizCardSpy(props);
     return <div data-testid={`quiz-card-${props.quiz.id}`} />;
   },
@@ -28,12 +28,12 @@ const makeQuiz = (id: string, title: string): Quiz => ({
 const quizzes: Quiz[] = [makeQuiz("q1", "Quiz 1"), makeQuiz("q2", "Quiz 2")];
 const quizStats = new Map<string, QuizStats>();
 
-describe("QuizGrid hero layout", () => {
+describe("QuizGrid featured layout", () => {
   afterEach(() => {
     quizCardSpy.mockClear();
   });
 
-  it("marks only the first quiz card as hero", () => {
+  it("marks only the first quiz card as featured", () => {
 
     render(
       <QuizGrid
@@ -45,11 +45,11 @@ describe("QuizGrid hero layout", () => {
     );
 
     expect(quizCardSpy).toHaveBeenCalledTimes(2);
-    expect(quizCardSpy.mock.calls[0]?.[0]?.isHero).toBe(true);
-    expect(quizCardSpy.mock.calls[1]?.[0]?.isHero).toBe(false);
+    expect(quizCardSpy.mock.calls[0]?.[0]?.isFeatured).toBe(true);
+    expect(quizCardSpy.mock.calls[1]?.[0]?.isFeatured).toBe(false);
   });
 
-  it("uses auto-rows asymmetric grid class", () => {
+  it("uses a single-row stretching grid without implicit featured-card row sizing", () => {
     render(
       <QuizGrid
         quizzes={quizzes}
@@ -59,6 +59,8 @@ describe("QuizGrid hero layout", () => {
       />,
     );
 
-    expect(screen.getByTestId("quiz-grid")).toHaveClass("auto-rows-[minmax(140px,auto)]");
+    const grid = screen.getByTestId("quiz-grid");
+    expect(grid).toHaveClass("items-stretch");
+    expect(grid).not.toHaveClass("auto-rows-[minmax(140px,auto)]");
   });
 });
