@@ -24,6 +24,7 @@ interface QuizLayoutProps {
   children: React.ReactNode;
   sidebar?: React.ReactNode;
   className?: string;
+  exitDescription?: string;
 }
 
 /**
@@ -42,6 +43,7 @@ export function QuizLayout({
   children,
   sidebar,
   className,
+  exitDescription,
 }: QuizLayoutProps): React.ReactElement {
   const [showExitModal, setShowExitModal] = React.useState(false);
   const shortcutsHelp = useKeyboardShortcutsHelp();
@@ -60,9 +62,7 @@ export function QuizLayout({
   };
 
   return (
-    <div
-      className={cn("min-h-screen bg-background", className)}
-    >
+    <div className={cn("min-h-screen bg-background", className)}>
       <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 py-3 sm:px-6">
           <div className="flex items-center gap-3">
@@ -147,7 +147,12 @@ export function QuizLayout({
         isOpen={showExitModal}
         onClose={() => setShowExitModal(false)}
         title="Exit Quiz?"
-        description="Your progress will be saved, but you'll need to restart this session."
+        description={
+          exitDescription ??
+          (mode === "proctor"
+            ? "Exiting Proctor mode ends this attempt."
+            : "Exiting ends this session. Resumable progress is not available for this mode.")
+        }
         size="sm"
         footer={
           <>

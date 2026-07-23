@@ -9,7 +9,7 @@ import { ZenQuizSkeleton } from "@/components/quiz/ZenQuizSkeleton";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { Button } from "@/components/ui/Button";
 import { useInitializeDatabase, useQuiz } from "@/hooks/useDatabase";
-import type { Question } from "@/types/quiz";
+import type { Question, ZenSessionKind } from "@/types/quiz";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 import {
@@ -49,13 +49,21 @@ export default function ZenModePage(): React.ReactElement {
 
   const rawMode = searchParams.get("mode");
   const mode: StudyMode =
-    rawMode === "smart" || rawMode === "topic"
-      ? (rawMode as StudyMode)
-      : null;
+    rawMode === "smart" || rawMode === "topic" ? (rawMode as StudyMode) : null;
 
   const isSmartRound = mode === "smart";
   const isTopicStudy = mode === "topic";
   const isFilteredMode = isSmartRound || isTopicStudy;
+  const sessionKind: ZenSessionKind =
+    rawMode === "smart"
+      ? "smart_round"
+      : rawMode === "topic"
+        ? "topic_study"
+        : rawMode !== null
+          ? "other_zen"
+          : searchParams.get("remix") === "true"
+            ? "remixed_zen"
+            : "standard_zen";
 
   const { user } = useAuth();
   const effectiveUserId = useEffectiveUserId(user?.id);
@@ -91,8 +99,12 @@ export default function ZenModePage(): React.ReactElement {
 
       const storedQuestionIds = sessionStorage.getItem(questionsKey);
       const storedQuizId = sessionStorage.getItem(quizIdKey);
-      const storedMissedCount = missedKey ? sessionStorage.getItem(missedKey) : null;
-      const storedFlaggedCount = flaggedKey ? sessionStorage.getItem(flaggedKey) : null;
+      const storedMissedCount = missedKey
+        ? sessionStorage.getItem(missedKey)
+        : null;
+      const storedFlaggedCount = flaggedKey
+        ? sessionStorage.getItem(flaggedKey)
+        : null;
       const storedCategory = isTopicStudy
         ? sessionStorage.getItem(TOPIC_STUDY_CATEGORY_KEY)
         : undefined;
@@ -117,17 +129,21 @@ export default function ZenModePage(): React.ReactElement {
         return null;
       }
 
-      const parsedMissed = storedMissedCount !== null
-        ? Number.parseInt(storedMissedCount, 10)
-        : NaN;
-      const parsedFlagged = storedFlaggedCount !== null
-        ? Number.parseInt(storedFlaggedCount, 10)
-        : NaN;
+      const parsedMissed =
+        storedMissedCount !== null
+          ? Number.parseInt(storedMissedCount, 10)
+          : NaN;
+      const parsedFlagged =
+        storedFlaggedCount !== null
+          ? Number.parseInt(storedFlaggedCount, 10)
+          : NaN;
 
       return {
         questionIds,
         missedCount: Number.isNaN(parsedMissed)
-          ? (isSmartRound ? orderedFiltered.length : 0)
+          ? isSmartRound
+            ? orderedFiltered.length
+            : 0
           : parsedMissed,
         flaggedCount: Number.isNaN(parsedFlagged) ? 0 : parsedFlagged,
         category: storedCategory ?? undefined,
@@ -211,7 +227,9 @@ export default function ZenModePage(): React.ReactElement {
   }
 
   const questionsToUse =
-    isFilteredMode && studyModePayload ? studyModePayload.filteredQuestions : quiz.questions;
+    isFilteredMode && studyModePayload
+      ? studyModePayload.filteredQuestions
+      : quiz.questions;
 
   if (questionsToUse.length === 0) {
     return (
@@ -294,6 +312,8 @@ export default function ZenModePage(): React.ReactElement {
       <ZenQuizContainer
         quiz={quizForSession}
         isSmartRound={isSmartRound}
+        isTopicStudy={isTopicStudy}
+        sessionKind={sessionKind}
       />
     </ErrorBoundary>
   );

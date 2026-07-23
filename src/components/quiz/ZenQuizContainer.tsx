@@ -11,10 +11,13 @@ import { SubmitButton, ZenControls } from "./ZenControls";
 import { Card, CardContent } from "@/components/ui/Card";
 import { useToast } from "@/components/ui/Toast";
 import { Button } from "@/components/ui/Button";
+import { Modal } from "@/components/ui/Modal";
 import { useQuizSessionStore } from "@/stores/quizSessionStore";
 import { useBeforeUnload } from "@/hooks/useBeforeUnload";
+import { useAuth } from "@/components/providers/AuthProvider";
+import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 
-import type { Quiz } from "@/types/quiz";
+import type { Quiz, ZenSessionKind } from "@/types/quiz";
 import { useQuizPersistence } from "./hooks/useQuizPersistence";
 import { useQuizSession } from "./hooks/useQuizSession";
 
@@ -31,6 +34,8 @@ interface ZenQuizContainerProps {
   sessionSourceMap?: Map<string, string> | null;
   /** Key mappings for answer translation in remixed sessions. */
   sessionKeyMappings?: Map<string, Record<string, string>> | null;
+  /** Explicit route/session intent. Only standard_zen is draft eligible. */
+  sessionKind?: ZenSessionKind;
 }
 
 /**
@@ -44,41 +49,26 @@ export function ZenQuizContainer({
   isInterleaved = false,
   sessionSourceMap = null,
   sessionKeyMappings = null,
+  sessionKind = "standard_zen",
 }: ZenQuizContainerProps): React.ReactElement {
   const router = useRouter();
   const { addToast } = useToast();
-  const {
-    clearError,
-    error,
-    questions,
-    answers,
-    flaggedQuestions,
-  } = useQuizSessionStore();
+  const { user } = useAuth();
+  const effectiveUserId = useEffectiveUserId(user?.id);
+  const { clearError, error, questions, answers, flaggedQuestions } =
+    useQuizSessionStore();
 
   const isMountedRef = React.useRef(false);
   const hasSavedResultRef = React.useRef(false);
   const completionTimeRef = React.useRef<number | null>(null);
 
-  const {
-    saveError,
-    submitQuiz: handleSessionComplete,
-    retrySave: retrySaveAction,
-    clearSessionStorage,
-    effectiveUserId,
-  } = useQuizPersistence({
-    config: {
-      quizId: quiz.id,
-      isSmartRound,
-      isSRSReview,
-      isTopicStudy,
-      isInterleaved,
-      sourceMap: sessionSourceMap,
-      keyMappings: sessionKeyMappings,
-    },
-    questions,
-    answers,
-    flaggedQuestions,
-  });
+  const draftEligible =
+    sessionKind === "standard_zen" &&
+    !isSmartRound &&
+    !isSRSReview &&
+    !isTopicStudy &&
+    !isInterleaved &&
+    sessionKeyMappings === null;
 
   const {
     isInitializing,
@@ -104,15 +94,51 @@ export function ZenQuizContainer({
     markHard,
     markGood,
     resetSession,
+    draftDecision,
+    draftSaveStatus,
+    draftSaveMessage,
+    draftOwnerId,
+    resumeDraft,
+    startOverDraft,
+    resumeDraftAsNewAttempt,
+    flushDraft,
   } = useQuizSession({
     quiz,
     isSRSReview,
     effectiveUserId,
+    draftEligible,
+  });
+
+  const {
+    saveError,
+    submitQuiz: handleSessionComplete,
+    retrySave: retrySaveAction,
+    clearSessionStorage,
+  } = useQuizPersistence({
+    config: {
+      quizId: quiz.id,
+      isSmartRound,
+      isSRSReview,
+      isTopicStudy,
+      isInterleaved,
+      sourceMap: sessionSourceMap,
+      keyMappings: sessionKeyMappings,
+    },
+    questions,
+    answers,
+    flaggedQuestions,
+    standardZenDraftOwnerId: draftEligible ? draftOwnerId : null,
   });
 
   useBeforeUnload(
-    !isComplete || Boolean(saveError),
-    "Your quiz progress will be lost. Are you sure?",
+    (!draftEligible && !isComplete) ||
+      draftSaveStatus === "saving" ||
+      draftSaveStatus === "error" ||
+      draftSaveStatus === "conflict" ||
+      Boolean(saveError),
+    draftEligible
+      ? "Your latest progress may still be saving on this device."
+      : "Your quiz progress will be lost. Are you sure?",
   );
 
   React.useEffect(() => {
@@ -141,13 +167,38 @@ export function ZenQuizContainer({
       pauseTimer();
       const elapsedSeconds = seconds;
       completionTimeRef.current = elapsedSeconds;
-      void handleSessionComplete(elapsedSeconds).catch(() => {
+      void (async (): Promise<void> => {
+        if (draftEligible && !(await flushDraft(true))) {
+          throw new Error("Draft flush failed before result creation.");
+        }
+        await handleSessionComplete(elapsedSeconds);
+      })().catch(() => {
         hasSavedResultRef.current = false;
       });
     }
-  }, [isComplete, handleSessionComplete, pauseTimer, seconds]);
+  }, [
+    draftEligible,
+    flushDraft,
+    handleSessionComplete,
+    isComplete,
+    pauseTimer,
+    seconds,
+  ]);
 
-  const handleExit = React.useCallback((): void => {
+  const handleExit = React.useCallback(async (): Promise<void> => {
+    // A conflicted tab no longer owns the draft, so it must be allowed to
+    // leave without attempting (or being able) to overwrite the newer tab.
+    if (
+      draftEligible &&
+      draftSaveStatus !== "conflict" &&
+      !(await flushDraft(true))
+    ) {
+      addToast(
+        "error",
+        "Your latest progress was not saved. Try exiting again after the save succeeds.",
+      );
+      return;
+    }
     resetSession();
     clearSessionStorage();
     if (isSRSReview) {
@@ -163,7 +214,22 @@ export function ZenQuizContainer({
       return;
     }
     router.push("/");
-  }, [resetSession, clearSessionStorage, isSRSReview, isTopicStudy, isInterleaved, router]);
+  }, [
+    addToast,
+    clearSessionStorage,
+    draftEligible,
+    draftSaveStatus,
+    flushDraft,
+    isInterleaved,
+    isSRSReview,
+    isTopicStudy,
+    resetSession,
+    router,
+  ]);
+
+  const requestExit = React.useCallback((): void => {
+    void handleExit();
+  }, [handleExit]);
 
   React.useEffect(() => {
     if (hasSubmitted && isCurrentAnswerCorrect) {
@@ -171,10 +237,46 @@ export function ZenQuizContainer({
     }
   }, [hasSubmitted, isCurrentAnswerCorrect, addToast]);
 
+  const persistenceNotice = draftEligible ? (
+    <div
+      className={
+        draftSaveStatus === "error" || draftSaveStatus === "conflict"
+          ? "mb-4 rounded-lg border border-warning/50 bg-warning/10 px-4 py-3 text-sm text-warning"
+          : "mb-4 rounded-lg border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground"
+      }
+      role={
+        draftSaveStatus === "error" || draftSaveStatus === "conflict"
+          ? "alert"
+          : "status"
+      }
+      aria-live="polite"
+    >
+      {draftSaveStatus === "saving"
+        ? "Saving on this device…"
+        : (draftSaveMessage ?? "Saved on this device.")}
+    </div>
+  ) : null;
+
   const quizContent = (
     <div className="mx-auto max-w-3xl">
+      {persistenceNotice}
       <Card>
         <CardContent className="p-6 sm:p-8">
+          {saveError ? (
+            <div className="mb-6 rounded-lg border border-warning/50 bg-warning/10 p-4 text-sm text-warning">
+              <p className="mb-3 font-semibold">
+                We couldn&apos;t save your results.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Button size="sm" onClick={retrySave}>
+                  Retry save
+                </Button>
+                <Button size="sm" variant="ghost" onClick={requestExit}>
+                  Exit without saving
+                </Button>
+              </div>
+            </div>
+          ) : null}
           {currentQuestion && (
             <>
               <QuestionDisplay
@@ -225,25 +327,6 @@ export function ZenQuizContainer({
                       onGood={markGood}
                       isLastQuestion={isLastQuestion}
                     />
-                    {saveError ? (
-                      <div className="rounded-lg border border-warning/50 bg-warning/10 p-4 text-sm text-warning">
-                        <p className="mb-3 font-semibold">
-                          We couldn&apos;t save your results.
-                        </p>
-                        <div className="flex flex-wrap gap-2">
-                          <Button size="sm" onClick={retrySave}>
-                            Retry save
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={handleExit}
-                          >
-                            Exit without saving
-                          </Button>
-                        </div>
-                      </div>
-                    ) : null}
                   </div>
                 )}
               </div>
@@ -254,17 +337,99 @@ export function ZenQuizContainer({
     </div>
   );
 
+  if (draftDecision) {
+    const isResultConflict = draftDecision.kind === "result-conflict";
+    const isIncompatible = draftDecision.kind === "incompatible";
+    const title = isResultConflict
+      ? "Quiz completed elsewhere"
+      : isIncompatible
+        ? "Saved quiz can't be resumed"
+        : "Continue saved quiz?";
+    const description = isResultConflict
+      ? "A completed attempt was added after this device-local draft began. Choose how to continue."
+      : isIncompatible
+        ? (draftDecision.assessment.reason ??
+          "This saved draft is not compatible with the current quiz.")
+        : "Your progress is saved on this device. Resume it or start over.";
+    return (
+      <QuizLayout
+        title={quiz.title}
+        currentProgress={0}
+        totalQuestions={quiz.questions.length}
+        onExit={() => router.push("/")}
+        showExitConfirm={false}
+        mode="zen"
+      >
+        <div className="py-12 text-center text-sm text-muted-foreground">
+          Saved on this device.
+        </div>
+        <Modal
+          isOpen
+          onClose={() => router.push("/")}
+          title={title}
+          description={description}
+          size="sm"
+          footer={
+            <>
+              {isIncompatible ? (
+                <Button variant="outline" onClick={() => router.push("/")}>
+                  Back to Dashboard
+                </Button>
+              ) : null}
+              <Button variant="outline" onClick={() => void startOverDraft()}>
+                {isResultConflict ? "Start New Attempt" : "Start Over"}
+              </Button>
+              {!isIncompatible ? (
+                <Button
+                  onClick={() =>
+                    void (isResultConflict
+                      ? resumeDraftAsNewAttempt()
+                      : resumeDraft())
+                  }
+                >
+                  {isResultConflict ? "Resume as New Attempt" : "Resume"}
+                </Button>
+              ) : null}
+            </>
+          }
+        >
+          <p className="text-sm text-muted-foreground">
+            Drafts stay in this browser and are never synchronized to the cloud.
+          </p>
+        </Modal>
+      </QuizLayout>
+    );
+  }
+
   if (isInitializing || !currentQuestion) {
     return (
       <QuizLayout
         title={quiz.title}
         currentProgress={progress.current}
         totalQuestions={progress.total}
-        onExit={handleExit}
+        onExit={requestExit}
         mode="zen"
+        exitDescription={
+          draftEligible
+            ? draftSaveStatus === "conflict"
+              ? "A newer tab owns this saved draft. Exiting will not overwrite it."
+              : draftSaveStatus === "error"
+              ? "Your latest progress has not been saved. Close this dialog and retry after the device save succeeds."
+              : "Your progress is saved on this device. You can continue this quiz later."
+            : "Exiting ends this session. This mode does not save resumable progress."
+        }
       >
-        <div className="py-12 text-center" aria-busy="true" aria-live="polite">
-          <p className="text-muted-foreground">Initializing quiz session...</p>
+        <div className="mx-auto max-w-3xl">
+          {persistenceNotice}
+          <div
+            className="py-12 text-center"
+            aria-busy="true"
+            aria-live="polite"
+          >
+            <p className="text-muted-foreground">
+              Initializing quiz session...
+            </p>
+          </div>
         </div>
       </QuizLayout>
     );
@@ -276,8 +441,17 @@ export function ZenQuizContainer({
       currentProgress={progress.current}
       totalQuestions={progress.total}
       timerDisplay={formattedTime}
-      onExit={handleExit}
+      onExit={requestExit}
       mode="zen"
+      exitDescription={
+        draftEligible
+          ? draftSaveStatus === "conflict"
+            ? "A newer tab owns this saved draft. Exiting will not overwrite it."
+            : draftSaveStatus === "error"
+            ? "Your latest progress has not been saved. Close this dialog and retry after the device save succeeds."
+            : "Your progress is saved on this device. You can continue this quiz later."
+          : "Exiting ends this session. This mode does not save resumable progress."
+      }
     >
       {quizContent}
     </QuizLayout>

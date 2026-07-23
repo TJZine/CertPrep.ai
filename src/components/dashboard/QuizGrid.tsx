@@ -7,10 +7,12 @@ import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { EmptyState } from "@/components/common/EmptyState";
 import type { Quiz } from "@/types/quiz";
 import type { QuizStats } from "@/db/quizzes";
+import type { ZenDraftCompatibility } from "@/types/zenDraft";
 
 export interface QuizGridProps {
   quizzes: Quiz[];
   quizStats: Map<string, QuizStats>;
+  zenDraftStatuses?: Map<string, ZenDraftCompatibility>;
   onStartQuiz: (quiz: Quiz) => void;
   onDeleteQuiz: (quiz: Quiz) => void;
   isLoading?: boolean;
@@ -22,6 +24,7 @@ export interface QuizGridProps {
 export function QuizGrid({
   quizzes,
   quizStats,
+  zenDraftStatuses = new Map(),
   onStartQuiz,
   onDeleteQuiz,
   isLoading = false,
@@ -54,6 +57,7 @@ export function QuizGrid({
           key={quiz.id}
           quiz={quiz}
           stats={quizStats.get(quiz.id) ?? null}
+          hasResumableDraft={zenDraftStatuses.get(quiz.id) === "resumable"}
           onStart={onStartQuiz}
           onDelete={onDeleteQuiz}
           isFeatured={index === 0}

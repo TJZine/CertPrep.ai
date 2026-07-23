@@ -1,8 +1,5 @@
 import { clearDatabase, db } from "@/db";
-import {
-  isSRSQuiz,
-  sanitizeQuestionsWithIdMap,
-} from "@/db/quizzes";
+import { isSRSQuiz, sanitizeQuestionsWithIdMap } from "@/db/quizzes";
 import { sanitizeQuestionText } from "@/lib/utils/sanitize";
 import { computeQuizHash } from "@/lib/core/crypto";
 import type { Quiz } from "@/types/quiz";
@@ -289,8 +286,9 @@ function buildRetainedQuizQuestionIdMap(
     if (!retainedQuestionId) continue;
 
     retainedQuestionIdMap.set(importedQuestion.id, retainedQuestionId);
-    for (const rawQuestionId of rawQuestionIdsBySanitizedId.get(importedQuestion.id) ??
-      []) {
+    for (const rawQuestionId of rawQuestionIdsBySanitizedId.get(
+      importedQuestion.id,
+    ) ?? []) {
       retainedQuestionIdMap.set(rawQuestionId, retainedQuestionId);
     }
   }
@@ -311,7 +309,9 @@ function buildMergeQuestionIdMaps(
   );
 
   for (const importedQuiz of importedQuizzes) {
-    const importedQuestionIdMap = importedQuestionIdMapsByQuiz.get(importedQuiz.id);
+    const importedQuestionIdMap = importedQuestionIdMapsByQuiz.get(
+      importedQuiz.id,
+    );
     if (!importedQuestionIdMap) continue;
 
     const retainedQuiz = existingQuizzesById.get(importedQuiz.id);
@@ -363,10 +363,10 @@ function sanitizeResultRecord(
 
   return remapResultQuestionMetadata(
     {
-    ...parsed.data,
-    user_id: userId,
-    synced: 0,
-    category_breakdown: sanitizedCategoryBreakdown,
+      ...parsed.data,
+      user_id: userId,
+      synced: 0,
+      category_breakdown: sanitizedCategoryBreakdown,
     },
     questionIdMapsByQuiz,
   );
@@ -538,7 +538,11 @@ export async function importData(
   const quizIds = new Set<string>();
 
   for (const quiz of data.quizzes) {
-    const sanitizedQuizImport = await sanitizeQuizRecord(quiz, userId, warnings);
+    const sanitizedQuizImport = await sanitizeQuizRecord(
+      quiz,
+      userId,
+      warnings,
+    );
     if (!sanitizedQuizImport) continue;
     if (quizIds.has(sanitizedQuizImport.quiz.id)) {
       recordImportWarning(
@@ -567,10 +571,10 @@ export async function importData(
   const questionIdMapsByQuiz =
     mode === "merge"
       ? buildMergeQuestionIdMaps(
-        sanitizedQuizzes,
-        importedQuestionIdMapsByQuiz,
-        existingQuizzes,
-      )
+          sanitizedQuizzes,
+          importedQuestionIdMapsByQuiz,
+          existingQuizzes,
+        )
       : importedQuestionIdMapsByQuiz;
   const existingQuizIds = new Set<string>(
     existingQuizzes.map((quiz) => quiz.id),
@@ -630,6 +634,7 @@ export async function importData(
       db.quizzes,
       db.results,
       db.syncState,
+      db.zenDrafts,
       async () => {
         await Promise.all([
           db.quizzes.where("user_id").equals(userId).delete(),
@@ -638,6 +643,7 @@ export async function importData(
           db.syncState.delete(`results:${userId}`),
           db.syncState.delete(`quizzes:${userId}`),
           db.syncState.delete(`quizzes:backfill:${userId}`),
+          db.zenDrafts.where("user_id").equals(userId).delete(),
         ]);
         if (sanitizedQuizzes.length > 0) {
           await db.quizzes.bulkPut(sanitizedQuizzes);
@@ -695,7 +701,11 @@ export async function importData(
     }
   });
 
-  return { quizzesImported, resultsImported, warnings: Array.from(warnings.values()) };
+  return {
+    quizzesImported,
+    resultsImported,
+    warnings: Array.from(warnings.values()),
+  };
 }
 
 function findMatchingQuiz(
@@ -755,7 +765,11 @@ export async function importDataSmart(
   const missingHashInImport = new Set<string>();
 
   for (const quiz of data.quizzes) {
-    const sanitizedQuizImport = await sanitizeQuizRecord(quiz, userId, warnings);
+    const sanitizedQuizImport = await sanitizeQuizRecord(
+      quiz,
+      userId,
+      warnings,
+    );
     if (!sanitizedQuizImport) continue;
     const sanitizedQuiz = sanitizedQuizImport.quiz;
     if (quizIds.has(sanitizedQuiz.id)) {
@@ -791,7 +805,10 @@ export async function importDataSmart(
     }
 
     sanitizedQuizzes.push(sanitizedQuiz);
-    questionIdMapsByQuiz.set(sanitizedQuiz.id, sanitizedQuizImport.questionIdMap);
+    questionIdMapsByQuiz.set(
+      sanitizedQuiz.id,
+      sanitizedQuizImport.questionIdMap,
+    );
     quizIds.add(sanitizedQuiz.id);
   }
 
@@ -849,8 +866,7 @@ export async function importDataSmart(
       const isDeletedImport =
         quiz.deleted_at !== null && quiz.deleted_at !== undefined;
       const allowTitleFallback =
-        !hashComputationFailed.has(quiz.id) &&
-        missingHashInImport.has(quiz.id);
+        !hashComputationFailed.has(quiz.id) && missingHashInImport.has(quiz.id);
       const match = findMatchingQuiz(
         quiz,
         isDeletedImport ? deletedByHash : activeByHash,
@@ -872,9 +888,7 @@ export async function importDataSmart(
       quizzesInDb.push(...quizzesToAdd);
     }
 
-    const allowedQuizIds = new Set<string>(
-      quizzesInDb.map((quiz) => quiz.id),
-    );
+    const allowedQuizIds = new Set<string>(quizzesInDb.map((quiz) => quiz.id));
 
     const resultsInDb = await db.results
       .where("user_id")
@@ -898,10 +912,13 @@ export async function importDataSmart(
           "Skipped result referencing missing quiz during smart import.",
           result.id,
         );
-        logger.warn("Skipped result referencing missing quiz during smart import", {
-          resultId: result.id,
-          quizId: mappedQuizId,
-        });
+        logger.warn(
+          "Skipped result referencing missing quiz during smart import",
+          {
+            resultId: result.id,
+            quizId: mappedQuizId,
+          },
+        );
         continue;
       }
 
@@ -1067,7 +1084,9 @@ export async function getDeletedItemsStats(
   const deletedResultCount = await db.results
     .where("user_id")
     .equals(userId)
-    .filter((result) => result.deleted_at !== null && result.deleted_at !== undefined)
+    .filter(
+      (result) => result.deleted_at !== null && result.deleted_at !== undefined,
+    )
     .count();
 
   return { deletedQuizCount, deletedResultCount };
@@ -1077,42 +1096,52 @@ export async function getDeletedItemsStats(
  * Permanently remove soft-deleted (tombstoned) items from local storage.
  * This frees up space but means deletions can no longer sync to other devices.
  */
-export async function purgeDeletedItems(
-  userId: string,
-): Promise<{
+export async function purgeDeletedItems(userId: string): Promise<{
   quizzesPurged: number;
   resultsPurged: number;
 }> {
   let quizzesPurged = 0;
   let resultsPurged = 0;
 
-  await db.transaction("rw", db.quizzes, db.results, async () => {
-    // Find and delete tombstoned quizzes
-    const deletedQuizzes = await db.quizzes
-      .where("user_id")
-      .equals(userId)
-      .filter((quiz) => quiz.deleted_at !== null && quiz.deleted_at !== undefined)
-      .toArray();
+  await db.transaction(
+    "rw",
+    [db.quizzes, db.results, db.zenDrafts],
+    async () => {
+      // Find and delete tombstoned quizzes
+      const deletedQuizzes = await db.quizzes
+        .where("user_id")
+        .equals(userId)
+        .filter(
+          (quiz) => quiz.deleted_at !== null && quiz.deleted_at !== undefined,
+        )
+        .toArray();
 
-    if (deletedQuizzes.length > 0) {
-      const quizIds = deletedQuizzes.map((q) => q.id);
-      await db.quizzes.bulkDelete(quizIds);
-      quizzesPurged = quizIds.length;
-    }
+      if (deletedQuizzes.length > 0) {
+        const quizIds = deletedQuizzes.map((q) => q.id);
+        await db.zenDrafts.bulkDelete(
+          quizIds.map((quizId) => [userId, quizId] as [string, string]),
+        );
+        await db.quizzes.bulkDelete(quizIds);
+        quizzesPurged = quizIds.length;
+      }
 
-    // Find and delete tombstoned results
-    const deletedResults = await db.results
-      .where("user_id")
-      .equals(userId)
-      .filter((result) => result.deleted_at !== null && result.deleted_at !== undefined)
-      .toArray();
+      // Find and delete tombstoned results
+      const deletedResults = await db.results
+        .where("user_id")
+        .equals(userId)
+        .filter(
+          (result) =>
+            result.deleted_at !== null && result.deleted_at !== undefined,
+        )
+        .toArray();
 
-    if (deletedResults.length > 0) {
-      const resultIds = deletedResults.map((r) => r.id);
-      await db.results.bulkDelete(resultIds);
-      resultsPurged = resultIds.length;
-    }
-  });
+      if (deletedResults.length > 0) {
+        const resultIds = deletedResults.map((r) => r.id);
+        await db.results.bulkDelete(resultIds);
+        resultsPurged = resultIds.length;
+      }
+    },
+  );
 
   return { quizzesPurged, resultsPurged };
 }

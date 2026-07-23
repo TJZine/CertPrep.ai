@@ -27,6 +27,21 @@ vi.mock("@/hooks/useTimer", () => ({
     start: vi.fn(),
     seconds: 0,
     pause: vi.fn(),
+    reset: vi.fn(),
+  })),
+}));
+
+vi.mock("@/components/quiz/hooks/useZenDraftSession", () => ({
+  useZenDraftSession: vi.fn(() => ({
+    isInitializing: false,
+    decision: null,
+    saveStatus: "idle",
+    saveMessage: null,
+    draftOwnerId: null,
+    resume: vi.fn(),
+    startOver: vi.fn(),
+    resumeAsNewAttempt: vi.fn(),
+    flushDraft: vi.fn().mockResolvedValue(true),
   })),
 }));
 

@@ -4,128 +4,213 @@ import DashboardClient from "@/components/dashboard/DashboardClient";
 
 // Define mocks outside to ensure hoisting compatibility
 const mocks = vi.hoisted(() => ({
-    useAuth: vi.fn(),
-    useEffectiveUserId: vi.fn(),
-    useInitializeDatabase: vi.fn(),
-    useQuizzes: vi.fn(),
-    useDashboardStats: vi.fn(),
-    useToast: vi.fn(),
-    getDueCountsByBox: vi.fn(),
-    useSearchParams: vi.fn(),
+  useAuth: vi.fn(),
+  useEffectiveUserId: vi.fn(),
+  useInitializeDatabase: vi.fn(),
+  useQuizzes: vi.fn(),
+  useDashboardStats: vi.fn(),
+  useToast: vi.fn(),
+  getDueCountsByBox: vi.fn(),
+  useSearchParams: vi.fn(),
+  useZenDraftStatuses: vi.fn(),
 }));
 
 // Mock Hooks
 vi.mock("@/components/providers/AuthProvider", () => ({
-    useAuth: mocks.useAuth,
+  useAuth: mocks.useAuth,
 }));
 
 vi.mock("@/hooks/useEffectiveUserId", () => ({
-    useEffectiveUserId: mocks.useEffectiveUserId,
+  useEffectiveUserId: mocks.useEffectiveUserId,
 }));
 
 vi.mock("@/hooks/useDatabase", () => ({
-    useInitializeDatabase: mocks.useInitializeDatabase,
-    useQuizzes: mocks.useQuizzes,
+  useInitializeDatabase: mocks.useInitializeDatabase,
+  useQuizzes: mocks.useQuizzes,
+  useZenDraftStatuses: mocks.useZenDraftStatuses,
 }));
 
 vi.mock("@/hooks/useDashboardStats", () => ({
-    useDashboardStats: mocks.useDashboardStats,
+  useDashboardStats: mocks.useDashboardStats,
 }));
 
 vi.mock("@/components/ui/Toast", () => ({
-    useToast: mocks.useToast,
+  useToast: mocks.useToast,
 }));
 
 vi.mock("next/navigation", () => ({
-    useSearchParams: mocks.useSearchParams,
+  useSearchParams: mocks.useSearchParams,
 }));
 
 // Note: deleteQuiz mock removed - add to mocks object when delete flow tests are added
 
 vi.mock("@/db/srs", () => ({
-    getDueCountsByBox: mocks.getDueCountsByBox,
+  getDueCountsByBox: mocks.getDueCountsByBox,
 }));
 
 vi.mock("@/lib/prefetch", () => ({
-    prefetchOnIdle: vi.fn().mockReturnValue(() => { }),
+  prefetchOnIdle: vi.fn().mockReturnValue(() => {}),
 }));
 
 // Mock components
 vi.mock("@/components/dashboard/DashboardHeader", () => ({
-    DashboardHeader: ({ onImportClick }: { onImportClick: () => void }): React.JSX.Element => (
-        <div data-testid="dashboard-header">
-            <button onClick={onImportClick}>Import Quiz</button>
-        </div>
-    ),
+  DashboardHeader: ({
+    onImportClick,
+  }: {
+    onImportClick: () => void;
+  }): React.JSX.Element => (
+    <div data-testid="dashboard-header">
+      <button onClick={onImportClick}>Import Quiz</button>
+    </div>
+  ),
 }));
 
-vi.mock("@/components/dashboard/StatsBar", () => ({ StatsBar: (): React.JSX.Element => <div data-testid="stats-bar" /> }));
-vi.mock("@/components/dashboard/QuizGrid", () => ({ QuizGrid: (): React.JSX.Element => <div data-testid="quiz-grid" /> }));
-vi.mock("@/components/dashboard/QuizSortControls", () => ({ QuizSortControls: (): React.JSX.Element => <div data-testid="quiz-sort-controls" /> }));
-vi.mock("@/components/srs/DueQuestionsCard", () => ({ DueQuestionsCard: (): React.JSX.Element => <div data-testid="due-questions-card" /> }));
-vi.mock("@/components/dashboard/InterleavedPracticeCard", () => ({ InterleavedPracticeCard: (): React.JSX.Element => <div data-testid="interleaved-card" /> }));
+vi.mock("@/components/dashboard/StatsBar", () => ({
+  StatsBar: (): React.JSX.Element => <div data-testid="stats-bar" />,
+}));
+vi.mock("@/components/dashboard/QuizGrid", () => ({
+  QuizGrid: ({
+    quizzes,
+    onStartQuiz,
+  }: {
+    quizzes: Array<{ id: string; title: string }>;
+    onStartQuiz: (quiz: { id: string; title: string }) => void;
+  }): React.JSX.Element => (
+    <div data-testid="quiz-grid">
+      {quizzes.map((quiz) => (
+        <button key={quiz.id} onClick={() => onStartQuiz(quiz)}>
+          Open {quiz.title}
+        </button>
+      ))}
+    </div>
+  ),
+}));
+vi.mock("@/components/dashboard/QuizSortControls", () => ({
+  QuizSortControls: (): React.JSX.Element => (
+    <div data-testid="quiz-sort-controls" />
+  ),
+}));
+vi.mock("@/components/srs/DueQuestionsCard", () => ({
+  DueQuestionsCard: (): React.JSX.Element => (
+    <div data-testid="due-questions-card" />
+  ),
+}));
+vi.mock("@/components/dashboard/InterleavedPracticeCard", () => ({
+  InterleavedPracticeCard: (): React.JSX.Element => (
+    <div data-testid="interleaved-card" />
+  ),
+}));
 
 vi.mock("@/components/dashboard/ImportModal", () => ({
-    ImportModal: ({ isOpen }: { isOpen: boolean }): React.JSX.Element | null => (
-        isOpen ? <div data-testid="import-modal">Import Modal Content</div> : null
-    ),
+  ImportModal: ({ isOpen }: { isOpen: boolean }): React.JSX.Element | null =>
+    isOpen ? <div data-testid="import-modal">Import Modal Content</div> : null,
+}));
+
+vi.mock("@/components/dashboard/ModeSelectModal", () => ({
+  ModeSelectModal: ({
+    isOpen,
+  }: {
+    isOpen: boolean;
+  }): React.JSX.Element | null =>
+    isOpen ? <div data-testid="mode-select-modal" /> : null,
 }));
 
 describe("DashboardClient", () => {
-    beforeEach(() => {
-        vi.clearAllMocks();
+  beforeEach(() => {
+    vi.clearAllMocks();
 
-        // Setup default stable mock returns
-        mocks.useAuth.mockReturnValue({ user: { id: "test-user" }, isLoading: false });
-        mocks.useEffectiveUserId.mockReturnValue("test-user");
-        mocks.useInitializeDatabase.mockReturnValue({ isInitialized: true, error: null });
-        mocks.useQuizzes.mockReturnValue({ quizzes: [], isLoading: false, error: null });
-        mocks.useDashboardStats.mockReturnValue({
-            quizStats: new Map(),
-            overallStats: { totalQuizzes: 0, totalAttempts: 0, averageScore: 0, totalStudyTime: 0 },
-            isLoading: false
-        });
-        mocks.useToast.mockReturnValue({ addToast: vi.fn() });
-        mocks.getDueCountsByBox.mockResolvedValue({ 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 });
-        mocks.useSearchParams.mockReturnValue(new URLSearchParams());
+    // Setup default stable mock returns
+    mocks.useAuth.mockReturnValue({
+      user: { id: "test-user" },
+      isLoading: false,
+    });
+    mocks.useEffectiveUserId.mockReturnValue("test-user");
+    mocks.useInitializeDatabase.mockReturnValue({
+      isInitialized: true,
+      error: null,
+    });
+    mocks.useQuizzes.mockReturnValue({
+      quizzes: [],
+      isLoading: false,
+      error: null,
+    });
+    mocks.useZenDraftStatuses.mockReturnValue({
+      statuses: new Map(),
+      isLoading: false,
+    });
+    mocks.useDashboardStats.mockReturnValue({
+      quizStats: new Map(),
+      overallStats: {
+        totalQuizzes: 0,
+        totalAttempts: 0,
+        averageScore: 0,
+        totalStudyTime: 0,
+      },
+      isLoading: false,
+    });
+    mocks.useToast.mockReturnValue({ addToast: vi.fn() });
+    mocks.getDueCountsByBox.mockResolvedValue({ 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 });
+    mocks.useSearchParams.mockReturnValue(new URLSearchParams());
+  });
+
+  it("renders dashboard header after initialization", async () => {
+    render(<DashboardClient />);
+
+    // Check if loading state resolves
+    await waitFor(() => {
+      expect(screen.getByTestId("dashboard-header")).toBeInTheDocument();
     });
 
-    it("renders dashboard header after initialization", async () => {
-        render(<DashboardClient />);
+    // Verify hooks were called with correct arguments
+    expect(mocks.useEffectiveUserId).toHaveBeenCalledWith("test-user");
+    expect(mocks.useQuizzes).toHaveBeenCalledWith("test-user");
+    expect(mocks.useDashboardStats).toHaveBeenCalledWith("test-user");
+  });
 
-        // Check if loading state resolves
-        await waitFor(() => {
-            expect(screen.getByTestId("dashboard-header")).toBeInTheDocument();
-        });
+  it("lazy loads and opens ImportModal when requested", async () => {
+    render(<DashboardClient />);
 
-        // Verify hooks were called with correct arguments
-        expect(mocks.useEffectiveUserId).toHaveBeenCalledWith("test-user");
-        expect(mocks.useQuizzes).toHaveBeenCalledWith("test-user");
-        expect(mocks.useDashboardStats).toHaveBeenCalledWith("test-user");
+    await waitFor(() => {
+      expect(screen.getByTestId("dashboard-header")).toBeInTheDocument();
     });
 
-    it("lazy loads and opens ImportModal when requested", async () => {
-        render(<DashboardClient />);
+    const importBtn = screen.getByText("Import Quiz");
+    fireEvent.click(importBtn);
 
-        await waitFor(() => {
-            expect(screen.getByTestId("dashboard-header")).toBeInTheDocument();
-        });
+    await waitFor(() => {
+      expect(screen.getByTestId("import-modal")).toBeInTheDocument();
+    });
+  });
 
-        const importBtn = screen.getByText("Import Quiz");
-        fireEvent.click(importBtn);
+  it("opens ImportModal automatically when the import query param is present", async () => {
+    mocks.useSearchParams.mockReturnValue(new URLSearchParams("import=1"));
 
-        await waitFor(() => {
-            expect(screen.getByTestId("import-modal")).toBeInTheDocument();
-        });
+    render(<DashboardClient />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("import-modal")).toBeInTheDocument();
+    });
+  });
+
+  it("keeps Start and Study Again actions in the mode selector", async () => {
+    const quiz = {
+      id: "quiz-1",
+      title: "Finished quiz",
+      tags: [],
+      questions: [],
+      created_at: 1,
+    };
+    mocks.useQuizzes.mockReturnValue({
+      quizzes: [quiz],
+      isLoading: false,
+      error: null,
     });
 
-    it("opens ImportModal automatically when the import query param is present", async () => {
-        mocks.useSearchParams.mockReturnValue(new URLSearchParams("import=1"));
+    render(<DashboardClient />);
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Open Finished quiz" }),
+    );
 
-        render(<DashboardClient />);
-
-        await waitFor(() => {
-            expect(screen.getByTestId("import-modal")).toBeInTheDocument();
-        });
-    });
+    expect(await screen.findByTestId("mode-select-modal")).toBeInTheDocument();
+  });
 });

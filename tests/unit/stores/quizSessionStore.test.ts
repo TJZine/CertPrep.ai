@@ -1,454 +1,558 @@
-
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { useQuizSessionStore, useCurrentQuestion, useProgress, useIsAnswered, useProctorStatus, useQuestionStatuses } from "@/stores/quizSessionStore";
+import {
+  useQuizSessionStore,
+  useCurrentQuestion,
+  useProgress,
+  useIsAnswered,
+  useProctorStatus,
+  useQuestionStatuses,
+} from "@/stores/quizSessionStore";
 import { renderHook } from "@testing-library/react";
 import { act } from "@testing-library/react";
 import type { Question } from "@/types/quiz";
 import { hashAnswer } from "@/lib/core/crypto";
+import type { ZenQuizDraft } from "@/types/zenDraft";
 
 // Mock crypto
 vi.mock("@/lib/core/crypto", () => ({
-    hashAnswer: vi.fn(async (input: string) => `hashed_${input}`),
-    generateUUID: vi.fn(() => "mock-uuid"),
+  hashAnswer: vi.fn(async (input: string) => `hashed_${input}`),
+  generateUUID: vi.fn(() => "mock-uuid"),
 }));
 
 // We can still mock other utils if needed, but hashAnswer is now in crypto
 vi.mock("@/lib/utils/cn", () => ({
-    cn: vi.fn((...args: string[]) => args.join(" ")),
+  cn: vi.fn((...args: string[]) => args.join(" ")),
 }));
 
 describe("Quiz Session Store", () => {
-    const mockQuestions: Question[] = [
+  const mockQuestions: Question[] = [
+    {
+      id: "q1",
+      question: "Q1",
+      options: { a: "A", b: "B" },
+      correct_answer_hash: "hashed_A",
+      explanation: "Exp1",
+      category: "Cat1",
+    },
+    {
+      id: "q2",
+      question: "Q2",
+      options: { c: "C", d: "D" },
+      correct_answer_hash: "hashed_C",
+      explanation: "Exp2",
+      category: "Cat1",
+    },
+  ];
+
+  beforeEach(() => {
+    act(() => {
+      useQuizSessionStore.getState().resetSession();
+    });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("should initialize session correctly", () => {
+    act(() => {
+      useQuizSessionStore
+        .getState()
+        .initializeSession("quiz-1", "zen", mockQuestions);
+    });
+
+    const state = useQuizSessionStore.getState();
+    expect(state.quizId).toBe("quiz-1");
+    expect(state.questions).toHaveLength(2);
+    expect(state.currentIndex).toBe(0);
+    expect(state.startTime).toBeDefined();
+  });
+
+  it("hydrates a validated Zen draft with order, answer metadata, flags, and position", () => {
+    const draft: ZenQuizDraft = {
+      schema_version: 1,
+      user_id: "user-1",
+      quiz_id: "quiz-1",
+      mode: "zen",
+      quiz_version: 1,
+      quiz_hash: "hash",
+      question_ids: ["q2", "q1"],
+      current_index: 1,
+      answers: [
         {
-            id: "q1",
-            question: "Q1",
-            options: { a: "A", b: "B" },
-            correct_answer_hash: "hashed_A",
-            explanation: "Exp1",
-            category: "Cat1",
+          question_id: "q1",
+          selected_answer: "A",
+          is_correct: true,
+          answered_at: 2_000,
+          difficulty: "hard",
+          time_spent_seconds: 18,
         },
-        {
-            id: "q2",
-            question: "Q2",
-            options: { c: "C", d: "D" },
-            correct_answer_hash: "hashed_C",
-            explanation: "Exp2",
-            category: "Cat1",
-        },
-    ];
+      ],
+      flagged_question_ids: ["q2"],
+      hard_question_ids: ["q1"],
+      selected_answer: "A",
+      has_submitted: true,
+      show_explanation: false,
+      elapsed_seconds: 42,
+      started_at: 1_000,
+      updated_at: 2_000,
+      writer_id: "writer-1",
+      revision: 4,
+    };
 
-    beforeEach(() => {
-        act(() => {
-            useQuizSessionStore.getState().resetSession();
-        });
+    act(() => {
+      useQuizSessionStore
+        .getState()
+        .hydrateZenSession("quiz-1", mockQuestions, draft);
     });
 
-    afterEach(() => {
-        vi.restoreAllMocks();
+    const state = useQuizSessionStore.getState();
+    expect(state.mode).toBe("zen");
+    expect(state.questionQueue).toEqual(["q2", "q1"]);
+    expect(state.questions.map((question) => question.id)).toEqual([
+      "q2",
+      "q1",
+    ]);
+    expect(state.currentIndex).toBe(1);
+    expect(state.selectedAnswer).toBe("A");
+    expect(state.hasSubmitted).toBe(true);
+    expect(state.answers.get("q1")).toMatchObject({
+      difficulty: "hard",
+      timeSpentSeconds: 18,
+    });
+    expect(state.answeredQuestions.has("q1")).toBe(true);
+    expect(state.flaggedQuestions.has("q2")).toBe(true);
+    expect(state.hardQuestions.has("q1")).toBe(true);
+    expect(state.getSessionDuration()).toBeGreaterThanOrEqual(42);
+  });
+
+  it("should navigate between questions", () => {
+    act(() => {
+      useQuizSessionStore
+        .getState()
+        .initializeSession("quiz-1", "zen", mockQuestions);
     });
 
-    it("should initialize session correctly", () => {
-        act(() => {
-            useQuizSessionStore
-                .getState()
-                .initializeSession("quiz-1", "zen", mockQuestions);
-        });
+    // Next
+    act(() => {
+      useQuizSessionStore.getState().goToNextQuestion();
+    });
+    expect(useQuizSessionStore.getState().currentIndex).toBe(1);
 
-        const state = useQuizSessionStore.getState();
-        expect(state.quizId).toBe("quiz-1");
-        expect(state.questions).toHaveLength(2);
-        expect(state.currentIndex).toBe(0);
-        expect(state.startTime).toBeDefined();
+    // Prev
+    act(() => {
+      useQuizSessionStore.getState().goToPreviousQuestion();
+    });
+    expect(useQuizSessionStore.getState().currentIndex).toBe(0);
+
+    // Direct
+    act(() => {
+      useQuizSessionStore.getState().goToQuestion(1);
+    });
+    expect(useQuizSessionStore.getState().currentIndex).toBe(1);
+  });
+
+  it("should handle answer submission and hashing", async () => {
+    act(() => {
+      useQuizSessionStore
+        .getState()
+        .initializeSession("quiz-1", "zen", mockQuestions);
+      useQuizSessionStore.getState().selectAnswer("A");
     });
 
-    it("should navigate between questions", () => {
-        act(() => {
-            useQuizSessionStore
-                .getState()
-                .initializeSession("quiz-1", "zen", mockQuestions);
-        });
+    expect(useQuizSessionStore.getState().selectedAnswer).toBe("A");
 
-        // Next
-        act(() => {
-            useQuizSessionStore.getState().goToNextQuestion();
-        });
-        expect(useQuizSessionStore.getState().currentIndex).toBe(1);
-
-        // Prev
-        act(() => {
-            useQuizSessionStore.getState().goToPreviousQuestion();
-        });
-        expect(useQuizSessionStore.getState().currentIndex).toBe(0);
-
-        // Direct
-        act(() => {
-            useQuizSessionStore.getState().goToQuestion(1);
-        });
-        expect(useQuizSessionStore.getState().currentIndex).toBe(1);
+    await act(async () => {
+      useQuizSessionStore.getState().submitAnswer();
     });
 
-    it("should handle answer submission and hashing", async () => {
-        act(() => {
-            useQuizSessionStore
-                .getState()
-                .initializeSession("quiz-1", "zen", mockQuestions);
-            useQuizSessionStore.getState().selectAnswer("A");
-        });
+    const state = useQuizSessionStore.getState();
+    const answer = state.answers.get("q1");
 
-        expect(useQuizSessionStore.getState().selectedAnswer).toBe("A");
+    expect(answer).toBeDefined();
+    expect(answer?.isCorrect).toBe(true); // hashed_A === hashed_A
+    expect(hashAnswer).toHaveBeenCalledWith("A");
+    expect(state.hasSubmitted).toBe(true);
+    expect(state.showExplanation).toBe(false); // Correct answers don't show explanation
+  });
 
-        await act(async () => {
-            useQuizSessionStore.getState().submitAnswer();
-        });
+  it("should preserve selectedAnswer on hash failures for retry", async () => {
+    const mockHashAnswer = vi.mocked(hashAnswer);
+    const suppressError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+    // Both retry attempts fail
+    mockHashAnswer.mockRejectedValueOnce(new Error("Hash failed"));
+    mockHashAnswer.mockRejectedValueOnce(new Error("Hash failed"));
 
-        const state = useQuizSessionStore.getState();
-        const answer = state.answers.get("q1");
-
-        expect(answer).toBeDefined();
-        expect(answer?.isCorrect).toBe(true); // hashed_A === hashed_A
-        expect(hashAnswer).toHaveBeenCalledWith("A");
-        expect(state.hasSubmitted).toBe(true);
-        expect(state.showExplanation).toBe(false); // Correct answers don't show explanation
+    act(() => {
+      useQuizSessionStore
+        .getState()
+        .initializeSession("quiz-1", "zen", mockQuestions);
+      useQuizSessionStore.getState().selectAnswer("A");
     });
 
-    it("should preserve selectedAnswer on hash failures for retry", async () => {
-        const mockHashAnswer = vi.mocked(hashAnswer);
-        const suppressError = vi.spyOn(console, "error").mockImplementation(() => { });
-        // Both retry attempts fail
-        mockHashAnswer.mockRejectedValueOnce(new Error("Hash failed"));
-        mockHashAnswer.mockRejectedValueOnce(new Error("Hash failed"));
-
-        act(() => {
-            useQuizSessionStore
-                .getState()
-                .initializeSession("quiz-1", "zen", mockQuestions);
-            useQuizSessionStore.getState().selectAnswer("A");
-        });
-
-        await act(async () => {
-            useQuizSessionStore.getState().submitAnswer();
-        });
-        await vi.waitFor(() => {
-            expect(useQuizSessionStore.getState().error).not.toBeNull();
-        });
-
-        const state = useQuizSessionStore.getState();
-        expect(state.error).toBe("Failed to submit answer. Please try again.");
-        // KEY: selectedAnswer must be preserved so user can retry!
-        expect(state.selectedAnswer).toBe("A");
-        expect(state.isSubmitting).toBe(false);
-        expect(state.hasSubmitted).toBe(false);
-        expect(suppressError).toHaveBeenCalled();
+    await act(async () => {
+      useQuizSessionStore.getState().submitAnswer();
+    });
+    await vi.waitFor(() => {
+      expect(useQuizSessionStore.getState().error).not.toBeNull();
     });
 
-    it("should show explanation on incorrect answer", async () => {
-        act(() => {
-            useQuizSessionStore
-                .getState()
-                .initializeSession("quiz-1", "zen", mockQuestions);
-            useQuizSessionStore.getState().selectAnswer("B");
-        });
+    const state = useQuizSessionStore.getState();
+    expect(state.error).toBe("Failed to submit answer. Please try again.");
+    // KEY: selectedAnswer must be preserved so user can retry!
+    expect(state.selectedAnswer).toBe("A");
+    expect(state.isSubmitting).toBe(false);
+    expect(state.hasSubmitted).toBe(false);
+    expect(suppressError).toHaveBeenCalled();
+  });
 
-        await act(async () => {
-            useQuizSessionStore.getState().submitAnswer();
-        });
-
-        const state = useQuizSessionStore.getState();
-        const answer = state.answers.get("q1");
-
-        expect(answer?.isCorrect).toBe(false);
-        expect(state.showExplanation).toBe(true);
+  it("should show explanation on incorrect answer", async () => {
+    act(() => {
+      useQuizSessionStore
+        .getState()
+        .initializeSession("quiz-1", "zen", mockQuestions);
+      useQuizSessionStore.getState().selectAnswer("B");
     });
 
-    it("should complete session when finishing last question", () => {
-        act(() => {
-            useQuizSessionStore
-                .getState()
-                .initializeSession("quiz-1", "zen", mockQuestions);
-            useQuizSessionStore.getState().goToQuestion(1); // Last question
-        });
-
-        act(() => {
-            useQuizSessionStore.getState().goToNextQuestion();
-        });
-
-        const state = useQuizSessionStore.getState();
-        expect(state.isComplete).toBe(true);
-        expect(state.endTime).toBeDefined();
+    await act(async () => {
+      useQuizSessionStore.getState().submitAnswer();
     });
 
-    it("should handle markAgain correctly (no re-queueing)", async () => {
-        act(() => {
-            useQuizSessionStore
-                .getState()
-                .initializeSession("quiz-1", "zen", mockQuestions);
-        });
+    const state = useQuizSessionStore.getState();
+    const answer = state.answers.get("q1");
 
-        // 1. Answer first question
-        act(() => {
-            useQuizSessionStore.getState().selectAnswer("A");
-        });
-        await act(async () => {
-            useQuizSessionStore.getState().submitAnswer();
-        });
+    expect(answer?.isCorrect).toBe(false);
+    expect(state.showExplanation).toBe(true);
+  });
 
-        const initialQueueLength = useQuizSessionStore.getState().questions.length;
-
-        // 2. Mark Again
-        act(() => {
-            useQuizSessionStore.getState().markAgain();
-        });
-
-        const state = useQuizSessionStore.getState();
-
-        // Verify navigation
-        expect(state.currentIndex).toBe(1);
-
-        // Verify NO re-queueing (length should be same)
-        expect(state.questions.length).toBe(initialQueueLength);
-        expect(state.questionQueue.length).toBe(initialQueueLength);
-
-        // Verify difficulty marked
-        const answer = state.answers.get("q1");
-        expect(answer?.difficulty).toBe("again");
+  it("should complete session when finishing last question", () => {
+    act(() => {
+      useQuizSessionStore
+        .getState()
+        .initializeSession("quiz-1", "zen", mockQuestions);
+      useQuizSessionStore.getState().goToQuestion(1); // Last question
     });
 
-    it("should handle Proctor Mode specific logic", () => {
-        act(() => {
-            useQuizSessionStore
-                .getState()
-                .initializeProctorSession("quiz-1", mockQuestions, 60);
-        });
-
-        const state = useQuizSessionStore.getState();
-        expect(state.mode).toBe("proctor");
-        expect(state.timeRemaining).toBe(3600);
-
-        // Proctor mode often tracks seen questions
-        expect(state.seenQuestions.has("q1")).toBe(true);
-
-        // Navigation in proctor mode
-        act(() => {
-            useQuizSessionStore.getState().navigateToQuestion(1);
-        });
-        expect(useQuizSessionStore.getState().seenQuestions.has("q2")).toBe(true);
-    });
-    it("should handle selectAnswerProctor and hashing", async () => {
-        act(() => {
-            useQuizSessionStore
-                .getState()
-                .initializeProctorSession("quiz-1", mockQuestions, 60);
-            useQuizSessionStore.getState().selectAnswerProctor("A");
-        });
-
-        const state = useQuizSessionStore.getState();
-        expect(state.isSubmitting).toBe(true);
-        expect(state.selectedAnswer).toBe("A");
-
-        await vi.waitFor(() => {
-            expect(useQuizSessionStore.getState().isSubmitting).toBe(false);
-        });
-
-        const finalState = useQuizSessionStore.getState();
-        const answer = finalState.answers.get("q1");
-
-        expect(answer).toBeDefined();
-        expect(answer?.isCorrect).toBe(true);
-        expect(finalState.answeredQuestions.has("q1")).toBe(true);
-        expect(finalState.seenQuestions.has("q1")).toBe(true);
+    act(() => {
+      useQuizSessionStore.getState().goToNextQuestion();
     });
 
-    it("should handle error in selectAnswerProctor", async () => {
-        const mockHashAnswer = vi.mocked(hashAnswer);
-        const suppressError = vi.spyOn(console, "error").mockImplementation(() => { });
-        mockHashAnswer.mockRejectedValueOnce(new Error("Hash failed"));
-        mockHashAnswer.mockRejectedValueOnce(new Error("Hash failed"));
+    const state = useQuizSessionStore.getState();
+    expect(state.isComplete).toBe(true);
+    expect(state.endTime).toBeDefined();
+  });
 
-        act(() => {
-            useQuizSessionStore
-                .getState()
-                .initializeProctorSession("quiz-1", mockQuestions, 60);
-            useQuizSessionStore.getState().selectAnswerProctor("A");
-        });
-
-        await vi.waitFor(() => {
-            expect(useQuizSessionStore.getState().error).not.toBeNull();
-        });
-
-        const state = useQuizSessionStore.getState();
-        expect(state.error).toBe("We could not save your answer. Please try again.");
-        expect(state.isSubmitting).toBe(false);
-        expect(suppressError).toHaveBeenCalled();
+  it("should handle markAgain correctly (no re-queueing)", async () => {
+    act(() => {
+      useQuizSessionStore
+        .getState()
+        .initializeSession("quiz-1", "zen", mockQuestions);
     });
 
-    it("should markHard and markGood correctly", async () => {
-        act(() => {
-            useQuizSessionStore.getState().initializeSession("quiz-1", "zen", mockQuestions);
-            useQuizSessionStore.getState().selectAnswer("A");
-        });
-        await act(async () => {
-            useQuizSessionStore.getState().submitAnswer();
-        });
-
-        act(() => {
-            useQuizSessionStore.getState().markHard();
-        });
-
-        expect(useQuizSessionStore.getState().hardQuestions.has("q1")).toBe(true);
-        expect(useQuizSessionStore.getState().answers.get("q1")?.difficulty).toBe("hard");
-
-        // Now we are on q2 because markHard calls goToNextQuestion
-        act(() => {
-            useQuizSessionStore.getState().selectAnswer("C");
-        });
-        await act(async () => {
-            useQuizSessionStore.getState().submitAnswer();
-        });
-
-        act(() => {
-            useQuizSessionStore.getState().markGood();
-        });
-
-        expect(useQuizSessionStore.getState().answers.get("q2")?.difficulty).toBe("good");
+    // 1. Answer first question
+    act(() => {
+      useQuizSessionStore.getState().selectAnswer("A");
+    });
+    await act(async () => {
+      useQuizSessionStore.getState().submitAnswer();
     });
 
-    it("should manage time and warnings", () => {
-        act(() => {
-            useQuizSessionStore.getState().updateTimeRemaining(600);
-        });
-        expect(useQuizSessionStore.getState().timeRemaining).toBe(600);
-        expect(useQuizSessionStore.getState().isTimeWarning).toBe(false);
+    const initialQueueLength = useQuizSessionStore.getState().questions.length;
 
-        act(() => {
-            useQuizSessionStore.getState().updateTimeRemaining(150); // Warning threshold defaults to 300
-        });
-        expect(useQuizSessionStore.getState().isTimeWarning).toBe(true);
-
-        act(() => {
-            useQuizSessionStore.getState().setTimeWarning(false);
-        });
-        expect(useQuizSessionStore.getState().isTimeWarning).toBe(false);
+    // 2. Mark Again
+    act(() => {
+      useQuizSessionStore.getState().markAgain();
     });
 
-    it("should handle exam submission", () => {
-        act(() => {
-            useQuizSessionStore.getState().initializeSession("quiz-1", "zen", mockQuestions);
-        });
-        expect(useQuizSessionStore.getState().canSubmitExam()).toBe(true);
+    const state = useQuizSessionStore.getState();
 
-        act(() => {
-            useQuizSessionStore.getState().submitExam();
-        });
-        expect(useQuizSessionStore.getState().isComplete).toBe(true);
-        expect(useQuizSessionStore.getState().isAutoSubmitted).toBe(false);
-        expect(useQuizSessionStore.getState().canSubmitExam()).toBe(false);
+    // Verify navigation
+    expect(state.currentIndex).toBe(1);
 
-        act(() => {
-            useQuizSessionStore.getState().resetSession();
-            useQuizSessionStore.getState().initializeSession("quiz-1", "zen", mockQuestions);
-            useQuizSessionStore.getState().autoSubmitExam();
-        });
-        expect(useQuizSessionStore.getState().isComplete).toBe(true);
-        expect(useQuizSessionStore.getState().isAutoSubmitted).toBe(true);
+    // Verify NO re-queueing (length should be same)
+    expect(state.questions.length).toBe(initialQueueLength);
+    expect(state.questionQueue.length).toBe(initialQueueLength);
+
+    // Verify difficulty marked
+    const answer = state.answers.get("q1");
+    expect(answer?.difficulty).toBe("again");
+  });
+
+  it("should handle Proctor Mode specific logic", () => {
+    act(() => {
+      useQuizSessionStore
+        .getState()
+        .initializeProctorSession("quiz-1", mockQuestions, 60);
     });
 
-    it("should toggle explanation and flag", () => {
-        act(() => {
-            useQuizSessionStore.getState().toggleExplanation();
-        });
-        expect(useQuizSessionStore.getState().showExplanation).toBe(true);
+    const state = useQuizSessionStore.getState();
+    expect(state.mode).toBe("proctor");
+    expect(state.timeRemaining).toBe(3600);
 
-        act(() => {
-            useQuizSessionStore.getState().toggleFlag("q1");
-        });
-        expect(useQuizSessionStore.getState().flaggedQuestions.has("q1")).toBe(true);
-        expect(useQuizSessionStore.getState().isQuestionFlagged("q1")).toBe(true);
+    // Proctor mode often tracks seen questions
+    expect(state.seenQuestions.has("q1")).toBe(true);
 
-        act(() => {
-            useQuizSessionStore.getState().toggleFlag("q1");
-        });
-        expect(useQuizSessionStore.getState().flaggedQuestions.has("q1")).toBe(false);
+    // Navigation in proctor mode
+    act(() => {
+      useQuizSessionStore.getState().navigateToQuestion(1);
+    });
+    expect(useQuizSessionStore.getState().seenQuestions.has("q2")).toBe(true);
+  });
+  it("should handle selectAnswerProctor and hashing", async () => {
+    act(() => {
+      useQuizSessionStore
+        .getState()
+        .initializeProctorSession("quiz-1", mockQuestions, 60);
+      useQuizSessionStore.getState().selectAnswerProctor("A");
     });
 
-    it("should compute getters for answered and flagged states", async () => {
-        act(() => {
-            useQuizSessionStore.getState().initializeSession("quiz-1", "zen", mockQuestions);
-        });
+    const state = useQuizSessionStore.getState();
+    expect(state.isSubmitting).toBe(true);
+    expect(state.selectedAnswer).toBe("A");
 
-        expect(useQuizSessionStore.getState().getCurrentQuestion()).toEqual(mockQuestions[0]);
-        expect(useQuizSessionStore.getState().getUnansweredCount()).toBe(2);
-
-        act(() => {
-            useQuizSessionStore.getState().selectAnswer("A");
-        });
-        await act(async () => {
-            useQuizSessionStore.getState().submitAnswer();
-        });
-
-        expect(useQuizSessionStore.getState().isQuestionAnswered("q1")).toBe(true);
-        expect(useQuizSessionStore.getState().getAnswerForQuestion("q1")).toBeDefined();
-        expect(useQuizSessionStore.getState().getAnsweredCount()).toBe(1);
-        expect(useQuizSessionStore.getState().getUnansweredCount()).toBe(1);
-
-        expect(useQuizSessionStore.getState().getQuestionStatus("q1")).toBe("answered");
-
-        act(() => {
-            useQuizSessionStore.getState().toggleFlag("q2");
-        });
-        expect(useQuizSessionStore.getState().getQuestionStatus("q2")).toBe("flagged");
-        expect(useQuizSessionStore.getState().getFlaggedCount()).toBe(1);
-
-        act(() => {
-            useQuizSessionStore.getState().markQuestionSeen("q2");
-        });
-        expect(useQuizSessionStore.getState().getQuestionStatus("q2")).toBe("flagged"); // Flagged takes precedence
-
-        act(() => {
-            useQuizSessionStore.getState().toggleFlag("q2"); // Unflag
-        });
-        expect(useQuizSessionStore.getState().getQuestionStatus("q2")).toBe("seen");
-
+    await vi.waitFor(() => {
+      expect(useQuizSessionStore.getState().isSubmitting).toBe(false);
     });
 
-    it("should compute progress/session duration and clear errors", async () => {
-        act(() => {
-            useQuizSessionStore.getState().initializeSession("quiz-1", "zen", mockQuestions);
-            useQuizSessionStore.getState().selectAnswer("A");
-        });
-        await act(async () => {
-            useQuizSessionStore.getState().submitAnswer();
-        });
+    const finalState = useQuizSessionStore.getState();
+    const answer = finalState.answers.get("q1");
 
-        expect(useQuizSessionStore.getState().getProgress().percentage).toBe(50);
-        expect(useQuizSessionStore.getState().getSessionDuration()).toBeGreaterThanOrEqual(0);
+    expect(answer).toBeDefined();
+    expect(answer?.isCorrect).toBe(true);
+    expect(finalState.answeredQuestions.has("q1")).toBe(true);
+    expect(finalState.seenQuestions.has("q1")).toBe(true);
+  });
 
-        act(() => {
-            useQuizSessionStore.getState().clearError();
-        });
-        expect(useQuizSessionStore.getState().error).toBeNull();
+  it("should handle error in selectAnswerProctor", async () => {
+    const mockHashAnswer = vi.mocked(hashAnswer);
+    const suppressError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+    mockHashAnswer.mockRejectedValueOnce(new Error("Hash failed"));
+    mockHashAnswer.mockRejectedValueOnce(new Error("Hash failed"));
+
+    act(() => {
+      useQuizSessionStore
+        .getState()
+        .initializeProctorSession("quiz-1", mockQuestions, 60);
+      useQuizSessionStore.getState().selectAnswerProctor("A");
     });
 
-    it("should test react hooks selectors", () => {
-        act(() => {
-            useQuizSessionStore.getState().initializeSession("quiz-1", "zen", mockQuestions);
-            useQuizSessionStore.getState().toggleFlag("q1");
-        });
-
-        const { result: currentQ } = renderHook(() => useCurrentQuestion());
-        expect(currentQ.current?.id).toBe("q1");
-
-        const { result: progress } = renderHook(() => useProgress());
-        expect(progress.current.total).toBe(2);
-        expect(progress.current.current).toBe(0);
-
-        const { result: isAnswered } = renderHook(() => useIsAnswered());
-        expect(isAnswered.current).toBe(false);
-
-        const { result: proctorStatus } = renderHook(() => useProctorStatus());
-        expect(proctorStatus.current.totalQuestions).toBe(2);
-
-        const { result: questionStatuses } = renderHook(() => useQuestionStatuses());
-        expect(questionStatuses.current[0]?.status).toBe("flagged");
-        expect(questionStatuses.current[1]?.status).toBe("unseen");
+    await vi.waitFor(() => {
+      expect(useQuizSessionStore.getState().error).not.toBeNull();
     });
+
+    const state = useQuizSessionStore.getState();
+    expect(state.error).toBe(
+      "We could not save your answer. Please try again.",
+    );
+    expect(state.isSubmitting).toBe(false);
+    expect(suppressError).toHaveBeenCalled();
+  });
+
+  it("should markHard and markGood correctly", async () => {
+    act(() => {
+      useQuizSessionStore
+        .getState()
+        .initializeSession("quiz-1", "zen", mockQuestions);
+      useQuizSessionStore.getState().selectAnswer("A");
+    });
+    await act(async () => {
+      useQuizSessionStore.getState().submitAnswer();
+    });
+
+    act(() => {
+      useQuizSessionStore.getState().markHard();
+    });
+
+    expect(useQuizSessionStore.getState().hardQuestions.has("q1")).toBe(true);
+    expect(useQuizSessionStore.getState().answers.get("q1")?.difficulty).toBe(
+      "hard",
+    );
+
+    // Now we are on q2 because markHard calls goToNextQuestion
+    act(() => {
+      useQuizSessionStore.getState().selectAnswer("C");
+    });
+    await act(async () => {
+      useQuizSessionStore.getState().submitAnswer();
+    });
+
+    act(() => {
+      useQuizSessionStore.getState().markGood();
+    });
+
+    expect(useQuizSessionStore.getState().answers.get("q2")?.difficulty).toBe(
+      "good",
+    );
+  });
+
+  it("should manage time and warnings", () => {
+    act(() => {
+      useQuizSessionStore.getState().updateTimeRemaining(600);
+    });
+    expect(useQuizSessionStore.getState().timeRemaining).toBe(600);
+    expect(useQuizSessionStore.getState().isTimeWarning).toBe(false);
+
+    act(() => {
+      useQuizSessionStore.getState().updateTimeRemaining(150); // Warning threshold defaults to 300
+    });
+    expect(useQuizSessionStore.getState().isTimeWarning).toBe(true);
+
+    act(() => {
+      useQuizSessionStore.getState().setTimeWarning(false);
+    });
+    expect(useQuizSessionStore.getState().isTimeWarning).toBe(false);
+  });
+
+  it("should handle exam submission", () => {
+    act(() => {
+      useQuizSessionStore
+        .getState()
+        .initializeSession("quiz-1", "zen", mockQuestions);
+    });
+    expect(useQuizSessionStore.getState().canSubmitExam()).toBe(true);
+
+    act(() => {
+      useQuizSessionStore.getState().submitExam();
+    });
+    expect(useQuizSessionStore.getState().isComplete).toBe(true);
+    expect(useQuizSessionStore.getState().isAutoSubmitted).toBe(false);
+    expect(useQuizSessionStore.getState().canSubmitExam()).toBe(false);
+
+    act(() => {
+      useQuizSessionStore.getState().resetSession();
+      useQuizSessionStore
+        .getState()
+        .initializeSession("quiz-1", "zen", mockQuestions);
+      useQuizSessionStore.getState().autoSubmitExam();
+    });
+    expect(useQuizSessionStore.getState().isComplete).toBe(true);
+    expect(useQuizSessionStore.getState().isAutoSubmitted).toBe(true);
+  });
+
+  it("should toggle explanation and flag", () => {
+    act(() => {
+      useQuizSessionStore.getState().toggleExplanation();
+    });
+    expect(useQuizSessionStore.getState().showExplanation).toBe(true);
+
+    act(() => {
+      useQuizSessionStore.getState().toggleFlag("q1");
+    });
+    expect(useQuizSessionStore.getState().flaggedQuestions.has("q1")).toBe(
+      true,
+    );
+    expect(useQuizSessionStore.getState().isQuestionFlagged("q1")).toBe(true);
+
+    act(() => {
+      useQuizSessionStore.getState().toggleFlag("q1");
+    });
+    expect(useQuizSessionStore.getState().flaggedQuestions.has("q1")).toBe(
+      false,
+    );
+  });
+
+  it("should compute getters for answered and flagged states", async () => {
+    act(() => {
+      useQuizSessionStore
+        .getState()
+        .initializeSession("quiz-1", "zen", mockQuestions);
+    });
+
+    expect(useQuizSessionStore.getState().getCurrentQuestion()).toEqual(
+      mockQuestions[0],
+    );
+    expect(useQuizSessionStore.getState().getUnansweredCount()).toBe(2);
+
+    act(() => {
+      useQuizSessionStore.getState().selectAnswer("A");
+    });
+    await act(async () => {
+      useQuizSessionStore.getState().submitAnswer();
+    });
+
+    expect(useQuizSessionStore.getState().isQuestionAnswered("q1")).toBe(true);
+    expect(
+      useQuizSessionStore.getState().getAnswerForQuestion("q1"),
+    ).toBeDefined();
+    expect(useQuizSessionStore.getState().getAnsweredCount()).toBe(1);
+    expect(useQuizSessionStore.getState().getUnansweredCount()).toBe(1);
+
+    expect(useQuizSessionStore.getState().getQuestionStatus("q1")).toBe(
+      "answered",
+    );
+
+    act(() => {
+      useQuizSessionStore.getState().toggleFlag("q2");
+    });
+    expect(useQuizSessionStore.getState().getQuestionStatus("q2")).toBe(
+      "flagged",
+    );
+    expect(useQuizSessionStore.getState().getFlaggedCount()).toBe(1);
+
+    act(() => {
+      useQuizSessionStore.getState().markQuestionSeen("q2");
+    });
+    expect(useQuizSessionStore.getState().getQuestionStatus("q2")).toBe(
+      "flagged",
+    ); // Flagged takes precedence
+
+    act(() => {
+      useQuizSessionStore.getState().toggleFlag("q2"); // Unflag
+    });
+    expect(useQuizSessionStore.getState().getQuestionStatus("q2")).toBe("seen");
+  });
+
+  it("should compute progress/session duration and clear errors", async () => {
+    act(() => {
+      useQuizSessionStore
+        .getState()
+        .initializeSession("quiz-1", "zen", mockQuestions);
+      useQuizSessionStore.getState().selectAnswer("A");
+    });
+    await act(async () => {
+      useQuizSessionStore.getState().submitAnswer();
+    });
+
+    expect(useQuizSessionStore.getState().getProgress().percentage).toBe(50);
+    expect(
+      useQuizSessionStore.getState().getSessionDuration(),
+    ).toBeGreaterThanOrEqual(0);
+
+    act(() => {
+      useQuizSessionStore.getState().clearError();
+    });
+    expect(useQuizSessionStore.getState().error).toBeNull();
+  });
+
+  it("should test react hooks selectors", () => {
+    act(() => {
+      useQuizSessionStore
+        .getState()
+        .initializeSession("quiz-1", "zen", mockQuestions);
+      useQuizSessionStore.getState().toggleFlag("q1");
+    });
+
+    const { result: currentQ } = renderHook(() => useCurrentQuestion());
+    expect(currentQ.current?.id).toBe("q1");
+
+    const { result: progress } = renderHook(() => useProgress());
+    expect(progress.current.total).toBe(2);
+    expect(progress.current.current).toBe(0);
+
+    const { result: isAnswered } = renderHook(() => useIsAnswered());
+    expect(isAnswered.current).toBe(false);
+
+    const { result: proctorStatus } = renderHook(() => useProctorStatus());
+    expect(proctorStatus.current.totalQuestions).toBe(2);
+
+    const { result: questionStatuses } = renderHook(() =>
+      useQuestionStatuses(),
+    );
+    expect(questionStatuses.current[0]?.status).toBe("flagged");
+    expect(questionStatuses.current[1]?.status).toBe("unseen");
+  });
 });

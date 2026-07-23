@@ -27,6 +27,14 @@ vi.mock("@/hooks/useBeforeUnload", () => ({
   useBeforeUnload: vi.fn(),
 }));
 
+vi.mock("@/components/providers/AuthProvider", () => ({
+  useAuth: vi.fn(() => ({ user: { id: "user-1" } })),
+}));
+
+vi.mock("@/hooks/useEffectiveUserId", () => ({
+  useEffectiveUserId: vi.fn(() => "user-1"),
+}));
+
 vi.mock("@/components/quiz/hooks/useQuizPersistence", () => ({
   useQuizPersistence: vi.fn(),
 }));
@@ -174,6 +182,14 @@ describe("ZenQuizContainer", () => {
           markHard: vi.fn(),
           markGood: vi.fn(),
           resetSession: mockResetSession,
+          draftDecision: null,
+          draftSaveStatus: "saved",
+          draftSaveMessage: "Saved on this device.",
+          draftOwnerId: "writer-1",
+          resumeDraft: vi.fn(),
+          startOverDraft: vi.fn(),
+          resumeDraftAsNewAttempt: vi.fn(),
+          flushDraft: vi.fn().mockResolvedValue(true),
         }) as unknown as ReturnType<typeof useQuizSession>,
     );
   });
@@ -190,6 +206,64 @@ describe("ZenQuizContainer", () => {
       "data-timer-kind",
       "elapsed",
     );
+  });
+
+  it("enables drafts only for ordinary standard Zen intent", () => {
+    render(<ZenQuizContainer quiz={mockQuiz} sessionKind="standard_zen" />);
+    expect(useQuizSession).toHaveBeenLastCalledWith(
+      expect.objectContaining({ draftEligible: true }),
+    );
+  });
+
+  it.each([
+    ["remixed Zen", { sessionKind: "remixed_zen" as const }],
+    ["Smart Round", { isSmartRound: true }],
+    ["Topic Study", { isTopicStudy: true }],
+    ["SRS Review", { isSRSReview: true }],
+    ["Interleaved Practice", { isInterleaved: true }],
+  ])("never enables standard drafts for %s", (_label, props) => {
+    render(<ZenQuizContainer quiz={mockQuiz} {...props} />);
+    expect(useQuizSession).toHaveBeenLastCalledWith(
+      expect.objectContaining({ draftEligible: false }),
+    );
+  });
+
+  it("offers explicit reconciliation choices for a newer completed result", () => {
+    vi.mocked(useQuizSession).mockReturnValue({
+      isInitializing: false,
+      currentQuestion: null,
+      progress: { current: 0, total: 2 },
+      isComplete: false,
+      seconds: 30,
+      pauseTimer: mockPauseTimer,
+      resetSession: mockResetSession,
+      draftDecision: {
+        kind: "result-conflict",
+        assessment: {
+          compatibility: "result-conflict",
+          draft: { revision: 2 },
+          latest_result_at: 2_000,
+        },
+      },
+      draftSaveStatus: "saved",
+      draftSaveMessage: "Saved on this device.",
+      draftOwnerId: null,
+      startOverDraft: vi.fn(),
+      resumeDraftAsNewAttempt: vi.fn(),
+      flushDraft: vi.fn().mockResolvedValue(true),
+    } as unknown as ReturnType<typeof useQuizSession>);
+
+    render(<ZenQuizContainer quiz={mockQuiz} />);
+
+    expect(
+      screen.getByRole("dialog", { name: "Quiz completed elsewhere" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Start New Attempt" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Resume as New Attempt" }),
+    ).toBeInTheDocument();
   });
 
   it("renders loading state when initializing", () => {
@@ -256,8 +330,8 @@ describe("ZenQuizContainer", () => {
           currentQuestion: { id: "q1", options: {} } as unknown as Question,
           currentIndex: 0,
           progress: { current: 1, total: 10 },
-          selectedAnswer: "a",
-          hasSubmitted: true,
+          selectedAnswer: null,
+          hasSubmitted: false,
           showExplanation: false,
           isComplete: true,
           formattedTime: "00:10",
@@ -267,6 +341,11 @@ describe("ZenQuizContainer", () => {
           isCurrentAnswerCorrect: true,
           isLastQuestion: false,
           resetSession: mockResetSession,
+          draftDecision: null,
+          draftSaveStatus: "saved",
+          draftSaveMessage: "Saved on this device.",
+          draftOwnerId: "writer-1",
+          flushDraft: vi.fn().mockResolvedValue(true),
         }) as unknown as ReturnType<typeof useQuizSession>,
     );
 
@@ -284,10 +363,43 @@ describe("ZenQuizContainer", () => {
     });
   });
 
-  it("handles exit correctly for standard mode", () => {
+  it("handles exit correctly for standard mode", async () => {
     render(<ZenQuizContainer quiz={mockQuiz} />);
     fireEvent.click(screen.getByTestId("exit-button"));
-    expect(mockPush).toHaveBeenCalledWith("/");
+    await waitFor(() => expect(mockPush).toHaveBeenCalledWith("/"));
+  });
+
+  it("lets a stale tab exit without overwriting the newer draft", async () => {
+    const flushDraft = vi.fn().mockResolvedValue(false);
+    vi.mocked(useQuizSession).mockReturnValue({
+      isInitializing: false,
+      currentQuestion: { id: "q1", options: {} } as unknown as Question,
+      currentIndex: 0,
+      progress: { current: 1, total: 10 },
+      selectedAnswer: null,
+      hasSubmitted: false,
+      showExplanation: false,
+      isComplete: false,
+      formattedTime: "00:10",
+      seconds: 10,
+      pauseTimer: mockPauseTimer,
+      isResolving: false,
+      isCurrentAnswerCorrect: false,
+      isLastQuestion: false,
+      resetSession: mockResetSession,
+      draftDecision: null,
+      draftSaveStatus: "conflict",
+      draftSaveMessage: "This draft was updated in another tab.",
+      draftOwnerId: "writer-old",
+      flushDraft,
+    } as unknown as ReturnType<typeof useQuizSession>);
+
+    render(<ZenQuizContainer quiz={mockQuiz} />);
+    fireEvent.click(screen.getByTestId("exit-button"));
+
+    await waitFor(() => expect(mockPush).toHaveBeenCalledWith("/"));
+    expect(flushDraft).not.toHaveBeenCalled();
+    expect(mockResetSession).toHaveBeenCalled();
   });
 
   it("handles exit correctly for SRS review", () => {

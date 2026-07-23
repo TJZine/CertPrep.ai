@@ -25,7 +25,7 @@ import {
   CardTitle,
 } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
+import { Button, buttonVariants } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { copyToClipboard } from "@/lib/clipboard";
 import { formatDate } from "@/lib/date";
@@ -39,6 +39,7 @@ export interface QuizCardProps {
   onStart: (quiz: Quiz) => void;
   onDelete: (quiz: Quiz) => void;
   isFeatured?: boolean;
+  hasResumableDraft?: boolean;
 }
 
 function useClickOutside(
@@ -83,6 +84,7 @@ export function QuizCard({
   onStart,
   onDelete,
   isFeatured = false,
+  hasResumableDraft = false,
 }: QuizCardProps): React.ReactElement {
   const router = useRouter();
   const [showMenu, setShowMenu] = React.useState(false);
@@ -257,9 +259,16 @@ export function QuizCard({
                     </span>
                   </button>
                 )}
-                <CardTitle className="line-clamp-2 text-lg">{quiz.title}</CardTitle>
+                <CardTitle className="line-clamp-2 text-lg">
+                  {quiz.title}
+                </CardTitle>
               </div>
-              <p className={cn("text-sm text-muted-foreground", isFeatured && "line-clamp-2 max-w-3xl")}>
+              <p
+                className={cn(
+                  "text-sm text-muted-foreground",
+                  isFeatured && "line-clamp-2 max-w-3xl",
+                )}
+              >
                 {quiz.description?.trim()
                   ? quiz.description
                   : `${quiz.questions.length} questions`}
@@ -271,8 +280,7 @@ export function QuizCard({
                 type="button"
                 className={cn(
                   "rounded-full p-2 text-muted-foreground transition hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                  showMenu &&
-                  "bg-accent text-accent-foreground",
+                  showMenu && "bg-accent text-accent-foreground",
                 )}
                 aria-label="Quiz options"
                 aria-expanded={showMenu}
@@ -289,7 +297,9 @@ export function QuizCard({
                   onKeyDown={handleMenuKeyDown}
                 >
                   <button
-                    ref={(el) => { menuItemRefs.current[0] = el; }}
+                    ref={(el) => {
+                      menuItemRefs.current[0] = el;
+                    }}
                     type="button"
                     onClick={handleCopyLink}
                     className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-foreground transition hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
@@ -300,7 +310,9 @@ export function QuizCard({
                     Copy link
                   </button>
                   <button
-                    ref={(el) => { menuItemRefs.current[1] = el; }}
+                    ref={(el) => {
+                      menuItemRefs.current[1] = el;
+                    }}
                     type="button"
                     onClick={handleEditSettings}
                     className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-foreground transition hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
@@ -311,7 +323,9 @@ export function QuizCard({
                     Edit Settings
                   </button>
                   <button
-                    ref={(el) => { menuItemRefs.current[2] = el; }}
+                    ref={(el) => {
+                      menuItemRefs.current[2] = el;
+                    }}
                     type="button"
                     onClick={handleDelete}
                     className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-destructive transition hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
@@ -410,15 +424,23 @@ export function QuizCard({
             <div className="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-lg border border-border/70 bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
               <span className="inline-flex items-center gap-1.5">
                 <Target className="h-4 w-4 text-primary" aria-hidden="true" />
-                {quiz.questions.length} {quiz.questions.length === 1 ? "question" : "questions"}
+                {quiz.questions.length}{" "}
+                {quiz.questions.length === 1 ? "question" : "questions"}
               </span>
               <span className="inline-flex items-center gap-1.5">
                 <Clock className="h-4 w-4 text-primary" aria-hidden="true" />
-                {totalStudyTime > 0 ? `${formatStudyTime(totalStudyTime)} studied` : "Not studied yet"}
+                {totalStudyTime > 0
+                  ? `${formatStudyTime(totalStudyTime)} studied`
+                  : "Not studied yet"}
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <TrendingUp className="h-4 w-4 text-primary" aria-hidden="true" />
-                {averageScore !== null ? `${averageScore}% average` : "No average yet"}
+                <TrendingUp
+                  className="h-4 w-4 text-primary"
+                  aria-hidden="true"
+                />
+                {averageScore !== null
+                  ? `${averageScore}% average`
+                  : "No average yet"}
               </span>
             </div>
           ) : null}
@@ -437,13 +459,23 @@ export function QuizCard({
         </CardContent>
 
         <CardFooter className="pt-0">
-          <Button
-            className="w-full"
-            leftIcon={<Play className="h-4 w-4" aria-hidden="true" />}
-            onClick={() => onStart(quiz)}
-          >
-            {isFeatured && attemptCount > 0 ? "Continue Quiz" : "Start Quiz"}
-          </Button>
+          {hasResumableDraft ? (
+            <a
+              href={`/quiz/${quiz.id}/zen`}
+              className={cn(buttonVariants(), "w-full")}
+            >
+              <Play className="h-4 w-4" aria-hidden="true" />
+              <span className="whitespace-nowrap">Continue Quiz</span>
+            </a>
+          ) : (
+            <Button
+              className="w-full"
+              leftIcon={<Play className="h-4 w-4" aria-hidden="true" />}
+              onClick={() => onStart(quiz)}
+            >
+              {attemptCount > 0 ? "Study Again" : "Start Quiz"}
+            </Button>
+          )}
         </CardFooter>
       </Card>
     </div>

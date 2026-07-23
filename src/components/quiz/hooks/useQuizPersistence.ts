@@ -10,7 +10,11 @@ import { clearSRSReviewState } from "@/lib/storage/srsReviewStorage";
 import { clearTopicStudyState } from "@/lib/storage/topicStudyStorage";
 import { clearInterleavedState } from "@/lib/storage/interleavedStorage";
 import { ensureSRSQuizExists } from "@/db/quizzes";
-import { createSRSReviewResult, createTopicStudyResult, createInterleavedResult } from "@/db/results";
+import {
+  createSRSReviewResult,
+  createTopicStudyResult,
+  createInterleavedResult,
+} from "@/db/results";
 import { calculatePercentage } from "@/lib/utils/math";
 import { buildAnswersRecord } from "@/lib/quiz/quizRemix";
 
@@ -34,6 +38,7 @@ interface UseQuizPersistenceProps {
   questions: Question[];
   answers: Map<string, { selectedAnswer: string; isCorrect: boolean }>;
   flaggedQuestions: Set<string>;
+  standardZenDraftOwnerId?: string | null;
 }
 
 export function useQuizPersistence({
@@ -41,6 +46,7 @@ export function useQuizPersistence({
   questions,
   answers,
   flaggedQuestions,
+  standardZenDraftOwnerId = null,
 }: UseQuizPersistenceProps): {
   saveError: boolean;
   submitQuiz: (timeTakenSeconds: number) => Promise<void>;
@@ -72,6 +78,7 @@ export function useQuizPersistence({
   } = useQuizSubmission({
     quizId,
     isSmartRound,
+    standardZenDraftOwnerId,
   });
 
   const handleSessionComplete = React.useCallback(
@@ -83,7 +90,10 @@ export function useQuizPersistence({
           const srsQuiz = await ensureSRSQuizExists(effectiveUserId);
           const questionMap = new Map(questions.map((q) => [q.id, q]));
           let correctCount = 0;
-          const categoryTotals: Record<string, { correct: number; total: number }> = {};
+          const categoryTotals: Record<
+            string,
+            { correct: number; total: number }
+          > = {};
           const answersRecord: Record<string, string> = {};
           const actualQuestionIds: string[] = [];
 
@@ -107,10 +117,12 @@ export function useQuizPersistence({
 
           const score = calculatePercentage(correctCount, answers.size);
           const categoryBreakdown = Object.fromEntries(
-            Object.entries(categoryTotals).map(([category, { correct, total }]) => [
-              category,
-              calculatePercentage(correct, total),
-            ]),
+            Object.entries(categoryTotals).map(
+              ([category, { correct, total }]) => [
+                category,
+                calculatePercentage(correct, total),
+              ],
+            ),
           );
 
           // Reuse the source map captured when the aggregated session was hydrated.
@@ -129,16 +141,16 @@ export function useQuizPersistence({
           clearSRSReviewState();
           addToast("success", "SRS Review complete! Keep up the great work.");
           void sync().catch((syncErr) => {
-            console.warn("Background sync failed after SRS review save:", syncErr);
+            console.warn(
+              "Background sync failed after SRS review save:",
+              syncErr,
+            );
           });
           router.push(`/results/${result.id}`);
         } catch (err) {
           console.error("Failed to save SRS review result:", err);
           setAggregatedSaveError(true);
-          addToast(
-            "error",
-            AGGREGATED_SAVE_ERROR_MESSAGE,
-          );
+          addToast("error", AGGREGATED_SAVE_ERROR_MESSAGE);
           return;
         }
         return;
@@ -150,7 +162,10 @@ export function useQuizPersistence({
           const srsQuiz = await ensureSRSQuizExists(effectiveUserId);
           const questionMap = new Map(questions.map((q) => [q.id, q]));
           let correctCount = 0;
-          const categoryTotals: Record<string, { correct: number; total: number }> = {};
+          const categoryTotals: Record<
+            string,
+            { correct: number; total: number }
+          > = {};
           const answersRecord: Record<string, string> = {};
           const actualQuestionIds: string[] = [];
 
@@ -174,10 +189,12 @@ export function useQuizPersistence({
 
           const score = calculatePercentage(correctCount, answers.size);
           const categoryBreakdown = Object.fromEntries(
-            Object.entries(categoryTotals).map(([category, { correct, total }]) => [
-              category,
-              calculatePercentage(correct, total),
-            ]),
+            Object.entries(categoryTotals).map(
+              ([category, { correct, total }]) => [
+                category,
+                calculatePercentage(correct, total),
+              ],
+            ),
           );
 
           // Reuse the source map captured when the aggregated session was hydrated.
@@ -196,16 +213,16 @@ export function useQuizPersistence({
           clearTopicStudyState();
           addToast("success", "Topic Study complete! Great progress.");
           void sync().catch((syncErr) => {
-            console.warn("Background sync failed after Topic Study save:", syncErr);
+            console.warn(
+              "Background sync failed after Topic Study save:",
+              syncErr,
+            );
           });
           router.push(`/results/${result.id}`);
         } catch (err) {
           console.error("Failed to save topic study result:", err);
           setAggregatedSaveError(true);
-          addToast(
-            "error",
-            AGGREGATED_SAVE_ERROR_MESSAGE,
-          );
+          addToast("error", AGGREGATED_SAVE_ERROR_MESSAGE);
           return;
         }
         return;
@@ -218,7 +235,10 @@ export function useQuizPersistence({
           const srsQuiz = await ensureSRSQuizExists(effectiveUserId);
           const questionMap = new Map(questions.map((q) => [q.id, q]));
           let correctCount = 0;
-          const categoryTotals: Record<string, { correct: number; total: number }> = {};
+          const categoryTotals: Record<
+            string,
+            { correct: number; total: number }
+          > = {};
           // Translate remixed keys to original keys for consistent analytics
           const answersRecord = buildAnswersRecord(answers, configKeyMappings);
           const actualQuestionIds: string[] = [];
@@ -244,10 +264,12 @@ export function useQuizPersistence({
 
           const score = calculatePercentage(correctCount, answers.size);
           const categoryBreakdown = Object.fromEntries(
-            Object.entries(categoryTotals).map(([category, { correct, total }]) => [
-              category,
-              calculatePercentage(correct, total),
-            ]),
+            Object.entries(categoryTotals).map(
+              ([category, { correct, total }]) => [
+                category,
+                calculatePercentage(correct, total),
+              ],
+            ),
           );
 
           // Convert sourceMap to plain object
@@ -267,16 +289,16 @@ export function useQuizPersistence({
           clearInterleavedState();
           addToast("success", "Interleaved Practice complete! Great job.");
           void sync().catch((syncErr) => {
-            console.warn("Background sync failed after Interleaved save:", syncErr);
+            console.warn(
+              "Background sync failed after Interleaved save:",
+              syncErr,
+            );
           });
           router.push(`/results/${result.id}`);
         } catch (err) {
           console.error("Failed to save interleaved result:", err);
           setAggregatedSaveError(true);
-          addToast(
-            "error",
-            AGGREGATED_SAVE_ERROR_MESSAGE,
-          );
+          addToast("error", AGGREGATED_SAVE_ERROR_MESSAGE);
           return;
         }
         return;
@@ -297,7 +319,7 @@ export function useQuizPersistence({
       addToast,
       router,
       submitQuiz,
-      sync
+      sync,
     ],
   );
 

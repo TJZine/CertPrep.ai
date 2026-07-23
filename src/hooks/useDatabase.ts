@@ -5,13 +5,12 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { db, initializeDatabase } from "@/db";
 import { NIL_UUID } from "@/lib/constants";
 import type { Quiz } from "@/types/quiz";
-import {
-  type Result,
-  isAggregatedSessionType,
-} from "@/types/result";
+import { type Result, isAggregatedSessionType } from "@/types/result";
 import type { QuizStats } from "@/db/quizzes";
 import { getQuizStats, isSRSQuiz, sortQuizzesByNewest } from "@/db/quizzes";
 import { resolveAggregatedResultReadModel } from "@/db/aggregatedQuiz";
+import { assessZenDraft } from "@/db/zenDrafts";
+import type { ZenDraftCompatibility } from "@/types/zenDraft";
 
 interface InitializationState {
   isInitialized: boolean;
@@ -32,6 +31,11 @@ interface UseQuizResponse {
 interface UseQuizWithStatsResponse {
   quiz: Quiz | undefined;
   stats: QuizStats | null;
+  isLoading: boolean;
+}
+
+interface UseZenDraftStatusesResponse {
+  statuses: Map<string, ZenDraftCompatibility>;
   isLoading: boolean;
 }
 
@@ -101,7 +105,7 @@ export function useInitializeDatabase(): InitializationState {
  */
 export function useQuizzes(
   userId: string | undefined,
-  includeHidden: boolean = false
+  includeHidden: boolean = false,
 ): UseQuizzesResponse {
   const [error, setError] = useState<Error | null>(null);
   const quizzes = useLiveQuery(async () => {
@@ -194,22 +198,49 @@ export function useQuizWithStats(
   };
 }
 
+/** Reactively classifies this user's device-local standard-Zen drafts. */
+export function useZenDraftStatuses(
+  userId: string | undefined,
+): UseZenDraftStatusesResponse {
+  const statuses = useLiveQuery(async () => {
+    if (!userId) return new Map<string, ZenDraftCompatibility>();
+    const [drafts, quizzes] = await Promise.all([
+      db.zenDrafts.where("user_id").equals(userId).toArray(),
+      db.quizzes.toArray(),
+    ]);
+    const quizzesById = new Map(quizzes.map((quiz) => [quiz.id, quiz]));
+    const entries = await Promise.all(
+      drafts.map(async (draft) => {
+        const quiz = quizzesById.get(draft.quiz_id);
+        if (!quiz || quiz.deleted_at) {
+          return [draft.quiz_id, "invalid"] as const;
+        }
+        const assessment = await assessZenDraft(draft, quiz, userId);
+        return [draft.quiz_id, assessment?.compatibility ?? "invalid"] as const;
+      }),
+    );
+    return new Map(entries);
+  }, [userId]);
+
+  return {
+    statuses: statuses ?? new Map(),
+    isLoading: Boolean(userId) && statuses === undefined,
+  };
+}
+
 /**
  * Retrieves all results with live updates.
  */
 export function useResults(userId: string | undefined): UseResultsResponse {
-  const results = useLiveQuery(
-    async () => {
-      if (!userId) return [];
-      const raw = await db.results
-        .where("user_id")
-        .equals(userId)
-        .filter((r) => !r.deleted_at)
-        .sortBy("timestamp");
-      return [...raw].reverse();
-    },
-    [userId],
-  );
+  const results = useLiveQuery(async () => {
+    if (!userId) return [];
+    const raw = await db.results
+      .where("user_id")
+      .equals(userId)
+      .filter((r) => !r.deleted_at)
+      .sortBy("timestamp");
+    return [...raw].reverse();
+  }, [userId]);
   return {
     results: results ?? [],
     isLoading: !userId ? true : results === undefined,
@@ -273,7 +304,9 @@ export function useResultWithHydratedQuiz(
 ): UseResultWithHydratedQuizResponse {
   const { result, isLoading: resultLoading } = useResult(id, userId);
   const [hydratedQuiz, setHydratedQuiz] = useState<Quiz | undefined>(undefined);
-  const [resolvedSourceMap, setResolvedSourceMap] = useState<Record<string, string> | undefined>(undefined);
+  const [resolvedSourceMap, setResolvedSourceMap] = useState<
+    Record<string, string> | undefined
+  >(undefined);
   const [isHydrating, setIsHydrating] = useState(false);
 
   // We use live query for the base quiz to keep it reactive to title changes etc.
@@ -301,11 +334,16 @@ export function useResultWithHydratedQuiz(
         !!result.question_ids?.length &&
         isSRSQuiz(result.quiz_id, userId);
       const isAggregatedResult =
-        isAggregatedSessionType(result.session_type) || isLegacyAggregatedResult;
+        isAggregatedSessionType(result.session_type) ||
+        isLegacyAggregatedResult;
 
       // Aggregated results can reconstruct a read-model directly from result metadata
       // even if the container/base quiz record is no longer present.
-      if (isAggregatedResult && result.question_ids && result.question_ids.length > 0) {
+      if (
+        isAggregatedResult &&
+        result.question_ids &&
+        result.question_ids.length > 0
+      ) {
         if (isMounted) setIsHydrating(true);
         try {
           const readModel = await resolveAggregatedResultReadModel(

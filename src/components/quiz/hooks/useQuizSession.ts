@@ -1,12 +1,20 @@
 import * as React from "react";
 import { useSearchParams } from "next/navigation";
-import { useQuizSessionStore, useCurrentQuestion } from "@/stores/quizSessionStore";
+import {
+  useQuizSessionStore,
+  useCurrentQuestion,
+} from "@/stores/quizSessionStore";
 import { useTimer } from "@/hooks/useTimer";
 import { useKeyboardNav, useSpacedRepetitionNav } from "@/hooks/useKeyboardNav";
 import { useCorrectAnswer } from "@/hooks/useCorrectAnswer";
 import { remixQuiz } from "@/lib/quiz/quizRemix";
 import { updateSRSState } from "@/db/srs";
 import { booleanToRating } from "@/lib/srs";
+import {
+  useZenDraftSession,
+  type ZenDraftDecision,
+  type ZenDraftSaveStatus,
+} from "./useZenDraftSession";
 
 import type { Quiz, Question } from "@/types/quiz";
 
@@ -14,12 +22,14 @@ interface UseQuizSessionProps {
   quiz: Quiz;
   isSRSReview: boolean;
   effectiveUserId: string | null;
+  draftEligible?: boolean;
 }
 
 export function useQuizSession({
   quiz,
   isSRSReview,
   effectiveUserId,
+  draftEligible = false,
 }: UseQuizSessionProps): {
   isInitializing: boolean;
   currentQuestion: Question | null;
@@ -47,6 +57,14 @@ export function useQuizSession({
   markHard: () => void;
   markGood: () => void;
   resetSession: () => void;
+  draftDecision: ZenDraftDecision | null;
+  draftSaveStatus: ZenDraftSaveStatus;
+  draftSaveMessage: string | null;
+  draftOwnerId: string | null;
+  resumeDraft: () => Promise<void>;
+  startOverDraft: () => Promise<void>;
+  resumeDraftAsNewAttempt: () => Promise<void>;
+  flushDraft: (force?: boolean) => Promise<boolean>;
 } {
   const searchParams = useSearchParams();
   const {
@@ -77,7 +95,8 @@ export function useQuizSession({
     start: startTimer,
     seconds,
     pause: pauseTimer,
-  } = useTimer({ autoStart: true });
+    reset: resetTimer,
+  } = useTimer({ autoStart: false });
 
   const [isInitializing, setIsInitializing] = React.useState(true);
   const srsUpdatedQuestionsRef = React.useRef<Set<string>>(new Set());
@@ -87,7 +106,18 @@ export function useQuizSession({
     srsUpdatedQuestionsRef.current.clear();
   }, [quiz.id, effectiveUserId, isSRSReview]);
 
+  const draftSession = useZenDraftSession({
+    quiz,
+    userId: effectiveUserId,
+    enabled: draftEligible,
+    seconds,
+    startTimer,
+    pauseTimer,
+    resetTimer,
+  });
+
   React.useEffect(() => {
+    if (draftEligible) return;
     let mounted = true;
     const init = async (): Promise<void> => {
       setIsInitializing(true);
@@ -115,7 +145,14 @@ export function useQuizSession({
       mounted = false;
       resetSession();
     };
-  }, [quiz, initializeSession, startTimer, resetSession, searchParams]);
+  }, [
+    draftEligible,
+    quiz,
+    initializeSession,
+    startTimer,
+    resetSession,
+    searchParams,
+  ]);
 
   const totalQuestions = questionQueue.length;
   const progress = {
@@ -145,7 +182,8 @@ export function useQuizSession({
 
   // Update SRS state after each answer
   React.useEffect(() => {
-    if (!isSRSReview || !hasSubmitted || !currentQuestion || !effectiveUserId) return;
+    if (!isSRSReview || !hasSubmitted || !currentQuestion || !effectiveUserId)
+      return;
     if (srsUpdatedQuestionsRef.current.has(currentQuestion.id)) return;
     const answerRecord = answers.get(currentQuestion.id);
     if (!answerRecord) return;
@@ -188,7 +226,9 @@ export function useQuizSession({
   });
 
   return {
-    isInitializing,
+    isInitializing: draftEligible
+      ? draftSession.isInitializing
+      : isInitializing,
     currentQuestion,
     currentIndex,
     progress,
@@ -203,7 +243,10 @@ export function useQuizSession({
     currentCorrectAnswer,
     isCurrentAnswerCorrect,
     isLastQuestion,
-    answers: answers as Map<string, { selectedAnswer: string; isCorrect: boolean }>,
+    answers: answers as Map<
+      string,
+      { selectedAnswer: string; isCorrect: boolean }
+    >,
     questions,
     flaggedQuestions,
     selectAnswer,
@@ -214,5 +257,13 @@ export function useQuizSession({
     markHard,
     markGood,
     resetSession,
+    draftDecision: draftSession.decision,
+    draftSaveStatus: draftSession.saveStatus,
+    draftSaveMessage: draftSession.saveMessage,
+    draftOwnerId: draftSession.draftOwnerId,
+    resumeDraft: draftSession.resume,
+    startOverDraft: draftSession.startOver,
+    resumeDraftAsNewAttempt: draftSession.resumeAsNewAttempt,
+    flushDraft: draftSession.flushDraft,
   };
 }

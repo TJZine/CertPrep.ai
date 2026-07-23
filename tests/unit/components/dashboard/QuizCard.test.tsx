@@ -67,11 +67,35 @@ describe("QuizCard", () => {
       />,
     );
 
-    const featuredCard = screen.getByText("Quick start").closest(".dashboard-card");
+    const featuredCard = screen
+      .getByText("Quick start")
+      .closest(".dashboard-card");
     expect(featuredCard).toHaveClass("lg:col-span-2");
     expect(featuredCard).not.toHaveClass("lg:row-span-2");
-    expect(screen.getByRole("button", { name: "Continue Quiz" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Study Again" }),
+    ).toBeInTheDocument();
     expect(screen.getByText("73% average")).toBeInTheDocument();
     expect(screen.queryByText("Study Time")).not.toBeInTheDocument();
+  });
+
+  it("shows Continue Quiz only when a compatible local draft exists", () => {
+    render(
+      <QuizCard
+        quiz={quiz}
+        stats={attemptedStats}
+        onStart={vi.fn()}
+        onDelete={vi.fn()}
+        hasResumableDraft
+      />,
+    );
+
+    expect(
+      screen.getByRole("link", { name: "Continue Quiz" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Continue Quiz" })).toHaveAttribute(
+      "href",
+      "/quiz/quiz-1/zen",
+    );
   });
 });

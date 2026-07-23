@@ -89,6 +89,7 @@ Primary client persistence lives in [src/db/dbInstance.ts](../src/db/dbInstance.
 - `syncState`
 - `srs`
 - `hashCache`
+- `zenDrafts`
 
 The main local data access layer is:
 
@@ -97,6 +98,29 @@ The main local data access layer is:
 - [src/db/srs.ts](../src/db/srs.ts)
 - [src/db/syncState.ts](../src/db/syncState.ts)
 - [src/hooks/useDatabase.ts](../src/hooks/useDatabase.ts)
+
+`zenDrafts` is a device-local persistence boundary for resumable ordinary Zen
+Study sessions. Records are keyed by both user ID and quiz ID, validated against
+the current quiz version and content hash before hydration, and guarded by a
+per-session writer token plus monotonic revision to reject older writes from
+another tab. Drafts contain only ordered question IDs, submitted option IDs and
+answer-state metadata, flags, position, and timing metadata; they do not contain
+quiz content or correct-answer plaintext.
+
+Phase 1 draft ownership is limited to standard Zen Study. Proctor, Flashcards,
+Smart Round, Topic Study, SRS Review, Interleaved Practice, and remixed Zen start
+fresh and do not read, write, or delete standard-Zen drafts. Compatible drafts
+require an explicit Resume or Start Over decision and are labeled "Saved on this
+device." Invalid or changed-quiz drafts are retained until an explicit discard
+where the UI can safely offer one.
+
+Standard-Zen completion appends the result and removes the completing tab's
+owned draft in one local Dexie transaction. A failed result write rolls the
+transaction back and retains the draft. Soft quiz deletion retains an invalid
+draft for possible recovery; permanent tombstone purge, replace import, clean
+sign-out, account deletion/factory reset, and central database clearing remove
+the applicable drafts. All reads and writes remain user scoped, so preserved
+sign-out data cannot hydrate under another account.
 
 ### Sync Ownership
 
@@ -110,6 +134,18 @@ Remote synchronization ownership lives in:
 - [src/components/providers/SyncProvider.tsx](../src/components/providers/SyncProvider.tsx)
 
 The sync model is local-first. Local records are written first, then pushed/pulled against Supabase with user-scoped validation and conflict handling.
+
+`zenDrafts` is explicitly excluded from this synchronization boundary. It has
+no `synced` field, Supabase table, migration, RLS policy, sync-plan entry, remote
+fallback, or sync-manager integration. After a results pull, local resume
+classification compares a same-user, same-quiz completed-result timestamp with
+the draft start time. A newer completion blocks normal resume and offers Start
+New Attempt or Resume as New Attempt; the latter acknowledges the observed
+completion locally and eventually appends an additional result. Because local
+results currently preserve the origin device's client timestamp rather than a
+server-created timestamp, this comparison inherits cross-device clock-skew
+limits. Offline resume uses only state already present in IndexedDB and never
+waits for network access.
 
 ## Browser Storage Surfaces
 
