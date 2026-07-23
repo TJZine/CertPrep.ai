@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/Toast";
-import { createResult } from "@/db/results";
+import { createResult, finalizeStandardZenResult } from "@/db/results";
 import { initializeSRSForResult } from "@/db/srs";
 import { db } from "@/db";
 import { useSync } from "@/hooks/useSync";
@@ -15,6 +15,7 @@ import { buildAnswersRecord } from "@/lib/quiz/quizRemix";
 interface UseQuizSubmissionProps {
   quizId: string;
   isSmartRound?: boolean;
+  standardZenDraftOwnerId?: string | null;
 }
 
 export interface UseQuizSubmissionReturn {
@@ -33,7 +34,7 @@ export interface UseQuizSubmissionReturn {
   submitQuiz: (
     timeTakenSeconds: number,
     answers: Map<string, { selectedAnswer: string; isCorrect?: boolean }>,
-    flaggedQuestions: Set<string>
+    flaggedQuestions: Set<string>,
   ) => Promise<void>;
   /**
    * Retries the submission logic (wrapper around submitQuiz).
@@ -53,6 +54,7 @@ export interface UseQuizSubmissionReturn {
 export function useQuizSubmission({
   quizId,
   isSmartRound = false,
+  standardZenDraftOwnerId = null,
 }: UseQuizSubmissionProps): UseQuizSubmissionReturn {
   const router = useRouter();
   const { addToast } = useToast();
@@ -77,8 +79,11 @@ export function useQuizSubmission({
   const submitQuiz = useCallback(
     async (
       timeTakenSeconds: number,
-      currentAnswers: Map<string, { selectedAnswer: string; isCorrect?: boolean }>,
-      currentFlaggedQuestions: Set<string>
+      currentAnswers: Map<
+        string,
+        { selectedAnswer: string; isCorrect?: boolean }
+      >,
+      currentFlaggedQuestions: Set<string>,
     ): Promise<void> => {
       if (isSavingRef.current) return;
       isSavingRef.current = true;
@@ -97,7 +102,7 @@ export function useQuizSubmission({
           return;
         }
 
-        const result = await createResult({
+        const resultInput = {
           quizId,
           userId: effectiveUserId,
           mode: "zen",
@@ -105,7 +110,13 @@ export function useQuizSubmission({
           flaggedQuestions: Array.from(currentFlaggedQuestions),
           timeTakenSeconds,
           activeQuestionIds: questions.map((q) => q.id), // Pass active questions for accurate scoring (e.g. Smart Round)
-        });
+        } as const;
+        const result = standardZenDraftOwnerId
+          ? await finalizeStandardZenResult({
+              ...resultInput,
+              draftWriterId: standardZenDraftOwnerId,
+            })
+          : await createResult(resultInput);
 
         // Initialize SRS state for answered questions (non-blocking)
         const quiz = await db.quizzes.get(quizId);
@@ -156,6 +167,7 @@ export function useQuizSubmission({
       questions,
       effectiveUserId,
       keyMappings,
+      standardZenDraftOwnerId,
     ],
   );
 

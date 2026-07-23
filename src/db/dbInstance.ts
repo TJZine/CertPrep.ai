@@ -3,6 +3,7 @@ import { computeQuizHash } from "@/lib/core/crypto";
 import type { Quiz } from "@/types/quiz";
 import type { Result } from "@/types/result";
 import type { SRSState } from "@/types/srs";
+import type { ZenQuizDraft } from "@/types/zenDraft";
 
 import type { SyncState } from "@/types/sync";
 
@@ -39,8 +40,11 @@ export class CertPrepDatabase extends Dexie {
   /** Cache of answer → hash mappings to avoid redundant crypto operations. */
   public hashCache!: Table<HashCacheEntry, string>;
 
-  constructor() {
-    super("CertPrepDatabase");
+  /** Device-local standard-Zen drafts. This table is never synchronized. */
+  public zenDrafts!: Table<ZenQuizDraft, [string, string]>;
+
+  constructor(databaseName = "CertPrepDatabase") {
+    super(databaseName);
 
     // Define schema version and indexes.
     // Version 5: Add user_id and composite indexes for per-user isolation; scope sync cursor per user.
@@ -313,6 +317,13 @@ export class CertPrepDatabase extends Dexie {
         logger.info("[DB Upgrade v16] hashCache created_at backfill complete");
       });
 
+    // Version 17: Add device-local standard-Zen drafts.
+    // This table intentionally has no sync metadata or sync-manager ownership.
+    this.version(17).stores({
+      zenDrafts:
+        "&[user_id+quiz_id], user_id, quiz_id, updated_at, [user_id+updated_at]",
+    });
+
     // Note: Quiz.category and Quiz.subcategory are now indexed as of version 13,
     // enabling optimized filtering by category in the library view.
 
@@ -321,6 +332,7 @@ export class CertPrepDatabase extends Dexie {
     this.syncState = this.table("syncState");
     this.hashCache = this.table("hashCache");
     this.srs = this.table("srs");
+    this.zenDrafts = this.table("zenDrafts");
   }
 }
 
@@ -366,7 +378,14 @@ export async function clearDatabase(): Promise<void> {
   try {
     await db.transaction(
       "rw",
-      [db.quizzes, db.results, db.syncState, db.srs, db.hashCache],
+      [
+        db.quizzes,
+        db.results,
+        db.syncState,
+        db.srs,
+        db.hashCache,
+        db.zenDrafts,
+      ],
       async () => {
         await Promise.all([
           db.quizzes.clear(),
@@ -374,6 +393,7 @@ export async function clearDatabase(): Promise<void> {
           db.syncState.clear(),
           db.srs.clear(),
           db.hashCache.clear(),
+          db.zenDrafts.clear(),
         ]);
       },
     );

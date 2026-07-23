@@ -5,15 +5,16 @@ import { enableMapSet } from "immer";
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { TIMER } from "@/lib/constants";
-import { hashAnswer } from "@/lib/core/crypto";;
+import { hashAnswer } from "@/lib/core/crypto";
 import type { Question, QuizMode } from "@/types/quiz";
+import type { ZenQuizDraft } from "@/types/zenDraft";
 
 enableMapSet();
 
 const HASH_RETRY_ATTEMPTS = 2;
 
 // Answer record for a single question
-interface AnswerRecord {
+export interface AnswerRecord {
   questionId: string;
   selectedAnswer: string;
   isCorrect: boolean;
@@ -68,6 +69,11 @@ interface QuizSessionActions {
     questions: Question[],
     durationMinutes: number,
     keyMappings?: Map<string, Record<string, string>>,
+  ) => void;
+  hydrateZenSession: (
+    quizId: string,
+    questions: Question[],
+    draft: ZenQuizDraft,
   ) => void;
   resetSession: () => void;
   completeSession: () => void;
@@ -175,6 +181,47 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
         if (questions[0]) {
           state.seenQuestions.add(questions[0].id);
         }
+      });
+    },
+
+    hydrateZenSession: (quizId, questions, draft): void => {
+      set((state) => {
+        const questionsById = new Map(
+          questions.map((question) => [question.id, question]),
+        );
+        const orderedQuestions = draft.question_ids
+          .map((id) => questionsById.get(id))
+          .filter((question): question is Question => question !== undefined);
+
+        Object.assign(state, createInitialState());
+        state.quizId = quizId;
+        state.mode = "zen";
+        state.questions = orderedQuestions;
+        state.questionQueue = [...draft.question_ids];
+        state.currentIndex = draft.current_index;
+        state.answers = new Map(
+          draft.answers.map((answer) => [
+            answer.question_id,
+            {
+              questionId: answer.question_id,
+              selectedAnswer: answer.selected_answer,
+              isCorrect: answer.is_correct,
+              timestamp: answer.answered_at,
+              difficulty: answer.difficulty,
+              timeSpentSeconds: answer.time_spent_seconds,
+            },
+          ]),
+        );
+        state.answeredQuestions = new Set(
+          draft.answers.map((answer) => answer.question_id),
+        );
+        state.flaggedQuestions = new Set(draft.flagged_question_ids);
+        state.hardQuestions = new Set(draft.hard_question_ids);
+        state.selectedAnswer = draft.selected_answer;
+        state.hasSubmitted = draft.has_submitted;
+        state.showExplanation = draft.show_explanation;
+        state.startTime = Date.now() - draft.elapsed_seconds * 1000;
+        state.questionStartTime = Date.now();
       });
     },
 
@@ -395,7 +442,10 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
 
             // Calculate time spent on this question (capped at 5 minutes)
             const timeSpentSeconds = draft.questionStartTime
-              ? Math.min(300, Math.round((Date.now() - draft.questionStartTime) / 1000))
+              ? Math.min(
+                  300,
+                  Math.round((Date.now() - draft.questionStartTime) / 1000),
+                )
               : 0;
 
             const record: AnswerRecord = {
@@ -499,7 +549,10 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
               timestamp: Date.now(),
               difficulty: null,
               timeSpentSeconds: draft.questionStartTime
-                ? Math.min(300, Math.round((Date.now() - draft.questionStartTime) / 1000))
+                ? Math.min(
+                    300,
+                    Math.round((Date.now() - draft.questionStartTime) / 1000),
+                  )
                 : 0,
             });
             draft.answeredQuestions.add(questionId);

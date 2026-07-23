@@ -59,6 +59,7 @@ describe("QuizSortControls", () => {
             "aria-label",
             "Search quizzes by title or tags"
         );
+        expect(searchInput).toHaveClass("has-leading-icon", "pl-9");
     });
 
     it("calls onSearchChange when typing in search input", async () => {

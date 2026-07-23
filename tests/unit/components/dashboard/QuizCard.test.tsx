@@ -2,6 +2,7 @@ import * as React from "react";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { QuizCard } from "@/components/dashboard/QuizCard";
+import type { QuizStats } from "@/db/quizzes";
 import type { Quiz } from "@/types/quiz";
 
 vi.mock("next/navigation", () => ({
@@ -28,6 +29,16 @@ const quiz = {
   updated_at: 100,
 } satisfies Quiz;
 
+const attemptedStats = {
+  quizId: quiz.id,
+  attemptCount: 3,
+  lastAttemptScore: 90,
+  lastAttemptDate: 1700000000000,
+  averageScore: 73,
+  bestScore: 100,
+  totalStudyTime: 360,
+} satisfies QuizStats;
+
 describe("QuizCard", () => {
   it("provides a 24px missing-category warning target without changing its name", () => {
     render(
@@ -43,5 +54,55 @@ describe("QuizCard", () => {
       name: "Missing category for full analytics",
     });
     expect(warning).toHaveClass("h-6", "w-6");
+  });
+
+  it("renders the featured card as a compact two-column quick-start card", () => {
+    render(
+      <QuizCard
+        quiz={quiz}
+        stats={attemptedStats}
+        onStart={vi.fn()}
+        onDelete={vi.fn()}
+        isFeatured
+      />,
+    );
+
+    const featuredCard = screen
+      .getByText("Quick start")
+      .closest(".dashboard-card");
+    expect(featuredCard).toHaveClass("lg:col-span-2");
+    expect(featuredCard).not.toHaveClass("lg:row-span-2");
+    expect(
+      screen.getByRole("button", { name: "Study Again" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("73% average")).toBeInTheDocument();
+    expect(screen.queryByText("Study Time")).not.toBeInTheDocument();
+  });
+
+  it("shows Continue Quiz only when a compatible local draft exists", () => {
+    const props = {
+      quiz,
+      stats: attemptedStats,
+      onStart: vi.fn(),
+      onDelete: vi.fn(),
+    };
+    const { rerender } = render(<QuizCard {...props} hasResumableDraft />);
+
+    expect(
+      screen.getByRole("link", { name: "Continue Quiz" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Continue Quiz" })).toHaveAttribute(
+      "href",
+      "/quiz/quiz-1/zen",
+    );
+
+    rerender(<QuizCard {...props} hasResumableDraft={false} />);
+
+    expect(
+      screen.queryByRole("link", { name: "Continue Quiz" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Study Again" }),
+    ).toBeInTheDocument();
   });
 });

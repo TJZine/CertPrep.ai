@@ -1,5 +1,5 @@
 import * as React from "react";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { QuizLayout } from "@/components/quiz/QuizLayout";
 
@@ -27,5 +27,34 @@ describe("QuizLayout timer semantics", () => {
     );
 
     expect(screen.getByLabelText("Time remaining: 00:42")).toBeInTheDocument();
+  });
+
+  it("accurately describes a device-local saved exit", () => {
+    render(
+      <QuizLayout
+        {...defaultProps}
+        exitDescription="Your progress is saved on this device. You can continue this quiz later."
+      >
+        Question
+      </QuizLayout>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Exit quiz" }));
+    expect(
+      screen.getByText(
+        "Your progress is saved on this device. You can continue this quiz later.",
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("does not claim resumable progress for Proctor mode", () => {
+    render(
+      <QuizLayout {...defaultProps} mode="proctor">
+        Question
+      </QuizLayout>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Exit quiz" }));
+    expect(
+      screen.getByText("Exiting Proctor mode ends this attempt."),
+    ).toBeInTheDocument();
   });
 });
