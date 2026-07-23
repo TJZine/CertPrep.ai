@@ -1,8 +1,18 @@
 import { renderHook } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { useQuizSession } from "@/components/quiz/hooks/useQuizSession";
+import {
+  useZenDraftSession,
+  type ZenDraftDecision,
+} from "@/components/quiz/hooks/useZenDraftSession";
 import { useQuizSessionStore } from "@/stores/quizSessionStore";
 import type { Quiz } from "@/types/quiz";
+
+const timerMocks = vi.hoisted(() => ({
+  start: vi.fn(),
+  pause: vi.fn(),
+  reset: vi.fn(),
+}));
 
 // Mock dependencies
 vi.mock("next/navigation", () => ({
@@ -24,10 +34,10 @@ vi.mock("@/stores/quizSessionStore", () => ({
 vi.mock("@/hooks/useTimer", () => ({
   useTimer: vi.fn(() => ({
     formattedTime: "00:00",
-    start: vi.fn(),
+    start: timerMocks.start,
     seconds: 0,
-    pause: vi.fn(),
-    reset: vi.fn(),
+    pause: timerMocks.pause,
+    reset: timerMocks.reset,
   })),
 }));
 
@@ -75,6 +85,17 @@ describe("useQuizSession", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(useZenDraftSession).mockReturnValue({
+      isInitializing: false,
+      decision: null,
+      saveStatus: "idle",
+      saveMessage: null,
+      draftOwnerId: null,
+      resume: vi.fn(),
+      startOver: vi.fn(),
+      resumeAsNewAttempt: vi.fn(),
+      flushDraft: vi.fn().mockResolvedValue(true),
+    });
     (
       useQuizSessionStore as unknown as ReturnType<typeof vi.fn>
     ).mockReturnValue({
@@ -173,6 +194,28 @@ describe("useQuizSession", () => {
     expect(result.current.isCurrentAnswerCorrect).toBe(true);
   });
 
+  it("does not reset a non-draft session for metadata-only quiz refreshes", async () => {
+    const { result, rerender } = renderHook(
+      ({ currentQuiz }: { currentQuiz: Quiz }) =>
+        useQuizSession({
+          quiz: currentQuiz,
+          isSRSReview: false,
+          effectiveUserId: "user-1",
+        }),
+      { initialProps: { currentQuiz: mockQuiz } },
+    );
+
+    await vi.waitFor(() => expect(result.current.isInitializing).toBe(false));
+    mockInitializeSession.mockClear();
+    mockResetSession.mockClear();
+
+    rerender({ currentQuiz: { ...mockQuiz, last_synced_at: Date.now() } });
+    await Promise.resolve();
+
+    expect(mockResetSession).not.toHaveBeenCalled();
+    expect(mockInitializeSession).not.toHaveBeenCalled();
+  });
+
   it("does not advance progress until the current question is submitted and reaches total on completion", async () => {
     let storeState = {
       initializeSession: mockInitializeSession,
@@ -239,5 +282,51 @@ describe("useQuizSession", () => {
 
     expect(result.current.progress.current).toBe(10);
     expect(result.current.progress.total).toBe(10);
+  });
+
+  it("maps the complete Zen draft contract without wrapping its handlers", () => {
+    const resume = vi.fn().mockResolvedValue(undefined);
+    const startOver = vi.fn().mockResolvedValue(undefined);
+    const resumeAsNewAttempt = vi.fn().mockResolvedValue(undefined);
+    const flushDraft = vi.fn().mockResolvedValue(true);
+    const decision = {
+      kind: "resume",
+      assessment: {
+        compatibility: "resumable",
+        draft: { revision: 3 },
+      },
+    } as unknown as ZenDraftDecision;
+    vi.mocked(useZenDraftSession).mockReturnValue({
+      isInitializing: true,
+      decision,
+      saveStatus: "conflict",
+      saveMessage: "A newer tab owns this draft.",
+      draftOwnerId: "writer-3",
+      resume,
+      startOver,
+      resumeAsNewAttempt,
+      flushDraft,
+    });
+
+    const { result } = renderHook(() =>
+      useQuizSession({
+        quiz: mockQuiz,
+        isSRSReview: false,
+        effectiveUserId: "user-1",
+        draftEligible: true,
+      }),
+    );
+
+    expect(result.current.isInitializing).toBe(true);
+    expect(result.current.draftDecision).toBe(decision);
+    expect(result.current.draftSaveStatus).toBe("conflict");
+    expect(result.current.draftSaveMessage).toBe(
+      "A newer tab owns this draft.",
+    );
+    expect(result.current.draftOwnerId).toBe("writer-3");
+    expect(result.current.resumeDraft).toBe(resume);
+    expect(result.current.startOverDraft).toBe(startOver);
+    expect(result.current.resumeDraftAsNewAttempt).toBe(resumeAsNewAttempt);
+    expect(result.current.flushDraft).toBe(flushDraft);
   });
 });

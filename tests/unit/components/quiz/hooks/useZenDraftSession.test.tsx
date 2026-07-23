@@ -38,6 +38,17 @@ const quiz: Quiz = {
   quiz_hash: "hook-hash",
 };
 
+const replacementQuiz: Quiz = {
+  ...quiz,
+  id: "quiz-hook-replacement",
+  title: "Replacement hook quiz",
+  quiz_hash: "replacement-hook-hash",
+  questions: quiz.questions.map((question) => ({
+    ...question,
+    id: `replacement-${question.id}`,
+  })),
+};
+
 function savedDraft(overrides: Partial<ZenQuizDraft> = {}): ZenQuizDraft {
   return {
     schema_version: 1,
@@ -104,6 +115,7 @@ describe("useZenDraftSession", () => {
     expect(timer.startTimer).toHaveBeenCalled();
 
     act(() => useQuizSessionStore.getState().toggleFlag("q1"));
+    await waitFor(() => expect(result.current.saveStatus).toBe("saving"));
     await waitFor(
       async () => {
         expect(
@@ -112,7 +124,85 @@ describe("useZenDraftSession", () => {
       },
       { timeout: 2_000 },
     );
-    expect(result.current.saveMessage).toBe("Saved on this device.");
+    await waitFor(() => {
+      expect(result.current.saveStatus).toBe("saved");
+      expect(result.current.saveMessage).toBe("Saved on this device.");
+    });
+  });
+
+  it("preserves the active session across metadata-only quiz record refreshes", async () => {
+    const { result, rerender } = renderHook(
+      ({ currentQuiz }: { currentQuiz: Quiz }) =>
+        useZenDraftSession({
+          quiz: currentQuiz,
+          userId: "user-1",
+          enabled: true,
+          seconds: 0,
+          ...timer,
+        }),
+      { initialProps: { currentQuiz: quiz } },
+    );
+
+    await waitFor(() => expect(result.current.saveStatus).toBe("saved"));
+    act(() => useQuizSessionStore.getState().toggleFlag("q1"));
+    await waitFor(
+      async () => {
+        expect(
+          (await db.zenDrafts.get(["user-1", quiz.id]))?.flagged_question_ids,
+        ).toEqual(["q1"]);
+      },
+      { timeout: 2_000 },
+    );
+    await waitFor(() => expect(result.current.saveStatus).toBe("saved"));
+    const persistedBeforeRefresh = await db.zenDrafts.get(["user-1", quiz.id]);
+    vi.clearAllMocks();
+
+    rerender({ currentQuiz: { ...quiz, last_synced_at: Date.now() } });
+    await act(async () => Promise.resolve());
+
+    expect(useQuizSessionStore.getState().flaggedQuestions.has("q1")).toBe(
+      true,
+    );
+    expect(result.current.decision).toBeNull();
+    expect(timer.pauseTimer).not.toHaveBeenCalled();
+    expect(timer.startTimer).not.toHaveBeenCalled();
+    expect(await db.zenDrafts.get(["user-1", quiz.id])).toMatchObject({
+      writer_id: persistedBeforeRefresh?.writer_id,
+      revision: persistedBeforeRefresh?.revision,
+    });
+  });
+
+  it("isolates cleanup saves when the active quiz identity changes", async () => {
+    await db.quizzes.add(replacementQuiz);
+    const { result, rerender } = renderHook(
+      ({ currentQuiz }: { currentQuiz: Quiz }) =>
+        useZenDraftSession({
+          quiz: currentQuiz,
+          userId: "user-1",
+          enabled: true,
+          seconds: 0,
+          ...timer,
+        }),
+      { initialProps: { currentQuiz: quiz } },
+    );
+
+    await waitFor(() => expect(result.current.saveStatus).toBe("saved"));
+    act(() => useQuizSessionStore.getState().toggleFlag("q1"));
+    rerender({ currentQuiz: replacementQuiz });
+
+    await waitFor(() => {
+      expect(useQuizSessionStore.getState().quizId).toBe(replacementQuiz.id);
+      expect(result.current.saveStatus).toBe("saved");
+    });
+    await waitFor(async () => {
+      expect(
+        (await db.zenDrafts.get(["user-1", quiz.id]))?.flagged_question_ids,
+      ).toEqual(["q1"]);
+    });
+    expect(
+      (await db.zenDrafts.get(["user-1", replacementQuiz.id]))
+        ?.flagged_question_ids,
+    ).toEqual([]);
   });
 
   it("captures the latest session before unmount resets the shared store", async () => {
@@ -133,8 +223,7 @@ describe("useZenDraftSession", () => {
     await waitFor(
       async () => {
         expect(
-          (await db.zenDrafts.get(["user-1", quiz.id]))
-            ?.flagged_question_ids,
+          (await db.zenDrafts.get(["user-1", quiz.id]))?.flagged_question_ids,
         ).toEqual(["q2"]);
       },
       { timeout: 2_000 },

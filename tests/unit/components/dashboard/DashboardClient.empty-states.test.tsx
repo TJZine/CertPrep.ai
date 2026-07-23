@@ -227,22 +227,8 @@ describe("DashboardClient empty states", () => {
 
     render(<DashboardClient />);
 
-    // We trigger the empty state by selecting 'azure' but simulating a state
-    // where the grid becomes empty (e.g. by interacting with search as well)
-    // Actually, the reviewer suggestion is simpler: if we select 'azure',
-    // it filters OUT the 'aws' quiz. If we want it to be *completely* empty,
-    // we need a scenario where a category is selected but *no* quizzes match
-    // both the category AND the search term.
-    // Wait, the reviewer specifically said: "change the selected value to an existing
-    // option (e.g., 'aws') and instead provide a second quiz with a different category
-    // so selecting 'aws' hides that other quiz". But to trigger the *empty state*,
-    // 0 quizzes must be rendered. If 'aws' is selected, the 'aws' quiz IS rendered,
-    // thus no empty state. Let's provide an 'aws' quiz, then type 'missing' in search,
-    // AND select the 'aws' category, so both are active, leading to 0 results.
-
-    // Wait, looking at the logic: `filteredQuizzes.length === 0 && quizzes.length > 0 && (searchTerm.trim() || categoryFilter !== "all")`
-    // We can just type in the search box to make length === 0, while category is active.
-    // OR we can supply a quiz that gets filtered out.
+    // Category options always match an existing quiz, so combine the selected
+    // category with a nonmatching search term to produce zero results.
 
     const select = await screen.findByRole("combobox", {
       name: /filter by category/i,

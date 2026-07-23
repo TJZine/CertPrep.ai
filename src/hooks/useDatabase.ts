@@ -11,6 +11,7 @@ import { getQuizStats, isSRSQuiz, sortQuizzesByNewest } from "@/db/quizzes";
 import { resolveAggregatedResultReadModel } from "@/db/aggregatedQuiz";
 import { assessZenDraft } from "@/db/zenDrafts";
 import type { ZenDraftCompatibility } from "@/types/zenDraft";
+import { logger } from "@/lib/logger";
 
 interface InitializationState {
   isInitialized: boolean;
@@ -204,22 +205,51 @@ export function useZenDraftStatuses(
 ): UseZenDraftStatusesResponse {
   const statuses = useLiveQuery(async () => {
     if (!userId) return new Map<string, ZenDraftCompatibility>();
-    const [drafts, quizzes] = await Promise.all([
-      db.zenDrafts.where("user_id").equals(userId).toArray(),
-      db.quizzes.toArray(),
-    ]);
-    const quizzesById = new Map(quizzes.map((quiz) => [quiz.id, quiz]));
-    const entries = await Promise.all(
-      drafts.map(async (draft) => {
-        const quiz = quizzesById.get(draft.quiz_id);
-        if (!quiz || quiz.deleted_at) {
-          return [draft.quiz_id, "invalid"] as const;
+    try {
+      const drafts = await db.zenDrafts
+        .where("user_id")
+        .equals(userId)
+        .toArray();
+      const quizIds = [...new Set(drafts.map((draft) => draft.quiz_id))];
+      const referencedQuizzes = await db.quizzes.bulkGet(quizIds);
+      const quizzesById = new Map(
+        referencedQuizzes.flatMap((quiz) =>
+          quiz && (quiz.user_id === userId || quiz.user_id === NIL_UUID)
+            ? [[quiz.id, quiz] as const]
+            : [],
+        ),
+      );
+      const assessments = await Promise.allSettled(
+        drafts.map(async (draft) => {
+          const quiz = quizzesById.get(draft.quiz_id);
+          if (!quiz || quiz.deleted_at) {
+            return [draft.quiz_id, "invalid"] as const;
+          }
+          const assessment = await assessZenDraft(draft, quiz, userId);
+          return [
+            draft.quiz_id,
+            assessment?.compatibility ?? "invalid",
+          ] as const;
+        }),
+      );
+      const entries: Array<readonly [string, ZenDraftCompatibility]> = [];
+      assessments.forEach((assessment, index) => {
+        if (assessment.status === "fulfilled") {
+          entries.push(assessment.value);
+          return;
         }
-        const assessment = await assessZenDraft(draft, quiz, userId);
-        return [draft.quiz_id, assessment?.compatibility ?? "invalid"] as const;
-      }),
-    );
-    return new Map(entries);
+        logger.warn("Failed to assess device-local Zen draft", {
+          quizId: drafts[index]?.quiz_id,
+          error: assessment.reason,
+        });
+      });
+      return new Map(entries);
+    } catch (error) {
+      logger.warn("Failed to load device-local Zen draft statuses", {
+        error,
+      });
+      return new Map<string, ZenDraftCompatibility>();
+    }
   }, [userId]);
 
   return {

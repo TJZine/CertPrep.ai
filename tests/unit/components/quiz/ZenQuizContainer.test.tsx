@@ -221,6 +221,10 @@ describe("ZenQuizContainer", () => {
     ["Topic Study", { isTopicStudy: true }],
     ["SRS Review", { isSRSReview: true }],
     ["Interleaved Practice", { isInterleaved: true }],
+    [
+      "answer key mappings",
+      { sessionKeyMappings: new Map([["q1", { a: "b", b: "a" }]]) },
+    ],
   ])("never enables standard drafts for %s", (_label, props) => {
     render(<ZenQuizContainer quiz={mockQuiz} {...props} />);
     expect(useQuizSession).toHaveBeenLastCalledWith(
@@ -311,6 +315,53 @@ describe("ZenQuizContainer", () => {
     expect(mockAddToast).toHaveBeenCalledWith("success", expect.any(String));
   });
 
+  it("surfaces a draft-flush completion failure and retries the full preflight", async () => {
+    const flushDraft = vi
+      .fn()
+      .mockResolvedValueOnce(false)
+      .mockResolvedValueOnce(true);
+    vi.mocked(useQuizSession).mockReturnValue({
+      isInitializing: false,
+      currentQuestion: null,
+      currentIndex: 1,
+      progress: { current: 2, total: 2 },
+      selectedAnswer: null,
+      hasSubmitted: false,
+      showExplanation: false,
+      isComplete: true,
+      formattedTime: "00:10",
+      seconds: 10,
+      pauseTimer: mockPauseTimer,
+      isResolving: false,
+      isCurrentAnswerCorrect: false,
+      isLastQuestion: true,
+      resetSession: mockResetSession,
+      draftDecision: null,
+      draftSaveStatus: "error",
+      draftSaveMessage: "The latest progress is not saved.",
+      draftOwnerId: "writer-1",
+      flushDraft,
+    } as unknown as ReturnType<typeof useQuizSession>);
+
+    render(<ZenQuizContainer quiz={mockQuiz} />);
+
+    await waitFor(() => expect(flushDraft).toHaveBeenCalledTimes(1));
+    expect(mockSubmitQuiz).not.toHaveBeenCalled();
+    expect(
+      screen.getByText(/couldn't save your latest progress before completing/i),
+    ).toBeInTheDocument();
+    expect(mockAddToast).toHaveBeenCalledWith(
+      "error",
+      expect.stringMatching(/retry completion/i),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Retry completion" }));
+
+    await waitFor(() => expect(flushDraft).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(mockSubmitQuiz).toHaveBeenCalledWith(10));
+    expect(mockPauseTimer).toHaveBeenCalledTimes(2);
+  });
+
   it("displays save error UI and handles retry", async () => {
     vi.mocked(useQuizPersistence).mockImplementation(
       () =>
@@ -327,7 +378,7 @@ describe("ZenQuizContainer", () => {
       () =>
         ({
           isInitializing: false,
-          currentQuestion: { id: "q1", options: {} } as unknown as Question,
+          currentQuestion: null,
           currentIndex: 0,
           progress: { current: 1, total: 10 },
           selectedAnswer: null,

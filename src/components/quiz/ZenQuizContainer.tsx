@@ -61,6 +61,10 @@ export function ZenQuizContainer({
   const isMountedRef = React.useRef(false);
   const hasSavedResultRef = React.useRef(false);
   const completionTimeRef = React.useRef<number | null>(null);
+  const [completionFlushError, setCompletionFlushError] = React.useState<
+    string | null
+  >(null);
+  const [isRetryingCompletion, setIsRetryingCompletion] = React.useState(false);
 
   const draftEligible =
     sessionKind === "standard_zen" &&
@@ -135,6 +139,7 @@ export function ZenQuizContainer({
       draftSaveStatus === "saving" ||
       draftSaveStatus === "error" ||
       draftSaveStatus === "conflict" ||
+      Boolean(completionFlushError) ||
       Boolean(saveError),
     draftEligible
       ? "Your latest progress may still be saving on this device."
@@ -155,35 +160,53 @@ export function ZenQuizContainer({
     };
   }, []);
 
+  const attemptSessionCompletion =
+    React.useCallback(async (): Promise<void> => {
+      const elapsedSeconds = completionTimeRef.current ?? seconds;
+      completionTimeRef.current = elapsedSeconds;
+      pauseTimer();
+      setIsRetryingCompletion(true);
+      try {
+        if (draftEligible && !(await flushDraft(true))) {
+          const message =
+            "We couldn't save your latest progress before completing this quiz. Retry completion to keep your result and saved draft consistent.";
+          setCompletionFlushError(message);
+          addToast("error", message);
+          return;
+        }
+        setCompletionFlushError(null);
+        await handleSessionComplete(elapsedSeconds);
+      } catch {
+        // Result persistence owns its saveError state and user-facing toast.
+      } finally {
+        if (isMountedRef.current) setIsRetryingCompletion(false);
+      }
+    }, [
+      addToast,
+      draftEligible,
+      flushDraft,
+      handleSessionComplete,
+      pauseTimer,
+      seconds,
+    ]);
+
   const retrySave = React.useCallback((): void => {
+    if (completionFlushError) {
+      void attemptSessionCompletion();
+      return;
+    }
     const elapsedSeconds = completionTimeRef.current;
     if (elapsedSeconds === null) return;
     retrySaveAction(elapsedSeconds);
-  }, [retrySaveAction]);
+  }, [attemptSessionCompletion, completionFlushError, retrySaveAction]);
 
   React.useEffect(() => {
     if (isComplete && !hasSavedResultRef.current) {
       hasSavedResultRef.current = true;
-      pauseTimer();
-      const elapsedSeconds = seconds;
-      completionTimeRef.current = elapsedSeconds;
-      void (async (): Promise<void> => {
-        if (draftEligible && !(await flushDraft(true))) {
-          throw new Error("Draft flush failed before result creation.");
-        }
-        await handleSessionComplete(elapsedSeconds);
-      })().catch(() => {
-        hasSavedResultRef.current = false;
-      });
+      completionTimeRef.current = seconds;
+      void attemptSessionCompletion();
     }
-  }, [
-    draftEligible,
-    flushDraft,
-    handleSessionComplete,
-    isComplete,
-    pauseTimer,
-    seconds,
-  ]);
+  }, [attemptSessionCompletion, isComplete, seconds]);
 
   const handleExit = React.useCallback(async (): Promise<void> => {
     // A conflicted tab no longer owns the draft, so it must be allowed to
@@ -237,6 +260,32 @@ export function ZenQuizContainer({
     }
   }, [hasSubmitted, isCurrentAnswerCorrect, addToast]);
 
+  const completionFailureNotice =
+    completionFlushError || saveError ? (
+      <div
+        className="mb-6 rounded-lg border border-warning/50 bg-warning/10 p-4 text-sm text-warning"
+        role="alert"
+      >
+        <p className="mb-3 font-semibold">
+          {completionFlushError ?? "We couldn't save your results."}
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            size="sm"
+            onClick={retrySave}
+            isLoading={isRetryingCompletion}
+          >
+            {completionFlushError ? "Retry completion" : "Retry save"}
+          </Button>
+          {!completionFlushError ? (
+            <Button size="sm" variant="ghost" onClick={requestExit}>
+              Exit without saving
+            </Button>
+          ) : null}
+        </div>
+      </div>
+    ) : null;
+
   const persistenceNotice = draftEligible ? (
     <div
       className={
@@ -257,26 +306,20 @@ export function ZenQuizContainer({
     </div>
   ) : null;
 
+  const exitDescription = draftEligible
+    ? draftSaveStatus === "conflict"
+      ? "A newer tab owns this saved draft. Exiting will not overwrite it."
+      : draftSaveStatus === "error"
+        ? "Your latest progress has not been saved. Close this dialog and retry after the device save succeeds."
+        : "Your progress is saved on this device. You can continue this quiz later."
+    : "Exiting ends this session. This mode does not save resumable progress.";
+
   const quizContent = (
     <div className="mx-auto max-w-3xl">
       {persistenceNotice}
       <Card>
         <CardContent className="p-6 sm:p-8">
-          {saveError ? (
-            <div className="mb-6 rounded-lg border border-warning/50 bg-warning/10 p-4 text-sm text-warning">
-              <p className="mb-3 font-semibold">
-                We couldn&apos;t save your results.
-              </p>
-              <div className="flex flex-wrap gap-2">
-                <Button size="sm" onClick={retrySave}>
-                  Retry save
-                </Button>
-                <Button size="sm" variant="ghost" onClick={requestExit}>
-                  Exit without saving
-                </Button>
-              </div>
-            </div>
-          ) : null}
+          {completionFailureNotice}
           {currentQuestion && (
             <>
               <QuestionDisplay
@@ -409,27 +452,21 @@ export function ZenQuizContainer({
         totalQuestions={progress.total}
         onExit={requestExit}
         mode="zen"
-        exitDescription={
-          draftEligible
-            ? draftSaveStatus === "conflict"
-              ? "A newer tab owns this saved draft. Exiting will not overwrite it."
-              : draftSaveStatus === "error"
-              ? "Your latest progress has not been saved. Close this dialog and retry after the device save succeeds."
-              : "Your progress is saved on this device. You can continue this quiz later."
-            : "Exiting ends this session. This mode does not save resumable progress."
-        }
+        exitDescription={exitDescription}
       >
         <div className="mx-auto max-w-3xl">
           {persistenceNotice}
-          <div
-            className="py-12 text-center"
-            aria-busy="true"
-            aria-live="polite"
-          >
-            <p className="text-muted-foreground">
-              Initializing quiz session...
-            </p>
-          </div>
+          {completionFailureNotice ?? (
+            <div
+              className="py-12 text-center"
+              aria-busy="true"
+              aria-live="polite"
+            >
+              <p className="text-muted-foreground">
+                Initializing quiz session...
+              </p>
+            </div>
+          )}
         </div>
       </QuizLayout>
     );
@@ -443,15 +480,7 @@ export function ZenQuizContainer({
       timerDisplay={formattedTime}
       onExit={requestExit}
       mode="zen"
-      exitDescription={
-        draftEligible
-          ? draftSaveStatus === "conflict"
-            ? "A newer tab owns this saved draft. Exiting will not overwrite it."
-            : draftSaveStatus === "error"
-            ? "Your latest progress has not been saved. Close this dialog and retry after the device save succeeds."
-            : "Your progress is saved on this device. You can continue this quiz later."
-          : "Exiting ends this session. This mode does not save resumable progress."
-      }
+      exitDescription={exitDescription}
     >
       {quizContent}
     </QuizLayout>

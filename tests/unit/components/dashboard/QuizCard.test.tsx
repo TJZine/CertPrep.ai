@@ -80,15 +80,13 @@ describe("QuizCard", () => {
   });
 
   it("shows Continue Quiz only when a compatible local draft exists", () => {
-    render(
-      <QuizCard
-        quiz={quiz}
-        stats={attemptedStats}
-        onStart={vi.fn()}
-        onDelete={vi.fn()}
-        hasResumableDraft
-      />,
-    );
+    const props = {
+      quiz,
+      stats: attemptedStats,
+      onStart: vi.fn(),
+      onDelete: vi.fn(),
+    };
+    const { rerender } = render(<QuizCard {...props} hasResumableDraft />);
 
     expect(
       screen.getByRole("link", { name: "Continue Quiz" }),
@@ -97,5 +95,14 @@ describe("QuizCard", () => {
       "href",
       "/quiz/quiz-1/zen",
     );
+
+    rerender(<QuizCard {...props} hasResumableDraft={false} />);
+
+    expect(
+      screen.queryByRole("link", { name: "Continue Quiz" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Study Again" }),
+    ).toBeInTheDocument();
   });
 });

@@ -116,11 +116,16 @@ where the UI can safely offer one.
 
 Standard-Zen completion appends the result and removes the completing tab's
 owned draft in one local Dexie transaction. A failed result write rolls the
-transaction back and retains the draft. Soft quiz deletion retains an invalid
-draft for possible recovery; permanent tombstone purge, replace import, clean
-sign-out, account deletion/factory reset, and central database clearing remove
-the applicable drafts. All reads and writes remain user scoped, so preserved
-sign-out data cannot hydrate under another account.
+transaction back and retains the draft. Mounted quiz sessions keep the quiz
+seed captured at session entry, so metadata-only live-query record refreshes do
+not reset active work; current quiz version and content hash are checked again
+inside the completion transaction. A failed pre-completion draft flush keeps the
+timer paused and exposes a retry that repeats the flush before result creation.
+Soft quiz deletion retains an invalid draft for possible recovery; permanent
+tombstone purge, replace import, clean sign-out, account deletion/factory reset,
+and central database clearing remove the applicable drafts. All reads and writes
+remain user scoped, so preserved sign-out data cannot hydrate under another
+account.
 
 ### Sync Ownership
 

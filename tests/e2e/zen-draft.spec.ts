@@ -1,6 +1,7 @@
 import type { Page } from "@playwright/test";
 import { test, expect, TEST_QUIZ, MOCK_USER } from "./fixtures";
 import { E2E_TIMEOUTS } from "./helpers/timeouts";
+import { runtimeCacheContainsPaths } from "./helpers/serviceWorker";
 import type { ZenQuizDraft } from "../../src/types/zenDraft";
 
 test.use({ serviceWorkers: "allow" });
@@ -108,16 +109,7 @@ test.describe("device-local standard Zen drafts", () => {
     await expectDraft(page, quiz.id, (draft) => draft.current_index === 1);
     await expect
       .poll(() =>
-        page.evaluate(
-          async (paths) => {
-            const cache = await caches.open("certprep-runtime-v5");
-            const urls = (await cache.keys()).map(
-              (request) => new URL(request.url).pathname,
-            );
-            return paths.every((path) => urls.includes(path));
-          },
-          ["/", `/quiz/${quiz.id}/zen`],
-        ),
+        runtimeCacheContainsPaths(page, ["/", `/quiz/${quiz.id}/zen`]),
       )
       .toBe(true);
 

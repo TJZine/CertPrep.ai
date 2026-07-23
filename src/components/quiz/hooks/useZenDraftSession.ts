@@ -53,6 +53,80 @@ interface UseZenDraftSessionResult {
   flushDraft: (force?: boolean) => Promise<boolean>;
 }
 
+class ActiveZenDraftRuntime {
+  readonly quiz: Quiz;
+  readonly writerId: string;
+  private revision: number | null = null;
+  private startedAt: number | null = null;
+  private reconciledResultAt: number | undefined;
+  private quizHash: string | null = null;
+  private ready = false;
+  private dirty = false;
+  private saveChain: Promise<boolean> = Promise.resolve(true);
+
+  constructor(quiz: Quiz) {
+    this.quiz = quiz;
+    this.writerId = generateUUID();
+  }
+
+  setQuizHash(quizHash: string): void {
+    this.quizHash = quizHash;
+  }
+
+  getQuizHash(): string | null {
+    return this.quizHash;
+  }
+
+  beginFreshDraft(startedAt: number): void {
+    this.startedAt = startedAt;
+    this.reconciledResultAt = undefined;
+    this.revision = 1;
+  }
+
+  adoptClaimedDraft(draft: ZenQuizDraft): void {
+    this.revision = draft.revision;
+    this.startedAt = draft.started_at;
+    this.reconciledResultAt = draft.reconciled_result_at;
+  }
+
+  getRevision(): number | null {
+    return this.revision;
+  }
+
+  setRevision(revision: number): void {
+    this.revision = revision;
+  }
+
+  getStartedAt(): number | null {
+    return this.startedAt;
+  }
+
+  getReconciledResultAt(): number | undefined {
+    return this.reconciledResultAt;
+  }
+
+  isReady(): boolean {
+    return this.ready;
+  }
+
+  setReady(ready: boolean): void {
+    this.ready = ready;
+  }
+
+  isDirty(): boolean {
+    return this.dirty;
+  }
+
+  setDirty(dirty: boolean): void {
+    this.dirty = dirty;
+  }
+
+  enqueueSave(save: () => Promise<boolean>): Promise<boolean> {
+    this.saveChain = this.saveChain.then(save);
+    return this.saveChain;
+  }
+}
+
 async function resolveQuizHash(quiz: Quiz): Promise<string> {
   if (quiz.quiz_hash) return quiz.quiz_hash;
   return computeQuizHash({
@@ -110,222 +184,227 @@ export function useZenDraftSession({
   const [saveMessage, setSaveMessage] = React.useState<string | null>(null);
   const [draftOwnerId, setDraftOwnerId] = React.useState<string | null>(null);
 
+  // The live quiz record can receive metadata-only updates while a session is
+  // mounted. Read the latest value only when a new identity lifecycle begins,
+  // then freeze that seed until the lifecycle ends.
+  const readLatestQuiz = React.useEffectEvent(() => quiz);
+  const activeRuntimeRef = React.useRef<ActiveZenDraftRuntime | null>(null);
   const mountedRef = React.useRef(true);
-  const readyRef = React.useRef(false);
-  const dirtyRef = React.useRef(false);
-  const writerIdRef = React.useRef(generateUUID());
-  const revisionRef = React.useRef<number | null>(null);
-  const startedAtRef = React.useRef<number | null>(null);
-  const reconciledResultAtRef = React.useRef<number | undefined>(undefined);
-  const quizHashRef = React.useRef<string | null>(null);
   const secondsRef = React.useRef(seconds);
-  const saveChainRef = React.useRef<Promise<boolean>>(Promise.resolve(true));
 
   React.useEffect(() => {
     secondsRef.current = seconds;
   }, [seconds]);
 
-  const reportFailure = React.useCallback((error: unknown): void => {
-    if (!mountedRef.current) return;
-    if (error instanceof ZenDraftConflictError) {
-      readyRef.current = false;
-      setSaveStatus("conflict");
+  const reportFailure = React.useCallback(
+    (error: unknown, runtime: ActiveZenDraftRuntime): void => {
+      if (error instanceof ZenDraftConflictError) {
+        runtime.setReady(false);
+      }
+      if (!mountedRef.current || activeRuntimeRef.current !== runtime) {
+        return;
+      }
+      if (error instanceof ZenDraftConflictError) {
+        setSaveStatus("conflict");
+        setSaveMessage(
+          "This draft was updated in another tab. Your newer local work was not overwritten.",
+        );
+        return;
+      }
+      setSaveStatus("error");
       setSaveMessage(
-        "This draft was updated in another tab. Your newer local work was not overwritten.",
+        "We couldn't save your latest progress on this device. Your previous saved draft is still available.",
       );
-      return;
-    }
-    setSaveStatus("error");
-    setSaveMessage(
-      "We couldn't save your latest progress on this device. Your previous saved draft is still available.",
-    );
-  }, []);
+    },
+    [],
+  );
 
-  const buildDraft = React.useCallback((): ZenQuizDraft | null => {
-    if (
-      !enabled ||
-      !userId ||
-      !quizHashRef.current ||
-      revisionRef.current === null ||
-      startedAtRef.current === null
-    ) {
-      return null;
-    }
-    const state = useQuizSessionStore.getState();
-    return {
-      schema_version: ZEN_DRAFT_SCHEMA_VERSION,
-      user_id: userId,
-      quiz_id: quiz.id,
-      mode: "zen",
-      quiz_version: quiz.version,
-      quiz_hash: quizHashRef.current,
-      question_ids: [...state.questionQueue],
-      current_index: state.currentIndex,
-      answers: serializeAnswers(state.answers),
-      flagged_question_ids: Array.from(state.flaggedQuestions),
-      hard_question_ids: Array.from(state.hardQuestions),
-      selected_answer: state.hasSubmitted ? state.selectedAnswer : null,
-      has_submitted: state.hasSubmitted,
-      show_explanation: state.showExplanation,
-      elapsed_seconds: Math.max(0, Math.floor(secondsRef.current)),
-      started_at: startedAtRef.current,
-      updated_at: Date.now(),
-      reconciled_result_at: reconciledResultAtRef.current,
-      writer_id: writerIdRef.current,
-      revision: revisionRef.current,
-    };
-  }, [enabled, quiz.id, quiz.version, userId]);
+  const buildDraft = React.useCallback(
+    (runtime: ActiveZenDraftRuntime): ZenQuizDraft | null => {
+      const quizHash = runtime.getQuizHash();
+      const revision = runtime.getRevision();
+      const startedAt = runtime.getStartedAt();
+      if (
+        !enabled ||
+        !userId ||
+        !quizHash ||
+        revision === null ||
+        startedAt === null
+      ) {
+        return null;
+      }
+      const state = useQuizSessionStore.getState();
+      return {
+        schema_version: ZEN_DRAFT_SCHEMA_VERSION,
+        user_id: userId,
+        quiz_id: runtime.quiz.id,
+        mode: "zen",
+        quiz_version: runtime.quiz.version,
+        quiz_hash: quizHash,
+        question_ids: [...state.questionQueue],
+        current_index: state.currentIndex,
+        answers: serializeAnswers(state.answers),
+        flagged_question_ids: Array.from(state.flaggedQuestions),
+        hard_question_ids: Array.from(state.hardQuestions),
+        selected_answer: state.hasSubmitted ? state.selectedAnswer : null,
+        has_submitted: state.hasSubmitted,
+        show_explanation: state.showExplanation,
+        elapsed_seconds: Math.max(0, Math.floor(secondsRef.current)),
+        started_at: startedAt,
+        updated_at: Date.now(),
+        reconciled_result_at: runtime.getReconciledResultAt(),
+        writer_id: runtime.writerId,
+        revision,
+      };
+    },
+    [enabled, userId],
+  );
 
   const flushDraft = React.useCallback(
     async (force = false): Promise<boolean> => {
       if (!enabled) return true;
-      if (!readyRef.current) return false;
-      if (force) dirtyRef.current = true;
-      if (!dirtyRef.current) return true;
+      const runtime = activeRuntimeRef.current;
+      if (!runtime?.isReady()) return false;
+      if (force) runtime.setDirty(true);
+      if (!runtime.isDirty()) return true;
       // Capture the Zustand state synchronously. Route cleanup resets the
       // shared store immediately after requesting this flush, so reading the
       // store later from the queued promise could otherwise persist an empty
       // session over the user's latest progress.
-      const snapshot = buildDraft();
+      const snapshot = buildDraft(runtime);
       if (!snapshot) return false;
-      dirtyRef.current = false;
-      saveChainRef.current = saveChainRef.current.then(async () => {
-        if (!readyRef.current || revisionRef.current === null) return false;
-        const expectedRevision = revisionRef.current;
+      runtime.setDirty(false);
+      return runtime.enqueueSave(async () => {
+        const currentRevision = runtime.getRevision();
+        if (!runtime.isReady() || currentRevision === null) return false;
+        const expectedRevision = currentRevision;
         const draft = { ...snapshot, revision: expectedRevision };
-        if (mountedRef.current) {
+        if (mountedRef.current && activeRuntimeRef.current === runtime) {
           setSaveStatus("saving");
           setSaveMessage(null);
         }
         try {
           const saved = await saveZenDraft(draft, expectedRevision);
-          revisionRef.current = saved.revision;
-          if (mountedRef.current) {
+          runtime.setRevision(saved.revision);
+          if (mountedRef.current && activeRuntimeRef.current === runtime) {
             setSaveStatus("saved");
             setSaveMessage("Saved on this device.");
           }
           return true;
         } catch (error) {
-          dirtyRef.current = true;
-          reportFailure(error);
+          runtime.setDirty(true);
+          reportFailure(error, runtime);
           return false;
         }
       });
-      return saveChainRef.current;
     },
     [buildDraft, enabled, reportFailure],
   );
 
-  const createFreshDraft = React.useCallback(async (): Promise<void> => {
-    if (!userId || !quizHashRef.current) return;
-    pauseTimer();
-    resetTimer(0);
-    const now = Date.now();
-    startedAtRef.current = now;
-    reconciledResultAtRef.current = undefined;
-    revisionRef.current = 1;
-    const draft: ZenQuizDraft = {
-      schema_version: ZEN_DRAFT_SCHEMA_VERSION,
-      user_id: userId,
-      quiz_id: quiz.id,
-      mode: "zen",
-      quiz_version: quiz.version,
-      quiz_hash: quizHashRef.current,
-      question_ids: quiz.questions.map((question) => question.id),
-      current_index: 0,
-      answers: [],
-      flagged_question_ids: [],
-      hard_question_ids: [],
-      selected_answer: null,
-      has_submitted: false,
-      show_explanation: false,
-      elapsed_seconds: 0,
-      started_at: now,
-      updated_at: now,
-      writer_id: writerIdRef.current,
-      revision: 1,
-    };
-    try {
-      await createZenDraft(draft);
-      initializeSession(quiz.id, "zen", quiz.questions);
-      readyRef.current = true;
-      dirtyRef.current = false;
-      if (mountedRef.current) {
-        setDraftOwnerId(writerIdRef.current);
-        setSaveStatus("saved");
-        setSaveMessage("Saved on this device.");
-        setDecision(null);
+  const createFreshDraft = React.useCallback(
+    async (runtime = activeRuntimeRef.current): Promise<void> => {
+      const quizHash = runtime?.getQuizHash();
+      if (!userId || !runtime || !quizHash) return;
+      pauseTimer();
+      resetTimer(0);
+      const now = Date.now();
+      runtime.beginFreshDraft(now);
+      const draft: ZenQuizDraft = {
+        schema_version: ZEN_DRAFT_SCHEMA_VERSION,
+        user_id: userId,
+        quiz_id: runtime.quiz.id,
+        mode: "zen",
+        quiz_version: runtime.quiz.version,
+        quiz_hash: quizHash,
+        question_ids: runtime.quiz.questions.map((question) => question.id),
+        current_index: 0,
+        answers: [],
+        flagged_question_ids: [],
+        hard_question_ids: [],
+        selected_answer: null,
+        has_submitted: false,
+        show_explanation: false,
+        elapsed_seconds: 0,
+        started_at: now,
+        updated_at: now,
+        writer_id: runtime.writerId,
+        revision: 1,
+      };
+      try {
+        await createZenDraft(draft);
+        if (activeRuntimeRef.current !== runtime) return;
+        initializeSession(runtime.quiz.id, "zen", runtime.quiz.questions);
+        runtime.setReady(true);
+        runtime.setDirty(false);
+        if (mountedRef.current) {
+          setDraftOwnerId(runtime.writerId);
+          setSaveStatus("saved");
+          setSaveMessage("Saved on this device.");
+          setDecision(null);
+        }
+        startTimer();
+      } catch (error) {
+        reportFailure(error, runtime);
+        throw error;
       }
-      startTimer();
-    } catch (error) {
-      reportFailure(error);
-      throw error;
-    }
-  }, [
-    initializeSession,
-    pauseTimer,
-    quiz.id,
-    quiz.questions,
-    quiz.version,
-    reportFailure,
-    resetTimer,
-    startTimer,
-    userId,
-  ]);
+    },
+    [
+      initializeSession,
+      pauseTimer,
+      reportFailure,
+      resetTimer,
+      startTimer,
+      userId,
+    ],
+  );
 
   const activateDraft = React.useCallback(
     async (acknowledgeResult = false): Promise<void> => {
-      if (!decision) return;
+      const runtime = activeRuntimeRef.current;
+      if (!decision || !runtime) return;
       try {
         const claimed = await claimZenDraft(
           decision.assessment.draft,
-          writerIdRef.current,
+          runtime.writerId,
           acknowledgeResult ? decision.assessment.latest_result_at : undefined,
         );
-        revisionRef.current = claimed.revision;
-        startedAtRef.current = claimed.started_at;
-        reconciledResultAtRef.current = claimed.reconciled_result_at;
-        hydrateZenSession(quiz.id, quiz.questions, claimed);
+        if (activeRuntimeRef.current !== runtime) return;
+        runtime.adoptClaimedDraft(claimed);
+        hydrateZenSession(runtime.quiz.id, runtime.quiz.questions, claimed);
         resetTimer(claimed.elapsed_seconds);
-        readyRef.current = true;
-        dirtyRef.current = false;
+        runtime.setReady(true);
+        runtime.setDirty(false);
         if (mountedRef.current) {
-          setDraftOwnerId(writerIdRef.current);
+          setDraftOwnerId(runtime.writerId);
           setDecision(null);
           setSaveStatus("saved");
           setSaveMessage("Saved on this device.");
         }
         startTimer();
       } catch (error) {
-        reportFailure(error);
+        reportFailure(error, runtime);
       }
     },
-    [
-      decision,
-      hydrateZenSession,
-      quiz.id,
-      quiz.questions,
-      reportFailure,
-      resetTimer,
-      startTimer,
-    ],
+    [decision, hydrateZenSession, reportFailure, resetTimer, startTimer],
   );
 
   const startOver = React.useCallback(async (): Promise<void> => {
-    if (!decision || !userId) return;
+    const runtime = activeRuntimeRef.current;
+    if (!decision || !userId || !runtime) return;
     try {
       await discardZenDraft(
         userId,
-        quiz.id,
+        runtime.quiz.id,
         Number.isSafeInteger(decision.assessment.draft.revision)
           ? decision.assessment.draft.revision
           : undefined,
       );
-      await createFreshDraft();
+      if (activeRuntimeRef.current !== runtime) return;
+      await createFreshDraft(runtime);
     } catch (error) {
-      reportFailure(error);
+      reportFailure(error, runtime);
     }
-  }, [createFreshDraft, decision, quiz.id, reportFailure, userId]);
+  }, [createFreshDraft, decision, reportFailure, userId]);
 
   React.useEffect(() => {
     mountedRef.current = true;
@@ -336,20 +415,28 @@ export function useZenDraftSession({
 
   React.useEffect(() => {
     if (!enabled || !userId) {
+      activeRuntimeRef.current = null;
       return;
     }
+    const sessionQuiz = readLatestQuiz();
+    const runtime = new ActiveZenDraftRuntime(sessionQuiz);
+    activeRuntimeRef.current = runtime;
     let cancelled = false;
     const load = async (): Promise<void> => {
+      setDecision(null);
+      setDraftOwnerId(null);
+      setSaveStatus("idle");
+      setSaveMessage(null);
       setIsInitializing(true);
       pauseTimer();
       try {
-        const quizHash = await resolveQuizHash(quiz);
-        quizHashRef.current = quizHash;
-        const currentQuiz = { ...quiz, quiz_hash: quizHash };
-        const existing = await getZenDraft(userId, quiz.id);
+        const quizHash = await resolveQuizHash(sessionQuiz);
+        runtime.setQuizHash(quizHash);
+        const currentQuiz = { ...sessionQuiz, quiz_hash: quizHash };
+        const existing = await getZenDraft(userId, sessionQuiz.id);
         if (cancelled) return;
         if (!existing) {
-          await createFreshDraft();
+          await createFreshDraft(runtime);
           return;
         }
         const assessment = await assessZenDraft(existing, currentQuiz, userId);
@@ -366,7 +453,7 @@ export function useZenDraftSession({
         setSaveStatus("saved");
         setSaveMessage("Saved on this device.");
       } catch (error) {
-        reportFailure(error);
+        reportFailure(error, runtime);
       } finally {
         if (!cancelled) setIsInitializing(false);
       }
@@ -382,7 +469,7 @@ export function useZenDraftSession({
     createFreshDraft,
     enabled,
     pauseTimer,
-    quiz,
+    quiz.id,
     reportFailure,
     resetSession,
     flushDraft,
@@ -414,8 +501,9 @@ export function useZenDraftSession({
   );
 
   React.useEffect(() => {
-    if (!enabled || !readyRef.current || isComplete) return;
-    dirtyRef.current = true;
+    const runtime = activeRuntimeRef.current;
+    if (!enabled || !runtime?.isReady() || isComplete) return;
+    runtime.setDirty(true);
     setSaveStatus("saving");
     const timeout = window.setTimeout(() => {
       void flushDraft();

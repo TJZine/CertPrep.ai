@@ -67,6 +67,8 @@ export function useQuizSession({
   flushDraft: (force?: boolean) => Promise<boolean>;
 } {
   const searchParams = useSearchParams();
+  const shouldRemix = searchParams?.get("remix") === "true";
+  const readLatestQuiz = React.useEffectEvent(() => quiz);
   const {
     initializeSession,
     selectAnswer,
@@ -118,21 +120,28 @@ export function useQuizSession({
 
   React.useEffect(() => {
     if (draftEligible) return;
+    const sessionQuiz = readLatestQuiz();
     let mounted = true;
     const init = async (): Promise<void> => {
       setIsInitializing(true);
-      if (searchParams?.get("remix") === "true") {
+      if (shouldRemix) {
         try {
-          const { quiz: remixedQuiz, keyMappings } = await remixQuiz(quiz);
+          const { quiz: remixedQuiz, keyMappings } =
+            await remixQuiz(sessionQuiz);
           if (!mounted) return;
-          initializeSession(quiz.id, "zen", remixedQuiz.questions, keyMappings);
+          initializeSession(
+            sessionQuiz.id,
+            "zen",
+            remixedQuiz.questions,
+            keyMappings,
+          );
         } catch (err) {
           console.error("Failed to remix quiz:", err);
           if (!mounted) return;
-          initializeSession(quiz.id, "zen", quiz.questions);
+          initializeSession(sessionQuiz.id, "zen", sessionQuiz.questions);
         }
       } else {
-        initializeSession(quiz.id, "zen", quiz.questions);
+        initializeSession(sessionQuiz.id, "zen", sessionQuiz.questions);
       }
       if (!mounted) return;
       startTimer();
@@ -147,11 +156,11 @@ export function useQuizSession({
     };
   }, [
     draftEligible,
-    quiz,
+    quiz.id,
     initializeSession,
     startTimer,
     resetSession,
-    searchParams,
+    shouldRemix,
   ]);
 
   const totalQuestions = questionQueue.length;
