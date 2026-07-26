@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Quiz Recovery Semantics**: Preserved permanent Proctor auto-submit outcomes
+  through the time-up fallback so terminal failures no longer receive
+  contradictory retry guidance.
+- **Saved Quiz Launch Safety**: Distinguished unavailable or partially unknown
+  device-local draft status from a confirmed empty result, disabled affected
+  launch actions, and added an explicit dashboard retry path.
+
 ## [1.5.2] - 2026-07-23
 
 ### Added

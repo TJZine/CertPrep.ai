@@ -119,6 +119,14 @@ require an explicit Resume or Start Over decision and are labeled "Saved on this
 device." Invalid or changed-quiz drafts are retained until an explicit discard
 where the UI can safely offer one.
 
+Dashboard draft classification distinguishes a successful empty result from an
+unavailable status. A query-level IndexedDB failure disables all quiz launch
+actions until the same query succeeds; an individual assessment failure
+preserves healthy classifications while disabling only the affected quiz.
+Settled failures render a retry state instead of leaving the dashboard in a
+permanent loading skeleton. Retry re-runs the same Dexie live query and does not
+introduce a second persistence path or remote fallback.
+
 Standard-Zen completion appends the result and removes the completing tab's
 owned draft in one local Dexie transaction. A failed result write rolls the
 transaction back and retains the draft. Mounted quiz sessions keep the quiz
@@ -138,7 +146,10 @@ conflicted tab may still append its completed in-memory attempt as an ordinary
 result; doing so leaves the newer tab's draft untouched. Quiz-unavailable,
 quiz-ownership, and quiz-changed completion failures are typed as permanent
 domain failures so the UI routes users back to recovery instead of offering a
-retry that cannot succeed.
+retry that cannot succeed. Proctor auto-submit preserves the same distinction
+through its caller contract, so the time-up fallback adds retry guidance only
+for transient failures and does not contradict a permanent-failure toast and
+redirect.
 
 ### Sync Ownership
 

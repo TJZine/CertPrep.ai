@@ -23,7 +23,10 @@ import { TIMER } from "@/lib/constants";
 import type { Quiz } from "@/types/quiz";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
-import { useExamSubmission } from "@/hooks/useExamSubmission";
+import {
+  useExamSubmission,
+  type AutoSubmitOutcome,
+} from "@/hooks/useExamSubmission";
 import { remixQuiz } from "@/lib/quiz/quizRemix";
 
 interface ProctorQuizContainerProps {
@@ -99,7 +102,9 @@ export function ProctorQuizContainer({
     flaggedQuestions,
   });
 
-  const autoSubmitRef = React.useRef<(() => Promise<string | null>) | null>(null);
+  const autoSubmitRef = React.useRef<
+    (() => Promise<AutoSubmitOutcome>) | null
+  >(null);
   const [isInitializing, setIsInitializing] = React.useState(true);
 
   React.useEffect(() => {

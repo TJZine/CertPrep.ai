@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { db, initializeDatabase } from "@/db";
 import { NIL_UUID } from "@/lib/constants";
@@ -37,11 +37,23 @@ interface UseQuizWithStatsResponse {
 
 interface UseZenDraftStatusesResponse {
   statuses: ReadonlyMap<string, ZenDraftCompatibility>;
+  unknownQuizIds: ReadonlySet<string>;
   isLoading: boolean;
+  error: Error | null;
+  retry: () => void;
 }
 
 const EMPTY_ZEN_DRAFT_STATUSES: ReadonlyMap<string, ZenDraftCompatibility> =
   new Map();
+const EMPTY_UNKNOWN_ZEN_DRAFT_QUIZ_IDS: ReadonlySet<string> = new Set();
+
+interface ZenDraftStatusesQueryResult {
+  userId: string;
+  requestVersion: number;
+  statuses: ReadonlyMap<string, ZenDraftCompatibility>;
+  unknownQuizIds: ReadonlySet<string>;
+  error: Error | null;
+}
 
 interface UseResultsResponse {
   results: Result[];
@@ -206,8 +218,15 @@ export function useQuizWithStats(
 export function useZenDraftStatuses(
   userId: string | undefined,
 ): UseZenDraftStatusesResponse {
-  const statuses = useLiveQuery(async () => {
-    if (!userId) return new Map<string, ZenDraftCompatibility>();
+  const [requestVersion, setRequestVersion] = useState(0);
+  const retry = useCallback((): void => {
+    setRequestVersion((version) => version + 1);
+  }, []);
+
+  const queryResult = useLiveQuery(async (): Promise<
+    ZenDraftStatusesQueryResult | undefined
+  > => {
+    if (!userId) return undefined;
     try {
       const drafts = await db.zenDrafts
         .where("user_id")
@@ -236,28 +255,69 @@ export function useZenDraftStatuses(
         }),
       );
       const entries: Array<readonly [string, ZenDraftCompatibility]> = [];
+      const unknownQuizIds = new Set<string>();
       assessments.forEach((assessment, index) => {
         if (assessment.status === "fulfilled") {
           entries.push(assessment.value);
           return;
         }
+        const quizId = drafts[index]?.quiz_id;
+        if (quizId) {
+          unknownQuizIds.add(quizId);
+        }
         logger.warn("Failed to assess device-local Zen draft", {
-          quizId: drafts[index]?.quiz_id,
+          quizId,
           error: assessment.reason,
         });
       });
-      return new Map(entries);
+      return {
+        userId,
+        requestVersion,
+        statuses: new Map(entries),
+        unknownQuizIds,
+        error: null,
+      };
     } catch (error) {
       logger.warn("Failed to load device-local Zen draft statuses", {
         error,
       });
-      return new Map<string, ZenDraftCompatibility>();
+      return {
+        userId,
+        requestVersion,
+        statuses: EMPTY_ZEN_DRAFT_STATUSES,
+        unknownQuizIds: EMPTY_UNKNOWN_ZEN_DRAFT_QUIZ_IDS,
+        error:
+          error instanceof Error
+            ? error
+            : new Error("Failed to load saved quiz statuses."),
+      };
     }
-  }, [userId]);
+  }, [userId, requestVersion]);
+
+  const currentResult =
+    queryResult &&
+    queryResult.userId === userId &&
+    queryResult.requestVersion === requestVersion
+      ? queryResult
+      : undefined;
+
+  if (!userId) {
+    return {
+      statuses: EMPTY_ZEN_DRAFT_STATUSES,
+      unknownQuizIds: EMPTY_UNKNOWN_ZEN_DRAFT_QUIZ_IDS,
+      isLoading: false,
+      error: null,
+      retry,
+    };
+  }
 
   return {
-    statuses: statuses ?? EMPTY_ZEN_DRAFT_STATUSES,
-    isLoading: Boolean(userId) && statuses === undefined,
+    statuses: currentResult?.statuses ?? EMPTY_ZEN_DRAFT_STATUSES,
+    unknownQuizIds:
+      currentResult?.unknownQuizIds ?? EMPTY_UNKNOWN_ZEN_DRAFT_QUIZ_IDS,
+    isLoading: currentResult === undefined,
+    error: currentResult?.error ?? null,
+    retry,
   };
 }
 

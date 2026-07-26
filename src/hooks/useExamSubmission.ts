@@ -30,14 +30,21 @@ interface UseExamSubmissionReturn {
     handleSubmitExam: () => Promise<void>;
     /**
      * Auto-triggered submission when time runs out.
-     * Returns the result ID if successful, or null.
+     * Returns an explicit outcome so callers cannot treat permanent failures,
+     * duplicate calls, or in-flight work as retryable save failures.
      */
-    handleAutoSubmit: () => Promise<string | null>;
+    handleAutoSubmit: () => Promise<AutoSubmitOutcome>;
     /**
      * Confirm handler for the Time Up modal.
      */
     handleTimeUpConfirm: () => Promise<void>;
 }
+
+export type AutoSubmitOutcome =
+    | { kind: "saved"; resultId: string }
+    | { kind: "retryable-failure" }
+    | { kind: "permanent-failure" }
+    | { kind: "ignored" };
 
 function getPermanentSubmissionMessage(error: unknown): string | null {
     if (!isResultCompletionError(error)) return null;
@@ -177,14 +184,19 @@ export function useExamSubmission({
     ]);
 
     const handleAutoSubmit = React.useCallback(async (): Promise<
-        string | null
+        AutoSubmitOutcome
     > => {
-        if (isSubmitting || hasSavedResultRef.current) {
-            return autoResultId;
+        if (hasSavedResultRef.current) {
+            return autoResultId
+                ? { kind: "saved", resultId: autoResultId }
+                : { kind: "ignored" };
+        }
+        if (isSubmitting) {
+            return { kind: "ignored" };
         }
         if (!effectiveUserId) {
             addToast("error", "Unable to save results: no user context available.");
-            return null;
+            return { kind: "permanent-failure" };
         }
         setIsSubmitting(true);
         setShowSubmitModal(false); // Close submit modal to prevent overlap with time-up modal
@@ -203,11 +215,11 @@ export function useExamSubmission({
             setAutoResultId(result.id);
             setShowTimeUpModal(true);
             syncSavedResult("auto-submit");
-            return result.id;
+            return { kind: "saved", resultId: result.id };
         } catch (error) {
             console.error("Failed to auto-submit exam:", error);
+            const permanentMessage = getPermanentSubmissionMessage(error);
             if (isMountedRef.current) {
-                const permanentMessage = getPermanentSubmissionMessage(error);
                 addToast(
                     "error",
                     permanentMessage ?? "Auto-submit failed. Please submit manually.",
@@ -218,7 +230,9 @@ export function useExamSubmission({
                     setShowSubmitModal(true);
                 }
             }
-            return null;
+            return permanentMessage
+                ? { kind: "permanent-failure" }
+                : { kind: "retryable-failure" };
         } finally {
             if (isMountedRef.current) {
                 setIsSubmitting(false);
@@ -248,11 +262,10 @@ export function useExamSubmission({
                 router.push(`/results/${resultId}`);
             } else {
                 // Fallback: handleAutoSubmit manages its own isSubmitting state
-                const finalResultId = await handleAutoSubmit();
-                if (finalResultId) {
-                    router.push(`/results/${finalResultId}`);
-                } else {
-                    // Inform user if fallback submission also failed
+                const outcome = await handleAutoSubmit();
+                if (outcome.kind === "saved") {
+                    router.push(`/results/${outcome.resultId}`);
+                } else if (outcome.kind === "retryable-failure") {
                     addToast("error", "Unable to save results. Please try again.");
                 }
             }

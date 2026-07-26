@@ -148,7 +148,10 @@ describe("DashboardClient empty states", () => {
     });
     mocks.useZenDraftStatuses.mockReturnValue({
       statuses: new Map(),
+      unknownQuizIds: new Set(),
       isLoading: false,
+      error: null,
+      retry: vi.fn(),
     });
     mocks.useDashboardStats.mockReturnValue({
       quizStats: new Map(),

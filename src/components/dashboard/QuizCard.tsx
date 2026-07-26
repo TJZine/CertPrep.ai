@@ -39,6 +39,7 @@ export interface QuizCardProps {
   stats: QuizStats | null;
   onStart: (quiz: Quiz) => void;
   onDelete: (quiz: Quiz) => void;
+  isLaunchDisabled: boolean;
   isFeatured?: boolean;
   hasResumableDraft?: boolean;
 }
@@ -84,6 +85,7 @@ export function QuizCard({
   stats,
   onStart,
   onDelete,
+  isLaunchDisabled,
   isFeatured = false,
   hasResumableDraft = false,
 }: QuizCardProps): React.ReactElement {
@@ -461,7 +463,7 @@ export function QuizCard({
         </CardContent>
 
         <CardFooter className="pt-0">
-          {hasResumableDraft ? (
+          {hasResumableDraft && !isLaunchDisabled ? (
             <div className="grid w-full gap-2 sm:grid-cols-2">
               <Link href={zenHref} className={cn(buttonVariants(), "w-full")}>
                 <Play className="h-4 w-4" aria-hidden="true" />
@@ -479,9 +481,14 @@ export function QuizCard({
             <Button
               className="w-full"
               leftIcon={<Play className="h-4 w-4" aria-hidden="true" />}
+              disabled={isLaunchDisabled}
               onClick={() => onStart(quiz)}
             >
-              {attemptCount > 0 ? "Study Again" : "Start Quiz"}
+              {isLaunchDisabled
+                ? "Quiz Status Unavailable"
+                : attemptCount > 0
+                  ? "Study Again"
+                  : "Start Quiz"}
             </Button>
           )}
         </CardFooter>

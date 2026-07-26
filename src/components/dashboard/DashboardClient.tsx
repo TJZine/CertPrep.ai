@@ -31,6 +31,7 @@ import { InterleavedPracticeCard } from "@/components/dashboard/InterleavedPract
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { useToast } from "@/components/ui/Toast";
+import { Button } from "@/components/ui/Button";
 import { LOCAL_STORAGE_KEYS, buildDashboardCacheKey } from "@/lib/constants";
 import { prefetchOnIdle } from "@/lib/prefetch";
 import type { Quiz } from "@/types/quiz";
@@ -93,8 +94,13 @@ export default function DashboardClient(): React.ReactElement {
     overallStats,
     isLoading: statsLoading,
   } = useDashboardStats(effectiveUserId ?? undefined);
-  const { statuses: zenDraftStatuses, isLoading: zenDraftStatusesLoading } =
-    useZenDraftStatuses(effectiveUserId ?? undefined);
+  const {
+    statuses: zenDraftStatuses,
+    unknownQuizIds: unknownZenDraftQuizIds,
+    isLoading: zenDraftStatusesLoading,
+    error: zenDraftStatusesError,
+    retry: retryZenDraftStatuses,
+  } = useZenDraftStatuses(effectiveUserId ?? undefined);
 
   const [isImportModalOpen, setIsImportModalOpen] = React.useState(false);
   const handledImportQueryRef = React.useRef(false);
@@ -474,6 +480,27 @@ export default function DashboardClient(): React.ReactElement {
         }
         contentSlot={
           <div className="space-y-4">
+            {(zenDraftStatusesError ||
+              unknownZenDraftQuizIds.size > 0) && (
+              <div
+                role="alert"
+                className="flex flex-col gap-3 rounded-lg border border-warning/50 bg-warning/10 p-4 text-sm text-foreground sm:flex-row sm:items-center sm:justify-between"
+              >
+                <p>
+                  {zenDraftStatusesError
+                    ? "Saved quiz status is temporarily unavailable. Quiz launch actions are disabled until it reloads."
+                    : "Some saved quiz statuses could not be verified. Affected quiz launch actions are disabled until they reload."}
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="shrink-0"
+                  onClick={retryZenDraftStatuses}
+                >
+                  Retry saved quiz status
+                </Button>
+              </div>
+            )}
             {quizzesError && (
               <div
                 role="alert"
@@ -507,6 +534,8 @@ export default function DashboardClient(): React.ReactElement {
               quizzes={filteredQuizzes}
               quizStats={quizStats}
               zenDraftStatuses={zenDraftStatuses}
+              areZenDraftStatusesAvailable={!zenDraftStatusesError}
+              unknownZenDraftQuizIds={unknownZenDraftQuizIds}
               onStartQuiz={handleStartQuiz}
               onDeleteQuiz={handleDeleteClick}
             />

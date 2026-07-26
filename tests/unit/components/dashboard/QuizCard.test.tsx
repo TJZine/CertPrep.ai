@@ -47,6 +47,7 @@ describe("QuizCard", () => {
         stats={null}
         onStart={vi.fn()}
         onDelete={vi.fn()}
+        isLaunchDisabled={false}
       />,
     );
 
@@ -63,6 +64,7 @@ describe("QuizCard", () => {
         stats={attemptedStats}
         onStart={vi.fn()}
         onDelete={vi.fn()}
+        isLaunchDisabled={false}
         isFeatured
       />,
     );
@@ -86,6 +88,7 @@ describe("QuizCard", () => {
       stats: attemptedStats,
       onStart,
       onDelete: vi.fn(),
+      isLaunchDisabled: false,
     };
     const { rerender } = render(<QuizCard {...props} hasResumableDraft />);
 
@@ -109,6 +112,29 @@ describe("QuizCard", () => {
     ).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Choose Mode" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("fails closed when saved quiz status is unavailable", () => {
+    const onStart = vi.fn();
+    render(
+      <QuizCard
+        quiz={quiz}
+        stats={null}
+        onStart={onStart}
+        onDelete={vi.fn()}
+        isLaunchDisabled
+      />,
+    );
+
+    const unavailableButton = screen.getByRole("button", {
+      name: "Quiz Status Unavailable",
+    });
+    expect(unavailableButton).toBeDisabled();
+    fireEvent.click(unavailableButton);
+    expect(onStart).not.toHaveBeenCalled();
+    expect(
+      screen.queryByRole("button", { name: "Start Quiz" }),
     ).not.toBeInTheDocument();
   });
 });

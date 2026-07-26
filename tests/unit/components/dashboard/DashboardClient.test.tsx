@@ -72,16 +72,29 @@ vi.mock("@/components/dashboard/QuizGrid", () => ({
   QuizGrid: ({
     quizzes,
     onStartQuiz,
+    areZenDraftStatusesAvailable,
+    unknownZenDraftQuizIds,
   }: {
     quizzes: Array<{ id: string; title: string }>;
     onStartQuiz: (quiz: { id: string; title: string }) => void;
+    areZenDraftStatusesAvailable: boolean;
+    unknownZenDraftQuizIds: ReadonlySet<string>;
   }): React.JSX.Element => (
     <div data-testid="quiz-grid">
-      {quizzes.map((quiz) => (
-        <button key={quiz.id} onClick={() => onStartQuiz(quiz)}>
-          Open {quiz.title}
-        </button>
-      ))}
+      {quizzes.map((quiz) => {
+        const disabled =
+          !areZenDraftStatusesAvailable ||
+          unknownZenDraftQuizIds.has(quiz.id);
+        return (
+          <button
+            key={quiz.id}
+            disabled={disabled}
+            onClick={() => onStartQuiz(quiz)}
+          >
+            Open {quiz.title}
+          </button>
+        );
+      })}
     </div>
   ),
 }));
@@ -136,7 +149,10 @@ describe("DashboardClient", () => {
     });
     mocks.useZenDraftStatuses.mockReturnValue({
       statuses: new Map(),
+      unknownQuizIds: new Set(),
       isLoading: false,
+      error: null,
+      retry: vi.fn(),
     });
     mocks.useDashboardStats.mockReturnValue({
       quizStats: new Map(),
@@ -212,5 +228,86 @@ describe("DashboardClient", () => {
     );
 
     expect(await screen.findByTestId("mode-select-modal")).toBeInTheDocument();
+  });
+
+  it("disables quiz launch and offers retry when saved status loading fails", async () => {
+    const retry = vi.fn();
+    const quiz = {
+      id: "quiz-1",
+      title: "Saved quiz",
+      tags: [],
+      questions: [],
+      created_at: 1,
+    };
+    mocks.useQuizzes.mockReturnValue({
+      quizzes: [quiz],
+      isLoading: false,
+      error: null,
+    });
+    mocks.useZenDraftStatuses.mockReturnValue({
+      statuses: new Map(),
+      unknownQuizIds: new Set(),
+      isLoading: false,
+      error: new Error("IndexedDB unavailable"),
+      retry,
+    });
+
+    render(<DashboardClient />);
+
+    expect(
+      await screen.findByText(/saved quiz status is temporarily unavailable/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Open Saved quiz" }),
+    ).toBeDisabled();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Retry saved quiz status" }),
+    );
+    expect(retry).toHaveBeenCalledTimes(1);
+    expect(screen.queryByTestId("mode-select-modal")).not.toBeInTheDocument();
+  });
+
+  it("disables only the quiz with an unknown draft assessment", async () => {
+    const quizzes = [
+      {
+        id: "healthy",
+        title: "Healthy quiz",
+        tags: [],
+        questions: [],
+        created_at: 1,
+      },
+      {
+        id: "unknown",
+        title: "Unknown quiz",
+        tags: [],
+        questions: [],
+        created_at: 2,
+      },
+    ];
+    mocks.useQuizzes.mockReturnValue({
+      quizzes,
+      isLoading: false,
+      error: null,
+    });
+    mocks.useZenDraftStatuses.mockReturnValue({
+      statuses: new Map(),
+      unknownQuizIds: new Set(["unknown"]),
+      isLoading: false,
+      error: null,
+      retry: vi.fn(),
+    });
+
+    render(<DashboardClient />);
+
+    expect(
+      await screen.findByText(/some saved quiz statuses could not be verified/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Open Unknown quiz" }),
+    ).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "Open Healthy quiz" }),
+    ).toBeEnabled();
   });
 });

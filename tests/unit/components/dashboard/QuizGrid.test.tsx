@@ -10,6 +10,7 @@ const { quizCardSpy } = vi.hoisted(() => ({ quizCardSpy: vi.fn() }));
 interface MockQuizCardProps {
   isFeatured?: boolean;
   hasResumableDraft?: boolean;
+  isLaunchDisabled: boolean;
   quiz: { id: string };
 }
 
@@ -34,6 +35,8 @@ const makeQuiz = (id: string, title: string): Quiz => ({
 
 const quizzes: Quiz[] = [makeQuiz("q1", "Quiz 1"), makeQuiz("q2", "Quiz 2")];
 const quizStats = new Map<string, QuizStats>();
+const emptyZenDraftStatuses = new Map<string, ZenDraftCompatibility>();
+const noUnknownZenDraftQuizIds = new Set<string>();
 
 describe("QuizGrid featured layout", () => {
   afterEach(() => {
@@ -45,6 +48,9 @@ describe("QuizGrid featured layout", () => {
       <QuizGrid
         quizzes={quizzes}
         quizStats={quizStats}
+        zenDraftStatuses={emptyZenDraftStatuses}
+        areZenDraftStatusesAvailable
+        unknownZenDraftQuizIds={noUnknownZenDraftQuizIds}
         onStartQuiz={vi.fn()}
         onDeleteQuiz={vi.fn()}
       />,
@@ -60,6 +66,9 @@ describe("QuizGrid featured layout", () => {
       <QuizGrid
         quizzes={quizzes}
         quizStats={quizStats}
+        zenDraftStatuses={emptyZenDraftStatuses}
+        areZenDraftStatusesAvailable
+        unknownZenDraftQuizIds={noUnknownZenDraftQuizIds}
         onStartQuiz={vi.fn()}
         onDeleteQuiz={vi.fn()}
       />,
@@ -81,6 +90,8 @@ describe("QuizGrid featured layout", () => {
             ["q2", "quiz-changed"],
           ])
         }
+        areZenDraftStatusesAvailable
+        unknownZenDraftQuizIds={noUnknownZenDraftQuizIds}
         onStartQuiz={vi.fn()}
         onDeleteQuiz={vi.fn()}
       />,
@@ -88,5 +99,39 @@ describe("QuizGrid featured layout", () => {
 
     expect(quizCardSpy.mock.calls[0]?.[0]?.hasResumableDraft).toBe(true);
     expect(quizCardSpy.mock.calls[1]?.[0]?.hasResumableDraft).toBe(false);
+  });
+
+  it("disables every launch when draft statuses are globally unavailable", () => {
+    render(
+      <QuizGrid
+        quizzes={quizzes}
+        quizStats={quizStats}
+        zenDraftStatuses={emptyZenDraftStatuses}
+        areZenDraftStatusesAvailable={false}
+        unknownZenDraftQuizIds={noUnknownZenDraftQuizIds}
+        onStartQuiz={vi.fn()}
+        onDeleteQuiz={vi.fn()}
+      />,
+    );
+
+    expect(quizCardSpy.mock.calls[0]?.[0]?.isLaunchDisabled).toBe(true);
+    expect(quizCardSpy.mock.calls[1]?.[0]?.isLaunchDisabled).toBe(true);
+  });
+
+  it("disables only quizzes whose draft assessment is unknown", () => {
+    render(
+      <QuizGrid
+        quizzes={quizzes}
+        quizStats={quizStats}
+        zenDraftStatuses={emptyZenDraftStatuses}
+        areZenDraftStatusesAvailable
+        unknownZenDraftQuizIds={new Set(["q2"])}
+        onStartQuiz={vi.fn()}
+        onDeleteQuiz={vi.fn()}
+      />,
+    );
+
+    expect(quizCardSpy.mock.calls[0]?.[0]?.isLaunchDisabled).toBe(false);
+    expect(quizCardSpy.mock.calls[1]?.[0]?.isLaunchDisabled).toBe(true);
   });
 });

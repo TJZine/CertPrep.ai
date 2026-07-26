@@ -2,7 +2,15 @@
 
 Status: completed
 Owner: Codex
-Last Reviewed: 2026-07-22
+Last Reviewed: 2026-07-26
+
+> Superseded decision (2026-07-26): the partial/empty degradation policy below
+> no longer treats failed classifications as known absence. The current policy
+> preserves healthy partial results, marks failed quiz assessments unknown,
+> treats query-level failures as globally unavailable, and provides an explicit
+> retry without a permanent loading state. See
+> `docs/plans/2026-07-26-submission-draft-status-hardening.md` and
+> `docs/ARCHITECTURE.md`.
 
 ## Objective
 
