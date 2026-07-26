@@ -192,12 +192,17 @@ export const useQuizSessionStore = create<QuizSessionStore>()(
         const orderedQuestions = draft.question_ids
           .map((id) => questionsById.get(id))
           .filter((question): question is Question => question !== undefined);
+        if (orderedQuestions.length !== draft.question_ids.length) {
+          throw new Error(
+            "Cannot hydrate Zen session: draft question set is invalid.",
+          );
+        }
 
         Object.assign(state, createInitialState());
         state.quizId = quizId;
         state.mode = "zen";
         state.questions = orderedQuestions;
-        state.questionQueue = [...draft.question_ids];
+        state.questionQueue = orderedQuestions.map((question) => question.id);
         state.currentIndex = draft.current_index;
         state.answers = new Map(
           draft.answers.map((answer) => [

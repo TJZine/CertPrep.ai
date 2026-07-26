@@ -63,6 +63,9 @@ const RemoteQuizSchema = z.object({
   description: z.string().nullable(),
   tags: z.array(z.string()).nullable(),
   version: z.number().int(),
+  // Empty arrays are valid for deterministic SRS aggregate containers. User
+  // quiz launch routes fail closed with an explicit "No Questions" state, so
+  // this transport schema must not globally require a non-empty collection.
   questions: z.array(QuestionSchema),
   quiz_hash: z.string().nullable().optional(),
   source_id: z.string().nullable().optional(),

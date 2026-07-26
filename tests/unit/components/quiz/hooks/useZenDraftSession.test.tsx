@@ -7,6 +7,9 @@ import { useQuizSessionStore } from "@/stores/quizSessionStore";
 import type { Quiz } from "@/types/quiz";
 import type { ZenQuizDraft } from "@/types/zenDraft";
 
+// Covers the 350 ms production debounce plus fake-IndexedDB scheduling under CI.
+const DRAFT_AUTOSAVE_TEST_TIMEOUT_MS = 2_000;
+
 const quiz: Quiz = {
   id: "quiz-hook",
   user_id: "user-1",
@@ -122,7 +125,7 @@ describe("useZenDraftSession", () => {
           (await db.zenDrafts.get(["user-1", quiz.id]))?.flagged_question_ids,
         ).toEqual(["q1"]);
       },
-      { timeout: 2_000 },
+      { timeout: DRAFT_AUTOSAVE_TEST_TIMEOUT_MS },
     );
     await waitFor(() => {
       expect(result.current.saveStatus).toBe("saved");
@@ -151,7 +154,7 @@ describe("useZenDraftSession", () => {
           (await db.zenDrafts.get(["user-1", quiz.id]))?.flagged_question_ids,
         ).toEqual(["q1"]);
       },
-      { timeout: 2_000 },
+      { timeout: DRAFT_AUTOSAVE_TEST_TIMEOUT_MS },
     );
     await waitFor(() => expect(result.current.saveStatus).toBe("saved"));
     const persistedBeforeRefresh = await db.zenDrafts.get(["user-1", quiz.id]);
@@ -226,7 +229,7 @@ describe("useZenDraftSession", () => {
           (await db.zenDrafts.get(["user-1", quiz.id]))?.flagged_question_ids,
         ).toEqual(["q2"]);
       },
-      { timeout: 2_000 },
+      { timeout: DRAFT_AUTOSAVE_TEST_TIMEOUT_MS },
     );
     expect(useQuizSessionStore.getState().quizId).toBeNull();
   });
@@ -244,6 +247,29 @@ describe("useZenDraftSession", () => {
 
     await new Promise((resolve) => window.setTimeout(resolve, 0));
     expect(await db.zenDrafts.count()).toBe(0);
+    expect(useQuizSessionStore.getState().quizId).toBeNull();
+    expect(timer.startTimer).not.toHaveBeenCalled();
+  });
+
+  it("fails closed without creating a draft for an empty standard quiz", async () => {
+    const emptyQuiz: Quiz = {
+      ...quiz,
+      id: "quiz-empty",
+      quiz_hash: "empty-hash",
+      questions: [],
+    };
+    const { result } = renderHook(() =>
+      useZenDraftSession({
+        quiz: emptyQuiz,
+        userId: "user-1",
+        enabled: true,
+        seconds: 0,
+        ...timer,
+      }),
+    );
+
+    await waitFor(() => expect(result.current.saveStatus).toBe("error"));
+    expect(await db.zenDrafts.get(["user-1", emptyQuiz.id])).toBeUndefined();
     expect(useQuizSessionStore.getState().quizId).toBeNull();
     expect(timer.startTimer).not.toHaveBeenCalled();
   });
@@ -304,8 +330,9 @@ describe("useZenDraftSession", () => {
     });
     act(() => useQuizSessionStore.getState().toggleFlag("q2"));
     await waitFor(() => expect(result.current.saveStatus).toBe("conflict"), {
-      timeout: 2_000,
+      timeout: DRAFT_AUTOSAVE_TEST_TIMEOUT_MS,
     });
+    expect(result.current.draftOwnerId).toBeNull();
     expect((await db.zenDrafts.get(["user-1", quiz.id]))?.writer_id).toBe(
       "writer-newer-tab",
     );

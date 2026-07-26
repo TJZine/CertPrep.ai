@@ -114,7 +114,7 @@ export function ZenQuizContainer({
   });
 
   const {
-    saveError,
+    failure: submissionFailure,
     submitQuiz: handleSessionComplete,
     retrySave: retrySaveAction,
     clearSessionStorage,
@@ -140,7 +140,7 @@ export function ZenQuizContainer({
       draftSaveStatus === "error" ||
       draftSaveStatus === "conflict" ||
       Boolean(completionFlushError) ||
-      Boolean(saveError),
+      Boolean(submissionFailure),
     draftEligible
       ? "Your latest progress may still be saving on this device."
       : "Your quiz progress will be lost. Are you sure?",
@@ -167,7 +167,11 @@ export function ZenQuizContainer({
       pauseTimer();
       setIsRetryingCompletion(true);
       try {
-        if (draftEligible && !(await flushDraft(true))) {
+        if (
+          draftEligible &&
+          draftSaveStatus !== "conflict" &&
+          !(await flushDraft(true))
+        ) {
           const message =
             "We couldn't save your latest progress before completing this quiz. Retry completion to keep your result and saved draft consistent.";
           setCompletionFlushError(message);
@@ -177,13 +181,14 @@ export function ZenQuizContainer({
         setCompletionFlushError(null);
         await handleSessionComplete(elapsedSeconds);
       } catch {
-        // Result persistence owns its saveError state and user-facing toast.
+        // Result persistence owns its structured failure state and toast.
       } finally {
         if (isMountedRef.current) setIsRetryingCompletion(false);
       }
     }, [
       addToast,
       draftEligible,
+      draftSaveStatus,
       flushDraft,
       handleSessionComplete,
       pauseTimer,
@@ -197,8 +202,15 @@ export function ZenQuizContainer({
     }
     const elapsedSeconds = completionTimeRef.current;
     if (elapsedSeconds === null) return;
-    retrySaveAction(elapsedSeconds);
-  }, [attemptSessionCompletion, completionFlushError, retrySaveAction]);
+    if (submissionFailure?.canRetry) {
+      retrySaveAction(elapsedSeconds);
+    }
+  }, [
+    attemptSessionCompletion,
+    completionFlushError,
+    retrySaveAction,
+    submissionFailure,
+  ]);
 
   React.useEffect(() => {
     if (isComplete && !hasSavedResultRef.current) {
@@ -254,6 +266,15 @@ export function ZenQuizContainer({
     void handleExit();
   }, [handleExit]);
 
+  const returnToDashboardAfterPermanentFailure = React.useCallback((): void => {
+    // A permanent result failure cannot be repaired by another draft flush.
+    // Preserve the last valid device draft and leave without letting a broken
+    // or unavailable quiz trap the user on the completion screen.
+    resetSession();
+    clearSessionStorage();
+    router.push("/");
+  }, [clearSessionStorage, resetSession, router]);
+
   React.useEffect(() => {
     if (hasSubmitted && isCurrentAnswerCorrect) {
       addToast("success", "Correct! 🎉");
@@ -261,25 +282,32 @@ export function ZenQuizContainer({
   }, [hasSubmitted, isCurrentAnswerCorrect, addToast]);
 
   const completionFailureNotice =
-    completionFlushError || saveError ? (
+    completionFlushError || submissionFailure ? (
       <div
         className="mb-6 rounded-lg border border-warning/50 bg-warning/10 p-4 text-sm text-warning"
         role="alert"
       >
         <p className="mb-3 font-semibold">
-          {completionFlushError ?? "We couldn't save your results."}
+          {completionFlushError ?? submissionFailure?.message}
         </p>
         <div className="flex flex-wrap gap-2">
-          <Button
-            size="sm"
-            onClick={retrySave}
-            isLoading={isRetryingCompletion}
-          >
-            {completionFlushError ? "Retry completion" : "Retry save"}
-          </Button>
-          {!completionFlushError ? (
+          {completionFlushError || submissionFailure?.canRetry ? (
+            <Button
+              size="sm"
+              onClick={retrySave}
+              isLoading={isRetryingCompletion}
+            >
+              {completionFlushError ? "Retry completion" : "Retry save"}
+            </Button>
+          ) : null}
+          {!completionFlushError && submissionFailure?.canRetry ? (
             <Button size="sm" variant="ghost" onClick={requestExit}>
               Exit without saving
+            </Button>
+          ) : null}
+          {submissionFailure?.kind === "permanent" ? (
+            <Button size="sm" onClick={returnToDashboardAfterPermanentFailure}>
+              Back to Dashboard
             </Button>
           ) : null}
         </div>

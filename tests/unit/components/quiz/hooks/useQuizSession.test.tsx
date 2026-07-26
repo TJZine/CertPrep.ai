@@ -1,4 +1,4 @@
-import { renderHook } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { useQuizSession } from "@/components/quiz/hooks/useQuizSession";
 import {
@@ -209,8 +209,9 @@ describe("useQuizSession", () => {
     mockInitializeSession.mockClear();
     mockResetSession.mockClear();
 
-    rerender({ currentQuiz: { ...mockQuiz, last_synced_at: Date.now() } });
-    await Promise.resolve();
+    await act(async () => {
+      rerender({ currentQuiz: { ...mockQuiz, last_synced_at: Date.now() } });
+    });
 
     expect(mockResetSession).not.toHaveBeenCalled();
     expect(mockInitializeSession).not.toHaveBeenCalled();

@@ -9,6 +9,7 @@ import { useToast } from "@/components/ui/Toast";
 import { useAuth } from "@/components/providers/AuthProvider";
 import type { Quiz } from "@/types/quiz";
 import type { Result } from "@/types/result";
+import { ResultCompletionError } from "@/db/resultErrors";
 
 // Mock dependencies
 vi.mock("@/stores/quizSessionStore");
@@ -273,6 +274,28 @@ describe("useExamSubmission", () => {
 
         expect(mockAddToast).toHaveBeenCalledWith("error", expect.stringContaining("Failed to submit"));
         expect(mockRouterPush).not.toHaveBeenCalled();
+        consoleSpy.mockRestore();
+    });
+
+    it("routes to the dashboard instead of offering retry for a permanent failure", async () => {
+        const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+        vi.mocked(ResultsDB.createResult).mockRejectedValueOnce(
+            new ResultCompletionError(
+                "QUIZ_UNAVAILABLE",
+                "Quiz is no longer available for completion.",
+            ),
+        );
+        const { result } = renderHook(() => useExamSubmission(defaultProps));
+
+        await act(async () => {
+            await result.current.handleSubmitExam();
+        });
+
+        expect(mockAddToast).toHaveBeenCalledWith(
+            "error",
+            expect.stringContaining("no longer available"),
+        );
+        expect(mockRouterPush).toHaveBeenCalledWith("/");
         consoleSpy.mockRestore();
     });
 });

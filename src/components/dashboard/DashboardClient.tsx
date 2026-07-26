@@ -394,7 +394,9 @@ export default function DashboardClient(): React.ReactElement {
   }, [quizzes.length, quizzesLoading, effectiveUserId]);
 
   // Loading: auth/user context and DB/data fetches.
-  // Keep a single skeleton visible until all dynamic sections (including SRS due counts) are ready.
+  // Draft status controls each quiz card's primary action. Keep the dashboard
+  // skeleton until it resolves so a resumable quiz is never briefly exposed as
+  // "Start Quiz" or routed through the wrong launch flow.
   // Error state - specific DB initialization failure
   if (dbError) {
     return (

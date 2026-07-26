@@ -1,5 +1,5 @@
 import * as React from "react";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { QuizCard } from "@/components/dashboard/QuizCard";
 import type { QuizStats } from "@/db/quizzes";
@@ -80,10 +80,11 @@ describe("QuizCard", () => {
   });
 
   it("shows Continue Quiz only when a compatible local draft exists", () => {
+    const onStart = vi.fn();
     const props = {
       quiz,
       stats: attemptedStats,
-      onStart: vi.fn(),
+      onStart,
       onDelete: vi.fn(),
     };
     const { rerender } = render(<QuizCard {...props} hasResumableDraft />);
@@ -95,6 +96,8 @@ describe("QuizCard", () => {
       "href",
       "/quiz/quiz-1/zen",
     );
+    fireEvent.click(screen.getByRole("button", { name: "Choose Mode" }));
+    expect(onStart).toHaveBeenCalledWith(quiz);
 
     rerender(<QuizCard {...props} hasResumableDraft={false} />);
 
@@ -104,5 +107,8 @@ describe("QuizCard", () => {
     expect(
       screen.getByRole("button", { name: "Study Again" }),
     ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Choose Mode" }),
+    ).not.toBeInTheDocument();
   });
 });

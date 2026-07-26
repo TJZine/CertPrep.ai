@@ -1,7 +1,7 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { clearDatabase, db } from "@/db/dbInstance";
 import { createZenDraft } from "@/db/zenDrafts";
-import { finalizeStandardZenResult } from "@/db/results";
+import { createResult, finalizeStandardZenResult } from "@/db/results";
 import type { Quiz } from "@/types/quiz";
 import type { Result } from "@/types/result";
 import type { ZenQuizDraft } from "@/types/zenDraft";
@@ -61,6 +61,10 @@ const draft: ZenQuizDraft = {
 };
 
 describe("standard Zen result finalization", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   beforeEach(async () => {
     await db.open();
     await clearDatabase();
@@ -105,9 +109,9 @@ describe("standard Zen result finalization", () => {
   });
 
   it("retains the draft and creates no result when result persistence fails", async () => {
-    const add = vi
-      .spyOn(db.results, "add")
-      .mockRejectedValueOnce(new Error("simulated result failure"));
+    vi.spyOn(db.results, "add").mockRejectedValueOnce(
+      new Error("simulated result failure"),
+    );
 
     await expect(
       finalizeStandardZenResult({
@@ -124,7 +128,6 @@ describe("standard Zen result finalization", () => {
 
     expect(await db.results.count()).toBe(0);
     expect(await db.zenDrafts.get(["user-1", quiz.id])).toEqual(draft);
-    add.mockRestore();
   });
 
   it("does not delete or finalize a draft owned by another tab", async () => {
@@ -143,5 +146,28 @@ describe("standard Zen result finalization", () => {
 
     expect(await db.results.count()).toBe(0);
     expect(await db.zenDrafts.get(["user-1", quiz.id])).toEqual(draft);
+  });
+
+  it("can append an independent result while preserving a newer tab's draft", async () => {
+    await db.zenDrafts.update(["user-1", quiz.id], {
+      writer_id: "writer-newer",
+      revision: 2,
+    });
+
+    const result = await createResult({
+      quizId: quiz.id,
+      userId: "user-1",
+      mode: "zen",
+      answers: { "question-1": "a" },
+      flaggedQuestions: [],
+      timeTakenSeconds: 60,
+      activeQuestionIds: ["question-1"],
+    });
+
+    expect(await db.results.get(result.id)).toBeDefined();
+    expect(await db.zenDrafts.get(["user-1", quiz.id])).toMatchObject({
+      writer_id: "writer-newer",
+      revision: 2,
+    });
   });
 });

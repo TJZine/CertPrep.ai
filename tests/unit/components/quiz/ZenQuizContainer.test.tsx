@@ -148,7 +148,7 @@ describe("ZenQuizContainer", () => {
     vi.mocked(useQuizPersistence).mockImplementation(
       () =>
         ({
-          saveError: false,
+          failure: null,
           submitQuiz: mockSubmitQuiz,
           retrySave: mockRetrySave,
           clearSessionStorage: vi.fn(),
@@ -362,11 +362,46 @@ describe("ZenQuizContainer", () => {
     expect(mockPauseTimer).toHaveBeenCalledTimes(2);
   });
 
+  it("completes a conflicted tab without flushing or deleting the newer draft", async () => {
+    const flushDraft = vi.fn().mockResolvedValue(false);
+    vi.mocked(useQuizSession).mockReturnValue({
+      isInitializing: false,
+      currentQuestion: null,
+      currentIndex: 1,
+      progress: { current: 2, total: 2 },
+      selectedAnswer: null,
+      hasSubmitted: false,
+      showExplanation: false,
+      isComplete: true,
+      formattedTime: "00:10",
+      seconds: 10,
+      pauseTimer: mockPauseTimer,
+      isResolving: false,
+      isCurrentAnswerCorrect: false,
+      isLastQuestion: true,
+      resetSession: mockResetSession,
+      draftDecision: null,
+      draftSaveStatus: "conflict",
+      draftSaveMessage: "This draft was updated in another tab.",
+      draftOwnerId: null,
+      flushDraft,
+    } as unknown as ReturnType<typeof useQuizSession>);
+
+    render(<ZenQuizContainer quiz={mockQuiz} />);
+
+    await waitFor(() => expect(mockSubmitQuiz).toHaveBeenCalledWith(10));
+    expect(flushDraft).not.toHaveBeenCalled();
+  });
+
   it("displays save error UI and handles retry", async () => {
     vi.mocked(useQuizPersistence).mockImplementation(
       () =>
         ({
-          saveError: true,
+          failure: {
+            kind: "transient",
+            message: "We couldn't save your results.",
+            canRetry: true,
+          },
           submitQuiz: mockSubmitQuiz,
           retrySave: mockRetrySave,
           clearSessionStorage: vi.fn(),
@@ -412,6 +447,53 @@ describe("ZenQuizContainer", () => {
     await waitFor(() => {
       expect(mockRetrySave).toHaveBeenCalledWith(10);
     });
+  });
+
+  it("offers dashboard recovery instead of retrying a permanent save failure", async () => {
+    const clearSessionStorage = vi.fn();
+    const flushDraft = vi.fn().mockResolvedValue(false);
+    vi.mocked(useQuizPersistence).mockReturnValue({
+      failure: {
+        kind: "permanent",
+        code: "QUIZ_CHANGED",
+        message:
+          "This quiz changed while you were studying. Return to the dashboard and start a new attempt.",
+        canRetry: false,
+      },
+      submitQuiz: mockSubmitQuiz,
+      retrySave: mockRetrySave,
+      clearSessionStorage,
+      effectiveUserId: "user-1",
+    });
+    vi.mocked(useQuizSession).mockReturnValue({
+      isInitializing: false,
+      currentQuestion: null,
+      currentIndex: 1,
+      progress: { current: 2, total: 2 },
+      isComplete: false,
+      seconds: 10,
+      pauseTimer: mockPauseTimer,
+      resetSession: mockResetSession,
+      draftDecision: null,
+      draftSaveStatus: "saved",
+      draftSaveMessage: "Saved on this device.",
+      draftOwnerId: "writer-1",
+      flushDraft,
+    } as unknown as ReturnType<typeof useQuizSession>);
+
+    render(<ZenQuizContainer quiz={mockQuiz} />);
+
+    expect(
+      screen.getByText(/quiz changed while you were studying/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Retry save" }),
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Back to Dashboard" }));
+    await waitFor(() => expect(mockPush).toHaveBeenCalledWith("/"));
+    expect(flushDraft).not.toHaveBeenCalled();
+    expect(mockResetSession).toHaveBeenCalledOnce();
+    expect(clearSessionStorage).toHaveBeenCalledOnce();
   });
 
   it("handles exit correctly for standard mode", async () => {

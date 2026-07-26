@@ -43,7 +43,7 @@ async function selectOption(
 
   // Verify selection registered in UI
   await expect(option).toHaveAttribute("aria-checked", "true", {
-    timeout: 3000,
+    timeout: E2E_TIMEOUTS.LOADING,
   });
 
   // Wait for async answer persistence (hash operation ~50-200ms)

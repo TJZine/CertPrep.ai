@@ -268,6 +268,17 @@ describe("useDatabase hooks (Unit Layer)", () => {
     });
 
     describe("useZenDraftStatuses", () => {
+        it("reuses one read-only empty status map while no user is available", () => {
+            const first = renderHook(() => useZenDraftStatuses(undefined));
+            const second = renderHook(() => useZenDraftStatuses(undefined));
+
+            expect(first.result.current.statuses).toBe(second.result.current.statuses);
+            expect(first.result.current.isLoading).toBe(false);
+
+            first.unmount();
+            second.unmount();
+        });
+
         it("loads only referenced quizzes and preserves system-quiz drafts", async () => {
             const drafts = [
                 { quiz_id: "owned" },

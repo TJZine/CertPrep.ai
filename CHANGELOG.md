@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.5.2] - 2026-07-23
 
+### Added
+
+- **Resumable Zen Study**: Standard Zen quiz progress is saved on this device,
+  survives reloads and offline exits, and can be resumed through the
+  dashboard's "Continue Quiz" action.
+
 ### Changed
 
 - **Dependencies**: Updated compatible runtime and development dependencies to

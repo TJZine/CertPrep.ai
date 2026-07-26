@@ -20,7 +20,8 @@ describe("dashboard theme overrides", () => {
     });
 
     it("preserves leading-icon spacing for Blossom inputs", () => {
-        expect(css).toContain('[data-theme="blossom"] input.has-leading-icon');
-        expect(css).toContain("padding-left: 2.25rem !important");
+        expect(css).toMatch(
+            /\[data-theme="blossom"\]\s+input\.has-leading-icon\s*\{[^}]*padding-left:\s*2\.25rem\s*!important;?[^}]*\}/,
+        );
     });
 });

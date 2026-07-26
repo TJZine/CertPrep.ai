@@ -6,6 +6,7 @@ import { generateUUID } from "@/lib/core/crypto";
 import type { PersistedResultMode, Result } from "@/types/result";
 import type { Quiz } from "@/types/quiz";
 import { evaluateAnswer } from "@/lib/grading";
+import { ResultCompletionError } from "./resultErrors";
 
 export interface CreateResultInput {
   quizId: string;
@@ -80,18 +81,25 @@ export async function calculateResults(
  */
 async function prepareResult(input: CreateResultInput): Promise<Result> {
   if (!input.userId) {
-    throw new Error("Cannot create result without a user context.");
+    throw new ResultCompletionError(
+      "USER_CONTEXT_UNAVAILABLE",
+      "Cannot create result without a user context.",
+    );
   }
 
   const quiz = await db.quizzes.get(input.quizId);
 
-  if (!quiz) {
-    throw new Error("Quiz not found.");
+  if (!quiz || quiz.deleted_at) {
+    throw new ResultCompletionError(
+      "QUIZ_UNAVAILABLE",
+      "Quiz is no longer available for completion.",
+    );
   }
 
   // Allow taking a quiz if the user owns it OR if it's a System/Public quiz
   if (quiz.user_id !== input.userId && quiz.user_id !== NIL_UUID) {
-    throw new Error(
+    throw new ResultCompletionError(
+      "QUIZ_OWNERSHIP_MISMATCH",
       "Security mismatch: Quiz does not belong to the current user.",
     );
   }
@@ -151,10 +159,14 @@ export async function finalizeStandardZenResult(
         quiz.deleted_at ||
         (quiz.user_id !== input.userId && quiz.user_id !== NIL_UUID)
       ) {
-        throw new Error("Quiz is no longer available for completion.");
+        throw new ResultCompletionError(
+          "QUIZ_UNAVAILABLE",
+          "Quiz is no longer available for completion.",
+        );
       }
       if (!draft || draft.writer_id !== input.draftWriterId) {
-        throw new Error(
+        throw new ResultCompletionError(
+          "DRAFT_OWNERSHIP_LOST",
           "The saved draft is no longer owned by this quiz session.",
         );
       }
@@ -163,7 +175,10 @@ export async function finalizeStandardZenResult(
         !quiz.quiz_hash ||
         draft.quiz_hash !== quiz.quiz_hash
       ) {
-        throw new Error("The quiz changed before this draft was completed.");
+        throw new ResultCompletionError(
+          "QUIZ_CHANGED",
+          "The quiz changed before this draft was completed.",
+        );
       }
       await db.results.add(result);
       await db.zenDrafts.delete([input.userId, input.quizId]);

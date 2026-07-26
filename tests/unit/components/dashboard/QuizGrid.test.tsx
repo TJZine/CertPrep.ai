@@ -3,11 +3,18 @@ import { render, screen } from "@testing-library/react";
 import { QuizGrid } from "@/components/dashboard/QuizGrid";
 import type { Quiz } from "@/types/quiz";
 import type { QuizStats } from "@/db/quizzes";
+import type { ZenDraftCompatibility } from "@/types/zenDraft";
 
 const { quizCardSpy } = vi.hoisted(() => ({ quizCardSpy: vi.fn() }));
 
+interface MockQuizCardProps {
+  isFeatured?: boolean;
+  hasResumableDraft?: boolean;
+  quiz: { id: string };
+}
+
 vi.mock("@/components/dashboard/QuizCard", () => ({
-  QuizCard: (props: { isFeatured?: boolean; quiz: { id: string } }): React.JSX.Element => {
+  QuizCard: (props: MockQuizCardProps): React.JSX.Element => {
     quizCardSpy(props);
     return <div data-testid={`quiz-card-${props.quiz.id}`} />;
   },
@@ -34,7 +41,6 @@ describe("QuizGrid featured layout", () => {
   });
 
   it("marks only the first quiz card as featured", () => {
-
     render(
       <QuizGrid
         quizzes={quizzes}
@@ -62,5 +68,25 @@ describe("QuizGrid featured layout", () => {
     const grid = screen.getByTestId("quiz-grid");
     expect(grid).toHaveClass("items-stretch");
     expect(grid).not.toHaveClass("auto-rows-[minmax(140px,auto)]");
+  });
+
+  it("marks only resumable drafts as continuable", () => {
+    render(
+      <QuizGrid
+        quizzes={quizzes}
+        quizStats={quizStats}
+        zenDraftStatuses={
+          new Map<string, ZenDraftCompatibility>([
+            ["q1", "resumable"],
+            ["q2", "quiz-changed"],
+          ])
+        }
+        onStartQuiz={vi.fn()}
+        onDeleteQuiz={vi.fn()}
+      />,
+    );
+
+    expect(quizCardSpy.mock.calls[0]?.[0]?.hasResumableDraft).toBe(true);
+    expect(quizCardSpy.mock.calls[1]?.[0]?.hasResumableDraft).toBe(false);
   });
 });

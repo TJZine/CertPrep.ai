@@ -5,10 +5,7 @@ import {
   deleteResult,
   type CreateResultInput,
 } from "@/db/results";
-import {
-  getCategoryPerformance,
-  getOverallStats,
-} from "@/db/resultAnalytics";
+import { getCategoryPerformance, getOverallStats } from "@/db/resultAnalytics";
 import { db } from "@/db/dbInstance";
 import { evaluateAnswer } from "@/lib/grading";
 import { NIL_UUID } from "@/lib/constants";
@@ -187,7 +184,28 @@ describe("src/db/results and src/db/resultAnalytics", () => {
         userId: "u1",
         quizId: "q1",
       } as unknown as CreateResultInput;
-      await expect(createResult(input)).rejects.toThrow("Quiz not found.");
+      await expect(createResult(input)).rejects.toThrow(
+        "Quiz is no longer available for completion.",
+      );
+    });
+
+    it("should reject a soft-deleted quiz without persisting a result", async () => {
+      vi.mocked(db.quizzes.get).mockResolvedValue({
+        id: "q1",
+        user_id: "u1",
+        deleted_at: Date.now(),
+        questions: [],
+      } as unknown as Quiz);
+      const input = {
+        userId: "u1",
+        quizId: "q1",
+      } as unknown as CreateResultInput;
+
+      await expect(createResult(input)).rejects.toMatchObject({
+        code: "QUIZ_UNAVAILABLE",
+        retryable: false,
+      });
+      expect(db.results.add).not.toHaveBeenCalled();
     });
 
     it("should throw if security mismatch occurs", async () => {
@@ -458,10 +476,12 @@ describe("src/db/results and src/db/resultAnalytics", () => {
         sortBy: vi.fn().mockResolvedValue(mockResults),
       } as unknown as ReturnType<typeof db.results.where>;
       vi.mocked(db.results.where).mockReturnValue(mockResultQuery);
-      vi.mocked(evaluateAnswer).mockImplementation(async (question, answer) => ({
-        category: question.category || "Uncategorized",
-        isCorrect: answer === question.correct_answer,
-      }));
+      vi.mocked(evaluateAnswer).mockImplementation(
+        async (question, answer) => ({
+          category: question.category || "Uncategorized",
+          isCorrect: answer === question.correct_answer,
+        }),
+      );
 
       const performance = await getCategoryPerformance(mockQuizId, mockUserId);
 
@@ -475,7 +495,6 @@ describe("src/db/results and src/db/resultAnalytics", () => {
       ]);
       expect(vi.mocked(evaluateAnswer)).toHaveBeenCalledTimes(1);
     });
-
   });
 
   describe("deleteResult", () => {
