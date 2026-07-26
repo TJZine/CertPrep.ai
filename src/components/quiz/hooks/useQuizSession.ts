@@ -3,6 +3,7 @@ import { useSearchParams } from "next/navigation";
 import {
   useQuizSessionStore,
   useCurrentQuestion,
+  type AnswerRecord,
 } from "@/stores/quizSessionStore";
 import { useTimer } from "@/hooks/useTimer";
 import { useKeyboardNav, useSpacedRepetitionNav } from "@/hooks/useKeyboardNav";
@@ -46,7 +47,7 @@ export function useQuizSession({
   currentCorrectAnswer: string | undefined;
   isCurrentAnswerCorrect: boolean;
   isLastQuestion: boolean;
-  answers: Map<string, { selectedAnswer: string; isCorrect: boolean }>;
+  answers: Map<string, AnswerRecord>;
   questions: Question[];
   flaggedQuestions: Set<string>;
   selectAnswer: (answerId: string) => void;
@@ -252,10 +253,7 @@ export function useQuizSession({
     currentCorrectAnswer,
     isCurrentAnswerCorrect,
     isLastQuestion,
-    answers: answers as Map<
-      string,
-      { selectedAnswer: string; isCorrect: boolean }
-    >,
+    answers,
     questions,
     flaggedQuestions,
     selectAnswer,

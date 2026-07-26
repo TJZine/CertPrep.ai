@@ -36,9 +36,12 @@ interface UseQuizWithStatsResponse {
 }
 
 interface UseZenDraftStatusesResponse {
-  statuses: Map<string, ZenDraftCompatibility>;
+  statuses: ReadonlyMap<string, ZenDraftCompatibility>;
   isLoading: boolean;
 }
+
+const EMPTY_ZEN_DRAFT_STATUSES: ReadonlyMap<string, ZenDraftCompatibility> =
+  new Map();
 
 interface UseResultsResponse {
   results: Result[];
@@ -253,7 +256,7 @@ export function useZenDraftStatuses(
   }, [userId]);
 
   return {
-    statuses: statuses ?? new Map(),
+    statuses: statuses ?? EMPTY_ZEN_DRAFT_STATUSES,
     isLoading: Boolean(userId) && statuses === undefined,
   };
 }

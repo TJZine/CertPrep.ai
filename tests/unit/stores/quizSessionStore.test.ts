@@ -126,6 +126,43 @@ describe("Quiz Session Store", () => {
     expect(state.getSessionDuration()).toBeGreaterThanOrEqual(42);
   });
 
+  it("rejects a Zen draft with a missing question without partially mutating state", () => {
+    act(() => {
+      useQuizSessionStore
+        .getState()
+        .initializeSession("existing-session", "zen", mockQuestions);
+    });
+    const invalidDraft: ZenQuizDraft = {
+      schema_version: 1,
+      user_id: "user-1",
+      quiz_id: "quiz-1",
+      mode: "zen",
+      quiz_version: 1,
+      quiz_hash: "hash",
+      question_ids: ["q1", "missing-question"],
+      current_index: 0,
+      answers: [],
+      flagged_question_ids: [],
+      hard_question_ids: [],
+      selected_answer: null,
+      has_submitted: false,
+      show_explanation: false,
+      elapsed_seconds: 0,
+      started_at: 1_000,
+      updated_at: 1_000,
+      writer_id: "writer-1",
+      revision: 1,
+    };
+
+    expect(() =>
+      useQuizSessionStore
+        .getState()
+        .hydrateZenSession("quiz-1", mockQuestions, invalidDraft),
+    ).toThrow("draft question set is invalid");
+    expect(useQuizSessionStore.getState().quizId).toBe("existing-session");
+    expect(useQuizSessionStore.getState().questionQueue).toEqual(["q1", "q2"]);
+  });
+
   it("should navigate between questions", () => {
     act(() => {
       useQuizSessionStore

@@ -165,9 +165,24 @@ test.describe("device-local standard Zen drafts", () => {
     seedTestQuiz,
   }) => {
     const quiz = await seedTestQuiz(TEST_QUIZ);
+    await page.goto(`/quiz/${quiz.id}/zen`);
+    await expect(page.getByText(quiz.questions[0]!.question)).toBeVisible();
+    await expectDraft(page, quiz.id, (draft) => draft.question_ids.length > 0);
+    await page.getByRole("button", { name: "Exit quiz" }).click();
+    await page
+      .getByRole("dialog", { name: "Exit Quiz?" })
+      .getByRole("button", { name: "Exit Quiz" })
+      .click();
+    await expect(page).toHaveURL("/");
+    const standardDraft = structuredClone(await getDraft(page, quiz.id));
+    expect(standardDraft).toBeDefined();
+
     await page.goto(`/quiz/${quiz.id}/proctor`);
     await expect(page.getByText(quiz.questions[0]!.question)).toBeVisible();
-    expect(await getDraft(page, quiz.id)).toBeUndefined();
+    await expect(
+      page.getByRole("dialog", { name: "Continue saved quiz?" }),
+    ).toHaveCount(0);
+    expect(await getDraft(page, quiz.id)).toEqual(standardDraft);
 
     await page.goto(`/quiz/${quiz.id}/zen?remix=true`);
     await expect(
@@ -183,7 +198,9 @@ test.describe("device-local standard Zen drafts", () => {
         )
         .first(),
     ).toBeVisible();
-    await page.waitForTimeout(E2E_TIMEOUTS.ANSWER_PERSIST);
-    expect(await getDraft(page, quiz.id)).toBeUndefined();
+    await expect(
+      page.getByRole("dialog", { name: "Continue saved quiz?" }),
+    ).toHaveCount(0);
+    expect(await getDraft(page, quiz.id)).toEqual(standardDraft);
   });
 });

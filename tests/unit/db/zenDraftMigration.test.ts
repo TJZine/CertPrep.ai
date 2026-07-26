@@ -3,8 +3,10 @@ import { afterEach, describe, expect, it } from "vitest";
 import { CertPrepDatabase } from "@/db/dbInstance";
 
 const databaseNames: string[] = [];
+const databaseInstances: Dexie[] = [];
 
 afterEach(async () => {
+  databaseInstances.splice(0).forEach((instance) => instance.close());
   await Promise.all(databaseNames.splice(0).map((name) => Dexie.delete(name)));
 });
 
@@ -13,6 +15,7 @@ describe("Dexie v17 Zen draft migration", () => {
     const name = `CertPrepMigration-${crypto.randomUUID()}`;
     databaseNames.push(name);
     const legacy = new Dexie(name);
+    databaseInstances.push(legacy);
     legacy.version(16).stores({
       quizzes:
         "id, user_id, created_at, deleted_at, *tags, quiz_hash, updated_at, [user_id+created_at], category, subcategory",
@@ -39,6 +42,7 @@ describe("Dexie v17 Zen draft migration", () => {
     legacy.close();
 
     const upgraded = new CertPrepDatabase(name);
+    databaseInstances.push(upgraded);
     await upgraded.open();
     expect(upgraded.verno).toBe(17);
     expect(upgraded.tables.map((table) => table.name)).toContain("zenDrafts");
@@ -52,6 +56,5 @@ describe("Dexie v17 Zen draft migration", () => {
       hash: "hash-a",
       created_at: 1,
     });
-    upgraded.close();
   });
 });

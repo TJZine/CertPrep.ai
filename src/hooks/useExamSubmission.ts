@@ -5,6 +5,7 @@ import { useToast } from "@/components/ui/Toast";
 import { useSync } from "@/hooks/useSync";
 import { useQuizSessionStore } from "@/stores/quizSessionStore";
 import { createResult } from "@/db/results";
+import { isResultCompletionError } from "@/db/resultErrors";
 import { buildAnswersRecord } from "@/lib/quiz/quizRemix";
 import type { Quiz } from "@/types/quiz";
 
@@ -36,6 +37,23 @@ interface UseExamSubmissionReturn {
      * Confirm handler for the Time Up modal.
      */
     handleTimeUpConfirm: () => Promise<void>;
+}
+
+function getPermanentSubmissionMessage(error: unknown): string | null {
+    if (!isResultCompletionError(error)) return null;
+
+    switch (error.code) {
+        case "QUIZ_CHANGED":
+            return "This quiz changed during the exam. Return to the dashboard and start a new attempt.";
+        case "QUIZ_UNAVAILABLE":
+            return "This quiz is no longer available. Return to the dashboard to continue.";
+        case "QUIZ_OWNERSHIP_MISMATCH":
+            return "This quiz is not available for the current account.";
+        case "USER_CONTEXT_UNAVAILABLE":
+            return "Your account context is no longer available.";
+        case "DRAFT_OWNERSHIP_LOST":
+            return "This exam can no longer be completed from the current session.";
+    }
 }
 
 /**
@@ -128,7 +146,14 @@ export function useExamSubmission({
         } catch (error) {
             console.error("Failed to submit exam:", error);
             if (isMountedRef.current) {
-                addToast("error", "Failed to submit exam. Please try again.");
+                const permanentMessage = getPermanentSubmissionMessage(error);
+                addToast(
+                    "error",
+                    permanentMessage ?? "Failed to submit exam. Please try again.",
+                );
+                if (permanentMessage) {
+                    router.push("/");
+                }
             }
         } finally {
             if (isMountedRef.current) {
@@ -182,8 +207,16 @@ export function useExamSubmission({
         } catch (error) {
             console.error("Failed to auto-submit exam:", error);
             if (isMountedRef.current) {
-                addToast("error", "Auto-submit failed. Please submit manually.");
-                setShowSubmitModal(true);
+                const permanentMessage = getPermanentSubmissionMessage(error);
+                addToast(
+                    "error",
+                    permanentMessage ?? "Auto-submit failed. Please submit manually.",
+                );
+                if (permanentMessage) {
+                    router.push("/");
+                } else {
+                    setShowSubmitModal(true);
+                }
             }
             return null;
         } finally {
@@ -203,6 +236,7 @@ export function useExamSubmission({
         isSubmitting,
         pauseTimer,
         quiz.id,
+        router,
         syncSavedResult,
     ]);
 

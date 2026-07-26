@@ -206,6 +206,7 @@ export function useZenDraftSession({
       }
       if (error instanceof ZenDraftConflictError) {
         setSaveStatus("conflict");
+        setDraftOwnerId(null);
         setSaveMessage(
           "This draft was updated in another tab. Your newer local work was not overwritten.",
         );
@@ -305,6 +306,11 @@ export function useZenDraftSession({
     async (runtime = activeRuntimeRef.current): Promise<void> => {
       const quizHash = runtime?.getQuizHash();
       if (!userId || !runtime || !quizHash) return;
+      if (runtime.quiz.questions.length === 0) {
+        throw new Error(
+          "Cannot create a standard Zen draft for a quiz with no questions.",
+        );
+      }
       pauseTimer();
       resetTimer(0);
       const now = Date.now();
@@ -330,32 +336,20 @@ export function useZenDraftSession({
         writer_id: runtime.writerId,
         revision: 1,
       };
-      try {
-        await createZenDraft(draft);
-        if (activeRuntimeRef.current !== runtime) return;
-        initializeSession(runtime.quiz.id, "zen", runtime.quiz.questions);
-        runtime.setReady(true);
-        runtime.setDirty(false);
-        if (mountedRef.current) {
-          setDraftOwnerId(runtime.writerId);
-          setSaveStatus("saved");
-          setSaveMessage("Saved on this device.");
-          setDecision(null);
-        }
-        startTimer();
-      } catch (error) {
-        reportFailure(error, runtime);
-        throw error;
+      await createZenDraft(draft);
+      if (activeRuntimeRef.current !== runtime) return;
+      initializeSession(runtime.quiz.id, "zen", runtime.quiz.questions);
+      runtime.setReady(true);
+      runtime.setDirty(false);
+      if (mountedRef.current) {
+        setDraftOwnerId(runtime.writerId);
+        setSaveStatus("saved");
+        setSaveMessage("Saved on this device.");
+        setDecision(null);
       }
+      startTimer();
     },
-    [
-      initializeSession,
-      pauseTimer,
-      reportFailure,
-      resetTimer,
-      startTimer,
-      userId,
-    ],
+    [initializeSession, pauseTimer, resetTimer, startTimer, userId],
   );
 
   const activateDraft = React.useCallback(

@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   MoreVertical,
@@ -95,6 +96,7 @@ export function QuizCard({
   const menuItemRefs = React.useRef<(HTMLButtonElement | null)[]>([]);
   const menuButtonRef = React.useRef<HTMLButtonElement>(null);
   const { addToast } = useToast();
+  const zenHref = `/quiz/${quiz.id}/zen`;
 
   useClickOutside(menuRef, showMenu, () => setShowMenu(false));
   useClickOutside(tagsPopoverRef, showTagsPopover, () =>
@@ -121,7 +123,7 @@ export function QuizCard({
       return;
     }
     try {
-      const url = `${window.location.origin}/quiz/${quiz.id}/zen`;
+      const url = new URL(zenHref, window.location.origin).toString();
       await copyToClipboard(url);
       addToast("success", "Quiz link copied!");
     } catch (error) {
@@ -460,13 +462,19 @@ export function QuizCard({
 
         <CardFooter className="pt-0">
           {hasResumableDraft ? (
-            <a
-              href={`/quiz/${quiz.id}/zen`}
-              className={cn(buttonVariants(), "w-full")}
-            >
-              <Play className="h-4 w-4" aria-hidden="true" />
-              <span className="whitespace-nowrap">Continue Quiz</span>
-            </a>
+            <div className="grid w-full gap-2 sm:grid-cols-2">
+              <Link href={zenHref} className={cn(buttonVariants(), "w-full")}>
+                <Play className="h-4 w-4" aria-hidden="true" />
+                <span className="whitespace-nowrap">Continue Quiz</span>
+              </Link>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => onStart(quiz)}
+              >
+                Choose Mode
+              </Button>
+            </div>
           ) : (
             <Button
               className="w-full"

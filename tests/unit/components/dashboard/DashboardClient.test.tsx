@@ -192,7 +192,7 @@ describe("DashboardClient", () => {
     });
   });
 
-  it("keeps Start and Study Again actions in the mode selector", async () => {
+  it("opens the mode selector when a quiz start action is requested", async () => {
     const quiz = {
       id: "quiz-1",
       title: "Finished quiz",

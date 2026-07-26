@@ -4,7 +4,10 @@ import { useToast } from "@/components/ui/Toast";
 import { useSync } from "@/hooks/useSync";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 import { useAuth } from "@/components/providers/AuthProvider";
-import { useQuizSubmission } from "@/hooks/useQuizSubmission";
+import {
+  useQuizSubmission,
+  type QuizSubmissionFailure,
+} from "@/hooks/useQuizSubmission";
 import { clearSmartRoundState } from "@/lib/storage/smartRoundStorage";
 import { clearSRSReviewState } from "@/lib/storage/srsReviewStorage";
 import { clearTopicStudyState } from "@/lib/storage/topicStudyStorage";
@@ -22,6 +25,11 @@ import type { Question, QuizSessionConfig } from "@/types/quiz";
 
 const AGGREGATED_SAVE_ERROR_MESSAGE =
   "Failed to save result. Your answers are still here—retry when ready.";
+const AGGREGATED_SAVE_FAILURE: QuizSubmissionFailure = {
+  kind: "transient",
+  message: AGGREGATED_SAVE_ERROR_MESSAGE,
+  canRetry: true,
+};
 
 function mapSourceMapToObject(
   sourceMap: Map<string, string> | null | undefined,
@@ -48,7 +56,7 @@ export function useQuizPersistence({
   flaggedQuestions,
   standardZenDraftOwnerId = null,
 }: UseQuizPersistenceProps): {
-  saveError: boolean;
+  failure: QuizSubmissionFailure | null;
   submitQuiz: (timeTakenSeconds: number) => Promise<void>;
   retrySave: (timeTakenSeconds: number) => void;
   clearSessionStorage: () => void;
@@ -69,10 +77,11 @@ export function useQuizPersistence({
   const { sync } = useSync();
   const { user } = useAuth();
   const effectiveUserId = useEffectiveUserId(user?.id);
-  const [aggregatedSaveError, setAggregatedSaveError] = React.useState(false);
+  const [aggregatedFailure, setAggregatedFailure] =
+    React.useState<QuizSubmissionFailure | null>(null);
 
   const {
-    saveError,
+    failure,
     submitQuiz,
     retrySave: retrySaveAction,
   } = useQuizSubmission({
@@ -85,7 +94,7 @@ export function useQuizPersistence({
     async (timeTakenSeconds: number): Promise<void> => {
       // SRS review sessions save results differently
       if (isSRSReview && effectiveUserId) {
-        setAggregatedSaveError(false);
+        setAggregatedFailure(null);
         try {
           const srsQuiz = await ensureSRSQuizExists(effectiveUserId);
           const questionMap = new Map(questions.map((q) => [q.id, q]));
@@ -149,7 +158,7 @@ export function useQuizPersistence({
           router.push(`/results/${result.id}`);
         } catch (err) {
           console.error("Failed to save SRS review result:", err);
-          setAggregatedSaveError(true);
+          setAggregatedFailure(AGGREGATED_SAVE_FAILURE);
           addToast("error", AGGREGATED_SAVE_ERROR_MESSAGE);
           return;
         }
@@ -157,7 +166,7 @@ export function useQuizPersistence({
       }
 
       if (isTopicStudy && effectiveUserId) {
-        setAggregatedSaveError(false);
+        setAggregatedFailure(null);
         try {
           const srsQuiz = await ensureSRSQuizExists(effectiveUserId);
           const questionMap = new Map(questions.map((q) => [q.id, q]));
@@ -221,7 +230,7 @@ export function useQuizPersistence({
           router.push(`/results/${result.id}`);
         } catch (err) {
           console.error("Failed to save topic study result:", err);
-          setAggregatedSaveError(true);
+          setAggregatedFailure(AGGREGATED_SAVE_FAILURE);
           addToast("error", AGGREGATED_SAVE_ERROR_MESSAGE);
           return;
         }
@@ -230,7 +239,7 @@ export function useQuizPersistence({
 
       // Handle Interleaved Practice session completion
       if (isInterleaved && effectiveUserId) {
-        setAggregatedSaveError(false);
+        setAggregatedFailure(null);
         try {
           const srsQuiz = await ensureSRSQuizExists(effectiveUserId);
           const questionMap = new Map(questions.map((q) => [q.id, q]));
@@ -297,7 +306,7 @@ export function useQuizPersistence({
           router.push(`/results/${result.id}`);
         } catch (err) {
           console.error("Failed to save interleaved result:", err);
-          setAggregatedSaveError(true);
+          setAggregatedFailure(AGGREGATED_SAVE_FAILURE);
           addToast("error", AGGREGATED_SAVE_ERROR_MESSAGE);
           return;
         }
@@ -349,7 +358,7 @@ export function useQuizPersistence({
   );
 
   return {
-    saveError: saveError || aggregatedSaveError,
+    failure: failure ?? aggregatedFailure,
     submitQuiz: handleSessionComplete,
     retrySave,
     clearSessionStorage,

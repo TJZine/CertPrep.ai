@@ -99,6 +99,11 @@ The main local data access layer is:
 - [src/db/syncState.ts](../src/db/syncState.ts)
 - [src/hooks/useDatabase.ts](../src/hooks/useDatabase.ts)
 
+Quiz imports require at least one question. The sync transport still accepts an
+empty question array because deterministic SRS aggregate containers intentionally
+store no fixed questions; standard quiz launch routes fail closed with an
+explicit empty-quiz state and never create a Zen draft for an empty quiz.
+
 `zenDrafts` is a device-local persistence boundary for resumable ordinary Zen
 Study sessions. Records are keyed by both user ID and quiz ID, validated against
 the current quiz version and content hash before hydration, and guarded by a
@@ -126,6 +131,14 @@ tombstone purge, replace import, clean sign-out, account deletion/factory reset,
 and central database clearing remove the applicable drafts. All reads and writes
 remain user scoped, so preserved sign-out data cannot hydrate under another
 account.
+
+If a mounted tab loses draft ownership to a newer writer, it permanently
+detaches from that draft and cannot flush, reclaim, overwrite, or delete it. The
+conflicted tab may still append its completed in-memory attempt as an ordinary
+result; doing so leaves the newer tab's draft untouched. Quiz-unavailable,
+quiz-ownership, and quiz-changed completion failures are typed as permanent
+domain failures so the UI routes users back to recovery instead of offering a
+retry that cannot succeed.
 
 ### Sync Ownership
 

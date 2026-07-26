@@ -12,7 +12,7 @@ import type { ZenDraftCompatibility } from "@/types/zenDraft";
 export interface QuizGridProps {
   quizzes: Quiz[];
   quizStats: Map<string, QuizStats>;
-  zenDraftStatuses?: Map<string, ZenDraftCompatibility>;
+  zenDraftStatuses?: ReadonlyMap<string, ZenDraftCompatibility>;
   onStartQuiz: (quiz: Quiz) => void;
   onDeleteQuiz: (quiz: Quiz) => void;
   isLoading?: boolean;
@@ -24,7 +24,7 @@ export interface QuizGridProps {
 export function QuizGrid({
   quizzes,
   quizStats,
-  zenDraftStatuses = new Map(),
+  zenDraftStatuses,
   onStartQuiz,
   onDeleteQuiz,
   isLoading = false,
@@ -57,7 +57,7 @@ export function QuizGrid({
           key={quiz.id}
           quiz={quiz}
           stats={quizStats.get(quiz.id) ?? null}
-          hasResumableDraft={zenDraftStatuses.get(quiz.id) === "resumable"}
+          hasResumableDraft={zenDraftStatuses?.get(quiz.id) === "resumable"}
           onStart={onStartQuiz}
           onDelete={onDeleteQuiz}
           isFeatured={index === 0}

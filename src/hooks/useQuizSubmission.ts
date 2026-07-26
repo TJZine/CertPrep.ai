@@ -2,6 +2,11 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/Toast";
 import { createResult, finalizeStandardZenResult } from "@/db/results";
+import {
+  ResultCompletionError,
+  isResultCompletionError,
+  type ResultCompletionErrorCode,
+} from "@/db/resultErrors";
 import { initializeSRSForResult } from "@/db/srs";
 import { db } from "@/db";
 import { useSync } from "@/hooks/useSync";
@@ -19,8 +24,8 @@ interface UseQuizSubmissionProps {
 }
 
 export interface UseQuizSubmissionReturn {
-  /** True if the last save attempt failed. */
-  saveError: boolean;
+  /** The last submission failure, including whether retrying can succeed. */
+  failure: QuizSubmissionFailure | null;
   /** True while the submission is being processed. */
   isSaving: boolean;
   /**
@@ -44,6 +49,49 @@ export interface UseQuizSubmissionReturn {
   retrySave: (timeTakenSeconds: number) => void;
 }
 
+export type QuizSubmissionFailure =
+  | {
+      kind: "transient";
+      message: string;
+      canRetry: true;
+    }
+  | {
+      kind: "permanent";
+      code: ResultCompletionErrorCode;
+      message: string;
+      canRetry: false;
+    };
+
+function toSubmissionFailure(error: unknown): QuizSubmissionFailure {
+  if (isResultCompletionError(error)) {
+    const messageByCode: Record<ResultCompletionErrorCode, string> = {
+      USER_CONTEXT_UNAVAILABLE:
+        "Your account context is no longer available. Return to the dashboard before starting another attempt.",
+      QUIZ_UNAVAILABLE:
+        "This quiz is no longer available. Return to the dashboard to continue.",
+      QUIZ_OWNERSHIP_MISMATCH:
+        "This quiz is not available for the current account. Return to the dashboard to continue.",
+      QUIZ_CHANGED:
+        "This quiz changed while you were studying. Return to the dashboard and start a new attempt.",
+      DRAFT_OWNERSHIP_LOST:
+        "Another tab now owns this saved quiz. Return to the dashboard to continue.",
+    };
+    return {
+      kind: "permanent",
+      code: error.code,
+      message: messageByCode[error.code],
+      canRetry: false,
+    };
+  }
+
+  return {
+    kind: "transient",
+    message:
+      "We couldn't save your result. Your answers are still here—retry when ready.",
+    canRetry: true,
+  };
+}
+
 /**
  * Hook to handle quiz completion and result submission.
  * Manages local persistence, syncing, and navigation.
@@ -64,7 +112,7 @@ export function useQuizSubmission({
   const { answers, flaggedQuestions, questions, keyMappings } =
     useQuizSessionStore();
 
-  const [saveError, setSaveError] = useState(false);
+  const [failure, setFailure] = useState<QuizSubmissionFailure | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const isMountedRef = useRef(false);
   const isSavingRef = useRef(false);
@@ -88,18 +136,16 @@ export function useQuizSubmission({
       if (isSavingRef.current) return;
       isSavingRef.current = true;
       setIsSaving(true);
-      setSaveError(false);
+      setFailure(null);
 
       try {
         const answersRecord = buildAnswersRecord(currentAnswers, keyMappings);
 
         if (!effectiveUserId) {
-          setSaveError(true);
-          addToast(
-            "error",
+          throw new ResultCompletionError(
+            "USER_CONTEXT_UNAVAILABLE",
             "Unable to save result: no user context available.",
           );
-          return;
         }
 
         const resultInput = {
@@ -111,12 +157,28 @@ export function useQuizSubmission({
           timeTakenSeconds,
           activeQuestionIds: questions.map((q) => q.id), // Pass active questions for accurate scoring (e.g. Smart Round)
         } as const;
-        const result = standardZenDraftOwnerId
-          ? await finalizeStandardZenResult({
+        let result;
+        if (standardZenDraftOwnerId) {
+          try {
+            result = await finalizeStandardZenResult({
               ...resultInput,
               draftWriterId: standardZenDraftOwnerId,
-            })
-          : await createResult(resultInput);
+            });
+          } catch (error) {
+            if (
+              !isResultCompletionError(error) ||
+              error.code !== "DRAFT_OWNERSHIP_LOST"
+            ) {
+              throw error;
+            }
+            // Another tab owns (or completed) the saved draft. This in-memory
+            // attempt is still valid, so append its result without touching
+            // the newer writer's draft.
+            result = await createResult(resultInput);
+          }
+        } else {
+          result = await createResult(resultInput);
+        }
 
         // Initialize SRS state for answered questions (non-blocking)
         const quiz = await db.quizzes.get(quizId);
@@ -147,8 +209,9 @@ export function useQuizSubmission({
       } catch (error) {
         console.error("Failed to save quiz result:", error);
         if (isMountedRef.current) {
-          setSaveError(true);
-          addToast("error", "Failed to save result. Please try again.");
+          const nextFailure = toSubmissionFailure(error);
+          setFailure(nextFailure);
+          addToast("error", nextFailure.message);
         }
         throw error;
       } finally {
@@ -173,17 +236,18 @@ export function useQuizSubmission({
 
   const retrySave = useCallback(
     (timeTakenSeconds: number) => {
+      if (!failure?.canRetry) return;
       // On retry, we use the current store state
       void submitQuiz(timeTakenSeconds, answers, flaggedQuestions).catch(() => {
-        // submitQuiz already updates saveError and shows a toast;
+        // submitQuiz already updates failure state and shows a toast;
         // suppress the rejection to avoid unhandled promise errors.
       });
     },
-    [submitQuiz, answers, flaggedQuestions],
+    [answers, failure, flaggedQuestions, submitQuiz],
   );
 
   return {
-    saveError,
+    failure,
     isSaving,
     submitQuiz,
     retrySave,
