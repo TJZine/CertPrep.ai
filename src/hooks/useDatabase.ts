@@ -1,17 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { db, initializeDatabase } from "@/db";
 import { NIL_UUID } from "@/lib/constants";
 import type { Quiz } from "@/types/quiz";
-import {
-  type Result,
-  isAggregatedSessionType,
-} from "@/types/result";
+import { type Result, isAggregatedSessionType } from "@/types/result";
 import type { QuizStats } from "@/db/quizzes";
 import { getQuizStats, isSRSQuiz, sortQuizzesByNewest } from "@/db/quizzes";
 import { resolveAggregatedResultReadModel } from "@/db/aggregatedQuiz";
+import { assessZenDraft } from "@/db/zenDrafts";
+import type { ZenDraftCompatibility } from "@/types/zenDraft";
+import { logger } from "@/lib/logger";
 
 interface InitializationState {
   isInitialized: boolean;
@@ -33,6 +33,26 @@ interface UseQuizWithStatsResponse {
   quiz: Quiz | undefined;
   stats: QuizStats | null;
   isLoading: boolean;
+}
+
+interface UseZenDraftStatusesResponse {
+  statuses: ReadonlyMap<string, ZenDraftCompatibility>;
+  unknownQuizIds: ReadonlySet<string>;
+  isLoading: boolean;
+  error: Error | null;
+  retry: () => void;
+}
+
+const EMPTY_ZEN_DRAFT_STATUSES: ReadonlyMap<string, ZenDraftCompatibility> =
+  new Map();
+const EMPTY_UNKNOWN_ZEN_DRAFT_QUIZ_IDS: ReadonlySet<string> = new Set();
+
+interface ZenDraftStatusesQueryResult {
+  userId: string;
+  requestVersion: number;
+  statuses: ReadonlyMap<string, ZenDraftCompatibility>;
+  unknownQuizIds: ReadonlySet<string>;
+  error: Error | null;
 }
 
 interface UseResultsResponse {
@@ -101,7 +121,7 @@ export function useInitializeDatabase(): InitializationState {
  */
 export function useQuizzes(
   userId: string | undefined,
-  includeHidden: boolean = false
+  includeHidden: boolean = false,
 ): UseQuizzesResponse {
   const [error, setError] = useState<Error | null>(null);
   const quizzes = useLiveQuery(async () => {
@@ -194,22 +214,126 @@ export function useQuizWithStats(
   };
 }
 
+/** Reactively classifies this user's device-local standard-Zen drafts. */
+export function useZenDraftStatuses(
+  userId: string | undefined,
+): UseZenDraftStatusesResponse {
+  const [requestVersion, setRequestVersion] = useState(0);
+  const retry = useCallback((): void => {
+    setRequestVersion((version) => version + 1);
+  }, []);
+
+  const queryResult = useLiveQuery(async (): Promise<
+    ZenDraftStatusesQueryResult | undefined
+  > => {
+    if (!userId) return undefined;
+    try {
+      const drafts = await db.zenDrafts
+        .where("user_id")
+        .equals(userId)
+        .toArray();
+      const quizIds = [...new Set(drafts.map((draft) => draft.quiz_id))];
+      const referencedQuizzes = await db.quizzes.bulkGet(quizIds);
+      const quizzesById = new Map(
+        referencedQuizzes.flatMap((quiz) =>
+          quiz && (quiz.user_id === userId || quiz.user_id === NIL_UUID)
+            ? [[quiz.id, quiz] as const]
+            : [],
+        ),
+      );
+      const assessments = await Promise.allSettled(
+        drafts.map(async (draft) => {
+          const quiz = quizzesById.get(draft.quiz_id);
+          if (!quiz || quiz.deleted_at) {
+            return [draft.quiz_id, "invalid"] as const;
+          }
+          const assessment = await assessZenDraft(draft, quiz, userId);
+          return [
+            draft.quiz_id,
+            assessment?.compatibility ?? "invalid",
+          ] as const;
+        }),
+      );
+      const entries: Array<readonly [string, ZenDraftCompatibility]> = [];
+      const unknownQuizIds = new Set<string>();
+      assessments.forEach((assessment, index) => {
+        if (assessment.status === "fulfilled") {
+          entries.push(assessment.value);
+          return;
+        }
+        const quizId = drafts[index]?.quiz_id;
+        if (quizId) {
+          unknownQuizIds.add(quizId);
+        }
+        logger.warn("Failed to assess device-local Zen draft", {
+          quizId,
+          error: assessment.reason,
+        });
+      });
+      return {
+        userId,
+        requestVersion,
+        statuses: new Map(entries),
+        unknownQuizIds,
+        error: null,
+      };
+    } catch (error) {
+      logger.warn("Failed to load device-local Zen draft statuses", {
+        error,
+      });
+      return {
+        userId,
+        requestVersion,
+        statuses: EMPTY_ZEN_DRAFT_STATUSES,
+        unknownQuizIds: EMPTY_UNKNOWN_ZEN_DRAFT_QUIZ_IDS,
+        error:
+          error instanceof Error
+            ? error
+            : new Error("Failed to load saved quiz statuses."),
+      };
+    }
+  }, [userId, requestVersion]);
+
+  const currentResult =
+    queryResult &&
+    queryResult.userId === userId &&
+    queryResult.requestVersion === requestVersion
+      ? queryResult
+      : undefined;
+
+  if (!userId) {
+    return {
+      statuses: EMPTY_ZEN_DRAFT_STATUSES,
+      unknownQuizIds: EMPTY_UNKNOWN_ZEN_DRAFT_QUIZ_IDS,
+      isLoading: false,
+      error: null,
+      retry,
+    };
+  }
+
+  return {
+    statuses: currentResult?.statuses ?? EMPTY_ZEN_DRAFT_STATUSES,
+    unknownQuizIds:
+      currentResult?.unknownQuizIds ?? EMPTY_UNKNOWN_ZEN_DRAFT_QUIZ_IDS,
+    isLoading: currentResult === undefined,
+    error: currentResult?.error ?? null,
+    retry,
+  };
+}
+
 /**
  * Retrieves all results with live updates.
  */
 export function useResults(userId: string | undefined): UseResultsResponse {
-  const results = useLiveQuery(
-    async () => {
-      if (!userId) return [];
-      const raw = await db.results
-        .where("user_id")
-        .equals(userId)
-        .filter((r) => !r.deleted_at)
-        .sortBy("timestamp");
-      return [...raw].reverse();
-    },
-    [userId],
-  );
+  const results = useLiveQuery(async () => {
+    if (!userId) return [];
+    const raw = await db.results
+      .where("user_id")
+      .equals(userId)
+      .filter((r) => !r.deleted_at)
+      .sortBy("timestamp");
+    return [...raw].reverse();
+  }, [userId]);
   return {
     results: results ?? [],
     isLoading: !userId ? true : results === undefined,
@@ -273,7 +397,9 @@ export function useResultWithHydratedQuiz(
 ): UseResultWithHydratedQuizResponse {
   const { result, isLoading: resultLoading } = useResult(id, userId);
   const [hydratedQuiz, setHydratedQuiz] = useState<Quiz | undefined>(undefined);
-  const [resolvedSourceMap, setResolvedSourceMap] = useState<Record<string, string> | undefined>(undefined);
+  const [resolvedSourceMap, setResolvedSourceMap] = useState<
+    Record<string, string> | undefined
+  >(undefined);
   const [isHydrating, setIsHydrating] = useState(false);
 
   // We use live query for the base quiz to keep it reactive to title changes etc.
@@ -301,11 +427,16 @@ export function useResultWithHydratedQuiz(
         !!result.question_ids?.length &&
         isSRSQuiz(result.quiz_id, userId);
       const isAggregatedResult =
-        isAggregatedSessionType(result.session_type) || isLegacyAggregatedResult;
+        isAggregatedSessionType(result.session_type) ||
+        isLegacyAggregatedResult;
 
       // Aggregated results can reconstruct a read-model directly from result metadata
       // even if the container/base quiz record is no longer present.
-      if (isAggregatedResult && result.question_ids && result.question_ids.length > 0) {
+      if (
+        isAggregatedResult &&
+        result.question_ids &&
+        result.question_ids.length > 0
+      ) {
         if (isMounted) setIsHydrating(true);
         try {
           const readModel = await resolveAggregatedResultReadModel(

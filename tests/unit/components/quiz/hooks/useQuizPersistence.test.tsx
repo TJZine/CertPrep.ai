@@ -94,7 +94,7 @@ describe("useQuizPersistence", () => {
     vi.clearAllMocks();
 
     vi.mocked(useQuizSubmission).mockReturnValue({
-      saveError: false,
+      failure: null,
       isSaving: false,
       submitQuiz: mocks.submitQuiz,
       retrySave: mocks.retrySave,
@@ -118,7 +118,7 @@ describe("useQuizPersistence", () => {
   it("should initialize and return submission methods", () => {
     const { result } = renderHook(() => useQuizPersistence(defaultProps));
 
-    expect(result.current.saveError).toBe(false);
+    expect(result.current.failure).toBeNull();
     expect(result.current.effectiveUserId).toBe("user-1");
     expect(typeof result.current.submitQuiz).toBe("function");
     expect(typeof result.current.clearSessionStorage).toBe("function");
@@ -343,7 +343,10 @@ describe("useQuizPersistence", () => {
         await result.current.submitQuiz(45);
       });
 
-      expect(result.current.saveError).toBe(true);
+      expect(result.current.failure).toMatchObject({
+        kind: "transient",
+        canRetry: true,
+      });
       expect(clearState).not.toHaveBeenCalled();
       expect(mocks.push).not.toHaveBeenCalled();
       expect(mocks.addToast).toHaveBeenCalledWith(
@@ -358,7 +361,7 @@ describe("useQuizPersistence", () => {
         });
       });
 
-      expect(result.current.saveError).toBe(false);
+      expect(result.current.failure).toBeNull();
       expect(clearState).toHaveBeenCalledTimes(1);
       expect(mocks.push).toHaveBeenCalledWith(`/results/${resultId}`);
     },

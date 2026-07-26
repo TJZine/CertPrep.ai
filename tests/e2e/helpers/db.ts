@@ -40,7 +40,7 @@ async function openIndexedDB(page: Page): Promise<void> {
 /**
  * Gets the effective user ID from the browser's localStorage.
  * This matches what useEffectiveUserId hook returns in the app.
- * 
+ *
  * @param page - Playwright page
  * @returns The effective user ID or null if not found
  */
@@ -68,7 +68,7 @@ export async function waitForDatabase(
     // Fallback: ensure raw IndexedDB is accessible (for prod-mode E2E or legacy)
     console.warn(
       "[E2E] window.__certprepDb not exposed. Falling back to raw IndexedDB. " +
-      "For reliable tests, set NEXT_PUBLIC_IS_E2E=true in dev builds."
+        "For reliable tests, set NEXT_PUBLIC_IS_E2E=true in dev builds.",
     );
     await openIndexedDB(page);
   }
@@ -273,6 +273,8 @@ export async function clearDatabase(page: Page): Promise<void> {
         window.__certprepDb.results.clear(),
         window.__certprepDb.syncState.clear(),
         window.__certprepDb.srs.clear(),
+        window.__certprepDb.hashCache.clear(),
+        window.__certprepDb.zenDrafts.clear(),
       ]);
       return;
     }
@@ -283,7 +285,14 @@ export async function clearDatabase(page: Page): Promise<void> {
       request.onerror = (): void => reject(request.error);
       request.onsuccess = (): void => {
         const db = request.result;
-        const storeNames = ["quizzes", "results", "syncState", "srs"];
+        const storeNames = [
+          "quizzes",
+          "results",
+          "syncState",
+          "srs",
+          "hashCache",
+          "zenDrafts",
+        ];
         const availableStores = Array.from(db.objectStoreNames);
 
         const storesToClear = storeNames.filter((s) =>
@@ -400,7 +409,10 @@ export async function resultHasSyncStatus(
  * @param page - Playwright page
  * @param srsState - SRSState object to seed
  */
-export async function seedSRSState(page: Page, srsState: SRSState): Promise<void> {
+export async function seedSRSState(
+  page: Page,
+  srsState: SRSState,
+): Promise<void> {
   await page.evaluate(async (state) => {
     // Try using exposed Dexie first
     if (window.__certprepDb) {

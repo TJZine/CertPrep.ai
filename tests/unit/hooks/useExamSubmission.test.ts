@@ -9,6 +9,7 @@ import { useToast } from "@/components/ui/Toast";
 import { useAuth } from "@/components/providers/AuthProvider";
 import type { Quiz } from "@/types/quiz";
 import type { Result } from "@/types/result";
+import { ResultCompletionError } from "@/db/resultErrors";
 
 // Mock dependencies
 vi.mock("@/stores/quizSessionStore");
@@ -142,14 +143,19 @@ describe("useExamSubmission", () => {
     it("handles auto submission correctly", async () => {
         const { result } = renderHook(() => useExamSubmission(defaultProps));
 
-        let submissionResult: string | null = null;
+        let submissionResult:
+            | Awaited<ReturnType<typeof result.current.handleAutoSubmit>>
+            | undefined;
         await act(async () => {
             submissionResult = await result.current.handleAutoSubmit();
         });
 
         expect(mockPauseTimer).toHaveBeenCalled();
         expect(mockAutoSubmitExam).toHaveBeenCalled();
-        expect(submissionResult).toBe("result-123");
+        expect(submissionResult).toEqual({
+            kind: "saved",
+            resultId: "result-123",
+        });
         expect(result.current.showTimeUpModal).toBe(true);
 
         // Should NOT navigate yet
@@ -168,12 +174,17 @@ describe("useExamSubmission", () => {
         vi.clearAllMocks();
 
         // Second submission attempt
+        let duplicateOutcome:
+            | Awaited<ReturnType<typeof result.current.handleAutoSubmit>>
+            | undefined;
         await act(async () => {
-            await result.current.handleAutoSubmit();
+            duplicateOutcome = await result.current.handleAutoSubmit();
         });
 
+        expect(duplicateOutcome).toEqual({ kind: "ignored" });
         expect(ResultsDB.createResult).not.toHaveBeenCalled();
         expect(mockSubmitExam).not.toHaveBeenCalled();
+        expect(mockAddToast).not.toHaveBeenCalled();
     });
 
     it("handles missing user ID gracefully", async () => {
@@ -227,12 +238,17 @@ describe("useExamSubmission", () => {
         };
         const { result } = renderHook(() => useExamSubmission(guestProps));
 
-        let resultId: string | null = null;
+        let submissionResult:
+            | Awaited<ReturnType<typeof result.current.handleAutoSubmit>>
+            | undefined;
         await act(async () => {
-            resultId = await result.current.handleAutoSubmit();
+            submissionResult = await result.current.handleAutoSubmit();
         });
 
-        expect(resultId).toBe("result-123");
+        expect(submissionResult).toEqual({
+            kind: "saved",
+            resultId: "result-123",
+        });
         expect(ResultsDB.createResult).toHaveBeenCalledWith(
             expect.objectContaining({ userId: "guest-user-123" }),
         );
@@ -272,6 +288,78 @@ describe("useExamSubmission", () => {
         });
 
         expect(mockAddToast).toHaveBeenCalledWith("error", expect.stringContaining("Failed to submit"));
+        expect(mockRouterPush).not.toHaveBeenCalled();
+        consoleSpy.mockRestore();
+    });
+
+    it("routes to the dashboard instead of offering retry for a permanent failure", async () => {
+        const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+        vi.mocked(ResultsDB.createResult).mockRejectedValueOnce(
+            new ResultCompletionError(
+                "QUIZ_UNAVAILABLE",
+                "Quiz is no longer available for completion.",
+            ),
+        );
+        const { result } = renderHook(() => useExamSubmission(defaultProps));
+
+        await act(async () => {
+            await result.current.handleSubmitExam();
+        });
+
+        expect(mockAddToast).toHaveBeenCalledWith(
+            "error",
+            expect.stringContaining("no longer available"),
+        );
+        expect(mockRouterPush).toHaveBeenCalledWith("/");
+        consoleSpy.mockRestore();
+    });
+
+    it("does not add a retry toast when the time-up fallback fails permanently", async () => {
+        const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+        vi.mocked(ResultsDB.createResult).mockRejectedValueOnce(
+            new ResultCompletionError(
+                "QUIZ_UNAVAILABLE",
+                "Quiz is no longer available for completion.",
+            ),
+        );
+        const { result } = renderHook(() => useExamSubmission(defaultProps));
+
+        await act(async () => {
+            await result.current.handleTimeUpConfirm();
+        });
+
+        expect(mockAddToast).toHaveBeenCalledTimes(1);
+        expect(mockAddToast).toHaveBeenCalledWith(
+            "error",
+            expect.stringContaining("no longer available"),
+        );
+        expect(mockAddToast).not.toHaveBeenCalledWith(
+            "error",
+            expect.stringContaining("try again"),
+        );
+        expect(mockRouterPush).toHaveBeenCalledWith("/");
+        consoleSpy.mockRestore();
+    });
+
+    it("retains retry guidance when the time-up fallback fails transiently", async () => {
+        const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+        vi.mocked(ResultsDB.createResult).mockRejectedValueOnce(
+            new Error("IndexedDB write failed"),
+        );
+        const { result } = renderHook(() => useExamSubmission(defaultProps));
+
+        await act(async () => {
+            await result.current.handleTimeUpConfirm();
+        });
+
+        expect(mockAddToast).toHaveBeenCalledWith(
+            "error",
+            "Auto-submit failed. Please submit manually.",
+        );
+        expect(mockAddToast).toHaveBeenCalledWith(
+            "error",
+            "Unable to save results. Please try again.",
+        );
         expect(mockRouterPush).not.toHaveBeenCalled();
         consoleSpy.mockRestore();
     });

@@ -3,7 +3,11 @@
 import * as React from "react";
 import dynamic from "next/dynamic";
 import { useSearchParams } from "next/navigation";
-import { useQuizzes, useInitializeDatabase } from "@/hooks/useDatabase";
+import {
+  useQuizzes,
+  useInitializeDatabase,
+  useZenDraftStatuses,
+} from "@/hooks/useDatabase";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { deleteQuiz } from "@/db/quizzes";
 import { getDueCountsByBox } from "@/db/srs";
@@ -13,7 +17,13 @@ import { QuizGrid } from "@/components/dashboard/QuizGrid";
 import { QuizSortControls } from "@/components/dashboard/QuizSortControls";
 import { DashboardEmptyState } from "@/components/dashboard/DashboardEmptyState";
 // Sort options as const array for type-safe validation
-const DASHBOARD_SORT_OPTIONS = ["recent", "added", "title", "performance", "questions"] as const;
+const DASHBOARD_SORT_OPTIONS = [
+  "recent",
+  "added",
+  "title",
+  "performance",
+  "questions",
+] as const;
 type DashboardSortOption = (typeof DASHBOARD_SORT_OPTIONS)[number];
 import { DueQuestionsCard } from "@/components/srs/DueQuestionsCard";
 import { InterleavedPracticeCard } from "@/components/dashboard/InterleavedPracticeCard";
@@ -21,6 +31,7 @@ import { InterleavedPracticeCard } from "@/components/dashboard/InterleavedPract
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { useToast } from "@/components/ui/Toast";
+import { Button } from "@/components/ui/Button";
 import { LOCAL_STORAGE_KEYS, buildDashboardCacheKey } from "@/lib/constants";
 import { prefetchOnIdle } from "@/lib/prefetch";
 import type { Quiz } from "@/types/quiz";
@@ -30,20 +41,32 @@ import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 
 // Code-split modals - loaded on demand, not in initial bundle
 const ImportModal = dynamic(
-    () => import("@/components/dashboard/ImportModal").then((mod) => ({ default: mod.ImportModal })),
-    { ssr: false, loading: () => null }
+  () =>
+    import("@/components/dashboard/ImportModal").then((mod) => ({
+      default: mod.ImportModal,
+    })),
+  { ssr: false, loading: () => null },
 );
 const ModeSelectModal = dynamic(
-    () => import("@/components/dashboard/ModeSelectModal").then((mod) => ({ default: mod.ModeSelectModal })),
-    { ssr: false, loading: () => null }
+  () =>
+    import("@/components/dashboard/ModeSelectModal").then((mod) => ({
+      default: mod.ModeSelectModal,
+    })),
+  { ssr: false, loading: () => null },
 );
 const DeleteConfirmModal = dynamic(
-    () => import("@/components/dashboard/DeleteConfirmModal").then((mod) => ({ default: mod.DeleteConfirmModal })),
-    { ssr: false, loading: () => null }
+  () =>
+    import("@/components/dashboard/DeleteConfirmModal").then((mod) => ({
+      default: mod.DeleteConfirmModal,
+    })),
+  { ssr: false, loading: () => null },
 );
 const ReviewModeModal = dynamic(
-    () => import("@/components/srs/ReviewModeModal").then((mod) => ({ default: mod.ReviewModeModal })),
-    { ssr: false, loading: () => null }
+  () =>
+    import("@/components/srs/ReviewModeModal").then((mod) => ({
+      default: mod.ReviewModeModal,
+    })),
+  { ssr: false, loading: () => null },
 );
 
 /**
@@ -56,425 +79,506 @@ const ReviewModeModal = dynamic(
  * since this component only runs in the browser.
  */
 export default function DashboardClient(): React.ReactElement {
-    const searchParams = useSearchParams();
-    const { user, isLoading: authLoading } = useAuth();
-    const effectiveUserId = useEffectiveUserId(user?.id);
-    const { isInitialized, error: dbError } = useInitializeDatabase();
-    const {
-        quizzes,
-        isLoading: quizzesLoading,
-        error: quizzesError,
-    } = useQuizzes(
-        effectiveUserId ?? undefined,
-    );
+  const searchParams = useSearchParams();
+  const { user, isLoading: authLoading } = useAuth();
+  const effectiveUserId = useEffectiveUserId(user?.id);
+  const { isInitialized, error: dbError } = useInitializeDatabase();
+  const {
+    quizzes,
+    isLoading: quizzesLoading,
+    error: quizzesError,
+  } = useQuizzes(effectiveUserId ?? undefined);
 
-    const {
-        quizStats,
-        overallStats,
-        isLoading: statsLoading
-    } = useDashboardStats(effectiveUserId ?? undefined);
+  const {
+    quizStats,
+    overallStats,
+    isLoading: statsLoading,
+  } = useDashboardStats(effectiveUserId ?? undefined);
+  const {
+    statuses: zenDraftStatuses,
+    unknownQuizIds: unknownZenDraftQuizIds,
+    isLoading: zenDraftStatusesLoading,
+    error: zenDraftStatusesError,
+    retry: retryZenDraftStatuses,
+  } = useZenDraftStatuses(effectiveUserId ?? undefined);
 
-    const [isImportModalOpen, setIsImportModalOpen] = React.useState(false);
-    const handledImportQueryRef = React.useRef(false);
-    const [modeSelectQuiz, setModeSelectQuiz] = React.useState<Quiz | null>(null);
-    const [deleteContext, setDeleteContext] = React.useState<{
-        quiz: Quiz;
-        attemptCount: number;
-    } | null>(null);
-    const [isDeleting, setIsDeleting] = React.useState(false);
-    const [isReviewModeModalOpen, setIsReviewModeModalOpen] = React.useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = React.useState(false);
+  const handledImportQueryRef = React.useRef(false);
+  const [modeSelectQuiz, setModeSelectQuiz] = React.useState<Quiz | null>(null);
+  const [deleteContext, setDeleteContext] = React.useState<{
+    quiz: Quiz;
+    attemptCount: number;
+  } | null>(null);
+  const [isDeleting, setIsDeleting] = React.useState(false);
+  const [isReviewModeModalOpen, setIsReviewModeModalOpen] =
+    React.useState(false);
 
-    // Unmount guard
-    const isMounted = React.useRef(true);
-    React.useEffect(() => {
-        isMounted.current = true;
-        return (): void => {
-            isMounted.current = false;
-        };
-    }, []);
+  // Unmount guard
+  const isMounted = React.useRef(true);
+  React.useEffect(() => {
+    isMounted.current = true;
+    return (): void => {
+      isMounted.current = false;
+    };
+  }, []);
 
-    React.useEffect(() => {
-        const shouldOpenImportModal = searchParams?.get("import") === "1";
+  React.useEffect(() => {
+    const shouldOpenImportModal = searchParams?.get("import") === "1";
 
-        if (shouldOpenImportModal && !handledImportQueryRef.current) {
-            setIsImportModalOpen(true);
-            handledImportQueryRef.current = true;
-        }
+    if (shouldOpenImportModal && !handledImportQueryRef.current) {
+      setIsImportModalOpen(true);
+      handledImportQueryRef.current = true;
+    }
 
-        if (!shouldOpenImportModal) {
-            handledImportQueryRef.current = false;
-        }
-    }, [searchParams]);
+    if (!shouldOpenImportModal) {
+      handledImportQueryRef.current = false;
+    }
+  }, [searchParams]);
 
-    // Sort/filter state
-    const [sortBy, setSortBy] = React.useState<DashboardSortOption>(() => {
-        if (typeof window !== "undefined") {
-            const stored = localStorage.getItem(LOCAL_STORAGE_KEYS.DASHBOARD_SORT_BY);
-            if (stored && (DASHBOARD_SORT_OPTIONS as readonly string[]).includes(stored)) {
-                return stored as DashboardSortOption;
-            }
-        }
-        return "recent";
+  // Sort/filter state
+  const [sortBy, setSortBy] = React.useState<DashboardSortOption>(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem(LOCAL_STORAGE_KEYS.DASHBOARD_SORT_BY);
+      if (
+        stored &&
+        (DASHBOARD_SORT_OPTIONS as readonly string[]).includes(stored)
+      ) {
+        return stored as DashboardSortOption;
+      }
+    }
+    return "recent";
+  });
+  const [searchTerm, setSearchTerm] = React.useState("");
+  const [categoryFilter, setCategoryFilter] = React.useState("all");
+
+  // Persist sort preference
+  React.useEffect(() => {
+    try {
+      localStorage.setItem(LOCAL_STORAGE_KEYS.DASHBOARD_SORT_BY, sortBy);
+    } catch {
+      // localStorage may be unavailable
+    }
+  }, [sortBy]);
+
+  // Derive available categories from quizzes
+  const categories = React.useMemo(() => {
+    const unique = new Set<string>();
+    quizzes.forEach((q) => {
+      if (q.category) {
+        unique.add(q.category);
+      }
     });
-    const [searchTerm, setSearchTerm] = React.useState("");
-    const [categoryFilter, setCategoryFilter] = React.useState("all");
+    return ["all", ...Array.from(unique).sort((a, b) => a.localeCompare(b))];
+  }, [quizzes]);
 
-    // Persist sort preference
-    React.useEffect(() => {
-        try {
-            localStorage.setItem(LOCAL_STORAGE_KEYS.DASHBOARD_SORT_BY, sortBy);
-        } catch {
-            // localStorage may be unavailable
-        }
-    }, [sortBy]);
+  // Filter and sort quizzes
+  const filteredQuizzes = React.useMemo(() => {
+    let result = [...quizzes];
 
-    // Derive available categories from quizzes
-    const categories = React.useMemo(() => {
-        const unique = new Set<string>();
-        quizzes.forEach((q) => {
-            if (q.category) {
-                unique.add(q.category);
-            }
+    // Filter by search term
+    const needle = searchTerm.trim().toLowerCase();
+    if (needle) {
+      result = result.filter((q) => {
+        const haystack =
+          `${q.title} ${q.tags.join(" ")} ${q.category ?? ""}`.toLowerCase();
+        return haystack.includes(needle);
+      });
+    }
+
+    // Filter by category
+    if (categoryFilter !== "all") {
+      result = result.filter((q) => q.category === categoryFilter);
+    }
+
+    // Sort
+    switch (sortBy) {
+      case "recent":
+        result.sort((a, b) => {
+          const aDate = quizStats.get(a.id)?.lastAttemptDate ?? 0;
+          const bDate = quizStats.get(b.id)?.lastAttemptDate ?? 0;
+          return bDate - aDate;
         });
-        return ["all", ...Array.from(unique).sort((a, b) => a.localeCompare(b))];
-    }, [quizzes]);
+        break;
+      case "added":
+        result.sort((a, b) => b.created_at - a.created_at);
+        break;
+      case "title":
+        result.sort((a, b) => a.title.localeCompare(b.title));
+        break;
+      case "performance":
+        result.sort((a, b) => {
+          const aScore = quizStats.get(a.id)?.averageScore ?? 0;
+          const bScore = quizStats.get(b.id)?.averageScore ?? 0;
+          return aScore - bScore; // Weakest first
+        });
+        break;
+      case "questions":
+        result.sort((a, b) => b.questions.length - a.questions.length);
+        break;
+    }
 
-    // Filter and sort quizzes
-    const filteredQuizzes = React.useMemo(() => {
-        let result = [...quizzes];
+    return result;
+  }, [quizzes, quizStats, searchTerm, categoryFilter, sortBy]);
 
-        // Filter by search term
-        const needle = searchTerm.trim().toLowerCase();
-        if (needle) {
-            result = result.filter((q) => {
-                const haystack = `${q.title} ${q.tags.join(" ")} ${q.category ?? ""}`.toLowerCase();
-                return haystack.includes(needle);
-            });
+  // SRS due questions state
+  const [dueCountsByBox, setDueCountsByBox] = React.useState<
+    Record<LeitnerBox, number>
+  >({
+    1: 0,
+    2: 0,
+    3: 0,
+    4: 0,
+    5: 0,
+  });
+  const [dueCountsStatus, setDueCountsStatus] = React.useState<
+    "idle" | "loading" | "ready" | "error"
+  >("idle");
+  const totalDue = Object.values(dueCountsByBox).reduce(
+    (sum, count) => sum + count,
+    0,
+  );
+  // SRS Status Logic
+  const shouldLoadDueCounts = !!effectiveUserId;
+  const isDueCountsLoading =
+    shouldLoadDueCounts &&
+    (dueCountsStatus === "loading" || dueCountsStatus === "idle");
+
+  // Fetch SRS due counts
+  React.useEffect(() => {
+    if (!effectiveUserId || !isInitialized) return;
+    let cancelled = false;
+
+    const loadDueCounts = async (): Promise<void> => {
+      setDueCountsStatus("loading");
+      try {
+        const counts = await getDueCountsByBox(effectiveUserId);
+        if (!cancelled && isMounted.current) {
+          // Check isMounted.current here
+          setDueCountsByBox(counts);
+          setDueCountsStatus("ready");
         }
-
-        // Filter by category
-        if (categoryFilter !== "all") {
-            result = result.filter((q) => q.category === categoryFilter);
+      } catch (err) {
+        console.warn("Failed to load SRS due counts:", err);
+        if (!cancelled && isMounted.current) {
+          // Check isMounted.current here
+          setDueCountsStatus("error");
         }
-
-        // Sort
-        switch (sortBy) {
-            case "recent":
-                result.sort((a, b) => {
-                    const aDate = quizStats.get(a.id)?.lastAttemptDate ?? 0;
-                    const bDate = quizStats.get(b.id)?.lastAttemptDate ?? 0;
-                    return bDate - aDate;
-                });
-                break;
-            case "added":
-                result.sort((a, b) => b.created_at - a.created_at);
-                break;
-            case "title":
-                result.sort((a, b) => a.title.localeCompare(b.title));
-                break;
-            case "performance":
-                result.sort((a, b) => {
-                    const aScore = quizStats.get(a.id)?.averageScore ?? 0;
-                    const bScore = quizStats.get(b.id)?.averageScore ?? 0;
-                    return aScore - bScore; // Weakest first
-                });
-                break;
-            case "questions":
-                result.sort((a, b) => b.questions.length - a.questions.length);
-                break;
-        }
-
-        return result;
-    }, [quizzes, quizStats, searchTerm, categoryFilter, sortBy]);
-
-    // SRS due questions state
-    const [dueCountsByBox, setDueCountsByBox] = React.useState<Record<LeitnerBox, number>>({
-        1: 0, 2: 0, 3: 0, 4: 0, 5: 0,
-    });
-    const [dueCountsStatus, setDueCountsStatus] = React.useState<"idle" | "loading" | "ready" | "error">("idle");
-    const totalDue = Object.values(dueCountsByBox).reduce((sum, count) => sum + count, 0);
-    // SRS Status Logic
-    const shouldLoadDueCounts = !!effectiveUserId;
-    const isDueCountsLoading =
-        shouldLoadDueCounts && (dueCountsStatus === "loading" || dueCountsStatus === "idle");
-
-    // Fetch SRS due counts
-    React.useEffect(() => {
-        if (!effectiveUserId || !isInitialized) return;
-        let cancelled = false;
-
-        const loadDueCounts = async (): Promise<void> => {
-            setDueCountsStatus("loading");
-            try {
-                const counts = await getDueCountsByBox(effectiveUserId);
-                if (!cancelled && isMounted.current) { // Check isMounted.current here
-                    setDueCountsByBox(counts);
-                    setDueCountsStatus("ready");
-                }
-            } catch (err) {
-                console.warn("Failed to load SRS due counts:", err);
-                if (!cancelled && isMounted.current) { // Check isMounted.current here
-                    setDueCountsStatus("error");
-                }
-            }
-        };
-
-        void loadDueCounts();
-        return (): void => { cancelled = true; };
-    }, [effectiveUserId, isInitialized]);
-
-    // Persist quiz count for skeleton size caching (CLS optimization)
-    // User-scoped to prevent cross-account cache pollution
-    React.useEffect(() => {
-        if (!quizzesLoading && effectiveUserId) {
-            try {
-                localStorage.setItem(buildDashboardCacheKey(effectiveUserId, "quiz_count"), String(quizzes.length));
-            } catch {
-                // localStorage may be unavailable in private browsing
-            }
-        }
-    }, [quizzes.length, quizzesLoading, effectiveUserId]);
-
-    // Persist SRS due state for skeleton sizing (CLS optimization)
-    // User-scoped to prevent cross-account cache pollution
-    React.useEffect(() => {
-        if (dueCountsStatus === "ready" && effectiveUserId) {
-            try {
-                localStorage.setItem(buildDashboardCacheKey(effectiveUserId, "has_srs_dues"), totalDue > 0 ? "1" : "0");
-            } catch {
-                // localStorage may be unavailable in private browsing
-            }
-        }
-    }, [dueCountsStatus, totalDue, effectiveUserId]);
-
-    // Prefetch modal chunks during idle time for faster first-open and offline reliability
-    React.useEffect(() => {
-        return prefetchOnIdle([
-            { key: 'ImportModal', load: (): Promise<typeof import('@/components/dashboard/ImportModal')> => import('@/components/dashboard/ImportModal') },
-            { key: 'ModeSelectModal', load: (): Promise<typeof import('@/components/dashboard/ModeSelectModal')> => import('@/components/dashboard/ModeSelectModal') },
-            { key: 'DeleteConfirmModal', load: (): Promise<typeof import('@/components/dashboard/DeleteConfirmModal')> => import('@/components/dashboard/DeleteConfirmModal') },
-            { key: 'ReviewModeModal', load: (): Promise<typeof import('@/components/srs/ReviewModeModal')> => import('@/components/srs/ReviewModeModal') },
-        ]);
-    }, []);
-
-    const { addToast } = useToast();
-
-    const handleImportSuccess = (quiz: Quiz): void => {
-        setIsImportModalOpen(false);
-        addToast("success", `Successfully imported "${quiz.title}"`);
+      }
     };
 
-    const handleStartQuiz = (quiz: Quiz): void => {
-        setModeSelectQuiz(quiz);
+    void loadDueCounts();
+    return (): void => {
+      cancelled = true;
     };
+  }, [effectiveUserId, isInitialized]);
 
-    const handleDeleteClick = (quiz: Quiz): void => {
-        const attempts = quizStats.get(quiz.id)?.attemptCount ?? 0;
-        setDeleteContext({ quiz, attemptCount: attempts });
-    };
-
-    const handleConfirmDelete = async (): Promise<void> => {
-        if (!deleteContext) return;
-        if (!effectiveUserId) {
-            addToast("error", "Unable to delete quiz: missing user context.");
-            return;
-        }
-        setIsDeleting(true);
-        try {
-            await deleteQuiz(deleteContext.quiz.id, effectiveUserId);
-            if (isMounted.current) {
-                addToast("success", `Deleted "${deleteContext.quiz.title}"`);
-                setDeleteContext(null);
-            }
-        } catch (error) {
-            console.error("Failed to delete quiz", error);
-            if (isMounted.current) {
-                addToast("error", "Failed to delete quiz. Please try again.");
-            }
-        } finally {
-            if (isMounted.current) {
-                setIsDeleting(false);
-            }
-        }
-    };
-
-    // Use cached quiz count for skeleton sizing (CLS optimization)
-    // User-scoped cache prevents cross-account pollution
-    const cachedQuizCount = React.useMemo((): number | null => {
-        // If we already have quiz data loaded, use that
-        if (!quizzesLoading) {
-            return quizzes.length;
-        }
-        // Otherwise, read user-scoped cached count from localStorage
-        if (typeof window !== "undefined" && effectiveUserId) {
-            try {
-                const cached = localStorage.getItem(buildDashboardCacheKey(effectiveUserId, "quiz_count"));
-                if (cached !== null) {
-                    const count = Number(cached);
-                    if (Number.isFinite(count) && count >= 0) {
-                        return count;
-                    }
-                }
-            } catch {
-                // localStorage unavailable
-            }
-        }
-        // No cache exists - return null, skeleton logic will determine variant
-        return null;
-    }, [quizzes.length, quizzesLoading, effectiveUserId]);
-
-    // Loading: auth/user context and DB/data fetches.
-    // Keep a single skeleton visible until all dynamic sections (including SRS due counts) are ready.
-    // Error state - specific DB initialization failure
-    if (dbError) {
-        return (
-            <div
-                className="mx-auto max-w-7xl px-4 py-8"
-                role="alert"
-            >
-                <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
-                    <h2 className="text-lg font-semibold text-destructive">
-                        Failed to initialize database
-                    </h2>
-                    <p className="mt-2 text-destructive">{dbError.message}</p>
-                    <p className="mt-4 text-sm text-destructive">
-                        Please ensure your browser supports IndexedDB and try refreshing the
-                        page.
-                    </p>
-                </div>
-            </div>
+  // Persist quiz count for skeleton size caching (CLS optimization)
+  // User-scoped to prevent cross-account cache pollution
+  React.useEffect(() => {
+    if (!quizzesLoading && effectiveUserId) {
+      try {
+        localStorage.setItem(
+          buildDashboardCacheKey(effectiveUserId, "quiz_count"),
+          String(quizzes.length),
         );
+      } catch {
+        // localStorage may be unavailable in private browsing
+      }
     }
+  }, [quizzes.length, quizzesLoading, effectiveUserId]);
 
-    if (
-        authLoading ||
-        effectiveUserId === null ||
-        (!isInitialized && !dbError) ||
-        quizzesLoading ||
-        statsLoading ||
-        isDueCountsLoading
-    ) {
-        // Use cached quiz count for skeleton, default to 0 for new users (LCP optimization)
-        // This allows EmptyStateSkeleton to render immediately, improving LCP by ~2s
-        // Returning users with quizzes will have their count cached from previous visits
-        const quizCardCount = cachedQuizCount ?? 0;
-
-        return <DashboardSkeleton quizCardCount={quizCardCount} />;
+  // Persist SRS due state for skeleton sizing (CLS optimization)
+  // User-scoped to prevent cross-account cache pollution
+  React.useEffect(() => {
+    if (dueCountsStatus === "ready" && effectiveUserId) {
+      try {
+        localStorage.setItem(
+          buildDashboardCacheKey(effectiveUserId, "has_srs_dues"),
+          totalDue > 0 ? "1" : "0",
+        );
+      } catch {
+        // localStorage may be unavailable in private browsing
+      }
     }
+  }, [dueCountsStatus, totalDue, effectiveUserId]);
 
+  // Prefetch modal chunks during idle time for faster first-open and offline reliability
+  React.useEffect(() => {
+    return prefetchOnIdle([
+      {
+        key: "ImportModal",
+        load: (): Promise<
+          typeof import("@/components/dashboard/ImportModal")
+        > => import("@/components/dashboard/ImportModal"),
+      },
+      {
+        key: "ModeSelectModal",
+        load: (): Promise<
+          typeof import("@/components/dashboard/ModeSelectModal")
+        > => import("@/components/dashboard/ModeSelectModal"),
+      },
+      {
+        key: "DeleteConfirmModal",
+        load: (): Promise<
+          typeof import("@/components/dashboard/DeleteConfirmModal")
+        > => import("@/components/dashboard/DeleteConfirmModal"),
+      },
+      {
+        key: "ReviewModeModal",
+        load: (): Promise<typeof import("@/components/srs/ReviewModeModal")> =>
+          import("@/components/srs/ReviewModeModal"),
+      },
+    ]);
+  }, []);
+
+  const { addToast } = useToast();
+
+  const handleImportSuccess = (quiz: Quiz): void => {
+    setIsImportModalOpen(false);
+    addToast("success", `Successfully imported "${quiz.title}"`);
+  };
+
+  const handleStartQuiz = (quiz: Quiz): void => {
+    setModeSelectQuiz(quiz);
+  };
+
+  const handleDeleteClick = (quiz: Quiz): void => {
+    const attempts = quizStats.get(quiz.id)?.attemptCount ?? 0;
+    setDeleteContext({ quiz, attemptCount: attempts });
+  };
+
+  const handleConfirmDelete = async (): Promise<void> => {
+    if (!deleteContext) return;
+    if (!effectiveUserId) {
+      addToast("error", "Unable to delete quiz: missing user context.");
+      return;
+    }
+    setIsDeleting(true);
+    try {
+      await deleteQuiz(deleteContext.quiz.id, effectiveUserId);
+      if (isMounted.current) {
+        addToast("success", `Deleted "${deleteContext.quiz.title}"`);
+        setDeleteContext(null);
+      }
+    } catch (error) {
+      console.error("Failed to delete quiz", error);
+      if (isMounted.current) {
+        addToast("error", "Failed to delete quiz. Please try again.");
+      }
+    } finally {
+      if (isMounted.current) {
+        setIsDeleting(false);
+      }
+    }
+  };
+
+  // Use cached quiz count for skeleton sizing (CLS optimization)
+  // User-scoped cache prevents cross-account pollution
+  const cachedQuizCount = React.useMemo((): number | null => {
+    // If we already have quiz data loaded, use that
+    if (!quizzesLoading) {
+      return quizzes.length;
+    }
+    // Otherwise, read user-scoped cached count from localStorage
+    if (typeof window !== "undefined" && effectiveUserId) {
+      try {
+        const cached = localStorage.getItem(
+          buildDashboardCacheKey(effectiveUserId, "quiz_count"),
+        );
+        if (cached !== null) {
+          const count = Number(cached);
+          if (Number.isFinite(count) && count >= 0) {
+            return count;
+          }
+        }
+      } catch {
+        // localStorage unavailable
+      }
+    }
+    // No cache exists - return null, skeleton logic will determine variant
+    return null;
+  }, [quizzes.length, quizzesLoading, effectiveUserId]);
+
+  // Loading: auth/user context and DB/data fetches.
+  // Draft status controls each quiz card's primary action. Keep the dashboard
+  // skeleton until it resolves so a resumable quiz is never briefly exposed as
+  // "Start Quiz" or routed through the wrong launch flow.
+  // Error state - specific DB initialization failure
+  if (dbError) {
     return (
-        <>
-            <DashboardShell
-                headerSlot={
-                    <DashboardHeader
-                        onImportClick={() => setIsImportModalOpen(true)}
-                        quizCount={quizzes.length}
-                    />
-                }
-                statsSlot={
-                    quizzes.length > 0 && overallStats ? (
-                        <StatsBar
-                            totalQuizzes={overallStats.totalQuizzes}
-                            totalAttempts={overallStats.totalAttempts}
-                            averageScore={
-                                overallStats.totalAttempts > 0 ? overallStats.averageScore : null
-                            }
-                            totalStudyTime={overallStats.totalStudyTime}
-                        />
-                    ) : (
-                        <DashboardEmptyState
-                            testId="stats-empty-state"
-                            title="Performance insights appear here"
-                            description="Complete quizzes to unlock progress trends, averages, and study-time signals."
-                            className="min-h-[100px] grid place-items-center"
-                        />
-                    )
-                }
-                srsSlot={
-                    <div className="mx-auto grid max-w-3xl gap-4 md:grid-cols-2">
-                        <DueQuestionsCard
-                            dueCountsByBox={dueCountsByBox}
-                            totalDue={totalDue}
-                            onStartReview={() => setIsReviewModeModalOpen(true)}
-                        />
-                        <InterleavedPracticeCard />
-                    </div>
-                }
-                contentSlot={
-                    <div className="space-y-4">
-                        {quizzesError && (
-                            <div
-                                role="alert"
-                                className="rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-sm text-destructive"
-                            >
-                                Unable to load quizzes: {quizzesError.message}
-                            </div>
-                        )}
-                        {quizzes.length > 0 && (
-                            <QuizSortControls
-                                searchTerm={searchTerm}
-                                onSearchChange={setSearchTerm}
-                                sortBy={sortBy}
-                                onSortChange={setSortBy}
-                                categories={categories}
-                                categoryFilter={categoryFilter}
-                                onCategoryChange={setCategoryFilter}
-                            />
-                        )}
-                        {filteredQuizzes.length === 0 && quizzes.length > 0 && (searchTerm.trim() || categoryFilter !== "all") && (
-                            <DashboardEmptyState
-                                testId="search-empty-state"
-                                title="No quizzes match this filter"
-                                description="Try a broader keyword, or clear filters to see all quizzes."
-                                className="py-10"
-                            />
-                        )}
-                        <QuizGrid
-                            quizzes={filteredQuizzes}
-                            quizStats={quizStats}
-                            onStartQuiz={handleStartQuiz}
-                            onDeleteQuiz={handleDeleteClick}
-                        />
-                    </div>
-                }
-            />
-
-            {/* Modals - rendered as siblings, use portals internally */}
-            {isImportModalOpen && (
-                <ImportModal
-                    isOpen
-                    onClose={() => setIsImportModalOpen(false)}
-                    onImportSuccess={handleImportSuccess}
-                    userId={effectiveUserId}
-                />
-            )}
-
-            {modeSelectQuiz !== null && (
-                <ModeSelectModal
-                    quiz={modeSelectQuiz}
-                    isOpen
-                    onClose={() => setModeSelectQuiz(null)}
-                />
-            )}
-
-            {isReviewModeModalOpen && (
-                <ReviewModeModal
-                    isOpen
-                    onClose={() => setIsReviewModeModalOpen(false)}
-                    dueCount={totalDue}
-                />
-            )}
-
-            {deleteContext !== null && (
-                <DeleteConfirmModal
-                    quiz={deleteContext.quiz}
-                    attemptCount={deleteContext.attemptCount}
-                    isOpen
-                    onClose={() => setDeleteContext(null)}
-                    onConfirm={handleConfirmDelete}
-                    isDeleting={isDeleting}
-                />
-            )}
-        </>
+      <div className="mx-auto max-w-7xl px-4 py-8" role="alert">
+        <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
+          <h2 className="text-lg font-semibold text-destructive">
+            Failed to initialize database
+          </h2>
+          <p className="mt-2 text-destructive">{dbError.message}</p>
+          <p className="mt-4 text-sm text-destructive">
+            Please ensure your browser supports IndexedDB and try refreshing the
+            page.
+          </p>
+        </div>
+      </div>
     );
+  }
+
+  if (
+    authLoading ||
+    effectiveUserId === null ||
+    (!isInitialized && !dbError) ||
+    quizzesLoading ||
+    statsLoading ||
+    zenDraftStatusesLoading ||
+    isDueCountsLoading
+  ) {
+    // Use cached quiz count for skeleton, default to 0 for new users (LCP optimization)
+    // This allows EmptyStateSkeleton to render immediately, improving LCP by ~2s
+    // Returning users with quizzes will have their count cached from previous visits
+    const quizCardCount = cachedQuizCount ?? 0;
+
+    return <DashboardSkeleton quizCardCount={quizCardCount} />;
+  }
+
+  return (
+    <>
+      <DashboardShell
+        headerSlot={
+          <DashboardHeader
+            onImportClick={() => setIsImportModalOpen(true)}
+            quizCount={quizzes.length}
+          />
+        }
+        statsSlot={
+          quizzes.length > 0 && overallStats ? (
+            <StatsBar
+              totalQuizzes={overallStats.totalQuizzes}
+              totalAttempts={overallStats.totalAttempts}
+              averageScore={
+                overallStats.totalAttempts > 0
+                  ? overallStats.averageScore
+                  : null
+              }
+              totalStudyTime={overallStats.totalStudyTime}
+            />
+          ) : (
+            <DashboardEmptyState
+              testId="stats-empty-state"
+              title="Performance insights appear here"
+              description="Complete quizzes to unlock progress trends, averages, and study-time signals."
+              className="min-h-[100px] grid place-items-center"
+            />
+          )
+        }
+        srsSlot={
+          <div className="mx-auto grid max-w-3xl gap-4 md:grid-cols-2">
+            <DueQuestionsCard
+              dueCountsByBox={dueCountsByBox}
+              totalDue={totalDue}
+              onStartReview={() => setIsReviewModeModalOpen(true)}
+            />
+            <InterleavedPracticeCard />
+          </div>
+        }
+        contentSlot={
+          <div className="space-y-4">
+            {(zenDraftStatusesError ||
+              unknownZenDraftQuizIds.size > 0) && (
+              <div
+                role="alert"
+                className="flex flex-col gap-3 rounded-lg border border-warning/50 bg-warning/10 p-4 text-sm text-foreground sm:flex-row sm:items-center sm:justify-between"
+              >
+                <p>
+                  {zenDraftStatusesError
+                    ? "Saved quiz status is temporarily unavailable. Quiz launch actions are disabled until it reloads."
+                    : "Some saved quiz statuses could not be verified. Affected quiz launch actions are disabled until they reload."}
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="shrink-0"
+                  onClick={retryZenDraftStatuses}
+                >
+                  Retry saved quiz status
+                </Button>
+              </div>
+            )}
+            {quizzesError && (
+              <div
+                role="alert"
+                className="rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-sm text-destructive"
+              >
+                Unable to load quizzes: {quizzesError.message}
+              </div>
+            )}
+            {quizzes.length > 0 && (
+              <QuizSortControls
+                searchTerm={searchTerm}
+                onSearchChange={setSearchTerm}
+                sortBy={sortBy}
+                onSortChange={setSortBy}
+                categories={categories}
+                categoryFilter={categoryFilter}
+                onCategoryChange={setCategoryFilter}
+              />
+            )}
+            {filteredQuizzes.length === 0 &&
+              quizzes.length > 0 &&
+              (searchTerm.trim() || categoryFilter !== "all") && (
+                <DashboardEmptyState
+                  testId="search-empty-state"
+                  title="No quizzes match this filter"
+                  description="Try a broader keyword, or clear filters to see all quizzes."
+                  className="py-10"
+                />
+              )}
+            <QuizGrid
+              quizzes={filteredQuizzes}
+              quizStats={quizStats}
+              zenDraftStatuses={zenDraftStatuses}
+              areZenDraftStatusesAvailable={!zenDraftStatusesError}
+              unknownZenDraftQuizIds={unknownZenDraftQuizIds}
+              onStartQuiz={handleStartQuiz}
+              onDeleteQuiz={handleDeleteClick}
+            />
+          </div>
+        }
+      />
+
+      {/* Modals - rendered as siblings, use portals internally */}
+      {isImportModalOpen && (
+        <ImportModal
+          isOpen
+          onClose={() => setIsImportModalOpen(false)}
+          onImportSuccess={handleImportSuccess}
+          userId={effectiveUserId}
+        />
+      )}
+
+      {modeSelectQuiz !== null && (
+        <ModeSelectModal
+          quiz={modeSelectQuiz}
+          isOpen
+          onClose={() => setModeSelectQuiz(null)}
+        />
+      )}
+
+      {isReviewModeModalOpen && (
+        <ReviewModeModal
+          isOpen
+          onClose={() => setIsReviewModeModalOpen(false)}
+          dueCount={totalDue}
+        />
+      )}
+
+      {deleteContext !== null && (
+        <DeleteConfirmModal
+          quiz={deleteContext.quiz}
+          attemptCount={deleteContext.attemptCount}
+          isOpen
+          onClose={() => setDeleteContext(null)}
+          onConfirm={handleConfirmDelete}
+          isDeleting={isDeleting}
+        />
+      )}
+    </>
+  );
 }

@@ -91,6 +91,16 @@ export const QUIZ_MODES = ["zen", "proctor", "flashcard"] as const;
  */
 export type QuizMode = (typeof QUIZ_MODES)[number];
 
+/** Route/session intent used to keep standard-Zen drafts out of derived modes. */
+export type ZenSessionKind =
+  | "standard_zen"
+  | "remixed_zen"
+  | "smart_round"
+  | "topic_study"
+  | "srs_review"
+  | "interleaved"
+  | "other_zen";
+
 export interface QuizSessionState {
   quizId: string;
   mode: QuizMode;

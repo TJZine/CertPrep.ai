@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Quiz Recovery Semantics**: Preserved permanent Proctor auto-submit outcomes
+  through the time-up fallback so terminal failures no longer receive
+  contradictory retry guidance.
+- **Saved Quiz Launch Safety**: Distinguished unavailable or partially unknown
+  device-local draft status from a confirmed empty result, disabled affected
+  launch actions, and added an explicit dashboard retry path.
+
+## [1.5.2] - 2026-07-23
+
+### Added
+
+- **Resumable Zen Study**: Standard Zen quiz progress is saved on this device,
+  survives reloads and offline exits, and can be resumed through the
+  dashboard's "Continue Quiz" action.
+
+### Changed
+
+- **Dependencies**: Updated compatible runtime and development dependencies to
+  their latest minor or patch releases.
+
+### Security
+
+- **Dependency Remediation**: Updated Next.js and refreshed transitive security
+  pins for `brace-expansion`, `fast-uri`, and `sharp`.
+
 ## [1.5.1] - 2026-07-19
 
 ### Fixed

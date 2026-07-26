@@ -1,4 +1,4 @@
-import { renderHook, waitFor } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { describe, it, expect, beforeEach, vi, afterEach, type Mock } from "vitest";
 
 import { useState, useEffect } from "react";
@@ -33,10 +33,12 @@ import {
     useResult,
     useQuizResults,
     useResultWithHydratedQuiz,
-    useQuizWithStats
+    useQuizWithStats,
+    useZenDraftStatuses
 } from "@/hooks/useDatabase";
 import { db, initializeDatabase } from "@/db";
 import { isSRSQuiz, getQuizStats } from "@/db/quizzes";
+import { assessZenDraft } from "@/db/zenDrafts";
 import { resolveAggregatedResultReadModel } from "@/db/aggregatedQuiz";
 import type { Quiz } from "@/types/quiz";
 import type { Result } from "@/types/result";
@@ -49,8 +51,14 @@ vi.mock("@/db", () => ({
             filter: vi.fn().mockReturnThis(),
             toArray: vi.fn(),
             get: vi.fn(),
+            bulkGet: vi.fn(),
             bulkAdd: vi.fn(),
             clear: vi.fn(),
+        },
+        zenDrafts: {
+            where: vi.fn().mockReturnThis(),
+            equals: vi.fn().mockReturnThis(),
+            toArray: vi.fn(),
         },
         results: {
             where: vi.fn().mockReturnThis(),
@@ -76,10 +84,23 @@ vi.mock("@/db/aggregatedQuiz", () => ({
     resolveAggregatedResultReadModel: vi.fn(),
 }));
 
+vi.mock("@/db/zenDrafts", () => ({
+    assessZenDraft: vi.fn(),
+}));
+
+vi.mock("@/lib/logger", () => ({
+    logger: { warn: vi.fn() },
+}));
+
 const mockedResultsTable = db.results as unknown as {
     where: Mock;
     equals: Mock;
     sortBy: Mock;
+};
+const mockedZenDraftsTable = db.zenDrafts as unknown as {
+    where: Mock;
+    equals: Mock;
+    toArray: Mock;
 };
 
 describe("useDatabase hooks (Unit Layer)", () => {
@@ -243,6 +264,141 @@ describe("useDatabase hooks (Unit Layer)", () => {
                 expect(result.current.isLoading).toBe(false);
                 expect(result.current.quiz).toBeUndefined();
             });
+        });
+    });
+
+    describe("useZenDraftStatuses", () => {
+        it("reuses one read-only empty status map while no user is available", () => {
+            const first = renderHook(() => useZenDraftStatuses(undefined));
+            const second = renderHook(() => useZenDraftStatuses(undefined));
+
+            expect(first.result.current.statuses).toBe(second.result.current.statuses);
+            expect(first.result.current.unknownQuizIds).toBe(
+                second.result.current.unknownQuizIds,
+            );
+            expect(first.result.current.isLoading).toBe(false);
+            expect(first.result.current.error).toBeNull();
+
+            first.unmount();
+            second.unmount();
+        });
+
+        it("loads only referenced quizzes and preserves system-quiz drafts", async () => {
+            const drafts = [
+                { quiz_id: "owned" },
+                { quiz_id: "system" },
+                { quiz_id: "other-owner" },
+            ];
+            mockedZenDraftsTable.toArray.mockResolvedValue(drafts);
+            (db.quizzes.bulkGet as Mock).mockResolvedValue([
+                { id: "owned", user_id: "user1", deleted_at: null },
+                {
+                    id: "system",
+                    user_id: "00000000-0000-0000-0000-000000000000",
+                    deleted_at: null,
+                },
+                { id: "other-owner", user_id: "user2", deleted_at: null },
+            ]);
+            (assessZenDraft as unknown as Mock).mockImplementation(
+                async (draft: { quiz_id: string }) => ({
+                    compatibility: draft.quiz_id === "owned" ? "resumable" : "quiz-changed",
+                }),
+            );
+
+            const { result } = renderHook(() => useZenDraftStatuses("user1"));
+
+            await waitFor(() => expect(result.current.isLoading).toBe(false));
+            expect(result.current.statuses).toEqual(new Map([
+                ["owned", "resumable"],
+                ["system", "quiz-changed"],
+                ["other-owner", "invalid"],
+            ]));
+            expect(result.current.unknownQuizIds).toEqual(new Set());
+            expect(result.current.error).toBeNull();
+            expect(mockedZenDraftsTable.where).toHaveBeenCalledWith("user_id");
+            expect(mockedZenDraftsTable.equals).toHaveBeenCalledWith("user1");
+            expect(db.quizzes.bulkGet).toHaveBeenCalledWith([
+                "owned",
+                "system",
+                "other-owner",
+            ]);
+            expect(assessZenDraft).toHaveBeenCalledTimes(2);
+        });
+
+        it("preserves successful statuses when one assessment fails", async () => {
+            mockedZenDraftsTable.toArray.mockResolvedValue([
+                { quiz_id: "healthy" },
+                { quiz_id: "failed" },
+            ]);
+            (db.quizzes.bulkGet as Mock).mockResolvedValue([
+                { id: "healthy", user_id: "user1", deleted_at: null },
+                { id: "failed", user_id: "user1", deleted_at: null },
+            ]);
+            (assessZenDraft as unknown as Mock).mockImplementation(
+                async (draft: { quiz_id: string }) => {
+                    if (draft.quiz_id === "failed") {
+                        throw new Error("result read failed");
+                    }
+                    return { compatibility: "resumable" };
+                },
+            );
+
+            const { result } = renderHook(() => useZenDraftStatuses("user1"));
+
+            await waitFor(() => expect(result.current.isLoading).toBe(false));
+            expect(result.current.statuses).toEqual(new Map([
+                ["healthy", "resumable"],
+            ]));
+            expect(result.current.unknownQuizIds).toEqual(new Set(["failed"]));
+            expect(result.current.error).toBeNull();
+        });
+
+        it("exposes an error instead of treating an underlying query failure as no drafts", async () => {
+            const indexedDbError = new Error("IndexedDB unavailable");
+            mockedZenDraftsTable.toArray.mockResolvedValue([
+                { quiz_id: "quiz-1" },
+            ]);
+            (db.quizzes.bulkGet as Mock).mockRejectedValue(indexedDbError);
+
+            const { result } = renderHook(() => useZenDraftStatuses("user1"));
+
+            await waitFor(() => expect(result.current.isLoading).toBe(false));
+            expect(result.current.statuses).toEqual(new Map());
+            expect(result.current.unknownQuizIds).toEqual(new Set());
+            expect(result.current.error).toBe(indexedDbError);
+        });
+
+        it("fails closed while retrying and exposes statuses only after reload succeeds", async () => {
+            mockedZenDraftsTable.toArray.mockResolvedValue([
+                { quiz_id: "quiz-1" },
+            ]);
+            (db.quizzes.bulkGet as Mock)
+                .mockRejectedValueOnce(new Error("IndexedDB unavailable"))
+                .mockResolvedValue([
+                    { id: "quiz-1", user_id: "user1", deleted_at: null },
+                ]);
+            (assessZenDraft as unknown as Mock).mockResolvedValue({
+                compatibility: "resumable",
+            });
+
+            const { result } = renderHook(() => useZenDraftStatuses("user1"));
+
+            await waitFor(() => expect(result.current.error).not.toBeNull());
+
+            act(() => {
+                result.current.retry();
+            });
+
+            expect(result.current.isLoading).toBe(true);
+            expect(result.current.statuses).toEqual(new Map());
+            expect(result.current.error).toBeNull();
+
+            await waitFor(() => expect(result.current.isLoading).toBe(false));
+            expect(result.current.statuses).toEqual(
+                new Map([["quiz-1", "resumable"]]),
+            );
+            expect(result.current.error).toBeNull();
+            expect(db.quizzes.bulkGet).toHaveBeenCalledTimes(2);
         });
     });
 

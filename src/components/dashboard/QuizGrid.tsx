@@ -7,10 +7,14 @@ import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { EmptyState } from "@/components/common/EmptyState";
 import type { Quiz } from "@/types/quiz";
 import type { QuizStats } from "@/db/quizzes";
+import type { ZenDraftCompatibility } from "@/types/zenDraft";
 
 export interface QuizGridProps {
   quizzes: Quiz[];
   quizStats: Map<string, QuizStats>;
+  zenDraftStatuses: ReadonlyMap<string, ZenDraftCompatibility>;
+  areZenDraftStatusesAvailable: boolean;
+  unknownZenDraftQuizIds: ReadonlySet<string>;
   onStartQuiz: (quiz: Quiz) => void;
   onDeleteQuiz: (quiz: Quiz) => void;
   isLoading?: boolean;
@@ -22,6 +26,9 @@ export interface QuizGridProps {
 export function QuizGrid({
   quizzes,
   quizStats,
+  zenDraftStatuses,
+  areZenDraftStatusesAvailable,
+  unknownZenDraftQuizIds,
   onStartQuiz,
   onDeleteQuiz,
   isLoading = false,
@@ -47,18 +54,29 @@ export function QuizGrid({
   return (
     <div
       data-testid="quiz-grid"
-      className="grid gap-6 auto-rows-[minmax(140px,auto)] sm:grid-cols-2 lg:grid-cols-3"
+      className="grid items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3"
     >
-      {quizzes.map((quiz, index) => (
-        <QuizCard
-          key={quiz.id}
-          quiz={quiz}
-          stats={quizStats.get(quiz.id) ?? null}
-          onStart={onStartQuiz}
-          onDelete={onDeleteQuiz}
-          isHero={index === 0}
-        />
-      ))}
+      {quizzes.map((quiz, index) => {
+        const isLaunchDisabled =
+          !areZenDraftStatusesAvailable ||
+          unknownZenDraftQuizIds.has(quiz.id);
+
+        return (
+          <QuizCard
+            key={quiz.id}
+            quiz={quiz}
+            stats={quizStats.get(quiz.id) ?? null}
+            hasResumableDraft={
+              !isLaunchDisabled &&
+              zenDraftStatuses.get(quiz.id) === "resumable"
+            }
+            isLaunchDisabled={isLaunchDisabled}
+            onStart={onStartQuiz}
+            onDelete={onDeleteQuiz}
+            isFeatured={index === 0}
+          />
+        );
+      })}
     </div>
   );
 }

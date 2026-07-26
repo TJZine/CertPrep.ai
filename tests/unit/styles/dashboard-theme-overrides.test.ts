@@ -5,8 +5,8 @@ import { resolve } from "node:path";
 describe("dashboard theme overrides", () => {
     const css = readFileSync(resolve(process.cwd(), "src/app/globals.css"), "utf8");
 
-    it("contains midnight hero-card override", () => {
-        expect(css).toContain('[data-theme="midnight"] .dashboard-hero-card');
+    it("contains midnight featured-card override", () => {
+        expect(css).toContain('[data-theme="midnight"] .dashboard-featured-card');
     });
 
     it("contains brutalist card override", () => {
@@ -16,6 +16,12 @@ describe("dashboard theme overrides", () => {
     it("contains reduced-motion fallback for dashboard cards", () => {
         expect(css).toContain("@media (prefers-reduced-motion: reduce)");
         expect(css).toContain(".dashboard-card");
-        expect(css).toContain(".dashboard-hero-card");
+        expect(css).toContain(".dashboard-featured-card");
+    });
+
+    it("preserves leading-icon spacing for Blossom inputs", () => {
+        expect(css).toMatch(
+            /\[data-theme="blossom"\]\s+input\.has-leading-icon\s*\{[^}]*padding-left:\s*2\.25rem\s*!important;?[^}]*\}/,
+        );
     });
 });

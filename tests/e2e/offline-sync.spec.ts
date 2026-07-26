@@ -42,7 +42,9 @@ async function selectOption(
   await option.click();
 
   // Verify selection registered in UI
-  await expect(option).toHaveAttribute("aria-checked", "true", { timeout: 3000 });
+  await expect(option).toHaveAttribute("aria-checked", "true", {
+    timeout: E2E_TIMEOUTS.LOADING,
+  });
 
   // Wait for async answer persistence (hash operation ~50-200ms)
   await page.waitForTimeout(E2E_TIMEOUTS.ANSWER_PERSIST);
@@ -234,13 +236,17 @@ test.describe("Offline Data Persistence", () => {
       await dismissOfflineToast(page);
 
       await selectOption(page, "A");
-      await expect(submitButton).toBeEnabled({ timeout: E2E_TIMEOUTS.HYDRATION });
+      await expect(submitButton).toBeEnabled({
+        timeout: E2E_TIMEOUTS.HYDRATION,
+      });
       await submitButton.click();
       await expect(goodButton).toBeVisible({ timeout: E2E_TIMEOUTS.HYDRATION });
       await goodButton.click();
 
       await selectOption(page, "B");
-      await expect(submitButton).toBeEnabled({ timeout: E2E_TIMEOUTS.HYDRATION });
+      await expect(submitButton).toBeEnabled({
+        timeout: E2E_TIMEOUTS.HYDRATION,
+      });
       await submitButton.click();
       await expect(goodButton).toBeVisible({ timeout: E2E_TIMEOUTS.HYDRATION });
       await goodButton.click();
@@ -351,7 +357,7 @@ test.describe("Offline Mode Behavior", () => {
     await page.waitForLoadState("domcontentloaded");
   });
 
-  test("quiz data persists across page navigation while offline", async ({
+  test("quiz state stays available on the active page when connectivity changes", async ({
     authenticatedPage: page,
     context,
   }) => {
@@ -413,8 +419,10 @@ test.describe("Sync Request Verification", () => {
 
     // Wait for sync hook to be exposed (replaces fixed timeout)
     await page.waitForFunction(
-      () => (window as Window & { __certprepSync?: () => Promise<void> }).__certprepSync !== undefined,
-      { timeout: 5000 }
+      () =>
+        (window as Window & { __certprepSync?: () => Promise<void> })
+          .__certprepSync !== undefined,
+      { timeout: 5000 },
     );
 
     // Manually trigger sync to ensure it runs even if auto-sync debouncing interferes

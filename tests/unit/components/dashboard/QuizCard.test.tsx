@@ -1,7 +1,8 @@
 import * as React from "react";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { QuizCard } from "@/components/dashboard/QuizCard";
+import type { QuizStats } from "@/db/quizzes";
 import type { Quiz } from "@/types/quiz";
 
 vi.mock("next/navigation", () => ({
@@ -28,6 +29,16 @@ const quiz = {
   updated_at: 100,
 } satisfies Quiz;
 
+const attemptedStats = {
+  quizId: quiz.id,
+  attemptCount: 3,
+  lastAttemptScore: 90,
+  lastAttemptDate: 1700000000000,
+  averageScore: 73,
+  bestScore: 100,
+  totalStudyTime: 360,
+} satisfies QuizStats;
+
 describe("QuizCard", () => {
   it("provides a 24px missing-category warning target without changing its name", () => {
     render(
@@ -36,6 +47,7 @@ describe("QuizCard", () => {
         stats={null}
         onStart={vi.fn()}
         onDelete={vi.fn()}
+        isLaunchDisabled={false}
       />,
     );
 
@@ -43,5 +55,86 @@ describe("QuizCard", () => {
       name: "Missing category for full analytics",
     });
     expect(warning).toHaveClass("h-6", "w-6");
+  });
+
+  it("renders the featured card as a compact two-column quick-start card", () => {
+    render(
+      <QuizCard
+        quiz={quiz}
+        stats={attemptedStats}
+        onStart={vi.fn()}
+        onDelete={vi.fn()}
+        isLaunchDisabled={false}
+        isFeatured
+      />,
+    );
+
+    const featuredCard = screen
+      .getByText("Quick start")
+      .closest(".dashboard-card");
+    expect(featuredCard).toHaveClass("lg:col-span-2");
+    expect(featuredCard).not.toHaveClass("lg:row-span-2");
+    expect(
+      screen.getByRole("button", { name: "Study Again" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("73% average")).toBeInTheDocument();
+    expect(screen.queryByText("Study Time")).not.toBeInTheDocument();
+  });
+
+  it("shows Continue Quiz only when a compatible local draft exists", () => {
+    const onStart = vi.fn();
+    const props = {
+      quiz,
+      stats: attemptedStats,
+      onStart,
+      onDelete: vi.fn(),
+      isLaunchDisabled: false,
+    };
+    const { rerender } = render(<QuizCard {...props} hasResumableDraft />);
+
+    expect(
+      screen.getByRole("link", { name: "Continue Quiz" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Continue Quiz" })).toHaveAttribute(
+      "href",
+      "/quiz/quiz-1/zen",
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Choose Mode" }));
+    expect(onStart).toHaveBeenCalledWith(quiz);
+
+    rerender(<QuizCard {...props} hasResumableDraft={false} />);
+
+    expect(
+      screen.queryByRole("link", { name: "Continue Quiz" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Study Again" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Choose Mode" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("fails closed when saved quiz status is unavailable", () => {
+    const onStart = vi.fn();
+    render(
+      <QuizCard
+        quiz={quiz}
+        stats={null}
+        onStart={onStart}
+        onDelete={vi.fn()}
+        isLaunchDisabled
+      />,
+    );
+
+    const unavailableButton = screen.getByRole("button", {
+      name: "Quiz Status Unavailable",
+    });
+    expect(unavailableButton).toBeDisabled();
+    fireEvent.click(unavailableButton);
+    expect(onStart).not.toHaveBeenCalled();
+    expect(
+      screen.queryByRole("button", { name: "Start Quiz" }),
+    ).not.toBeInTheDocument();
   });
 });

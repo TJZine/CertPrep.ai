@@ -6,6 +6,7 @@ import { generateUUID } from "@/lib/core/crypto";
 import type { PersistedResultMode, Result } from "@/types/result";
 import type { Quiz } from "@/types/quiz";
 import { evaluateAnswer } from "@/lib/grading";
+import { ResultCompletionError } from "./resultErrors";
 
 export interface CreateResultInput {
   quizId: string;
@@ -19,6 +20,10 @@ export interface CreateResultInput {
   difficultyRatings?: Record<string, 1 | 2 | 3>;
   /** Time spent per question in seconds */
   timePerQuestion?: Record<string, number>;
+}
+
+export interface FinalizeStandardZenResultInput extends CreateResultInput {
+  draftWriterId: string;
 }
 
 /**
@@ -74,20 +79,27 @@ export async function calculateResults(
 /**
  * Persists a quiz result and returns the stored entity.
  */
-export async function createResult(input: CreateResultInput): Promise<Result> {
+async function prepareResult(input: CreateResultInput): Promise<Result> {
   if (!input.userId) {
-    throw new Error("Cannot create result without a user context.");
+    throw new ResultCompletionError(
+      "USER_CONTEXT_UNAVAILABLE",
+      "Cannot create result without a user context.",
+    );
   }
 
   const quiz = await db.quizzes.get(input.quizId);
 
-  if (!quiz) {
-    throw new Error("Quiz not found.");
+  if (!quiz || quiz.deleted_at) {
+    throw new ResultCompletionError(
+      "QUIZ_UNAVAILABLE",
+      "Quiz is no longer available for completion.",
+    );
   }
 
   // Allow taking a quiz if the user owns it OR if it's a System/Public quiz
   if (quiz.user_id !== input.userId && quiz.user_id !== NIL_UUID) {
-    throw new Error(
+    throw new ResultCompletionError(
+      "QUIZ_OWNERSHIP_MISMATCH",
       "Security mismatch: Quiz does not belong to the current user.",
     );
   }
@@ -115,7 +127,63 @@ export async function createResult(input: CreateResultInput): Promise<Result> {
     synced: 0,
   };
 
+  return result;
+}
+
+export async function createResult(input: CreateResultInput): Promise<Result> {
+  const result = await prepareResult(input);
   await db.results.add(result);
+  return result;
+}
+
+/**
+ * Atomically appends a completed standard-Zen result and removes only the
+ * draft owned by the completing tab. If either write fails, IndexedDB rolls
+ * both operations back, leaving the draft recoverable without a duplicate
+ * result on retry.
+ */
+export async function finalizeStandardZenResult(
+  input: FinalizeStandardZenResultInput,
+): Promise<Result> {
+  const result = await prepareResult(input);
+  await db.transaction(
+    "rw",
+    [db.quizzes, db.results, db.zenDrafts],
+    async () => {
+      const [quiz, draft] = await Promise.all([
+        db.quizzes.get(input.quizId),
+        db.zenDrafts.get([input.userId, input.quizId]),
+      ]);
+      if (
+        !quiz ||
+        quiz.deleted_at ||
+        (quiz.user_id !== input.userId && quiz.user_id !== NIL_UUID)
+      ) {
+        throw new ResultCompletionError(
+          "QUIZ_UNAVAILABLE",
+          "Quiz is no longer available for completion.",
+        );
+      }
+      if (!draft || draft.writer_id !== input.draftWriterId) {
+        throw new ResultCompletionError(
+          "DRAFT_OWNERSHIP_LOST",
+          "The saved draft is no longer owned by this quiz session.",
+        );
+      }
+      if (
+        draft.quiz_version !== quiz.version ||
+        !quiz.quiz_hash ||
+        draft.quiz_hash !== quiz.quiz_hash
+      ) {
+        throw new ResultCompletionError(
+          "QUIZ_CHANGED",
+          "The quiz changed before this draft was completed.",
+        );
+      }
+      await db.results.add(result);
+      await db.zenDrafts.delete([input.userId, input.quizId]);
+    },
+  );
   return result;
 }
 
@@ -349,5 +417,3 @@ export async function deleteResult(id: string, userId: string): Promise<void> {
     synced: 0,
   });
 }
-
-
